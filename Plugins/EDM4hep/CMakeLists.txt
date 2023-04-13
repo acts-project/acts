@@ -1,25 +1,22 @@
 add_library(
-  ActsPluginmlpack SHARED
-  # header files
-  include/Acts/Plugins/mlpack/AmbiguityDBScanClustering.hpp)
+	ActsPluginEDM4hep SHARED
+	src/EDM4hepUtil.cpp)
 
 target_include_directories(
-  ActsPluginmlpack
+	ActsPluginEDM4hep
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-
 target_link_libraries(
-  ActsPluginmlpack
+	ActsPluginEDM4hep
   PUBLIC ActsCore)
 
-set_target_properties(ActsPluginmlpack PROPERTIES LINKER_LANGUAGE CXX)
+target_link_libraries(ActsPluginEDM4hep PUBLIC EDM4HEP::edm4hep)
 
 install(
-  TARGETS ActsPluginmlpack
-  EXPORT ActsPluginmlpackTargets
+  TARGETS ActsPluginEDM4hep
+  EXPORT ActsPluginEDM4hepTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
 install(
   DIRECTORY include/Acts
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

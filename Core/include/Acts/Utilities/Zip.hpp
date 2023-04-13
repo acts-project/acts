@@ -21,7 +21,7 @@ namespace Acts {
 /// @param rb The second range
 /// @note the behaviour is undefined if the ranges do not have equal range
 template <typename RA, typename RB>
-auto zip(RA &ra, RB &rb) {
+auto zip(RA &&ra, RB &&rb) {
   using ItA = decltype(ra.begin());
   using ItB = decltype(rb.begin());
 
@@ -29,8 +29,8 @@ auto zip(RA &ra, RB &rb) {
     ItA a;
     ItB b;
 
-    using reference =
-        std::tuple<typename ItA::reference, typename ItB::reference>;
+    using reference = std::tuple<decltype(*std::declval<ItA>()),
+                                 decltype(*std::declval<ItB>())>;
 
     auto operator++() {
       ++a;
