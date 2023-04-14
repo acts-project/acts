@@ -154,8 +154,10 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
   if (binning == Acts::binR) {
     // Range and center-r calculation
     auto [range, medium] = Acts::range_medium(boundaries);
-    // New joint center
-    Acts::Vector3 pCenter = volumeCenter + medium * refRotation.col(2);
+    // New joint center:
+    // - you start from the center of the volume, and then head the distence
+    //   of medium-r along the y-axis of the former (and new) portal
+    Acts::Vector3 pCenter = volumeCenter + medium * refRotation.col(1u);
     transform.pretranslate(pCenter);
     // Create the halflength
     Acts::ActsScalar halfX =
