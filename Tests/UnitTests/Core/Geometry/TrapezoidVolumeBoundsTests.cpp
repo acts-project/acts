@@ -60,8 +60,8 @@ BOOST_AUTO_TEST_CASE(TrapezoidVolumeBoundarySurfaces) {
     auto osCenter = os.first->center(geoCtx);
     auto osNormal = os.first->normal(geoCtx, osCenter);
     // Check if you step inside the volume with the oriented normal
-    auto insideTvb = osCenter + os.second * osNormal;
-    auto outsideTvb = osCenter - os.second * osNormal;
+    Vector3 insideTvb = osCenter + os.second * osNormal;
+    Vector3 outsideTvb = osCenter - os.second * osNormal;
     BOOST_CHECK(tvb.inside(insideTvb));
     BOOST_CHECK(!tvb.inside(outsideTvb));
   }
