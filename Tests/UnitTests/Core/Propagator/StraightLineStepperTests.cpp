@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
 
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, absMom, charge);
-  StraightLineStepper::State slsState(tgContext, mfContext, cp, navDir, stepSize,
-                                      tolerance);
+  StraightLineStepper::State slsState(tgContext, mfContext, cp, navDir,
+                                      stepSize, tolerance);
 
   StraightLineStepper sls;
 
@@ -122,8 +122,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                                 cov);
 
   // Build the state and the stepper
-  StraightLineStepper::State slsState(tgContext, mfContext, cp, navDir, stepSize,
-                                      tolerance);
+  StraightLineStepper::State slsState(tgContext, mfContext, cp, navDir,
+                                      stepSize, tolerance);
   StraightLineStepper sls;
 
   // Test the getters
