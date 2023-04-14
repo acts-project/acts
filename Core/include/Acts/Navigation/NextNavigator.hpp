@@ -67,15 +67,6 @@ class NextNavigator {
     bool targetReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
-
-    void reset(const GeometryContext& /*geoContext*/, const Vector3& /*pos*/,
-               const Vector3& /*dir*/, NavigationDirection /*navDir*/,
-               const Surface* /*ssurface*/, const Surface* /*tsurface*/) {
-      // Reset everything first
-      *this = State();
-
-      // TODO do stuff?
-    }
   };
 
   /// Constructor with configuration object
@@ -86,6 +77,63 @@ class NextNavigator {
                                          getDefaultLogger("NextNavigator",
                                                           Logging::Level::INFO))
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
+
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
+    return result;
+  }
+
+  void resetState(State& state, const GeometryContext& /*geoContext*/,
+                  const Vector3& /*pos*/, const Vector3& /*dir*/,
+                  NavigationDirection /*navDir*/, const Surface* /*ssurface*/,
+                  const Surface* /*tsurface*/) const {
+    // Reset everything first
+    state = State();
+
+    // TODO fill state
+  }
+
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
+  }
+
+  const TrackingVolume* currentVolume(const State& /*state*/) const {
+    return nullptr;  // TODO we do not have a tracking volume
+  }
+
+  const Surface* startSurface(const State& state) const {
+    return state.startSurface;
+  }
+
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
+
+  bool targetReached(const State& state) const { return state.targetReached; }
+
+  bool navigationBreak(const State& state) const {
+    return state.navigationBreak;
+  }
+
+  void currentSurface(State& state, const Surface* surface) const {
+    state.currentSurface = surface;
+  }
+
+  void targetReached(State& state, bool targetReached) const {
+    state.targetReached = targetReached;
+  }
+
+  void navigationBreak(State& state, bool navigationBreak) const {
+    state.navigationBreak = navigationBreak;
+  }
+
+  void insertExternalSurface(State& /*state*/,
+                             GeometryIdentifier /*geoid*/) const {
+    // TODO what about external surfaces?
+  }
 
   /// @brief Navigator status call
   ///

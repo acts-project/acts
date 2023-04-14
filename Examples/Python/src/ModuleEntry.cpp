@@ -107,7 +107,8 @@ void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
-void addMLTrackFinding(Context& ctx);
+void addOnnx(Context& ctx);
+void addOnnxMlpack(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -115,11 +116,11 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindings, m) {
   Acts::Python::Context ctx;
-  ctx.modules["main"] = &m;
+  ctx.modules["main"] = m;
   auto mex = m.def_submodule("_examples");
-  ctx.modules["examples"] = &mex;
+  ctx.modules["examples"] = mex;
   auto prop = m.def_submodule("_propagator");
-  ctx.modules["propagation"] = &prop;
+  ctx.modules["propagation"] = prop;
   m.doc() = "Acts";
 
   m.attr("__version__") =
@@ -277,5 +278,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
   addSvg(ctx);
-  addMLTrackFinding(ctx);
+  addOnnx(ctx);
+  addOnnxMlpack(ctx);
 }

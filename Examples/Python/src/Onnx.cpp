@@ -19,13 +19,14 @@ using namespace Acts;
 
 namespace Acts::Python {
 
-void addMLTrackFinding(Context& ctx) {
+void addOnnx(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
+  auto onnx = mex.def_submodule("_onnx");
+  ctx.modules["onnx"] = onnx;
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
-                                mex, "AmbiguityResolutionMLAlgorithm",
-                                inputTrajectories, inputDuplicateNN,
-                                outputTrajectories, nMeasurementsMin);
+                                onnx, "AmbiguityResolutionMLAlgorithm",
+                                inputTracks, inputDuplicateNN, outputTracks,
+                                nMeasurementsMin);
 }
-
 }  // namespace Acts::Python

@@ -52,13 +52,13 @@ struct PathLimitReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
+  /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/,
-                  const Logger& logger) const {
-    if (state.navigation.targetReached) {
+                  const navigator_t& navigator, const Logger& logger) const {
+    if (navigator.targetReached(state.navigation)) {
       return true;
     }
     // Check if the maximum allowed step size has to be updated
@@ -72,7 +72,7 @@ struct PathLimitReached {
       ACTS_VERBOSE("Target: x | "
                    << "Path limit reached at distance " << distance);
       // reaching the target means navigation break
-      state.navigation.targetReached = true;
+      navigator.targetReached(state.navigation, true);
     } else {
       ACTS_VERBOSE("Target: 0 | "
                    << "Target stepSize (path limit) updated to "
@@ -102,8 +102,8 @@ struct SurfaceReached {
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    return (*this)(state, stepper, navigator, *state.navigation.targetSurface,
-                   logger);
+    return (*this)(state, stepper, navigator,
+                   *navigator.targetSurface(state.navigation), logger);
   }
 
   /// boolean operator for abort condition without using the result
@@ -114,24 +114,25 @@ struct SurfaceReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for the progation
+  /// @param [in] navigator Navigator used for the progation
   /// @param [in] targetSurface The target surface
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/,
-                  const Surface& targetSurface, const Logger& logger) const {
-    if (state.navigation.targetReached) {
+                  const navigator_t& navigator, const Surface& targetSurface,
+                  const Logger& logger) const {
+    if (navigator.targetReached(state.navigation)) {
       return true;
     }
     // Check if the cache filled the currentSurface - or if we are on the
     // surface
-    if ((state.navigation.currentSurface &&
-         state.navigation.currentSurface == &targetSurface)) {
+    if ((navigator.currentSurface(state.navigation) &&
+         navigator.currentSurface(state.navigation) == &targetSurface)) {
       ACTS_VERBOSE("Target: x | "
                    << "Target surface reached.");
       // reaching the target calls a navigation break
-      state.navigation.targetReached = true;
+      navigator.targetReached(state.navigation, true);
       return true;
     }
     // Calculate the distance to the surface
@@ -151,13 +152,13 @@ struct SurfaceReached {
                    << "Target surface reached at distance (tolerance) "
                    << distance << " (" << tolerance << ")");
       // assigning the currentSurface
-      state.navigation.currentSurface = &targetSurface;
+      navigator.currentSurface(state.navigation, &targetSurface);
       ACTS_VERBOSE("Target: x | "
                    << "Current surface set to target surface  "
-                   << state.navigation.currentSurface->geometryId());
+                   << navigator.currentSurface(state.navigation)->geometryId());
 
       // reaching the target calls a navigation break
-      state.navigation.targetReached = true;
+      navigator.targetReached(state.navigation, true);
     } else {
       // Target is not reached, update the step size
       const double overstepLimit = stepper.overstepLimit(state.stepping);
@@ -186,17 +187,19 @@ struct EndOfWorldReached {
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
+  /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in,out] state The propagation state object
+  /// @param [in] navigator The navigator object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/,
+                  const navigator_t& navigator,
                   const Logger& /*logger*/) const {
-    if (state.navigation.currentVolume != nullptr) {
+    if (navigator.currentVolume(state.navigation) != nullptr) {
       return false;
     }
-    state.navigation.targetReached = true;
+    navigator.targetReached(state.navigation, true);
     return true;
   }
 };
@@ -213,15 +216,16 @@ struct ParticleStopped {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper The stepper object
+  /// @param [in] navigator The navigator object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/,
+                  const navigator_t& navigator,
                   const Logger& /*logger*/) const {
     if (stepper.momentum(state.stepping) > 0) {
       return false;
     }
-    state.navigation.targetReached = true;
+    navigator.targetReached(state.navigation, true);
     return true;
   }
 };

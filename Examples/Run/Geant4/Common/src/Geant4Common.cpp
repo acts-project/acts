@@ -69,11 +69,12 @@ void setupGeant4Simulation(
   g4Cfg.runManager = std::move(runManager);
   g4Cfg.randomNumbers = std::make_shared<ActsExamples::RandomNumbers>(
       ActsExamples::RandomNumbers::Config{seed});
+  g4Cfg.inputParticles = materialRecording ? Simulation::kParticlesInitial
+                                           : Simulation::kParticlesSelection;
 
   // Read the particle from the generator
   SimParticleTranslation::Config g4PrCfg;
-  g4PrCfg.inputParticles = materialRecording ? Simulation::kParticlesInitial
-                                             : Simulation::kParticlesSelection;
+
   if (materialRecording) {
     g4PrCfg.forcedPdgCode = 0;
     g4PrCfg.forcedCharge = 0.;

@@ -7,7 +7,7 @@ add_library(
   ActsCore SHARED "")
 target_compile_features(
   ActsCore
-  PUBLIC cxx_std_17)
+  PUBLIC ${ACTS_CXX_STANDARD_FEATURE})
 target_include_directories(
   ActsCore
   PUBLIC

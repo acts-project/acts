@@ -122,16 +122,14 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
 }
 
 template <typename E, typename R, typename A>
-template <typename propagator_state_t>
+template <typename propagator_state_t, typename navigator_t>
 Result<double> MultiEigenStepperLoop<E, R, A>::step(
-    propagator_state_t& state) const {
+    propagator_state_t& state, const navigator_t& navigator) const {
   using Status = Acts::Intersection3D::Status;
 
   State& stepping = state.stepping;
   auto& components = stepping.components;
-
-  // @TODO: This needs to be a real logger
-  const Logger& logger = getDummyLogger();
+  const Logger& logger = *m_logger;
 
   // Update step count
   stepping.steps++;
@@ -205,7 +203,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     ThisSinglePropState single_state(component.state, state.navigation,
                                      state.options, state.geoContext);
 
-    results.emplace_back(SingleStepper::step(single_state));
+    results.emplace_back(SingleStepper::step(single_state, navigator));
 
     if (results.back()->ok()) {
       accumulatedPathLength += component.weight * results.back()->value();
@@ -260,4 +258,5 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   stepping.pathAccumulated += accumulatedPathLength;
   return accumulatedPathLength;
 }
+
 }  // namespace Acts

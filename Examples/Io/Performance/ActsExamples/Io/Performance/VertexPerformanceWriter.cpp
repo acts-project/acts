@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Io/Root/RootVertexPerformanceWriter.hpp"
+#include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -35,10 +35,10 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
-ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
-    const ActsExamples::RootVertexPerformanceWriter::Config& config,
+ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
+    const ActsExamples::VertexPerformanceWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.inputVertices, "RootVertexPerformanceWriter", level),
+    : WriterT(config.inputVertices, "VertexPerformanceWriter", level),
       m_cfg(config) {
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
@@ -57,12 +57,20 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
   m_inputAllTruthParticles.initialize(m_cfg.inputAllTruthParticles);
   m_inputSelectedTruthParticles.initialize(m_cfg.inputSelectedTruthParticles);
 
-  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
-  m_inputAssociatedTruthParticles.maybeInitialize(
-      m_cfg.inputAssociatedTruthParticles);
-  m_inputMeasurementParticlesMap.maybeInitialize(
-      m_cfg.inputMeasurementParticlesMap);
+  if (!m_cfg.inputAssociatedTruthParticles.empty()) {
+    m_inputAssociatedTruthParticles.initialize(
+        m_cfg.inputAssociatedTruthParticles);
+    if (!m_cfg.inputTrackParameters.empty()) {
+      m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+    } else {
+      m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+    }
+  } else {
+    m_inputMeasurementParticlesMap.initialize(
+        m_cfg.inputMeasurementParticlesMap);
+    m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  }
+
   m_inputTime.maybeInitialize(m_cfg.inputTime);
 
   // Setup ROOT I/O
@@ -102,14 +110,13 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
   }
 }
 
-ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() {
+ActsExamples::VertexPerformanceWriter::~VertexPerformanceWriter() {
   if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode
-ActsExamples::RootVertexPerformanceWriter::finalize() {
+ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -117,9 +124,8 @@ ActsExamples::RootVertexPerformanceWriter::finalize() {
   return ProcessCode::SUCCESS;
 }
 
-int ActsExamples::RootVertexPerformanceWriter::
-    getNumberOfReconstructableVertices(
-        const SimParticleContainer& collection) const {
+int ActsExamples::VertexPerformanceWriter::getNumberOfReconstructableVertices(
+    const SimParticleContainer& collection) const {
   // map for finding frequency
   std::map<int, int> fmap;
 
@@ -147,7 +153,7 @@ int ActsExamples::RootVertexPerformanceWriter::
   return reconstructableTruthVertices.size();
 }
 
-int ActsExamples::RootVertexPerformanceWriter::getNumberOfTruePriVertices(
+int ActsExamples::VertexPerformanceWriter::getNumberOfTruePriVertices(
     const SimParticleContainer& collection) const {
   // Vector to store indices of all primary vertices
   std::set<int> allPriVtxIds;
@@ -165,7 +171,7 @@ int ActsExamples::RootVertexPerformanceWriter::getNumberOfTruePriVertices(
   return allPriVtxIds.size();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
+ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     const AlgorithmContext& ctx,
     const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices) {
   // Exclusive access to the tree while writing

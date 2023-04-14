@@ -53,43 +53,51 @@ struct MaterialCollector {
   ///
   /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper of the propagation
+  /// @tparam navigator_t Type of the navigator of the propagation
   ///
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
+  /// @param navigator The navigator in use
   /// @param result is the result object to be filled
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& logger) const {
-    if (state.navigation.currentSurface) {
-      if (state.navigation.currentSurface == state.navigation.targetSurface and
-          not state.navigation.targetReached) {
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& logger) const {
+    if (navigator.currentSurface(state.navigation)) {
+      if (navigator.currentSurface(state.navigation) ==
+              navigator.targetSurface(state.navigation) and
+          not navigator.targetReached(state.navigation)) {
         return;
       }
 
       ACTS_VERBOSE("Material check on surface "
-                   << state.navigation.currentSurface->geometryId());
+                   << navigator.currentSurface(state.navigation)->geometryId());
 
-      if (state.navigation.currentSurface->surfaceMaterial()) {
+      if (navigator.currentSurface(state.navigation)->surfaceMaterial()) {
         // get the material propertices and only continue
         const MaterialSlab* mProperties =
-            state.navigation.currentSurface->surfaceMaterial()->material(
-                stepper.position(state.stepping));
+            navigator.currentSurface(state.navigation)
+                ->surfaceMaterial()
+                ->material(stepper.position(state.stepping));
         if (mProperties) {
           // pre/post/full update
           double prepofu = 1.;
-          if (state.navigation.startSurface ==
-              state.navigation.currentSurface) {
+          if (navigator.startSurface(state.navigation) ==
+              navigator.currentSurface(state.navigation)) {
             ACTS_VERBOSE("Update on start surface: post-update mode.");
-            prepofu =
-                state.navigation.currentSurface->surfaceMaterial()->factor(
-                    state.stepping.navDir, MaterialUpdateStage::PostUpdate);
-          } else if (state.navigation.targetSurface ==
-                     state.navigation.currentSurface) {
+            prepofu = navigator.currentSurface(state.navigation)
+                          ->surfaceMaterial()
+                          ->factor(state.stepping.navDir,
+                                   MaterialUpdateStage::PostUpdate);
+          } else if (navigator.targetSurface(state.navigation) ==
+                     navigator.currentSurface(state.navigation)) {
             ACTS_VERBOSE("Update on target surface: pre-update mode");
-            prepofu =
-                state.navigation.currentSurface->surfaceMaterial()->factor(
-                    state.stepping.navDir, MaterialUpdateStage::PreUpdate);
+            prepofu = navigator.currentSurface(state.navigation)
+                          ->surfaceMaterial()
+                          ->factor(state.stepping.navDir,
+                                   MaterialUpdateStage::PreUpdate);
           } else {
             ACTS_VERBOSE("Update while pass through: full mode.");
           }
@@ -105,9 +113,9 @@ struct MaterialCollector {
 
           // the path correction from the surface intersection
           double pCorrection =
-              prepofu * state.navigation.currentSurface->pathCorrection(
-                            stepper.position(state.stepping),
-                            stepper.direction(state.stepping));
+              prepofu * navigator.currentSurface(state.navigation)
+                            ->pathCorrection(stepper.position(state.stepping),
+                                             stepper.direction(state.stepping));
           // the full material
           result.materialInX0 += pCorrection * mProperties->thicknessInX0();
           result.materialInL0 += pCorrection * mProperties->thicknessInL0();
@@ -120,7 +128,7 @@ struct MaterialCollector {
           if (detailedCollection) {
             // create for recording
             MaterialHit mHit;
-            mHit.surface = state.navigation.currentSurface;
+            mHit.surface = navigator.currentSurface(state.navigation);
             mHit.position = stepper.position(state.stepping);
             mHit.direction = stepper.direction(state.stepping);
             // get the material & path length

@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
@@ -32,6 +34,8 @@ namespace ActsExamples {
 class TrackFitterPerformanceWriter final
     : public WriterT<TrajectoriesContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// Input (fitted) trajectories collection.
     std::string inputTrajectories;
@@ -65,6 +69,11 @@ class TrackFitterPerformanceWriter final
                      const TrajectoriesContainer& trajectories) override;
 
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "inputMeasurementParticlesMap"};
+
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};

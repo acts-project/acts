@@ -16,6 +16,7 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <optional>
@@ -61,6 +62,12 @@ class SeedingOrthogonalAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
   Acts::SeedFinderOrthogonal<SimSpacePoint> m_finder;
+
+  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
+      m_inputSpacePoints{};
+
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
   void printOptions() const;
   template <typename sp>
   void printConfig() const;

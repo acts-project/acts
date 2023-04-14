@@ -83,7 +83,7 @@ struct SimulationActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t &state, stepper_t &stepper,
-                  navigator_t & /*navigator*/, result_type &result,
+                  navigator_t &navigator, result_type &result,
                   const Acts::Logger & /*logger*/) const {
     assert(generator and "The generator pointer must be valid");
 
@@ -140,14 +140,14 @@ struct SimulationActor {
     }
 
     // If we are on target, everything should have been done
-    if (state.navigation.targetReached) {
+    if (navigator.targetReached(state.navigation)) {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do
-    if (not state.navigation.currentSurface) {
+    if (not navigator.currentSurface(state.navigation)) {
       return;
     }
-    const Acts::Surface &surface = *state.navigation.currentSurface;
+    const Acts::Surface &surface = *navigator.currentSurface(state.navigation);
 
     // we need the particle state before and after the interaction for the hit
     // creation. create a copy since the particle will be modified in-place.

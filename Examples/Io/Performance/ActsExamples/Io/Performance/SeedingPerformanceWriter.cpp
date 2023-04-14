@@ -20,12 +20,6 @@
 
 #include <TFile.h>
 
-namespace {
-using SimParticleContainer = ActsExamples::SimParticleContainer;
-using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-using ProtoTrackContainer = ActsExamples::ProtoTrackContainer;
-}  // namespace
-
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config config,
     Acts::Logging::Level level)
@@ -42,6 +36,9 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -100,10 +97,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
 ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const SimSeedContainer& seeds) {
   // Read truth information collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   size_t nSeeds = seeds.size();
   size_t nMatchedSeeds = 0;
