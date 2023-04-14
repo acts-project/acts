@@ -9,13 +9,14 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <iomanip>
 #include <limits>
+#include <ostream>
 #include <sstream>
 
 namespace Acts {
@@ -59,7 +60,7 @@ class ConstrainedStep {
   /// @param value is the user given initial value
   constexpr explicit ConstrainedStep(Scalar value) {
     m_values[user] = std::abs(value);
-    m_direction = Acts::directionFromScalar(value);
+    m_direction = Direction::fromScalar(value);
   }
 
   /// set accuracy by one Scalar

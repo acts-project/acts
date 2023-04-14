@@ -8,25 +8,24 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(CommonDefinitions)
+BOOST_AUTO_TEST_SUITE(DefinitionsDirection)
 
 BOOST_AUTO_TEST_CASE(DirectionTests) {
   BOOST_CHECK(Direction::Negative == Direction::Backward);
   BOOST_CHECK(Direction::Positive == Direction::Forward);
 
-  BOOST_CHECK(indexFromDirection(Direction::Backward) == 0u);
-  BOOST_CHECK(indexFromDirection(Direction::Forward) == 1u);
+  BOOST_CHECK(Direction::index(Direction::Backward) == 0u);
+  BOOST_CHECK(Direction::index(Direction::Forward) == 1u);
 
-  BOOST_CHECK(directionFromScalar(-1.) == Direction::Backward);
-  BOOST_CHECK(directionFromScalar(1.) == Direction::Forward);
+  BOOST_CHECK(Direction::fromScalar(-1.) == Direction::Backward);
+  BOOST_CHECK(Direction::fromScalar(1.) == Direction::Forward);
 
-  BOOST_CHECK(invertDirection(Direction::Backward) == Direction::Forward);
-  BOOST_CHECK(invertDirection(Direction::Forward) == Direction::Backward);
+  BOOST_CHECK(Direction::invert(Direction::Backward) == Direction::Forward);
+  BOOST_CHECK(Direction::invert(Direction::Forward) == Direction::Backward);
 
   Direction fwd = Direction::Forward;
   Direction bwd = Direction::Backward;

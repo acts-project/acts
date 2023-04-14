@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"

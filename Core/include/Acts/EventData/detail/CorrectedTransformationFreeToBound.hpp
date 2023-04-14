@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Utilities/Logger.hpp"
 

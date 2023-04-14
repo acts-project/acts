@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 

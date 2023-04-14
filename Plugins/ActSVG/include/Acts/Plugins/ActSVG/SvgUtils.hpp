@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "actsvg/meta.hpp"
 
 #include <array>
@@ -18,7 +18,6 @@
 #include <vector>
 
 namespace Acts {
-
 namespace Svg {
 
 struct Style {
@@ -172,5 +171,4 @@ inline static void toFile(const std::vector<actsvg::svg::object>& objects,
 }
 
 }  // namespace Svg
-
 }  // namespace Acts

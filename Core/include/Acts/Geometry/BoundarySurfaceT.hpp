@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"

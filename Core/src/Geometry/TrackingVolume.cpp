@@ -190,7 +190,7 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  Direction dir = directionFromScalar(nvector.dot(distance));
+  Direction dir = Direction::fromScalar(nvector.dot(distance));
   // The easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -235,7 +235,7 @@ void Acts::TrackingVolume::glueTrackingVolumes(
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  Direction dir = directionFromScalar(nvector.dot(distance));
+  Direction dir = Direction::fromScalar(nvector.dot(distance));
   // the easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||

@@ -81,7 +81,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     const Vector3 ab = b - a, ac = c - a;
     Vector3 normal = ab.cross(ac).normalized();
 
-    Direction dir = directionFromScalar((cog - d).dot(normal));
+    Direction dir = Direction::fromScalar((cog - d).dot(normal));
 
     // build transform from z unit to normal
     // z is normal in local coordinates

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 

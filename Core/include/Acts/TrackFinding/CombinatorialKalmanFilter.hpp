@@ -524,7 +524,7 @@ class CombinatorialKalmanFilter {
                 result.iSmoothed++;
                 // Reverse navigation direction to start targeting for the rest
                 // tracks
-                state.stepping.navDir = invertDirection(state.stepping.navDir);
+                state.stepping.navDir = state.stepping.navDir.invert();
                 // To avoid meaningless navigation target call
                 state.stepping.stepSize =
                     ConstrainedStep(state.stepping.navDir *
@@ -1200,7 +1200,7 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir = invertDirection(state.stepping.navDir);
+        state.stepping.navDir = state.stepping.navDir.invert();
       }
       // Reinitialize the stepping jacobian
       state.stepping.jacobian = BoundMatrix::Identity();
