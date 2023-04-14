@@ -124,8 +124,7 @@ class ScopedGsfInfoPrinterAndChecker {
                  << stepper.direction(state.stepping).transpose()
                  << " and momentum " << stepper.momentum(state.stepping)
                  << " and charge " << stepper.charge(state.stepping));
-    ACTS_VERBOSE("Propagation is in " << state.stepping.navDir.toString()
-                                      << " mode");
+    ACTS_VERBOSE("Propagation is in " << state.stepping.navDir << " mode");
     print_component_stats();
   }
 

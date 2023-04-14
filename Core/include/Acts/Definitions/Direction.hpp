@@ -31,14 +31,18 @@ class Direction final {
   static constexpr auto Backward = Value::Negative;
   static constexpr auto Forward = Value::Positive;
 
-  /// This turns a signed value into a direction
+  /// This turns a signed value into a direction. Will assert on zero.
   ///
   /// @param scalar is the signed value
+  /// @param zeroAsPositive if set, 0 will be handled as "positive"
   ///
   /// @return a direciton enum
-  static inline constexpr Direction fromScalar(ActsScalar scalar) {
-    assert(scalar != 0);
-    return scalar > 0 ? Value::Positive : Value::Negative;
+  static inline constexpr Direction fromScalar(ActsScalar scalar,
+                                               bool zeroAsPositive = false) {
+    if (!zeroAsPositive) {
+      assert(scalar != 0);
+    }
+    return scalar >= 0 ? Value::Positive : Value::Negative;
   }
 
   /// Convert and index [0,1] to a direction e.g. for sorting in
@@ -50,23 +54,6 @@ class Direction final {
       return Value::Negative;
     }
     return Value::Positive;
-  }
-
-  /// Convert dir to index [0,1] which allows to store direction dependent
-  /// objects in std::array<T, 2u>
-  ///
-  /// @return either 0 or 1
-  static inline constexpr std::size_t index(Direction dir) {
-    return dir.index();
-  }
-
-  /// Invert a direction
-  ///
-  /// @param dir is the direction at input
-  ///
-  /// @return an opposite direction
-  static inline constexpr Direction invert(Direction dir) {
-    return dir.invert();
   }
 
   /// Convert dir to index [0,1] which allows to store direction dependent
@@ -115,15 +102,15 @@ std::ostream& operator<<(std::ostream& os, Direction dir);
 
 // Direction * T
 
-inline constexpr auto operator*(Direction dir, int value) {
+inline constexpr int operator*(Direction dir, int value) {
   return dir.sign() * value;
 }
 
-inline constexpr auto operator*(Direction dir, float value) {
+inline constexpr float operator*(Direction dir, float value) {
   return dir.sign() * value;
 }
 
-inline constexpr auto operator*(Direction dir, double value) {
+inline constexpr double operator*(Direction dir, double value) {
   return dir.sign() * value;
 }
 
@@ -133,15 +120,15 @@ inline Acts::Vector3 operator*(Direction dir, const Acts::Vector3& value) {
 
 // T * Direction
 
-inline constexpr auto operator*(int value, Direction dir) {
+inline constexpr int operator*(int value, Direction dir) {
   return value * dir.sign();
 }
 
-inline constexpr auto operator*(float value, Direction dir) {
+inline constexpr float operator*(float value, Direction dir) {
   return value * dir.sign();
 }
 
-inline constexpr auto operator*(double value, Direction dir) {
+inline constexpr double operator*(double value, Direction dir) {
   return value * dir.sign();
 }
 
@@ -151,17 +138,17 @@ inline Acts::Vector3 operator*(const Acts::Vector3& value, Direction dir) {
 
 // T *= Direction
 
-inline constexpr auto operator*=(int& value, Direction dir) {
+inline constexpr int operator*=(int& value, Direction dir) {
   value *= dir.sign();
   return value;
 }
 
-inline constexpr auto operator*=(float& value, Direction dir) {
+inline constexpr float operator*=(float& value, Direction dir) {
   value *= dir.sign();
   return value;
 }
 
-inline constexpr auto operator*=(double& value, Direction dir) {
+inline constexpr double operator*=(double& value, Direction dir) {
   value *= dir.sign();
   return value;
 }

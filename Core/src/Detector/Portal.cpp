@@ -29,11 +29,12 @@ void Acts::Experimental::Portal::assignGeometryId(
 }
 
 void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
+  Direction bDir = Direction::Backward;
+
   // Determine this directioon
-  Direction tDir =
-      (not m_volumeUpdators[Direction::index(Direction::Backward)].connected())
-          ? Direction::Forward
-          : Direction::Backward;
+  Direction tDir = (not m_volumeUpdators[bDir.index()].connected())
+                       ? Direction::Forward
+                       : Direction::Backward;
 
   if (not m_volumeUpdators[tDir.index()].connected()) {
     throw std::invalid_argument(

@@ -15,20 +15,20 @@ using namespace Acts;
 BOOST_AUTO_TEST_SUITE(DefinitionsDirection)
 
 BOOST_AUTO_TEST_CASE(DirectionTests) {
+  constexpr Direction fwd = Direction::Forward;
+  constexpr Direction bwd = Direction::Backward;
+
   BOOST_CHECK(Direction::Negative == Direction::Backward);
   BOOST_CHECK(Direction::Positive == Direction::Forward);
 
-  BOOST_CHECK(Direction::index(Direction::Backward) == 0u);
-  BOOST_CHECK(Direction::index(Direction::Forward) == 1u);
+  BOOST_CHECK(bwd.index() == 0u);
+  BOOST_CHECK(fwd.index() == 1u);
 
   BOOST_CHECK(Direction::fromScalar(-1.) == Direction::Backward);
   BOOST_CHECK(Direction::fromScalar(1.) == Direction::Forward);
 
-  BOOST_CHECK(Direction::invert(Direction::Backward) == Direction::Forward);
-  BOOST_CHECK(Direction::invert(Direction::Forward) == Direction::Backward);
-
-  Direction fwd = Direction::Forward;
-  Direction bwd = Direction::Backward;
+  BOOST_CHECK(bwd.invert() == Direction::Forward);
+  BOOST_CHECK(fwd.invert() == Direction::Backward);
 
   BOOST_CHECK(2. * fwd == 2.);
   BOOST_CHECK(7 * fwd == 7);
