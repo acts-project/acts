@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -123,10 +122,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     // Iterate over middle-top dublets
     getCompatibleDoublets<Acts::SpacePointCandidateType::TOP>(
-			  state.spacePointData, options, grid,
-                          state.topNeighbours, *spM.get(), state.linCircleTop,
-                          state.compatTopSP, m_config.deltaRMinTopSP,
-                          m_config.deltaRMaxTopSP);
+        state.spacePointData, options, grid, state.topNeighbours, *spM.get(),
+        state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
+        m_config.deltaRMaxTopSP);
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -189,12 +187,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
     const float& deltaRMinSP, const float& deltaRMaxSP) const {
-
   float impactMax = m_config.impactMax;
   if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
     impactMax = -impactMax;
   }
-  
+
   outVec.clear();
   linCircleVec.clear();
 
@@ -206,7 +203,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
   linCircleVec.reserve(nsp);
   outVec.reserve(nsp);
-  
+
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
   const float& yM = mediumSP.y();
@@ -215,8 +212,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float& varianceZM = mediumSP.varianceZ();
 
   const float uIP = -1. / rM;
-  const float cosPhiM = - xM * uIP;
-  const float sinPhiM = - yM * uIP;
+  const float cosPhiM = -xM * uIP;
+  const float sinPhiM = -yM * uIP;
   float vIPAbs = 0;
   if (m_config.interactionPointCut) {
     // equivalent to m_config.impactMax / (rM * rM);
@@ -225,7 +222,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
   float deltaR = 0.;
   float deltaZ = 0.;
-  
+
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
@@ -241,31 +238,30 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const auto& otherSP = *min_itr;
 
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
-	deltaR = (rM - otherSP->radius());
+        deltaR = (rM - otherSP->radius());
 
-      	// if r-distance is too small, try next SP in bin
-	if (deltaR < deltaRMinSP) {
-	  break;
-	}	
-	// if r-distance is too big, try next SP in bin
-	if (deltaR > deltaRMaxSP) {
-	  continue;
-	}
-	
+        // if r-distance is too small, try next SP in bin
+        if (deltaR < deltaRMinSP) {
+          break;
+        }
+        // if r-distance is too big, try next SP in bin
+        if (deltaR > deltaRMaxSP) {
+          continue;
+        }
+
       } else {
-	deltaR = (otherSP->radius() - rM);
-	
-	// if r-distance is too big, try next SP in bin
-	if (deltaR > deltaRMaxSP) {
-	  break;
-	}
-	// if r-distance is too small, try next SP in bin
-	if (deltaR < deltaRMinSP) {
-	  continue;
-	}
-	
+        deltaR = (otherSP->radius() - rM);
+
+        // if r-distance is too big, try next SP in bin
+        if (deltaR > deltaRMaxSP) {
+          break;
+        }
+        // if r-distance is too small, try next SP in bin
+        if (deltaR < deltaRMinSP) {
+          continue;
+        }
       }
-      
+
       /// We update the iterator in the Neighbout object
       /// that mean that we have changed the middle space point
       /// and the lower bound has moved accordingly
@@ -275,15 +271,15 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
-	deltaZ = (zM - otherSP->z());
+        deltaZ = (zM - otherSP->z());
       } else {
-	deltaZ = (otherSP->z() - zM);
+        deltaZ = (otherSP->z() - zM);
       }
-      
+
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
       if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
-	continue;
+        continue;
       }
 
       // check if duplet origin on z axis within collision region
@@ -292,7 +288,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-      
+
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
 
@@ -315,29 +311,28 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       const float iDeltaR = std::sqrt(iDeltaR2);
       cotTheta = deltaZ * iDeltaR;
-      
+
       // error term for sp-pair without correlation of middle space point
       const float Er =
-	((varianceZM + otherSP->varianceZ()) +
-	 (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
-	iDeltaR2;
+          ((varianceZM + otherSP->varianceZ()) +
+           (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
+          iDeltaR2;
 
-      
       if (not m_config.interactionPointCut or
-	   std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
-	if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-	  continue;
-	}
+          std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
+        if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+          continue;
+        }
 
-	// fill output vectors
-	linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT,
-				xNewFrame, yNewFrame);
-	spacePointData.setDeltaR(otherSP->index(),
-			       std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-	outVec.push_back(otherSP.get());	
+        // fill output vectors
+        linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
+                                  yNewFrame);
+        spacePointData.setDeltaR(otherSP->index(),
+                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+        outVec.push_back(otherSP.get());
         continue;
       }
-      
+
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam
       const float vIP = (yNewFrame > 0.) ? -vIPAbs : vIPAbs;
@@ -351,14 +346,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
       // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
       if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
-	continue;
+        continue;
       }
-      
+
       // fill output vectors
-      linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT,
-				xNewFrame, yNewFrame);
+      linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
+                                yNewFrame);
       spacePointData.setDeltaR(otherSP->index(),
-			       std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+                               std::sqrt(deltaR2 + (deltaZ * deltaZ)));
       outVec.push_back(otherSP.get());
     }
   }
