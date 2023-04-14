@@ -30,6 +30,11 @@ struct StepperState {
   NavigationDirection navDir = NavigationDirection::Forward;
 };
 
+/// @brief Simplified navigator
+struct NaivgatorState {
+  TrackingVolume* currentVolume = nullptr;
+};
+
 /// @brief Simplified propgator state
 struct State {
   struct {
@@ -37,11 +42,8 @@ struct State {
     int absPdgCode = 0;
   } options;
 
-  struct {
-    TrackingVolume* currentVolume = nullptr;
-  } navigation;
-
   StepperState stepping;
+  NaivgatorState navigation;
 };
 
 /// @brief Simplified stepper
@@ -57,6 +59,13 @@ struct Stepper {
   double momentum(const StepperState& state) const { return state.p; }
 
   double charge(const StepperState& state) const { return state.q; };
+};
+
+/// @brief Simplified navigator
+struct Navigator {
+  const TrackingVolume* currentVolume(const NaivgatorState& state) const {
+    return state.currentVolume;
+  }
 };
 
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
@@ -81,6 +90,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.navigation.currentVolume = volume.get();
 
   Stepper stepper;
+  Navigator navigator;
 
   // Build the VolumeMaterialInteraction & test assignments
   detail::VolumeMaterialInteraction volMatInt(volume.get(), state, stepper);
@@ -98,7 +108,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.nav, state.stepping.navDir);
 
   // Evaluate the material
-  bool result = volMatInt.evaluateMaterialSlab(state);
+  bool result = volMatInt.evaluateMaterialSlab(state, navigator);
   BOOST_CHECK(result);
   BOOST_CHECK_EQUAL(volMatInt.slab.material(), mat);
   BOOST_CHECK_EQUAL(volMatInt.slab.thickness(), 1.);
@@ -106,9 +116,10 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Evaluate the material without a tracking volume
   state.navigation.currentVolume = nullptr;
-  result = volMatInt.evaluateMaterialSlab(state);
+  result = volMatInt.evaluateMaterialSlab(state, navigator);
   BOOST_CHECK(!result);
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }
+
 }  // namespace Test
 }  // namespace Acts

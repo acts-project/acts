@@ -35,6 +35,8 @@ ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
 }
 
 ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
@@ -42,7 +44,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
     const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
         clusters) {
   // retrieve simulated hits
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = m_inputSimHits(ctx);
 
   // open per-event file for all components
   std::string pathHits =

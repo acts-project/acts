@@ -15,7 +15,7 @@ concurrency:
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format10:v29
+    container: ghcr.io/acts-project/format10:v41
     steps:
       - uses: actions/checkout@v3
       - name: Check

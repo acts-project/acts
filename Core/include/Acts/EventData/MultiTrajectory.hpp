@@ -508,14 +508,14 @@ class TrackStateProxy {
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed parameters
-  Parameters parameters() const;
+  ConstParameters parameters() const;
 
   /// Track parameters covariance matrix. This tries to be somewhat smart and
   /// return the
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed covariances
-  Covariance covariance() const;
+  ConstCovariance covariance() const;
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
@@ -712,6 +712,27 @@ class TrackStateProxy {
     auto projectorBitset = matrixToBitset(fullProjector);
     component<ProjectorBitset, hashString("projector")>() =
         projectorBitset.to_ullong();
+  }
+
+  /// Get the projector bitset, a compressed form of a projection matrix
+  /// @note This is mainly to copy explicitly a projector from one state
+  /// to another. Use the `projector` or `effectiveProjector` method if
+  /// you want to access the matrix.
+  /// @return The projector bitset
+  ProjectorBitset projectorBitset() const {
+    assert(has<hashString("projector")>());
+    return component<ProjectorBitset, hashString("projector")>();
+  }
+
+  /// Set the projector bitset, a compressed form of a projection matrix
+  /// @param proj The projector bitset
+  ///
+  /// @note This is mainly to copy explicitly a projector from one state
+  /// to another. If you have a projection matrix, set it with `setProjector`.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setProjectorBitset(ProjectorBitset proj) {
+    assert(has<hashString("projector")>());
+    component<ProjectorBitset, hashString("projector")>() = proj;
   }
 
   /// Uncalibrated measurement in the form of a source link. Const version
@@ -950,17 +971,6 @@ class TrackStateProxy {
                      hashString("referenceSurface")>();
   }
 
-  ProjectorBitset projectorBitset() const {
-    assert(has<hashString("projector")>());
-    return component<ProjectorBitset, hashString("projector")>();
-  }
-
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setProjectorBitset(ProjectorBitset proj) {
-    assert(has<hashString("projector")>());
-    component<ProjectorBitset, hashString("projector")>() = proj;
-  }
-
   TransitiveConstPointer<ConstIf<MultiTrajectory<Trajectory>, ReadOnly>> m_traj;
   IndexType m_istate;
 
@@ -1016,6 +1026,7 @@ class TrackStateRange {
   };
 
   TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+  TrackStateRange() : m_begin{std::nullopt} {}
 
   Iterator begin() { return m_begin; }
   Iterator end() { return Iterator{std::nullopt}; }
@@ -1132,7 +1143,13 @@ class MultiTrajectory {
   /// @return Iterator pair to iterate over
   /// @note Const version
   auto trackStateRange(IndexType iendpoint) const {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Range for the track states from @p iendpoint to the trajectory start
@@ -1141,7 +1158,13 @@ class MultiTrajectory {
   /// @note Mutable version
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStateRange(IndexType iendpoint) {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Apply a function to all previous states starting at a given endpoint.

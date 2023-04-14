@@ -36,7 +36,7 @@ std::shared_ptr<referenced_type> unpackToShared(referenced_type& rt) {
 
 Acts::GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   Acts::ActsScalar r0 = 0.;

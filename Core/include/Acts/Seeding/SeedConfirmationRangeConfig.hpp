@@ -16,7 +16,7 @@ struct SeedConfirmationRangeConfig {
   // z minimum and maximum of middle component of the seed used to define the
   // region of the detector for seed confirmation
   float zMinSeedConf =
-      std::numeric_limits<float>::min();  // Acts::UnitConstants::mm
+      std::numeric_limits<float>::lowest();  // Acts::UnitConstants::mm
   float zMaxSeedConf =
       std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
   // radius of bottom component of seed that is used to define the number of

@@ -27,13 +27,15 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   if (!m_cfg.trackFinderML) {
     throw std::invalid_argument("Missing track finder");
   }
+
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& spacepoints =
-      ctx.eventStore.get<SimSpacePointContainer>(m_cfg.inputSpacePoints);
+  const auto& spacepoints = m_inputSpacePoints(ctx);
 
   // Convert Input data to a list of size [num_measurements x
   // measurement_features]
@@ -75,7 +77,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   }
 
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
+  m_outputProtoTracks(ctx, std::move(protoTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

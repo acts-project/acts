@@ -14,9 +14,11 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <memory>
 #include <tuple>
 
 namespace Acts {
@@ -184,10 +186,15 @@ struct AdditionalSurfacesImpl : public INavigationDelegate {
 
 /// @brief  An indexed surface implementation access
 ///
-/// @tparam grid_type is the grid type used for this
+/// @tparam grid_type is the grid type used for this indexed lookup
 template <typename grid_type>
 using IndexedSurfacesImpl =
     IndexedUpdatorImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
+
+/// @brief An indexed surface implementaion with portal access
+template <typename grid_type>
+using IndexedSurfacesAllPortalsImpl =
+    ChainedUpdatorImpl<IndexedSurfacesImpl<grid_type>, AllPortalsImpl>;
 
 }  // namespace Experimental
 }  // namespace Acts

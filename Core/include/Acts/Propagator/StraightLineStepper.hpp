@@ -364,8 +364,9 @@ class StraightLineStepper {
   ///                be modified by the stepper class during propagation.
   ///
   /// @return the step size taken
-  template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const {
+  template <typename propagator_state_t, typename navigator_t>
+  Result<double> step(propagator_state_t& state,
+                      const navigator_t& /*navigator*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize.value();
     const double p = momentum(state.stepping);
