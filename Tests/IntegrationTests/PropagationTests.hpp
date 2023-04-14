@@ -251,7 +251,7 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
 
   // setup propagation options
   options_t<Actions, Aborts> options(geoCtx, magCtx);
-  options.direction = Direction::fromScalar(pathLength);
+  options.direction = Acts::Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
   options.maxStepSize = 1_cm;
 
@@ -302,7 +302,7 @@ inline void runForwardBackwardTest(
     const Acts::MagneticFieldContext& magCtx,
     const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
     double pathLength, double epsPos, double epsDir, double epsMom) {
-  // propagate parameters Direction::Forward
+  // propagate parameters Acts::Direction::Forward
   auto [fwdParams, fwdPathLength] =
       transportFreely<propagator_t, charge_t, options_t>(
           propagator, geoCtx, magCtx, initialParams, pathLength);
