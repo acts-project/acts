@@ -27,9 +27,33 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-#include <exception>
-#include <tuple>
-#include <unordered_set>
+#include <stdexcept>
+
+// Indexing of the portals follows the generation order of portals in the
+// CylinderVolumeBounds and BevelledCylinderVolumeBounds (latter for wrapping)
+//
+// In short:
+//
+// 0: index of the low-z disc bound
+// 1: index of the high-z disc bound
+// 2: index of the outer cylinder bound
+//
+// If the volume doesn't extend inward to inner radius=0:
+// 3: index of the inner cylinder bound
+//
+// Cylindrical sectors have up to 6 portals, enumerated as follows:
+// 0: index of the low-z disc sector bound
+// 1: index of the high-z disc sector bound
+// 2: index of the outer cylinder sector bound
+//
+// If no inner cylinder sector bound is present:
+// 3: index of the low-phi sector bound
+// 4: index of the high-phi sector bound
+// If an inner cylinder sector bound exists, it takes index 3 and the phi sector
+// bounds are shifted by one index: 3: index of the inner cylinder sector bound
+// 4: index of the low-phi sector bound
+// 5: index of the high-phi sector bound
+//
 
 namespace {
 
@@ -85,7 +109,7 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
   // Autodetector stitch value
   Acts::BinningValue stitchValue =
       phiBoundaries.size() == 2u ? Acts::binZ : Acts::binPhi;
-  auto [lengthZ, medZ] = Acts::range_medium(phiBoundaries);
+  auto [lengthZ, medZ] = Acts::range_medium(zBoundaries);
   auto [sectorPhi, avgPhi] = Acts::range_medium(phiBoundaries);
 
   // New bounds, with current length and sector values
@@ -104,7 +128,7 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
 }
 
 /// @brief Helper function to create a disc portal replacement
-/// @param gcxt the geometry context of thix call
+/// @param gcxt the geometry context of this call
 /// @param volumeCenter a reference center of the volume (combined)
 /// @param refSurface the reference surface (old portal)
 /// @param boundaries the vector of binning boundaries in r
@@ -128,19 +152,20 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
   // Create a new transform
   Acts::Transform3 transform = Acts::Transform3::Identity();
   if (binning == Acts::binR) {
-    // Center r calculation
-    Acts::ActsScalar centerR =
-        0.5 * (boundaries[0u] + boundaries[boundaries.size() - 1u]);
+    // Range and center-r calculation
+    auto [range, medium] = Acts::range_medium(boundaries);
     // New joint center
-    Acts::Vector3 pCenter = volumeCenter + centerR * refRotation.col(2);
+    Acts::Vector3 pCenter = volumeCenter + medium * refRotation.col(2);
     transform.pretranslate(pCenter);
+    // Create the halflength
     Acts::ActsScalar halfX =
         0.5 * (boundValues[Acts::RectangleBounds::BoundValues::eMaxX] -
                boundValues[Acts::RectangleBounds::BoundValues::eMinX]);
     // New joint bounds
-    bounds = std::make_unique<Acts::RectangleBounds>(
-        halfX, 0.5 * (boundaries[boundaries.size() - 1u] - boundaries[0u]));
+    bounds = std::make_unique<Acts::RectangleBounds>(halfX, 0.5 * range);
   } else if (binning == Acts::binZ) {
+    // Range and medium z alculation
+    auto [range, medium] = Acts::range_medium(boundaries);
     // Center R calculation, using projection onto vector
     const auto& surfaceCenter = refSurface.center(gctx);
     Acts::Vector3 centerDiffs = (surfaceCenter - volumeCenter);
@@ -152,8 +177,7 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
     Acts::ActsScalar halfY =
         0.5 * (boundValues[Acts::RectangleBounds::BoundValues::eMaxY] -
                boundValues[Acts::RectangleBounds::BoundValues::eMinY]);
-    bounds = std::make_unique<Acts::RectangleBounds>(
-        0.5 * (boundaries[boundaries.size() - 1u] - boundaries[0u]), halfY);
+    bounds = std::make_unique<Acts::RectangleBounds>(0.5 * range, halfY);
   }
   // Set the rotation
   transform.prerotate(refRotation);
@@ -183,7 +207,7 @@ stripSideVolumes(
     Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("::stripSideVolumes", logLevel));
 
-  // Thes are the aripped out side volumes
+  // Thes are the stripped off outside volumes
   std::map<unsigned int,
            std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
       sideVolumes;
@@ -198,10 +222,13 @@ stripSideVolumes(
     selectedSides = sides;
   }
 
+  // Loop through the containers
   for (const auto& pc : containers) {
+    // Loop through the selected sides and check if they are contained
     for (const auto& s : selectedSides) {
-      if (pc.find(s) != pc.end()) {
-        auto p = pc.find(s)->second;
+      auto cSide = pc.find(s);
+      if (cSide != pc.end()) {
+        auto p = cSide->second;
         if (sideVolumes.find(s) == sideVolumes.end()) {
           sideVolumes[s] = {};
         }
@@ -241,8 +268,6 @@ void checkAlignment(
         message += std::string(" is not aligned with previous volume");
         throw std::invalid_argument(message.c_str());
       }
-      // Set recursively
-      refRotation = curRotation;
     }
   }
 }
@@ -336,11 +361,13 @@ Acts::Experimental::connectDetectorVolumesInR(
     Acts::Logging::Level logLevel) {
   // Basic checks for eligability of the volumes
   checkVolumes(gctx, volumes);
-  // Check for bounds compatibility
-  // We check outer (1u) vs inner (0u), phi sector (3u) and average phi (4u)
+  // Check for bounds values of volumes (i) and (i+1) succesively for
+  // compatibility:
+  // - check outer (1u) of volume (i) vs inner radius (0u) of volume (i+1)
+  // - phi sector (3u) and average phi (4u) between volumes (i), (i+1)
   std::vector<std::array<unsigned int, 2u>> checks = {
       {1u, 0u}, {3u, 3u}, {4u, 4u}};
-  // And we check the half length if its not a selective attachment
+  // - And we check the half length if it is not a selective attachment
   if (selectedOnly.empty()) {
     checks.push_back({2u, 2u});
   }
@@ -359,10 +386,10 @@ Acts::Experimental::connectDetectorVolumesInR(
   auto refValues = volumes[0u]->volumeBounds().values();
 
   // Reference boundary values
-  rBoundaries.push_back(refValues[0u]);
-  rBoundaries.push_back(refValues[1u]);
+  rBoundaries.push_back(refValues[CylinderVolumeBounds::BoundValues::eMinR]);
+  rBoundaries.push_back(refValues[CylinderVolumeBounds::BoundValues::eMaxR]);
 
-  // Connect in R ?
+  // Connect in R ? (2u is the index of the outer cylinder)
   bool connectR = selectedOnly.empty() or
                   std::find(selectedOnly.begin(), selectedOnly.end(), 2u) !=
                       selectedOnly.end();
@@ -375,10 +402,15 @@ Acts::Experimental::connectDetectorVolumesInR(
   // Fuse the cylinders - portals can be reused for this operation
   for (unsigned int iv = 1; iv < volumes.size(); ++iv) {
     refValues = volumes[iv]->volumeBounds().values();
-    rBoundaries.push_back(refValues[1u]);
+    // Keep on collecting the outside maximum r for the overal r boundaries
+    rBoundaries.push_back(refValues[CylinderVolumeBounds::BoundValues::eMaxR]);
     // Only connect if configured to do so
     if (connectR) {
-      // Fuse and swap
+      // When fusing volumes at a cylinder boundary, we *keep* one
+      // portal and tranfer the portal link information from the other
+      //
+      // In this case the outer cylinder portal of the inner volume is kept,
+      // the inner cylinder of the outer portal goes to waste
       auto& keepCylinder = volumes[iv - 1]->portalPtrs()[2u];
       auto& wasteCylinder = volumes[iv]->portalPtrs()[3u];
       keepCylinder->fuse(wasteCylinder);
@@ -388,6 +420,7 @@ Acts::Experimental::connectDetectorVolumesInR(
 
   // Proto container setting
   if (connectR) {
+    // The number of portals indicate again if the inner is present or not,
     if (volumes[0u]->portals().size() == 4u or
         volumes[0u]->portals().size() == 6u) {
       protoContainer[3u] = volumes[0u]->portalPtrs()[3u];
@@ -395,7 +428,9 @@ Acts::Experimental::connectDetectorVolumesInR(
     protoContainer[2u] = volumes[volumes.size() - 1u]->portalPtrs()[2u];
   }
 
-  // Check if sectors are present by the number of portals
+  // Check if sectors are present by the number of portals, check is done on the
+  // outermost volume as this is required to have an inner cylinder, and hence
+  // no offset needs to be respected
   bool sectorsPresent = volumes[volumes.size() - 1u]->portals().size() > 4u;
 
   // A portal replacement, it comprises of the portal, the index, the
@@ -419,12 +454,14 @@ Acts::Experimental::connectDetectorVolumesInR(
 
   // If volume sectors are present, these have to be respected
   if (sectorsPresent) {
-    // Sector assignmenta are forward backward
+    // Sector assignments are forward backward
     std::vector<Acts::NavigationDirection> sectorDirs = {
         Acts::NavigationDirection::Forward,
         Acts::NavigationDirection::Backward};
     Acts::Vector3 vCenter = volumes[0u]->transform(gctx).translation();
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
+      // (iu + 4u) corresponds to the indices of the phi-low and phi-high sector
+      // planes.
       if (selectedOnly.empty() or
           std::find(selectedOnly.begin(), selectedOnly.end(), iu + 4u) !=
               selectedOnly.end()) {
@@ -446,6 +483,8 @@ Acts::Experimental::connectDetectorVolumesInR(
       // Fill the map
       protoContainer[i] = p;
       // Potential offset for tube vs/ cylinder
+      // - if the volume doesn't have an inner portal, indices need to
+      //   be shifted by -1 to update the correct index.
       int iOffset = (iv->portals().size() == 3u and i > 2u) ? -1 : 0;
       iv->updatePortal(p, static_cast<unsigned int>(i + iOffset));
     }
@@ -482,6 +521,8 @@ Acts::Experimental::connectDetectorVolumesInZ(
   ProtoContainer protoContainer;
 
   // Connect in Z ?
+  // - 1u corresponds to the index of the high-z disc portal for the reference
+  // volume.
   bool connectZ = selectedOnly.empty() or
                   std::find(selectedOnly.begin(), selectedOnly.end(), 1u) !=
                       selectedOnly.end();
@@ -518,6 +559,12 @@ Acts::Experimental::connectDetectorVolumesInZ(
     addZboundary3D(*volumes[iv].get(), 1u);
     // Do the connection
     if (connectZ) {
+      // When fusing, one portal survives (keep) and gets the
+      // portal linking from the waste tranfered
+      //
+      // In this case we keep the disc at positive z of the volume
+      // at lower relative z, and trash the disc at negative z of the
+      // following volume
       auto& keepDisc = volumes[iv - 1]->portalPtrs()[1u];
       auto& wasteDisc = volumes[iv]->portalPtrs()[0u];
       // Throw an exception if the discs are not at the same position
@@ -549,12 +596,14 @@ Acts::Experimental::connectDetectorVolumesInZ(
   }
 
   // Centre of gravity
+  // Centre of gravity
   Vector3 combinedCenter =
       0.5 * (zBoundaries3D[zBoundaries3D.size() - 1u] + zBoundaries3D[0u]);
 
   ACTS_VERBOSE("New combined center calculated at "
                << toString(combinedCenter));
 
+  // Evaluate the series of z boundaries
   std::vector<ActsScalar> zBoundaries = {};
   for (const auto& zb3D : zBoundaries3D) {
     auto proj3D = (zb3D - combinedCenter).dot(rotation.col(2));
@@ -645,6 +694,8 @@ Acts::Experimental::connectDetectorVolumesInZ(
     ACTS_VERBOSE("- update portals of volume '" << iv->name() << "'.");
     for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
       // Potential offset for tube vs/ cylinder
+      // if the volume doesn't have an inner portal, indices need to be shifted
+      // by -1 to update the correct index.
       int iOffset = (i > 2u and not innerPresent) ? -1 : 0;
       iv->updatePortal(p, static_cast<unsigned int>(i + iOffset));
       // Fill the map
@@ -729,23 +780,33 @@ Acts::Experimental::connectDetectorVolumesInPhi(
   std::vector<PortalReplacement> pReplacements = {};
   // Negative disc
   pReplacements.push_back(createDiscReplacement(
-      refTransform, {refValues[0u], refValues[1u]}, phiBoundaries, 0u,
-      Acts::NavigationDirection::Forward));
+      refTransform,
+      {refValues[CylinderVolumeBounds::BoundValues::eMinR],
+       refValues[CylinderVolumeBounds::BoundValues::eMaxR]},
+      phiBoundaries, 0u, Acts::NavigationDirection::Forward));
 
   // Positive disc
   pReplacements.push_back(createDiscReplacement(
-      refTransform, {refValues[0u], refValues[1u]}, phiBoundaries, 1u,
-      Acts::NavigationDirection::Backward));
+      refTransform,
+      {refValues[CylinderVolumeBounds::BoundValues::eMinR],
+       refValues[CylinderVolumeBounds::BoundValues::eMaxR]},
+      phiBoundaries, 1u, Acts::NavigationDirection::Backward));
 
   // Outside cylinder
   pReplacements.push_back(createCylinderReplacement(
-      refTransform, refValues[1u], {-refValues[2u], refValues[2u]},
+      refTransform, refValues[CylinderVolumeBounds::BoundValues::eMaxR],
+      {-refValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ],
+       refValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ]},
       phiBoundaries, 2u, Acts::NavigationDirection::Backward));
 
-  if (refValues[0u] > 0.) {
+  // If the volume has a different inner radius than 0, it MUST have
+  // an inner cylinder
+  if (refValues[CylinderVolumeBounds::BoundValues::eMinR] > 0.) {
     // Inner cylinder
     pReplacements.push_back(createCylinderReplacement(
-        refTransform, refValues[0u], {-refValues[2u], refValues[2u]},
+        refTransform, refValues[CylinderVolumeBounds::BoundValues::eMinR],
+        {-refValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ],
+         refValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ]},
         phiBoundaries, 3u, Acts::NavigationDirection::Forward));
   }
 
@@ -1021,7 +1082,7 @@ Acts::Experimental::ProtoContainer Acts::Experimental::wrapContainerInZR(
     auto sideVolumes = stripSideVolumes({innerContainer}, {3u}, {3u}, logLevel);
 
     // First the left volume sector
-    std::vector<std::shared_ptr<DetectorVolume>> innerVolumnes = {
+    std::vector<std::shared_ptr<DetectorVolume>> innerVolumes = {
         wrappingVolume.getSharedPtr()};
 
     std::vector<ActsScalar> zBoundaries = {
@@ -1031,12 +1092,12 @@ Acts::Experimental::ProtoContainer Acts::Experimental::wrapContainerInZR(
       for (auto& v : svs.second) {
         ActsScalar hlZ = v->volumeBounds().values()[2u];
         zBoundaries.push_back(zBoundaries.back() + 2 * hlZ);
-        innerVolumnes.push_back(v);
+        innerVolumes.push_back(v);
       }
     }
     // Last the right volume sector
     zBoundaries.push_back(zBoundaries.back() + 2 * pHalfLengthZ);
-    innerVolumnes.push_back(wrappingVolume.getSharedPtr());
+    innerVolumes.push_back(wrappingVolume.getSharedPtr());
   }
 
   // Done.

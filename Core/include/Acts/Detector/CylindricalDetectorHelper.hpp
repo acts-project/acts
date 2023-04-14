@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
+#include <map>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -78,7 +79,7 @@ ProtoContainer connectDetectorVolumesInPhi(
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
-/// @brief Connect detector volumes in phi
+/// @brief Wrap detector volumes in R,Z
 ///
 /// @param gctx The geometry context
 /// @param volumes the volumes
