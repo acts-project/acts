@@ -73,6 +73,31 @@ static inline actsvg::svg::object zr(const ProtoSurface& pSurface,
   return actsvg::display::surface(identification, pSurface, zrView, true);
 }
 
+/// Convert into an acts::svg::object with an Zr view
+///
+/// @param pSurface is the proto object
+/// @param identification is the to be translated id_ for actsvg
+///
+/// @return an svg object that can be written out directly to disc
+static inline actsvg::svg::object zphi(const ProtoSurface& pSurface,
+                                       const std::string& identification) {
+  actsvg::views::z_phi zphiView;
+  return actsvg::display::surface(identification, pSurface, zphiView, true);
+}
+
+/// Convert into an acts::svg::object with an Zr view
+///
+/// @param pSurface is the proto object
+/// @param identification is the to be translated id_ for actsvg
+///
+/// @return an svg object that can be written out directly to disc
+static inline actsvg::svg::object zrphi(const ProtoSurface& pSurface,
+                                        const std::string& identification) {
+  actsvg::views::z_rphi zrphiView;
+  zrphiView._fixed_r = pSurface._radii[0u];
+  return actsvg::display::surface(identification, pSurface, zrphiView, true);
+}
+
 }  // namespace View
 
 namespace Sheet {
