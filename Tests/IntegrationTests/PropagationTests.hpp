@@ -250,7 +250,7 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
 
   // setup propagation options
   options_t<Actions, Aborts> options(geoCtx, magCtx);
-  options.direction = Acts::directionFromScalar(pathLength);
+  options.direction = Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
   options.maxStepSize = 1_cm;
 

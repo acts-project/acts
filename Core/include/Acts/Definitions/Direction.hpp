@@ -33,7 +33,7 @@ class Direction final {
 
   /// This turns a signed value into a direction
   ///
-  /// @param value is the signed value
+  /// @param scalar is the signed value
   ///
   /// @return a direciton enum
   static inline constexpr Direction fromScalar(ActsScalar scalar) {
