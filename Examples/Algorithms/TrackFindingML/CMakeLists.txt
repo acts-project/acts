@@ -29,7 +29,7 @@ target_link_libraries(
 
 if(ACTS_BUILD_PLUGIN_MLPACK)
   target_link_libraries(
-    ActsExamplesTrackFindingML PUBLIC ActsPluginmlpack)
+    ActsExamplesTrackFindingML PUBLIC ActsPluginMlpack)
 endif()
 
 install(
