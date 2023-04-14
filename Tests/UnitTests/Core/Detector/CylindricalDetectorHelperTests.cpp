@@ -28,8 +28,8 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-#include <exception>
 #include <memory>
+#include <stdexcept>
 
 using namespace Acts::Experimental;
 

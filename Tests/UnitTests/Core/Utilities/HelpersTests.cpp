@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <bitset>
-#include <climits>
+#include <limits>
 #include <vector>
 
 using namespace Acts::VectorHelpers;
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
 
 BOOST_AUTO_TEST_CASE(min_max) {
   std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
-  auto [min0, max0] = Acts::min_max(ordered, false);
+  auto [min0, max0] = Acts::min_max(ordered);
 
   CHECK_CLOSE_ABS(min0, -3., std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(max0, 3., std::numeric_limits<ActsScalar>::epsilon());
@@ -198,7 +198,7 @@ BOOST_AUTO_TEST_CASE(min_max) {
 
 BOOST_AUTO_TEST_CASE(range_medium) {
   std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
-  auto [range0, medium0] = Acts::range_medium(ordered, false);
+  auto [range0, medium0] = Acts::range_medium(ordered);
 
   CHECK_CLOSE_ABS(range0, 6., std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(medium0, 0., std::numeric_limits<ActsScalar>::epsilon());
