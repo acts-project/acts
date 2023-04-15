@@ -714,6 +714,27 @@ class TrackStateProxy {
         projectorBitset.to_ullong();
   }
 
+  /// Get the projector bitset, a compressed form of a projection matrix
+  /// @note This is mainly to copy explicitly a projector from one state
+  /// to another. Use the `projector` or `effectiveProjector` method if
+  /// you want to access the matrix.
+  /// @return The projector bitset
+  ProjectorBitset projectorBitset() const {
+    assert(has<hashString("projector")>());
+    return component<ProjectorBitset, hashString("projector")>();
+  }
+
+  /// Set the projector bitset, a compressed form of a projection matrix
+  /// @param proj The projector bitset
+  ///
+  /// @note This is mainly to copy explicitly a projector from one state
+  /// to another. If you have a projection matrix, set it with `setProjector`.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setProjectorBitset(ProjectorBitset proj) {
+    assert(has<hashString("projector")>());
+    component<ProjectorBitset, hashString("projector")>() = proj;
+  }
+
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
   SourceLink getUncalibratedSourceLink() const;
@@ -948,17 +969,6 @@ class TrackStateProxy {
   const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
     return component<std::shared_ptr<const Surface>,
                      hashString("referenceSurface")>();
-  }
-
-  ProjectorBitset projectorBitset() const {
-    assert(has<hashString("projector")>());
-    return component<ProjectorBitset, hashString("projector")>();
-  }
-
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setProjectorBitset(ProjectorBitset proj) {
-    assert(has<hashString("projector")>());
-    component<ProjectorBitset, hashString("projector")>() = proj;
   }
 
   TransitiveConstPointer<ConstIf<MultiTrajectory<Trajectory>, ReadOnly>> m_traj;
