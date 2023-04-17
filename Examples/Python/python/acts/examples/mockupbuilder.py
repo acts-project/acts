@@ -18,18 +18,18 @@ mockupChamberConfigOuter.name = "Outer_Detector_Chamber"
 mockupChamberConfigOuter.SensitiveNames = ["Outer_Skin"]
 mockupChamberConfigOuter.PassiveNames = ["xx"]
 
-mockupConfig.gdmlPath = "/home/dimitra/ACTS_Dimitra/acts/Examples/Python/python/acts/examples/MuonChamber.gdml"
+mockupConfig.gdmlPath = (
+    "../../../../Detectors/MuonSpectrometerMockupDetector/MuonChamber.gdml"
+)
 mockupConfig.NumberOfSectors = 8
 
 mockupBuilder = actsG4.MockupSectorBuilder(mockupConfig)
-print("hello")
+
 detectorVolumeInner = mockupBuilder.buildChamber(mockupChamberConfigInner)
-print("inner built")
+
 detectorVolumeOuter = mockupBuilder.buildChamber(mockupChamberConfigOuter)
-print("outer built")
+
 detectorVolumeMiddle = mockupBuilder.buildChamber(mockupChamberConfigMiddle)
-print("middle built")
-print("hello")
 
 detectorVolumes = [detectorVolumeInner, detectorVolumeMiddle, detectorVolumeOuter]
 
