@@ -849,9 +849,7 @@ def addKalmanTracks(
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="kfTracks",
-        directNavigation=directNavigation,
         pickTrack=-1,
-        trackingGeometry=trackingGeometry,
         fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
@@ -896,9 +894,7 @@ def addTruthTrackingGsf(
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="gsf_tracks",
-        directNavigation=False,
         pickTrack=-1,
-        trackingGeometry=trackingGeometry,
         fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
     )
     s.addAlgorithm(gsfAlg)
@@ -1327,7 +1323,7 @@ def addAmbiguityResolutionML(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import AmbiguityResolutionMLAlgorithm
+    from acts.examples.onnx import AmbiguityResolutionMLAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 

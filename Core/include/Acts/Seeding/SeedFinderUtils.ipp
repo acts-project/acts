@@ -162,23 +162,19 @@ inline bool xyzCoordinateCheck(
 
   std::size_t index = sp.index();
 
-  const float& topHalfStripLength = spacePointData.getTopHalfStripLength(index);
-  const float& bottomHalfStripLength =
-      spacePointData.getBottomHalfStripLength(index);
-  const Acts::Vector3& topStripDirection =
-      spacePointData.getTopStripDirection(index);
-  const Acts::Vector3& bottomStripDirection =
-      spacePointData.getBottomStripDirection(index);
+  // prepare variables
+  const Acts::Vector3& topStripVector = spacePointData.getTopStripVector(index);
+  const Acts::Vector3& bottomStripVector =
+      spacePointData.getBottomStripVector(index);
   const Acts::Vector3& stripCenterDistance =
       spacePointData.getStripCenterDistance(index);
 
-  // prepare variables
-  double xTopStripVector = topHalfStripLength * topStripDirection[0];
-  double yTopStripVector = topHalfStripLength * topStripDirection[1];
-  double zTopStripVector = topHalfStripLength * topStripDirection[2];
-  double xBottomStripVector = bottomHalfStripLength * bottomStripDirection[0];
-  double yBottomStripVector = bottomHalfStripLength * bottomStripDirection[1];
-  double zBottomStripVector = bottomHalfStripLength * bottomStripDirection[2];
+  const double& xTopStripVector = topStripVector[0];
+  const double& yTopStripVector = topStripVector[1];
+  const double& zTopStripVector = topStripVector[2];
+  const double& xBottomStripVector = bottomStripVector[0];
+  const double& yBottomStripVector = bottomStripVector[1];
+  const double& zBottomStripVector = bottomStripVector[2];
 
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {yTopStripVector * spacepointPosition[2] -

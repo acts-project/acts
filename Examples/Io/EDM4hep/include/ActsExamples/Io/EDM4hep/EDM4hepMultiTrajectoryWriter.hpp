@@ -40,6 +40,8 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
     std::string inputMeasurementParticlesMap;
     /// Where to place output file
     std::string outputPath;
+    /// B field in the longitudinal direction
+    double Bz;
   };
 
   /// constructor
