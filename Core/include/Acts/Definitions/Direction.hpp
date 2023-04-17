@@ -34,14 +34,22 @@ class Direction final {
   /// This turns a signed value into a direction. Will assert on zero.
   ///
   /// @param scalar is the signed value
-  /// @param zeroAsPositive if set, 0 will be handled as "positive"
   ///
   /// @return a direciton enum
-  static inline constexpr Direction fromScalar(ActsScalar scalar,
-                                               bool zeroAsPositive = false) {
-    if (!zeroAsPositive) {
-      assert(scalar != 0);
-    }
+  static inline constexpr Direction fromScalar(ActsScalar scalar) {
+    assert(scalar != 0);
+    return scalar >= 0 ? Value::Positive : Value::Negative;
+  }
+
+  /// This turns a signed value into a direction and 0 will be handled as a
+  /// positive direction. Only use this when you are convinced that the 0 case
+  /// is properly handled downstream.
+  ///
+  /// @param scalar is the signed value
+  ///
+  /// @return a direciton enum
+  static inline constexpr Direction fromScalarZeroAsPositive(
+      ActsScalar scalar) {
     return scalar >= 0 ? Value::Positive : Value::Negative;
   }
 
