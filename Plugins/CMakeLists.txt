@@ -16,5 +16,6 @@ add_component_if(ExaTrkX PluginExaTrkX ACTS_BUILD_PLUGIN_EXATRKX)
 # dependent plugins. depend either on a independent plugins or on one another
 add_component_if(TGeo PluginTGeo ACTS_BUILD_PLUGIN_TGEO)
 add_component_if(DD4hep PluginDD4hep ACTS_BUILD_PLUGIN_DD4HEP)
+add_component_if(EDM4hep PluginEDM4hep ACTS_BUILD_PLUGIN_EDM4HEP)
 
 propagate_components_to_parent()
