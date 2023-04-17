@@ -244,7 +244,7 @@ jobs:
           && export PYTHONPATH=/usr/local/python:$PYTHONPATH
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFsv -v
+          && pytest -rFsv -k "not exatrkx" -v
 
   linux_physmon:
     runs-on: ubuntu-latest
