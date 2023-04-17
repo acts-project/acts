@@ -64,20 +64,8 @@ ProtoGrid convert(const grid_type& grid,
   // Grid axes
   auto axes = grid.axes();
 
-  /// Helper method to convert from ACTS to Grid edges
-  ///
-  /// @param acrtsEdges the grid edges from ACTS to be converted via static_cast
-  auto convertGridEdges = [](const std::vector<Acts::ActsScalar>& actsEdges)
-      -> std::vector<actsvg::scalar> {
-    std::vector<actsvg::scalar> svgEdges;
-    svgEdges.reserve(actsEdges.size());
-    for (const auto ae : actsEdges) {
-      svgEdges.push_back(static_cast<actsvg::scalar>(ae));
-    }
-    return svgEdges;
-  };
-
-  // The endges values
+  // The edge values - these need to follow the ACTSVG convention,
+  // so there could be swapping when necessary
   std::vector<Acts::ActsScalar> edges0;
   std::vector<Acts::ActsScalar> edges1;
 
@@ -85,51 +73,46 @@ ProtoGrid convert(const grid_type& grid,
   if constexpr (grid_type::DIM == 1u) {
     if (bValues[0u] == binPhi and
         axes[0]->getBoundaryType() == detail::AxisBoundaryType::Closed) {
+      // swap     needed
       edges1 = axes[0]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_r_phi;
     }
     if (cOptions.optionalBound.has_value()) {
       auto [boundRange, boundValue] = cOptions.optionalBound.value();
       if (boundValue == binR) {
+        // good - no swap needed
         edges0 = {boundRange[0u], boundRange[1u]};
       }
     }
   }
-
   // 2D cases
   if constexpr (grid_type::DIM == 2u) {
-    // Walk throuth the binning and translate
+    // Assign
+    edges0 = axes[0]->getBinEdges();
+    edges1 = axes[1]->getBinEdges();
     if (bValues[0] == binPhi and bValues[1] == binZ) {
-      //  flip to fit with actsvg convention
-      edges1 = axes[0]->getBinEdges();
-      edges0 = axes[1]->getBinEdges();
+      //  swap needed
+      std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_z_phi;
     } else if (bValues[0] == binPhi and bValues[1] == binR) {
-      //  flip to fit with actsvg convention
-      edges1 = axes[0]->getBinEdges();
-      edges0 = axes[1]->getBinEdges();
+      // swap needed
+      std::swap(edges0, edges1);
       pGrid._type = actsvg::proto::grid::e_r_phi;
     } else if (bValues[0] == binZ and bValues[1] == binPhi) {
-      // good
-      edges0 = axes[0]->getBinEdges();
-      edges1 = axes[1]->getBinEdges();
+      // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_z_phi;
     } else if (bValues[0] == binR and bValues[1] == binPhi) {
-      // good
-      edges0 = axes[0]->getBinEdges();
-      edges1 = axes[1]->getBinEdges();
+      // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_r_phi;
     } else if (bValues[0] == binX and bValues[1] == binY) {
-      // good
-      edges0 = axes[0]->getBinEdges();
-      edges1 = axes[1]->getBinEdges();
+      // good - no swap needed
       pGrid._type = actsvg::proto::grid::e_x_y;
     }
   }
 
   // Assign grid edges
-  pGrid._edges_0 = convertGridEdges(edges0);
-  pGrid._edges_1 = convertGridEdges(edges1);
+  pGrid._edges_0 = std::vector<actsvg::scalar>(edges0.begin(), edges0.end());
+  pGrid._edges_1 = std::vector<actsvg::scalar>(edges1.begin(), edges1.end());
 
   auto [fill, stroke] = cOptions.style.fillAndStroke();
   pGrid._fill = fill;

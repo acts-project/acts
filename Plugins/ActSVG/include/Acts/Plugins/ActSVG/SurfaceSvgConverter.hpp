@@ -49,7 +49,7 @@ ProtoSurface convert(const GeometryContext& gctx, const Surface& surface,
 
 namespace View {
 
-/// Convert into an acts::svg::object with an XY view
+/// Convert into an acts::svg::object with an x-y view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -61,7 +61,7 @@ static inline actsvg::svg::object xy(const ProtoSurface& pSurface,
   return actsvg::display::surface(identification, pSurface, xyView, true);
 }
 
-/// Convert into an acts::svg::object with an Zr view
+/// Convert into an acts::svg::object with an z-r view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -73,7 +73,7 @@ static inline actsvg::svg::object zr(const ProtoSurface& pSurface,
   return actsvg::display::surface(identification, pSurface, zrView, true);
 }
 
-/// Convert into an acts::svg::object with an Zr view
+/// Convert into an acts::svg::object with an z-phi view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
@@ -85,10 +85,12 @@ static inline actsvg::svg::object zphi(const ProtoSurface& pSurface,
   return actsvg::display::surface(identification, pSurface, zphiView, true);
 }
 
-/// Convert into an acts::svg::object with an Zr view
+/// Convert into an acts::svg::object with an z-rphi view
 ///
 /// @param pSurface is the proto object
 /// @param identification is the to be translated id_ for actsvg
+///
+/// @note it captures the the radii[0u] element for plotting
 ///
 /// @return an svg object that can be written out directly to disc
 static inline actsvg::svg::object zrphi(const ProtoSurface& pSurface,

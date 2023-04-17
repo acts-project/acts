@@ -32,72 +32,27 @@ namespace Experimental {
 
 using namespace GridAxisGenerators;
 
-// Helper tuple for unfolding
-//
-// This is a bit boiler plate, and one could make the compiler create those
-// but this would increase compile time significantly
-inline static auto createAxisTuple() {
-  // All 1D Eq options
-  EqBound eb{{0, 1}, 1};
-  EqOpen eo{{0, 1}, 1};
-  EqClosed ec{{0, 1}, 1};
-
-  // All 1D Var  options
-  VarBound vb{{0., 1.}};
-  VarOpen vo{{0., 1.}};
-  VarClosed vc{{0., 1.}};
-
-  // All 2D EqEq options
-  EqBoundEqBound ebeb{{0., 1.}, 1u, {0., 1.}, 1u};
-  EqBoundEqOpen ebeo{{0., 1.}, 1u, {0., 1.}, 1u};
-  EqBoundEqClosed ebec{{0., 1.}, 1u, {0., 1.}, 1u};
-  EqOpenEqBound eoeb{{0., 1.}, 1u, {0., 1.}, 1u};
-  EqOpenEqOpen eoeo{{0., 1.}, 1u, {0., 1.}, 1u};
-  EqOpenEqClosed eoec{{0., 1.}, 1u, {0., 1.}, 1u};
-  EqClosedEqBound eceb{{0., 1.}, 1u, {0., 1.}, 1u};
-  EqClosedEqOpen eceo{{0., 1.}, 1u, {0., 1.}, 1u};
-  EqClosedEqClosed ecec{{0., 1.}, 1u, {0., 1.}, 1u};
-
-  // All 2D EqVar options
-  EqBoundVarBound ebvb{{0., 1.}, 1u, {0., 1.}};
-  EqBoundVarOpen ebvo{{0., 1.}, 1u, {0., 1.}};
-  EqBoundVarClosed ebvc{{0., 1.}, 1u, {0., 1.}};
-  EqOpenVarBound eovb{{0., 1.}, 1u, {0., 1.}};
-  EqOpenVarOpen eovo{{0., 1.}, 1u, {0., 1.}};
-  EqOpenVarClosed eovc{{0., 1.}, 1u, {0., 1.}};
-  EqClosedVarBound ecvb{{0., 1.}, 1u, {0., 1.}};
-  EqClosedVarOpen ecvo{{0., 1.}, 1u, {0., 1.}};
-  EqClosedVarClosed ecvc{{0., 1.}, 1u, {0., 1.}};
-
-  // All 2D VarEq options
-  VarBoundEqBound vbeb{{0., 1.}, {0., 1.}, 1u};
-  VarBoundEqOpen vbeo{{0., 1.}, {0., 1.}, 1u};
-  VarBoundEqClosed vbec{{0., 1.}, {0., 1.}, 1u};
-  VarOpenEqBound voeb{{0., 1.}, {0., 1.}, 1u};
-  VarOpenEqOpen voeo{{0., 1.}, {0., 1.}, 1u};
-  VarOpenEqClosed voec{{0., 1.}, {0., 1.}, 1u};
-  VarClosedEqBound vceb{{0., 1.}, {0., 1.}, 1u};
-  VarClosedEqOpen vceo{{0., 1.}, {0., 1.}, 1u};
-  VarClosedEqClosed vcec{{0., 1.}, {0., 1.}, 1u};
-
-  // All 2D VarEq options
-  VarBoundVarBound vbvb{{0., 1.}, {0., 1.}};
-  VarBoundVarOpen vbvo{{0., 1.}, {0., 1.}};
-  VarBoundVarClosed vbvc{{0., 1.}, {0., 1.}};
-  VarOpenVarBound vovb{{0., 1.}, {0., 1.}};
-  VarOpenVarOpen vovo{{0., 1.}, {0., 1.}};
-  VarOpenVarClosed vovc{{0., 1.}, {0., 1.}};
-  VarClosedVarBound vcvb{{0., 1.}, {0., 1.}};
-  VarClosedVarOpen vcvo{{0., 1.}, {0., 1.}};
-  VarClosedVarClosed vcvc{{0., 1.}, {0., 1.}};
-
-  return std::tie(eb, eo, ec, vb, vo, vc, ebeb, ebeo, ebec, eoeb, eoeo, eoec,
-                  eceb, eceo, ecec, ebvb, ebvo, ebvc, eovb, eovo, eovc, ecvb,
-                  ecvo, ecvc, vbeb, vbeo, vbec, voeb, voeo, voec, vceb, vceo,
-                  vcec, vbvb, vbvo, vbvc, vovb, vovo, vovc, vcvb, vcvo, vcvc);
-}
-
-static auto s_possibleAxes = createAxisTuple();
+// Generate the possible axes in this case
+static auto s_possibleAxes =
+    std::tuple<EqBound, EqOpen, EqClosed,
+               // All 1D Var  options
+               VarBound, VarOpen, VarClosed,
+               // All 2D EqEq options
+               EqBoundEqBound, EqBoundEqOpen, EqBoundEqClosed, EqOpenEqBound,
+               EqOpenEqOpen, EqOpenEqClosed, EqClosedEqBound, EqClosedEqOpen,
+               EqClosedEqClosed,
+               // All 2D EqVar options
+               EqBoundVarBound, EqBoundVarOpen, EqBoundVarClosed,
+               EqOpenVarBound, EqOpenVarOpen, EqOpenVarClosed, EqClosedVarBound,
+               EqClosedVarOpen, EqClosedVarClosed,
+               // All 2D VarEq options
+               VarBoundEqBound, VarBoundEqOpen, VarBoundEqClosed,
+               VarOpenEqBound, VarOpenEqOpen, VarOpenEqClosed, VarClosedEqBound,
+               VarClosedEqOpen, VarClosedEqClosed,
+               // All 2D VarEq options
+               VarBoundVarBound, VarBoundVarOpen, VarBoundVarClosed,
+               VarOpenVarBound, VarOpenVarOpen, VarOpenVarClosed,
+               VarClosedVarBound, VarClosedVarOpen, VarClosedVarClosed>{};
 
 }  // namespace Experimental
 
@@ -119,83 +74,9 @@ struct Options {
   GridConverter::Options gridOptions;
 };
 
-/// @brief Convert the single delegate if it is of the type of the reference
-///
-/// @note It will do nothing if the type does not match
-///
-/// @tparam surface_container the surfaces to be drawn
-/// @tparam instance_type the reference instance type
-///
-/// @param gctx The Geometry context of this operation
-/// @param surfaces The surfaces to be converted
-/// @param cOptions the covnersion options
-/// @param sgi [in,out] the proto indexed grid to be whown
-/// @param delegate the delegate to be translated
-/// @param refInstance the reference input type from the reference Axes
-template <typename surface_container, typename instance_type>
-void convertImpl(const GeometryContext& gctx, const surface_container& surfaces,
-                 const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
-                 const Experimental::SurfaceCandidatesUpdator& delegate,
-                 [[maybe_unused]] const instance_type& refInstance) {
-  using GridType =
-      typename instance_type::template grid_type<std::vector<std::size_t>>;
-  // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<GridType>;
-  using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
-  // Get the instance
-  const auto* instance = delegate.instance();
-  auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
-  if (castedDelegate != nullptr) {
-    // Get the surface updator
-    auto indexedSurfaces = std::get<SubDelegateType>(castedDelegate->updators);
-    auto [pSurfaces, pGrid, pIndices] =
-        convert(gctx, surfaces, indexedSurfaces, cOptions);
-    std::get<0u>(sgi) = pSurfaces;
-    std::get<1u>(sgi) = pGrid;
-    std::get<2u>(sgi) = pIndices;
-  }
-}
-
-/// @brief Unrolling function for catching the right instance
-///
-/// @note parameters are as of the `convertImpl` method
-template <typename surface_container, typename tuple_type, std::size_t... I>
-void convert(const GeometryContext& gctx, const surface_container& surfaces,
-             const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
-             const Experimental::SurfaceCandidatesUpdator& delegate,
-             const tuple_type& axesTuple, std::index_sequence<I...>) {
-  (convertImpl(gctx, surfaces, cOptions, sgi, delegate, std::get<I>(axesTuple)),
-   ...);
-}
-
 /// Convert a surface array into needed constituents
 ///
-/// @param gtcx is the geometry context of the conversion call
-/// @param surfaces the container of surfaces
-/// @param indexGrid the indexGrid delegate
-/// @param cOptions the conversion options
-///
-/// @return a collection of proto surface object and a grid, and associations
-template <typename surface_container>
-ProtoIndexedSurfaceGrid convert(
-    const GeometryContext& gctx, const surface_container& surfaces,
-    const Experimental::SurfaceCandidatesUpdator& delegate,
-    const Options& cOptions) {
-  // Prep work what is to be filled
-  std::vector<ProtoSurface> pSurfaces;
-  ProtoGrid pGrid;
-  std::vector<std::vector<std::size_t>> indices;
-  ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
-  // Convert if dynamic cast happens to work
-  convert(
-      gctx, surfaces, cOptions, sgi, delegate, Experimental::s_possibleAxes,
-      std::make_index_sequence<
-          std::tuple_size<decltype(Experimental::s_possibleAxes)>::value>());
-  // Return the newly filled ones
-  return sgi;
-}
-
-/// Convert a surface array into needed constituents
+/// @note actual conversion implementation, bottom of unrolling loop
 ///
 /// @param gtcx is the geometry context of the conversion call
 /// @param surfaces the container of surfaces
@@ -204,10 +85,10 @@ ProtoIndexedSurfaceGrid convert(
 ///
 /// @return a collection of proto surface object and a grid, and associations
 template <typename surface_container, typename index_grid>
-ProtoIndexedSurfaceGrid convert(const GeometryContext& gctx,
-                                const surface_container& surfaces,
-                                const index_grid& indexGrid,
-                                const Options& cOptions) {
+ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
+                                    const surface_container& surfaces,
+                                    const index_grid& indexGrid,
+                                    const Options& cOptions) {
   // The return surfaces
   std::vector<ProtoSurface> pSurfaces;
   pSurfaces.reserve(surfaces.size());
@@ -228,12 +109,11 @@ ProtoIndexedSurfaceGrid convert(const GeometryContext& gctx,
   for (auto [is, s] : enumerate(surfaces)) {
     // Create the surface converter options
     SurfaceConverter::Options sOptions;
-    Style surfaceStyle;
+    // Try to see if you have predefined surface styles
     auto sfIter = cOptions.surfaceStyles.find(s->geometryId());
     if (sfIter != cOptions.surfaceStyles.end()) {
-      surfaceStyle = *sfIter;
+      sOptions.style = *sfIter;
     }
-    sOptions.style = surfaceStyle;
     auto pSurface = SurfaceConverter::convert(gctx, *s, sOptions);
     // Run the r estimation
     if (estimateR) {
@@ -296,6 +176,86 @@ ProtoIndexedSurfaceGrid convert(const GeometryContext& gctx,
   return std::tie(pSurfaces, pGrid, highlightIndices);
 }
 
+/// @brief Convert the single delegate if it is of the type of the reference
+///
+/// @note It will do nothing if the type does not match
+///
+/// @tparam surface_container the surfaces to be drawn
+/// @tparam instance_type the reference instance type
+///
+/// @param gctx The Geometry context of this operation
+/// @param surfaces The surfaces to be converted
+/// @param cOptions the covnersion options
+/// @param sgi [in,out] the proto indexed grid to be converted
+/// @param delegate the delegate to be translated
+/// @param refInstance the reference input type from the reference Axes
+template <typename surface_container, typename instance_type>
+void convert(const GeometryContext& gctx, const surface_container& surfaces,
+             const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
+             const Experimental::SurfaceCandidatesUpdator& delegate,
+             [[maybe_unused]] const instance_type& refInstance) {
+  using GridType =
+      typename instance_type::template grid_type<std::vector<std::size_t>>;
+  // Defining a Delegate type
+  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<GridType>;
+  using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
+  // Get the instance
+  const auto* instance = delegate.instance();
+  auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
+  if (castedDelegate != nullptr) {
+    // Get the surface updator
+    auto indexedSurfaces = std::get<SubDelegateType>(castedDelegate->updators);
+    auto [pSurfaces, pGrid, pIndices] =
+        convertImpl(gctx, surfaces, indexedSurfaces, cOptions);
+    std::get<0u>(sgi) = pSurfaces;
+    std::get<1u>(sgi) = pGrid;
+    std::get<2u>(sgi) = pIndices;
+  }
+}
+
+/// @brief Unrolling function for catching the right instance
+///
+/// @note parameters are as of the `convertImpl` method
+template <typename surface_container, typename tuple_type, std::size_t... I>
+void unrollConvert(const GeometryContext& gctx,
+                   const surface_container& surfaces, const Options& cOptions,
+                   ProtoIndexedSurfaceGrid& sgi,
+                   const Experimental::SurfaceCandidatesUpdator& delegate,
+                   const tuple_type& axesTuple, std::index_sequence<I...>) {
+  (convert(gctx, surfaces, cOptions, sgi, delegate, std::get<I>(axesTuple)),
+   ...);
+}
+
+/// Convert a surface array into needed constituents
+///
+/// @param gtcx is the geometry context of the conversion call
+/// @param surfaces the container of surfaces
+/// @param indexGrid the indexGrid delegate
+/// @param cOptions the conversion options
+///
+/// @note this is the entry point of the conversion, i.e. top of the
+/// unrolling loop
+///
+/// @return a collection of proto surface object and a grid, and associations
+template <typename surface_container>
+ProtoIndexedSurfaceGrid convert(
+    const GeometryContext& gctx, const surface_container& surfaces,
+    const Experimental::SurfaceCandidatesUpdator& delegate,
+    const Options& cOptions) {
+  // Prep work what is to be filled
+  std::vector<ProtoSurface> pSurfaces;
+  ProtoGrid pGrid;
+  std::vector<std::vector<std::size_t>> indices;
+  ProtoIndexedSurfaceGrid sgi = {pSurfaces, pGrid, indices};
+  // Convert if dynamic cast happens to work
+  unrollConvert(
+      gctx, surfaces, cOptions, sgi, delegate, Experimental::s_possibleAxes,
+      std::make_index_sequence<
+          std::tuple_size<decltype(Experimental::s_possibleAxes)>::value>());
+  // Return the newly filled ones
+  return sgi;
+}
+
 }  // namespace IndexedSurfacesConverter
 
 namespace View {
@@ -343,16 +303,17 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
     binText.push_back("Source:");
     binText.push_back(pGrid._bin_ids[ig]);
     binText.push_back("Target:");
-    for (auto& sis : pIndices[ig]) {
+    for (const auto& sis : pIndices[ig]) {
       binText.push_back(std::string("- object: ") + std::to_string(sis));
     }
     // Make the connected text
+    std::string cTextId =
+        identification + std::string("_ct_") + std::to_string(ig);
     auto cText = actsvg::draw::connected_text(
         "bla", {static_cast<actsvg::scalar>(1.1 * xmax), 0}, binText,
         actsvg::style::font{}, actsvg::style::transform{}, gTile);
     xyIndexedGrid.add_object(cText);
   }
-
   xyIndexedGrid.add_object(gOb);
   // Return the grid
   return xyIndexedGrid;
@@ -362,6 +323,9 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
 ///
 /// @param pIndexGrid is the proto object
 /// @param identification is the to be translated id_ for actsvg
+///
+/// @note this works, because the actual display at the end is 2D
+/// in an x-y plane and the parameters are appropriatly defined
 ///
 /// @return an svg object that can be written out directly
 static inline actsvg::svg::object zphi(

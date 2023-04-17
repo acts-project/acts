@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
   using GlobalBin = size_t;
   using LocalBin = std::array<size_t, 2u>;
 
-  // r-phi Axes & Grid
+  // x-y axis and grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-200., 200, 4);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisY(-200, 200, 6);
   Grid<std::tuple<GlobalBin, LocalBin>, decltype(axisX), decltype(axisY)>
@@ -58,14 +58,13 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridXY, {binX, binY}, cOptions);
-  pGrid._type = actsvg::proto::grid::type::e_x_y;
+  BOOST_CHECK(pGrid._type == actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
   auto edgesX = axisX.getBinEdges();
   auto edgesY = axisY.getBinEdges();
 
   std::vector<actsvg::svg::object> targets = {};
-  size_t ig = 0;
   for (auto [ix, x] : Acts::enumerate(edgesX)) {
     if (ix > 0u) {
       ActsScalar xp = 0.2 * edgesX[ix] + 0.8 * edgesX[ix - 1u];
@@ -82,7 +81,7 @@ BOOST_AUTO_TEST_CASE(BoundGridXY) {
               localToString<decltype(gridXY)::index_t, decltype(gridXY)::DIM>(
                   l);
           std::vector<std::string> glBin = {gBin, lBin};
-          std::string gBinID = "g_" + std::to_string(ig++);
+          std::string gBinID = "g_" + std::to_string(g);
           targets.push_back(
               actsvg::draw::text(gBinID,
                                  {static_cast<actsvg::scalar>(xp),
@@ -128,7 +127,7 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
   using GlobalBin = size_t;
   using LocalBin = std::array<size_t, 2u>;
 
-  // r-phi Axes & Grid
+  // x-y axis and grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Open> axisX(-200., 200, 4);
   Axis<AxisType::Equidistant, AxisBoundaryType::Open> axisY(-200, 200, 6);
   Grid<std::tuple<GlobalBin, LocalBin>, decltype(axisX), decltype(axisY)>
@@ -136,7 +135,7 @@ BOOST_AUTO_TEST_CASE(OpenGridXY) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridXY, {binX, binY}, cOptions);
-  pGrid._type = actsvg::proto::grid::type::e_x_y;
+  BOOST_CHECK(pGrid._type == actsvg::proto::grid::type::e_x_y);
 
   // Labelling the grid tiles
   auto edgesX = axisX.getBinEdges();
@@ -205,7 +204,7 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
   using GlobalBin = size_t;
   using LocalBin = std::array<size_t, 2u>;
 
-  // r-phi Axes & Grid
+  // z-phi Axes & Grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-200., 200., 3);
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(-M_PI, M_PI, 6);
   Grid<std::tuple<GlobalBin, LocalBin>, decltype(axisZ), decltype(axisPhi)>
@@ -213,6 +212,8 @@ BOOST_AUTO_TEST_CASE(ClosedCylinderGridZPhi) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridZPhi, {binZ, binPhi}, cOptions);
+  BOOST_CHECK(pGrid._type == actsvg::proto::grid::type::e_z_phi);
+
   pGrid._reference_r = 80.;
 
   // Labelling the grid tiles
@@ -290,6 +291,7 @@ BOOST_AUTO_TEST_CASE(ClosedDiscGridRPhi) {
 
   Svg::GridConverter::Options cOptions;
   auto pGrid = Svg::GridConverter::convert(gridRPhi, {binR, binPhi}, cOptions);
+  BOOST_CHECK(pGrid._type == actsvg::proto::grid::type::e_r_phi);
 
   // Labelling the grid tiles
   auto edgesR = axisR.getBinEdges();
