@@ -17,6 +17,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
+#include "Acts/Utilities/Holders.hpp"
 
 #include <iterator>
 
@@ -449,6 +450,7 @@ BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
   VectorMultiTrajectory mutMtj;
 
   TrackContainer mutTc{mutVtc, mutMtj};
+  static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
 
   auto t = mutTc.getTrack(mutTc.addTrack());
   t.appendTrackState();
@@ -468,6 +470,10 @@ BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
   BOOST_CHECK_EQUAL(mutMtj.size(), 0);
 
   TrackContainer ctc{vtc, mtj};
+  static_assert(ctc.ReadOnly, "Unexpectedly not read only");
+
+  // Does not compile:
+  // ctc.addTrack();
 
   BOOST_CHECK_EQUAL(ctc.size(), 2);
   BOOST_CHECK_EQUAL(mtj.size(), 4);
@@ -480,7 +486,12 @@ BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
   BOOST_CHECK_EQUAL(crtc.size(), 2);
   BOOST_CHECK_EQUAL(cmtj.size(), 4);
 
-  // tc.addTrack();
+  // Does not compile: holder deduced to ConstRefHolder, but is not RO
+  // const auto& mrvtc = mutVtc;
+  // const auto& mrmtj = mutMtj;
+  // TrackContainer mrtc{mrvtc, mrmtj};
+  // static_assert(ctc.ReadOnly, "Unexpectedly not read only");
+  // mrtc.addTrack();
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BuildReadOnly, factory_t, const_holder_types) {
