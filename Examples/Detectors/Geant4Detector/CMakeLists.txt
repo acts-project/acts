@@ -1,7 +1,7 @@
 add_library(
   ActsExamplesDetectorGeant4 SHARED
   src/Geant4Detector.cpp
-  src/MockupSectorBuilder.cpp)
+  )
 target_include_directories(
     ActsExamplesDetectorGeant4
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
