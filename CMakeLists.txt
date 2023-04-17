@@ -71,6 +71,7 @@ option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OF
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
 option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
+option(ACTS_BUILD_NONCOMPILE_TESTS "Build tests that check build failure invariants" OFF)
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)
@@ -93,6 +94,7 @@ include(ActsOptionHelpers)
 # options without inter-dependencies
 set_option_if(ACTS_BUILD_BENCHMARKS ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_UNITTESTS ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_NONCOMPILE_TESTS ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_INTEGRATIONTESTS ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_DD4HEP ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_EXAMPLES_GEANT4 ACTS_BUILD_EVERYTHING)
