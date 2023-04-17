@@ -86,7 +86,9 @@ class TrackContainer {
   /// @param container the track container backend
   /// @param traj the track state container backend
   template <
-      template <typename> class H = holder_t, bool RO = ReadOnly,
+      template <typename> class H = holder_t,
+      bool RO = (IsReadOnlyTrackContainer<track_container_t>::value &&
+                 IsReadOnlyMultiTrajectory<traj_t>::value),
       typename = std::enable_if_t<
           detail::is_same_template<H, detail::ConstRefHolder>::value && RO>>
   TrackContainer(const track_container_t& container, const traj_t& traj)
