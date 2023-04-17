@@ -444,6 +444,45 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
+  VectorTrackContainer mutVtc;
+  VectorMultiTrajectory mutMtj;
+
+  TrackContainer mutTc{mutVtc, mutMtj};
+
+  auto t = mutTc.getTrack(mutTc.addTrack());
+  t.appendTrackState();
+  t.appendTrackState();
+  t.appendTrackState();
+  t = mutTc.getTrack(mutTc.addTrack());
+  t.appendTrackState();
+
+  BOOST_CHECK_EQUAL(mutTc.size(), 2);
+  BOOST_CHECK_EQUAL(mutMtj.size(), 4);
+
+  ConstVectorTrackContainer vtc{std::move(mutVtc)};
+  ConstVectorMultiTrajectory mtj{std::move(mutMtj)};
+
+  // moved from
+  BOOST_CHECK_EQUAL(mutTc.size(), 0);
+  BOOST_CHECK_EQUAL(mutMtj.size(), 0);
+
+  TrackContainer ctc{vtc, mtj};
+
+  BOOST_CHECK_EQUAL(ctc.size(), 2);
+  BOOST_CHECK_EQUAL(mtj.size(), 4);
+
+  const auto& cvtc = vtc;
+  const auto& cmtj = mtj;
+
+  TrackContainer crtc{cvtc, cmtj};
+
+  BOOST_CHECK_EQUAL(crtc.size(), 2);
+  BOOST_CHECK_EQUAL(cmtj.size(), 4);
+
+  // tc.addTrack();
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(BuildReadOnly, factory_t, const_holder_types) {
   factory_t factory;
   auto& tc = factory.trackContainer();

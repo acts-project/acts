@@ -25,6 +25,20 @@ struct RefHolder {
   T* operator->() { return ptr; }
 };
 
+/// Internal holder type for referencing a backend without ownership that is
+/// const
+template <typename T>
+struct ConstRefHolder {
+  const T* ptr;
+
+  ConstRefHolder(const T* _ptr) : ptr{_ptr} {}
+  ConstRefHolder(const T& ref) : ptr{&ref} {}
+
+  const T& operator*() const { return *ptr; }
+
+  const T* operator->() const { return ptr; }
+};
+
 /// Internal holder type holding a backend container by value
 template <typename T>
 struct ValueHolder {
