@@ -74,6 +74,12 @@ if exatrkxEnabled:
     except ImportError:
         exatrkxEnabled = False
 
+try:
+    import podio
+
+    podioEnabled = True
+except ModuleNotFoundError:
+    podioEnabled = False
 
 isCI = os.environ.get("CI", "false") == "true"
 
