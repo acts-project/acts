@@ -94,16 +94,6 @@ class TrackContainer {
   TrackContainer(const track_container_t& container, const traj_t& traj)
       : m_container{&container}, m_traj{&traj} {}
 
-  /// Constructor from rvalue references to a track container backend and to a
-  /// track state container backend
-  /// @param container the track container backend
-  /// @param traj the track state container backend
-  template <template <typename> class H = holder_t,
-            typename = std::enable_if_t<
-                detail::is_same_template<H, detail::ValueHolder>::value>>
-  TrackContainer(track_container_t&& container, traj_t&& traj)
-      : m_container{std::move(container)}, m_traj{std::move(traj)} {}
-
   /// Get a const track proxy for a track index
   /// @param itrack the track index in the container
   /// @return A const track proxy for the index

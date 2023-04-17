@@ -48,8 +48,11 @@ struct ValueHolder {
 
   // Let's be clear with the user that we take the ownership
   // Only require rvalues and avoid hidden copies
-  explicit ValueHolder(T& _val) = delete;
-  explicit ValueHolder(T&& _val) : val{std::move(_val)} {}
+  ValueHolder(T& _val) = delete;
+  // @FIXME: Ideally we want this to be explicit, but cannot be explicit,
+  // because using an explicit constructor and a deduction guide leads to
+  // a SEGFAULT in GCC11 (an up?). Re-evaluate down the line
+  /* explicit */ ValueHolder(T&& _val) : val{std::move(_val)} {}
 
   // Does it makes sense to allow copy operations?
 
