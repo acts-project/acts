@@ -104,7 +104,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     Acts::GeometryIdentifier::Value sGeoVal = std::stoul(volumeName);
     Acts::GeometryIdentifier geoID(sGeoVal);
 
-    auto particleID = eventData.trackIdMapping[track->GetTrackID()];
+    auto particleID = eventData.trackIdMapping.at(track->GetTrackID());
 
     Acts::Vector4 particlePosition(hX, hY, hZ, hT);
     Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
@@ -116,6 +116,6 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     // Fill into the registry (subtract 1 from hit-count to get 0-based index)
     eventData.hits.emplace_back(geoID, particleID, particlePosition,
                                 beforeMomentum, afterMomentum,
-                                eventData.particleHitCount[particleID] - 1);
+                                eventData.particleHitCount.at(particleID) - 1);
   }
 }

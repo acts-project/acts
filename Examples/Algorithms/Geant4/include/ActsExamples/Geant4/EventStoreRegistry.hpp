@@ -16,6 +16,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <set>
 
 namespace ActsExamples {
 
@@ -45,6 +46,8 @@ class EventStoreRegistry {
     std::unordered_map<SimBarcode, std::size_t> particleHitCount;
     /// Track ID to Barcode mapping
     std::unordered_map<unsigned int, SimBarcode> trackIdMapping;
+    /// Used to ensure particle IDs are unique
+    std::set<SimBarcode> particleIdSet;
     /// Track ID to root Track ID mapping
     std::unordered_map<unsigned int, unsigned int> trackIdRootId;
     /// Track ID generation counter

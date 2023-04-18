@@ -18,6 +18,8 @@
 #include <G4UnitsTable.hh>
 #include <globals.hh>
 
+#include <optional>
+
 ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserTrackingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
@@ -34,7 +36,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   eventData.particlesFinal.push_back(convert(*aTrack));
 }
 
-ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
+std::optional<ActsExamples::SimParticle> ActsExamples::ParticleTrackingAction::convert(
     const G4Track& aTrack) const {
   auto& eventData = EventStoreRegistry::eventData();
 
@@ -69,6 +71,13 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
       auto rootId = eventData.trackIdRootId[id];
       particleId = eventData.trackIdMapping[rootId];
       particleId.setGeneration(++eventData.trackIdGenerationCount[rootId]);
+
+      const auto [it, success] = eventData.particleIdSet.insert(particleId);
+      if( not success ) {
+        ACTS_WARNING("Particle ID collision detected. Particle is not added to collection");
+        return std::nullopt;
+      }
+
       eventData.trackIdMapping[id] = particleId;
     } else {
       ACTS_WARNING("could not find parent " << parentId << " of " << id);
