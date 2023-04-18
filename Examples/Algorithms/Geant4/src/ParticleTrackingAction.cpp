@@ -18,8 +18,6 @@
 #include <G4UnitsTable.hh>
 #include <globals.hh>
 
-#include <optional>
-
 ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserTrackingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
@@ -27,17 +25,25 @@ ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
 void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     const G4Track* aTrack) {
   auto& eventData = EventStoreRegistry::eventData();
-  eventData.particlesInitial.push_back(convert(*aTrack));
+  auto maybeParticle = convert(*aTrack);
+
+  if (maybeParticle) {
+    eventData.particlesInitial.push_back(*maybeParticle);
+  }
 }
 
 void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
     const G4Track* aTrack) {
   auto& eventData = EventStoreRegistry::eventData();
-  eventData.particlesFinal.push_back(convert(*aTrack));
+  auto maybeParticle = convert(*aTrack);
+
+  if (maybeParticle) {
+    eventData.particlesFinal.push_back(*maybeParticle);
+  }
 }
 
-std::optional<ActsExamples::SimParticle> ActsExamples::ParticleTrackingAction::convert(
-    const G4Track& aTrack) const {
+std::optional<ActsExamples::SimParticle>
+ActsExamples::ParticleTrackingAction::convert(const G4Track& aTrack) const {
   auto& eventData = EventStoreRegistry::eventData();
 
   // Unit conversions G4->::ACTS
@@ -58,23 +64,25 @@ std::optional<ActsExamples::SimParticle> ActsExamples::ParticleTrackingAction::c
   G4double p = convertEnergy * aTrack.GetKineticEnergy();
 
   if (parentId != 0) {
-    eventData.trackIdRootId[id] = eventData.trackIdRootId[parentId];
+    eventData.trackIdRootId[id] = eventData.trackIdRootId.at(parentId);
   } else {
     eventData.trackIdRootId[id] = id;
   }
 
   SimBarcode particleId;
   if (eventData.trackIdMapping.find(id) != eventData.trackIdMapping.end()) {
-    particleId = eventData.trackIdMapping[id];
+    particleId = eventData.trackIdMapping.at(id);
   } else {
     if (eventData.trackIdRootId.find(id) != eventData.trackIdRootId.end()) {
-      auto rootId = eventData.trackIdRootId[id];
-      particleId = eventData.trackIdMapping[rootId];
-      particleId.setGeneration(++eventData.trackIdGenerationCount[rootId]);
+      auto rootId = eventData.trackIdRootId.at(id);
+      particleId = eventData.trackIdMapping.at(rootId);
+      particleId.setGeneration(++eventData.trackIdGenerationCount.at(rootId));
 
       const auto [it, success] = eventData.particleIdSet.insert(particleId);
-      if( not success ) {
-        ACTS_WARNING("Particle ID collision detected. Particle is not added to collection");
+      if (not success) {
+        ACTS_WARNING(
+            "Particle ID collision detected. Particle is not added to "
+            "collection");
         return std::nullopt;
       }
 

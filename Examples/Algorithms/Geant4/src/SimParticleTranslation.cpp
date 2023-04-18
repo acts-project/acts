@@ -142,14 +142,14 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
 
-    const auto [it, success] = eventData.particleIdSet.insert(part.particleId());
-    if( not success ) {
+    const auto [it, success] =
+        eventData.particleIdSet.insert(part.particleId());
+    if (not success) {
       throw std::runtime_error("Particle ID collision");
     }
 
-    eventData.trackIdMapping.insert({particle->GetTrackID(), part.particleId()});
-
-
+    eventData.trackIdMapping.insert(
+        {particle->GetTrackID(), part.particleId()});
 
     ++pCounter;
   }

@@ -12,6 +12,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <G4Track.hh>
@@ -56,7 +57,7 @@ class ParticleTrackingAction : public G4UserTrackingAction {
   /// Convert a G4Track to a SimParticle
   ///
   /// @param aTrack the current Geant4 track
-  SimParticle convert(const G4Track& aTrack) const;
+  std::optional<SimParticle> convert(const G4Track& aTrack) const;
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

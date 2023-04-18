@@ -14,9 +14,9 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
+#include <set>
 #include <unordered_map>
 #include <vector>
-#include <set>
 
 namespace ActsExamples {
 
