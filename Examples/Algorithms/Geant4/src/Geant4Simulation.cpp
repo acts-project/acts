@@ -207,5 +207,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
         ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
 
+  if (eventData.particleIdCollisions > 0) {
+    ACTS_WARNING(eventData.particleIdCollisions
+                 << " particles missing in the output data because of particle "
+                    "ID collissions");
+  }
+
   return ActsExamples::ProcessCode::SUCCESS;
 }

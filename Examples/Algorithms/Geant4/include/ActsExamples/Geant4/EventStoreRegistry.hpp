@@ -55,6 +55,9 @@ class EventStoreRegistry {
 
     /// Data handles to read particles from the whiteboard
     const ReadDataHandle<SimParticleContainer>* inputParticles{nullptr};
+
+    /// Count particle ID collisions
+    std::size_t particleIdCollisions = 0;
   };
 
   EventStoreRegistry() = delete;

@@ -63,33 +63,39 @@ ActsExamples::ParticleTrackingAction::convert(const G4Track& aTrack) const {
   G4ThreeVector pDirection = aTrack.GetMomentumDirection();
   G4double p = convertEnergy * aTrack.GetKineticEnergy();
 
-  if (parentId != 0) {
-    eventData.trackIdRootId[id] = eventData.trackIdRootId.at(parentId);
-  } else {
-    eventData.trackIdRootId[id] = id;
-  }
+  const auto rootId = parentId != 0 ? eventData.trackIdRootId.at(parentId) : id;
+  eventData.trackIdRootId[id] = rootId;
 
   SimBarcode particleId;
+
+  // We already have this particle (it is one of the input particles)
   if (eventData.trackIdMapping.find(id) != eventData.trackIdMapping.end()) {
     particleId = eventData.trackIdMapping.at(id);
-  } else {
-    if (eventData.trackIdRootId.find(id) != eventData.trackIdRootId.end()) {
-      auto rootId = eventData.trackIdRootId.at(id);
-      particleId = eventData.trackIdMapping.at(rootId);
-      particleId.setGeneration(++eventData.trackIdGenerationCount.at(rootId));
-
-      const auto [it, success] = eventData.particleIdSet.insert(particleId);
-      if (not success) {
-        ACTS_WARNING(
-            "Particle ID collision detected. Particle is not added to "
-            "collection");
-        return std::nullopt;
-      }
-
-      eventData.trackIdMapping[id] = particleId;
-    } else {
-      ACTS_WARNING("could not find parent " << parentId << " of " << id);
+  }
+  // If not, it is a secondary particle
+  else {
+    if (eventData.trackIdMapping.find(rootId) ==
+        eventData.trackIdMapping.end()) {
+      ACTS_DEBUG(
+          "Parent particle not registered, maybe from a previous particle ID "
+          "collision.");
+      ++eventData.particleIdCollisions;
+      return std::nullopt;
     }
+
+    particleId = eventData.trackIdMapping.at(rootId);
+    particleId.setGeneration(++eventData.trackIdGenerationCount[rootId]);
+
+    const auto [it, success] = eventData.particleIdSet.insert(particleId);
+    if (not success) {
+      ++eventData.particleIdCollisions;
+      ACTS_DEBUG(
+          "Particle ID collision detected. Particle is not added to "
+          "collection");
+      return std::nullopt;
+    }
+
+    eventData.trackIdMapping[id] = particleId;
   }
 
   // Now create the Particle
