@@ -31,10 +31,6 @@ acts_target_link_libraries_system(
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
-# set per-target c++17 requirement that will be propagated to linked targets
-target_compile_features(
-  ActsExamplesFramework
-  PUBLIC cxx_std_17)
 
 if(ACTS_USE_EXAMPLES_TBB)
   # newer DD4hep version require TBB and search interally for TBB in

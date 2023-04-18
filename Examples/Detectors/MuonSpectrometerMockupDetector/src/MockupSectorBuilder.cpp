@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Geant4Detector/MockupSectorBuilder.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
