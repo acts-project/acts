@@ -88,7 +88,6 @@ int main() {
 
   auto detector_sector = Acts::Experimental::Detector::makeShared(
       "Detector",
-      std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(
-          {detectorVolume_sector}),
-      Acts::Experimental::tryAllVolumes());
+      detectorVolume_sector, 
+      Acts::Experimental::tryRootVolume()));
 }
