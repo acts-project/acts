@@ -10,7 +10,7 @@
 
 #include <ostream>
 
-std::string Acts::Direction::toString() const {
+std::string_view Acts::Direction::toString() const {
   switch (m_value) {
     case Value::Positive:
       return "forward";

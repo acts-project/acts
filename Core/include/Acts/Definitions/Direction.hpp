@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <iosfwd>
-#include <string>
+#include <string_view>
 
 namespace Acts {
 
@@ -89,7 +89,7 @@ class Direction final {
     return (m_value == Value::Positive) ? Value::Negative : Value::Positive;
   }
 
-  std::string toString() const;
+  std::string_view toString() const;
 
   inline constexpr Direction() = default;
   inline constexpr Direction(Value value) : m_value(value) {}
