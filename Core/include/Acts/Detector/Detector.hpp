@@ -78,10 +78,10 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
   /// Non-const access to the root volume
   ///
-  /// @return the root volume shared pointer
+  /// @return the volumes shared pointer store
   std::vector<std::shared_ptr<DetectorVolume>>& volumePtrs();
 
-  /// Const access to the root volume
+  /// Const access to sub volumes
   ///
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
