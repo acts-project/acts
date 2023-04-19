@@ -154,6 +154,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
   // We will add an outside support cylinder
   using LayerSupport = LayerStructureKDT<>::Support;
   lCyl1.layerSupports = {LayerSupport{{15., 10., 10., 0., 0.}}};
+  lCyl1.representation = Acts::Surface::SurfaceType::Cylinder;
 
   // The surfaces should be filled and the updator ready
   auto [surfaces, updator] = lCyl1.create(tContext);
