@@ -304,6 +304,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
     zMin = -3000 * u.mm
+    zOutermostLayers = (-2700 * u.mm, 2700 * u.mm)
     beamPos = (0 * u.mm, 0 * u.mm)
     collisionRegionMin = -200 * u.mm
     collisionRegionMax = 200 * u.mm
@@ -521,6 +522,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         collisionRegion=(collisionRegionMin, collisionRegionMax),
         r=(None, rMaxSeedFinderConfig),
         z=(zMin, zMax),
+        zOutermostLayers=zOutermostLayers,
     )
 
     seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)
