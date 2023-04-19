@@ -118,15 +118,12 @@ ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
 
   auto pid = ed.trackIdMapping.at(parentId).makeDescendant();
 
-  // The subparticle field has 2**16 bits
-  for (int i = 1; i < 65536; ++i) {
-    pid.setSubParticle(i);
-
-    if (ed.particlesInitial.find(ActsFatras::Particle{pid, {}}) ==
-        ed.particlesInitial.end()) {
-      break;
-    }
-  }
+  auto key = EventStoreRegistry::State::BarcodeWithoutSubparticle::Zeros();
+  key.set(0, pid.vertexPrimary())
+      .set(1, pid.vertexSecondary())
+      .set(2, pid.particle())
+      .set(3, pid.generation());
+  pid.setSubParticle(++ed.subparticleMap[key]);
 
   return pid;
 }

@@ -66,6 +66,14 @@ class EventStoreRegistry {
     /// Count particle ID collisions
     std::size_t particleIdCollisionsInitial = 0;
     std::size_t particleIdCollisionsFinal = 0;
+
+    /// Store subparticle count for {primVertex, secVertex, part, gen}
+    /// This is done using a pseudo-barcode that contains all fields but not the
+    /// subparticle counter. This can be used as key in a map to store the
+    /// subparticle information
+    using BarcodeWithoutSubparticle =
+        Acts::MultiIndex<uint64_t, 16, 16, 16, 16>;
+    std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
   };
 
   EventStoreRegistry() = delete;
