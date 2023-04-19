@@ -163,14 +163,14 @@ class SpacePointContainer {
   const container_t& container() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType& proxy(std::size_t n);
+  ProxyType proxy(std::size_t n);
 
-  const ProxyType& proxy(std::size_t n) const;
+  const ProxyType proxy(std::size_t n) const;
 
-  const std::vector<ProxyType>& proxies() const;
+  // const std::vector<ProxyType>& proxies() const;
 
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  std::vector<ProxyType>& proxies();
+  // template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  // std::vector<ProxyType>& proxies();
     
  private:
   const float& x(std::size_t n) const;
@@ -196,8 +196,6 @@ class SpacePointContainer {
   Acts::SpacePointContainerOptions m_options;
   mutable Acts::SpacePointData m_data;
   holder_t<container_t> m_container;
-  // Collection of proxies. This vector is needed due to space point selections
-  std::vector<ProxyType> m_proxies;
 };
 
 }  // namespace Acts

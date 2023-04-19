@@ -157,7 +157,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   boost::container::flat_set<size_t> rBinsIndex;
 
   for (spacepoint_iterator_t it = spBegin; it != spEnd; ++it) {
-    const external_spacepoint_t& sp = *it;
+    const external_spacepoint_t sp = *it;
 
     float spX = sp.x();
     float spY = sp.y();
