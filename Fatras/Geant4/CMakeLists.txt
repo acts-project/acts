@@ -9,9 +9,6 @@ target_compile_definitions(
 target_include_directories(
   ActsFatrasGeant4
   SYSTEM PUBLIC ${Geant4_INCLUDE_DIRS})
-target_compile_features(
-  ActsFatrasGeant4
-  PUBLIC cxx_std_17)
 target_include_directories(
   ActsFatrasGeant4
   PUBLIC

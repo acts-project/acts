@@ -60,7 +60,7 @@ using namespace Acts::Experimental;
 // A test context
 Acts::GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 auto volumeA = std::make_shared<DetectorVolume>();
 auto volumeB = std::make_shared<DetectorVolume>();
