@@ -42,8 +42,14 @@ class AmbiguityTrackClassifier {
       std::unordered_map<int, std::vector<int>>& clusters,
       const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks)
       const {
+    // Compute the number of entry (since it is smaller than the number of
+    // track)
+    int trackNb = 0;
+    for (const auto& [_, val] : clusters) {
+      trackNb += val.size();
+    }
     // Input of the neural network
-    Acts::NetworkBatchInput networkInput(tracks.size() + 1, 8);
+    Acts::NetworkBatchInput networkInput(trackNb, 8);
     int inputID = 0;
     // Get the input feature of the network for all the tracks
     for (const auto& [key, val] : clusters) {
@@ -64,10 +70,8 @@ class AmbiguityTrackClassifier {
       }
     }
     // Use the network to compute a score for all the tracks.
-    std::cout << "start inference" << std::endl;
     std::vector<std::vector<float>> outputTensor =
         m_duplicateClassifier.runONNXInference(networkInput);
-    std::cout << "finished inference" << std::endl;
     return outputTensor;
   }
 
@@ -79,7 +83,6 @@ class AmbiguityTrackClassifier {
   std::vector<int> trackSelection(
       std::unordered_map<int, std::vector<int>>& clusters,
       std::vector<std::vector<float>>& outputTensor) const {
-    std::cout << "start track selection" << std::endl;
     std::vector<int> goodTracks;
     int iOut = 0;
     // Loop over all the cluster and only keep the track with the highest score
@@ -96,7 +99,6 @@ class AmbiguityTrackClassifier {
       }
       goodTracks.push_back(bestTrackID);
     }
-    std::cout << "finished track selection" << std::endl;
     return goodTracks;
   }
 
@@ -111,7 +113,6 @@ class AmbiguityTrackClassifier {
       std::unordered_map<int, std::vector<int>>& clusters,
       const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks)
       const {
-    std::cout << "start classifier" << std::endl;
     std::vector<std::vector<float>> outputTensor =
         inferScores(clusters, tracks);
     std::vector<int> goodTracks = trackSelection(clusters, outputTensor);
