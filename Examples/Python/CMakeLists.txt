@@ -36,6 +36,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesDetectorGeneric
   ActsExamplesDetectorContextual
   ActsExamplesDetectorTGeo
+  ActsExamplesDetectoInspectors
   ActsExamplesMagneticField
   ActsExamplesIoRoot
   ActsExamplesIoNuclearInteractions
@@ -76,6 +77,12 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
   target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_JSON AND ACTS_BUILD_PLUGIN_ACTSVG)
+  target_sources(ActsPythonBindings PRIVATE src/DetectorInspectors.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/DetectorInspectorsStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)

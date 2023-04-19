@@ -5,4 +5,5 @@ target_sources(
     DetectorVolume.cpp
     Portal.cpp
     ProtoDetector.cpp
+    SupportBuilder.cpp
 )
