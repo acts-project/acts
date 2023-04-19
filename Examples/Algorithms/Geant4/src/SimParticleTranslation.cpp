@@ -55,10 +55,6 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   // Get the number of input particles
   const auto inputParticles = (*eventData.inputParticles)(*eventStore);
 
-  // Reserve appropriate resources for initial/final particles
-  eventData.particlesInitial.reserve(inputParticles.size());
-  eventData.particlesFinal.reserve(inputParticles.size());
-
   // Reserve hopefully enough hit space
   eventData.hits.reserve(inputParticles.size() * m_cfg.reserveHitsPerParticle);
 
@@ -120,7 +116,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
     // Skip if tranlation failed
     if (particleDefinition == nullptr) {
-      ACTS_VERBOSE(
+      ACTS_DEBUG(
           "Could not translate particle with PDG code : " << particlePdgCode);
       continue;
     }
@@ -142,14 +138,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
 
-    const auto [it, success] =
-        eventData.particleIdSet.insert(part.particleId());
-    if (not success) {
-      throw std::runtime_error("Particle ID collision");
-    }
-
-    eventData.trackIdMapping.insert(
-        {particle->GetTrackID(), part.particleId()});
+    eventData.trackIdMapping[particle->GetTrackID()] = part.particleId();
 
     ++pCounter;
   }
