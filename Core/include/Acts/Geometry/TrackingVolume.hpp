@@ -13,12 +13,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Ray.hpp"
@@ -245,7 +247,7 @@ class TrackingVolume : public Volume {
   ///
   /// If a context is needed for the vist, the vistitor has to provide this
   /// e.g. as a private member
-  template <typename visitor_t>
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     if (!m_confinedVolumes) {
       // no sub volumes => loop over the confined layers

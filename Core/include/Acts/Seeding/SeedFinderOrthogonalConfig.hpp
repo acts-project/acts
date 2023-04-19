@@ -64,6 +64,10 @@ struct SeedFinderOrthogonalConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
+  // z of last layers to avoid iterations
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
+
   // radial range for middle SP
   // variable range based on SP radius
   bool useVariableMiddleSPRange = true;

@@ -84,7 +84,9 @@ struct GsfOptions {
 
   std::string_view finalMultiComponentStateColumn = "";
 
+#if __cplusplus < 202002L
   GsfOptions() = delete;
+#endif
 };
 
 }  // namespace Experimental

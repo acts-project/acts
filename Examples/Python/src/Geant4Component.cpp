@@ -25,7 +25,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
-#include "ActsExamples/Geant4Detector/MockupSectorBuilder.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
@@ -309,7 +309,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   Acts::Python::Context ctx;
-  ctx.modules["geant4"] = &mod;
+  ctx.modules["geant4"] = mod;
 
   addGeant4HepMC3(ctx);
 }
