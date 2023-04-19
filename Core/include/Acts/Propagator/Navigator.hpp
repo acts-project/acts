@@ -15,7 +15,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -24,7 +23,6 @@
 #include <sstream>
 #include <string>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
