@@ -36,7 +36,6 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesDetectorGeneric
   ActsExamplesDetectorContextual
   ActsExamplesDetectorTGeo
-  ActsExamplesDetectoInspectors
   ActsExamplesMagneticField
   ActsExamplesIoRoot
   ActsExamplesIoNuclearInteractions
@@ -80,6 +79,7 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_JSON AND ACTS_BUILD_PLUGIN_ACTSVG)
+  target_link_libraries(ctsPythonBindings PUBLIC ActsExamplesDetectoInspectors)
   target_sources(ActsPythonBindings PRIVATE src/DetectorInspectors.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/DetectorInspectorsStub.cpp)
