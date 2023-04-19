@@ -83,7 +83,7 @@ class SurfacesKDT {
   ///
   /// @param range is the range to be queried
   ///
-  /// @param return the matching surfaces
+  /// @return the matching surfaces from the KDT structure
   std::vector<std::shared_ptr<Surface>> surfaces(
       const RangeXD<kDIM, ActsScalar>& range) const {
     // Strip the surfaces
@@ -98,7 +98,7 @@ class SurfacesKDT {
   ///
   /// @param extent is the range Extent to be queried
   ///
-  /// @param return the matching surfaces
+  /// @return the matching surfaces fpulled from the KDT structure
   std::vector<std::shared_ptr<Surface>> surfaces(const Extent& extent) const {
     RangeXD<kDIM, ActsScalar> qRange;
     for (auto [ibv, v] : enumerate(m_casts)) {
