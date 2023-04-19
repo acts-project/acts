@@ -14,11 +14,11 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
-#include "G4Types.hh"
-
 #include <set>
 #include <unordered_map>
 #include <vector>
+
+#include "G4Types.hh"
 
 namespace ActsExamples {
 
@@ -38,8 +38,10 @@ class EventStoreRegistry {
     /// The current event store
     WhiteBoard* store = nullptr;
 
-    /// Use a std::set here because it allows for fast insertion and ensures uniqueness. Thus particle collisions are detected early.
-    using ParticleContainer = std::set<ActsFatras::Particle, ActsExamples::detail::CompareParticleId>;
+    /// Use a std::set here because it allows for fast insertion and ensures
+    /// uniqueness. Thus particle collisions are detected early.
+    using ParticleContainer =
+        std::set<ActsFatras::Particle, ActsExamples::detail::CompareParticleId>;
 
     /// Initial and final particle collections
     ParticleContainer particlesInitial;
@@ -50,6 +52,7 @@ class EventStoreRegistry {
 
     /// Tracks recorded in material mapping
     std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;
+
     /// Particle hit count (for hit indexing)
     std::unordered_map<SimBarcode, std::size_t> particleHitCount;
     /// Geant4 Track ID to Barcode mapping

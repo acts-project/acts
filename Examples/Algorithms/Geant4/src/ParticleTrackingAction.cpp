@@ -36,9 +36,10 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
   auto [it, success] =
       eventData.particlesInitial.insert(convert(*aTrack, *particleId));
 
-  // Only register particle at the initial state AND if there is no particle ID collision
+  // Only register particle at the initial state AND if there is no particle ID
+  // collision
   if (success) {
-    eventData.trackIdMapping[aTrack->GetParentID()] = *particleId;
+    eventData.trackIdMapping[aTrack->GetTrackID()] = *particleId;
   } else {
     eventData.particleIdCollisionsInitial++;
     ACTS_WARNING("Particle ID collision with "
@@ -64,9 +65,9 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
 
   if (not success) {
     eventData.particleIdCollisionsFinal++;
-    ACTS_DEBUG("Particle ID collision with "
-               << particle.particleId()
-               << " detected for final particles. Skip particle");
+    ACTS_WARNING("Particle ID collision with "
+                 << particle.particleId()
+                 << " detected for final particles. Skip particle");
   }
 }
 
@@ -108,12 +109,24 @@ ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
   }
 
   if (ed.trackIdMapping.find(parentId) == ed.trackIdMapping.end()) {
-    ACTS_WARNING(
-        "Parent particle " << parentId << " not registered, maybe because of previous particle "
-        "collision?")
+    ACTS_WARNING("Parent particle "
+                 << parentId
+                 << " not registered, maybe because of previous particle "
+                    "collision?");
     return std::nullopt;
   }
 
-  const auto subPartCount = ++ed.trackIdSubparticleCount[parentId];
-  return ed.trackIdMapping.at(parentId).makeDescendant(subPartCount);
+  auto pid = ed.trackIdMapping.at(parentId).makeDescendant();
+
+  // The subparticle field has 2**16 bits
+  for (int i = 1; i < 65536; ++i) {
+    pid.setSubParticle(i);
+
+    if (ed.particlesInitial.find(ActsFatras::Particle{pid, {}}) ==
+        ed.particlesInitial.end()) {
+      break;
+    }
+  }
+
+  return pid;
 }

@@ -178,6 +178,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
   m_cfg.runManager->BeamOn(1);
+  assert(eventData.particlesInitial.size() == eventData.particlesFinal.size());
 
   // Output handling: Initial/Final particles
   if (not m_cfg.outputParticlesInitial.empty() and
@@ -207,8 +208,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
         ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
 
-  if (eventData.particleIdCollisionsInitial > 0 or eventData.particleIdCollisionsFinal > 0 or true) {
-    ACTS_WARNING("Prticles missing in the output data because of particle ID collissions");
+  if (eventData.particleIdCollisionsInitial > 0 or
+      eventData.particleIdCollisionsFinal > 0 or true) {
+    ACTS_WARNING(
+        "Prticles missing in the output data because of particle ID "
+        "collissions");
     ACTS_WARNING("- initial states: " << eventData.particleIdCollisionsInitial);
     ACTS_WARNING("- final states: " << eventData.particleIdCollisionsFinal);
   }

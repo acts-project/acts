@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 
 #include <memory>
 #include <optional>
