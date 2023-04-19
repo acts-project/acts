@@ -103,6 +103,16 @@ class Measurement {
   /// Check if a specific parameter is part of this measurement.
   bool contains(indices_t i) const { return m_subspace.contains(i); }
 
+  /// The measurement indices
+  constexpr std::array<indices_t, kSize> indices() const {
+    std::array<uint8_t, kSize> subInds = m_subspace.indices();
+    std::array<indices_t, kSize> inds;
+    for (size_t i = 0; i < kSize; i++) {
+      inds[i] = static_cast<indices_t>(subInds[i]);
+    }
+    return inds;
+  }
+
   /// Measured parameters values.
   const ParametersVector& parameters() const { return m_params; }
 
