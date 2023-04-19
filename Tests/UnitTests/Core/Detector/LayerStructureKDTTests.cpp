@@ -121,8 +121,8 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationRing) {
 
   // The surfaces should be filled and the updator ready
   auto [surfaces, updator] = lEnd3.create(tContext);
-  BOOST_TEST(surfaces.size() == 22u);
-  BOOST_TEST(updator.connected());
+  BOOST_CHECK(surfaces.size() == 22u);
+  BOOST_CHECK(updator.connected());
 }
 
 // Test the creation of the Cylinder
@@ -157,8 +157,8 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
 
   // The surfaces should be filled and the updator ready
   auto [surfaces, updator] = lCyl1.create(tContext);
-  BOOST_TEST(surfaces.size() == 32u * 14u + 1u);
-  BOOST_TEST(updator.connected());
+  BOOST_CHECK(surfaces.size() == 32u * 14u + 1u);
+  BOOST_CHECK(updator.connected());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
