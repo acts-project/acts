@@ -60,6 +60,12 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   auto cyl2Bounds =
       std::make_unique<Acts::CylinderVolumeBounds>(r2, r3, zHalfL);
 
+  auto rootBounds =
+      std::make_unique<Acts::CylinderVolumeBounds>(r0, r3, zHalfL);
+
+  auto rootBoundsCopy =
+      std::make_unique<Acts::CylinderVolumeBounds>(r0, r3, zHalfL);
+
   auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
 
   auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -80,8 +86,13 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 =
       {cyl0, cyl1, cyl2};
+  auto root012 = Acts::Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "root", nominal, std::move(rootBounds),
+      std::vector<std::shared_ptr<Acts::Surface>>(), volumes012,
+      Acts::Experimental::tryAllSubVolumes(),
+      Acts::Experimental::tryAllPortals());
   auto det012 = Acts::Experimental::Detector::makeShared(
-      "Det012", volumes012, Acts::Experimental::tryAllVolumes());
+      "Det012", root012, Acts::Experimental::tryRootVolume());
 
   // Check the basic return functions
   BOOST_CHECK(det012->name() == "Det012");
@@ -120,17 +131,21 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   // Misconfigured - unkonnected finder
   Acts::Experimental::DetectorVolumeUpdator unconnected;
-  BOOST_CHECK_THROW(
-      Acts::Experimental::Detector::makeShared("Det012_unconnected", volumes012,
-                                               std::move(unconnected)),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::Experimental::Detector::makeShared(
+                        "Det012_unconnected", root012, std::move(unconnected)),
+                    std::invalid_argument);
 
   // Misconfigured - duplicate name
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes002 =
       {cyl0, cyl0nameDup, cyl2};
+  auto root002 = Acts::Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "root", nominal, std::move(rootBoundsCopy),
+      std::vector<std::shared_ptr<Acts::Surface>>(), volumes002,
+      Acts::Experimental::tryAllSubVolumes(),
+      Acts::Experimental::tryAllPortals());
   BOOST_CHECK_THROW(Acts::Experimental::Detector::makeShared(
-                        "Det002_name_duplicate", volumes002,
-                        Acts::Experimental::tryAllVolumes()),
+                        "Det002_name_duplicate", root002,
+                        Acts::Experimental::tryRootVolume()),
                     std::invalid_argument);
 }
 

@@ -55,12 +55,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   friend class DetectorVolume;
 
   /// Factory for producing memory managed instances of Portal.
-  /// Will forward all parameters and will attempt to find a suitable
-  /// constructor.
-  template <typename... Args>
-  static std::shared_ptr<Portal> makeShared(Args&&... args) {
-    return std::shared_ptr<Portal>(new Portal(std::forward<Args>(args)...));
-  }
+  static std::shared_ptr<Portal> makeShared(std::shared_ptr<Surface> surface);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
@@ -119,7 +114,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
   /// Update the volume link
   ///
-  /// @param dir the navigation direction for the link
+  /// @param dir the direction of the link
   /// @param dVolumeUpdator is the mangaged volume updator delegate
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
@@ -157,23 +152,6 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// The portal attaches to the following volumes
   AttachedDetectorVolumes m_attachedVolumes;
 };
-
-inline const Surface& Portal::surface() const {
-  return *(m_surface.get());
-}
-
-inline Surface& Portal::surface() {
-  return *(m_surface.get());
-}
-
-inline const Portal::DetectorVolumeUpdators& Portal::detectorVolumeUpdators()
-    const {
-  return m_volumeUpdators;
-}
-
-inline Portal::AttachedDetectorVolumes& Portal::attachedDetectorVolumes() {
-  return m_attachedVolumes;
-}
 
 }  // namespace Experimental
 }  // namespace Acts

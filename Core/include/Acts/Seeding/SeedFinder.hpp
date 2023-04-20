@@ -32,6 +32,8 @@
 
 namespace Acts {
 
+enum class SpacePointCandidateType : short { BOTTOM, TOP };
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
@@ -139,8 +141,7 @@ class SeedFinder {
   /// @param outVec Output object containing top or bottom SPs that are compatible with a certain middle SPs
   /// @param deltaRMinSP minimum allowed r-distance between dublet components
   /// @param deltaRMaxSP maximum allowed r-distance between dublet components
-  /// @param isBottom wheter otherSPs contains outer or inner SPs
-  template <typename out_range_t>
+  template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
       Acts::SpacePointData& spacePointData,
       const Acts::SeedFinderOptions& options,
@@ -149,7 +150,7 @@ class SeedFinder {
           otherSPsNeighbours,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-      const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const;
+      const float& deltaRMinSP, const float& deltaRMaxSP) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation

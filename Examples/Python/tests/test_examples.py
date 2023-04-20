@@ -1119,9 +1119,6 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     )
 
 
-@pytest.mark.skip(
-    reason="as of https://github.com/acts-project/acts/issues/2023 disabling for now"
-)
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.skipif(not onnxEnabled, reason="ONNX plugin not enabled")
 @pytest.mark.slow
