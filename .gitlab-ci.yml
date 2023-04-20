@@ -38,7 +38,7 @@ variables:
         # -DACTS_RUN_CLANG_TIDY=on
 
     # - mkdir clang-tidy
-/
+
     # # Main clang-tidy run during cmake compilation
     # - CI/clang_tidy/run_clang_tidy.sh build | tee clang-tidy/clang-tidy.log
 
