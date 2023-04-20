@@ -42,8 +42,14 @@ class AmbiguityTrackClassifier {
       std::unordered_map<int, std::vector<int>>& clusters,
       const Acts::TrackContainer<track_container_t, traj_t, holder_t>& tracks)
       const {
+    // Compute the number of entry (since it is smaller than the number of
+    // track)
+    int trackNb = 0;
+    for (const auto& [_, val] : clusters) {
+      trackNb += val.size();
+    }
     // Input of the neural network
-    Acts::NetworkBatchInput networkInput(tracks.size() + 1, 8);
+    Acts::NetworkBatchInput networkInput(trackNb, 8);
     int inputID = 0;
     // Get the input feature of the network for all the tracks
     for (const auto& [key, val] : clusters) {
@@ -56,7 +62,8 @@ class AmbiguityTrackClassifier {
         networkInput(inputID, 2) = trajState.nOutliers;
         networkInput(inputID, 3) = trajState.nHoles;
         networkInput(inputID, 4) = trajState.NDF;
-        networkInput(inputID, 5) = (trajState.chi2Sum * 1.0) / trajState.NDF;
+        networkInput(inputID, 5) = (trajState.chi2Sum * 1.0) /
+                                   (trajState.NDF != 0 ? trajState.NDF : 1);
         networkInput(inputID, 6) = Acts::VectorHelpers::eta(track.momentum());
         networkInput(inputID, 7) = Acts::VectorHelpers::phi(track.momentum());
         inputID++;
