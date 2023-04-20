@@ -85,8 +85,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   }
 
   for (const auto& spM : middleSPs) {
-    float rM = spM.radius();
-    float zM = spM.z();
+    const float& rM = spM.radius();
+    const float& zM = spM.z();
 
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
@@ -218,7 +218,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
-      const float rO = otherSP.radius();
+      const float& rO = otherSP.radius();
       float deltaR = sign * (rO - rM);
 
       // if r-distance is too small, try next SP in bin
@@ -245,7 +245,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         otherSPCol.itr = min_itr;
       }
 
-      const float zO = otherSP.z();
+      const float& zO = otherSP.z();
       float deltaZ = sign * (zO - zM);
       if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
         continue;
@@ -360,9 +360,9 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     const external_spacepoint_t& spM,
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
     SeedingState& state) const {
-  float rM = spM.radius();
-  float varianceRM = spM.varianceR();
-  float varianceZM = spM.varianceZ();
+  const float& rM = spM.radius();
+  const float& varianceRM = spM.varianceR();
+  const float& varianceZM = spM.varianceZ();
 
   std::size_t numTopSP = state.compatTopSP.size();
 

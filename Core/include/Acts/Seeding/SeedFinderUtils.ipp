@@ -71,13 +71,12 @@ inline void transformCoordinates(
                                  const std::vector<const external_spacepoint_t*>& vec,
                                  const external_spacepoint_t& spM, bool bottom,
                                  std::vector<LinCircle>& linCircleVec) {
-  std::cout << "transforming coordinates\n";
-  float xM = spM.x();
-  float yM = spM.y();
-  float zM = spM.z();	
-  float rM = spM.radius();
-  float varianceRM = spM.varianceR();
-  float varianceZM = spM.varianceZ();
+  const float& xM = spM.x();
+  const float& yM = spM.y();
+  const float& zM = spM.z();	
+  const float& rM = spM.radius();
+  const float& varianceRM = spM.varianceR();
+  const float& varianceZM = spM.varianceZ();
 
   // resize + operator[] is faster then reserve and push_back
   linCircleVec.resize(vec.size());
@@ -90,11 +89,11 @@ inline void transformCoordinates(
   for (std::size_t idx(0); idx < vec.size(); ++idx) {
     const external_spacepoint_t* sp = vec[idx];
 
-    float xSP = sp->x();
-    float ySP = sp->y();
-    float zSP = sp->z();
-    float varianceRSP = sp->varianceR();
-    float varianceZSP = sp->varianceZ();	
+    const float& xSP = sp->x();
+    const float& ySP = sp->y();
+    const float& zSP = sp->z();
+    const float& varianceRSP = sp->varianceR();
+    const float& varianceZSP = sp->varianceZ();	
 
     float deltaX = xSP - xM;
     float deltaY = ySP - yM;
@@ -133,9 +132,7 @@ inline void transformCoordinates(
     linCircleVec[idx].V = V;
     linCircleVec[idx].x = xNewFrame;
     linCircleVec[idx].y = yNewFrame;
-    std::cout << "about to set deltaR\n";	
     sp->setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-    std::cout << "done setting deltaR\n";	
   }
 }
 
