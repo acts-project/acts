@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
@@ -22,6 +21,11 @@ class Surface;
 class SurfaceArray;
 class TrackingVolume;
 struct Polyhedron;
+
+namespace Experimental {
+class DetectorVolume;
+class Portal;
+}  // namespace Experimental
 
 static ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
 static ViewConfig s_viewPassive = ViewConfig({240, 280, 0});

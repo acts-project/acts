@@ -8,10 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -21,8 +25,6 @@
 
 namespace Acts {
 namespace Experimental {
-/// Define a dummy detector volume
-class DetectorVolume {};
 
 /// a simple link to volume struct
 class LinkToVolumeImpl : public INavigationDelegate {
@@ -62,11 +64,18 @@ Acts::GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
-auto volumeA = std::make_shared<DetectorVolume>();
-auto volumeB = std::make_shared<DetectorVolume>();
-auto dTransform = Acts::Transform3::Identity();
-
 BOOST_AUTO_TEST_CASE(PortalTest) {
+  auto dTransform = Acts::Transform3::Identity();
+  auto pGenerator = defaultPortalGenerator();
+  auto volumeA = DetectorVolumeFactory::construct(
+      pGenerator, tContext, "dummyA", dTransform,
+      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
+      tryAllPortalsAndSurfaces());
+  auto volumeB = DetectorVolumeFactory::construct(
+      pGenerator, tContext, "dummyB", dTransform,
+      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
+      tryAllPortalsAndSurfaces());
+
   // A rectangle bound surface
   auto rectangle = std::make_shared<Acts::RectangleBounds>(10., 100.);
   auto surface =
@@ -98,10 +107,10 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   NavigationState nState;
   nState.position = Acts::Vector3(0., 0., 0.);
   nState.direction = Acts::Vector3(0., 0., 1.);
-  // The next volume in forward should be volume A
+  // The next volume in positive should be volume A
   portalA->updateDetectorVolume(tContext, nState);
   BOOST_CHECK(nState.currentVolume == volumeA.get());
-  // reverse should yield nullptr
+  // negative should yield nullptr
   nState.direction = Acts::Vector3(0., 0., -1.);
   portalA->updateDetectorVolume(tContext, nState);
   BOOST_CHECK(nState.currentVolume == nullptr);
@@ -113,7 +122,7 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   portalB->assignDetectorVolumeUpdator(Acts::NavigationDirection::Backward,
                                        std::move(linkToB), {volumeB});
 
-  // Reverse: forwad volume nullptr, backward volume volumeB
+  // Reverse: positive volume nullptr, negative volume volumeB
   nState.direction = Acts::Vector3(0., 0., 1.);
   portalB->updateDetectorVolume(tContext, nState);
   BOOST_CHECK(nState.currentVolume == nullptr);
