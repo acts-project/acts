@@ -38,7 +38,7 @@ variables:
         # -DACTS_RUN_CLANG_TIDY=on
 
     # - mkdir clang-tidy
-
+/
     # # Main clang-tidy run during cmake compilation
     # - CI/clang_tidy/run_clang_tidy.sh build | tee clang-tidy/clang-tidy.log
 
@@ -126,9 +126,9 @@ build_linux_ubuntu:
     - docker
 
   cache:
-    key: ccache-linux_ubuntu-$CI_COMMIT_REF_SLUG
+    key: ccache-linux_ubuntu-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
     paths:
-      - ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
+      - ${CI_PROJECT_DIR}/ccache
 
   artifacts:
     paths:
@@ -177,9 +177,9 @@ linux_test_examples:
 
   script:
     - /usr/local/bin/geant4-config --install-datasets
-    - source /usr/local/bin/thisroot.sh
-    - source /usr/local/bin/thisdd4hep_only.sh
-    - source /usr/local/bin/geant4.sh
+    - source /usr/local/bin/thisroot.sh || true
+    - source /usr/local/bin/thisdd4hep_only.sh || true
+    - source /usr/local/bin/geant4.sh || true
     - source build/python/setup.sh
     - export PYTHONPATH=/usr/local/python:$PYTHONPATH
     - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
