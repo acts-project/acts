@@ -17,12 +17,13 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 Acts::Experimental::Detector::Detector(
-    const std::string& name, std::shared_ptr<DetectorVolume> rootVolume,
+    const std::string& name,
+    std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
     DetectorVolumeUpdator&& detectorVolumeUpdator)
     : m_name(name),
-      m_rootVolume(std::move(rootVolume)),
+      m_rootVolumes(std::move(rootVolumes)),
       m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)) {
-  if (not m_rootVolume) {
+  if (m_rootVolumes.internal.empty()) {
     throw std::invalid_argument("Detector: no volume were given.");
   }
   if (not m_detectorVolumeUpdator.connected()) {
@@ -31,19 +32,22 @@ Acts::Experimental::Detector::Detector(
   }
 
   // Fill volumes
-  auto collectVolumes = [](DetectorVolume& root) {
+  auto collectVolumes = [&]() {
     std::vector<std::shared_ptr<DetectorVolume>> volumes;
-    auto recurse = [&volumes](DetectorVolume& volume, auto& callback) -> void {
-      for (const auto& v : volume.volumePtrs()) {
-        volumes.push_back(v);
-        callback(*v, callback);
+    auto recurse = [&volumes](const std::shared_ptr<DetectorVolume>& volume,
+                              auto& callback) -> void {
+      volumes.push_back(volume);
+      for (const auto& v : volume->volumePtrs()) {
+        callback(v, callback);
       }
     };
-    recurse(root, recurse);
+    for (const auto& root : m_rootVolumes.internal) {
+      recurse(root, recurse);
+    }
     return volumes;
   };
   m_volumes = DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>>(
-      collectVolumes(*m_rootVolume));
+      collectVolumes());
 
   // Check for unique names and fill the volume name / index map
   for (auto [iv, v] : enumerate(m_volumes.internal)) {
@@ -63,20 +67,21 @@ Acts::Experimental::Detector::Detector(
 
 std::shared_ptr<Acts::Experimental::Detector>
 Acts::Experimental::Detector::makeShared(
-    const std::string& name, std::shared_ptr<DetectorVolume> rootVolume,
+    const std::string& name,
+    std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
     DetectorVolumeUpdator&& detectorVolumeUpdator) {
   return std::shared_ptr<Detector>(new Detector(
-      name, std::move(rootVolume), std::move(detectorVolumeUpdator)));
+      name, std::move(rootVolumes), std::move(detectorVolumeUpdator)));
 }
 
-const std::shared_ptr<Acts::Experimental::DetectorVolume>&
-Acts::Experimental::Detector::rootVolumePtr() {
-  return m_rootVolume;
+std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
+Acts::Experimental::Detector::rootVolumePtrs() {
+  return m_rootVolumes.internal;
 }
 
-const Acts::Experimental::DetectorVolume*
-Acts::Experimental::Detector::rootVolume() const {
-  return m_rootVolume.get();
+const std::vector<const Acts::Experimental::DetectorVolume*>&
+Acts::Experimental::Detector::rootVolumes() const {
+  return m_rootVolumes.external;
 }
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
