@@ -36,14 +36,14 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note will throw an exception if duplicate volume names exist
   /// @note will throw an exception if the delegate is not connected
   Detector(const std::string& name,
-           const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes,
+           std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
            DetectorVolumeUpdator&& detectorVolumeUpdator) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of Detector.
   static std::shared_ptr<Detector> makeShared(
       const std::string& name,
-      const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes,
+      std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
       DetectorVolumeUpdator&& detectorVolumeUpdator);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
