@@ -15,20 +15,30 @@ using namespace Acts;
 BOOST_AUTO_TEST_SUITE(DefinitionsDirection)
 
 BOOST_AUTO_TEST_CASE(DirectionTests) {
-  constexpr Direction fwd = Direction::Forward;
   constexpr Direction bwd = Direction::Backward;
+  constexpr Direction fwd = Direction::Forward;
 
-  BOOST_CHECK(Direction::Negative == Direction::Backward);
-  BOOST_CHECK(Direction::Positive == Direction::Forward);
+  BOOST_CHECK(bwd == Direction::Negative);
+  BOOST_CHECK(fwd == Direction::Positive);
+
+  BOOST_CHECK(Direction::fromScalar(-1.) == bwd);
+  BOOST_CHECK(Direction::fromScalar(1.) == fwd);
+  BOOST_CHECK(Direction::fromScalarZeroAsPositive(0) == fwd);
+
+  BOOST_CHECK(Direction::fromIndex(0) == bwd);
+  BOOST_CHECK(Direction::fromIndex(1) == fwd);
 
   BOOST_CHECK(bwd.index() == 0u);
   BOOST_CHECK(fwd.index() == 1u);
 
-  BOOST_CHECK(Direction::fromScalar(-1.) == Direction::Backward);
-  BOOST_CHECK(Direction::fromScalar(1.) == Direction::Forward);
+  BOOST_CHECK(bwd.sign() == -1);
+  BOOST_CHECK(fwd.sign() == +1);
 
-  BOOST_CHECK(bwd.invert() == Direction::Forward);
-  BOOST_CHECK(fwd.invert() == Direction::Backward);
+  BOOST_CHECK(bwd.invert() == fwd);
+  BOOST_CHECK(fwd.invert() == bwd);
+
+  BOOST_CHECK(bwd.toString() == "backward");
+  BOOST_CHECK(fwd.toString() == "forward");
 
   BOOST_CHECK(2. * fwd == 2.);
   BOOST_CHECK(7 * fwd == 7);
