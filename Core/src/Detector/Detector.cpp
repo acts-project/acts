@@ -38,7 +38,6 @@ Acts::Experimental::Detector::Detector(
                               auto& callback) -> void {
       volumes.push_back(volume);
       for (const auto& v : volume->volumePtrs()) {
-        volumes.push_back(v);
         callback(v, callback);
       }
     };
