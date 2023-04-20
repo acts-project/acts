@@ -13,6 +13,7 @@
 #include "Acts/Detector/IndexedGridFiller.hpp"
 #include "Acts/Detector/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/SupportBuilder.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -139,7 +140,7 @@ Acts::Experimental::LayerStructureBuilder::create(
     const Acts::GeometryContext& gctx) const {
   // Trivialities first: internal volumes
   std::vector<std::shared_ptr<DetectorVolume>> internalVolumes = {};
-  DetectorVolumeUpdator internalVolumeUpdator;  //! @TODO add noop updator
+  DetectorVolumeUpdator internalVolumeUpdator = tryNoVolumes();
 
   if (not m_cfg.auxilliary.empty()) {
     ACTS_DEBUG(m_cfg.auxilliary);

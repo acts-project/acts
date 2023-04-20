@@ -76,6 +76,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   BOOST_CHECK(surfaces0.size() == 22u);
   BOOST_CHECK(surfacesUpdator0.connected());
   BOOST_CHECK(volumes0.empty());
+  BOOST_CHECK(volumeUpdator0.connected());
 
   using LayerSupport = Acts::Experimental::LayerStructureBuilder::Support;
 
@@ -92,6 +93,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   BOOST_CHECK(surfaces1.back()->type() == Acts::Surface::SurfaceType::Disc);
   BOOST_CHECK(surfacesUpdator1.connected());
   BOOST_CHECK(volumes1.empty());
+  BOOST_CHECK(volumeUpdator1.connected());
 
   lsConfig.auxilliary =
       "*** Endcap with 22 surfaces + 1 support -> split into 11 planes ***";
@@ -109,6 +111,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   BOOST_CHECK(surfaces2.back()->type() == Acts::Surface::SurfaceType::Plane);
   BOOST_CHECK(surfacesUpdator2.connected());
   BOOST_CHECK(volumes2.empty());
+  BOOST_CHECK(volumeUpdator2.connected());
 };
 
 // Test the creation of the Cylinder
@@ -140,6 +143,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
   BOOST_CHECK(surfaces0.size() == 448u);
   BOOST_CHECK(surfacesUpdator0.connected());
   BOOST_CHECK(volumes0.empty());
+  BOOST_CHECK(volumeUpdator0.connected());
 
   using LayerSupport = Acts::Experimental::LayerStructureBuilder::Support;
 
@@ -157,6 +161,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
   BOOST_CHECK(surfaces1.size() == 448u + 1u);
   BOOST_CHECK(surfacesUpdator1.connected());
   BOOST_CHECK(volumes1.empty());
+  BOOST_CHECK(volumeUpdator1.connected());
 
   lsConfig.auxilliary =
       "*** Barrel with 448 surfaces + 1 support -> split into 32 planes ***";
@@ -174,6 +179,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
   BOOST_CHECK(surfaces2.size() == 448u + 32u);
   BOOST_CHECK(surfacesUpdator2.connected());
   BOOST_CHECK(volumes2.empty());
+  BOOST_CHECK(volumeUpdator2.connected());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
