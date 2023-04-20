@@ -8,19 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
-
-namespace Acts {
-namespace Experimental {
-class DetectorVolume {};
-}  // namespace Experimental
-}  // namespace Acts
 
 using namespace Acts::Experimental;
 
@@ -28,10 +25,6 @@ using namespace Acts::Experimental;
 Acts::GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Detector)
-
-auto dVolume = std::make_shared<DetectorVolume>();
-auto dTransform = Acts::Transform3::Identity();
-auto pGenerator = defaultPortalGenerator();
 
 BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   // Access Vectors, they should yield the detector volume
@@ -50,6 +43,13 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
 
   // Filled Cylinder
   Acts::CylinderVolumeBounds cBar(0., 100, 200.);
+
+  auto dTransform = Acts::Transform3::Identity();
+  auto pGenerator = defaultPortalGenerator();
+  auto dVolume = DetectorVolumeFactory::construct(
+      pGenerator, tContext, "dummy", dTransform,
+      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
+      tryAllPortalsAndSurfaces());
 
   auto cBarPortals = generatePortals(dTransform, cBar, dVolume);
 

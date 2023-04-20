@@ -14,6 +14,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
@@ -160,7 +161,8 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   // with sub portal registration
   auto outerBox = DetectorVolumeFactory::construct(
       generatePortalsUpdateInternals, tContext, "OuterBox", nominal,
-      std::move(bigBoxBounds), surfaces, volumes, tryAllPortals());
+      std::move(bigBoxBounds), surfaces, volumes, tryAllSubVolumes(),
+      tryAllPortals());
 
   // Check that we are within the outer box
   Acts::Experimental::NavigationState nState;
