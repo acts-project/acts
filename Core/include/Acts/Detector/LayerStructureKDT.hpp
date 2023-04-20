@@ -71,7 +71,7 @@ class SurfacesKDT {
       const auto references = m_rGenerator.references(gctx, *s);
       const auto ref = cog(references);
       //  Now cast into the correct fill position
-      std::array<ActsScalar, kDIM> fill;
+      std::array<ActsScalar, kDIM> fill = {};
       fillCasts(ref, fill, std::make_integer_sequence<std::size_t, kDIM>{});
       kdtEntries.push_back({fill, s});
     }
