@@ -34,14 +34,16 @@ Acts::Experimental::Detector::Detector(
   // Fill volumes
   auto collectVolumes = [&]() {
     std::vector<std::shared_ptr<DetectorVolume>> volumes;
-    auto recurse = [&volumes](DetectorVolume& volume, auto& callback) -> void {
-      for (const auto& v : volume.volumePtrs()) {
+    auto recurse = [&volumes](const std::shared_ptr<DetectorVolume>& volume,
+                              auto& callback) -> void {
+      volumes.push_back(volume);
+      for (const auto& v : volume->volumePtrs()) {
         volumes.push_back(v);
-        callback(*v, callback);
+        callback(v, callback);
       }
     };
     for (const auto& root : m_rootVolumes.internal) {
-      recurse(*root, recurse);
+      recurse(root, recurse);
     }
     return volumes;
   };
