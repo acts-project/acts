@@ -176,6 +176,13 @@ linux_test_examples:
     - docker
 
   script:
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - cd ..
+
     - /usr/local/bin/geant4-config --install-datasets
     - "source /usr/local/bin/thisroot.sh || true"
     - "source /usr/local/bin/thisdd4hep_only.sh || true"
