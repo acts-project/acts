@@ -142,8 +142,8 @@ build_linux_ubuntu:
 
     - cd src
     - git checkout $HEAD_SHA
-    - git -C src submodule init
-    - git -C src submodule update
+    - git submodule init
+    - git submodule update
 
     - cd ..
     - mkdir build
