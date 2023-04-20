@@ -175,7 +175,7 @@ linux_test_examples:
   tags:
     - docker
 
-  scripts:
+  script:
     - /usr/local/bin/geant4-config --install-datasets
     - source /usr/local/bin/thisroot.sh
     - source /usr/local/bin/thisdd4hep_only.sh
