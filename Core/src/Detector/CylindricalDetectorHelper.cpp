@@ -231,11 +231,8 @@ stripSideVolumes(
       auto cSide = pc.find(s);
       if (cSide != pc.end()) {
         auto p = cSide->second;
-        if (sideVolumes.find(s) == sideVolumes.end()) {
-          sideVolumes[s] = {};
-        }
         auto& sVolumes = sideVolumes[s];
-        auto aVolumes = Acts::Experimental::attachedDetectorVolumes(*p.get());
+        auto aVolumes = Acts::Experimental::attachedDetectorVolumes(*p);
         sVolumes.insert(sVolumes.end(), aVolumes.begin(), aVolumes.end());
       }
     }
