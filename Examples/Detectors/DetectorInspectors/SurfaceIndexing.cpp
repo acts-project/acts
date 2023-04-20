@@ -79,11 +79,10 @@ CylindricalDetectorIndexing::CylindricalDetectorIndexing(
 void CylindricalDetectorIndexing::inspect(
     const std::string& name,
     const std::array<std::array<Acts::ActsScalar, 2u>, 2u> qRange,
-    const std::string& representation,
     const std::vector<SurfaceIndexing<2u>::Binning>& binnings,
     const std::vector<SurfaceIndexing<2u>::Support>& supports) {
-  SurfaceIndexing<2u>::createIndexing(name, qRange, representation, binnings,
-                                      supports, generateDrawOptions());
+  SurfaceIndexing<2u>::createIndexing(name, qRange, binnings, supports,
+                                      generateDrawOptions());
 }
 
 }  // namespace ActsExamples

@@ -198,7 +198,7 @@ void Acts::Experimental::SupportBuilder::addSupport(
       maxR += std::abs(demax);
       Transform3 sTransform = Transform3::Identity();
       sTransform.pretranslate(Vector3(0., 0., layerZ));
-      auto dSupport = SupportBuilder::cylindricalSupport(
+      auto dSupport = SupportBuilder::discSupport(
           sTransform, {minR, maxR, halfPhi, avgPhi}, supportSplits);
       // Remember the surfaces to be assigned to all bins, once the
       // support surfaces are split they enter the standard bin assignment

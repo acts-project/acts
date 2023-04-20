@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/LayerStructureKDT.hpp"
+#include "Acts/Detector/detail/KdtSurfacesProvider.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -72,7 +72,7 @@ std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
 BOOST_AUTO_TEST_SUITE(Detector)
 
 // Test only the KDT infrastructure
-BOOST_AUTO_TEST_CASE(SurfacesKDT_RZ) {
+BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
   // Detector store
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto pSurfaces = pixelSurfaces(dStore);
@@ -80,86 +80,25 @@ BOOST_AUTO_TEST_CASE(SurfacesKDT_RZ) {
   size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
   BOOST_CHECK(pSurfaces.size() == refNumber);
 
-  SurfacesKDT<> skdt(tContext, pSurfaces, {binZ, binR});
+  using KDTS = Acts::Experimental::detail::KdtSurfaces<>;
+  auto skdt = std::make_shared<KDTS>(KDTS(tContext, pSurfaces, {binZ, binR}));
 
   // query: Negative disc 3, it should yield 22 surfaces
-  Extent end3;
-  end3.set(binZ, -820, -780);
-  end3.set(binR, 0., 200.);
-  auto nd3 = skdt.surfaces(end3);
+  Acts::Experimental::detail::KdtSurfacesProvider<> end3;
+  end3.kdt = skdt;
+  end3.region.set(binZ, -820, -780);
+  end3.region.set(binR, 0., 200.);
+  auto nd3 = end3();
   BOOST_CHECK(nd3.size() == 22u);
 
   // query: 2nd Pixel barrel
-  Extent ba1;
-  ba1.set(binZ, -580, 580);
-  ba1.set(binR, 60., 80.);
-  auto b1 = skdt.surfaces(ba1);
+  Acts::Experimental::detail::KdtSurfacesProvider<> ba1;
+  ba1.kdt = skdt;
+  ba1.region.set(binZ, -580, 580);
+  ba1.region.set(binR, 60., 80.);
+  auto b1 = ba1();
   refNumber = 32u * 14u;
   BOOST_CHECK(b1.size() == refNumber);
-}
-
-// Test the creation of the Ring
-BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationRing) {
-  // Detector store
-  CylindricalTrackingGeometry::DetectorStore dStore;
-  auto pSurfaces = pixelSurfaces(dStore);
-
-  using KDT = SurfacesKDT<2u, 100u, PolyhedronReferenceGenerator>;
-
-  // Count the number of surfacees
-  PolyhedronReferenceGenerator pGenerator;
-  auto sKdt =
-      std::make_shared<KDT>(KDT(tContext, pSurfaces, {binZ, binR}, pGenerator));
-
-  // query: Negative disc 3, it should yield 22 surfaces - No support
-  LayerStructureKDT<> lEnd3;
-  lEnd3.surfacesKDT = sKdt;
-  lEnd3.layerExtent.set(binZ, -820, -780);
-  lEnd3.layerExtent.set(binR, 0., 200.);
-  lEnd3.surfaceBinning = {LayerStructureKDT<>::Binning{
-      Acts::BinningData(Acts::closed, Acts::binPhi, 22u, -M_PI, M_PI), 1u}};
-
-  // The surfaces should be filled and the updator ready
-  auto [surfaces, updator] = lEnd3.create(tContext);
-  BOOST_CHECK(surfaces.size() == 22u);
-  BOOST_CHECK(updator.connected());
-}
-
-// Test the creation of the Cylinder
-BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
-  // Detector store
-  CylindricalTrackingGeometry::DetectorStore dStore;
-  auto pSurfaces = pixelSurfaces(dStore);
-
-  using KDT = SurfacesKDT<2u, 100u, PolyhedronReferenceGenerator>;
-
-  // Count the number of surfacees
-  PolyhedronReferenceGenerator pGenerator;
-  auto sKdt =
-      std::make_shared<KDT>(KDT(tContext, pSurfaces, {binZ, binR}, pGenerator));
-
-  // query: Negative disc 3, it should yield 22 surfaces - No support
-  LayerStructureKDT<> lCyl1;
-  lCyl1.surfacesKDT = sKdt;
-
-  using LayerBinning = LayerStructureKDT<>::Binning;
-
-  lCyl1.layerExtent.set(binZ, -580, 580);
-  lCyl1.layerExtent.set(binR, 60., 80.);
-  lCyl1.surfaceBinning = {
-      LayerBinning{Acts::BinningData(Acts::open, Acts::binZ, 14u, -480, 480),
-                   1u},
-      LayerBinning{
-          Acts::BinningData(Acts::closed, Acts::binPhi, 32u, -M_PI, M_PI), 1u}};
-  // We will add an outside support cylinder
-  using LayerSupport = LayerStructureKDT<>::Support;
-  lCyl1.layerSupports = {LayerSupport{{15., 10., 10., 0., 0.}}};
-  lCyl1.representation = Acts::Surface::SurfaceType::Cylinder;
-
-  // The surfaces should be filled and the updator ready
-  auto [surfaces, updator] = lCyl1.create(tContext);
-  BOOST_CHECK(surfaces.size() == 32u * 14u + 1u);
-  BOOST_CHECK(updator.connected());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
