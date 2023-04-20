@@ -32,14 +32,11 @@ struct Style {
   ActsScalar strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
 
-<<<<<<< HEAD
   ActsScalar highlightStrokeWidth = 2;
   std::array<int, 3> highlightStrokeColor = {0, 0, 0};
 
   std::vector<int> strokeDasharray = {};
 
-=======
->>>>>>> 7196f0f65 (clang-format and conversion fix)
   unsigned int fontSize = 14u;
 
   unsigned int nSegments = 72u;
