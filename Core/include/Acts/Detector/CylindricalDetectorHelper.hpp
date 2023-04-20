@@ -16,7 +16,6 @@
 #include <limits>
 #include <map>
 #include <memory>
-#include <tuple>
 #include <vector>
 
 namespace Acts {
