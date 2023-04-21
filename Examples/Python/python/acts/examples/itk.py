@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 import math
 
 import acts
@@ -25,6 +26,7 @@ class InputSpacePointsType(Enum):
 
 def buildITkGeometry(
     geo_dir: Path,
+    customMaterialFile: Optional[str] = None,
     material: bool = True,
     jsonconfig: bool = False,
     logLevel=acts.logging.WARNING,
@@ -35,8 +37,13 @@ def buildITkGeometry(
 
     matDeco = None
     if material:
-        file = geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
-        logger.info("Adding material from %s", file.absolute())
+        file = None
+        if customMaterialFile:
+            file = customMaterialFile
+            logger.info("Adding custom material from %s", file)
+        else:
+            file = geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
+            logger.info("Adding material from %s", file.absolute())
         matDeco = acts.IMaterialDecorator.fromFile(
             file,
             level=customLogLevel(maxLevel=acts.logging.INFO),
@@ -297,6 +304,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
     zMin = -3000 * u.mm
+    zOutermostLayers = (-2700 * u.mm, 2700 * u.mm)
     beamPos = (0 * u.mm, 0 * u.mm)
     collisionRegionMin = -200 * u.mm
     collisionRegionMax = 200 * u.mm
@@ -313,10 +321,10 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         -2500.0,
         -1400.0,
         -925.0,
-        -450.0,
+        -500.0,
         -250.0,
         250.0,
-        450.0,
+        500.0,
         925.0,
         1400.0,
         2500.0,
@@ -339,8 +347,8 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     binSizeR = 1 * u.mm
     seedConfirmation = True
     centralSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
-        zMinSeedConf=-250 * u.mm,
-        zMaxSeedConf=250 * u.mm,
+        zMinSeedConf=-500 * u.mm,
+        zMaxSeedConf=500 * u.mm,
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
@@ -376,7 +384,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         deltaRMinSP = 6 * u.mm
         deltaRMax = 280 * u.mm
         deltaRMaxTopSP = 280 * u.mm
-        deltaRMaxBottomSP = 120 * u.mm
+        deltaRMaxBottomSP = 150 * u.mm
         deltaZMax = float("inf") * u.mm
         interactionPointCut = True
         arithmeticAverageCotTheta = False
@@ -514,6 +522,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         collisionRegion=(collisionRegionMin, collisionRegionMax),
         r=(None, rMaxSeedFinderConfig),
         z=(zMin, zMax),
+        zOutermostLayers=zOutermostLayers,
     )
 
     seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)

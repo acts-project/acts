@@ -10,9 +10,9 @@
 
 #include <filesystem>
 
-#include <core/session/onnxruntime_cxx_api.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <onnxruntime_cxx_api.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 

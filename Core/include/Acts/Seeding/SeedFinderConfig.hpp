@@ -119,6 +119,10 @@ struct SeedFinderConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
+  // z of last layers to avoid iterations
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
+
   std::vector<size_t> zBinsCustomLooping = {};
 
   // average radiation lengths of material on the length of a seed. used for
@@ -228,6 +232,7 @@ struct SeedFinderOptions {
   float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   float pT2perRadius = std::numeric_limits<float>::quiet_NaN();
   float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
 
   bool isInInternalUnits = false;
 
@@ -264,6 +269,8 @@ struct SeedFinderOptions {
         std::pow(config.highland / options.pTPerHelixRadius, 2);
     options.sigmapT2perRadius =
         options.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
+    options.multipleScattering2 =
+        config.maxScatteringAngle2 * std::pow(config.sigmaScattering, 2);
     return options;
   }
 };

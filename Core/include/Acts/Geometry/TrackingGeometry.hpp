@@ -11,7 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -97,7 +99,7 @@ class TrackingGeometry {
   ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
-  template <typename visitor_t>
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     highestTrackingVolume()->template visitSurfaces<visitor_t>(
         std::forward<visitor_t>(visitor));

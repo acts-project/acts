@@ -16,11 +16,9 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
-class TGeoMatrix;
+#include "DD4hep/DetElement.h"
 
-namespace dd4hep {
-class DetElement;
-}
+class TGeoMatrix;
 
 namespace Acts {
 
