@@ -227,7 +227,7 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("eAntiNeutron", Acts::PdgParticle::eAntiNeutron)
       .value("eProton", Acts::PdgParticle::eProton)
       .value("eAntiProton", Acts::PdgParticle::eAntiProton)
-      .value("lead", Acts::PdgParticle::lead);
+      .value("eLead", Acts::PdgParticle::eLead);
 }
 
 void addAlgebra(Acts::Python::Context& ctx) {
