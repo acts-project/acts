@@ -287,6 +287,13 @@ class Navigator {
     return state.currentVolume;
   }
 
+  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    if (state.currentVolume == nullptr) {
+      return nullptr;
+    }
+    return state.currentVolume->volumeMaterial();
+  }
+
   const Surface* startSurface(const State& state) const {
     return state.startSurface;
   }
