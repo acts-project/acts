@@ -302,8 +302,16 @@ lcg:
   script:
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/${LCG_PLATFORM}/setup.sh
       
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - cd ..
+
     - >
-      cmake -B build -S .
+      cmake -B build -S src
       -GNinja
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       -DCMAKE_BUILD_TYPE=Release
