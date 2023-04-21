@@ -375,19 +375,50 @@ variables:
     # LCG_VERSION: 102b
     # COMPILER: gcc11
   
-lcg_special:
+lcg_101:
   <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "101"
 
   parallel:
     matrix:
       - OS:
-        - centos7
-        - centos8
-        - alma9
+          - centos7
+          - centos8
         COMPILER:
-        - gcc11
-        LCG_VERSION:
-          - "100"
-          - "101"
-          - "102b"
+          - gcc11
+          - clang12
 
+lcg_102b:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "102b"
+
+  parallel:
+    matrix:
+      - OS:
+          - centos7
+          - centos8
+          - alma9
+        COMPILER:
+          - gcc11
+          - clang12
+
+lcg_103:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "103"
+
+  parallel:
+    matrix:
+      - OS:
+          - centos7
+          - alma9
+        COMPILER:
+          - gcc11
+          - gcc12
+          - clang12
+          - clang15
