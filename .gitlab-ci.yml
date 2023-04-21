@@ -281,6 +281,7 @@ variables:
 
 
 .lcg: &lcg_base_job
+  image: ghcr.io/acts-project/${OS}-base:sha-ca76a1f2
   stage: build
   tags:
     - docker
@@ -295,7 +296,11 @@ variables:
     paths:
       - ${CI_PROJECT_DIR}/ccache
 
-  script:
+  before_script:
+    - echo "LCG_VERSION: ${LCG_VERSION}"
+    - echo "COMPILER: ${COMPILER}"
+    - 'if [ "$OS" = "alma9"  ]; then export LCG_PLATFORM="centos9"; else export LCG_PLATFORM="$OS"; fi'
+    - echo "LCG_PLATFORM: ${LCG_PLATFORM}"
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/${LCG_PLATFORM}/setup.sh
       
     - git clone $CLONE_URL src
@@ -306,6 +311,7 @@ variables:
     - git submodule update
     - cd ..
 
+  script:
     - >
       cmake -B build -S src
       -GNinja
@@ -339,6 +345,7 @@ variables:
       -DACTS_BUILD_ANALYSIS_APPS=ON
 
 
+  after_script:
     - ccache -z
     - cmake --build build
     - ccache -s
@@ -347,21 +354,28 @@ variables:
 
 centos7_lcg102b_gcc11:
   <<: *lcg_base_job
-  image: ghcr.io/acts-project/centos7-base:sha-ca76a1f2
   variables:
+    OS: centos7
     LCG_VERSION: 102b
-    LCG_PLATFORM: x86_64-centos7-gcc11-opt
+    COMPILER: gcc11
 
 centos8_lcg102b_gcc11:
   <<: *lcg_base_job
-  image: ghcr.io/acts-project/centos8-base:sha-ca76a1f2
   variables:
+    OS: centos8
     LCG_VERSION: 102b
-    LCG_PLATFORM: x86_64-centos8-gcc11-opt
+    COMPILER: gcc11
 
 alma9_lcg102b_gcc11:
   <<: *lcg_base_job
-  image: ghcr.io/acts-project/alma9-base:sha-ca76a1f2
   variables:
+    OS: alma9
     LCG_VERSION: 102b
-    LCG_PLATFORM: x86_64-centos9-gcc11-opt
+    COMPILER: gcc11
+  
+# lcg_matrix:
+  # parallel:
+    # matrix:
+      # - OS:
+        # - centos7
+        # - centos7
