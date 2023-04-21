@@ -176,6 +176,8 @@ linux_test_examples:
     - docker
 
   script:
+    - apt-get upgrade && apt-get install -y git-lfs
+
     - git clone $CLONE_URL src
     - cd src
     - git checkout $HEAD_SHA
