@@ -109,10 +109,9 @@ ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
   }
 
   if (ed.trackIdMapping.find(parentId) == ed.trackIdMapping.end()) {
-    ACTS_WARNING("Parent particle "
-                 << parentId
-                 << " not registered, maybe because of previous particle "
-                    "collision?");
+    ACTS_DEBUG("Parent particle " << parentId
+                                  << " not registered, cannot build barcode");
+    ed.parentIdNotFound++;
     return std::nullopt;
   }
 

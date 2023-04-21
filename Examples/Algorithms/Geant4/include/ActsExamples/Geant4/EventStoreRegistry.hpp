@@ -66,6 +66,7 @@ class EventStoreRegistry {
     /// Count particle ID collisions
     std::size_t particleIdCollisionsInitial = 0;
     std::size_t particleIdCollisionsFinal = 0;
+    std::size_t parentIdNotFound = 0;
 
     /// Store subparticle count for {primVertex, secVertex, part, gen}
     /// This is done using a pseudo-barcode that contains all fields but not the
