@@ -281,7 +281,7 @@ variables:
 
 
 lcg:
-  image: ghcr.io/acts-project/centos7-base:buildcache
+  image: ghcr.io/acts-project/centos7-base:sha-ca76a1f2
   stage: build
   tags:
     - docker
