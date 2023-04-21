@@ -571,6 +571,7 @@ def addGeant4(
     inputParticles: str = "particles_input",
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
+    recordSecondaryHits=False,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,

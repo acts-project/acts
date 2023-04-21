@@ -149,7 +149,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           const std::shared_ptr<const Acts::MagneticFieldProvider>&
               magneticField,
           const std::vector<std::string>& volumeMappings,
-          const std::vector<std::string>& materialMappings) {
+          const std::vector<std::string>& materialMappings,
+          bool recordHitsOfSecondaries) {
         auto physicsList = new FTFP_BERT();
 
         // Read the particle from the generator
@@ -166,6 +167,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         g4Cfg.trackingActions.push_back(particleAction);
 
         SensitiveSteppingAction::Config g4StepCfg;
+        g4StepCfg.charged = true;
+        g4StepCfg.neutral = false;
+        g4StepCfg.primary = true;
+        g4StepCfg.secondary = recordHitsOfSecondaries;
         G4UserSteppingAction* steppingAction = new SensitiveSteppingAction(
             g4StepCfg,
             Acts::getDefaultLogger("SensitiveSteppingAction", level));
@@ -203,7 +208,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
-      py::arg("materialMappings") = std::vector<std::string>{});
+      py::arg("materialMappings") = std::vector<std::string>{},
+      py::arg("recordHitsOfSecondaries") = true);
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;
