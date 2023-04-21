@@ -24,10 +24,6 @@ ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     const G4Track* aTrack) {
-  if( aTrack->GetParticleDefinition()->GetPDGCharge() == 0.0 ) {
-    return;
-  }
-
   auto& eventData = EventStoreRegistry::eventData();
 
   auto particleId = makeParticleId(aTrack->GetTrackID(), aTrack->GetParentID());
@@ -54,10 +50,6 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
     const G4Track* aTrack) {
-  if( aTrack->GetParticleDefinition()->GetPDGCharge() == 0.0 ) {
-    return;
-  }
-
   auto& eventData = EventStoreRegistry::eventData();
 
   // The initial particle maybe was not registered because a particle ID
