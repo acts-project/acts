@@ -297,10 +297,10 @@ variables:
       - ${CI_PROJECT_DIR}/ccache
 
   before_script:
-    - echo "LCG_VERSION: ${LCG_VERSION}"
-    - echo "COMPILER: ${COMPILER}"
+    - 'echo "LCG_VERSION: ${LCG_VERSION}"'
+    - 'echo "COMPILER: ${COMPILER}"'
     - 'if [ "$OS" = "alma9"  ]; then export LCG_PLATFORM="centos9"; else export LCG_PLATFORM="$OS"; fi'
-    - echo "LCG_PLATFORM: ${LCG_PLATFORM}"
+    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/${LCG_PLATFORM}/setup.sh
       
     - git clone $CLONE_URL src
