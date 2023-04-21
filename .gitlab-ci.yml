@@ -281,7 +281,7 @@ variables:
 
 
 lcg:
-  image: ghcr.io/acts-project/centos7-base:
+  image: ghcr.io/acts-project/centos7-base
   stage: build
   tags:
     - docker
