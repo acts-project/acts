@@ -168,14 +168,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         // Instantiate the particle action
         ParticleTrackingAction* particleAction = new ParticleTrackingAction(
-            selector,
-            Acts::getDefaultLogger("ParticleTrackingAction", level));
+            selector, Acts::getDefaultLogger("ParticleTrackingAction", level));
         g4Cfg.trackingActions.push_back(particleAction);
 
         // Instantiate the hit action
         G4UserSteppingAction* steppingAction = new SensitiveSteppingAction(
-            selector,
-            Acts::getDefaultLogger("SensitiveSteppingAction", level));
+            selector, Acts::getDefaultLogger("SensitiveSteppingAction", level));
         g4Cfg.steppingActions.push_back(steppingAction);
 
         // An ACTS Magnetic field is provided

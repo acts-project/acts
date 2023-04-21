@@ -24,7 +24,7 @@ ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     const G4Track* aTrack) {
-  if( not m_selector(*aTrack) ) {
+  if (not m_selector(*aTrack)) {
     return;
   }
 
@@ -34,7 +34,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
     const G4Track* aTrack) {
-  if( not m_selector(*aTrack) ) {
+  if (not m_selector(*aTrack)) {
     return;
   }
 

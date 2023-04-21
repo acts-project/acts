@@ -35,7 +35,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // The particle after the step
   G4Track* track = step->GetTrack();
-  if( not m_selector(*track) ) {
+  if (not m_selector(*track)) {
     return;
   }
 

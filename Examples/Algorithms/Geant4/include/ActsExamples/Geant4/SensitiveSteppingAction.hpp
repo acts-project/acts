@@ -25,7 +25,6 @@ namespace ActsExamples {
 /// and records (if necessary) the hit.
 class SensitiveSteppingAction : public G4UserSteppingAction {
  public:
-
   /// Construct the stepping action
   ///
   /// @param cfg the configuration struct

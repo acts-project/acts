@@ -17,20 +17,14 @@
 
 namespace ActsExamples {
 
-/// The G4SteppingAction that is called for every step in
-/// the simulation process.
-///
-/// It checks whether a sensitive volume is present (via string tag)
-/// and records (if necessary) the hit.
+/// Helper class for selecting a G4 Track based on some criteria.
 class G4TrackSelector {
  public:
-  /// Configuration of the Stepping action
   struct Config {
-    /// Selection for hit recording
     bool charged = true;
-    bool neutral = false;
+    bool neutral = true;
     bool primary = true;
-    bool secondary = false;
+    bool secondary = true;
   };
 
   G4TrackSelector(Config cfg) : m_cfg(cfg) {}
