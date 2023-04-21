@@ -72,6 +72,9 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction);
 
+std::array<float, 6> transformCoordinates(
+    const std::array<float, 4>& lineCircleVariables);
+
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.

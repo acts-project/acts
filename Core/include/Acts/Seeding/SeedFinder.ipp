@@ -293,44 +293,30 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      // cuts on the origin of the dublet (the intersection of the line between
-      // them with the z axis) and z-distance between SPs
-      if (not m_config.interactionPointCut and
-          !longitudinalCollisionRange(zOrigin, deltaZ)) {
-        continue;
-      }
+      // if interactionPointCut is false we apply z cuts before coordinate
+      // transformation to avoid unnecessary calculations if interactionPointCut
+      // is true we apply the curvature cut first because it is more frequent
+      // and it requires the coordinate transformation
+      if (not m_config.interactionPointCut) {
+        // cuts on the origin of the dublet (the intersection of the line
+        // between them with the z axis) and z-distance between SPs
+        if (!longitudinalCollisionRange(zOrigin, deltaZ)) {
+          continue;
+        }
 
-      const float deltaX = otherSP->x() - xM;
-      const float deltaY = otherSP->y() - yM;
+        // transform SP cordinates to the u-v reference frame
+        const auto& [deltaR2, iDeltaR2, uT, vT, xNewFrame, yNewFrame] =
+            transformCoordinates(
+                {otherSP->x() - xM, otherSP->y() - yM, cosPhiM, sinPhiM});
 
-      // calculate projection fraction of spM->sp vector pointing in same
-      // direction as
-      // vector origin->spM (x) and projection fraction of spM->sp vector
-      // pointing orthogonal to origin->spM (y)
-      const float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
-      const float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        cotTheta = deltaZ * iDeltaR;
 
-      const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
-      const float iDeltaR2 = 1. / deltaR2;
+        const float Er =
+            ((varianceZM + otherSP->varianceZ()) +
+             (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
+            iDeltaR2;
 
-      // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
-      // circle into straight lines in the u/v plane the line equation can
-      // be described in terms of aCoef and bCoef, where v = aCoef * u +
-      // bCoef
-      const float uT = xNewFrame * iDeltaR2;
-      const float vT = yNewFrame * iDeltaR2;
-
-      const float iDeltaR = std::sqrt(iDeltaR2);
-      cotTheta = deltaZ * iDeltaR;
-
-      // error term for sp-pair without correlation of middle space point
-      const float Er =
-          ((varianceZM + otherSP->varianceZ()) +
-           (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
-          iDeltaR2;
-
-      if (not m_config.interactionPointCut or
-          std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
         // fill output vectors
         linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                   yNewFrame);
@@ -339,6 +325,45 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         outVec.push_back(otherSP.get());
         continue;
       }
+
+      // transform SP cordinates to the u-v reference frame
+      const auto& [deltaR2, iDeltaR2, uT, vT, xNewFrame, yNewFrame] =
+          transformCoordinates(
+              {otherSP->x() - xM, otherSP->y() - yM, cosPhiM, sinPhiM});
+
+      // interactionPointCut == true we apply this cut first cuts before
+      // coordinate transformation to avoid unnecessary calculations
+      if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
+        // cuts on the origin of the dublet (the intersection of the line
+        // between them with the z axis) and z-distance between SPs
+        if (!longitudinalCollisionRange(zOrigin, deltaZ)) {
+          continue;
+        }
+
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        cotTheta = deltaZ * iDeltaR;
+
+        const float Er =
+            ((varianceZM + otherSP->varianceZ()) +
+             (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
+            iDeltaR2;
+
+        // fill output vectors
+        linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
+                                  yNewFrame);
+        spacePointData.setDeltaR(otherSP->index(),
+                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+        outVec.push_back(otherSP.get());
+        continue;
+      }
+
+      const float iDeltaR = std::sqrt(iDeltaR2);
+      cotTheta = deltaZ * iDeltaR;
+
+      const float Er =
+          ((varianceZM + otherSP->varianceZ()) +
+           (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
+          iDeltaR2;
 
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam

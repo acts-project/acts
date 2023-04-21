@@ -147,6 +147,30 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
   }
 }
 
+inline std::array<float, 6> transformCoordinates(
+    const std::array<float, 4>& lineCircleVariables) {
+  auto& [deltaX, deltaY, cosPhiM, sinPhiM] = lineCircleVariables;
+
+  // calculate projection fraction of spM->sp vector pointing in same
+  // direction as
+  // vector origin->spM (x) and projection fraction of spM->sp vector
+  // pointing orthogonal to origin->spM (y)
+  const float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+  const float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+
+  const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
+  const float iDeltaR2 = 1. / deltaR2;
+
+  // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+  // circle into straight lines in the u/v plane the line equation can
+  // be described in terms of aCoef and bCoef, where v = aCoef * u +
+  // bCoef
+  const float uT = xNewFrame * iDeltaR2;
+  const float vT = yNewFrame * iDeltaR2;
+
+  return {deltaR2, iDeltaR2, uT, vT, xNewFrame, yNewFrame};
+}
+
 template <typename external_spacepoint_t>
 inline bool xyzCoordinateCheck(
     Acts::SpacePointData& spacePointData,
