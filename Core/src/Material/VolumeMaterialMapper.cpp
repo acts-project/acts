@@ -368,7 +368,6 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<BoundSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  auto propLogger = getDefaultLogger("Propagator", Logging::INFO);
   PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
                                                    mState.magFieldContext);
 

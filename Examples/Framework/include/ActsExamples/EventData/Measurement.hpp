@@ -47,13 +47,13 @@ class MeasurementCalibrator {
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
           trackState) const {
     const IndexSourceLink& sourceLink =
-        trackState.uncalibratedSourceLink().get<IndexSourceLink>();
+        trackState.getUncalibratedSourceLink().get<IndexSourceLink>();
     assert(m_measurements and
            "Undefined measurement container in DigitizedCalibrator");
     assert((sourceLink.index() < m_measurements->size()) and
            "Source link index is outside the container bounds");
     std::visit(
-        [&trackState](const auto& meas) {
+        [&](const auto& meas) {
           trackState.allocateCalibrated(meas.size());
           trackState.setCalibrated(meas);
         },

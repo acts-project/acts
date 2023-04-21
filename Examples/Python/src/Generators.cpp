@@ -131,6 +131,8 @@ void addGenerators(Context& ctx) {
         .def_readwrite("pdg", &Config::pdg)
         .def_readwrite("randomizeCharge", &Config::randomizeCharge)
         .def_readwrite("numParticles", &Config::numParticles)
+        .def_readwrite("mass", &Config::mass)
+        .def_readwrite("charge", &Config::charge)
         .def_property(
             "p",
             [](Config& cfg) {

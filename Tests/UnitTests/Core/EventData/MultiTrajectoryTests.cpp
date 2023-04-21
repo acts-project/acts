@@ -289,7 +289,6 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   VectorMultiTrajectory t;
 
   auto alwaysPresent = [](auto& ts) {
-    BOOST_CHECK(ts.template has<"calibratedSourceLink"_hash>());
     BOOST_CHECK(ts.template has<"referenceSurface"_hash>());
     BOOST_CHECK(ts.template has<"measdim"_hash>());
     BOOST_CHECK(ts.template has<"chi2"_hash>());
@@ -410,12 +409,14 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
     // create a new (invalid) source link
     TestSourceLink invalid;
     invalid.sourceId = -1;
-    BOOST_CHECK_NE(tsa.uncalibratedSourceLink().get<TestSourceLink>(), invalid);
-    BOOST_CHECK_NE(tsb.uncalibratedSourceLink().get<TestSourceLink>(), invalid);
+    BOOST_CHECK_NE(tsa.getUncalibratedSourceLink().get<TestSourceLink>(),
+                   invalid);
+    BOOST_CHECK_NE(tsb.getUncalibratedSourceLink().get<TestSourceLink>(),
+                   invalid);
     tsb.setUncalibratedSourceLink(SourceLink{invalid});
-    BOOST_CHECK_EQUAL(tsa.uncalibratedSourceLink().get<TestSourceLink>(),
+    BOOST_CHECK_EQUAL(tsa.getUncalibratedSourceLink().get<TestSourceLink>(),
                       invalid);
-    BOOST_CHECK_EQUAL(tsb.uncalibratedSourceLink().get<TestSourceLink>(),
+    BOOST_CHECK_EQUAL(tsb.getUncalibratedSourceLink().get<TestSourceLink>(),
                       invalid);
   }
   {
@@ -527,13 +528,11 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   BOOST_CHECK_EQUAL(ts.chi2(), pc.chi2);
 
   // check that the uncalibratedSourceLink source link is set
-  BOOST_CHECK_EQUAL(ts.uncalibratedSourceLink().get<TestSourceLink>(),
+  BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink().get<TestSourceLink>(),
                     pc.sourceLink);
 
   // check that the calibrated measurement is set
   BOOST_CHECK(ts.hasCalibrated());
-  BOOST_CHECK_EQUAL(ts.calibratedSourceLink().get<TestSourceLink>(),
-                    pc.sourceLink);
   BOOST_CHECK_EQUAL(ts.effectiveCalibrated(),
                     pc.sourceLink.parameters.head(nMeasurements));
   BOOST_CHECK_EQUAL(
@@ -605,7 +604,6 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   BOOST_CHECK(
       !tsnone.has<"uncalibratedSourceLink"_hash>());  // separate optional
                                                       // mechanism
-  BOOST_CHECK(tsnone.has<"calibratedSourceLink"_hash>());
   BOOST_CHECK(tsnone.has<"referenceSurface"_hash>());
   BOOST_CHECK(tsnone.has<"measdim"_hash>());
   BOOST_CHECK(tsnone.has<"chi2"_hash>());
@@ -624,7 +622,6 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   BOOST_CHECK(
       !tsall.has<"uncalibratedSourceLink"_hash>());  // separate optional
                                                      // mechanism: nullptr
-  BOOST_CHECK(tsall.has<"calibratedSourceLink"_hash>());
   BOOST_CHECK(tsall.has<"referenceSurface"_hash>());
   BOOST_CHECK(tsall.has<"measdim"_hash>());
   BOOST_CHECK(tsall.has<"chi2"_hash>());
@@ -775,11 +772,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_NE(ts1.smoothed(), ts2.smoothed());
   BOOST_CHECK_NE(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
-  BOOST_CHECK_NE(ts1.uncalibratedSourceLink().get<TestSourceLink>(),
-                 ts2.uncalibratedSourceLink().get<TestSourceLink>());
-
-  BOOST_CHECK_NE(ts1.calibratedSourceLink().get<TestSourceLink>(),
-                 ts2.calibratedSourceLink().get<TestSourceLink>());
+  BOOST_CHECK_NE(ts1.getUncalibratedSourceLink().get<TestSourceLink>(),
+                 ts2.getUncalibratedSourceLink().get<TestSourceLink>());
 
   visit_measurement(ts1.calibratedSize(), [&](auto N) {
     constexpr size_t measdim = decltype(N)::value;
@@ -805,11 +799,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_EQUAL(ts1.smoothed(), ts2.smoothed());
   BOOST_CHECK_EQUAL(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(ts1.uncalibratedSourceLink().get<TestSourceLink>(),
-                    ts2.uncalibratedSourceLink().get<TestSourceLink>());
-
-  BOOST_CHECK_EQUAL(ts1.calibratedSourceLink().get<TestSourceLink>(),
-                    ts2.calibratedSourceLink().get<TestSourceLink>());
+  BOOST_CHECK_EQUAL(ts1.getUncalibratedSourceLink().get<TestSourceLink>(),
+                    ts2.getUncalibratedSourceLink().get<TestSourceLink>());
 
   visit_measurement(ts1.calibratedSize(), [&](auto N) {
     constexpr size_t measdim = decltype(N)::value;
@@ -835,9 +826,6 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
   BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
 
-  BOOST_CHECK_NE(ts1.calibratedSourceLink().get<TestSourceLink>(),
-                 ts2.calibratedSourceLink().get<TestSourceLink>());
-
   visit_measurement(ts1.calibratedSize(), [&](auto N) {
     constexpr size_t measdim = decltype(N)::value;
     BOOST_CHECK_NE(ts1.calibrated<measdim>(), ts2.calibrated<measdim>());
@@ -858,9 +846,6 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   // some components are same now
   BOOST_CHECK_EQUAL(ts1.predicted(), ts2.predicted());
   BOOST_CHECK_EQUAL(ts1.predictedCovariance(), ts2.predictedCovariance());
-
-  BOOST_CHECK_EQUAL(ts1.calibratedSourceLink().get<TestSourceLink>(),
-                    ts2.calibratedSourceLink().get<TestSourceLink>());
 
   visit_measurement(ts1.calibratedSize(), [&](auto N) {
     constexpr size_t measdim = decltype(N)::value;
@@ -1154,7 +1139,8 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
 
   for (int t = 0; t < type_axis.size(); t++) {
     for (int c = 0; c < column_axis.size(); c++) {
-      BOOST_CHECK_EQUAL(h.at(c, t), 0);
+      double v = h.at(c, t);
+      BOOST_CHECK_EQUAL(v, 0.0);
     }
   }
 
@@ -1169,10 +1155,11 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
     for (int c = 0; c < column_axis.size(); c++) {
       std::string key = column_axis.bin(c);
       BOOST_TEST_CONTEXT("column: " << key) {
+        double v = h.at(c, t);
         if (t == 0) {
-          BOOST_CHECK_NE((h.at(c, t)), 0);
+          BOOST_CHECK_NE(v, 0.0);
         } else {
-          BOOST_CHECK_EQUAL((h.at(c, t)), 0);
+          BOOST_CHECK_EQUAL(v, 0.0);
         }
       }
     }

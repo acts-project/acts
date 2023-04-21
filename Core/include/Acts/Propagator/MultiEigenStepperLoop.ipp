@@ -20,55 +20,51 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
   if (numberComponents(state) == 1) {
     return SingleStepper::boundState(state.components.front().state, surface,
                                      transportCov, freeToBoundCorrection);
-  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
-    auto cmpIt = std::max_element(
-        state.components.begin(), state.components.end(),
-        [](const auto& a, const auto& b) { return a.weight < b.weight; });
-
-    return SingleStepper::boundState(cmpIt->state, surface, transportCov,
-                                     freeToBoundCorrection);
-  } else {
-    SmallVector<std::tuple<double, BoundVector, BoundSymMatrix>> states;
-    double accumulatedPathLength = 0.0;
-    int failedBoundTransforms = 0;
-
-    for (auto i = 0ul; i < numberComponents(state); ++i) {
-      auto bs = SingleStepper::boundState(state.components[i].state, surface,
-                                          transportCov, freeToBoundCorrection);
-
-      if (bs.ok()) {
-        const auto& btp = std::get<BoundTrackParameters>(*bs);
-        states.emplace_back(
-            state.components[i].weight, btp.parameters(),
-            btp.covariance().value_or(Acts::BoundSymMatrix::Zero()));
-        accumulatedPathLength +=
-            std::get<double>(*bs) * state.components[i].weight;
-      } else {
-        failedBoundTransforms++;
-      }
-    }
-
-    if (states.empty()) {
-      return MultiStepperError::AllComponentsConversionToBoundFailed;
-    }
-
-    if (failedBoundTransforms > 0) {
-      return MultiStepperError::SomeComponentsConversionToBoundFailed;
-    }
-
-    auto [params, cov] =
-        detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-          return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
-        });
-
-    std::optional<BoundSymMatrix> finalCov = std::nullopt;
-    if (cov != BoundSymMatrix::Zero()) {
-      finalCov = cov;
-    }
-
-    return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
-                      Jacobian::Zero(), accumulatedPathLength};
   }
+
+  SmallVector<std::tuple<double, BoundVector, BoundSymMatrix>> states;
+  double accumulatedPathLength = 0.0;
+
+  for (auto i = 0ul; i < numberComponents(state); ++i) {
+    auto bs = SingleStepper::boundState(state.components[i].state, surface,
+                                        transportCov, freeToBoundCorrection);
+
+    if (bs.ok()) {
+      const auto& btp = std::get<BoundTrackParameters>(*bs);
+      states.emplace_back(
+          state.components[i].weight, btp.parameters(),
+          btp.covariance().value_or(Acts::BoundSymMatrix::Zero()));
+      accumulatedPathLength +=
+          std::get<double>(*bs) * state.components[i].weight;
+    }
+  }
+
+  if (states.empty()) {
+    return MultiStepperError::AllComponentsConversionToBoundFailed;
+  }
+
+  const auto [mean, cov] =
+      detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
+        return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
+      });
+
+  const auto finalPars =
+      (m_finalReductionMethod == FinalReductionMethod::eMaxWeight)
+          ? std::get<BoundVector>(*std::max_element(
+                states.begin(), states.end(),
+                [](const auto& a, const auto& b) {
+                  return std::get<double>(a) < std::get<double>(b);
+                }))
+          : mean;
+
+  std::optional<BoundSymMatrix> finalCov = std::nullopt;
+  if (cov != BoundSymMatrix::Zero()) {
+    finalCov = cov;
+  }
+
+  return BoundState{
+      BoundTrackParameters(surface.getSharedPtr(), finalPars, finalCov),
+      Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R, typename A>
@@ -126,24 +122,14 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
 }
 
 template <typename E, typename R, typename A>
-template <typename propagator_state_t>
+template <typename propagator_state_t, typename navigator_t>
 Result<double> MultiEigenStepperLoop<E, R, A>::step(
-    propagator_state_t& state) const {
+    propagator_state_t& state, const navigator_t& navigator) const {
+  using Status = Acts::Intersection3D::Status;
+
   State& stepping = state.stepping;
-
-  // @TODO: This needs to be a real logger
-  const Logger& logger = getDummyLogger();
-
-  // Lambda for reweighting the components
-  auto reweight = [](auto& cmps) {
-    ActsScalar sumOfWeights = 0.0;
-    for (const auto& cmp : cmps) {
-      sumOfWeights += cmp.weight;
-    }
-    for (auto& cmp : cmps) {
-      cmp.weight /= sumOfWeights;
-    }
-  };
+  auto& components = stepping.components;
+  const Logger& logger = *m_logger;
 
   // Update step count
   stepping.steps++;
@@ -156,14 +142,14 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     // surface, reweight the components, perform no step and return 0
     if (*stepping.stepCounterAfterFirstComponentOnSurface >=
         m_stepLimitAfterFirstComponentOnSurface) {
-      for (auto& cmp : stepping.components) {
-        if (cmp.status != Intersection3D::Status::onSurface) {
-          cmp.status = Intersection3D::Status::missed;
+      for (auto& cmp : components) {
+        if (cmp.status != Status::onSurface) {
+          cmp.status = Status::missed;
         }
       }
 
       removeMissedComponents(stepping);
-      reweight(stepping.components);
+      reweightComponents(stepping);
 
       ACTS_VERBOSE("Stepper performed "
                    << m_stepLimitAfterFirstComponentOnSurface
@@ -177,43 +163,66 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     }
   }
 
+  // Flag indicating if we need to reweight in the end
+  bool reweightNecessary = false;
+
+  // If at least one component is on a surface, we can remove all missed
+  // components before the step. If not, we must keep them for the case that all
+  // components miss and we need to retarget
+  const auto cmpsOnSurface =
+      std::count_if(components.cbegin(), components.cend(), [&](auto& cmp) {
+        return cmp.status == Intersection3D::Status::onSurface;
+      });
+
+  if (cmpsOnSurface > 0) {
+    removeMissedComponents(stepping);
+    reweightNecessary = true;
+  }
+
   // Loop over all components and collect results in vector, write some
   // summary information to a stringstream
   SmallVector<std::optional<Result<double>>> results;
   double accumulatedPathLength = 0.0;
   std::size_t errorSteps = 0;
 
-  for (auto& component : stepping.components) {
-    // We must also propagate missed components for the case that all
-    // components miss the target and we need to re-target
-    if (component.status == Intersection3D::Status::onSurface) {
+  // Type of the proxy single propagation2 state
+  using ThisSinglePropState =
+      SinglePropState<SingleState, decltype(state.navigation),
+                      decltype(state.options), decltype(state.geoContext)>;
+
+  // Lambda that performs the step for a component and returns false if the step
+  // went ok and true if there was an error
+  auto errorInStep = [&](auto& component) {
+    if (component.status == Status::onSurface) {
       // We need to add these, so the propagation does not fail if we have only
       // components on surfaces and failing states
       results.emplace_back(std::nullopt);
-      continue;
+      return false;
     }
-
-    using ThisSinglePropState =
-        SinglePropState<SingleState, decltype(state.navigation),
-                        decltype(state.options), decltype(state.geoContext)>;
 
     ThisSinglePropState single_state(component.state, state.navigation,
                                      state.options, state.geoContext);
 
-    results.emplace_back(SingleStepper::step(single_state));
+    results.emplace_back(SingleStepper::step(single_state, navigator));
 
     if (results.back()->ok()) {
       accumulatedPathLength += component.weight * results.back()->value();
+      return false;
     } else {
       ++errorSteps;
-      component.status = Intersection3D::Status::missed;
+      reweightNecessary = true;
+      return true;
     }
-  }
+  };
 
-  // Since we have invalidated some components, we need to reweight
-  if (errorSteps > 0) {
-    removeMissedComponents(stepping);
-    reweight(stepping.components);
+  // Loop over components and remove errorous components
+  stepping.components.erase(
+      std::remove_if(components.begin(), components.end(), errorInStep),
+      components.end());
+
+  // Reweight if necessary
+  if (reweightNecessary) {
+    reweightComponents(stepping);
   }
 
   // Print the result vector to a string so we can log it
@@ -249,4 +258,5 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   stepping.pathAccumulated += accumulatedPathLength;
   return accumulatedPathLength;
 }
+
 }  // namespace Acts

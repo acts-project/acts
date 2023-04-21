@@ -51,7 +51,7 @@ template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
-using ProjectorBitset = std::bitset<eBoundSize * eBoundSize>;
+using ProjectorBitset = unsigned long long;
 
 namespace detail_lt {
 /// Either type T or const T depending on the boolean.
@@ -315,22 +315,15 @@ class TrackStateProxy {
         smoothedCovariance() = other.smoothedCovariance();
       }
 
-      // need to do it this way since other might be nullptr
-      component<std::optional<SourceLink>,
-                hashString("uncalibratedSourceLink")>() =
-          other.template component<std::optional<SourceLink>,
-                                   hashString("uncalibratedSourceLink")>();
+      if (other.hasUncalibratedSourceLink()) {
+        setUncalibratedSourceLink(other.getUncalibratedSourceLink());
+      }
 
       if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
         jacobian() = other.jacobian();
       }
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-        // need to do it this way since other might be nullptr
-        component<std::optional<SourceLink>,
-                  hashString("calibratedSourceLink")>() =
-            other.template component<std::optional<SourceLink>,
-                                     hashString("calibratedSourceLink")>();
         allocateCalibrated(other.calibratedSize());
 
         // workaround for gcc8 bug:
@@ -366,11 +359,9 @@ class TrackStateProxy {
         smoothedCovariance() = other.smoothedCovariance();
       }
 
-      // need to do it this way since other might be nullptr
-      component<std::optional<SourceLink>,
-                hashString("uncalibratedSourceLink")>() =
-          other.template component<std::optional<SourceLink>,
-                                   hashString("uncalibratedSourceLink")>();
+      if (other.hasUncalibratedSourceLink()) {
+        setUncalibratedSourceLink(other.getUncalibratedSourceLink());
+      }
 
       if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
           other.template has<hashString("jacobian")>()) {
@@ -379,15 +370,7 @@ class TrackStateProxy {
 
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
           has<hashString("calibrated")>() &&
-          other.template has<hashString("calibrated")>() &&
-          has<hashString("calibratedSourceLink")>() &&
-          other.template has<hashString("calibratedSourceLink")>()) {
-        // need to do it this way since other might be nullptr
-        component<std::optional<SourceLink>,
-                  hashString("calibratedSourceLink")>() =
-            other.template component<std::optional<SourceLink>,
-                                     hashString("calibratedSourceLink")>();
-
+          other.template has<hashString("calibrated")>()) {
         allocateCalibrated(other.calibratedSize());
 
         // workaround for gcc8 bug:
@@ -525,14 +508,14 @@ class TrackStateProxy {
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed parameters
-  Parameters parameters() const;
+  ConstParameters parameters() const;
 
   /// Track parameters covariance matrix. This tries to be somewhat smart and
   /// return the
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed covariances
-  Covariance covariance() const;
+  ConstCovariance covariance() const;
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
@@ -726,20 +709,41 @@ class TrackStateProxy {
     fullProjector.template topLeftCorner<rows, cols>() = projector;
 
     // convert to bitset before storing
+    auto projectorBitset = matrixToBitset(fullProjector);
     component<ProjectorBitset, hashString("projector")>() =
-        matrixToBitset(fullProjector);
+        projectorBitset.to_ullong();
+  }
+
+  /// Get the projector bitset, a compressed form of a projection matrix
+  /// @note This is mainly to copy explicitly a projector from one state
+  /// to another. Use the `projector` or `effectiveProjector` method if
+  /// you want to access the matrix.
+  /// @return The projector bitset
+  ProjectorBitset projectorBitset() const {
+    assert(has<hashString("projector")>());
+    return component<ProjectorBitset, hashString("projector")>();
+  }
+
+  /// Set the projector bitset, a compressed form of a projection matrix
+  /// @param proj The projector bitset
+  ///
+  /// @note This is mainly to copy explicitly a projector from one state
+  /// to another. If you have a projection matrix, set it with `setProjector`.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setProjectorBitset(ProjectorBitset proj) {
+    assert(has<hashString("projector")>());
+    component<ProjectorBitset, hashString("projector")>() = proj;
   }
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
-  const SourceLink& uncalibratedSourceLink() const;
+  SourceLink getUncalibratedSourceLink() const;
 
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setUncalibratedSourceLink(const SourceLink& sourceLink) {
-    component<std::optional<SourceLink>,
-              hashString("uncalibratedSourceLink")>() = sourceLink;
+  void setUncalibratedSourceLink(SourceLink sourceLink) {
+    m_traj->setUncalibratedSourceLink(m_istate, std::move(sourceLink));
   }
 
   /// Check if the point has an associated uncalibrated measurement.
@@ -751,20 +755,6 @@ class TrackStateProxy {
   /// Check if the point has an associated calibrated measurement.
   /// @return Whether it is set
   bool hasCalibrated() const { return has<hashString("calibrated")>(); }
-
-  /// The source link of the calibrated measurement. Const version
-  /// @note This does not necessarily have to be the uncalibrated source link.
-  /// @return The source link
-  const SourceLink& calibratedSourceLink() const;
-
-  /// Set a calibrated source link
-  /// @param sourceLink The source link to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setCalibratedSourceLink(const SourceLink& sourceLink) {
-    assert(has<hashString("calibratedSourceLink")>());
-    component<std::optional<SourceLink>, hashString("calibratedSourceLink")>() =
-        sourceLink;
-  }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
   /// dimensions.
@@ -901,10 +891,6 @@ class TrackStateProxy {
     static_assert(kMeasurementSize <= M,
                   "Input measurement must be within the allowed size");
 
-    assert(has<hashString("calibratedSourceLink")>());
-
-    setCalibratedSourceLink(meas.sourceLink());
-
     allocateCalibrated(kMeasurementSize);
     assert(hasCalibrated());
 
@@ -985,17 +971,6 @@ class TrackStateProxy {
                      hashString("referenceSurface")>();
   }
 
-  ProjectorBitset projectorBitset() const {
-    assert(has<hashString("projector")>());
-    return component<ProjectorBitset, hashString("projector")>();
-  }
-
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setProjectorBitset(ProjectorBitset proj) {
-    assert(has<hashString("projector")>());
-    component<ProjectorBitset, hashString("projector")>() = proj;
-  }
-
   TransitiveConstPointer<ConstIf<MultiTrajectory<Trajectory>, ReadOnly>> m_traj;
   IndexType m_istate;
 
@@ -1051,6 +1026,7 @@ class TrackStateRange {
   };
 
   TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+  TrackStateRange() : m_begin{std::nullopt} {}
 
   Iterator begin() { return m_begin; }
   Iterator end() { return Iterator{std::nullopt}; }
@@ -1167,7 +1143,13 @@ class MultiTrajectory {
   /// @return Iterator pair to iterate over
   /// @note Const version
   auto trackStateRange(IndexType iendpoint) const {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Range for the track states from @p iendpoint to the trajectory start
@@ -1176,7 +1158,13 @@ class MultiTrajectory {
   /// @note Mutable version
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStateRange(IndexType iendpoint) {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Apply a function to all previous states starting at a given endpoint.
@@ -1460,6 +1448,15 @@ class MultiTrajectory {
   ///       an the dimension is the same.
   void allocateCalibrated(IndexType istate, size_t measdim) {
     self().allocateCalibrated_impl(istate, measdim);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setUncalibratedSourceLink(IndexType istate, SourceLink sourceLink) {
+    self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
+  }
+
+  SourceLink getUncalibratedSourceLink(IndexType istate) const {
+    return self().getUncalibratedSourceLink_impl(istate);
   }
 
  private:

@@ -9,9 +9,9 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/TrackFitting/GsfFitterFunction.hpp"
-#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
+#include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
@@ -35,44 +35,36 @@ void addTrackFitting(Context& ctx) {
                                 inputSimHits, inputMeasurementSimHitsMap,
                                 outputProtoTracks);
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFittingAlgorithm, mex, "TrackFittingAlgorithm",
+      inputMeasurements, inputSourceLinks, inputProtoTracks,
+      inputInitialTrackParameters, outputTracks, fit, pickTrack);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::RefittingAlgorithm, mex,
+                                "RefittingAlgorithm", inputTracks, outputTracks,
+                                fit, pickTrack);
+
   {
-    using Alg = ActsExamples::TrackFittingAlgorithm;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackFittingAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    py::class_<TrackFittingAlgorithm::TrackFitterFunction,
-               std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>>(
-        alg, "TrackFitterFunction");
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputMeasurements);
-    ACTS_PYTHON_MEMBER(directNavigation);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
-    ACTS_PYTHON_MEMBER(inputProtoTracks);
-    ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTracks);
-    ACTS_PYTHON_MEMBER(fit);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(pickTrack);
-    ACTS_PYTHON_STRUCT_END();
+    py::class_<TrackFitterFunction, std::shared_ptr<TrackFitterFunction>>(
+        mex, "TrackFitterFunction");
 
     mex.def(
         "makeKalmanFitterFunction",
-        py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
-                          std::shared_ptr<const Acts::MagneticFieldProvider>,
-                          bool, bool, double, Acts::FreeToBoundCorrection>(
-            &ActsExamples::makeKalmanFitterFunction),
+        [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+           bool multipleScattering, bool energyLoss,
+           double reverseFilteringMomThreshold,
+           Acts::FreeToBoundCorrection freeToBoundCorrection,
+           Logging::Level level) {
+          return ActsExamples::makeKalmanFitterFunction(
+              trackingGeometry, magneticField, multipleScattering, energyLoss,
+              reverseFilteringMomThreshold, freeToBoundCorrection,
+              *Acts::getDefaultLogger("Kalman", level));
+        },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("multipleScattering"), py::arg("energyLoss"),
         py::arg("reverseFilteringMomThreshold"),
-        py::arg("freeToBoundCorrection"));
+        py::arg("freeToBoundCorrection"), py::arg("level"));
 
     py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
         .value("mean", Acts::FinalReductionMethod::eMean)
@@ -112,7 +104,7 @@ void addTrackFitting(Context& ctx) {
     using Config = Alg::Config;
 
     auto alg =
-        py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
             mex, "TrackFittingChi2Algorithm")
             .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))

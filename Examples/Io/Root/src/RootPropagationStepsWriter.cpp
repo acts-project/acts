@@ -77,7 +77,7 @@ ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();

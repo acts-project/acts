@@ -27,7 +27,7 @@ The `CMakeLists.txt` file needs to be updated as well.
 
 ## Algorithm Class
 
-The algorithm class has to inherit from {class}`ActsExamples::BareAlgorithm`
+The algorithm class has to inherit from {class}`ActsExamples::IAlgorithm`
 and thus implement this single method:
 
 ```cpp

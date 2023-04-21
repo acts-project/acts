@@ -36,7 +36,9 @@ int main(int argc, char** argv) {
     ao("predicted", bool_switch(), "Analyze the predicted parameters.");
     ao("filtered", bool_switch(), "Analyze the filtered parameters.");
     ao("smoothed", bool_switch(), "Analyze the smoothed parameters.");
-    ao("fit", bool_switch(), "Fit the smoothed parameters.");
+    ao("fit-predicted", bool_switch(), "Fit the predicted parameters.");
+    ao("fit-filtered", bool_switch(), "Fit the filtered parameters.");
+    ao("fit-smoothed", bool_switch(), "Fit the smoothed parameters.");
     ao("save", value<std::string>()->default_value("png"),
        "Output save format (to be interpreted by ROOT).");
 
@@ -66,7 +68,8 @@ int main(int argc, char** argv) {
     switch (boundParamResolution(
         iFile, iTree, oFile, vm["predicted"].as<bool>(),
         vm["filtered"].as<bool>(), vm["smoothed"].as<bool>(),
-        vm["fit"].as<bool>(), saveAs)) {
+        vm["fit-predicted"].as<bool>(), vm["fit-filtered"].as<bool>(),
+        vm["fit-smoothed"].as<bool>(), saveAs)) {
       case -1: {
         std::cout << "*** Input file could not be opened, check name/path."
                   << std::endl;

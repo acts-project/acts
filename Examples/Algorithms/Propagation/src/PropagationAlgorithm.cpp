@@ -101,13 +101,11 @@ ProcessCode PropagationAlgorithm::execute(
   }
 
   // Write the propagation step data to the event store
-  context.eventStore.add(m_cfg.propagationStepCollection,
-                         std::move(propagationSteps));
+  m_outpoutPropagationSteps(context, std::move(propagationSteps));
 
   // Write the recorded material to the event store
   if (m_cfg.recordMaterialInteractions) {
-    context.eventStore.add(m_cfg.propagationMaterialCollection,
-                           std::move(recordedMaterial));
+    m_recordedMaterial(context, std::move(recordedMaterial));
   }
 
   return ProcessCode::SUCCESS;
@@ -138,13 +136,16 @@ std::optional<Acts::BoundSymMatrix> PropagationAlgorithm::generateCovariance(
 
 PropagationAlgorithm::PropagationAlgorithm(
     const PropagationAlgorithm::Config& config, Acts::Logging::Level level)
-    : BareAlgorithm("PropagationAlgorithm", level), m_cfg(config) {
+    : IAlgorithm("PropagationAlgorithm", level), m_cfg(config) {
   if (!m_cfg.propagatorImpl) {
     throw std::invalid_argument("Config needs to contain a propagator");
   }
   if (!m_cfg.randomNumberSvc) {
     throw std::invalid_argument("No random number generator given");
   }
+
+  m_outpoutPropagationSteps.initialize(m_cfg.propagationStepCollection);
+  m_recordedMaterial.initialize(m_cfg.propagationMaterialCollection);
 }
 
 }  // namespace ActsExamples

@@ -37,6 +37,7 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include <Acts/Definitions/Units.hpp>
 
@@ -172,7 +173,6 @@ int runRecCKFTracks(
           spCfg.outputSpacePoints,
       };
       seedingCfg.outputSeeds = "seeds";
-      seedingCfg.outputProtoTracks = "prototracks";
 
       seedingCfg.gridConfig.rMax = 200._mm;
       seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
@@ -215,7 +215,14 @@ int runRecCKFTracks(
 
       sequencer.addAlgorithm(
           std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
-      inputProtoTracks = seedingCfg.outputProtoTracks;
+
+      SeedsToPrototracks::Config seedsToPrototrackCfg;
+      seedsToPrototrackCfg.inputSeeds = seedingCfg.outputSeeds;
+      seedsToPrototrackCfg.outputProtoTracks = "prototracks";
+      sequencer.addAlgorithm(
+          std::make_shared<SeedsToPrototracks>(seedsToPrototrackCfg, logLevel));
+
+      inputProtoTracks = seedsToPrototrackCfg.outputProtoTracks;
       inputSeeds = seedingCfg.outputSeeds;
     }
 
@@ -233,18 +240,10 @@ int runRecCKFTracks(
     // Algorithm estimating track parameter from seed
     TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
     paramsEstimationCfg.inputSeeds = inputSeeds;
-    paramsEstimationCfg.inputProtoTracks = inputProtoTracks;
-    paramsEstimationCfg.inputSpacePoints = {
-        spCfg.outputSpacePoints,
-    };
-    paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
     paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-    paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
-    paramsEstimationCfg.deltaRMax = 100._mm;
-    paramsEstimationCfg.deltaRMin = 10._mm;
     paramsEstimationCfg.sigmaLoc0 = 25._um;
     paramsEstimationCfg.sigmaLoc1 = 100._um;
     paramsEstimationCfg.sigmaPhi = 0.02_degree;

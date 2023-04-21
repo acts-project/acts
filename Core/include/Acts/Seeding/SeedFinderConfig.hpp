@@ -46,12 +46,9 @@ struct SeedFinderConfig {
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
 
-  // force sorting of middle SPs in radius
-  bool forceRadialSorting = false;
-
   // radial range for middle SP
   // variable range based on SP radius
-  bool useVariableMiddleSPRange = true;
+  bool useVariableMiddleSPRange = false;
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
   // range defined in vector for each z region
@@ -121,6 +118,10 @@ struct SeedFinderConfig {
   // WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
+
+  // z of last layers to avoid iterations
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
 
   std::vector<size_t> zBinsCustomLooping = {};
 
@@ -231,6 +232,7 @@ struct SeedFinderOptions {
   float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
   float pT2perRadius = std::numeric_limits<float>::quiet_NaN();
   float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  float multipleScattering2 = std::numeric_limits<float>::quiet_NaN();
 
   bool isInInternalUnits = false;
 
@@ -267,6 +269,8 @@ struct SeedFinderOptions {
         std::pow(config.highland / options.pTPerHelixRadius, 2);
     options.sigmapT2perRadius =
         options.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
+    options.multipleScattering2 =
+        config.maxScatteringAngle2 * std::pow(config.sigmaScattering, 2);
     return options;
   }
 };

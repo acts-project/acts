@@ -23,45 +23,36 @@ constexpr static double s_normalizationTolerance = 1.e-4;
 
 namespace detail {
 
-template <typename component_range_t, typename projector_t,
-          typename print_flag_t = std::false_type>
+template <typename component_range_t, typename projector_t>
 bool weightsAreNormalized(const component_range_t &cmps,
                           const projector_t &proj,
-                          double tol = s_normalizationTolerance,
-                          print_flag_t print_flag = print_flag_t{}) {
-  double sum_of_weights = 0.0;
+                          double tol = s_normalizationTolerance) {
+  double sumOfWeights = 0.0;
 
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
-    sum_of_weights += proj(*it);
+    sumOfWeights += proj(*it);
   }
 
-  if (std::abs(sum_of_weights - 1.0) < tol) {
-    return true;
-  } else {
-    if constexpr (print_flag) {
-      std::cout << std::setprecision(10)
-                << "diff from 1: " << std::abs(sum_of_weights - 1.0) << "\n";
-    }
-
-    return false;
-  }
+  return std::abs(sumOfWeights - 1.0) < tol;
 }
 
 template <typename component_range_t, typename projector_t>
 void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
-  double sum_of_weights = 0.0;
+  double sumOfWeights = 0.0;
 
   // we need decltype(auto) here to support proxy-types with reference
   // semantics, otherwise there is a `cannot bind ... to ...` error
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
     decltype(auto) cmp = *it;
-    throw_assert(std::isfinite(proj(cmp)), "weight not finite:" << proj(cmp));
-    sum_of_weights += proj(cmp);
+    assert(std::isfinite(proj(cmp)) && "weight not finite in normalization");
+    sumOfWeights += proj(cmp);
   }
+
+  assert(sumOfWeights > 0 && "sum of weights is not > 0");
 
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
     decltype(auto) cmp = *it;
-    proj(cmp) /= sum_of_weights;
+    proj(cmp) /= sumOfWeights;
   }
 }
 
@@ -69,12 +60,12 @@ void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
 // destruction, it also contains some assertions in the constructor and
 // destructor. It can be removed without change of behaviour, since it only
 // holds const references
-template <typename propagator_state_t, typename stepper_t>
+template <typename propagator_state_t, typename stepper_t, typename navigator_t>
 class ScopedGsfInfoPrinterAndChecker {
   const propagator_state_t &m_state;
   const stepper_t &m_stepper;
+  const navigator_t &m_navigator;
   double m_p_initial;
-  std::size_t m_missedCount;
   const Logger &m_logger;
 
   const Logger &logger() const { return m_logger; }
@@ -93,34 +84,39 @@ class ScopedGsfInfoPrinterAndChecker {
     }
   }
 
-  void checks(const std::string_view &where) const {
+  void checks(bool onStart) const {
     const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
-    // If all components are missed, their weights have been reset to zero.
-    // In this case the weights might not be normalized and not even be
-    // finite due to a division by zero.
-    if (m_stepper.numberComponents(m_state.stepping) > m_missedCount) {
-      throw_assert(
-          std::all_of(cmps.begin(), cmps.end(),
-                      [](auto cmp) { return std::isfinite(cmp.weight()); }),
-          "some weights are not finite at " << where);
+    [[maybe_unused]] const bool allFinite =
+        std::all_of(cmps.begin(), cmps.end(),
+                    [](auto cmp) { return std::isfinite(cmp.weight()); });
+    [[maybe_unused]] const bool allNormalized = detail::weightsAreNormalized(
+        cmps, [](const auto &cmp) { return cmp.weight(); });
+    [[maybe_unused]] const bool zeroComponents =
+        m_stepper.numberComponents(m_state.stepping) == 0;
 
-      throw_assert(detail::weightsAreNormalized(
-                       cmps, [](const auto &cmp) { return cmp.weight(); }),
-                   "not normalized at " << where);
+    if (onStart) {
+      assert(not zeroComponents && "no cmps at the start");
+      assert(allFinite && "weights not finite at the start");
+      assert(allNormalized && "not normalized at the start");
+    } else {
+      assert(not zeroComponents && "no cmps at the end");
+      assert(allFinite && "weights not finite at the end");
+      assert(allNormalized && "not normalized at the end");
     }
   }
 
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
                                  const stepper_t &stepper,
-                                 std::size_t missedCount, const Logger &_logger)
+                                 const navigator_t &navigator,
+                                 const Logger &logger)
       : m_state(state),
         m_stepper(stepper),
+        m_navigator(navigator),
         m_p_initial(stepper.momentum(state.stepping)),
-        m_missedCount(missedCount),
-        m_logger{_logger} {
+        m_logger{logger} {
     // Some initial printing
-    checks("start");
+    checks(true);
     ACTS_VERBOSE("Gsf step "
                  << state.stepping.steps << " at mean position "
                  << stepper.position(state.stepping).transpose()
@@ -137,14 +133,14 @@ class ScopedGsfInfoPrinterAndChecker {
   }
 
   ~ScopedGsfInfoPrinterAndChecker() {
-    if (m_state.navigation.currentSurface) {
+    if (m_navigator.currentSurface(m_state.navigation)) {
       const auto p_final = m_stepper.momentum(m_state.stepping);
       ACTS_VERBOSE("Component status at end of step:");
       print_component_stats();
       ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)
                                        << p_final - m_p_initial);
     }
-    checks("end");
+    checks(false);
   }
 };
 

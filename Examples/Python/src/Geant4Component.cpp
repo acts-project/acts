@@ -13,6 +13,7 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
@@ -24,6 +25,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
@@ -115,13 +117,13 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
-        g4PrCfg.inputParticles = inputParticles;
-        g4PrCfg.forceParticle = true;
+        g4PrCfg.forcedPdgCode = 0;
+        g4PrCfg.forcedCharge = 0.;
         g4PrCfg.forcedMass = 0.;
-        g4PrCfg.forcedPdgCode = 999;
 
         auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
                                       physicsList, g4PrCfg);
+        g4Cfg.inputParticles = inputParticles;
 
         MaterialSteppingAction::Config mStepCfg;
         mStepCfg.excludeMaterials = {"Air", "Vacuum"};
@@ -152,10 +154,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
-        g4PrCfg.inputParticles = inputParticles;
 
         auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
                                       physicsList, g4PrCfg);
+        g4Cfg.inputParticles = inputParticles;
 
         ParticleTrackingAction::Config g4TrackCfg;
         ParticleTrackingAction* particleAction = new ParticleTrackingAction(
@@ -246,15 +248,26 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     using Geant4Detector = ActsExamples::Geant4::Geant4Detector;
 
-    auto g = py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
-                 mod, "Geant4Detector")
-                 .def(py::init<>())
-                 .def("constructDetector",
-                      py::overload_cast<const Geant4Detector::Config&>(
-                          &Geant4Detector::constructDetector))
-                 .def("constructTrackingGeometry",
-                      py::overload_cast<const Geant4Detector::Config&>(
-                          &Geant4Detector::constructTrackingGeometry));
+    auto g =
+        py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
+            mod, "Geant4Detector")
+            .def(py::init<>())
+            .def(
+                "constructDetector",
+                [](Geant4Detector& self, const Geant4Detector::Config& cfg,
+                   Logging::Level logLevel) {
+                  auto logger = getDefaultLogger("Geant4Detector", logLevel);
+                  return self.constructDetector(cfg, *logger);
+                },
+                py::arg("cfg"), py::arg("logLevel") = Logging::INFO)
+            .def(
+                "constructTrackingGeometry",
+                [](Geant4Detector& self, const Geant4Detector::Config& cfg,
+                   Logging::Level logLevel) {
+                  auto logger = getDefaultLogger("Geant4Detector", logLevel);
+                  return self.constructTrackingGeometry(cfg, *logger);
+                },
+                py::arg("cfg"), py::arg("logLevel") = Logging::INFO);
 
     auto c = py::class_<Geant4Detector::Config>(g, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Geant4Detector::Config);
@@ -267,8 +280,36 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT_END();
   }
 
+  {
+    using MockupSectorBuilder = ActsExamples::MockupSectorBuilder;
+    using Config = ActsExamples::MockupSectorBuilder::Config;
+    using ChamberConfig = ActsExamples::MockupSectorBuilder::ChamberConfig;
+
+    auto ms =
+        py::class_<MockupSectorBuilder, std::shared_ptr<MockupSectorBuilder>>(
+            mod, "MockupSectorBuilder")
+            .def(py::init<const Config&>())
+            .def("buildChamber", &MockupSectorBuilder::buildChamber)
+            .def("buildSector", &MockupSectorBuilder::buildSector)
+            .def("drawSector", &MockupSectorBuilder::drawSector);
+
+    auto c = py::class_<Config>(ms, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(gdmlPath);
+    ACTS_PYTHON_MEMBER(NumberOfSectors);
+    ACTS_PYTHON_MEMBER(toleranceOverlap);
+    ACTS_PYTHON_STRUCT_END();
+
+    auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
+    ACTS_PYTHON_MEMBER(name);
+    ACTS_PYTHON_MEMBER(SensitiveNames);
+    ACTS_PYTHON_MEMBER(PassiveNames);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
   Acts::Python::Context ctx;
-  ctx.modules["geant4"] = &mod;
+  ctx.modules["geant4"] = mod;
 
   addGeant4HepMC3(ctx);
 }

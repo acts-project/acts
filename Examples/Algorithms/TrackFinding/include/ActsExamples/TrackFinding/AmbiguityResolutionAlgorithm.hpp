@@ -8,7 +8,9 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 #include <vector>
@@ -25,18 +27,21 @@ namespace ActsExamples {
 ///  3) Else, remove the track with the highest relative shared hits (i.e.
 ///     shared hits / hits).
 ///  4) Back to square 1.
-class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
+class AmbiguityResolutionAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Input trajectories collection.
-    std::string inputTrajectories;
+    std::string inputTracks;
     /// Output trajectories collection.
-    std::string outputTrajectories;
+    std::string outputTracks;
 
     /// Maximum amount of shared hits per track.
     std::uint32_t maximumSharedHits = 1;
+    /// Maximum number of iterations
+    std::uint32_t maximumIterations = 1000;
+
+    /// Minumum number of measurement to form a track.
+    size_t nMeasurementsMin = 7;
   };
 
   /// Construct the ambiguity resolution algorithm.
@@ -56,6 +61,8 @@ class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

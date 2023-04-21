@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -42,10 +43,25 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         .def("geometryId",
              [](Acts::Surface& self) { return self.geometryId(); })
-        .def("center", [](Acts::Surface& self) {
-          return self.center(Acts::GeometryContext{});
-        });
+        .def("center",
+             [](Acts::Surface& self) {
+               return self.center(Acts::GeometryContext{});
+             })
+        .def("type", [](Acts::Surface& self) { return self.type(); });
   }
+
+  {
+    py::enum_<Acts::Surface::SurfaceType>(m, "SurfaceType")
+        .value("Cone", Acts::Surface::SurfaceType::Cone)
+        .value("Cylinder", Acts::Surface::SurfaceType::Cylinder)
+        .value("Disc", Acts::Surface::SurfaceType::Disc)
+        .value("Perigee", Acts::Surface::SurfaceType::Perigee)
+        .value("Plane", Acts::Surface::SurfaceType::Plane)
+        .value("Straw", Acts::Surface::SurfaceType::Straw)
+        .value("Curvilinear", Acts::Surface::SurfaceType::Curvilinear)
+        .value("Other", Acts::Surface::SurfaceType::Other);
+  }
+
   {
     py::class_<Acts::TrackingGeometry, std::shared_ptr<Acts::TrackingGeometry>>(
         m, "TrackingGeometry")
@@ -69,6 +85,12 @@ void addGeometry(Context& ctx) {
   {
     py::class_<Acts::Experimental::Detector,
                std::shared_ptr<Acts::Experimental::Detector>>(m, "Detector");
+  }
+
+  {
+    py::class_<Acts::Experimental::DetectorVolume,
+               std::shared_ptr<Acts::Experimental::DetectorVolume>>(
+        m, "DetectorVolume");
   }
 }
 
