@@ -227,7 +227,7 @@ Acts::Experimental::LayerStructureBuilder::create(
   }
 
   // Return the internal structure
-  return {internalSurfaces, internalVolumes,
-          std::move(internalCandidatesUpdator),
-          std::move(internalVolumeUpdator)};
+  return InternalStructure{internalSurfaces, internalVolumes,
+                           std::move(internalCandidatesUpdator),
+                           std::move(internalVolumeUpdator)};
 }

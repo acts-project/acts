@@ -25,10 +25,20 @@ namespace Experimental {
 
 class DetectorVolume;
 
-using InternalStructure =
-    std::tuple<std::vector<std::shared_ptr<Surface>>,
-               std::vector<std::shared_ptr<DetectorVolume>>,
-               SurfaceCandidatesUpdator, DetectorVolumeUpdator>;
+/// Holder struct for the internal structure components of a DetectorVolume
+///
+/// @note the surface surfacesUpdator needs to handle also portal providing
+/// of contained volumes.
+struct InternalStructure {
+  /// Contained surfaces of this volume, handled by the surfacesUpdator
+  std::vector<std::shared_ptr<Surface>> surfaces = {};
+  /// Contained volumes of this volume, handled by the volumeUpdator
+  std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
+  /// Navigation delegate for surfaces
+  SurfaceCandidatesUpdator surfacesUpdator;
+  /// Navigaiton delegate for voluems
+  DetectorVolumeUpdator volumeUpdator;
+};
 
 /// @brief This is the interface definition of internal structure
 /// builders for DetectorVolume construction.
