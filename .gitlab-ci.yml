@@ -126,7 +126,7 @@ build_linux_ubuntu:
     - docker
 
   cache:
-    key: ccache-linux_ubuntu-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    key: ccache-${CI_JOB_NAME}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
     paths:
       - ${CI_PROJECT_DIR}/ccache
 
@@ -169,7 +169,7 @@ build_linux_ubuntu:
     - ccache -s
 
 linux_test_examples:
-  stage: build
+  stage: test
   image: ghcr.io/acts-project/ubuntu2204:v41
   needs: [build_linux_ubuntu]
   tags:
@@ -195,3 +195,66 @@ linux_test_examples:
     - cd src
     - pip3 install -r Examples/Python/tests/requirements.txt
     - pytest -rFsv -k "not exatrkx" -v -n auto
+
+linux_ubuntu_2204_cpp17:
+  variables:
+    CXXSTD: 17
+    INSTALL_DIR: ${CI_PROJECT_DIR}/install
+
+  stage: build
+  image: ghcr.io/acts-project/ubuntu2204:v41
+  tags:
+    - docker
+
+  cache:
+    key: ccache-${CI_JOB_NAME}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
+  script:
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src
+      -GNinja
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
+      -DACTS_BUILD_EVERYTHING=ON
+      -DACTS_BUILD_ODD=ON
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+      -DACTS_FORCE_ASSERTIONS=ON
+      -DACTS_BUILD_ANALYSIS_APPS=ON
+      -DACTS_BUILD_PLUGIN_ONNX=ON
+
+    - ccache -z
+    - cmake --build build --
+    - ccache -s
+
+    - ctest --test-dir build -j$(nproc)
+    - cmake --build build --target integrationtests
+
+    # downstream configure
+    - > 
+      cmake -B build-downstream -S Tests/DownstreamProject
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+    # Downstream build
+    - cmake --build build-downstream
+
+    # Downstream run
+    - ./build-downstream/bin/ShowActsVersion
