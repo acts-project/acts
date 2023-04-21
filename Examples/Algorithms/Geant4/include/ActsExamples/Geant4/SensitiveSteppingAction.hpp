@@ -30,7 +30,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool charged = true;
     bool neutral = false;
     bool primary = true;
-    bool secondary = true;
+    bool secondary = false;
   };
 
   /// Construct the stepping action
