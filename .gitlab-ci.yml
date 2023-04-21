@@ -383,12 +383,11 @@ lcg_101:
 
   parallel:
     matrix:
-      - OS:
-          - centos7
-          - centos8
-        COMPILER:
-          - gcc11
-          - clang12
+      - OS: [centos7]
+        COMPILER: [gcc10, gcc11, clang12]
+
+      - OS: [centos8]
+        COMPILER: [gcc11]
 
 lcg_102b:
   <<: *lcg_base_job
@@ -398,13 +397,11 @@ lcg_102b:
 
   parallel:
     matrix:
-      - OS:
-          - centos7
-          - centos8
-          - alma9
-        COMPILER:
-          - gcc11
-          - clang12
+      - OS: [centos7]
+        COMPILER: [gcc8, gcc11, clang12]
+
+      - OS: [centos8, alma9]
+        COMPILER: [gcc11]
 
 lcg_103:
   <<: *lcg_base_job
@@ -414,11 +411,8 @@ lcg_103:
 
   parallel:
     matrix:
-      - OS:
-          - centos7
-          - alma9
-        COMPILER:
-          - gcc11
-          - gcc12
-          - clang12
-          - clang15
+      - OS: [centos7]
+        COMPILER: [gcc11, gcc12, clang12, clang15]
+
+      - OS: [alma9]
+        COMPILER: [gcc11, gcc12]
