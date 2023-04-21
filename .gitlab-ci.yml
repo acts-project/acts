@@ -354,30 +354,38 @@ variables:
 
     - ctest --test-dir build -j$(nproc)
 
-centos7_lcg102b_gcc11:
-  <<: *lcg_base_job
-  variables:
-    OS: centos7
-    LCG_VERSION: 102b
-    COMPILER: gcc11
+# centos7_lcg102b_gcc11:
+  # <<: *lcg_base_job
+  # variables:
+    # OS: centos7
+    # LCG_VERSION: 102b
+    # COMPILER: gcc11
 
-centos8_lcg102b_gcc11:
-  <<: *lcg_base_job
-  variables:
-    OS: centos8
-    LCG_VERSION: 102b
-    COMPILER: gcc11
+# centos8_lcg102b_gcc11:
+  # <<: *lcg_base_job
+  # variables:
+    # OS: centos8
+    # LCG_VERSION: 102b
+    # COMPILER: gcc11
 
-alma9_lcg102b_gcc11:
-  <<: *lcg_base_job
-  variables:
-    OS: alma9
-    LCG_VERSION: 102b
-    COMPILER: gcc11
+# alma9_lcg102b_gcc11:
+  # <<: *lcg_base_job
+  # variables:
+    # OS: alma9
+    # LCG_VERSION: 102b
+    # COMPILER: gcc11
   
-# lcg_matrix:
-  # parallel:
-    # matrix:
-      # - OS:
-        # - centos7
-        # - centos7
+lcg_102b:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: 102b
+
+  parallel:
+    matrix:
+      - OS:
+        - centos7
+        - centos8
+        - alma9
+      - COMPILER:
+        - gcc11
