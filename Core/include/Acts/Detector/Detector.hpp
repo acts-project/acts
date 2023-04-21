@@ -29,19 +29,21 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// Create a detector from volumes
   ///
   /// @param name the detecor name
-  /// @param rootVolume the root detector volume
+  /// @param rootVolumes the volumes contained by this detector
   /// @param detectorVolumeUpdator is a Delegate to find the assocaited volume
   ///
   /// @note will throw an exception if volumes vector is empty
   /// @note will throw an exception if duplicate volume names exist
   /// @note will throw an exception if the delegate is not connected
-  Detector(const std::string& name, std::shared_ptr<DetectorVolume> rootVolume,
+  Detector(const std::string& name,
+           std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
            DetectorVolumeUpdator&& detectorVolumeUpdator) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of Detector.
   static std::shared_ptr<Detector> makeShared(
-      const std::string& name, std::shared_ptr<DetectorVolume> rootVolume,
+      const std::string& name,
+      std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
       DetectorVolumeUpdator&& detectorVolumeUpdator);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
@@ -66,15 +68,15 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @return The shared pointer
   std::shared_ptr<const Detector> getSharedPtr() const;
 
-  /// Non-const access to the root volume
+  /// Non-const access to the root volumes
   ///
   /// @return the root volume shared pointer
-  const std::shared_ptr<DetectorVolume>& rootVolumePtr();
+  std::vector<std::shared_ptr<DetectorVolume>>& rootVolumePtrs();
 
-  /// Const access to the root volume
+  /// Const access to the root volumes
   ///
   /// @return a vector to const DetectorVolume raw pointers
-  const DetectorVolume* rootVolume() const;
+  const std::vector<const DetectorVolume*>& rootVolumes() const;
 
   /// Non-const access to the root volume
   ///
@@ -128,8 +130,8 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// Name of the detector
   std::string m_name = "Unnamed";
 
-  /// Root volume
-  std::shared_ptr<DetectorVolume> m_rootVolume;
+  /// Root volumes
+  DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_rootVolumes;
 
   /// Volume store (internal/external)
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;

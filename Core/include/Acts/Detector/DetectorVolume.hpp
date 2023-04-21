@@ -102,8 +102,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolume(
       const GeometryContext& gctx, const std::string& name,
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-      const std::vector<std::shared_ptr<Surface>>& surfaces,
-      const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+      std::vector<std::shared_ptr<Surface>> surfaces,
+      std::vector<std::shared_ptr<DetectorVolume>> volumes,
       DetectorVolumeUpdator&& detectorVolumeUpdator,
       SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
 
@@ -129,8 +129,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, const std::string& name,
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-      const std::vector<std::shared_ptr<Surface>>& surfaces,
-      const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+      std::vector<std::shared_ptr<Surface>> surfaces,
+      std::vector<std::shared_ptr<DetectorVolume>> volumes,
       DetectorVolumeUpdator&& detectorVolumeUpdator,
       SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
 
