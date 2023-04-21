@@ -196,13 +196,11 @@ linux_test_examples:
     - pip3 install -r Examples/Python/tests/requirements.txt
     - pytest -rFsv -k "not exatrkx" -v -n auto
 
-linux_ubuntu_2204_cpp17:
+.linux_ubuntu_extra: &linux_ubuntu_extra
   variables:
-    CXXSTD: 17
     INSTALL_DIR: ${CI_PROJECT_DIR}/install
 
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204:v41
   tags:
     - docker
 
@@ -258,3 +256,21 @@ linux_ubuntu_2204_cpp17:
 
     # Downstream run
     - ./build-downstream/bin/ShowActsVersion
+
+linux_ubuntu_2004_cpp17:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 17
+  image: ghcr.io/acts-project/ubuntu2004:v41
+
+linux_ubuntu_2204_cpp20:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 20
+  image: ghcr.io/acts-project/ubuntu2204_cpp20:v41
+
+linux_ubuntu_2204_clang:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 17
+  image: ghcr.io/acts-project/ubuntu2204_clang:v41
