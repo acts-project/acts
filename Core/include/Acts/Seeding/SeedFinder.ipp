@@ -293,9 +293,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       float zOrigin = zM - rM * cotTheta;
 
       // if interactionPointCut is false we apply z cuts before coordinate
-      // transformation to avoid unnecessary calculations if interactionPointCut
-      // is true we apply the curvature cut first because it is more frequent
-      // and it requires the coordinate transformation
+      // transformation to avoid unnecessary calculations. If
+      // interactionPointCut is true we apply the curvature cut first because it
+      // is more frequent but requires the coordinate transformation
       if (not m_config.interactionPointCut) {
         // cuts on the origin of the dublet (the intersection of the line
         // between them with the z axis) and z-distance between SPs
