@@ -281,7 +281,7 @@ variables:
 
 
 lcg:
-  image: cern/cc7-base
+  image: ghcr.io/acts-project/centos7-base:
   stage: build
   tags:
     - docker
@@ -300,7 +300,6 @@ lcg:
       - ${CI_PROJECT_DIR}/ccache
 
   script:
-    - yum install -y HEP_OSlibs
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/${LCG_PLATFORM}/setup.sh
       
     - git clone $CLONE_URL src
