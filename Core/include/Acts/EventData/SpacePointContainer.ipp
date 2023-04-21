@@ -112,7 +112,7 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
 template <typename container_t, template <typename> class holder_t>
 template <typename T>
 const T& SpacePointContainer<container_t, holder_t>::component(HashedString key,
-							       std::size_t n) const {
+							       const std::size_t& n) const {
   using namespace Acts::HashedStringLiteral;
   switch (key) {
     case "TopHalfStripLength"_hash:
@@ -181,92 +181,92 @@ SpacePointContainer<container_t, holder_t>::container() const {
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
 inline typename SpacePointContainer<container_t, holder_t>::ValueType&
-SpacePointContainer<container_t, holder_t>::sp(std::size_t n) {
+SpacePointContainer<container_t, holder_t>::sp(const std::size_t& n) {
   return container().get_impl(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline typename SpacePointContainer<container_t, holder_t>::ValueType&
-SpacePointContainer<container_t, holder_t>::sp(std::size_t n) const {
+SpacePointContainer<container_t, holder_t>::sp(const std::size_t& n) const {
   return container().get_impl(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float& SpacePointContainer<container_t, holder_t>::x(
-    std::size_t n) const {
+    const std::size_t& n) const {
   return m_data.x(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float& SpacePointContainer<container_t, holder_t>::y(
-    std::size_t n) const {
+    const std::size_t& n) const {
   return m_data.y(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float& SpacePointContainer<container_t, holder_t>::z(
-    std::size_t n) const {
+    const std::size_t& n) const {
   return m_data.z(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float& SpacePointContainer<container_t, holder_t>::phi(
-    std::size_t n) const {
+    const std::size_t& n) const {
   return m_data.phi(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float& SpacePointContainer<container_t, holder_t>::radius(
-    std::size_t n) const {
+    const std::size_t& n) const {
   return m_data.radius(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float& SpacePointContainer<container_t, holder_t>::varianceR(
-    std::size_t n) const {
+    const std::size_t& n) const {
   return m_data.varianceR(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float& SpacePointContainer<container_t, holder_t>::varianceZ(
-    std::size_t n) const {
+    const std::size_t& n) const {
   return m_data.varianceZ(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float&
-SpacePointContainer<container_t, holder_t>::quality(std::size_t n) const {
+SpacePointContainer<container_t, holder_t>::quality(const std::size_t& n) const {
   return m_data.quality(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const float&
-SpacePointContainer<container_t, holder_t>::deltaR(std::size_t n) const {
+SpacePointContainer<container_t, holder_t>::deltaR(const std::size_t& n) const {
   return m_data.deltaR(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline void
-SpacePointContainer<container_t, holder_t>::setQuality(std::size_t n, const float& value) const {
+SpacePointContainer<container_t, holder_t>::setQuality(const std::size_t& n, const float& value) const {
   m_data.setQuality(n, value);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline void
-SpacePointContainer<container_t, holder_t>::setDeltaR(std::size_t n, const float& value) const {
+SpacePointContainer<container_t, holder_t>::setDeltaR(const std::size_t& n, const float& value) const {
   m_data.setDeltaR(n, value);
 }
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
 inline typename SpacePointContainer<container_t, holder_t>::ProxyType
-SpacePointContainer<container_t, holder_t>::proxy(std::size_t n) {
+SpacePointContainer<container_t, holder_t>::proxy(const std::size_t& n) {
   return {this, n};
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const typename SpacePointContainer<container_t, holder_t>::ProxyType
-SpacePointContainer<container_t, holder_t>::proxy(std::size_t n) const {
+SpacePointContainer<container_t, holder_t>::proxy(const std::size_t& n) const {
   return {*this, n};
 }
 

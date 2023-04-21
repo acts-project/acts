@@ -86,7 +86,7 @@ inline bool SpacePointProxyIterator<container_t, read_only>::operator>=(
 template <typename container_t, bool read_only>
 inline SpacePointProxyIterator<container_t, read_only>&
 SpacePointProxyIterator<container_t, read_only>::operator+=(
-    std::size_t offset) {
+    const std::size_t& offset) {
   m_index += offset;
   return *this;
 }
@@ -94,7 +94,7 @@ SpacePointProxyIterator<container_t, read_only>::operator+=(
 template <typename container_t, bool read_only>
 inline SpacePointProxyIterator<container_t, read_only>&
 SpacePointProxyIterator<container_t, read_only>::operator-=(
-    std::size_t offset) {
+    const std::size_t& offset) {
   m_index -= offset;
   return *this;
 }
@@ -102,14 +102,14 @@ SpacePointProxyIterator<container_t, read_only>::operator-=(
 template <typename container_t, bool read_only>
 inline SpacePointProxyIterator<container_t, read_only>
 SpacePointProxyIterator<container_t, read_only>::operator+(
-    std::size_t offset) const {
+    const std::size_t& offset) const {
   return SpacePointProxyIterator(*m_container, m_index + offset);
 }
 
 template <typename container_t, bool read_only>
 inline SpacePointProxyIterator<container_t, read_only>
 SpacePointProxyIterator<container_t, read_only>::operator-(
-    std::size_t offset) const {
+    const std::size_t& offset) const {
   return SpacePointProxyIterator(*m_container, m_index - offset);
 }
 

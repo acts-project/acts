@@ -153,9 +153,9 @@ class SpacePointContainer {
   const_iterator end() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ValueType& sp(std::size_t n);
+  ValueType& sp(const std::size_t& n);
 
-  ValueType& sp(std::size_t n) const;
+  ValueType& sp(const std::size_t& n) const;
 
  private:
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
@@ -164,9 +164,9 @@ class SpacePointContainer {
   const container_t& container() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType proxy(std::size_t n);
+  ProxyType proxy(const std::size_t& n);
 
-  const ProxyType proxy(std::size_t n) const;
+  const ProxyType proxy(const std::size_t& n) const;
 
   // const std::vector<ProxyType>& proxies() const;
 
@@ -174,23 +174,23 @@ class SpacePointContainer {
   // std::vector<ProxyType>& proxies();
     
  private:
-  const float& x(std::size_t n) const;
-  const float& y(std::size_t n) const;
-  const float& z(std::size_t n) const;
-  const float& phi(std::size_t n) const;
-  const float& radius(std::size_t n) const;
-  const float& varianceR(std::size_t n) const;
-  const float& varianceZ(std::size_t n) const;
+  const float& x(const std::size_t& n) const;
+  const float& y(const std::size_t& n) const;
+  const float& z(const std::size_t& n) const;
+  const float& phi(const std::size_t& n) const;
+  const float& radius(const std::size_t& n) const;
+  const float& varianceR(const std::size_t& n) const;
+  const float& varianceZ(const std::size_t& n) const;
 
-  const float& quality(std::size_t n) const;
-  const float& deltaR(std::size_t n) const;
+  const float& quality(const std::size_t& n) const;
+  const float& deltaR(const std::size_t& n) const;
 
-  void setQuality(std::size_t n, const float& value) const;
-  void setDeltaR(std::size_t n, const float& value) const;
+  void setQuality(const std::size_t& n, const float& value) const;
+  void setDeltaR(const std::size_t& n, const float& value) const;
   
   // component methods for additional quantities
   template <typename T>
-  const T& component(HashedString key, std::size_t n) const;
+  const T& component(HashedString key, const std::size_t& n) const;
 
  private:
   Acts::SpacePointContainerConfig m_config;
