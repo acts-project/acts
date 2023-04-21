@@ -11,8 +11,8 @@ target_link_libraries(
     ActsExamplesGeant4
     ActsExamplesGeant4Common
     ActsExamplesIoRoot)
-    
-    add_executable(
+
+add_executable(
   ActsExampleTestMockupBuilder
   TestMockupBuilder.cpp)
 target_link_libraries(
@@ -28,7 +28,7 @@ target_link_libraries(
     ActsExamplesDetectorGeant4
     ActsExamplesMuonSpectrometerMockupDetector
   )
-    
+
 install(
   TARGETS 
     ActsExampleMaterialRecordingGdml 
