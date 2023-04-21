@@ -19,7 +19,7 @@ namespace Acts {
 
 namespace Experimental {
 
-/// @brief  This file contains helper methdos to build common support structures
+/// @brief  This file contains helper methods to build common support structures
 /// such as support cylinders or discs.
 ///
 /// It allows to model those as Disc/CylinderSurface objects, but also - if

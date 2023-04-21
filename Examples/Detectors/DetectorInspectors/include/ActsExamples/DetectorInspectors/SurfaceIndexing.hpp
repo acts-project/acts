@@ -123,6 +123,9 @@ struct SurfaceIndexing {
         bValue = Acts::binR;
       } else if (bstring == "binPhi" or bstring == "phi") {
         bValue = Acts::binPhi;
+      } else {
+        throw std::invalid_argument(
+            "SurfaceBinning: binning type not supported.");
       }
       // Translate the option
       Acts::BinningOption bOption = Acts::open;

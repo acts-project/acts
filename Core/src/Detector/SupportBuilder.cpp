@@ -16,6 +16,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
+#include <stdexcept>
+
 std::vector<std::shared_ptr<Acts::Surface>>
 Acts::Experimental::SupportBuilder::cylindricalSupport(
     const Transform3& transform, const std::array<ActsScalar, 6u>& bounds,
@@ -51,8 +53,8 @@ Acts::Experimental::SupportBuilder::cylindricalSupport(
       ActsScalar planeY = planeR * sinPhi;
 
       Acts::Vector3 planeCenter(planeX, planeY, planeZ);
-      Acts::Vector3 planeAxisZ = {cosPhi, sinPhi, 0.};
-      Acts::Vector3 planeAxisY{0., 0., 1.};
+      Acts::Vector3 planeAxisZ(cosPhi, sinPhi, 0.);
+      Acts::Vector3 planeAxisY(0., 0., 1.);
       Acts::Vector3 planeAxisX = planeAxisY.cross(planeAxisZ);
 
       RotationMatrix3 planeRotation;
@@ -209,5 +211,9 @@ void Acts::Experimental::SupportBuilder::addSupport(
       layerSurfaces.insert(layerSurfaces.end(), dSupport.begin(),
                            dSupport.end());
     }
+  } else {
+    throw std::invalid_argument(
+        "SupportBuilder: currently only cylindrical/disc support building "
+        "possible.");
   }
 }

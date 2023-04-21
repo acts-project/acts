@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   BOOST_CHECK(surfacesUpdator2.connected());
   BOOST_CHECK(volumes2.empty());
   BOOST_CHECK(volumeUpdator2.connected());
-};
+}
 
 // Test the creation of the Cylinder
 BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {

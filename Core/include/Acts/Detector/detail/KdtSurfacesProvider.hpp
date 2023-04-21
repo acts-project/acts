@@ -54,14 +54,13 @@ class KdtSurfaces {
   /// @param surfaces the surfaces to be filled into the tree
   /// @param casts the cast list from global position into kdtree local
   /// @param rgen the reference point generator
-  ///
   KdtSurfaces(const GeometryContext& gctx,
               const std::vector<std::shared_ptr<Surface>>& surfaces,
               const std::array<BinningValue, kDIM>& casts,
               const reference_generator& rgen = PolyhedronReferenceGenerator{})
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
     // Simple check if the dimension is correct
-    if (kDIM == 0u or kDIM != m_casts.size()) {
+    if (kDIM == 0u) {
       throw std::invalid_argument(
           "KdtSurfaces: dimension and/or cast rules are incorrect.");
     }
