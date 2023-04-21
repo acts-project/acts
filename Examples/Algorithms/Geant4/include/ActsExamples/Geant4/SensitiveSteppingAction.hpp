@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Geant4/G4TrackSelector.hpp"
 
 #include <memory>
 #include <string>
@@ -24,20 +25,12 @@ namespace ActsExamples {
 /// and records (if necessary) the hit.
 class SensitiveSteppingAction : public G4UserSteppingAction {
  public:
-  /// Configuration of the Stepping action
-  struct Config {
-    /// Selection for hit recording
-    bool charged = true;
-    bool neutral = false;
-    bool primary = true;
-    bool secondary = false;
-  };
 
   /// Construct the stepping action
   ///
   /// @param cfg the configuration struct
   /// @param logger the ACTS logging instance
-  SensitiveSteppingAction(const Config& cfg,
+  SensitiveSteppingAction(const G4TrackSelector& sel,
                           std::unique_ptr<const Acts::Logger> logger =
                               Acts::getDefaultLogger("SensitiveSteppingAction",
                                                      Acts::Logging::INFO));
@@ -47,10 +40,10 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   /// @param step is the Geant4 step of the particle
   void UserSteppingAction(const G4Step* step) override;
 
- protected:
-  Config m_cfg;
-
  private:
+  // Allows to select the hits to store
+  G4TrackSelector m_selector;
+
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
 

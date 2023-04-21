@@ -158,15 +158,23 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                                       physicsList, g4PrCfg);
         g4Cfg.inputParticles = inputParticles;
 
-        ParticleTrackingAction::Config g4TrackCfg;
+        // Make a consistent track selection for particles & hits
+        G4TrackSelector::Config selCfg;
+        selCfg.charged = true;
+        selCfg.neutral = false;
+        selCfg.primary = true;
+        selCfg.secondary = true;
+        G4TrackSelector selector(selCfg);
+
+        // Instantiate the particle action
         ParticleTrackingAction* particleAction = new ParticleTrackingAction(
-            g4TrackCfg,
+            selector,
             Acts::getDefaultLogger("ParticleTrackingAction", level));
         g4Cfg.trackingActions.push_back(particleAction);
 
-        SensitiveSteppingAction::Config g4StepCfg;
+        // Instantiate the hit action
         G4UserSteppingAction* steppingAction = new SensitiveSteppingAction(
-            g4StepCfg,
+            selector,
             Acts::getDefaultLogger("SensitiveSteppingAction", level));
         g4Cfg.steppingActions.push_back(steppingAction);
 

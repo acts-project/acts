@@ -19,17 +19,25 @@
 #include <globals.hh>
 
 ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
-    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : G4UserTrackingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
+    const G4TrackSelector& sel, std::unique_ptr<const Acts::Logger> logger)
+    : G4UserTrackingAction(), m_selector(sel), m_logger(std::move(logger)) {}
 
 void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     const G4Track* aTrack) {
+  if( not m_selector(*aTrack) ) {
+    return;
+  }
+
   auto& eventData = EventStoreRegistry::eventData();
   eventData.particlesInitial.push_back(convert(*aTrack));
 }
 
 void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
     const G4Track* aTrack) {
+  if( not m_selector(*aTrack) ) {
+    return;
+  }
+
   auto& eventData = EventStoreRegistry::eventData();
   eventData.particlesFinal.push_back(convert(*aTrack));
 }

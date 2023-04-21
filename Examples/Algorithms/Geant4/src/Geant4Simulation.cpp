@@ -34,6 +34,8 @@
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
 
+#include "ActsExamples/Geant4/G4TrackSelector.hpp"
+
 namespace {
 /// Helper method to add the user actions
 /// @tparam manager_t the run manager type

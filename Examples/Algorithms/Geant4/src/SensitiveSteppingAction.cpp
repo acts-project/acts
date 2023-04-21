@@ -20,8 +20,8 @@
 #include <G4VPhysicalVolume.hh>
 
 ActsExamples::SensitiveSteppingAction::SensitiveSteppingAction(
-    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
+    const G4TrackSelector& sel, std::unique_ptr<const Acts::Logger> logger)
+    : G4UserSteppingAction(), m_selector(sel), m_logger(std::move(logger)) {}
 
 void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     const G4Step* step) {
@@ -35,27 +35,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   // The particle after the step
   G4Track* track = step->GetTrack();
-  G4PrimaryParticle* primaryParticle =
-      track->GetDynamicParticle()->GetPrimaryParticle();
-
-  // Bail out if charged & configured to do so
-  G4double absCharge = std::abs(track->GetParticleDefinition()->GetPDGCharge());
-  if (not m_cfg.charged and absCharge > 0.) {
-    return;
-  }
-
-  // Bail out if neutral & configured to do so
-  if (not m_cfg.neutral and absCharge == 0.) {
-    return;
-  }
-
-  // Bail out if it is a primary & configured to be ignored
-  if (not m_cfg.primary and primaryParticle != nullptr) {
-    return;
-  }
-
-  // Bail out if it is a secondary & configured to be ignored
-  if (not m_cfg.secondary and primaryParticle == nullptr) {
+  if( not m_selector(*track) ) {
     return;
   }
 

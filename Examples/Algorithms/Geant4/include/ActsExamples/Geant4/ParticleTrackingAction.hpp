@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Geant4/G4TrackSelector.hpp"
 
 #include <memory>
 #include <string>
@@ -25,13 +26,11 @@ namespace ActsExamples {
 /// It records the initial and final particle state
 class ParticleTrackingAction : public G4UserTrackingAction {
  public:
-  struct Config {};
-
   /// Construct the stepping action
   ///
   /// @param cfg the configuration struct
   /// @param logger the ACTS logging instance
-  ParticleTrackingAction(const Config& cfg,
+  ParticleTrackingAction(const G4TrackSelector& sel,
                          std::unique_ptr<const Acts::Logger> logger =
                              Acts::getDefaultLogger("ParticleTrackingAction",
                                                     Acts::Logging::INFO));
@@ -49,10 +48,10 @@ class ParticleTrackingAction : public G4UserTrackingAction {
   /// @param aTrack the current Geant4 track
   void PostUserTrackingAction(const G4Track* aTrack) final;
 
- protected:
-  Config m_cfg;
-
  private:
+  /// Which particles to store
+  G4TrackSelector m_selector;
+
   /// Convert a G4Track to a SimParticle
   ///
   /// @param aTrack the current Geant4 track
