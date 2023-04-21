@@ -244,7 +244,7 @@ linux_test_examples:
 
     # downstream configure
     - > 
-      cmake -B build-downstream -S Tests/DownstreamProject
+      cmake -B build-downstream -S src/Tests/DownstreamProject
       -GNinja
       -DCMAKE_BUILD_TYPE=Release
       -DCMAKE_CXX_FLAGS=-Werror
