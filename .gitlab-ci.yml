@@ -233,7 +233,6 @@ linux_test_examples:
       -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
       -DACTS_FORCE_ASSERTIONS=ON
       -DACTS_BUILD_ANALYSIS_APPS=ON
-      -DACTS_BUILD_PLUGIN_ONNX=ON
 
     - ccache -z
     - cmake --build build --
