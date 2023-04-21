@@ -9,78 +9,78 @@
 
 namespace Acts {
 
-inline const float& SpacePointData::x(std::size_t idx) const {
+inline const float& SpacePointData::x(const std::size_t& idx) const {
   return m_x[idx];
 }
   
-inline const float& SpacePointData::y(std::size_t idx) const {
+inline const float& SpacePointData::y(const std::size_t& idx) const {
   return m_y[idx];
 }
   
-inline const float& SpacePointData::z(std::size_t idx) const {
+inline const float& SpacePointData::z(const std::size_t& idx) const {
   return m_z[idx];
 }
 
-inline const float& SpacePointData::radius(std::size_t idx) const {
+inline const float& SpacePointData::radius(const std::size_t& idx) const {
   return m_radius[idx];
 }
   
-inline const float& SpacePointData::phi(std::size_t idx) const {
+inline const float& SpacePointData::phi(const std::size_t& idx) const {
   return m_phi[idx];
 }
 
-inline const float& SpacePointData::varianceZ(std::size_t idx) const {
+inline const float& SpacePointData::varianceZ(const std::size_t& idx) const {
   return m_varianceZ[idx];
 }
 
-inline const float& SpacePointData::varianceR(std::size_t idx) const {
+inline const float& SpacePointData::varianceR(const std::size_t& idx) const {
   return m_varianceR[idx];
 }
 
   
-inline void SpacePointData::setX(std::size_t idx, const float& value) {
+inline void SpacePointData::setX(const std::size_t& idx, const float& value) {
   m_x[idx] = value;
 }
 
-inline void SpacePointData::setY(std::size_t idx, const float& value) {
+inline void SpacePointData::setY(const std::size_t& idx, const float& value) {
   m_y[idx] = value;
 }
 
-inline void SpacePointData::setZ(std::size_t idx, const float& value) {
+inline void SpacePointData::setZ(const std::size_t& idx, const float& value) {
   m_z[idx] = value;
 }
 
-inline void SpacePointData::setRadius(std::size_t idx, const float& value) {
+inline void SpacePointData::setRadius(const std::size_t& idx, const float& value) {
   m_radius[idx] = value;
 }
 
-inline void SpacePointData::setPhi(std::size_t idx, const float& value) {
+inline void SpacePointData::setPhi(const std::size_t& idx, const float& value) {
   m_phi[idx] = value;
 }
 
-inline void SpacePointData::setVarianceZ(std::size_t idx, const float& value) {
+inline void SpacePointData::setVarianceZ(const std::size_t& idx, const float& value) {
   m_varianceZ[idx] = value;
 }
   
-inline void SpacePointData::setVarianceR(std::size_t idx, const float& value) {
+inline void SpacePointData::setVarianceR(const std::size_t& idx, const float& value) {
   m_varianceR[idx] = value;
 }
   
-inline const float& SpacePointData::quality(std::size_t idx) const {
+inline const float& SpacePointData::quality(const std::size_t& idx) const {
   return m_quality[idx];
 }
 
-inline const float& SpacePointData::deltaR(std::size_t idx) const {
+inline const float& SpacePointData::deltaR(const std::size_t& idx) const {
   return m_deltaR[idx];
 }
 
-inline void SpacePointData::setQuality(std::size_t idx, const float& value) {
+inline void SpacePointData::setQuality(const std::size_t& idx, const float& value) {
   if (value > m_quality[idx]) {
     m_quality[idx] = value;
   }
 }
 
-inline void SpacePointData::setDeltaR(std::size_t idx, const float& value) {
+inline void SpacePointData::setDeltaR(const std::size_t& idx, const float& value) {
   m_deltaR[idx] = value;
 }
 
@@ -89,7 +89,7 @@ inline bool SpacePointData::hasDynamicVariable() const {
 }
 
 inline std::any SpacePointData::component(Acts::HashedString key,
-					  std::size_t n) const {
+					  const std::size_t& n) const {
   using namespace Acts::HashedStringLiteral;
   switch (key) {
   case "TopHalfStripLength"_hash:
@@ -110,66 +110,66 @@ inline std::any SpacePointData::component(Acts::HashedString key,
 }
   
 inline const float& SpacePointData::getTopHalfStripLength(
-    std::size_t idx) const {
+    const std::size_t& idx) const {
   return m_topHalfStripLength[idx];
 }
 
 inline const float& SpacePointData::getBottomHalfStripLength(
-    std::size_t idx) const {
+    const std::size_t& idx) const {
   return m_bottomHalfStripLength[idx];
 }
 
 inline const Acts::Vector3& SpacePointData::getTopStripDirection(
-    std::size_t idx) const {
+    const std::size_t& idx) const {
   return m_topStripDirection[idx];
 }
 
 inline const Acts::Vector3& SpacePointData::getBottomStripDirection(
-    std::size_t idx) const {
+    const std::size_t& idx) const {
   return m_bottomStripDirection[idx];
 }
 
 inline const Acts::Vector3& SpacePointData::getStripCenterDistance(
-    std::size_t idx) const {
+    const std::size_t& idx) const {
   return m_stripCenterDistance[idx];
 }
 
 inline const Acts::Vector3& SpacePointData::getTopStripCenterPosition(
-    std::size_t idx) const {
+    const std::size_t& idx) const {
   return m_topStripCenterPosition[idx];
 }
 
-inline void SpacePointData::setTopHalfStripLength(std::size_t idx,
+inline void SpacePointData::setTopHalfStripLength(const std::size_t& idx,
                                                   const float& value) {
   m_topHalfStripLength[idx] = value;
 }
 
-inline void SpacePointData::setBottomHalfStripLength(std::size_t idx,
+inline void SpacePointData::setBottomHalfStripLength(const std::size_t& idx,
                                                      const float& value) {
   m_bottomHalfStripLength[idx] = value;
 }
 
-inline void SpacePointData::setTopStripDirection(std::size_t idx,
+inline void SpacePointData::setTopStripDirection(const std::size_t& idx,
                                                  const Acts::Vector3& value) {
   m_topStripDirection[idx] = value;
 }
 
 inline void SpacePointData::setBottomStripDirection(
-    std::size_t idx, const Acts::Vector3& value) {
+    const std::size_t& idx, const Acts::Vector3& value) {
   m_bottomStripDirection[idx] = value;
 }
 
-inline void SpacePointData::setStripCenterDistance(std::size_t idx,
+inline void SpacePointData::setStripCenterDistance(const std::size_t& idx,
                                                    const Acts::Vector3& value) {
   m_stripCenterDistance[idx] = value;
 }
 
 inline void SpacePointData::setTopStripCenterPosition(
-    std::size_t idx, const Acts::Vector3& value) {
+    const std::size_t& idx, const Acts::Vector3& value) {
   m_topStripCenterPosition[idx] = value;
 }
 
-inline void SpacePointData::resize(std::size_t n, bool resizeDynamic) {
+inline void SpacePointData::resize(const std::size_t& n, bool resizeDynamic) {
   clear();
 
   m_x.resize(n, 0.);
