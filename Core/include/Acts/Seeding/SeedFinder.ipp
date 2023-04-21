@@ -285,13 +285,12 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
-      // longitudinal impact parameter
-      float zOrigin = zM - rM * cotTheta;
-
       // check if duplet cotTheta is within the region of interest
       if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
         continue;
       }
+      // longitudinal impact parameter
+      float zOrigin = zM - rM * cotTheta;
 
       // if interactionPointCut is false we apply z cuts before coordinate
       // transformation to avoid unnecessary calculations if interactionPointCut
