@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto detector = Acts::Experimental::Detector::makeShared(
-      "Detector", detectorVolume, Acts::Experimental::tryRootVolume());
+      "Detector", {detectorVolume}, Acts::Experimental::tryRootVolumes());
 
   using ActionListType = Acts::ActionList<>;
   using AbortListType = Acts::AbortList<>;

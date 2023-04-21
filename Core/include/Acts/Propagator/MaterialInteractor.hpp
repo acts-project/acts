@@ -59,7 +59,7 @@ struct MaterialInteractor {
     if (recordInteractions && !result.materialInteractions.empty() &&
         result.materialInteractions.back().volume != nullptr &&
         result.materialInteractions.back().updatedVolumeStep == false) {
-      UpdateResult(state, stepper, result);
+      updateResult(state, stepper, result);
     }
 
     // If we are on target, everything should have been done
@@ -177,7 +177,7 @@ struct MaterialInteractor {
   /// @param [in] stepper The stepper instance
   /// @param [in, out] result Result storage
   template <typename propagator_state_t, typename stepper_t>
-  void UpdateResult(propagator_state_t& state, const stepper_t& stepper,
+  void updateResult(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
     // Update the previous interaction
     Vector3 shift = stepper.position(state.stepping) -
@@ -193,6 +193,6 @@ struct MaterialInteractor {
     result.materialInL0 +=
         result.materialInteractions.back().materialSlab.thicknessInL0();
   }
-};  // namespace Acts
+};
 
 }  // namespace Acts
