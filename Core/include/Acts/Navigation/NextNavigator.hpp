@@ -30,7 +30,6 @@
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
-
 namespace Experimental {
 
 class NextNavigator {
@@ -102,6 +101,10 @@ class NextNavigator {
 
   const TrackingVolume* currentVolume(const State& /*state*/) const {
     return nullptr;  // TODO we do not have a tracking volume
+  }
+
+  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    return state.currentVolume->volumeMaterial();
   }
 
   const Surface* startSurface(const State& state) const {
@@ -425,5 +428,4 @@ class NextNavigator {
 };
 
 }  // namespace Experimental
-
 }  // namespace Acts
