@@ -280,17 +280,13 @@ variables:
   # image: ghcr.io/acts-project/ubuntu2204_clang:v41
 
 
-lcg:
-  image: ghcr.io/acts-project/centos7-base:sha-ca76a1f2
+.lcg: &lcg_base_job
   stage: build
   tags:
     - docker
     - cvmfs
 
   variables:
-    LCG_VERSION: 102b
-    LCG_PLATFORM: x86_64-centos7-gcc12-opt
-
     INSTALL_DIR: ${{ github.workspace }}/install
 
   cache:
@@ -321,6 +317,9 @@ lcg:
       -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_FORCE_ASSERTIONS=ON
+      -DACTS_BUILD_UNITTESTS=ON
+      -DACTS_BUILD_INTEGRATIONTESTS=ON
+      -DACTS_BUILD_BENCHMARKS=ON
       -DACTS_BUILD_EXAMPLES=ON
       -DACTS_BUILD_PLUGIN_DD4HEP=OFF
       -DACTS_BUILD_PLUGIN_TGEO=ON
@@ -329,9 +328,6 @@ lcg:
       -DACTS_BUILD_FATRAS=ON
       -DACTS_BUILD_PLUGIN_LEGACY=ON
       -DACTS_BUILD_PLUGIN_AUTODIFF=ON
-      -DACTS_BUILD_BENCHMARKS=ON
-      -DACTS_BUILD_UNITTESTS=ON
-      -DACTS_BUILD_INTEGRATIONTESTS=ON
       -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
       -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
       -DACTS_BUILD_EXAMPLES_GEANT4=ON
@@ -348,3 +344,24 @@ lcg:
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
+
+centos7_lcg102b_gcc11:
+  <<: *lcg_base_job
+  image: ghcr.io/acts-project/centos7-base:sha-ca76a1f2
+  variables:
+    LCG_VERSION: 102b
+    LCG_PLATFORM: x86_64-centos7-gcc11-opt
+
+centos8_lcg102b_gcc11:
+  <<: *lcg_base_job
+  image: ghcr.io/acts-project/centos8-base:sha-ca76a1f2
+  variables:
+    LCG_VERSION: 102b
+    LCG_PLATFORM: x86_64-centos8-gcc11-opt
+
+alma9_lcg102b_gcc11:
+  <<: *lcg_base_job
+  image: ghcr.io/acts-project/alma9-base:sha-ca76a1f2
+  variables:
+    LCG_VERSION: 102b
+    LCG_PLATFORM: x86_64-centos9-gcc11-opt
