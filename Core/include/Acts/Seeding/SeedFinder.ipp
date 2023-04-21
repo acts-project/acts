@@ -285,14 +285,18 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
+      // longitudinal impact parameter
+      float zOrigin = zM - rM * cotTheta;
+
+      // check if duplet cotTheta is within the region of interest
       if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
         continue;
       }
 
-      // check if duplet origin on z axis within collision region
-      float zOrigin = zM - rM * cotTheta;
-      if (zOrigin < m_config.collisionRegionMin or
-          zOrigin > m_config.collisionRegionMax) {
+      // cuts on the origin of the dublet (the intersection of the line between
+      // them with the z axis) and z-distance between SPs
+      if (not m_config.interactionPointCut and
+          !longitudinalCollisionRange(zOrigin, deltaZ)) {
         continue;
       }
 
@@ -327,10 +331,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       if (not m_config.interactionPointCut or
           std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
-        if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-          continue;
-        }
-
         // fill output vectors
         linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                   yNewFrame);
@@ -356,6 +356,12 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
+      // cuts on the origin of the dublet (the intersection of the line between
+      // them with the z axis) and z-distance between SPs
+      if (!longitudinalCollisionRange(zOrigin, deltaZ)) {
+        continue;
+      }
+
       // fill output vectors
       linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                 yNewFrame);
@@ -364,6 +370,22 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       outVec.push_back(otherSP.get());
     }
   }
+}
+
+template <typename external_spacepoint_t, typename platform_t>
+inline bool
+SeedFinder<external_spacepoint_t, platform_t>::longitudinalCollisionRange(
+    const float& zOrigin, const float& deltaZ) const {
+  // check if duplet origin on z axis within collision region
+  if (zOrigin < m_config.collisionRegionMin or
+      zOrigin > m_config.collisionRegionMax) {
+    return false;
+  }
+  // if z-distance between SPs is within max and min values
+  if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+    return false;
+  }
+  return true;
 }
 
 template <typename external_spacepoint_t, typename platform_t>

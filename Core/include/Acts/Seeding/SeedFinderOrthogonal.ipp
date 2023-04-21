@@ -168,19 +168,6 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     return false;
   }
 
-  /*
-   * Cut: Ensure that the origin of the dublet (the intersection of the line
-   * between them with the z axis) lies within the collision region.
-   */
-  float zOrigin = zL - rL * cotTheta;
-  if (zOrigin < m_config.collisionRegionMin ||
-      zOrigin > m_config.collisionRegionMax) {
-    return false;
-  }
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
-    return false;
-  }
-
   // cut on the max curvature calculated from dublets
   // first transform the space point coordinates into a frame such that the
   // central space point SPm is in the origin of the frame and the x axis
@@ -220,6 +207,19 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
       if ((bCoef * bCoef) > (1 + aCoef * aCoef) / options.minHelixDiameter2) {
         return false;
       }
+    }
+
+    /*
+     * Cut: Ensure that the origin of the dublet (the intersection of the line
+     * between them with the z axis) lies within the collision region.
+     */
+    float zOrigin = zL - rL * cotTheta;
+    if (zOrigin < m_config.collisionRegionMin ||
+        zOrigin > m_config.collisionRegionMax) {
+      return false;
+    }
+    if (std::abs(deltaZ) > m_config.deltaZMax) {
+      return false;
     }
   }
 
