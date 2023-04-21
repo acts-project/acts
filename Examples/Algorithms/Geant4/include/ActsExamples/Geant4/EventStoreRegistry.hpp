@@ -14,8 +14,11 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
+#include <set>
 #include <unordered_map>
 #include <vector>
+
+#include "G4Types.hh"
 
 namespace ActsExamples {
 
@@ -34,24 +37,44 @@ class EventStoreRegistry {
   struct State {
     /// The current event store
     WhiteBoard* store = nullptr;
+
+    /// Use a std::set here because it allows for fast insertion and ensures
+    /// uniqueness. Thus particle collisions are detected early.
+    using ParticleContainer =
+        std::set<ActsFatras::Particle, ActsExamples::detail::CompareParticleId>;
+
     /// Initial and final particle collections
-    SimParticleContainer::sequence_type particlesInitial;
-    SimParticleContainer::sequence_type particlesFinal;
+    ParticleContainer particlesInitial;
+    ParticleContainer particlesFinal;
+
     /// The hits in sensitive detectors
     SimHitContainer::sequence_type hits;
+
     /// Tracks recorded in material mapping
     std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;
+
     /// Particle hit count (for hit indexing)
     std::unordered_map<SimBarcode, std::size_t> particleHitCount;
-    /// Track ID to Barcode mapping
-    std::unordered_map<unsigned int, SimBarcode> trackIdMapping;
-    /// Track ID to root Track ID mapping
-    std::unordered_map<unsigned int, unsigned int> trackIdRootId;
-    /// Track ID generation counter
-    std::unordered_map<unsigned int, unsigned int> trackIdGenerationCount;
+    /// Geant4 Track ID to Barcode mapping
+    std::unordered_map<G4int, SimBarcode> trackIdMapping;
+    /// Geant4 Track ID subparticle counter (for subparticle indexing)
+    std::unordered_map<G4int, std::size_t> trackIdSubparticleCount;
 
     /// Data handles to read particles from the whiteboard
     const ReadDataHandle<SimParticleContainer>* inputParticles{nullptr};
+
+    /// Count particle ID collisions
+    std::size_t particleIdCollisionsInitial = 0;
+    std::size_t particleIdCollisionsFinal = 0;
+    std::size_t parentIdNotFound = 0;
+
+    /// Store subparticle count for {primVertex, secVertex, part, gen}
+    /// This is done using a pseudo-barcode that contains all fields but not the
+    /// subparticle counter. This can be used as key in a map to store the
+    /// subparticle information
+    using BarcodeWithoutSubparticle =
+        Acts::MultiIndex<uint64_t, 16, 16, 16, 16>;
+    std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
   };
 
   EventStoreRegistry() = delete;
