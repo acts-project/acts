@@ -17,12 +17,10 @@
 #include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <iomanip>
+#include <algorithm>
 #include <iterator>
-#include <sstream>
-#include <string>
-
-#include <boost/algorithm/string.hpp>
+#include <memory>
+#include <vector>
 
 namespace Acts {
 
@@ -159,6 +157,13 @@ class DirectNavigator {
 
   const TrackingVolume* currentVolume(const State& state) const {
     return state.currentVolume;
+  }
+
+  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    if (state.currentVolume == nullptr) {
+      return nullptr;
+    }
+    return state.currentVolume->volumeMaterial();
   }
 
   const Surface* startSurface(const State& state) const {
