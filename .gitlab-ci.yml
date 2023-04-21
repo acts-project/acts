@@ -300,7 +300,7 @@ lcg:
       - ${CI_PROJECT_DIR}/ccache
 
   script:
-    - yum install HEP_OSlibs
+    - yum install -y HEP_OSlibs
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/${LCG_PLATFORM}/setup.sh
       
     - git clone $CLONE_URL src
