@@ -387,5 +387,5 @@ lcg_102b:
         - centos7
         - centos8
         - alma9
-      - COMPILER:
+        COMPILER:
         - gcc11
