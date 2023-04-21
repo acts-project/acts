@@ -36,11 +36,13 @@ struct RootVolumeFinder : public INavigationDelegate {
           "DetectorVolumeFinders: no detector set to navigation state.");
     }
 
-    const auto& volume = nState.currentDetector->rootVolume();
-    if (volume->inside(gctx, nState.position)) {
-      nState.currentVolume = volume;
-      volume->detectorVolumeUpdator()(gctx, nState);
-      return;
+    const auto& volumes = nState.currentDetector->rootVolumes();
+    for (const auto v : volumes) {
+      if (v->inside(gctx, nState.position)) {
+        nState.currentVolume = v;
+        v->detectorVolumeUpdator()(gctx, nState);
+        return;
+      }
     }
     nState.currentVolume = nullptr;
   }
@@ -65,8 +67,8 @@ struct TrialAndErrorVolumeFinder : public INavigationDelegate {
   }
 };
 
-/// Generate a delegate to try the root volume
-inline static DetectorVolumeUpdator tryRootVolume() {
+/// Generate a delegate to try the root volumes
+inline static DetectorVolumeUpdator tryRootVolumes() {
   DetectorVolumeUpdator vFinder;
   vFinder.connect<&RootVolumeFinder::update>(
       std::make_unique<const RootVolumeFinder>());

@@ -87,5 +87,6 @@ int main() {
   mockup_builder.drawSector(detectorVolume_sector, "sector_test.obj");
 
   auto detector_sector = Acts::Experimental::Detector::makeShared(
-      "Detector", detectorVolume_sector, Acts::Experimental::tryRootVolume());
+      "Detector", {detectorVolume_sector},
+      Acts::Experimental::tryRootVolumes());
 }
