@@ -301,7 +301,7 @@ variables:
     - 'echo "COMPILER: ${COMPILER}"'
     - 'if [ "$OS" = "alma9"  ]; then export LCG_PLATFORM="centos9"; else export LCG_PLATFORM="$OS"; fi'
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
-    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/${LCG_PLATFORM}/setup.sh
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
       
     - git clone $CLONE_URL src
 
