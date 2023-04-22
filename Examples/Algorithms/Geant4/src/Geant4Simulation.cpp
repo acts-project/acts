@@ -207,5 +207,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
         ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
 
+  ACTS_WARNING("G4 done, # initial particles states: "
+               << eventData.particlesInitial.size());
+  ACTS_WARNING(
+      "G4 done, # final particle states: " << eventData.particlesFinal.size());
+  ACTS_WARNING("G4 done, # hits: " << eventData.hits.size());
+
   return ActsExamples::ProcessCode::SUCCESS;
 }

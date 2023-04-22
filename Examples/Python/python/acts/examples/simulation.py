@@ -574,6 +574,8 @@ def addGeant4(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    killAtMaxR: Optional[float] = None,
+    killAtMaxAbsZ: Optional[float] = None,
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -595,6 +597,10 @@ def addGeant4(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    killAtMaxR: float|None,
+        Kill particle if radius exceeds passed value
+    killAtMaxAbsZ: float|None
+        Kill particle if |z| exceeds passed value
     """
 
     from acts.examples.geant4 import Geant4Simulation, makeGeant4SimulationConfig
@@ -627,6 +633,8 @@ def addGeant4(
         magneticField=field,
         volumeMappings=volumeMappings,
         materialMappings=materialMappings,
+        killAtMaxR=killAtMaxR,
+        killAtMaxAbsZ=killAtMaxAbsZ,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"

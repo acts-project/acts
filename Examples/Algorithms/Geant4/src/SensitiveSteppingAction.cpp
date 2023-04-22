@@ -38,6 +38,16 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   G4PrimaryParticle* primaryParticle =
       track->GetDynamicParticle()->GetPrimaryParticle();
 
+  // Decide if we want to kill the track
+  const auto pos = convertLength * track->GetPosition();
+  if (std::abs(pos.z()) > m_cfg.maxAbsZ or
+      std::hypot(pos.x(), pos.y()) > m_cfg.maxR) {
+    ACTS_DEBUG("Kill track with internal track ID "
+               << track->GetTrackID() << " at (r,z) = "
+               << std::hypot(pos.x(), pos.y()) << ", " << pos.z());
+    track->SetTrackStatus(G4TrackStatus::fStopAndKill);
+  }
+
   // Bail out if charged & configured to do so
   G4double absCharge = std::abs(track->GetParticleDefinition()->GetPDGCharge());
   if (not m_cfg.charged and absCharge > 0.) {

@@ -20,6 +20,7 @@
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
+#include "ActsExamples/Geant4/ParticleKillAction.hpp"
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
@@ -148,7 +149,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           const std::shared_ptr<const Acts::MagneticFieldProvider>&
               magneticField,
           const std::vector<std::string>& volumeMappings,
-          const std::vector<std::string>& materialMappings) {
+          const std::vector<std::string>& materialMappings,
+          std::optional<double> killAtMaxR,
+          std::optional<double> killAtMaxAbsZ) {
         auto physicsList = new FTFP_BERT();
 
         // Read the particle from the generator
@@ -165,6 +168,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         g4Cfg.trackingActions.push_back(particleAction);
 
         SensitiveSteppingAction::Config g4StepCfg;
+        g4StepCfg.maxAbsZ =
+            killAtMaxAbsZ.value_or(std::numeric_limits<double>::infinity());
+        g4StepCfg.maxR =
+            killAtMaxR.value_or(std::numeric_limits<double>::infinity());
         G4UserSteppingAction* steppingAction = new SensitiveSteppingAction(
             g4StepCfg,
             Acts::getDefaultLogger("SensitiveSteppingAction", level));
@@ -202,7 +209,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
-      py::arg("materialMappings") = std::vector<std::string>{});
+      py::arg("materialMappings") = std::vector<std::string>{},
+      py::arg("killAtMaxR") = std::nullopt,
+      py::arg("killAtMaxAbsZ") = std::nullopt);
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;

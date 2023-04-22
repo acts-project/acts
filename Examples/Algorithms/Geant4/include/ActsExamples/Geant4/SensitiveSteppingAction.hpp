@@ -31,6 +31,10 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool neutral = false;
     bool primary = true;
     bool secondary = false;
+
+    // When to kill a track
+    double maxAbsZ = std::numeric_limits<double>::infinity();
+    double maxR = std::numeric_limits<double>::infinity();
   };
 
   /// Construct the stepping action
