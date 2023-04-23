@@ -36,7 +36,7 @@ std::shared_ptr<referenced_type> unpackToShared(referenced_type& rt) {
 
 Acts::GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   Acts::ActsScalar r0 = 0.;
@@ -64,24 +64,24 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl0nameDup = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0BoundsCopy),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl1 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl1", nominal, std::move(cyl1Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl2 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl2", nominal, std::move(cyl2Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 =
       {cyl0, cyl1, cyl2};
   auto det012 = Acts::Experimental::Detector::makeShared(
-      "Det012", volumes012, Acts::Experimental::tryAllVolumes());
+      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
 
   // Check the basic return functions
   BOOST_CHECK(det012->name() == "Det012");
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
       {cyl0, cyl0nameDup, cyl2};
   BOOST_CHECK_THROW(Acts::Experimental::Detector::makeShared(
                         "Det002_name_duplicate", volumes002,
-                        Acts::Experimental::tryAllVolumes()),
+                        Acts::Experimental::tryRootVolumes()),
                     std::invalid_argument);
 }
 

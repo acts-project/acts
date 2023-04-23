@@ -9,10 +9,12 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Geant4/G4TrackSelector.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <G4Track.hh>
@@ -55,7 +57,11 @@ class ParticleTrackingAction : public G4UserTrackingAction {
   /// Convert a G4Track to a SimParticle
   ///
   /// @param aTrack the current Geant4 track
-  SimParticle convert(const G4Track& aTrack) const;
+  /// @param particleId the particle ID the particle will have
+  SimParticle convert(const G4Track& aTrack, SimBarcode particleId) const;
+
+  /// Make the particle id
+  std::optional<SimBarcode> makeParticleId(G4int trackId, G4int parentId) const;
 
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

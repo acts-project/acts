@@ -6,8 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#include "Acts/Plugins/Python/Utilities.hpp"
 
-#warning "Track.hpp is deprecated, use TrackContainer.hpp instead"
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include "Acts/EventData/TrackContainer.hpp"
+namespace Acts::Python {
+void addOnnx(Context& /*unused*/) {
+  // dummy function
+}
+}  // namespace Acts::Python
