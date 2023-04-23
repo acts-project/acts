@@ -70,7 +70,7 @@ struct PropagatorState {
       double q = 0;
 
       /// the navigation direction
-      NavigationDirection navDir = NavigationDirection::Forward;
+      Direction navDir = Direction::Forward;
 
       // accummulated path length cache
       double pathAccumulated = 0.;
@@ -90,7 +90,7 @@ struct PropagatorState {
     /// State resetter
     void resetState(State& /*state*/, const BoundVector& /*boundParams*/,
                     const BoundSymMatrix& /*cov*/, const Surface& /*surface*/,
-                    const NavigationDirection /*navDir*/,
+                    const Direction /*navDir*/,
                     const double /*stepSize*/) const {}
 
     /// Global particle position accessor

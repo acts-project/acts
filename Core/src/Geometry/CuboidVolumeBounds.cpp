@@ -48,39 +48,33 @@ Acts::OrientedSurfaces Acts::CuboidVolumeBounds::orientedSurfaces(
   //   (1) - at negative local z
   auto sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., 0., -get(eHalfLengthZ)), m_xyBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Forward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
   //   (2) - at positive local z
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., 0., get(eHalfLengthZ)), m_xyBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Backward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
   // Face surfaces yz -------------------------------------
   //   (3) - at negative local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(-get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Forward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
   //   (4) - at positive local x
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(get(eHalfLengthX), 0., 0.) * s_planeYZ,
       m_yzBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Backward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
   // Face surfaces zx -------------------------------------
   //   (5) - at negative local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Forward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
   //   (6) - at positive local y
   sf = Surface::makeShared<PlaneSurface>(
       transform * Translation3(0., get(eHalfLengthY), 0.) * s_planeZX,
       m_zxBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Backward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
 
   return oSurfaces;
 }
