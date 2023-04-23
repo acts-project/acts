@@ -27,8 +27,8 @@ class DetectorVolume;
 /// It consists of the new portal, the index, the direction, the parameters
 /// gathered from the sub volumes, the binning description
 using PortalReplacement =
-    std::tuple<std::shared_ptr<Experimental::Portal>, unsigned int,
-               NavigationDirection, std::vector<ActsScalar>, BinningValue>;
+    std::tuple<std::shared_ptr<Experimental::Portal>, unsigned int, Direction,
+               std::vector<ActsScalar>, BinningValue>;
 
 /// @brief Create and attach the multi link updator
 ///

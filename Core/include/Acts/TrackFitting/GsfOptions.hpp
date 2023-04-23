@@ -38,7 +38,7 @@ struct GsfExtensions {
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        NavigationDirection, const Logger&)>;
+                                        Direction, const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
