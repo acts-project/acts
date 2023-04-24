@@ -138,7 +138,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         return g4Cfg;
       },
-      "logger"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
+      "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       "outputMaterialTracks"_a);
 
   mod.def(
@@ -211,7 +211,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         return g4Cfg;
       },
-      "logger"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
+      "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{},
