@@ -9,10 +9,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/CylindricalDetectorHelper.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -32,6 +32,7 @@
 #include <stdexcept>
 
 using namespace Acts::Experimental;
+using namespace Acts::Experimental::detail;
 
 Acts::Logging::Level logLevel = Acts::Logging::INFO;
 
