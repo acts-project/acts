@@ -88,7 +88,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   /// @param gctx the geometry context at the creation of the internal structure
   ///
   /// @return a consistent set of detector volume internals
-  InternalStructure create(const GeometryContext& gctx) const override final;
+  InternalStructure create(const GeometryContext& gctx) const final;
 
  private:
   /// configuration object
