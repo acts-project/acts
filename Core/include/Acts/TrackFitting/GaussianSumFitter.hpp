@@ -214,7 +214,7 @@ struct GaussianSumFitter {
     // Define directions based on input propagation direction. This way we can
     // refer to 'forward' and 'backward' regardless of the actual direction.
     const auto gsfForward = options.propagatorPlainOptions.direction;
-    const auto gsfBackward = static_cast<NavigationDirection>(-1 * gsfForward);
+    const auto gsfBackward = gsfForward.invert();
 
     // Check if the start parameters are on the start surface
     auto intersectionStatusStartSurface =

@@ -9,13 +9,14 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <iomanip>
 #include <limits>
+#include <ostream>
 #include <sstream>
 
 namespace Acts {
@@ -59,7 +60,7 @@ class ConstrainedStep {
   /// @param value is the user given initial value
   constexpr explicit ConstrainedStep(Scalar value) {
     m_values[user] = std::abs(value);
-    m_direction = Acts::directionFromStepSize(value);
+    m_direction = Direction::fromScalar(value);
   }
 
   /// set accuracy by one Scalar
@@ -157,7 +158,7 @@ class ConstrainedStep {
   std::array<Scalar, 4> m_values = {kNotSet, kNotSet, kNotSet, kNotSet};
   /// the navigation direction
   /// the direction is invariant after initialization
-  NavigationDirection m_direction = NavigationDirection::Forward;
+  Direction m_direction = Direction::Forward;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const ConstrainedStep& step) {
