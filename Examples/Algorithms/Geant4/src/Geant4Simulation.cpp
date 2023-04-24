@@ -179,16 +179,27 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   // Start simulation. each track is simulated as a separate Geant4 event.
   m_cfg.runManager->BeamOn(1);
 
+  // Since these are std::set, this ensures that each particle is in both sets
+  assert(eventData.particlesInitial.size() == eventData.particlesFinal.size());
+
+  // Print out warnings about possible particle collision if happened
+  if (eventData.particleIdCollisionsInitial > 0 or
+      eventData.particleIdCollisionsFinal > 0 or
+      eventData.parentIdNotFound > 0) {
+    ACTS_WARNING(
+        "Particle ID collisions detected, don't trust the particle "
+        "identification!");
+    ACTS_WARNING("- initial states: " << eventData.particleIdCollisionsInitial);
+    ACTS_WARNING("- final states: " << eventData.particleIdCollisionsFinal);
+    ACTS_WARNING("- parent ID not found: " << eventData.parentIdNotFound);
+  }
+
   // Output handling: Initial/Final particles
   if (not m_cfg.outputParticlesInitial.empty() and
       not m_cfg.outputParticlesFinal.empty()) {
-    // Initial state of particles
-    // Register to the event store
     m_outputParticlesInitial(
         ctx, SimParticleContainer(eventData.particlesInitial.begin(),
                                   eventData.particlesInitial.end()));
-    // Final state of particles
-    // Register to the event store
     m_outputParticlesFinal(
         ctx, SimParticleContainer(eventData.particlesFinal.begin(),
                                   eventData.particlesFinal.end()));
@@ -196,7 +207,6 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
 
   // Output handling: Simulated hits
   if (not m_cfg.outputSimHits.empty()) {
-    // Register to the event store
     m_outputSimHits(
         ctx, SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
   }

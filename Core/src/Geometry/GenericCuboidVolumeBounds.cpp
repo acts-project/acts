@@ -81,9 +81,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     const Vector3 ab = b - a, ac = c - a;
     Vector3 normal = ab.cross(ac).normalized();
 
-    NavigationDirection nDir = ((cog - d).dot(normal) < 0)
-                                   ? NavigationDirection::Backward
-                                   : NavigationDirection::Forward;
+    Direction dir = Direction::fromScalar((cog - d).dot(normal));
 
     // build transform from z unit to normal
     // z is normal in local coordinates
@@ -110,7 +108,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     auto srfTrf = transform * vol2srf.inverse();
     auto srf = Surface::makeShared<PlaneSurface>(srfTrf, polyBounds);
 
-    oSurfaces.push_back(OrientedSurface(std::move(srf), nDir));
+    oSurfaces.push_back(OrientedSurface(std::move(srf), dir));
   };
 
   make_surface(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);

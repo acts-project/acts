@@ -105,10 +105,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
   for (auto& os : cvbOrientedSurfaces) {
     auto osCenter = os.first->center(geoCtx);
     auto osNormal = os.first->normal(geoCtx);
-    double nDir = (double)os.second;
     // Check if you step inside the volume with the oriented normal
-    auto insideBox = osCenter + nDir * osNormal;
-    auto outsideBox = osCenter - nDir * osNormal;
+    Vector3 insideBox = osCenter + os.second * osNormal;
+    Vector3 outsideBox = osCenter - os.second * osNormal;
     BOOST_CHECK(box.inside(insideBox));
     BOOST_CHECK(!box.inside(outsideBox));
   }

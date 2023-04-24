@@ -30,6 +30,7 @@ enum PdgParticle : int32_t {
   eAntiNeutron = -eNeutron,
   eProton = 2212,
   eAntiProton = -eProton,
+  eLead = 1000822080
 };
 
 /// Convert an anti-particle to its particle and leave particles as-is.
