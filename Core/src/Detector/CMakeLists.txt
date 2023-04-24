@@ -4,8 +4,10 @@ target_sources(
     detail/CylindricalDetectorHelper.cpp
     Detector.cpp
     DetectorVolume.cpp
+    LayerStructureBuilder.cpp
     Portal.cpp
     PortalGenerators.cpp
     PortalHelper.cpp
     ProtoDetector.cpp
+    SupportBuilder.cpp
 )

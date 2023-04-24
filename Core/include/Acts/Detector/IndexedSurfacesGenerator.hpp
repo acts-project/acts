@@ -35,13 +35,10 @@ struct IndexedSurfacesGenerator {
   std::vector<std::size_t> assignToAll = {};
   /// The binning
   std::vector<BinningValue> bValues = {};
-
   // Bin expansion
   std::vector<std::size_t> binExpansion = {};
-
   /// The transform into the local binning schema
   Transform3 transform = Transform3::Identity();
-
   /// Screen output logger
   std::unique_ptr<const Logger> oLogger =
       getDefaultLogger("IndexedSurfacesGenerator", Logging::INFO);

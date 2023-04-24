@@ -163,10 +163,10 @@ inline void RadialBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument("RadialBounds: invalid radial setup");
   }
   if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
-    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
+    throw std::invalid_argument("RadialBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
+    throw std::invalid_argument("RadialBounds: invalid phi positioning.");
   }
 }
 
