@@ -118,7 +118,8 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector,
+                                DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       std::vector<const Surface*> backwardSequence(
@@ -169,7 +170,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts) {
-      using Actors = ActionList<GsfActor>;
+      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
@@ -213,7 +214,7 @@ struct GaussianSumFitter {
     // Define directions based on input propagation direction. This way we can
     // refer to 'forward' and 'backward' regardless of the actual direction.
     const auto gsfForward = options.propagatorPlainOptions.direction;
-    const auto gsfBackward = static_cast<NavigationDirection>(-1 * gsfForward);
+    const auto gsfBackward = gsfForward.invert();
 
     // Check if the start parameters are on the start surface
     auto intersectionStatusStartSurface =
@@ -441,6 +442,15 @@ struct GaussianSumFitter {
       track.parameters() = params.parameters();
       track.covariance() = params.covariance().value();
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+
+      if (trackContainer.hasColumn(
+              hashString(GsfConstants::kFinalMultiComponentStateColumn))) {
+        ACTS_DEBUG("Add final multi-component state to track")
+        const auto& fsr = bwdResult->template get<
+            Acts::detail::FinalStateCollector::result_type>();
+        track.template component<GsfConstants::FinalMultiComponentState>(
+            GsfConstants::kFinalMultiComponentStateColumn) = fsr.pars;
+      }
     }
 
     calculateTrackQuantities(track);

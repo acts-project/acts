@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -28,8 +29,6 @@
 
 namespace ActsExamples {
 namespace EDM4hepUtil {
-
-static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
 using MapParticleIdFrom =
     std::function<ActsFatras::Barcode(edm4hep::MCParticle particle)>;
@@ -113,12 +112,8 @@ void writeMeasurement(const Measurement& from,
 /// Inpersistent information:
 /// - trajectory state incomplete
 /// - relation to the particles
-///
-/// Known issues:
-/// - curvature parameter
-/// - track state local coordinates are written to (D0,Z0)
-/// - covariance incorrect
-void writeTrajectory(const Trajectories& from, edm4hep::MutableTrack to,
+void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
+                     const Trajectories& from, edm4hep::MutableTrack to,
                      std::size_t fromIndex,
                      const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);
 
