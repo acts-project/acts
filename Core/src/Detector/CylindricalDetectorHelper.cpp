@@ -62,14 +62,14 @@ namespace {
 /// @param transform The transform of the newly created portal
 /// @param rBoundaries the vector of binning boundaries in r
 /// @param phiBoundaries an eventual phi sector value
-/// @param nDir the navigation direction to be set
+/// @param dir the  direction to be set
 ///
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createDiscReplacement(
     const Acts::Transform3& transform,
     const std::vector<Acts::ActsScalar>& rBoundaries,
     const std::vector<Acts::ActsScalar>& phiBoundaries, unsigned int index,
-    Acts::NavigationDirection nDir) {
+    Acts::Direction dir) {
   // Autodetector stitch value
   Acts::BinningValue stitchValue =
       phiBoundaries.size() == 2u ? Acts::binR : Acts::binPhi;
@@ -87,7 +87,7 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
   const auto& stitchBoundaries =
       (stitchValue == Acts::binR) ? rBoundaries : phiBoundaries;
   return Acts::Experimental::PortalReplacement(
-      Acts::Experimental::Portal::makeShared(surface), index, nDir,
+      Acts::Experimental::Portal::makeShared(surface), index, dir,
       stitchBoundaries, stitchValue);
 }
 
@@ -98,14 +98,14 @@ Acts::Experimental::PortalReplacement createDiscReplacement(
 /// @param zBoundaries the vector of binning boundaries
 /// @param phiBoundaries the vector of binning boundaries
 /// @param index the index of this portal to be set
-/// @param nDir the navigation direction to be set
+/// @param dir the navigation direction to be set
 ///
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createCylinderReplacement(
     const Acts::Transform3& transform, Acts::ActsScalar r,
     const std::vector<Acts::ActsScalar>& zBoundaries,
     const std::vector<Acts::ActsScalar>& phiBoundaries, unsigned int index,
-    Acts::NavigationDirection nDir) {
+    Acts::Direction dir) {
   // Autodetector stitch value
   Acts::BinningValue stitchValue =
       phiBoundaries.size() == 2u ? Acts::binZ : Acts::binPhi;
@@ -123,7 +123,7 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
   const auto& stitchBoundaries =
       (stitchValue == Acts::binZ) ? zBoundaries : phiBoundaries;
   return Acts::Experimental::PortalReplacement(
-      Acts::Experimental::Portal::makeShared(surface), index, nDir,
+      Acts::Experimental::Portal::makeShared(surface), index, dir,
       stitchBoundaries, stitchValue);
 }
 
@@ -134,14 +134,14 @@ Acts::Experimental::PortalReplacement createCylinderReplacement(
 /// @param boundaries the vector of binning boundaries in r
 /// @param binning the binning of the sector (inR, inZ)
 /// @param index the index of this portal to be set
-/// @param nDir the navigation direction to be set
+/// @param dir the navigation direction to be set
 ///
 /// @return a new portal replacement object
 Acts::Experimental::PortalReplacement createSectorReplacement(
     const Acts::GeometryContext& gctx, const Acts::Vector3& volumeCenter,
     const Acts::Surface& refSurface,
     const std::vector<Acts::ActsScalar>& boundaries, Acts::BinningValue binning,
-    unsigned int index, Acts::NavigationDirection nDir) {
+    unsigned int index, Acts::Direction dir) {
   // Get a reference transform
   const auto& refTransform = refSurface.transform(gctx);
   auto refRotation = refTransform.rotation();
@@ -188,7 +188,7 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
       transform, std::move(bounds));
   // A make a portal and indicate the new link direction
   Acts::Experimental::PortalReplacement pRep = {
-      Acts::Experimental::Portal::makeShared(surface), index, nDir, boundaries,
+      Acts::Experimental::Portal::makeShared(surface), index, dir, boundaries,
       binning};
   return pRep;
 }
@@ -437,8 +437,8 @@ Acts::Experimental::connectDetectorVolumesInR(
   std::vector<PortalReplacement> pReplacements = {};
 
   // Disc assignments are forwad for negative disc, backward for positive
-  std::vector<Acts::NavigationDirection> discDirs = {
-      Acts::NavigationDirection::Forward, Acts::NavigationDirection::Backward};
+  std::vector<Acts::Direction> discDirs = {Acts::Direction::Forward,
+                                           Acts::Direction::Backward};
   for (const auto [iu, idir] : enumerate(discDirs)) {
     if (selectedOnly.empty() or
         std::find(selectedOnly.begin(), selectedOnly.end(), iu) !=
@@ -454,9 +454,8 @@ Acts::Experimental::connectDetectorVolumesInR(
   // If volume sectors are present, these have to be respected
   if (sectorsPresent) {
     // Sector assignments are forward backward
-    std::vector<Acts::NavigationDirection> sectorDirs = {
-        Acts::NavigationDirection::Forward,
-        Acts::NavigationDirection::Backward};
+    std::vector<Acts::Direction> sectorDirs = {Acts::Direction::Forward,
+                                               Acts::Direction::Backward};
     Acts::Vector3 vCenter = volumes[0u]->transform(gctx).translation();
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
       // (iu + 4u) corresponds to the indices of the phi-low and phi-high sector
@@ -636,13 +635,12 @@ Acts::Experimental::connectDetectorVolumesInZ(
   std::vector<PortalReplacement> pReplacements = {};
 
   // Disc assignments are forwad for negative disc, backward for positive
-  std::vector<Acts::NavigationDirection> cylinderDirs = {
-      Acts::NavigationDirection::Backward};
+  std::vector<Acts::Direction> cylinderDirs = {Acts::Direction::Backward};
   // Cylinder radii
   std::vector<Acts::ActsScalar> cylinderR = {maxR};
   if (innerPresent) {
     ACTS_VERBOSE("Inner surface present, tube geometry detected.");
-    cylinderDirs.push_back(NavigationDirection::Forward);
+    cylinderDirs.push_back(Direction::Forward);
     cylinderR.push_back(minR);
   } else {
     ACTS_VERBOSE("No inner surface present, solid cylinder geometry detected.");
@@ -664,9 +662,8 @@ Acts::Experimental::connectDetectorVolumesInZ(
   if (sectorsPresent) {
     ACTS_VERBOSE("Sector planes are present, they need replacement.");
     // Sector assignmenta are forward backward
-    std::vector<Acts::NavigationDirection> sectorDirs = {
-        Acts::NavigationDirection::Forward,
-        Acts::NavigationDirection::Backward};
+    std::vector<Acts::Direction> sectorDirs = {Acts::Direction::Forward,
+                                               Acts::Direction::Backward};
     for (const auto [iu, idir] : enumerate(sectorDirs)) {
       // Access with 3u or 4u but always write 4u (to be caught later)
       if (selectedOnly.empty() or
@@ -782,21 +779,21 @@ Acts::Experimental::connectDetectorVolumesInPhi(
       refTransform,
       {refValues[CylinderVolumeBounds::BoundValues::eMinR],
        refValues[CylinderVolumeBounds::BoundValues::eMaxR]},
-      phiBoundaries, 0u, Acts::NavigationDirection::Forward));
+      phiBoundaries, 0u, Acts::Direction::Forward));
 
   // Positive disc
   pReplacements.push_back(createDiscReplacement(
       refTransform,
       {refValues[CylinderVolumeBounds::BoundValues::eMinR],
        refValues[CylinderVolumeBounds::BoundValues::eMaxR]},
-      phiBoundaries, 1u, Acts::NavigationDirection::Backward));
+      phiBoundaries, 1u, Acts::Direction::Backward));
 
   // Outside cylinder
   pReplacements.push_back(createCylinderReplacement(
       refTransform, refValues[CylinderVolumeBounds::BoundValues::eMaxR],
       {-refValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ],
        refValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ]},
-      phiBoundaries, 2u, Acts::NavigationDirection::Backward));
+      phiBoundaries, 2u, Acts::Direction::Backward));
 
   // If the volume has a different inner radius than 0, it MUST have
   // an inner cylinder
@@ -806,7 +803,7 @@ Acts::Experimental::connectDetectorVolumesInPhi(
         refTransform, refValues[CylinderVolumeBounds::BoundValues::eMinR],
         {-refValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ],
          refValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ]},
-        phiBoundaries, 3u, Acts::NavigationDirection::Forward));
+        phiBoundaries, 3u, Acts::Direction::Forward));
   }
 
   // Attach the new volume multi links
@@ -886,7 +883,7 @@ Acts::Experimental::ProtoContainer Acts::Experimental::wrapDetectorVolumesInZR(
     std::vector<PortalReplacement> pReplacements;
     pReplacements.push_back(createCylinderReplacement(
         volumes[0u]->transform(gctx), innerR, {-HlZ, -hlZ, hlZ, HlZ},
-        {-M_PI, M_PI}, 3u, NavigationDirection::Forward));
+        {-M_PI, M_PI}, 3u, Direction::Forward));
     std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {
         volumes[1u], volumes[0u], volumes[1u]};
     // Attach the new volume multi links

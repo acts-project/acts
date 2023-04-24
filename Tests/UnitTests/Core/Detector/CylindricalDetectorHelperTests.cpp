@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
 
     // A detector construction that should work
     auto detector =
-        Detector::makeShared("DetectorInR", rVolumes, tryRootVolume());
+        Detector::makeShared("DetectorInR", rVolumes, tryRootVolumes());
 
     // Make a rzphi grid
     const auto& volumes = detector->volumes();
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
       }
 
       auto detector =
-          Detector::makeShared("DetectorInZ", zVolumes, tryRootVolume());
+          Detector::makeShared("DetectorInZ", zVolumes, tryRootVolumes());
     }
   }
 
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
     }
 
     auto detector =
-        Detector::makeShared("DetectorInPhi", phiVolumes, tryRootVolume());
+        Detector::makeShared("DetectorInPhi", phiVolumes, tryRootVolumes());
   }
 
   // Invalid arguments
@@ -539,7 +539,7 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
     dVolumes.push_back(pecOuter);
 
     auto detector = Detector::makeShared("DetectorFromProtoContainer", dVolumes,
-                                         tryRootVolume());
+                                         tryRootVolumes());
   }  // test with different innermost radii
 }
 
