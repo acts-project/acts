@@ -85,7 +85,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       sensitiveSurfaceMapper);
 
   auto makeGeant4Config =
-      [](const std::unique_ptr<const Acts::Logger>& logger,
+      [](const Acts::Logger& logger,
          std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
          G4VUserDetectorConstruction* detector, G4VUserPhysicsList* physicsList,
          const SimParticleTranslation::Config& prCfg)
@@ -100,7 +100,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     // Set the primarty generator
     g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
-        prCfg, logger->cloneWithSuffix("SimParticleTranslation"));
+        prCfg, logger.cloneWithSuffix("SimParticleTranslation"));
     g4Cfg.detectorConstruction = detector;
 
     return g4Cfg;
@@ -123,7 +123,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         g4PrCfg.forcedCharge = 0.;
         g4PrCfg.forcedMass = 0.;
 
-        auto g4Cfg = makeGeant4Config(logger, std::move(randomNumbers),
+        auto g4Cfg = makeGeant4Config(*logger, std::move(randomNumbers),
                                       detector, physicsList, g4PrCfg);
         g4Cfg.inputParticles = inputParticles;
 
@@ -157,7 +157,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         auto logger = Acts::getDefaultLogger("Geant4", level);
         auto physicsList = new FTFP_BERT();
         auto g4Cfg =
-            makeGeant4Config(logger, std::move(randomNumbers), detector,
+            makeGeant4Config(*logger, std::move(randomNumbers), detector,
                              physicsList, SimParticleTranslation::Config{});
         g4Cfg.inputParticles = inputParticles;
 
