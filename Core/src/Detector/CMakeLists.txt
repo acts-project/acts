@@ -3,7 +3,6 @@ target_sources(
   PRIVATE
     detail/CylindricalDetectorHelper.cpp
     Detector.cpp
-    DetectorHelper.cpp
     DetectorVolume.cpp
     LayerStructureBuilder.cpp
     Portal.cpp
