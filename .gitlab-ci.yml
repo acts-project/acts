@@ -398,7 +398,7 @@ lcg_102b:
   parallel:
     matrix:
       - OS: [centos7]
-        COMPILER: [gcc8, gcc11, clang12]
+        COMPILER: [gcc11, gcc12, clang12]
 
       - OS: [centos8, alma9]
         COMPILER: [gcc11]
