@@ -15,17 +15,18 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Geant4/ActsSteppingActionList.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
+#include "ActsExamples/Geant4/ParticleKillAction.hpp"
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
-#include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
@@ -149,7 +150,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           const std::shared_ptr<const Acts::MagneticFieldProvider>&
               magneticField,
           const std::vector<std::string>& volumeMappings,
-          const std::vector<std::string>& materialMappings) {
+          const std::vector<std::string>& materialMappings,
+          std::optional<double> killAtMaxR,
+          std::optional<double> killAtMaxAbsZ) {
         auto physicsList = new FTFP_BERT();
 
         // Read the particle from the generator
@@ -165,11 +168,22 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
             Acts::getDefaultLogger("ParticleTrackingAction", level));
         g4Cfg.trackingAction = particleAction;
 
-        SensitiveSteppingAction::Config g4StepCfg;
-        G4UserSteppingAction* steppingAction = new SensitiveSteppingAction(
-            g4StepCfg,
-            Acts::getDefaultLogger("SensitiveSteppingAction", level));
-        g4Cfg.steppingAction = steppingAction;
+        // The stepping actions
+        ParticleKillAction::Config g4KillCfg;
+        g4KillCfg.maxAbsZ =
+            killAtMaxAbsZ.value_or(std::numeric_limits<double>::infinity());
+        g4KillCfg.maxR =
+            killAtMaxR.value_or(std::numeric_limits<double>::infinity());
+
+        ActsSteppingActionList::Config steppingCfg;
+        steppingCfg.actions.push_back(new SensitiveSteppingAction(
+            SensitiveSteppingAction::Config{},
+            Acts::getDefaultLogger("SensitiveSteppingAction", level)));
+        steppingCfg.actions.push_back(new ParticleKillAction(
+            g4KillCfg,
+            Acts::getDefaultLogger("SensitiveSteppingAction", level)));
+
+        g4Cfg.steppingAction = new ActsSteppingActionList(steppingCfg);
 
         // An ACTS Magnetic field is provided
         if (magneticField) {
@@ -203,7 +217,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
-      py::arg("materialMappings") = std::vector<std::string>{});
+      py::arg("materialMappings") = std::vector<std::string>{},
+      py::arg("killAtMaxR") = std::nullopt,
+      py::arg("killAtMaxAbsZ") = std::nullopt);
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;
@@ -277,34 +293,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(protoDetector);
     ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_MEMBER(logLevel);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using MockupSectorBuilder = ActsExamples::MockupSectorBuilder;
-    using Config = ActsExamples::MockupSectorBuilder::Config;
-    using ChamberConfig = ActsExamples::MockupSectorBuilder::ChamberConfig;
-
-    auto ms =
-        py::class_<MockupSectorBuilder, std::shared_ptr<MockupSectorBuilder>>(
-            mod, "MockupSectorBuilder")
-            .def(py::init<const Config&>())
-            .def("buildChamber", &MockupSectorBuilder::buildChamber)
-            .def("buildSector", &MockupSectorBuilder::buildSector)
-            .def("drawSector", &MockupSectorBuilder::drawSector);
-
-    auto c = py::class_<Config>(ms, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(gdmlPath);
-    ACTS_PYTHON_MEMBER(NumberOfSectors);
-    ACTS_PYTHON_MEMBER(toleranceOverlap);
-    ACTS_PYTHON_STRUCT_END();
-
-    auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
-    ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(SensitiveNames);
-    ACTS_PYTHON_MEMBER(PassiveNames);
     ACTS_PYTHON_STRUCT_END();
   }
 
