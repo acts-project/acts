@@ -85,7 +85,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       sensitiveSurfaceMapper);
 
   auto makeGeant4Config =
-      [](Acts::Logging::Level& level,
+      [](const std::unique_ptr<const Acts::Logger>& logger,
          std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
          G4VUserDetectorConstruction* detector, G4VUserPhysicsList* physicsList,
          const SimParticleTranslation::Config& prCfg)
@@ -100,7 +100,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     // Set the primarty generator
     g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
-        prCfg, Acts::getDefaultLogger("SimParticleTranslation", level));
+        prCfg, logger->cloneWithSuffix("SimParticleTranslation"));
     g4Cfg.detectorConstruction = detector;
 
     return g4Cfg;
@@ -113,8 +113,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
           const std::string& inputParticles,
           const std::string& outputMaterialTracks) {
+        auto logger = Acts::getDefaultLogger("Geant4", level);
         auto physicsList = new MaterialPhysicsList(
-            Acts::getDefaultLogger("MaterialPhysicsList", level));
+            logger->cloneWithSuffix("MaterialPhysicsList"));
 
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
@@ -122,14 +123,14 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         g4PrCfg.forcedCharge = 0.;
         g4PrCfg.forcedMass = 0.;
 
-        auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
-                                      physicsList, g4PrCfg);
+        auto g4Cfg = makeGeant4Config(logger, std::move(randomNumbers),
+                                      detector, physicsList, g4PrCfg);
         g4Cfg.inputParticles = inputParticles;
 
         MaterialSteppingAction::Config mStepCfg;
         mStepCfg.excludeMaterials = {"Air", "Vacuum"};
         auto steppingAction = new MaterialSteppingAction(
-            mStepCfg, Acts::getDefaultLogger("MaterialSteppingAction", level));
+            mStepCfg, logger->cloneWithSuffix("MaterialSteppingAction"));
         g4Cfg.steppingAction = steppingAction;
 
         // Set the material tracks at output
@@ -137,13 +138,13 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         return g4Cfg;
       },
-      "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
+      "logger"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       "outputMaterialTracks"_a);
 
   mod.def(
       "makeGeant4SimulationConfig",
       [makeGeant4Config](
-          Acts::Logging::Level& level, G4VUserDetectorConstruction* detector,
+          Acts::Logging::Level level, G4VUserDetectorConstruction* detector,
           std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
           const std::string& inputParticles,
           const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
@@ -153,22 +154,19 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           const std::vector<std::string>& materialMappings,
           std::optional<double> killAtMaxR,
           std::optional<double> killAtMaxAbsZ) {
+        auto logger = Acts::getDefaultLogger("Geant4", level);
         auto physicsList = new FTFP_BERT();
-
-        // Read the particle from the generator
-        SimParticleTranslation::Config g4PrCfg;
-
-        auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
-                                      physicsList, g4PrCfg);
+        auto g4Cfg =
+            makeGeant4Config(logger, std::move(randomNumbers), detector,
+                             physicsList, SimParticleTranslation::Config{});
         g4Cfg.inputParticles = inputParticles;
 
-        ParticleTrackingAction::Config g4TrackCfg;
-        ParticleTrackingAction* particleAction = new ParticleTrackingAction(
-            g4TrackCfg,
-            Acts::getDefaultLogger("ParticleTrackingAction", level));
-        g4Cfg.trackingAction = particleAction;
+        // Particle action
+        g4Cfg.trackingAction = new ParticleTrackingAction(
+            ParticleTrackingAction::Config{},
+            logger->cloneWithSuffix("ParticleTracking"));
 
-        // The stepping actions
+        // Stepping actions
         ParticleKillAction::Config g4KillCfg;
         g4KillCfg.maxAbsZ =
             killAtMaxAbsZ.value_or(std::numeric_limits<double>::infinity());
@@ -178,10 +176,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         ActsSteppingActionList::Config steppingCfg;
         steppingCfg.actions.push_back(new SensitiveSteppingAction(
             SensitiveSteppingAction::Config{},
-            Acts::getDefaultLogger("SensitiveSteppingAction", level)));
+            logger->cloneWithSuffix("SensitiveStepping")));
         steppingCfg.actions.push_back(new ParticleKillAction(
-            g4KillCfg,
-            Acts::getDefaultLogger("SensitiveSteppingAction", level)));
+            g4KillCfg, logger->cloneWithSuffix("Killer")));
 
         g4Cfg.steppingAction = new ActsSteppingActionList(steppingCfg);
 
@@ -214,7 +211,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         return g4Cfg;
       },
-      "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
+      "logger"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{},
