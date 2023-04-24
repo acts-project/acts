@@ -63,7 +63,7 @@ class StraightLineStepper {
     explicit State(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
                    const SingleBoundTrackParameters<charge_t>& par,
-                   NavigationDirection ndir = NavigationDirection::Forward,
+                   Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : q(par.charge()),
@@ -109,7 +109,7 @@ class StraightLineStepper {
     Covariance cov = Covariance::Zero();
 
     /// Navigation direction, this is needed for searching
-    NavigationDirection navDir;
+    Direction navDir;
 
     /// accummulated path length state
     double pathAccumulated = 0.;
@@ -137,10 +137,10 @@ class StraightLineStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = NavigationDirection::Forward,
+                  Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx, mctx, par, ndir, ssize, stolerance};
+    return State{gctx, mctx, par, navDir, ssize, stolerance};
   }
 
   /// @brief Resets the state
@@ -153,8 +153,7 @@ class StraightLineStepper {
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface,
-      const NavigationDirection navDir = NavigationDirection::Forward,
+      const Surface& surface, const Direction navDir = Direction::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, this gives back a zero field

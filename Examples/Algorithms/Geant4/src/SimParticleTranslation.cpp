@@ -55,10 +55,6 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   // Get the number of input particles
   const auto inputParticles = (*eventData.inputParticles)(*eventStore);
 
-  // Reserve appropriate resources for initial/final particles
-  eventData.particlesInitial.reserve(inputParticles.size());
-  eventData.particlesFinal.reserve(inputParticles.size());
-
   // Reserve hopefully enough hit space
   eventData.hits.reserve(inputParticles.size() * m_cfg.reserveHitsPerParticle);
 
@@ -120,7 +116,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
     // Skip if tranlation failed
     if (particleDefinition == nullptr) {
-      ACTS_VERBOSE(
+      ACTS_DEBUG(
           "Could not translate particle with PDG code : " << particlePdgCode);
       continue;
     }

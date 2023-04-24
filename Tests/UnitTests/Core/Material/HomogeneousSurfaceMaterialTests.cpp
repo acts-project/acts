@@ -83,8 +83,8 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test) {
   BOOST_CHECK_EQUAL(mat, mat3d);
   BOOST_CHECK_EQUAL(mat, matbin);
 
-  NavigationDirection fDir = NavigationDirection::Forward;
-  NavigationDirection bDir = NavigationDirection::Backward;
+  Direction fDir = Direction::Forward;
+  Direction bDir = Direction::Backward;
 
   MaterialUpdateStage pre = MaterialUpdateStage::PreUpdate;
   MaterialUpdateStage full = MaterialUpdateStage::FullUpdate;
