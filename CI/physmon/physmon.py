@@ -230,7 +230,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
         for stem in [
             "performance_ckf",
-            "tracksummary_ckf.root",
+            "tracksummary_ckf",
             "performance_vertexing",
         ] + (
             ["performance_seeding", "performance_ambi"]
