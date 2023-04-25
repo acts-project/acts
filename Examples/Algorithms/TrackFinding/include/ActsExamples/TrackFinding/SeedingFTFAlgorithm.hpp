@@ -30,13 +30,13 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
     //two parameters that will be returned in function: 
     /// Output track seed collection.
     std::string outputSeeds;
-    /// Output proto track collection.
-    // std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
     //change to FTF type
     Acts::SeedFinderFTFConfig<SimSpacePoint> seedFinderConfig;
     Acts::SeedFinderOptions seedFinderOptions;
+
+    std::string layerMappingFile ; 
 
   }; 
 

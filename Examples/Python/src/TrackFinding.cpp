@@ -276,7 +276,7 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingFTFAlgorithm, mex,
       "SeedingFTFAlgorithm", inputSpacePoints, outputSeeds,
-      seedFilterConfig, seedFinderConfig, seedFinderOptions);
+      seedFilterConfig, seedFinderConfig, seedFinderOptions, layerMappingFile);
 
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

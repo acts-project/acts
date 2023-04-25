@@ -8,6 +8,14 @@
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <iostream>
+#include <map>
+#include <fstream>
+#include <vector> 
+#include <sstream>
+
+using namespace std;
+
 //constructor: 
 ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     ActsExamples::SeedingFTFAlgorithm::Config cfg, 
@@ -15,7 +23,7 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), 
       m_cfg(std::move(cfg)) {
     //fill config struct
-
+    m_cfg.layerMappingFile = m_cfg.layerMappingFile ; 
     //now interal units error on SeedFilter so using on all 3 
 
     m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
@@ -90,11 +98,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               spacePoints, create_coordinates);
 
-  //prototracks part, so far can just state, there is a loop over seeds  
-  //since update the last steps have changed: 
-
-
-  // ProtoTrackContainer protoTracks;                                
+                             
 
   // //debug statement
   
@@ -102,6 +106,53 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   // ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
   m_outputSeeds(ctx, std::move(seeds));
 
+//create map from csv 
+  map<std::pair<int, int>,int> ACTS_FTF;
+
+  std::ifstream data(m_cfg.layerMappingFile);
+  std::string line;
+  std::vector<std::vector<std::string> > parsedCsv;
+  while(std::getline(data,line))
+  {
+      std::stringstream lineStream(line);
+      std::string cell;
+      std::vector<std::string> parsedRow;
+      while(std::getline(lineStream,cell,','))
+      {
+          parsedRow.push_back(cell); 
+      }
+
+      parsedCsv.push_back(parsedRow);
+            
+  }
+
+  for (auto i : parsedCsv){
+        
+      int FTF = stoi(i[0]); 
+      int ACTS_vol = stoi(i[1]); 
+      int ACTS_lay = stoi(i[2]);
+      ACTS_FTF.insert({{ACTS_vol,ACTS_lay},FTF}) ; 
+  }
+
+
+
+
+   //loop over space points, call on map 
+  for (const auto &isp : m_inputSpacePoints) {
+    for (const auto &spacePoint : (*isp)(ctx)) {
+
+      int ACTS_vol_id = spacePoint.sourceLinks().front().geometryId().volume() ;
+      int ACTS_lay_id = spacePoint.sourceLinks().front().geometryId().layer() ; 
+      auto key = std::make_pair(ACTS_vol_id,ACTS_lay_id) ; 
+      auto Find = ACTS_FTF.find(key) ; 
+      if (Find == ACTS_FTF.end()){
+        int FTF_id = 0 ; //not found
+        std::cout<<"key not in map" ;  
+      } 
+      int FTF_id = Find->second ;
+      std::cout << "Space point" <<  " vol=  " << ACTS_vol_id << "  lay= " << ACTS_lay_id << "  FTF_ID " << FTF_id << "\n" ;
+    }
+  }
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

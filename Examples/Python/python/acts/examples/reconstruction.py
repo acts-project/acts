@@ -169,6 +169,7 @@ def addSeeding(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
+    layerMappingConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
@@ -315,6 +316,7 @@ def addSeeding(
                 seedFinderOptionsArg,
                 seedFilterConfigArg,
                 logLevel,
+                layerMappingConfigFile,
             )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
@@ -764,6 +766,7 @@ def addFTFSeeding(
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
     logLevel: acts.logging.Level = None,
+    layerMappingConfigFile: Union[Path, str] = None,
 ):  
     """trying to make own seeding algorithm 
     eventually will use FTF
@@ -771,6 +774,7 @@ def addFTFSeeding(
     #just copied these from standard and ortho seeding, same input and outputs in both 
     ##which are then inputs to the unique seeding alg (some extra in standard, used common ones)
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    layerMappingFile=str(layerMappingConfigFile) #turn path into string 
     #want to change to SFFTFconfig here 
     seedFinderConfig = acts.SeedFinderFTFConfig(
         **acts.examples.defaultKWArgs(
@@ -853,10 +857,10 @@ def addFTFSeeding(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",
-        #outputProtoTracks="prototracks",
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
+        layerMappingFile=layerMappingFile, 
     )
 
     sequence.addAlgorithm(seedingAlg) 

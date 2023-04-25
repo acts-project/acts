@@ -94,6 +94,7 @@ addSeeding(
     ),
     ##python part of FTF seeding working, but algorithm replaced with ortho
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
+    layerMappingConfigFile = geo_dir / "itk-hgtd/ACTS_FTF_mapinput.csv", 
     outputDirRoot=outputDir,
 )
 
