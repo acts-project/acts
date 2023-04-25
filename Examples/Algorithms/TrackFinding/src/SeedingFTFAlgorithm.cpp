@@ -150,9 +150,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
         std::cout<<"key not in map" ;  
       } 
       int FTF_id = Find->second ;
-      std::cout << "Space point" <<  " vol=  " << ACTS_vol_id << "  lay= " << ACTS_lay_id << "  FTF_ID " << FTF_id << "\n" ;
+      if (FTF_ID == 1) {
+        "key in map but no FTF ID"
+      }
+      if (ACTS_vol_id == 8) {
+        std::cout << "Space point" <<  " vol=  " << ACTS_vol_id << "  lay= " << ACTS_lay_id << "  FTF_ID " << FTF_id << "\n" ;
+
+      }
     }
   }
+  std::cout<< "how many space points" << sizeof(m_inputSpacePoints) << "\n" ;
+
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
