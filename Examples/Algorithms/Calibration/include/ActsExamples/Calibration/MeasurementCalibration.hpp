@@ -24,7 +24,7 @@ class MeasurementCalibrator {
   virtual void calibrate(
       const MeasurementContainer& measurements,
       const Acts::GeometryContext& gctx,
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
+      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const = 0;
 };
 
@@ -39,8 +39,8 @@ class PassThroughCalibrator : public MeasurementCalibrator {
   void calibrate(
       const MeasurementContainer& measurements,
       const Acts::GeometryContext& /*gctx*/,
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
-          trackState) const;
+      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
+          trackState) const override;
 };
 
 // Executor class that pairs together a MeasurementCalibrator and a

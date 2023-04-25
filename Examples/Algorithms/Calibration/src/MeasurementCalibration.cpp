@@ -11,7 +11,7 @@
 void ActsExamples::PassThroughCalibrator::calibrate(
     const MeasurementContainer& measurements,
     const Acts::GeometryContext& /*gctx*/,
-    Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
+    Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
   const IndexSourceLink& sourceLink =
       trackState.getUncalibratedSourceLink().get<IndexSourceLink>();
