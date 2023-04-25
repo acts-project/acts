@@ -108,7 +108,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
 //create map from csv 
   map<std::pair<int, int>,int> ACTS_FTF;
-
+  //0 in this file refers to no FTF ID 
   std::ifstream data(m_cfg.layerMappingFile);
   std::string line;
   std::vector<std::vector<std::string> > parsedCsv;
@@ -141,22 +141,39 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   for (const auto &isp : m_inputSpacePoints) {
     for (const auto &spacePoint : (*isp)(ctx)) {
 
-      int ACTS_vol_id = spacePoint.sourceLinks().front().geometryId().volume() ;
-      int ACTS_lay_id = spacePoint.sourceLinks().front().geometryId().layer() ; 
-      auto key = std::make_pair(ACTS_vol_id,ACTS_lay_id) ; 
-      auto Find = ACTS_FTF.find(key) ; 
-      if (Find == ACTS_FTF.end()){
-        int FTF_id = 0 ; //not found
-        std::cout<<"key not in map" ;  
-      } 
-      int FTF_id = Find->second ;
-      if (FTF_id == 1) {
-        std::cout<<"key in map but no FTF ID"  << "\n" ;
+      auto source_link = spacePoint.sourceLinks() ; 
+      //warning if source link empty 
+      if (source_link.empty()){
+        std::cout << "warning source link vector is empty" ; 
       }
+      //continue if source link okay 
       else {
-        std::cout << "Space point" <<  " vol=  " << ACTS_vol_id << "  lay= " << ACTS_lay_id << "  FTF_ID " << FTF_id << "\n" ;
-      }
+        int ACTS_vol_id = source_link.front().geometryId().volume() ;
+        int ACTS_lay_id = source_link.front().geometryId().layer() ; 
+        auto key = std::make_pair(ACTS_vol_id,ACTS_lay_id) ; 
+        auto Find = ACTS_FTF.find(key) ;
+        
+        //dont want strips or HGTD 
+        if (ACTS_vol_id == 2 or  ACTS_vol_id == 22 or ACTS_vol_id == 23 or ACTS_vol_id == 24){ 
+          continue; 
+        }
 
+        //warning if key not in map 
+        if (Find == ACTS_FTF.end()){
+          std::cout<<"key not in map" ;  
+        } 
+
+        //now should be pixel with FTF ID: 
+        int FTF_id = Find->second ;
+
+        //backup shouldnt need as no 0 in csv 
+        // if (FTF_id == 0) {
+        //   std::cout<<"key in map but no FTF ID"  << "\n" ;
+        // }
+ 
+
+      }
+      
     }
   }
 
