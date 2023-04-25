@@ -147,10 +147,10 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
   }
 }
 
-inline std::array<float, 6> transformCoordinates(
-    const std::array<float, 4>& lineCircleVariables) {
-  auto& [deltaX, deltaY, cosPhiM, sinPhiM] = lineCircleVariables;
-
+inline std::array<float, 6> transformCoordinates(const float& deltaX,
+                                                 const float& deltaY,
+                                                 const float& cosPhiM,
+                                                 const float& sinPhiM) {
   // calculate projection fraction of spM->sp vector pointing in same
   // direction as
   // vector origin->spM (x) and projection fraction of spM->sp vector
