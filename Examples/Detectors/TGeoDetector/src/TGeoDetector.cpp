@@ -204,8 +204,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
     bpvConfig.volumeName = "BeamPipe";
     bpvConfig.layerBuilder = beamPipeBuilder;
-    bpvConfig.layerEnvelopeR = {config.beampipeEnvelopeR,
-                                config.beampipeEnvelopeR};
+    bpvConfig.layerEnvelopeR = {config.beamPipeEnvelopeR,
+                                config.beamPipeEnvelopeR};
     bpvConfig.buildToRadiusZero = true;
     auto beamPipeVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
