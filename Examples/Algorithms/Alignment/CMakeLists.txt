@@ -8,8 +8,8 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesAlignment
   PUBLIC
-  ActsCore ActsAlignment
-    ActsExamplesFramework ActsExamplesMagneticField)
+  ActsCore ActsAlignment ActsExamplesCalibration
+  ActsExamplesFramework ActsExamplesMagneticField)
 
 install(
   TARGETS ActsExamplesAlignment

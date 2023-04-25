@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "ActsExamples/Calibration/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -98,8 +99,10 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
-  MeasurementCalibrator calibrator{measurements};
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  PassThroughCalibrator pcalibrator;
+  PairedMeasurementCalibrator calibrator(pcalibrator, measurements);
+  extensions.calibrator.connect<&PairedMeasurementCalibrator::calibrate>(
+      &calibrator);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   extensions.updater.connect<
