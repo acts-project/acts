@@ -27,6 +27,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
@@ -152,8 +153,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
               magneticField,
           const std::vector<std::string>& volumeMappings,
           const std::vector<std::string>& materialMappings,
-          std::optional<double> killAtMaxR,
-          std::optional<double> killAtMaxAbsZ) {
+          std::shared_ptr<const Acts::Volume> killVolume = nullptr) {
         auto logger = Acts::getDefaultLogger("Geant4", level);
         auto physicsList = new FTFP_BERT();
         auto g4Cfg =
@@ -167,18 +167,15 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
             logger->cloneWithSuffix("ParticleTracking"));
 
         // Stepping actions
-        ParticleKillAction::Config g4KillCfg;
-        g4KillCfg.maxAbsZ =
-            killAtMaxAbsZ.value_or(std::numeric_limits<double>::infinity());
-        g4KillCfg.maxR =
-            killAtMaxR.value_or(std::numeric_limits<double>::infinity());
-
         ActsSteppingActionList::Config steppingCfg;
+
         steppingCfg.actions.push_back(new SensitiveSteppingAction(
             SensitiveSteppingAction::Config{},
             logger->cloneWithSuffix("SensitiveStepping")));
-        steppingCfg.actions.push_back(new ParticleKillAction(
-            g4KillCfg, logger->cloneWithSuffix("Killer")));
+
+        steppingCfg.actions.push_back(
+            new ParticleKillAction(ParticleKillAction::Config{killVolume},
+                                   logger->cloneWithSuffix("Killer")));
 
         g4Cfg.steppingAction = new ActsSteppingActionList(steppingCfg);
 
@@ -215,8 +212,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{},
-      py::arg("killAtMaxR") = std::nullopt,
-      py::arg("killAtMaxAbsZ") = std::nullopt);
+      py::arg("killVolume") = nullptr);
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -26,9 +27,7 @@ class ParticleKillAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
   struct Config {
-    // When to kill a track
-    double maxAbsZ = std::numeric_limits<double>::infinity();
-    double maxR = std::numeric_limits<double>::infinity();
+    std::shared_ptr<const Acts::Volume> volume;
   };
 
   /// Construct the stepping action

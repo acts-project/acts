@@ -28,11 +28,11 @@ void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
   G4Track* track = step->GetTrack();
 
   const auto pos = convertLength * track->GetPosition();
-  if (std::abs(pos.z()) > m_cfg.maxAbsZ or
-      std::hypot(pos.x(), pos.y()) > m_cfg.maxR) {
-    ACTS_DEBUG("Kill track with internal track ID "
-               << track->GetTrackID() << " at (r,z) = "
-               << std::hypot(pos.x(), pos.y()) << ", " << pos.z());
+
+  if (m_cfg.volume and
+      not m_cfg.volume->inside(Acts::Vector3{pos.x(), pos.y(), pos.z()})) {
+    ACTS_DEBUG("Kill track with internal track ID " << track->GetTrackID()
+                                                    << " at " << pos);
     track->SetTrackStatus(G4TrackStatus::fStopAndKill);
   }
 }
