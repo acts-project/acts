@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -21,47 +22,157 @@
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-    const std::vector<std::shared_ptr<Surface>>& surfaces,
-    const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    std::vector<std::shared_ptr<Surface>> surfaces,
+    std::vector<std::shared_ptr<DetectorVolume>> volumes,
+    DetectorVolumeUpdator&& detectorVolumeUpdator,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
+      m_surfaces(std::move(surfaces)),
+      m_volumes(std::move(volumes)),
+      m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)),
       m_surfaceCandidatesUpdator(std::move(surfaceCandidateUpdator)),
       m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
     throw std::invalid_argument(
         "DetectorVolume: construction with nullptr bounds.");
   }
+  if (not m_detectorVolumeUpdator.connected()) {
+    throw std::invalid_argument(
+        "DetectorVolume: navigation state updator delegate is not connected.");
+  }
   if (not m_surfaceCandidatesUpdator.connected()) {
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
-
-  m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
-  m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 
   [[maybe_unused]] const auto& gctx_ref = gctx;
   assert(checkContainment(gctx) && "Objects are not contained by volume.");
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext& /*gctx*/, const std::string& name,
+    const GeometryContext& gctx, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
-    : m_name(name),
-      m_transform(transform),
-      m_bounds(std::move(bounds)),
-      m_surfaceCandidatesUpdator(std::move(surfaceCandidateUpdator)),
-      m_volumeMaterial(nullptr) {
-  if (m_bounds == nullptr) {
-    throw std::invalid_argument(
-        "DetectorVolume: construction with nullptr bounds.");
+    : DetectorVolume(gctx, name, transform, std::move(bounds), {}, {},
+                     tryNoVolumes(), std::move(surfaceCandidateUpdator)) {}
+
+std::shared_ptr<Acts::Experimental::DetectorVolume>
+Acts::Experimental::DetectorVolume::makeShared(
+    const GeometryContext& gctx, const std::string& name,
+    const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    std::vector<std::shared_ptr<Surface>> surfaces,
+    std::vector<std::shared_ptr<DetectorVolume>> volumes,
+    DetectorVolumeUpdator&& detectorVolumeUpdator,
+    SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
+  return std::shared_ptr<DetectorVolume>(new DetectorVolume(
+      gctx, name, transform, std::move(bounds), std::move(surfaces),
+      std::move(volumes), std::move(detectorVolumeUpdator),
+      std::move(surfaceCandidateUpdator)));
+}
+
+std::shared_ptr<Acts::Experimental::DetectorVolume>
+Acts::Experimental::DetectorVolume::makeShared(
+    const GeometryContext& gctx, const std::string& name,
+    const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
+  return std::shared_ptr<DetectorVolume>(
+      new DetectorVolume(gctx, name, transform, std::move(bounds),
+                         std::move(surfaceCandidateUpdator)));
+}
+
+const Acts::Transform3& Acts::Experimental::DetectorVolume::transform(
+    const GeometryContext& /*gctx*/) const {
+  return m_transform;
+}
+
+Acts::Vector3 Acts::Experimental::DetectorVolume::center(
+    const GeometryContext& gctx) const {
+  return transform(gctx).translation();
+}
+
+const Acts::VolumeBounds& Acts::Experimental::DetectorVolume::volumeBounds()
+    const {
+  return (*m_bounds.get());
+}
+
+std::vector<std::shared_ptr<Acts::Experimental::Portal>>&
+Acts::Experimental::DetectorVolume::portalPtrs() {
+  return m_portals.internal;
+}
+
+std::vector<std::shared_ptr<Acts::Surface>>&
+Acts::Experimental::DetectorVolume::surfacePtrs() {
+  return m_surfaces.internal;
+}
+
+std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
+Acts::Experimental::DetectorVolume::volumePtrs() {
+  return m_volumes.internal;
+}
+
+const std::vector<const Acts::Experimental::Portal*>&
+Acts::Experimental::DetectorVolume::portals() const {
+  return m_portals.external;
+}
+
+const std::vector<const Acts::Surface*>&
+Acts::Experimental::DetectorVolume::surfaces() const {
+  return m_surfaces.external;
+}
+
+const std::vector<const Acts::Experimental::DetectorVolume*>&
+Acts::Experimental::DetectorVolume::volumes() const {
+  return m_volumes.external;
+}
+
+const Acts::Experimental::DetectorVolumeUpdator&
+Acts::Experimental::DetectorVolume::detectorVolumeUpdator() const {
+  return m_detectorVolumeUpdator;
+}
+
+const Acts::Experimental::SurfaceCandidatesUpdator&
+Acts::Experimental::DetectorVolume::surfaceCandidatesUpdator() const {
+  return m_surfaceCandidatesUpdator;
+}
+
+void Acts::Experimental::DetectorVolume::assignVolumeMaterial(
+    std::shared_ptr<IVolumeMaterial> material) {
+  m_volumeMaterial = std::move(material);
+}
+
+std::shared_ptr<Acts::IVolumeMaterial>
+Acts::Experimental::DetectorVolume::volumeMaterialPtr() {
+  return m_volumeMaterial;
+}
+
+const Acts::IVolumeMaterial*
+Acts::Experimental::DetectorVolume::volumeMaterial() const {
+  return m_volumeMaterial.get();
+}
+
+const Acts::GeometryIdentifier& Acts::Experimental::DetectorVolume::geometryId()
+    const {
+  return m_geometryId;
+}
+
+const std::string& Acts::Experimental::DetectorVolume::name() const {
+  return m_name;
+}
+
+void Acts::Experimental::DetectorVolume::assignDetector(
+    const Detector& detector) {
+  m_detector = &detector;
+
+  for (auto& v : m_volumes.internal) {
+    v->assignDetector(detector);
   }
-  if (not m_surfaceCandidatesUpdator.connected()) {
-    throw std::invalid_argument(
-        "DetectorVolume: navigation state updator delegate is not connected.");
-  }
+}
+
+const Acts::Experimental::Detector*
+Acts::Experimental::DetectorVolume::detector() const {
+  return m_detector;
 }
 
 void Acts::Experimental::DetectorVolume::updatePortal(
@@ -94,17 +205,18 @@ Acts::Experimental::DetectorVolume::getSharedPtr() const {
 }
 
 bool Acts::Experimental::DetectorVolume::inside(const GeometryContext& gctx,
-                                                const Vector3& position,
-                                                bool excludeInserts) const {
-  Vector3 posInVolFrame((transform(gctx).inverse()) * position);
-  if (not volumeBounds().inside(posInVolFrame)) {
+                                                const Vector3& position) const {
+  Vector3 posInVolFrame(transform(gctx).inverse() * position);
+  return volumeBounds().inside(posInVolFrame);
+}
+
+bool Acts::Experimental::DetectorVolume::exclusivelyInside(
+    const GeometryContext& gctx, const Vector3& position) const {
+  if (!inside(gctx, position)) {
     return false;
   }
-  if (not excludeInserts or m_volumes.external.empty()) {
-    return true;
-  }
   // Check exclusion through subvolume
-  for (const auto v : volumes()) {
+  for (const auto& v : volumes()) {
     if (v->inside(gctx, position)) {
       return false;
     }
@@ -165,7 +277,7 @@ void Acts::Experimental::DetectorVolume::closePortals() {
     // Create a null link
     for (auto [ivu, vu] : enumerate(p->detectorVolumeUpdators())) {
       if (not vu.connected()) {
-        auto eowDir = Acts::directionFromIndex(ivu);
+        auto eowDir = Direction::fromIndex(ivu);
         auto eow = std::make_unique<const EndOfWorldImpl>();
         Acts::Experimental::DetectorVolumeUpdator eowLink;
         eowLink.connect<&EndOfWorldImpl::update>(std::move(eow));

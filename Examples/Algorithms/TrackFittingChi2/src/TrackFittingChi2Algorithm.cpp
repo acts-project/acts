@@ -8,7 +8,7 @@
 
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"

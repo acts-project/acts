@@ -245,7 +245,7 @@ Acts::Layer::compatibleSurfaces(
   sIntersections.resize(std::distance(sIntersections.begin(), it));
 
   // sort according to the path length
-  if (options.navDir == NavigationDirection::Forward) {
+  if (options.navDir == Direction::Forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());

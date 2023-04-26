@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "actsvg/meta.hpp"
 
 #include <array>
@@ -18,12 +18,11 @@
 #include <vector>
 
 namespace Acts {
-
 namespace Svg {
 
 struct Style {
   // Fill parameters
-  std::array<int, 3> fillColor = {0, 0, 0};
+  std::array<int, 3> fillColor = {255, 255, 255};
   ActsScalar fillOpacity = 1.;
 
   // Highlight parameters
@@ -33,7 +32,12 @@ struct Style {
   ActsScalar strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
 
-  ActsScalar fontSize = 14;
+  ActsScalar highlightStrokeWidth = 2;
+  std::array<int, 3> highlightStrokeColor = {0, 0, 0};
+
+  std::vector<int> strokeDasharray = {};
+
+  unsigned int fontSize = 14u;
 
   unsigned int nSegments = 72u;
 
@@ -48,7 +52,10 @@ struct Style {
 
     actsvg::style::stroke str;
     str._sc._rgb = strokeColor;
+    str._sc._hl_rgb = highlightStrokeColor;
     str._width = strokeWidth;
+    str._hl_width = highlightStrokeWidth;
+    str._dasharray = strokeDasharray;
 
     return std::tie(fll, str);
   }
@@ -172,5 +179,4 @@ inline static void toFile(const std::vector<actsvg::svg::object>& objects,
 }
 
 }  // namespace Svg
-
 }  // namespace Acts

@@ -1,5 +1,6 @@
 import pytest
 import os
+from pathlib import Path
 import multiprocessing
 
 from helpers import (
@@ -12,7 +13,7 @@ from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
 import acts
-from acts import PlanarModuleStepper
+from acts import PlanarModuleStepper, UnitConstants as u
 from acts.examples import (
     RootParticleWriter,
     RootParticleReader,
@@ -460,3 +461,55 @@ def test_edm4hep_particle_reader(tmp_path, conf_const, ptcl_gun):
     s.run()
 
     assert alg.events_seen == 10
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_tracks_reader(tmp_path):
+    from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
+
+    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    out = tmp_path / "tracks_edm4hep.root"
+
+    s.addWriter(
+        EDM4hepTrackWriter(
+            level=acts.logging.VERBOSE,
+            inputTracks="kfTracks",
+            outputPath=str(out),
+            Bz=2 * u.T,
+        )
+    )
+
+    s.run()
+
+    del s
+
+    s = Sequencer(numThreads=1)
+    s.addReader(
+        EDM4hepTrackReader(
+            level=acts.logging.VERBOSE,
+            outputTracks="kfTracks",
+            inputPath=str(out),
+            Bz=2 * u.T,
+        )
+    )
+
+    s.run()

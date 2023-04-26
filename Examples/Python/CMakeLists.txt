@@ -78,6 +78,13 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGIN_JSON AND ACTS_BUILD_PLUGIN_ACTSVG)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesDetectoInspectors)
+  target_sources(ActsPythonBindings PRIVATE src/DetectorInspectors.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/DetectorInspectorsStub.cpp)
+endif()
+
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
   pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
   target_link_libraries(ActsPythonBindingsDD4hep PUBLIC 
@@ -109,7 +116,7 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
   pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
   target_link_libraries(ActsPythonBindingsGeant4 PUBLIC 
     ActsExamplesGeant4 ActsExamplesDetectorGeant4
-    ActsPythonUtilities)
+    ActsPythonUtilities ActsExamplesMuonSpectrometerMockupDetector)
   add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
 
   install(TARGETS ActsPythonBindingsGeant4 DESTINATION ${_python_install_dir})
@@ -166,9 +173,19 @@ endif()
 
 if(ACTS_BUILD_PLUGIN_ONNX)
   target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
-  target_sources(ActsPythonBindings PRIVATE src/MLTrackFinding.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/Onnx.cpp)
+  list(APPEND py_files examples/onnx/__init__.py)
+
+  if(ACTS_BUILD_PLUGIN_MLPACK)
+    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpack.cpp)
+    list(APPEND py_files examples/onnx/mlpack.py)
+  else()
+    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
+  endif()
+
 else()
-  target_sources(ActsPythonBindings PRIVATE src/MLTrackFindingStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)
