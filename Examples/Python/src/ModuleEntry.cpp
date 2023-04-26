@@ -91,6 +91,7 @@ void addMagneticField(Context& ctx);
 void addMaterial(Context& ctx);
 void addOutput(Context& ctx);
 void addDetector(Context& ctx);
+void addDetectorInspectors(Context& ctx);
 void addExampleAlgorithms(Context& ctx);
 void addInput(Context& ctx);
 void addGenerators(Context& ctx);
@@ -263,6 +264,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addMaterial(ctx);
   addOutput(ctx);
   addDetector(ctx);
+  addDetectorInspectors(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);
   addGenerators(ctx);

@@ -16,6 +16,10 @@
 #include <sstream>
 #include <utility>
 
+std::array<std::string, Acts::Surface::SurfaceType::Other>
+    Acts::Surface::s_surfaceTypeNames = {
+        "Cone", "Cylinder", "Disc", "Perigee", "Plane", "Straw", "Curvilinear"};
+
 Acts::Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(transform) {}
 

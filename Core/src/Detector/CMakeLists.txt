@@ -3,8 +3,10 @@ target_sources(
   PRIVATE
     Detector.cpp
     DetectorVolume.cpp
+    LayerStructureBuilder.cpp
     Portal.cpp
     PortalGenerators.cpp
     PortalHelper.cpp
     ProtoDetector.cpp
+    SupportBuilder.cpp
 )
