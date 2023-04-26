@@ -4,36 +4,44 @@
 #
 #    pip-compile Examples/Scripts/requirements.in
 #
-awkward==1.8.0
-    # via -r Examples/Scripts/requirements.in
-boost-histogram==1.3.1
+awkward==2.1.3
+    # via
+    #   -r Examples/Scripts/requirements.in
+    #   uproot
+awkward-cpp==14
+    # via awkward
+boost-histogram==1.3.2
     # via hist
 click==8.1.3
     # via
     #   histoprint
     #   typer
+contourpy==1.0.7
+    # via matplotlib
 cycler==0.11.0
     # via matplotlib
-fonttools==4.34.4
+fonttools==4.39.3
     # via matplotlib
-hist==2.6.1
+hist==2.6.3
     # via -r Examples/Scripts/requirements.in
 histoprint==2.4.0
     # via hist
 kiwisolver==1.4.4
     # via matplotlib
-matplotlib==3.5.2
+matplotlib==3.7.1
     # via
     #   -r Examples/Scripts/requirements.in
     #   mplhep
-mplhep==0.3.26
+mplhep==0.3.27
     # via -r Examples/Scripts/requirements.in
 mplhep-data==0.0.3
     # via mplhep
-numpy==1.23.1
+numpy==1.24.3
     # via
     #   awkward
+    #   awkward-cpp
     #   boost-histogram
+    #   contourpy
     #   hist
     #   histoprint
     #   matplotlib
@@ -42,42 +50,43 @@ numpy==1.23.1
     #   scipy
     #   uhi
     #   uproot
-packaging==21.3
+packaging==23.1
     # via
+    #   awkward
     #   matplotlib
     #   mplhep
-pandas==1.4.3
+    #   uproot
+pandas==2.0.1
     # via -r Examples/Scripts/requirements.in
-pillow==9.2.0
+pillow==9.5.0
     # via matplotlib
-pydantic==1.9.1
+pydantic==1.10.7
     # via -r Examples/Scripts/requirements.in
 pyparsing==3.0.9
-    # via
-    #   matplotlib
-    #   packaging
+    # via matplotlib
 python-dateutil==2.8.2
     # via
     #   matplotlib
     #   pandas
-pytz==2022.1
+pytz==2023.3
     # via pandas
 pyyaml==6.0
     # via -r Examples/Scripts/requirements.in
-scipy==1.9.0
+scipy==1.10.1
     # via -r Examples/Scripts/requirements.in
 six==1.16.0
     # via python-dateutil
-typer==0.6.1
+typer==0.7.0
     # via -r Examples/Scripts/requirements.in
-typing-extensions==4.3.0
-    # via pydantic
-uhi==0.3.1
+typing-extensions==4.5.0
+    # via
+    #   awkward
+    #   pydantic
+tzdata==2023.3
+    # via pandas
+uhi==0.3.3
     # via
     #   histoprint
     #   mplhep
-uproot==4.3.4
+uproot==5.0.7
     # via -r Examples/Scripts/requirements.in
-
-# The following packages are considered to be unsafe in a requirements file:
-# setuptools
