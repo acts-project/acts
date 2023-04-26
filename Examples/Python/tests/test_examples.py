@@ -1136,13 +1136,15 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
         raise
 
     import re, collections
+
     errors = []
     error_regex = re.compile(r"^\d\d:\d\d:\d\d\s+(\w+)\s+ERROR\s+", re.MULTILINE)
     for match in error_regex.finditer(stdout):
-        algo, = match.groups()
+        (algo,) = match.groups()
         errors.append(algo)
     errors = collections.Counter(errors)
     assert dict(errors) == {"Propagator": 2, "CKF": 2}, stdout
+
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.skipif(not onnxEnabled, reason="ONNX plugin not enabled")
