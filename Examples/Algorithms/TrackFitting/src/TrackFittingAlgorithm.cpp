@@ -39,7 +39,7 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     throw std::invalid_argument("Missing output tracks collection");
   }
   if (!m_cfg.calibrator) {
-      throw std::invalid_argument("Missing calibrator");
+    throw std::invalid_argument("Missing calibrator");
   }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
