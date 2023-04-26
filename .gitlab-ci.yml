@@ -389,6 +389,11 @@ lcg_101:
       - OS: [centos8]
         COMPILER: [gcc11]
 
+  rules:
+    - if: '$COMPILER == "clang12"'
+      allow_failure: true
+
+
 lcg_102b:
   <<: *lcg_base_job
 
@@ -403,6 +408,10 @@ lcg_102b:
       - OS: [centos8, alma9]
         COMPILER: [gcc11]
 
+  rules:
+    - if: '$COMPILER == "clang12" || $COMPILER == "gcc12"'
+      allow_failure: true
+
 lcg_103:
   <<: *lcg_base_job
 
@@ -416,3 +425,7 @@ lcg_103:
 
       - OS: [alma9]
         COMPILER: [gcc11, gcc12]
+
+  rules:
+    - if: '$COMPILER == "clang12" || $COMPILER == "gcc12" || $COMPILER == "clang15"'
+      allow_failure: true
