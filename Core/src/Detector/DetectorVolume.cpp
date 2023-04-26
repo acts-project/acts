@@ -277,7 +277,7 @@ void Acts::Experimental::DetectorVolume::closePortals() {
     // Create a null link
     for (auto [ivu, vu] : enumerate(p->detectorVolumeUpdators())) {
       if (not vu.connected()) {
-        auto eowDir = directionFromIndex(ivu);
+        auto eowDir = Direction::fromIndex(ivu);
         auto eow = std::make_unique<const EndOfWorldImpl>();
         Acts::Experimental::DetectorVolumeUpdator eowLink;
         eowLink.connect<&EndOfWorldImpl::update>(std::move(eow));

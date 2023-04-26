@@ -101,7 +101,6 @@ std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
   } else if (sType == "PerigeeSurface") {
     Transform3 pTransform;
     nlohmann::json trfj = j["transform"];
-    ;
     from_json(trfj, pTransform);
     mutableSf = Surface::makeShared<PerigeeSurface>(pTransform);
   }

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
@@ -25,7 +26,7 @@ namespace Acts {
 /// @brief TargetOptions struct for geometry interface
 struct TargetOptions {
   /// Navigation direction
-  NavigationDirection navDir = NavigationDirection::Forward;
+  Direction navDir = Direction::Forward;
 
   /// Target Boundary check directive - always false here
   BoundaryCheck boundaryCheck = false;
@@ -37,7 +38,7 @@ struct TargetOptions {
   double pathLimit = std::numeric_limits<double>::max();
 
   /// create target options
-  TargetOptions(NavigationDirection ndir) : navDir(ndir) {}
+  TargetOptions(Direction ndir) : navDir(ndir) {}
 };
 
 /// This is the condition that the pathLimit has been reached

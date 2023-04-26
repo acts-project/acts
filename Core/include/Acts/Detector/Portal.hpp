@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
@@ -120,7 +120,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   ///
   /// @note this overwrites the existing link
   void assignDetectorVolumeUpdator(
-      NavigationDirection dir, DetectorVolumeUpdator&& dVolumeUpdator,
+      Direction dir, DetectorVolumeUpdator&& dVolumeUpdator,
       const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes);
 
   /// Update the volume link, w/o directive, i.e. it relies that there's only
