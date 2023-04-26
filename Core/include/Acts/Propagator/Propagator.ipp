@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 
 #include <type_traits>
