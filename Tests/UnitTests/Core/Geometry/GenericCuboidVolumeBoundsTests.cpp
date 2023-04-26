@@ -200,10 +200,9 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
     auto geoCtx = GeometryContext();
     auto osCenter = os.first->center(geoCtx);
     auto osNormal = os.first->normal(geoCtx);
-    double nDir = (double)os.second;
     // Check if you step inside the volume with the oriented normal
-    auto insideGcvb = osCenter + nDir * osNormal;
-    auto outsideGcvb = osCenter - nDir * osNormal;
+    Vector3 insideGcvb = osCenter + os.second * osNormal;
+    Vector3 outsideGcvb = osCenter - os.second * osNormal;
     BOOST_CHECK(cubo.inside(insideGcvb));
     BOOST_CHECK(!cubo.inside(outsideGcvb));
   }
