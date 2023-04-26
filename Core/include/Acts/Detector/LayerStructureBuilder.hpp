@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/IInternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -20,13 +20,21 @@ namespace Acts {
 namespace Experimental {
 
 /// @brief This is a builder of layer structures to be contained
-/// within a DetectorVolume.
+/// within a DetectorVolume, it extends the IInternalStructureBuilder
+/// interface and provides the internal structure components of
+/// DetectorVolume objects to be constructed.
 ///
 /// It uses the IndexedSurfaceGrid to bin the internal surfaces,
 /// and allows for additional support surfaces that are added to the
 /// structure and indexing mechanism. Those support structures can
 /// also be approximated by planar surfaces, in order to facilitate
 /// vectorization of surface intersection calls.
+///
+/// The binning can be chosen with a so called `expansion`, a number
+/// which indicates the configured expanded bin window in which the
+/// surfaces are going to be filled, the details to this strategy
+/// can be found in the IndexedGridFiller and IndexedSurfacesGenerator
+/// classes.
 ///
 /// No sub volumes are added to this structure builders, hence,
 /// the DetectorVolumeFinder navigation delegate uses the "NoopFinder"
@@ -50,9 +58,9 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
 
   /// @brief The surface binning definition
   struct Binning {
-    /// Define the binning
+    /// Define the binning of the surfaces
     BinningData data;
-    /// An expansion for the filling
+    /// An expansion for the filling (in bins)
     size_t expansion = 0u;
   };
 
@@ -71,15 +79,15 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<Binning> binnings = {};
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
-    /// Extra information
+    /// Extra information, mainly for screen output
     std::string auxilliary = "";
   };
 
   /// Constructor
   ///
-  /// @param lConfig is the configuration struct
+  /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
-  LayerStructureBuilder(const Config& lConfig,
+  LayerStructureBuilder(const Config& cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "LayerStructureBuilder", Logging::INFO));
 
@@ -88,7 +96,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   /// @param gctx the geometry context at the creation of the internal structure
   ///
   /// @return a consistent set of detector volume internals
-  InternalStructure create(const GeometryContext& gctx) const final;
+  InternalStructure construct(const GeometryContext& gctx) const final;
 
  private:
   /// configuration object

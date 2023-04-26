@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/GridAxisGenerators.hpp"
-#include "Acts/Detector/IndexedGridFiller.hpp"
-#include "Acts/Detector/IndexedSurfacesGenerator.hpp"
-#include "Acts/Detector/SupportBuilder.hpp"
+#include "Acts/Detector/detail/GridAxisGenerators.hpp"
+#include "Acts/Detector/detail/IndexedGridFiller.hpp"
+#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
+#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Helpers.hpp"
