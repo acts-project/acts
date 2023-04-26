@@ -85,6 +85,9 @@ function full_chain() {
         --config CI/physmon/tracksummary_ckf_config.yml
     ec=$(($ec | $?))
 
+    # remove ntuple file because it's large
+    rm $outdir/tracksummary_ckf_${suffix}.root
+
     run \
         $outdir/tracksummary_ckf_${suffix}_hist.root \
         $refdir/tracksummary_ckf_${suffix}_hist.root \
