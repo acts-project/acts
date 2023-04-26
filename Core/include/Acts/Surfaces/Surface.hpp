@@ -69,6 +69,9 @@ class Surface : public virtual GeometryObject,
     Other = 7
   };
 
+  /// Helper strings for screen output
+  static std::array<std::string, SurfaceType::Other> s_surfaceTypeNames;
+
  protected:
   /// Constructor with Transform3 as a shared object
   ///
