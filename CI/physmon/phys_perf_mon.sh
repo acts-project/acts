@@ -76,6 +76,26 @@ function full_chain() {
         --title "IVF ${suffix}" \
         -o $outdir/ivf_${suffix}.html \
         -p $outdir/ivf_${suffix}_plots
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/tracksummary_ckf_${suffix}.root \
+        tracksummary \
+        $outdir/tracksummary_ckf_${suffix}_hist.root \
+        --silent \
+        --config CI/physmon/tracksummary_ckf_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/tracksummary_ckf_${suffix}.root
+
+    run \
+        $outdir/tracksummary_ckf_${suffix}_hist.root \
+        $refdir/tracksummary_ckf_${suffix}_hist.root \
+        --title "Track Summary CKF ${suffix}" \
+        -o $outdir/tracksummary_ckf_${suffix}.html \
+        -p $outdir/tracksummary_ckf_${suffix}_plots
+
+
 }
 
 full_chain truth_smeared
