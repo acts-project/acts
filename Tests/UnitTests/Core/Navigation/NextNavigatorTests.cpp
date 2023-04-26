@@ -38,10 +38,7 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
       std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3),
       std::vector<std::shared_ptr<Acts::Surface>>(),
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(),
-<<<<<<< HEAD
       Acts::Experimental::tryAllSubVolumes(),
-=======
->>>>>>> 7196f0f65 (clang-format and conversion fix)
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -51,10 +48,7 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
       std::vector<std::shared_ptr<Acts::Surface>>(),
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(
           {innerVolume}),
-<<<<<<< HEAD
       Acts::Experimental::tryAllSubVolumes(),
-=======
->>>>>>> 7196f0f65 (clang-format and conversion fix)
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto detector = Acts::Experimental::Detector::makeShared(
