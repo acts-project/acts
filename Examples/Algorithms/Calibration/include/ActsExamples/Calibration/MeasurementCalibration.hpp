@@ -26,6 +26,8 @@ class MeasurementCalibrator {
       const Acts::GeometryContext& gctx,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const = 0;
+
+    virtual ~MeasurementCalibrator() {}
 };
 
 // Calibrator to convert an index source link to a measurement as-is
