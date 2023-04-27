@@ -80,7 +80,29 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
-BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {}
+BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
+  // misconfiruation: no builders
+  CylindricalContainerBuilder::Config misCfg;
+  BOOST_CHECK_THROW(auto a = CylindricalContainerBuilder(misCfg),
+                    std::invalid_argument);
+  // misconfiguration - 1D binning not in z, r, phgi
+  misCfg.builders = {nullptr};
+  misCfg.binning = {Acts::binX};
+  BOOST_CHECK_THROW(auto b = CylindricalContainerBuilder(misCfg),
+                    std::invalid_argument);
+
+  // misconfiguration - 2D binning not in z, r,
+  misCfg.builders = {nullptr, nullptr};
+  misCfg.binning = {Acts::binZ, Acts::binPhi};
+  BOOST_CHECK_THROW(auto c = CylindricalContainerBuilder(misCfg),
+                    std::invalid_argument);
+
+  // misconfiguration - 2D binning  in z, r, but not exaclty 2 builders
+  misCfg.builders = {nullptr, nullptr, nullptr};
+  misCfg.binning = {Acts::binZ, Acts::binR};
+  BOOST_CHECK_THROW(auto d = CylindricalContainerBuilder(misCfg),
+                    std::invalid_argument);
+}
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   // Declare a negative disc builder
@@ -90,6 +112,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
       std::make_shared<CylindricalVolumeBuilder<DiscSurface, RadialBounds>>(
           negZ, CylinderVolumeBounds(50., 200., 100.), RadialBounds(60., 190.),
           "NegativeDisc");
+
   // Declare a barrel builder
   auto barrel = std::make_shared<
       CylindricalVolumeBuilder<CylinderSurface, CylinderBounds>>(

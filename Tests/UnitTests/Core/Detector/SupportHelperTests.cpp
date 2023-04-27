@@ -142,4 +142,37 @@ BOOST_AUTO_TEST_CASE(addDiscSupport) {
   BOOST_CHECK(assignToAll.empty());
 }
 
+BOOST_AUTO_TEST_CASE(addMisconfiguredSupport) {
+  std::vector<std::shared_ptr<Acts::Surface>> lSurfaces;
+  std::vector<size_t> assignToAll;
+
+  // Get the main support parameters:
+  // - doff .. offset (in r.z)
+  // - demin, demax .. envelop min, max (in z,r)
+  // - dphimin, dphimin .. envelop min, max (in phi)
+  std::array<Acts::ActsScalar, 5u> sValues = {-10, 10, 20, 0., 0.};
+
+  // Unconstrainted extent
+  Acts::Extent lExtent;
+
+  // R - Z are not constrained
+  // Add a single disc as a support cylinder
+  BOOST_CHECK_THROW(
+      Acts::Experimental::detail::SupportHelper::addSupport(
+          lSurfaces, assignToAll, lExtent, Acts::Surface::SurfaceType::Cylinder,
+          sValues, std::nullopt, 1u),
+      std::runtime_error);
+
+  // The Extent
+  lExtent.set(Acts::binR, 100., 400.);
+  lExtent.set(Acts::binZ, -110., -100.);
+
+  // Add a single disc as a support cylinder
+  BOOST_CHECK_THROW(
+      Acts::Experimental::detail::SupportHelper::addSupport(
+          lSurfaces, assignToAll, lExtent, Acts::Surface::SurfaceType::Cone,
+          sValues, std::nullopt, 1u),
+      std::invalid_argument);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

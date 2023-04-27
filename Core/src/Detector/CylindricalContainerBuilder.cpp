@@ -24,6 +24,9 @@ namespace {
 /// @param binnning the chosen binning
 /// @param logLevel the logging output level
 ///
+/// @note no checking on consistency is done as the caller container builder
+/// is already checked at construction
+///
 /// @return a newly built container
 template <typename object_collection>
 Acts::Experimental::DetectorComponent::Container connect(
@@ -51,10 +54,8 @@ Acts::Experimental::DetectorComponent::Container connect(
             Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
                 gctx, objects, {}, logLevel);
       } break;
-      default: {
-        throw std::invalid_argument(
-            "CylinderContainerBuilder: binning not supported.");
-      }
+      default:
+        break;
     }
   } else if (binning ==
                  std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR} and
@@ -62,9 +63,6 @@ Acts::Experimental::DetectorComponent::Container connect(
     rContainer =
         Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
             gctx, objects, logLevel);
-  } else {
-    throw std::invalid_argument(
-        "CylinderContainerBuilder: binning not supported.");
   }
   return rContainer;
 }
@@ -74,9 +72,34 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
     const Acts::Experimental::CylindricalContainerBuilder::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
     : IDetectorComponentBuilder(), m_cfg(cfg), m_logger(std::move(logger)) {
+  // Check if builders are present
   if (m_cfg.builders.empty()) {
     throw std::invalid_argument(
         "CylindricalContainerBuilder: no sub builders provided.");
+  }
+  // Check if binning value is correctly chosen
+  if (m_cfg.binning.size() == 1u) {
+    // 1-dimensional case
+    auto b = m_cfg.binning.front();
+    if (b != Acts::binR and b != Acts::binZ and b != Acts::binPhi) {
+      throw std::invalid_argument(
+          "CylindricalContainerBuilder: 1D binning only supported in z, r, or "
+          "phi");
+    }
+  } else if (m_cfg.binning.size() == 2u) {
+    // 2-dimensional case, this is for wrapping
+    if (m_cfg.binning !=
+        std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR}) {
+      throw std::invalid_argument(
+          "CylindricalContainerBuilder: 2D binning only supports wrapping in "
+          "z-r.");
+    } else if (m_cfg.builders.size() != 2u) {
+      // Wrapping needs exacly one inner (volume or container) and one outer
+      // volume
+      throw std::invalid_argument(
+          "CylindricalContainerBuilder: 2D wrapping in z-r requires exaclty "
+          "two builders.");
+    }
   }
 }
 

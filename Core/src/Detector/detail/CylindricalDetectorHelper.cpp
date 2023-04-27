@@ -493,10 +493,16 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
       // Fill the map
       dShell[i] = p;
+
       // Potential offset for tube vs/ cylinder
       // - if the volume doesn't have an inner portal, indices need to
-      //   be shifted by -1 to update the correct index.
-      int iOffset = (iv->portals().size() == 3u and i > 2u) ? -1 : 0;
+      //   be shifted by -1 to update the correct index, that's the case for
+      //   size 3 and 5 for portals
+      size_t nPortals = iv->portals().size();
+      bool innerPresent = (nPortals == 3u or nPortals == 5u);
+      int iOffset = (innerPresent and i > 2u) ? -1 : 0;
+      ACTS_VERBOSE("-- update portal with index "
+                   << i + iOffset << " (including offset " << iOffset << ")");
       iv->updatePortal(p, static_cast<unsigned int>(i + iOffset));
     }
   }
@@ -697,6 +703,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
       // if the volume doesn't have an inner portal, indices need to be shifted
       // by -1 to update the correct index.
       int iOffset = (i > 2u and not innerPresent) ? -1 : 0;
+      ACTS_VERBOSE("-- update portal with index " << i);
       iv->updatePortal(p, static_cast<unsigned int>(i + iOffset));
       // Fill the map
       dShell[i] = p;
@@ -820,6 +827,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   for (auto& iv : volumes) {
     ACTS_VERBOSE("- update portals of volume '" << iv->name() << "'.");
     for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
+      ACTS_VERBOSE("-- update portal with index " << i);
       iv->updatePortal(p, static_cast<unsigned int>(i));
       // Fill the map
       dShell[i] = p;

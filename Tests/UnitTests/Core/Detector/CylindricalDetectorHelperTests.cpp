@@ -35,7 +35,7 @@ using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
 using namespace Acts::Experimental::detail::CylindricalDetectorHelper;
 
-Acts::Logging::Level logLevel = Acts::Logging::INFO;
+Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 
 Acts::GeometryContext tContext;
 std::vector<std::shared_ptr<DetectorVolume>> eVolumes = {};
@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(ConnectVolumeExceptions) {
 BOOST_AUTO_TEST_CASE(ConnectInR) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Connect: R", logLevel));
   ACTS_INFO("*** Test: connect DetectorVolumes in R, create proto container");
-  // Test with different opening angles: @TODO to be added, not used yet
-  std::vector<Acts::ActsScalar> testOpenings = {M_PI};
+  // Test with different opening angles
+  std::vector<Acts::ActsScalar> testOpenings = {M_PI, 0.5 * M_PI};
 
   std::vector<Acts::ActsScalar> radii = {0., 10., 100., 200.};
   Acts::ActsScalar halfZ = 100.;
