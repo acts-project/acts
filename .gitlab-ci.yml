@@ -391,6 +391,7 @@ lcg_101:
 
   rules:
     - if: '$COMPILER == "clang12"'
+      when: always
       allow_failure: true
 
 
