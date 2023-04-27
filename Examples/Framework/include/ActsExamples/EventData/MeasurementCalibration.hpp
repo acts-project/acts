@@ -50,7 +50,7 @@ class PassThroughCalibrator : public MeasurementCalibrator {
 class MeasurementCalibratorAdapter {
  public:
   MeasurementCalibratorAdapter(const MeasurementCalibrator& calibrator,
-                              const MeasurementContainer& measurements);
+                               const MeasurementContainer& measurements);
 
   void calibrate(
       const Acts::GeometryContext& gctx,

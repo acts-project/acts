@@ -72,7 +72,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // measurements to construct it. The other extensions are hold by the
   // fit-function-object
   ActsExamples::MeasurementCalibratorAdapter calibrator(*(m_cfg.calibrator),
-                                                       measurements);
+                                                        measurements);
 
   TrackFitterFunction::GeneralFitterOptions options{
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),

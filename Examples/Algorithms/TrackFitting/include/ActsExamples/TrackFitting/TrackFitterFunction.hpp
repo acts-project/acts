@@ -20,8 +20,8 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 
