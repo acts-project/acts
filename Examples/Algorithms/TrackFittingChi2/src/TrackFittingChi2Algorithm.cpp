@@ -10,7 +10,7 @@
 
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "ActsExamples/Calibration/MeasurementCalibration.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 

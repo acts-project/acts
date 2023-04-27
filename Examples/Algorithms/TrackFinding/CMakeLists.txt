@@ -22,7 +22,6 @@ target_link_libraries(
     ActsExamplesFramework
     ActsExamplesIoJson
     ActsExamplesMagneticField
-    ActsExamplesCalibration
 )
 
 install(

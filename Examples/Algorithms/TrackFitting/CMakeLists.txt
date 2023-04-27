@@ -13,7 +13,7 @@ target_link_libraries(
   ActsExamplesTrackFitting
   PUBLIC
     ActsCore
-    ActsExamplesFramework ActsExamplesMagneticField ActsExamplesCalibration)
+    ActsExamplesFramework ActsExamplesMagneticField)
 
 install(
   TARGETS ActsExamplesTrackFitting
