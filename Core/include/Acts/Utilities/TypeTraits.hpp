@@ -371,8 +371,8 @@ constexpr bool has_member = identical_to<V, M, T>;
     /* Trait check for the qualifier and the return type of the function */    \
     /* This does not check the const qualifier at all */                       \
     template <typename T_, typename... Arguments_>                             \
-    using qual_ret = decltype(                                                 \
-        std::declval<T_>().method_name(std::declval<Arguments_>()...));        \
+    using qual_ret = decltype(std::declval<T_>().method_name(                  \
+        std::declval<Arguments_>()...));                                       \
                                                                                \
     /* The problem is this: while the above is fine with and without const,    \
      * and with and without exact argument type match, the assignment to the   \

@@ -1,3 +1,8 @@
+variables:
+  CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
+  CCACHE_MAXSIZE: 10G
+  CCACHE_KEY_SUFFIX: r1
+
 clang_tidy:
   stage: build
   image: ghcr.io/acts-project/ubuntu2004:v41
@@ -53,20 +58,16 @@ clang_tidy:
     # Generate an html report
     - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
-build:
+build_exatrkx:
   stage: build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
   tags:
     - docker
-  variables:
-    CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
-    CCACHE_MAXSIZE: 10G
-    CCACHE_KEY_SUFFIX: r1
 
   cache:
-    key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
+    key: ccache-exatrkx-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
     paths:
-      - ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
+      - ${CCACHE_DIR}
 
   artifacts:
     paths:
@@ -97,12 +98,15 @@ build:
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-    - cmake --build build --
 
-test:
+    - ccache -z
+    - cmake --build build --
+    - ccache -s
+
+test_exatrkx:
   stage: test
   needs:
-    - build
+    - build_exatrkx
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
   tags:
     - docker-gpu-nvidia
@@ -117,3 +121,4 @@ test:
     - pip3 install -r Examples/Python/tests/requirements.txt
     - nvidia-smi
     - pytest -rFsv -k test_exatrkx
+
