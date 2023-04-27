@@ -1075,8 +1075,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   std::shared_ptr<DetectorVolume> wrappingVolume = nullptr;
   for (auto [key, value] : outerContainer) {
     auto attachedVolumes = value->attachedDetectorVolumes();
-    for (auto ava : attachedVolumes) {
-      for (auto av : ava) {
+    for (const auto& ava : attachedVolumes) {
+      for (const auto& av : ava) {
         if (wrappingVolume == nullptr and av != nullptr) {
           wrappingVolume = av;
         } else if (wrappingVolume != nullptr and av != wrappingVolume) {

@@ -44,7 +44,7 @@ class ExternalsBuilder : public IExternalStructureBuilder {
         m_bounds(std::move(bounds)) {}
 
   ExternalStructure construct(
-      [[maybe_unused]] const GeometryContext& gctx) const {
+      [[maybe_unused]] const GeometryContext& gctx) const final {
     return {m_transform, std::make_unique<bounds_type>(m_bounds),
             defaultPortalGenerator()};
   }
@@ -66,7 +66,7 @@ class InternalSurfaceBuilder : public IInternalStructureBuilder {
         m_bounds(std::move(bounds)) {}
 
   InternalStructure construct(
-      [[maybe_unused]] const GeometryContext& gctx) const {
+      [[maybe_unused]] const GeometryContext& gctx) const final {
     auto surface = Surface::makeShared<surface_type>(
         m_transform, std::make_shared<bounds_type>(m_bounds));
     return {{surface}, {}, tryAllPortalsAndSurfaces(), tryNoVolumes()};
@@ -89,7 +89,7 @@ class InternalVolumeBuilder : public IInternalStructureBuilder {
         m_bounds(std::move(bounds)) {}
 
   InternalStructure construct(
-      [[maybe_unused]] const GeometryContext& gctx) const {
+      [[maybe_unused]] const GeometryContext& gctx) const final {
     auto bounds = std::make_unique<bounds_type>(m_bounds);
     auto portalGenerator = defaultPortalGenerator();
     auto volume = DetectorVolumeFactory::construct(
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
 
   // Get the volume and check it is empty
   auto volume = roots.volumes.front();
-  BOOST_CHECK(volume->surfaces().size() == 1);
+  BOOST_CHECK(volume->surfaces().size() == 1u);
   BOOST_CHECK(volume->volumes().empty());
 }
 
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolume) {
   RootDetectorVolumes roots;
   auto dvComponents = dvBuilder->construct(roots, tContext);
 
-  BOOST_CHECK(roots.volumes.size() == 0u);
+  BOOST_CHECK(roots.volumes.empty());
   BOOST_CHECK(dvComponents.portals.size() == 4u);
 }
 
