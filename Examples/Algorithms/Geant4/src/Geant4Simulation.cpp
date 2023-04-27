@@ -193,8 +193,16 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
 
   // Output handling: Simulated hits
   if (not m_cfg.outputSimHits.empty()) {
+#if BOOST_VERSION < 107800
+    SimHitContainer container;
+    for (const auto& hit : eventData.hits) {
+      container.insert(hit);
+    }
+    m_outputSimHits(ctx, std::move(container));
+#else
     m_outputSimHits(
         ctx, SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
+#endif
   }
 
   // Output handling: Material tracks
