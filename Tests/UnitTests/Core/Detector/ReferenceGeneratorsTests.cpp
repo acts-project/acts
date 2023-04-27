@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(CenterReference) {
   // Simply return the cetner
   auto center = CenterReferenceGenerator{}.references(tContext, *pSurface);
   BOOST_CHECK(center.size() == 1u);
-  BOOST_CHECK(center.front().isApprox(Acts::Vector3(20., 30., 100.)));
+  BOOST_CHECK(center.front().isApprox(Acts::Vector3(20., 20., 100.)));
 }
 
 BOOST_AUTO_TEST_CASE(BinningPositionReference) {
@@ -46,7 +46,8 @@ BOOST_AUTO_TEST_CASE(PolyhedronReference) {
   // not the output
   auto referencePositions =
       PolyhedronReferenceGenerator{}.references(tContext, *pSurface);
-  BOOST_CHECK(referencePositions.size() == 4u);
+  // 4 corners with center of gravity    
+  BOOST_CHECK(referencePositions.size() == 5u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
