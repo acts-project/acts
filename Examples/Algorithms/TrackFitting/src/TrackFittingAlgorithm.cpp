@@ -38,6 +38,9 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing output tracks collection");
   }
+  if (!m_cfg.calibrator) {
+    throw std::invalid_argument("Missing calibrator");
+  }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
@@ -68,7 +71,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // Measurement calibrator must be instantiated here, because we need the
   // measurements to construct it. The other extensions are hold by the
   // fit-function-object
-  ActsExamples::MeasurementCalibrator calibrator(measurements);
+  ActsExamples::MeasurementCalibratorAdapter calibrator(*(m_cfg.calibrator),
+                                                        measurements);
 
   TrackFitterFunction::GeneralFitterOptions options{
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),
