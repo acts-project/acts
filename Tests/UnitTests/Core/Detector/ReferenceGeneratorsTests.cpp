@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(PolyhedronReference) {
   // not the output
   auto referencePositions =
       PolyhedronReferenceGenerator{}.references(tContext, *pSurface);
-  // 4 corners with center of gravity    
+  // 4 corners with center of gravity
   BOOST_CHECK(referencePositions.size() == 5u);
 }
 
