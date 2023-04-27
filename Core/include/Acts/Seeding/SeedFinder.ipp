@@ -285,28 +285,41 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
-      // check if duplet cotTheta is within the region of interest
-      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
-        continue;
-      }
       // longitudinal impact parameter
       float zOrigin = zM - rM * cotTheta;
+      // check if duplet origin on z axis within collision region
+      if (zOrigin < m_config.collisionRegionMin or
+          zOrigin > m_config.collisionRegionMax) {
+        continue;
+      }
 
       // if interactionPointCut is false we apply z cuts before coordinate
       // transformation to avoid unnecessary calculations. If
       // interactionPointCut is true we apply the curvature cut first because it
       // is more frequent but requires the coordinate transformation
       if (not m_config.interactionPointCut) {
-        // cuts on the origin of the dublet (the intersection of the line
-        // between them with the z axis) and z-distance between SPs
-        if (!longitudinalCollisionRange(zOrigin, deltaZ)) {
+        // check if duplet cotTheta is within the region of interest
+        if (cotTheta > m_config.cotThetaMax or
+            cotTheta < -m_config.cotThetaMax) {
+          continue;
+        }
+        // if z-distance between SPs is within max and min values
+        if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
           continue;
         }
 
         // transform SP cordinates to the u-v reference frame
-        const auto& [deltaR2, iDeltaR2, uT, vT, xNewFrame, yNewFrame] =
-            transformCoordinates(otherSP->x() - xM, otherSP->y() - yM, cosPhiM,
-                                 sinPhiM);
+        const float deltaX = otherSP->x() - xM;
+        const float deltaY = otherSP->y() - yM;
+
+        const float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+        const float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+
+        const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
+        const float iDeltaR2 = 1. / deltaR2;
+
+        const float uT = xNewFrame * iDeltaR2;
+        const float vT = yNewFrame * iDeltaR2;
 
         const float iDeltaR = std::sqrt(iDeltaR2);
         cotTheta = deltaZ * iDeltaR;
@@ -326,16 +339,24 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       // transform SP cordinates to the u-v reference frame
-      const auto& [deltaR2, iDeltaR2, uT, vT, xNewFrame, yNewFrame] =
-          transformCoordinates(otherSP->x() - xM, otherSP->y() - yM, cosPhiM,
-                               sinPhiM);
+      const float deltaX = otherSP->x() - xM;
+      const float deltaY = otherSP->y() - yM;
+
+      const float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
+      const float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+
+      const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
+      const float iDeltaR2 = 1. / deltaR2;
+
+      const float uT = xNewFrame * iDeltaR2;
+      const float vT = yNewFrame * iDeltaR2;
 
       // interactionPointCut == true we apply this cut first cuts before
       // coordinate transformation to avoid unnecessary calculations
       if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
-        // cuts on the origin of the dublet (the intersection of the line
-        // between them with the z axis) and z-distance between SPs
-        if (!longitudinalCollisionRange(zOrigin, deltaZ)) {
+        // check if duplet cotTheta is within the region of interest
+        if (cotTheta > m_config.cotThetaMax or
+            cotTheta < -m_config.cotThetaMax) {
           continue;
         }
 
@@ -356,14 +377,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      const float iDeltaR = std::sqrt(iDeltaR2);
-      cotTheta = deltaZ * iDeltaR;
-
-      const float Er =
-          ((varianceZM + otherSP->varianceZ()) +
-           (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
-          iDeltaR2;
-
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam
       const float vIP = (yNewFrame > 0.) ? -vIPAbs : vIPAbs;
@@ -380,11 +393,18 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      // cuts on the origin of the dublet (the intersection of the line between
-      // them with the z axis) and z-distance between SPs
-      if (!longitudinalCollisionRange(zOrigin, deltaZ)) {
+      // check if duplet cotTheta is within the region of interest
+      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
         continue;
       }
+
+      const float iDeltaR = std::sqrt(iDeltaR2);
+      cotTheta = deltaZ * iDeltaR;
+
+      const float Er =
+          ((varianceZM + otherSP->varianceZ()) +
+           (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
+          iDeltaR2;
 
       // fill output vectors
       linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
@@ -394,22 +414,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       outVec.push_back(otherSP.get());
     }
   }
-}
-
-template <typename external_spacepoint_t, typename platform_t>
-inline bool
-SeedFinder<external_spacepoint_t, platform_t>::longitudinalCollisionRange(
-    const float& zOrigin, const float& deltaZ) const {
-  // check if duplet origin on z axis within collision region
-  if (zOrigin < m_config.collisionRegionMin or
-      zOrigin > m_config.collisionRegionMax) {
-    return false;
-  }
-  // if z-distance between SPs is within max and min values
-  if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-    return false;
-  }
-  return true;
 }
 
 template <typename external_spacepoint_t, typename platform_t>

@@ -152,13 +152,6 @@ class SeedFinder {
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
       const float& deltaRMinSP, const float& deltaRMaxSP) const;
 
-  /// Apply compatibility  cuts to the origin of the dublet and the z-distance
-  /// between the two SPs
-  /// @param zOrigin longitudinal impact parameter of the dublet
-  /// @param deltaZ z-distance between the two SPs in the dublet
-  bool longitudinalCollisionRange(const float& zOrigin,
-                                  const float& deltaZ) const;
-
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
   /// @param spacePointData object contaning the spacepoint data
