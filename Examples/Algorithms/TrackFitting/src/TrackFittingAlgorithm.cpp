@@ -71,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // Measurement calibrator must be instantiated here, because we need the
   // measurements to construct it. The other extensions are hold by the
   // fit-function-object
-  ActsExamples::PairedMeasurementCalibrator calibrator(*(m_cfg.calibrator),
+  ActsExamples::MeasurementCalibratorAdapter calibrator(*(m_cfg.calibrator),
                                                        measurements);
 
   TrackFitterFunction::GeneralFitterOptions options{

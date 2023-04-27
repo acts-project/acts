@@ -66,8 +66,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
   Acts::Experimental::Chi2FitterExtensions<Acts::VectorMultiTrajectory>
       extensions;
   PassThroughCalibrator pcalibrator;
-  PairedMeasurementCalibrator calibrator(pcalibrator, measurements);
-  extensions.calibrator.connect<&PairedMeasurementCalibrator::calibrate>(
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
 
   Acts::Experimental::Chi2FitterOptions chi2Options(

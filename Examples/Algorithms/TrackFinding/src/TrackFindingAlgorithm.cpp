@@ -65,14 +65,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   pOptions.maxSteps = 100000;
 
   PassThroughCalibrator pcalibrator;
-  PairedMeasurementCalibrator calibrator(pcalibrator, measurements);
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
       extensions;
-  extensions.calibrator.connect<&PairedMeasurementCalibrator::calibrate>(
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(

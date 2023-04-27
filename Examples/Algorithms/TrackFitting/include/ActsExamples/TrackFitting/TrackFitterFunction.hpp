@@ -47,7 +47,7 @@ class TrackFitterFunction {
   virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
                                        const TrackParameters&,
                                        const GeneralFitterOptions&,
-                                       const PairedMeasurementCalibrator&,
+                                       const MeasurementCalibratorAdapter&,
                                        TrackContainer&) const = 0;
 
   virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,

@@ -26,12 +26,12 @@ void ActsExamples::PassThroughCalibrator::calibrate(
       (measurements)[sourceLink.index()]);
 }
 
-ActsExamples::PairedMeasurementCalibrator::PairedMeasurementCalibrator(
+ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(
     const MeasurementCalibrator& calibrator,
     const MeasurementContainer& measurements)
     : m_calibrator{calibrator}, m_measurements{measurements} {}
 
-void ActsExamples::PairedMeasurementCalibrator::calibrate(
+void ActsExamples::MeasurementCalibratorAdapter::calibrate(
     const Acts::GeometryContext& gctx,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
         trackState) const {

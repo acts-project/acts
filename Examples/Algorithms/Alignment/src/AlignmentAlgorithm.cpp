@@ -100,8 +100,8 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
 
   Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
   PassThroughCalibrator pcalibrator;
-  PairedMeasurementCalibrator calibrator(pcalibrator, measurements);
-  extensions.calibrator.connect<&PairedMeasurementCalibrator::calibrate>(
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
       &calibrator);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;

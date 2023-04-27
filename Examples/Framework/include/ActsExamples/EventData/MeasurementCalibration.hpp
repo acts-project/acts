@@ -45,11 +45,11 @@ class PassThroughCalibrator : public MeasurementCalibrator {
           trackState) const override;
 };
 
-// Executor class that pairs together a MeasurementCalibrator and a
-// MeasurementContainer, to be passed to a Kalman Fitter, for instance
-class PairedMeasurementCalibrator {
+// Adapter class that wraps a MeasurementCalibrator to conform to the
+// core ACTS calibration interface
+class MeasurementCalibratorAdapter {
  public:
-  PairedMeasurementCalibrator(const MeasurementCalibrator& calibrator,
+  MeasurementCalibratorAdapter(const MeasurementCalibrator& calibrator,
                               const MeasurementContainer& measurements);
 
   void calibrate(
