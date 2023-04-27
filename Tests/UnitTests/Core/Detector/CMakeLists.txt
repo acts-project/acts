@@ -1,3 +1,4 @@
+add_unittest(CylindricalDetectorHelper CylindricalDetectorHelperTests.cpp)
 add_unittest(GridAxisGenerators GridAxisGeneratorsTests.cpp)
 add_unittest(Detector DetectorTests.cpp)
 add_unittest(DetectorVolume DetectorVolumeTests.cpp)

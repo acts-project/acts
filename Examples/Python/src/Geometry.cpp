@@ -9,8 +9,10 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -69,6 +71,19 @@ void addGeometry(Context& ctx) {
              [](Acts::TrackingGeometry& self, py::function& func) {
                self.visitSurfaces(func);
              });
+  }
+
+  {
+    py::class_<Acts::Volume, std::shared_ptr<Acts::Volume>>(m, "Volume")
+        .def_static(
+            "makeCylinderVolume",
+            [](double r, double halfZ) {
+              auto bounds =
+                  std::make_shared<Acts::CylinderVolumeBounds>(0, r, halfZ);
+              return std::make_shared<Acts::Volume>(Transform3::Identity(),
+                                                    bounds);
+            },
+            "r"_a, "halfZ"_a);
   }
 
   {

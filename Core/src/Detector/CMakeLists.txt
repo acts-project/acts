@@ -1,6 +1,7 @@
 target_sources(
   ActsCore
   PRIVATE
+    detail/CylindricalDetectorHelper.cpp
     Detector.cpp
     DetectorVolume.cpp
     LayerStructureBuilder.cpp

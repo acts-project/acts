@@ -228,7 +228,11 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         s.run()
         del s
 
-        for stem in ["performance_ckf", "performance_vertexing"] + (
+        for stem in [
+            "performance_ckf",
+            "tracksummary_ckf",
+            "performance_vertexing",
+        ] + (
             ["performance_seeding", "performance_ambi"]
             if label in ["seeded", "orthogonal"]
             else ["performance_seeding"]
