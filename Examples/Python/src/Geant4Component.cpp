@@ -153,7 +153,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
               magneticField,
           const std::vector<std::string>& volumeMappings,
           const std::vector<std::string>& materialMappings,
-          std::shared_ptr<const Acts::Volume> killVolume = nullptr,
+          std::shared_ptr<const Acts::Volume> killVolume,
           bool recordHitsOfSecondaries) {
         auto logger = Acts::getDefaultLogger("Geant4", level);
 
@@ -177,8 +177,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         g4StepCfg.primary = true;
         g4StepCfg.secondary = recordHitsOfSecondaries;
         steppingCfg.actions.push_back(new SensitiveSteppingAction(
-            g4StepCfg,
-            logger->cloneWithSuffix("SensitiveStepping")));
+            g4StepCfg, logger->cloneWithSuffix("SensitiveStepping")));
 
         steppingCfg.actions.push_back(
             new ParticleKillAction(ParticleKillAction::Config{killVolume},
@@ -209,8 +208,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
           g4Cfg.sensitiveSurfaceMapper =
               std::make_shared<const SensitiveSurfaceMapper>(
-                  ssmCfg,
-                  logger->cloneWithSuffix("SensitiveSurfaceMapper"));
+                  ssmCfg, logger->cloneWithSuffix("SensitiveSurfaceMapper"));
         }
 
         return g4Cfg;
@@ -221,7 +219,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("materialMappings") = std::vector<std::string>{},
       py::arg("killVolume") = nullptr,
       py::arg("recordHitsOfSecondaries") = true);
-  }
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;
