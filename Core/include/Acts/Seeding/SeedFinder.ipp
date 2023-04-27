@@ -373,6 +373,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
     SeedingState& state) const {
   float rM = spM.radius();
+  float cosPhiM = spM.x() / rM;
+  float sinPhiM = spM.y() / rM;
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
@@ -389,17 +391,19 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     sorted_tops[i] = i;
   }
 
-  std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
-            [&state](const std::size_t& a, const std::size_t& b) -> bool {
-              return state.linCircleBottom[a].cotTheta <
-                     state.linCircleBottom[b].cotTheta;
-            });
+  if (m_config.skipPreviousTopSP) {
+    std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
+              [&state](const std::size_t& a, const std::size_t& b) -> bool {
+                return state.linCircleBottom[a].cotTheta <
+                       state.linCircleBottom[b].cotTheta;
+              });
 
-  std::sort(sorted_tops.begin(), sorted_tops.end(),
-            [&state](const std::size_t& a, const std::size_t& b) -> bool {
-              return state.linCircleTop[a].cotTheta <
-                     state.linCircleTop[b].cotTheta;
-            });
+    std::sort(sorted_tops.begin(), sorted_tops.end(),
+              [&state](const std::size_t& a, const std::size_t& b) -> bool {
+                return state.linCircleTop[a].cotTheta <
+                       state.linCircleTop[b].cotTheta;
+              });
+  }
 
   // Reserve enough space, in case current capacity is too little
   state.topSpVec.reserve(numTopSP);
@@ -450,8 +454,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     // x and y terms for the rotation from UV to XY plane
     float rotationTermsUVtoXY[2] = {0, 0};
     if (m_config.useDetailedDoubleMeasurementInfo) {
-      rotationTermsUVtoXY[0] = spM.x() * sinTheta / spM.radius();
-      rotationTermsUVtoXY[1] = spM.y() * sinTheta / spM.radius();
+      rotationTermsUVtoXY[0] = cosPhiM * sinTheta;
+      rotationTermsUVtoXY[1] = sinPhiM * sinTheta;
     }
 
     // minimum number of compatible top SPs to trigger the filter for a certain
@@ -488,12 +492,14 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         // x_0 and y_0
         float A0 = (lt.V - Vb) / dU;
 
+        float zPositionMiddle = cosTheta * std::sqrt(1 + A0 * A0);
+
         // position of Middle SP converted from UV to XY assuming cotTheta
         // evaluated from the Bottom and Middle SPs double
         double positionMiddle[3] = {
             rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
             rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
-            cosTheta * std::sqrt(1 + A0 * A0)};
+            zPositionMiddle};
 
         double rMTransf[3];
         if (!xyzCoordinateCheck(spacePointData, m_config, spM, positionMiddle,
@@ -508,7 +514,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         double positionBottom[3] = {
             rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
             rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
-            cosTheta * std::sqrt(1 + A0 * A0)};
+            zPositionMiddle};
 
         auto spB = state.compatBottomSP[b];
         double rBTransf[3];
@@ -523,7 +529,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         double positionTop[3] = {
             rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
             rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
-            cosTheta * std::sqrt(1 + A0 * A0)};
+            zPositionMiddle};
 
         auto spT = state.compatTopSP[t];
         double rTTransf[3];
