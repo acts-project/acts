@@ -853,6 +853,7 @@ def addKalmanTracks(
         fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
+        calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(fitAlg)
 
@@ -896,6 +897,7 @@ def addTruthTrackingGsf(
         outputTracks="gsf_tracks",
         pickTrack=-1,
         fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+        calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
 
