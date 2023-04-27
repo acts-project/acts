@@ -44,30 +44,7 @@ enum TrackStateFlag {
   NumTrackStateFlags = 6
 };
 
-class TrackStateType;
-
-/// View type over a bitset stored in a 64 bit integer
-/// This view does not allow modifications
-class ConstTrackStateType {
- public:
-  using raw_type = unsigned long long;
-
-  /// Constructor from a reference to the underlying value container
-  /// @param raw the value container
-  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {}
-
-  /// Return if the bit at position @p pos is 1
-  /// @param pos the bit position
-  /// @return if the bit at @p pos is one or not
-  bool test(std::size_t pos) const {
-    std::bitset<sizeof(raw_type)> bs{*m_raw};
-    return bs.test(pos);
-  }
-
- private:
-  friend TrackStateType;
-  const raw_type* m_raw{nullptr};
-};
+class ConstTrackStateType;
 
 /// View type over a bitset stored in a 64 bit integer
 /// This view allows modifications.
@@ -89,10 +66,7 @@ class TrackStateType {
   /// Assign the value from another set of flags
   /// @param other the other set of flags to assign
   /// @return this object
-  TrackStateType& operator=(const ConstTrackStateType& other) {
-    *m_raw = *other.m_raw;
-    return *this;
-  }
+  TrackStateType& operator=(const ConstTrackStateType& other);
 
   /// Return if the bit at position @p pos is 1
   /// @param pos the bit position
@@ -118,6 +92,35 @@ class TrackStateType {
  private:
   raw_type* m_raw{nullptr};
 };
+
+/// View type over a bitset stored in a 64 bit integer
+/// This view does not allow modifications
+class ConstTrackStateType {
+ public:
+  using raw_type = unsigned long long;
+
+  /// Constructor from a reference to the underlying value container
+  /// @param raw the value container
+  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {}
+
+  /// Return if the bit at position @p pos is 1
+  /// @param pos the bit position
+  /// @return if the bit at @p pos is one or not
+  bool test(std::size_t pos) const {
+    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    return bs.test(pos);
+  }
+
+ private:
+  friend TrackStateType;
+  const raw_type* m_raw{nullptr};
+};
+
+inline TrackStateType& TrackStateType::operator=(
+    const ConstTrackStateType& other) {
+  *m_raw = *other.m_raw;
+  return *this;
+}
 
 // using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
 
