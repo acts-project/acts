@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -64,8 +65,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
   // Set Chi2 options
   Acts::Experimental::Chi2FitterExtensions<Acts::VectorMultiTrajectory>
       extensions;
-  MeasurementCalibrator calibrator{measurements};
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  PassThroughCalibrator pcalibrator;
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
+      &calibrator);
 
   Acts::Experimental::Chi2FitterOptions chi2Options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,

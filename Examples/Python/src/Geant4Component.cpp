@@ -153,8 +153,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
               magneticField,
           const std::vector<std::string>& volumeMappings,
           const std::vector<std::string>& materialMappings,
-          std::shared_ptr<const Acts::Volume> killVolume = nullptr) {
+          std::shared_ptr<const Acts::Volume> killVolume,
+          bool recordHitsOfSecondaries) {
         auto logger = Acts::getDefaultLogger("Geant4", level);
+
         auto physicsList = new FTFP_BERT();
         auto g4Cfg =
             makeGeant4Config(*logger, std::move(randomNumbers), detector,
@@ -169,9 +171,13 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         // Stepping actions
         ActsSteppingActionList::Config steppingCfg;
 
+        SensitiveSteppingAction::Config g4StepCfg;
+        g4StepCfg.charged = true;
+        g4StepCfg.neutral = false;
+        g4StepCfg.primary = true;
+        g4StepCfg.secondary = recordHitsOfSecondaries;
         steppingCfg.actions.push_back(new SensitiveSteppingAction(
-            SensitiveSteppingAction::Config{},
-            logger->cloneWithSuffix("SensitiveStepping")));
+            g4StepCfg, logger->cloneWithSuffix("SensitiveStepping")));
 
         steppingCfg.actions.push_back(
             new ParticleKillAction(ParticleKillAction::Config{killVolume},
@@ -202,8 +208,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
           g4Cfg.sensitiveSurfaceMapper =
               std::make_shared<const SensitiveSurfaceMapper>(
-                  ssmCfg,
-                  Acts::getDefaultLogger("SensitiveSurfaceMapper", level));
+                  ssmCfg, logger->cloneWithSuffix("SensitiveSurfaceMapper"));
         }
 
         return g4Cfg;
@@ -212,7 +217,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{},
-      py::arg("killVolume") = nullptr);
+      py::arg("killVolume") = nullptr,
+      py::arg("recordHitsOfSecondaries") = true);
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;
