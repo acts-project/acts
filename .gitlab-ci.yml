@@ -390,9 +390,9 @@ lcg_101:
         COMPILER: [gcc11]
 
   rules:
-    - when: always
     - if: '$COMPILER == "clang12"'
       allow_failure: true
+    - when: on_success
 
 
 lcg_102b:
@@ -410,9 +410,9 @@ lcg_102b:
         COMPILER: [gcc11]
 
   rules:
-    - when: always
     - if: '$COMPILER == "clang12" || $COMPILER == "gcc12"'
       allow_failure: true
+    - when: on_success
 
 lcg_103:
   <<: *lcg_base_job
@@ -429,6 +429,6 @@ lcg_103:
         COMPILER: [gcc11, gcc12]
 
   rules:
-    - when: always
     - if: '$COMPILER == "clang12" || $COMPILER == "gcc12" || $COMPILER == "clang15"'
       allow_failure: true
+    - when: on_success
