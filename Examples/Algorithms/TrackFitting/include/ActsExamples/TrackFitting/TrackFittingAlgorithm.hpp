@@ -37,8 +37,10 @@ class TrackFittingAlgorithm final : public IAlgorithm {
     std::string outputTracks;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterFunction> fit;
-    /// Tracking geometry for surface lookup
+    /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
+    // Type erased calibrator for the measurements
+    std::shared_ptr<MeasurementCalibrator> calibrator;
   };
 
   /// Constructor of the fitting algorithm

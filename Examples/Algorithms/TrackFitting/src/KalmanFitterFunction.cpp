@@ -94,7 +94,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
                                const TrackParameters& initialParameters,
                                const GeneralFitterOptions& options,
-                               const MeasurementCalibrator& calibrator,
+                               const MeasurementCalibratorAdapter& calibrator,
                                TrackContainer& tracks) const override {
     const auto kfOptions = makeKfOptions(options, calibrator);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
