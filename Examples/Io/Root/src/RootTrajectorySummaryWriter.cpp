@@ -285,10 +285,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
             }
           }
         } else {
-          ACTS_WARNING("Truth particle with barcode "
-                       << majorityParticleId << "="
-                       << majorityParticleId.value()
-                       << " not found in the input collection!");
+          ACTS_INFO("Truth particle with barcode "
+                    << majorityParticleId << "=" << majorityParticleId.value()
+                    << " not found in the input collection!");
         }
       }
       if (not foundMajorityParticle) {
