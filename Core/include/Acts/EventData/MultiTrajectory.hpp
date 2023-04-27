@@ -112,7 +112,7 @@ class ConstTrackStateType {
   }
 
  private:
-  friend TrackStateType;
+  friend class TrackStateType;
   const raw_type* m_raw{nullptr};
 };
 
