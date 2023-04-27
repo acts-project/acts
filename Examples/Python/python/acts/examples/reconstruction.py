@@ -983,6 +983,7 @@ def addCKFTracks(
             outputTracks="selectedTracks",
             logLevel=customLogLevel(),
         )
+        s.addWhiteboardAlias("tracks", trackSelector.config.outputTracks)
 
         selectedTrackConverter = acts.examples.TracksToTrajectories(
             level=customLogLevel(),
