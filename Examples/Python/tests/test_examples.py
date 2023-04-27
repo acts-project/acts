@@ -1122,7 +1122,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     )
     assert script.exists()
     env = os.environ.copy()
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
     try:
         stdout = subprocess.check_output(
             [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
@@ -1135,15 +1135,15 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
         print(e.output.decode("utf-8"))
         raise
 
+    # collect and compare known errors
     import re, collections
-
     errors = []
     error_regex = re.compile(r"^\d\d:\d\d:\d\d\s+(\w+)\s+ERROR\s+", re.MULTILINE)
     for match in error_regex.finditer(stdout):
         (algo,) = match.groups()
         errors.append(algo)
     errors = collections.Counter(errors)
-    assert dict(errors) == {"Propagator": 2, "CKF": 2}, stdout
+    assert dict(errors) == {}, stdout
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
