@@ -390,8 +390,8 @@ lcg_101:
         COMPILER: [gcc11]
 
   rules:
+    - when: always
     - if: '$COMPILER == "clang12"'
-      when: always
       allow_failure: true
 
 
