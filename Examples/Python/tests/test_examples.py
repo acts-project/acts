@@ -6,6 +6,8 @@ import tarfile
 import urllib.request
 import subprocess
 import sys
+import re
+import collections
 
 import pytest
 
@@ -1136,7 +1138,6 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
         raise
 
     # collect and compare known errors
-    import re, collections
     errors = []
     error_regex = re.compile(r"^\d\d:\d\d:\d\d\s+(\w+)\s+ERROR\s+", re.MULTILINE)
     for match in error_regex.finditer(stdout):
