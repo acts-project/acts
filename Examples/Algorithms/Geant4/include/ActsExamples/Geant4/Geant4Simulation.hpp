@@ -77,17 +77,17 @@ class Geant4Simulation final : public IAlgorithm {
     /// User Action: Primary generator action of the simulation
     G4VUserPrimaryGeneratorAction* primaryGeneratorAction = nullptr;
 
-    /// User Actions: Run
-    std::vector<G4UserRunAction*> runActions = {};
+    /// User Action: Run
+    G4UserRunAction* runAction = nullptr;
 
-    /// User Actions: Event
-    std::vector<G4UserEventAction*> eventActions = {};
+    /// User Action: Event
+    G4UserEventAction* eventAction = nullptr;
 
-    /// User Actions: Tracking
-    std::vector<G4UserTrackingAction*> trackingActions = {};
+    /// User Action: Tracking
+    G4UserTrackingAction* trackingAction = nullptr;
 
-    /// User Actions: Stepping
-    std::vector<G4UserSteppingAction*> steppingActions = {};
+    /// User Action: Stepping
+    G4UserSteppingAction* steppingAction = nullptr;
 
     /// Detector construction object.
     G4VUserDetectorConstruction* detectorConstruction = nullptr;

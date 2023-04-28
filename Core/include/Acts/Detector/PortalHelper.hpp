@@ -36,7 +36,6 @@ using PortalReplacement =
 /// @param volumes are the volumes that are pointed to
 /// @param pReplacements are the portal replacements that are newly connected
 ///
-///
 void attachDetectorVolumeUpdators(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,

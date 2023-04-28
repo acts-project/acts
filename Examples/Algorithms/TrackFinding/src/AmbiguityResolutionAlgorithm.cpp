@@ -56,6 +56,7 @@ struct State {
 State computeInitialState(const ActsExamples::ConstTrackContainer& tracks,
                           std::size_t nMeasurementsMin) {
   State state;
+
   for (const auto& track : tracks) {
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
         tracks.trackStateContainer(), track.tipIndex());
@@ -120,7 +121,12 @@ void removeTrack(State& state, std::size_t iTrack) {
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   const auto& tracks = m_inputTracks(ctx);
+
+  ACTS_VERBOSE("number of input tracks " << tracks.size());
+
   auto state = computeInitialState(tracks, m_cfg.nMeasurementsMin);
+
+  ACTS_VERBOSE("state initialized");
 
   auto sharedMeasurementsComperator = [&state](std::size_t a, std::size_t b) {
     return state.sharedMeasurementsPerTrack[a] <
@@ -139,6 +145,11 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
   };
 
   for (std::size_t i = 0; i < m_cfg.maximumIterations; ++i) {
+    if (state.selectedTracks.empty()) {
+      ACTS_VERBOSE("no tracks left - exit loop");
+      break;
+    }
+
     auto maximumSharedMeasurements = *std::max_element(
         state.selectedTracks.begin(), state.selectedTracks.end(),
         sharedMeasurementsComperator);
@@ -158,7 +169,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
   }
 
   ACTS_INFO("Resolved to " << state.selectedTracks.size() << " tracks from "
-                           << state.trackTips.size());
+                           << tracks.size());
 
   std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer =
       tracks.trackStateContainerHolder();
