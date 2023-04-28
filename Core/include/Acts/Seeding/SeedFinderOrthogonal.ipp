@@ -409,73 +409,71 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         }
         t0 = index_t + 1;
       }
+
+      float dU = lt.U - Ub;
+
+      // A and B are evaluated as a function of the circumference parameters
+      // x_0 and y_0
+      float A = (lt.V - Vb) / dU;
+      float S2 = 1. + A * A;
+      float B = Vb - A * Ub;
+      float B2 = B * B;
+      // sqrt(S2)/B = 2 * helixradius
+      // calculated radius must not be smaller than minimum radius
+      if (S2 < B2 * options.minHelixDiameter2) {
+        continue;
+      }
+
+      // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
+      float iHelixDiameter2 = B2 / S2;
+      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
+      // from rad to deltaCotTheta
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
+      if (!std::isinf(m_config.maxPtScattering)) {
+        // if pT > maxPtScattering, calculate allowed scattering angle using
+        // maxPtScattering instead of pt.
+        float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+        if (pT > m_config.maxPtScattering) {
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
+          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
+        }
+      }
+      // if deltaTheta larger than allowed scattering for calculated pT, skip
+      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+        if (cotThetaB - cotThetaT < 0) {
+          break;
+        }
+        t0 = index_t;
+      }
+
+      // A and B allow calculation of impact params in U/V plane with linear
+      // function
+      // (in contrast to having to solve a quadratic function in x/y plane)
+      float Im = std::abs((A - B * rM) * rM);
+
+      if (Im <= m_config.impactMax) {
+        top_valid.push_back(top[t]);
+        // inverse diameter is signed depending if the curvature is
+        // positive/negative in phi
+        curvatures.push_back(B / std::sqrt(S2));
+        impactParameters.push_back(Im);
+      }
     }
 
-    float dU = lt.U - Ub;
-
-    // A and B are evaluated as a function of the circumference parameters
-    // x_0 and y_0
-    float A = (lt.V - Vb) / dU;
-    float S2 = 1. + A * A;
-    float B = Vb - A * Ub;
-    float B2 = B * B;
-    // sqrt(S2)/B = 2 * helixradius
-    // calculated radius must not be smaller than minimum radius
-    if (S2 < B2 * options.minHelixDiameter2) {
+    // continue if number of top SPs is smaller than minimum required for filter
+    if (top.size() < minCompatibleTopSPs) {
       continue;
     }
 
-    // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
-    float iHelixDiameter2 = B2 / S2;
-    // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
-    // from rad to deltaCotTheta
-    float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-    if (!std::isinf(m_config.maxPtScattering)) {
-      // if pT > maxPtScattering, calculate allowed scattering angle using
-      // maxPtScattering instead of pt.
-      float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-      if (pT > m_config.maxPtScattering) {
-        float pTscatterSigma = (m_config.highland / m_config.maxPtScattering) *
-                               m_config.sigmaScattering;
-        p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-      }
-    }
-    // if deltaTheta larger than allowed scattering for calculated pT, skip
-    if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-      if (cotThetaB - cotThetaT < 0) {
-        break;
-      }
-      t0 = index_t;
-    }
-  }
+    seedFilterState.zOrigin = middle.z() - rM * lb.cotTheta;
 
-  // A and B allow calculation of impact params in U/V plane with linear
-  // function
-  // (in contrast to having to solve a quadratic function in x/y plane)
-  float Im = std::abs((A - B * rM) * rM);
+    m_config.seedFilter->filterSeeds_2SpFixed(
+        spacePointData, *bottom[b], middle, top_valid, curvatures,
+        impactParameters, seedFilterState, candidates_collector);
 
-  if (Im <= m_config.impactMax) {
-    top_valid.push_back(top[t]);
-    // inverse diameter is signed depending if the curvature is
-    // positive/negative in phi
-    curvatures.push_back(B / std::sqrt(S2));
-    impactParameters.push_back(Im);
-  }
-}
-
-// continue if number of top SPs is smaller than minimum required for filter
-if (top.size() < minCompatibleTopSPs) {
-  continue;
-}
-
-seedFilterState.zOrigin = middle.z() - rM * lb.cotTheta;
-
-m_config.seedFilter->filterSeeds_2SpFixed(spacePointData, *bottom[b], middle,
-                                          top_valid, curvatures,
-                                          impactParameters, seedFilterState,
-                                          candidates_collector);
-
-}  // namespace Acts
+  }  // namespace Acts
 }
 
 template <typename external_spacepoint_t>
