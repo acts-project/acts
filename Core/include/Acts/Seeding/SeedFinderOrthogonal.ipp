@@ -473,7 +473,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         spacePointData, *bottom[b], middle, top_valid, curvatures,
         impactParameters, seedFilterState, candidates_collector);
 
-  }  // namespace Acts
+  }  // loop on bottoms
 }
 
 template <typename external_spacepoint_t>
