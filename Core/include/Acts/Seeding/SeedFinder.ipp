@@ -391,7 +391,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     sorted_tops[i] = i;
   }
 
-  if (m_config.skipPreviousTopSP) {
+  if (not m_config.useDetailedDoubleMeasurementInfo) {
     std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
               [&state](const std::size_t& a, const std::size_t& b) -> bool {
                 return state.linCircleBottom[a].cotTheta <
@@ -594,7 +594,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
-        if (not m_config.skipPreviousTopSP) {
+        if (m_config.useDetailedDoubleMeasurementInfo) {
           continue;
         }
         // break if cotTheta from bottom SP < cotTheta from top SP because
@@ -663,7 +663,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (not m_config.skipPreviousTopSP) {
+        if (m_config.useDetailedDoubleMeasurementInfo) {
           continue;
         }
         if (cotThetaB - cotThetaT < 0) {
