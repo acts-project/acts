@@ -571,6 +571,7 @@ def addGeant4(
     inputParticles: str = "particles_input",
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
+    recordHitsOfSecondaries=True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -631,6 +632,7 @@ def addGeant4(
         volumeMappings=volumeMappings,
         materialMappings=materialMappings,
         killVolume=killVolume,
+        recordHitsOfSecondaries=recordHitsOfSecondaries,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"

@@ -11,6 +11,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"

@@ -87,7 +87,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
                                const TrackParameters& initialParameters,
                                const GeneralFitterOptions& options,
-                               const MeasurementCalibrator& calibrator,
+                               const MeasurementCalibratorAdapter& calibrator,
                                TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
