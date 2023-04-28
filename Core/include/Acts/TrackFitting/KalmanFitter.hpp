@@ -977,8 +977,8 @@ class KalmanFitter {
         state.stepping.navDir = state.stepping.navDir.invert();
       }
       // Reset the step size
-      state.stepping.stepSize = ConstrainedStep(
-          state.stepping.navDir * std::abs(state.options.maxStepSize));
+      state.stepping.stepSize =
+          ConstrainedStep(std::abs(state.options.maxStepSize));
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 

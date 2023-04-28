@@ -260,8 +260,8 @@ BOOST_AUTO_TEST_CASE(Step) {
 
   // extract the actual step size
   auto h = res.value();
-  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h * navDir);
 
   // check that the position has moved
   auto deltaPos = (stepper.position(state.stepping) - pos).eval();
@@ -293,8 +293,8 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 
   // extract the actual step size
   auto h = res.value();
-  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h * navDir);
 
   // check that the position has moved
   auto deltaPos = (stepper.position(state.stepping) - pos).eval();

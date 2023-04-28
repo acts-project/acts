@@ -184,8 +184,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   ps.stepping.covTransport = false;
   double h = sls.step(ps, mockNavigator).value();
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), navDir * stepSize);
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), h);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), h * navDir);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(ps.stepping), newMom.normalized(), 1e-6);
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   ps.stepping.covTransport = true;
   double h2 = sls.step(ps, mockNavigator).value();
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
