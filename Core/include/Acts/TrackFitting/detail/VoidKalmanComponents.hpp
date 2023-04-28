@@ -27,7 +27,7 @@ template <typename traj_t>
 Result<void> voidKalmanUpdater(
     const GeometryContext& /*gctx*/,
     typename MultiTrajectory<traj_t>::TrackStateProxy trackState,
-    NavigationDirection /*direction*/, const Logger& /*logger*/) {
+    Direction /*direction*/, const Logger& /*logger*/) {
   trackState.filtered() = trackState.predicted();
   trackState.filteredCovariance() = trackState.predictedCovariance();
   return Result<void>::success();

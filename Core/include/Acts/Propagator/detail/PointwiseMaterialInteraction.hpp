@@ -39,7 +39,7 @@ struct PointwiseMaterialInteraction {
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport;
   /// The navigation direction
-  const NavigationDirection nav;
+  const Direction navDir;
 
   /// The effective, passed material properties including the path correction.
   MaterialSlab slab;
@@ -78,7 +78,7 @@ struct PointwiseMaterialInteraction {
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),
-        nav(state.stepping.navDir) {}
+        navDir(state.stepping.navDir) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
@@ -105,7 +105,7 @@ struct PointwiseMaterialInteraction {
     // Retrieve the material properties
     slab = navigator.currentSurface(state.navigation)
                ->surfaceMaterial()
-               ->materialSlab(pos, nav, updateStage);
+               ->materialSlab(pos, navDir, updateStage);
 
     // Correct the material properties for non-zero incidence
     pathCorrection = surface->pathCorrection(state.geoContext, pos, dir);
@@ -137,10 +137,7 @@ struct PointwiseMaterialInteraction {
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
     const auto nextE =
-        std::sqrt(mass * mass + momentum * momentum) -
-        std::copysign(
-            Eloss,
-            static_cast<std::underlying_type_t<NavigationDirection>>(nav));
+        std::sqrt(mass * mass + momentum * momentum) - Eloss * navDir;
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // minimum momentum below which we will not push particles via material

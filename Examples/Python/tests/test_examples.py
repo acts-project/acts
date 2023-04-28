@@ -6,6 +6,8 @@ import tarfile
 import urllib.request
 import subprocess
 import sys
+import re
+import collections
 
 import pytest
 
@@ -181,12 +183,16 @@ def test_geant4(tmp_path, assert_root_hash):
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script)],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script)],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     assert_csv_output(csv, "particles_final")
     assert_csv_output(csv, "particles_initial")
@@ -509,12 +515,16 @@ def test_event_recording(tmp_path):
     env = os.environ.copy()
     env["NEVENTS"] = "1"
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script)],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script)],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     from acts.examples.hepmc3 import HepMC3AsciiReader
 
@@ -1083,12 +1093,16 @@ def test_full_chain_odd_example(tmp_path):
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script), "-n1"],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), "-n1"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
 
 @pytest.mark.skipif(
@@ -1110,13 +1124,27 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     )
     assert script.exists()
     env = os.environ.copy()
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
+    try:
+        stdout = subprocess.check_output(
+            [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+        stdout = stdout.decode("utf-8")
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
+
+    # collect and compare known errors
+    errors = []
+    error_regex = re.compile(r"^\d\d:\d\d:\d\d\s+(\w+)\s+ERROR\s+", re.MULTILINE)
+    for match in error_regex.finditer(stdout):
+        (algo,) = match.groups()
+        errors.append(algo)
+    errors = collections.Counter(errors)
+    assert dict(errors) == {}, stdout
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
@@ -1141,12 +1169,16 @@ def test_ML_Ambiguity_Solver(tmp_path, assert_root_hash):
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call(
-        [sys.executable, str(script), "-n5", "--MLSolver"],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), "-n5", "--MLSolver"],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     rfp = tmp_path / output_dir / root_file
     assert rfp.exists()
@@ -1201,12 +1233,16 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
 
-    subprocess.check_call(
-        [sys.executable, str(script), backend],
-        cwd=tmp_path,
-        env=env,
-        stderr=subprocess.STDOUT,
-    )
+    try:
+        subprocess.check_call(
+            [sys.executable, str(script), backend],
+            cwd=tmp_path,
+            env=env,
+            stderr=subprocess.STDOUT,
+        )
+    except subprocess.CalledProcessError as e:
+        print(e.output.decode("utf-8"))
+        raise
 
     rfp = tmp_path / root_file
     assert rfp.exists()
