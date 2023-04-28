@@ -52,9 +52,8 @@ class DetectorElementStub : public DetectorElementBase {
       : DetectorElementBase(),
         m_elementTransform(transform),
         m_elementThickness(thickness) {
-    auto mutableSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-    mutableSurface->assignSurfaceMaterial(std::move(material));
-    m_elementSurface = mutableSurface;
+    m_elementSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
+    m_elementSurface->assignSurfaceMaterial(std::move(material));
   }
 
   /// Constructor for single sided detector element
@@ -71,9 +70,8 @@ class DetectorElementStub : public DetectorElementBase {
       : DetectorElementBase(),
         m_elementTransform(transform),
         m_elementThickness(thickness) {
-    auto mutableSurface = Surface::makeShared<LineSurfaceStub>(lBounds, *this);
-    mutableSurface->assignSurfaceMaterial(std::move(material));
-    m_elementSurface = mutableSurface;
+    m_elementSurface = Surface::makeShared<LineSurfaceStub>(lBounds, *this);
+    m_elementSurface->assignSurfaceMaterial(std::move(material));
   }
 
   ///  Destructor
@@ -89,6 +87,9 @@ class DetectorElementStub : public DetectorElementBase {
   /// Return surface associated with this detector element
   const Surface& surface() const override;
 
+  /// Non-const access to surface associated with this detector element
+  Surface& surface() override;
+
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const override;
 
@@ -96,7 +97,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// the transform for positioning in 3D space
   Transform3 m_elementTransform;
   /// the surface represented by it
-  std::shared_ptr<const Surface> m_elementSurface{nullptr};
+  std::shared_ptr<Surface> m_elementSurface{nullptr};
   /// the element thickness
   double m_elementThickness{0.};
 };
@@ -107,6 +108,10 @@ inline const Transform3& DetectorElementStub::transform(
 }
 
 inline const Surface& DetectorElementStub::surface() const {
+  return *m_elementSurface;
+}
+
+inline Surface& DetectorElementStub::surface() {
   return *m_elementSurface;
 }
 

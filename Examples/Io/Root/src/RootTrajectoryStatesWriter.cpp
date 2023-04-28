@@ -303,8 +303,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
           // Get the truth particle charge
           truthQ = static_cast<int>(particle.charge());
         } else {
-          ACTS_WARNING("Truth particle with barcode "
-                       << barcode << "=" << barcode.value() << " not found!");
+          ACTS_DEBUG("Truth particle with barcode "
+                     << barcode << "=" << barcode.value() << " not found!");
         }
       }
 
