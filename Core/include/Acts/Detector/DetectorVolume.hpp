@@ -101,7 +101,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///       state updator delegates are not connected
   DetectorVolume(
       const GeometryContext& gctx, const std::string& name,
-      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
       DetectorVolumeUpdator&& detectorVolumeUpdator,
@@ -120,7 +120,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///       state updator delegates are not connected
   DetectorVolume(
       const GeometryContext& gctx, const std::string& name,
-      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
@@ -128,7 +128,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note This is called by the @class DetectorVolumeFactory
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, const std::string& name,
-      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
       DetectorVolumeUpdator&& detectorVolumeUpdator,
@@ -139,7 +139,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note This is called by the @class DetectorVolumeFactory
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, const std::string& name,
-      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
 
  public:
@@ -362,7 +362,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   Transform3 m_transform = Transform3::Identity();
 
   /// Volume boundaries
-  std::unique_ptr<VolumeBounds> m_bounds = nullptr;
+  std::shared_ptr<VolumeBounds> m_bounds = nullptr;
 
   /// Portal store (internal/external)
   ObjectStore<std::shared_ptr<Portal>> m_portals;
@@ -400,7 +400,7 @@ class DetectorVolumeFactory {
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
       const std::string& name, const Transform3& transform,
-      std::unique_ptr<VolumeBounds> bounds,
+      std::shared_ptr<VolumeBounds> bounds,
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
       DetectorVolumeUpdator&& detectorVolumeUpdator,
@@ -416,7 +416,7 @@ class DetectorVolumeFactory {
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
       const std::string& name, const Transform3& transform,
-      std::unique_ptr<VolumeBounds> bounds,
+      std::shared_ptr<VolumeBounds> bounds,
       SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
     auto dVolume =
         DetectorVolume::makeShared(gctx, name, transform, std::move(bounds),

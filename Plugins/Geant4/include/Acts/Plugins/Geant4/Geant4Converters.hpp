@@ -91,7 +91,7 @@ struct Geant4ShapeConverter {
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts Cylinder bounds object, and thickness
-  std::tuple<std::unique_ptr<CylinderBounds>, ActsScalar> cylinderBounds(
+  std::tuple<std::shared_ptr<CylinderBounds>, ActsScalar> cylinderBounds(
       const G4Tubs& g4Tubs);
 
   /// @brief Convert to radial bounds
@@ -99,7 +99,7 @@ struct Geant4ShapeConverter {
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts Radial bounds object and thickness
-  std::tuple<std::unique_ptr<RadialBounds>, ActsScalar> radialBounds(
+  std::tuple<std::shared_ptr<RadialBounds>, ActsScalar> radialBounds(
       const G4Tubs& g4Tubs);
 
   /// @brief Convert to line/straw bounds
@@ -107,14 +107,14 @@ struct Geant4ShapeConverter {
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts line bounds object and thickness
-  std::unique_ptr<LineBounds> lineBounds(const G4Tubs& g4Tubs);
+  std::shared_ptr<LineBounds> lineBounds(const G4Tubs& g4Tubs);
 
   /// @brief Convert to rectangle bounds
   ///
   /// @param g4Box a Geant4 box shape
   ///
   /// @return an ACTS Rectangle bounds shape,  axis orientation, and thickness
-  std::tuple<std::unique_ptr<RectangleBounds>, std::array<int, 2u>, ActsScalar>
+  std::tuple<std::shared_ptr<RectangleBounds>, std::array<int, 2u>, ActsScalar>
   rectangleBounds(const G4Box& g4Box);
 
   /// @brief Convert to trapezoid bounds - from Trap
@@ -122,7 +122,7 @@ struct Geant4ShapeConverter {
   /// @param g4Trd a Geant4 trapezoid shape
   ///
   /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
-  std::tuple<std::unique_ptr<TrapezoidBounds>, std::array<int, 2u>, ActsScalar>
+  std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, ActsScalar>
   trapezoidBounds(const G4Trd& g4Trd);
 
   /// @brief Convert to general solid into a planar shape
@@ -131,7 +131,7 @@ struct Geant4ShapeConverter {
   ///
   /// @return an ACTS Planar bounds object,
   /// the axes, and the thickness of the compressed dimension
-  std::tuple<std::unique_ptr<PlanarBounds>, std::array<int, 2u>, ActsScalar>
+  std::tuple<std::shared_ptr<PlanarBounds>, std::array<int, 2u>, ActsScalar>
   planarBounds(const G4VSolid& g4Solid);
 };
 
@@ -166,7 +166,7 @@ struct Geant4MaterialConverter {
   /// @param original the original thickness
   /// @param compressed the compressed thickness
   ///
-  std::unique_ptr<HomogeneousSurfaceMaterial> surfaceMaterial(
+  std::shared_ptr<HomogeneousSurfaceMaterial> surfaceMaterial(
       const G4Material& g4Material, ActsScalar original, ActsScalar compressed);
 };
 
@@ -178,7 +178,7 @@ struct Geant4VolumeConverter {
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts Cylinder bounds object
-  std::unique_ptr<CylinderVolumeBounds> cylinderBounds(const G4Tubs& g4Tubs);
+  std::shared_ptr<CylinderVolumeBounds> cylinderBounds(const G4Tubs& g4Tubs);
 };
 
 }  // namespace Acts
