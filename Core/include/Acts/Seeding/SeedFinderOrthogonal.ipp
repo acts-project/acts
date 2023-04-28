@@ -210,20 +210,20 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
         return false;
       }
     }
+  }
 
-    /*
-     * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
-     * which is to say the absolute value must be smaller than the max cot(θ).
-     */
-    if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-      return false;
-    }
-    /*
-     * Cut: Ensure that z-distance between SPs is within max and min values.
-     */
-    if (std::abs(deltaZ) > m_config.deltaZMax) {
-      return false;
-    }
+  /*
+   * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
+   * which is to say the absolute value must be smaller than the max cot(θ).
+   */
+  if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+    return false;
+  }
+  /*
+   * Cut: Ensure that z-distance between SPs is within max and min values.
+   */
+  if (std::abs(deltaZ) > m_config.deltaZMax) {
+    return false;
   }
 
   return true;
