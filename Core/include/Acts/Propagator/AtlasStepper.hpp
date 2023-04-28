@@ -1105,7 +1105,7 @@ class AtlasStepper {
   Result<double> step(propagator_state_t& state,
                       const navigator_t& /*navigator*/) const {
     // we use h for keeping the nominclature with the original atlas code
-    auto h = state.stepping.stepSize.value();
+    auto h = state.stepping.stepSize.value() * state.stepping.navDir;
     bool Jac = state.stepping.useJacobian;
 
     double* R = &(state.stepping.pVector[0]);  // Coordinates
@@ -1216,7 +1216,7 @@ class AtlasStepper {
            std::abs((C1 + C6) - (C3 + C4)));
       if (EST > state.options.tolerance) {
         h = h * .5;
-        state.stepping.stepSize.setValue(h);
+        state.stepping.stepSize.setValue(h * state.stepping.navDir);
         //        dltm = 0.;
         nStepTrials++;
         continue;
