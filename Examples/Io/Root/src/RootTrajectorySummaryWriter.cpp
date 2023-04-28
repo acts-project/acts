@@ -291,8 +291,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
         }
       }
       if (not foundMajorityParticle) {
-        ACTS_WARNING("Truth particle for mj " << itraj << " subtraj "
-                                              << isubtraj << " not found!");
+        ACTS_DEBUG("Truth particle for mj " << itraj << " subtraj " << isubtraj
+                                            << " not found!");
       }
 
       // Push the corresponding truth particle info for the track.
