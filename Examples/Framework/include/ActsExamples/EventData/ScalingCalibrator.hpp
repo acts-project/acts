@@ -27,10 +27,13 @@ class ScalingCalibrator : public MeasurementCalibrator {
 
   void calibrate(
       const MeasurementContainer& measurements,
-      const std::optional<std::reference_wrapper<ClusterContainer>>& clusters,
+      const std::optional<std::reference_wrapper<const ClusterContainer>>
+          clusters,
       const Acts::GeometryContext& /*gctx*/,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const;
+
+  bool needsClusters() { return true; }
 
  private:
   using GeoId = Acts::GeometryIdentifier::Value;
