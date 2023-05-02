@@ -10,10 +10,10 @@
 
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 
+#include <cstdint>
 #include <limits>
 #include <ostream>
 #include <type_traits>
-#include <cstdint>
 
 namespace Acts {
 
