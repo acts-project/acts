@@ -144,7 +144,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       auto source_link = spacePoint.sourceLinks() ; 
       //warning if source link empty 
       if (source_link.empty()){
-        std::cout << "warning source link vector is empty" ; 
+        //warning in officaial acts format 
+        ACTS_WARNING("warning source link vector is empty");
+
       }
       //continue if source link okay 
       else {
@@ -160,23 +162,24 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
         //warning if key not in map 
         if (Find == ACTS_FTF.end()){
-          std::cout<<"key not in map" ;  
+          ACTS_WARNING("Key not found in map");
+          
         } 
 
         //now should be pixel with FTF ID: 
         int FTF_id = Find->second ;
 
-        //backup shouldnt need as no 0 in csv 
-        // if (FTF_id == 0) {
-        //   std::cout<<"key in map but no FTF ID"  << "\n" ;
-        // }
+        //backup warning shouldnt need as no 0 in csv 
+        if (FTF_id == 0) {
+          ACTS_WARNING("No assigned FTF ID for key") ;
+        }
  
 
       }
       
     }
   }
-
+  ACTS_VERBOSE("Space points successfully assigned FTF ID") ; 
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

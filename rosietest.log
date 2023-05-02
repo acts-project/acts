@@ -1,4 +1,4 @@
-18:29:56    buildITkGeom   INFO      Adding material from /net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/acts-itk/itk-hgtd/material-maps-ITk-HGTD.json
+15:07:21    buildITkGeom   INFO      Adding material from /net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/acts-itk/itk-hgtd/material-maps-ITk-HGTD.json
 Info in <TGeoManager::Import>: Reading geometry from file: acts-itk/itk-hgtd/ATLAS-ITk-HGTD.tgeo.root
 Info in <TGeoManager::CloseGeometry>: Geometry loaded from file...
 Info in <TGeoManager::SetTopVolume>: Top volume is Atlas__Atlas. Master volume is Atlas__Atlas
@@ -18,287 +18,287 @@ Warning in <TGeoMatrix::dtor>: Registered matrix ID was removed
 Warning in <TGeoMatrix::dtor>: Registered matrix ID was removed
 Warning in <TGeoMatrix::dtor>: Registered matrix ID was removed
 Warning in <TGeoMatrix::dtor>: Registered matrix ID was removed
-18:30:30    Sequencer      INFO      Create Sequencer with -1 threads
-18:30:30    Sequencer      INFO      Add Reader 'EventGenerator'
-18:30:30    Sequencer      INFO      -> OutputParticles 'particles_input':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      Add Algorithm 'ParticleSelector'
-18:30:30    Sequencer      INFO      <- InputParticles 'particles_input':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      -> OutputParticles 'particles_selected':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      Add Algorithm 'FatrasSimulation'
-18:30:30    Sequencer      INFO      <- InputParticles 'particles_selected':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      -> OutputSimHits 'simhits':
-18:30:30    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
-18:30:30    Sequencer      INFO         ometryId, void>
-18:30:30    Sequencer      INFO      -> OutputParticlesInitial 'particles_initial':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      -> OutputParticlesFinal 'particles_final':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      Add Writer 'RootParticleWriter'
-18:30:30    Sequencer      INFO      <- InputHandle 'particles_initial':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      Add Writer 'RootParticleWriter'
-18:30:30    Sequencer      INFO      <- InputHandle 'particles_final':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      Add Writer 'RootSimHitWriter'
-18:30:30    Sequencer      INFO      <- InputHandle 'simhits':
-18:30:30    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
-18:30:30    Sequencer      INFO         ometryId, void>
-18:30:30    Sequencer      INFO      Add Algorithm 'DigitizationAlgorithm'
-18:30:30    Sequencer      INFO      <- SimHitContainer 'simhits':
-18:30:30    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
-18:30:30    Sequencer      INFO         ometryId, void>
-18:30:30    Sequencer      INFO      -> SourceLinks 'sourcelinks':
-18:30:30    Sequencer      INFO         boost::container::flat_multiset<ActsExamples::IndexSourceLink, ActsExamples::det
-18:30:30    Sequencer      INFO         ail::CompareGeometryId, void>
-18:30:30    Sequencer      INFO      -> Measurements 'measurements':
-18:30:30    Sequencer      INFO         std::vector<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measu
-18:30:30    Sequencer      INFO         rement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5
-18:30:30    Sequencer      INFO         s::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices,
-18:30:30    Sequencer      INFO         ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Act
-18:30:30    Sequencer      INFO         cts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO          2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO         Indices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO         s::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO      -> Clusters 'clusters':
-18:30:30    Sequencer      INFO         std::vector<ActsExamples::Cluster, std::allocator<ActsExamples::Cluster> >
-18:30:30    Sequencer      INFO      -> MeasurementParticlesMap 'measurement_particles_map':
-18:30:30    Sequencer      INFO         boost::container::flat_multimap<unsigned int, ActsFatras::Barcode, std::less<uns
-18:30:30    Sequencer      INFO         igned int>, void>
-18:30:30    Sequencer      INFO      -> MeasurementSimHitsMap 'measurement_simhits_map':
-18:30:30    Sequencer      INFO         boost::container::flat_multimap<unsigned int, unsigned int, std::less<unsigned i
-18:30:30    Sequencer      INFO         nt>, void>
-18:30:30    Sequencer      INFO      Add Writer 'RootMeasurementWriter'
-18:30:30    Sequencer      INFO      <- InputHandle 'measurements':
-18:30:30    Sequencer      INFO         std::vector<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measu
-18:30:30    Sequencer      INFO         rement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5
-18:30:30    Sequencer      INFO         s::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices,
-18:30:30    Sequencer      INFO         ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Act
-18:30:30    Sequencer      INFO         cts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO          2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO         Indices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO         s::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO      <- InputSimHits 'simhits':
-18:30:30    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
-18:30:30    Sequencer      INFO         ometryId, void>
-18:30:30    Sequencer      INFO      <- InputMeasurementSimHitsMap 'measurement_simhits_map':
-18:30:30    Sequencer      INFO         boost::container::flat_multimap<unsigned int, unsigned int, std::less<unsigned i
-18:30:30    Sequencer      INFO         nt>, void>
-18:30:30    Sequencer      INFO      <- InputClusters 'clusters':
-18:30:30    Sequencer      INFO         std::vector<ActsExamples::Cluster, std::allocator<ActsExamples::Cluster> >
-18:30:30    Sequencer      INFO      Add Algorithm 'TruthSeedSelector'
-18:30:30    Sequencer      INFO      <- InputParticles 'particles':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    Sequencer      INFO      <- InputMeasurementParticlesMap 'measurement_particles_map':
-18:30:30    Sequencer      INFO         boost::container::flat_multimap<unsigned int, ActsFatras::Barcode, std::less<uns
-18:30:30    Sequencer      INFO         igned int>, void>
-18:30:30    Sequencer      INFO      -> OutputParticles 'truth_seeds_selected':
-18:30:30    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:30    Sequencer      INFO         rticleId, void>
-18:30:30    SpacePointMa   INFO      Space point geometry selection:
-18:30:30    SpacePointMa   INFO        vol=8
-18:30:30    SpacePointMa   INFO        vol=9
-18:30:30    SpacePointMa   INFO        vol=10
-18:30:30    SpacePointMa   INFO        vol=13
-18:30:30    SpacePointMa   INFO        vol=14
-18:30:30    SpacePointMa   INFO        vol=15
-18:30:30    SpacePointMa   INFO        vol=16
-18:30:30    SpacePointMa   INFO        vol=18
-18:30:30    SpacePointMa   INFO        vol=19
-18:30:30    SpacePointMa   INFO        vol=20
-18:30:30    Sequencer      INFO      Add Algorithm 'SpacePointMaker'
-18:30:30    Sequencer      INFO      <- InputSourceLinks 'sourcelinks':
-18:30:30    Sequencer      INFO         boost::container::flat_multiset<ActsExamples::IndexSourceLink, ActsExamples::det
-18:30:30    Sequencer      INFO         ail::CompareGeometryId, void>
-18:30:30    Sequencer      INFO      <- InputMeasurements 'measurements':
-18:30:30    Sequencer      INFO         std::vector<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measu
-18:30:30    Sequencer      INFO         rement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5
-18:30:30    Sequencer      INFO         s::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices,
-18:30:30    Sequencer      INFO         ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Act
-18:30:30    Sequencer      INFO         cts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO          2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO         Indices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO         s::BoundIndices, 6ul> > > >
-18:30:30    Sequencer      INFO      -> OutputSpacePoints 'spacepoints':
-18:30:30    Sequencer      INFO         std::vector<ActsExamples::SimSpacePoint, std::allocator<ActsExamples::SimSpacePo
-18:30:30    Sequencer      INFO         int> >
-18:30:31    addSeeding     INFO      Using FTF seeding
-18:30:31    Sequencer      INFO      Add Algorithm 'SeedingAlgorithm'
-18:30:31    Sequencer      INFO      <- InputSpacePoints#0 'spacepoints':
-18:30:31    Sequencer      INFO         std::vector<ActsExamples::SimSpacePoint, std::allocator<ActsExamples::SimSpacePo
-18:30:31    Sequencer      INFO         int> >
-18:30:31    Sequencer      INFO      -> OutputSeeds 'seeds':
-18:30:31    Sequencer      INFO         std::vector<Acts::Seed<ActsExamples::SimSpacePoint>, std::allocator<Acts::Seed<A
-18:30:31    Sequencer      INFO         ctsExamples::SimSpacePoint> > >
-18:30:31    Sequencer      INFO      Add Algorithm 'TrackParamsEstimationAlgorithm'
-18:30:31    Sequencer      INFO      <- InputSeeds 'seeds':
-18:30:31    Sequencer      INFO         std::vector<Acts::Seed<ActsExamples::SimSpacePoint>, std::allocator<Acts::Seed<A
-18:30:31    Sequencer      INFO         ctsExamples::SimSpacePoint> > >
-18:30:31    Sequencer      INFO      -> OutputTrackParameters 'estimatedparameters':
-18:30:31    Sequencer      INFO         std::vector<Acts::SingleBoundTrackParameters<Acts::SinglyCharged>, std::allocato
-18:30:31    Sequencer      INFO         r<Acts::SingleBoundTrackParameters<Acts::SinglyCharged> > >
-18:30:31    Sequencer      INFO      Add Algorithm 'TrajectoriesToPrototracks'
-18:30:31    Sequencer      INFO      <- InputSeeds 'seeds':
-18:30:31    Sequencer      INFO         std::vector<Acts::Seed<ActsExamples::SimSpacePoint>, std::allocator<Acts::Seed<A
-18:30:31    Sequencer      INFO         ctsExamples::SimSpacePoint> > >
-18:30:31    Sequencer      INFO      -> OutputProtoTracks 'seed-prototracks':
-18:30:31    Sequencer      INFO         std::vector<boost::container::small_vector<unsigned int, 3ul, void, void>, std::
-18:30:31    Sequencer      INFO         allocator<boost::container::small_vector<unsigned int, 3ul, void, void> > >
-18:30:31    Sequencer      INFO      Add Writer 'SeedingPerformanceWriter'
-18:30:31    Sequencer      INFO      <- InputHandle 'seeds':
-18:30:31    Sequencer      INFO         std::vector<Acts::Seed<ActsExamples::SimSpacePoint>, std::allocator<Acts::Seed<A
-18:30:31    Sequencer      INFO         ctsExamples::SimSpacePoint> > >
-18:30:31    Sequencer      INFO      <- InputParticles 'truth_seeds_selected':
-18:30:31    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:31    Sequencer      INFO         rticleId, void>
-18:30:31    Sequencer      INFO      <- InputMeasurementParticlesMaps 'measurement_particles_map':
-18:30:31    Sequencer      INFO         boost::container::flat_multimap<unsigned int, ActsFatras::Barcode, std::less<uns
-18:30:31    Sequencer      INFO         igned int>, void>
-18:30:31    Sequencer      INFO      Add Writer 'RootTrackParameterWriter'
-18:30:31    Sequencer      INFO      <- InputHandle 'estimatedparameters':
-18:30:31    Sequencer      INFO         std::vector<Acts::SingleBoundTrackParameters<Acts::SinglyCharged>, std::allocato
-18:30:31    Sequencer      INFO         r<Acts::SingleBoundTrackParameters<Acts::SinglyCharged> > >
-18:30:31    Sequencer      INFO      <- InputProtoTracks 'seed-prototracks':
-18:30:31    Sequencer      INFO         std::vector<boost::container::small_vector<unsigned int, 3ul, void, void>, std::
-18:30:31    Sequencer      INFO         allocator<boost::container::small_vector<unsigned int, 3ul, void, void> > >
-18:30:31    Sequencer      INFO      <- InputParticles 'particles':
-18:30:31    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
-18:30:31    Sequencer      INFO         rticleId, void>
-18:30:31    Sequencer      INFO      <- InputSimHits 'simhits':
-18:30:31    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
-18:30:31    Sequencer      INFO         ometryId, void>
-18:30:31    Sequencer      INFO      <- InputMeasurementParticlesMap 'measurement_particles_map':
-18:30:31    Sequencer      INFO         boost::container::flat_multimap<unsigned int, ActsFatras::Barcode, std::less<uns
-18:30:31    Sequencer      INFO         igned int>, void>
-18:30:31    Sequencer      INFO      <- InputMeasurementSimHitsMap 'measurement_simhits_map':
-18:30:31    Sequencer      INFO         boost::container::flat_multimap<unsigned int, unsigned int, std::less<unsigned i
-18:30:31    Sequencer      INFO         nt>, void>
-18:30:31    Sequencer      INFO      Processing events [0, 10000)
-18:30:31    Sequencer      INFO      Starting event loop with -1 threads
-18:30:31    Sequencer      INFO        0 context decorators
-18:30:31    Sequencer      INFO        15 sequence elements
-18:30:31    Sequencer      INFO        1 readers
-18:30:31    Sequencer      INFO        8 algorithms
-18:30:31    Sequencer      INFO        6 writers
-18:30:31    Sequencer      INFO      100 / 10000 events processed
-18:30:31    Sequencer      INFO      201 / 10000 events processed
-18:30:31    Sequencer      INFO      300 / 10000 events processed
-18:30:31    Sequencer      INFO      401 / 10000 events processed
-18:30:31    Sequencer      INFO      500 / 10000 events processed
-18:30:31    Sequencer      INFO      601 / 10000 events processed
-18:30:31    Sequencer      INFO      700 / 10000 events processed
-18:30:31    Sequencer      INFO      800 / 10000 events processed
-18:30:31    Sequencer      INFO      900 / 10000 events processed
-18:30:31    Sequencer      INFO      1000 / 10000 events processed
-18:30:31    Sequencer      INFO      1100 / 10000 events processed
-18:30:31    Sequencer      INFO      1200 / 10000 events processed
-18:30:31    Sequencer      INFO      1300 / 10000 events processed
-18:30:31    Sequencer      INFO      1400 / 10000 events processed
-18:30:31    Sequencer      INFO      1500 / 10000 events processed
-18:30:31    Sequencer      INFO      1600 / 10000 events processed
-18:30:31    Sequencer      INFO      1700 / 10000 events processed
-18:30:31    Sequencer      INFO      1800 / 10000 events processed
-18:30:31    Sequencer      INFO      1900 / 10000 events processed
-18:30:31    Sequencer      INFO      2000 / 10000 events processed
-18:30:31    Sequencer      INFO      2100 / 10000 events processed
-18:30:31    Sequencer      INFO      2200 / 10000 events processed
-18:30:32    Sequencer      INFO      2300 / 10000 events processed
-18:30:32    Sequencer      INFO      2400 / 10000 events processed
-18:30:32    Sequencer      INFO      2501 / 10000 events processed
-18:30:32    Sequencer      INFO      2600 / 10000 events processed
-18:30:32    Sequencer      INFO      2700 / 10000 events processed
-18:30:32    Sequencer      INFO      2801 / 10000 events processed
-18:30:32    Sequencer      INFO      2900 / 10000 events processed
-18:30:32    Sequencer      INFO      3000 / 10000 events processed
-18:30:32    Sequencer      INFO      3101 / 10000 events processed
-18:30:32    Sequencer      INFO      3200 / 10000 events processed
-18:30:32    Sequencer      INFO      3300 / 10000 events processed
-18:30:32    Sequencer      INFO      3400 / 10000 events processed
-18:30:32    Sequencer      INFO      3500 / 10000 events processed
-18:30:32    Sequencer      INFO      3600 / 10000 events processed
-18:30:32    Sequencer      INFO      3700 / 10000 events processed
-18:30:32    Sequencer      INFO      3800 / 10000 events processed
-18:30:32    Sequencer      INFO      3900 / 10000 events processed
-18:30:32    Sequencer      INFO      4000 / 10000 events processed
-18:30:32    Sequencer      INFO      4100 / 10000 events processed
-18:30:32    Sequencer      INFO      4201 / 10000 events processed
-18:30:32    Sequencer      INFO      4300 / 10000 events processed
-18:30:32    Sequencer      INFO      4400 / 10000 events processed
-18:30:32    Sequencer      INFO      4500 / 10000 events processed
-18:30:32    Sequencer      INFO      4602 / 10000 events processed
-18:30:32    Sequencer      INFO      4700 / 10000 events processed
-18:30:33    Sequencer      INFO      4800 / 10000 events processed
-18:30:33    Sequencer      INFO      4900 / 10000 events processed
-18:30:33    Sequencer      INFO      5000 / 10000 events processed
-18:30:33    Sequencer      INFO      5100 / 10000 events processed
-18:30:33    Sequencer      INFO      5200 / 10000 events processed
-18:30:33    Sequencer      INFO      5300 / 10000 events processed
-18:30:33    Sequencer      INFO      5401 / 10000 events processed
-18:30:33    Sequencer      INFO      5500 / 10000 events processed
-18:30:33    Sequencer      INFO      5600 / 10000 events processed
-18:30:33    Sequencer      INFO      5700 / 10000 events processed
-18:30:33    Sequencer      INFO      5800 / 10000 events processed
-18:30:33    Sequencer      INFO      5900 / 10000 events processed
-18:30:33    Sequencer      INFO      6000 / 10000 events processed
-18:30:33    Sequencer      INFO      6100 / 10000 events processed
-18:30:33    Sequencer      INFO      6200 / 10000 events processed
-18:30:33    Sequencer      INFO      6300 / 10000 events processed
-18:30:33    Sequencer      INFO      6401 / 10000 events processed
-18:30:33    Sequencer      INFO      6500 / 10000 events processed
-18:30:33    Sequencer      INFO      6600 / 10000 events processed
-18:30:33    Sequencer      INFO      6700 / 10000 events processed
-18:30:33    Sequencer      INFO      6800 / 10000 events processed
-18:30:33    Sequencer      INFO      6900 / 10000 events processed
-18:30:33    Sequencer      INFO      7000 / 10000 events processed
-18:30:34    Sequencer      INFO      7100 / 10000 events processed
-18:30:34    Sequencer      INFO      7200 / 10000 events processed
-18:30:34    Sequencer      INFO      7300 / 10000 events processed
-18:30:34    Sequencer      INFO      7400 / 10000 events processed
-18:30:34    Sequencer      INFO      7500 / 10000 events processed
-18:30:34    Sequencer      INFO      7600 / 10000 events processed
-18:30:34    Sequencer      INFO      7700 / 10000 events processed
-18:30:34    Sequencer      INFO      7800 / 10000 events processed
-18:30:34    Sequencer      INFO      7901 / 10000 events processed
-18:30:34    Sequencer      INFO      8000 / 10000 events processed
-18:30:34    Sequencer      INFO      8100 / 10000 events processed
-18:30:34    Sequencer      INFO      8200 / 10000 events processed
-18:30:34    Sequencer      INFO      8300 / 10000 events processed
-18:30:34    Sequencer      INFO      8400 / 10000 events processed
-18:30:34    Sequencer      INFO      8500 / 10000 events processed
-18:30:34    Sequencer      INFO      8600 / 10000 events processed
-18:30:34    Sequencer      INFO      8700 / 10000 events processed
-18:30:34    Sequencer      INFO      8800 / 10000 events processed
-18:30:34    Sequencer      INFO      8900 / 10000 events processed
-18:30:34    Sequencer      INFO      9000 / 10000 events processed
-18:30:34    Sequencer      INFO      9100 / 10000 events processed
-18:30:34    Sequencer      INFO      9200 / 10000 events processed
-18:30:35    Sequencer      INFO      9300 / 10000 events processed
-18:30:35    Sequencer      INFO      9400 / 10000 events processed
-18:30:35    Sequencer      INFO      9500 / 10000 events processed
-18:30:35    Sequencer      INFO      9600 / 10000 events processed
-18:30:35    Sequencer      INFO      9700 / 10000 events processed
-18:30:35    Sequencer      INFO      9800 / 10000 events processed
-18:30:35    Sequencer      INFO      9900 / 10000 events processed
-18:30:35    Sequencer      INFO      10000 / 10000 events processed
-18:30:35    RootParticle   INFO      Wrote particles to tree 'particles' in '/net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/itk_output/particles_initial.root'
-18:30:35    RootParticle   INFO      Wrote particles to tree 'particles' in '/net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/itk_output/particles_final.root'
-18:30:35    SeedingPerfo   INFO      Efficiency (nMatchedParticles / nAllParticles) = 0
-18:30:35    SeedingPerfo   INFO      Fake rate (nUnMatchedSeeds / nAllSeeds) = -nan
-18:30:35    SeedingPerfo   INFO      Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) = -nan
-18:30:35    SeedingPerfo   INFO      Average number of duplicated seeds ((nMatchedSeeds - nMatchedParticles) / nMatchedParticles) = -nan
-18:30:35    SeedingPerfo   INFO      Wrote performance plots to '/net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/itk_output/performance_seeding.root:/'
-18:30:35    RootTrackPar   INFO      Wrote estimated parameters from seed to tree 'estimatedparams' in '/net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/itk_output/estimatedparams.root'
-18:30:35    Sequencer      INFO      Processed 10000 events in 4.587509 s (wall clock)
-18:30:35    Sequencer      INFO      Average time per event: 13.743230 ms/event
+15:07:57    Sequencer      INFO      Create Sequencer with -1 threads
+15:07:57    Sequencer      INFO      Add Reader 'EventGenerator'
+15:07:57    Sequencer      INFO      -> OutputParticles 'particles_input':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      Add Algorithm 'ParticleSelector'
+15:07:57    Sequencer      INFO      <- InputParticles 'particles_input':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      -> OutputParticles 'particles_selected':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      Add Algorithm 'FatrasSimulation'
+15:07:57    Sequencer      INFO      <- InputParticles 'particles_selected':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      -> OutputSimHits 'simhits':
+15:07:57    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
+15:07:57    Sequencer      INFO         ometryId, void>
+15:07:57    Sequencer      INFO      -> OutputParticlesInitial 'particles_initial':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      -> OutputParticlesFinal 'particles_final':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      Add Writer 'RootParticleWriter'
+15:07:57    Sequencer      INFO      <- InputHandle 'particles_initial':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      Add Writer 'RootParticleWriter'
+15:07:57    Sequencer      INFO      <- InputHandle 'particles_final':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      Add Writer 'RootSimHitWriter'
+15:07:57    Sequencer      INFO      <- InputHandle 'simhits':
+15:07:57    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
+15:07:57    Sequencer      INFO         ometryId, void>
+15:07:57    Sequencer      INFO      Add Algorithm 'DigitizationAlgorithm'
+15:07:57    Sequencer      INFO      <- SimHitContainer 'simhits':
+15:07:57    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
+15:07:57    Sequencer      INFO         ometryId, void>
+15:07:57    Sequencer      INFO      -> SourceLinks 'sourcelinks':
+15:07:57    Sequencer      INFO         boost::container::flat_multiset<ActsExamples::IndexSourceLink, ActsExamples::det
+15:07:57    Sequencer      INFO         ail::CompareGeometryId, void>
+15:07:57    Sequencer      INFO      -> Measurements 'measurements':
+15:07:57    Sequencer      INFO         std::vector<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measu
+15:07:57    Sequencer      INFO         rement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5
+15:07:57    Sequencer      INFO         s::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices,
+15:07:57    Sequencer      INFO         ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Act
+15:07:57    Sequencer      INFO         cts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO          2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO         Indices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO         s::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO      -> Clusters 'clusters':
+15:07:57    Sequencer      INFO         std::vector<ActsExamples::Cluster, std::allocator<ActsExamples::Cluster> >
+15:07:57    Sequencer      INFO      -> MeasurementParticlesMap 'measurement_particles_map':
+15:07:57    Sequencer      INFO         boost::container::flat_multimap<unsigned int, ActsFatras::Barcode, std::less<uns
+15:07:57    Sequencer      INFO         igned int>, void>
+15:07:57    Sequencer      INFO      -> MeasurementSimHitsMap 'measurement_simhits_map':
+15:07:57    Sequencer      INFO         boost::container::flat_multimap<unsigned int, unsigned int, std::less<unsigned i
+15:07:57    Sequencer      INFO         nt>, void>
+15:07:57    Sequencer      INFO      Add Writer 'RootMeasurementWriter'
+15:07:57    Sequencer      INFO      <- InputHandle 'measurements':
+15:07:57    Sequencer      INFO         std::vector<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measu
+15:07:57    Sequencer      INFO         rement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5
+15:07:57    Sequencer      INFO         s::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices,
+15:07:57    Sequencer      INFO         ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Act
+15:07:57    Sequencer      INFO         cts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO          2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO         Indices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO         s::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO      <- InputSimHits 'simhits':
+15:07:57    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
+15:07:57    Sequencer      INFO         ometryId, void>
+15:07:57    Sequencer      INFO      <- InputMeasurementSimHitsMap 'measurement_simhits_map':
+15:07:57    Sequencer      INFO         boost::container::flat_multimap<unsigned int, unsigned int, std::less<unsigned i
+15:07:57    Sequencer      INFO         nt>, void>
+15:07:57    Sequencer      INFO      <- InputClusters 'clusters':
+15:07:57    Sequencer      INFO         std::vector<ActsExamples::Cluster, std::allocator<ActsExamples::Cluster> >
+15:07:57    Sequencer      INFO      Add Algorithm 'TruthSeedSelector'
+15:07:57    Sequencer      INFO      <- InputParticles 'particles':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      <- InputMeasurementParticlesMap 'measurement_particles_map':
+15:07:57    Sequencer      INFO         boost::container::flat_multimap<unsigned int, ActsFatras::Barcode, std::less<uns
+15:07:57    Sequencer      INFO         igned int>, void>
+15:07:57    Sequencer      INFO      -> OutputParticles 'truth_seeds_selected':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    SpacePointMa   INFO      Space point geometry selection:
+15:07:57    SpacePointMa   INFO        vol=8
+15:07:57    SpacePointMa   INFO        vol=9
+15:07:57    SpacePointMa   INFO        vol=10
+15:07:57    SpacePointMa   INFO        vol=13
+15:07:57    SpacePointMa   INFO        vol=14
+15:07:57    SpacePointMa   INFO        vol=15
+15:07:57    SpacePointMa   INFO        vol=16
+15:07:57    SpacePointMa   INFO        vol=18
+15:07:57    SpacePointMa   INFO        vol=19
+15:07:57    SpacePointMa   INFO        vol=20
+15:07:57    Sequencer      INFO      Add Algorithm 'SpacePointMaker'
+15:07:57    Sequencer      INFO      <- InputSourceLinks 'sourcelinks':
+15:07:57    Sequencer      INFO         boost::container::flat_multiset<ActsExamples::IndexSourceLink, ActsExamples::det
+15:07:57    Sequencer      INFO         ail::CompareGeometryId, void>
+15:07:57    Sequencer      INFO      <- InputMeasurements 'measurements':
+15:07:57    Sequencer      INFO         std::vector<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measu
+15:07:57    Sequencer      INFO         rement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5
+15:07:57    Sequencer      INFO         s::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices,
+15:07:57    Sequencer      INFO         ul>, Acts::Measurement<Acts::BoundIndices, 6ul> >, std::allocator<std::variant<Acts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Act
+15:07:57    Sequencer      INFO         cts::Measurement<Acts::BoundIndices, 1ul>, Acts::Measurement<Acts::BoundIndices, 2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO          2ul>, Acts::Measurement<Acts::BoundIndices, 3ul>, Acts::Measurement<Acts::BoundIndices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO         Indices, 4ul>, Acts::Measurement<Acts::BoundIndices, 5ul>, Acts::Measurement<Acts::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO         s::BoundIndices, 6ul> > > >
+15:07:57    Sequencer      INFO      -> OutputSpacePoints 'spacepoints':
+15:07:57    Sequencer      INFO         std::vector<ActsExamples::SimSpacePoint, std::allocator<ActsExamples::SimSpacePo
+15:07:57    Sequencer      INFO         int> >
+15:07:57    addSeeding     INFO      Using FTF seeding
+15:07:57    Sequencer      INFO      Add Algorithm 'SeedingAlgorithm'
+15:07:57    Sequencer      INFO      <- InputSpacePoints#0 'spacepoints':
+15:07:57    Sequencer      INFO         std::vector<ActsExamples::SimSpacePoint, std::allocator<ActsExamples::SimSpacePo
+15:07:57    Sequencer      INFO         int> >
+15:07:57    Sequencer      INFO      -> OutputSeeds 'seeds':
+15:07:57    Sequencer      INFO         std::vector<Acts::Seed<ActsExamples::SimSpacePoint>, std::allocator<Acts::Seed<A
+15:07:57    Sequencer      INFO         ctsExamples::SimSpacePoint> > >
+15:07:57    Sequencer      INFO      Add Algorithm 'TrackParamsEstimationAlgorithm'
+15:07:57    Sequencer      INFO      <- InputSeeds 'seeds':
+15:07:57    Sequencer      INFO         std::vector<Acts::Seed<ActsExamples::SimSpacePoint>, std::allocator<Acts::Seed<A
+15:07:57    Sequencer      INFO         ctsExamples::SimSpacePoint> > >
+15:07:57    Sequencer      INFO      -> OutputTrackParameters 'estimatedparameters':
+15:07:57    Sequencer      INFO         std::vector<Acts::SingleBoundTrackParameters<Acts::SinglyCharged>, std::allocato
+15:07:57    Sequencer      INFO         r<Acts::SingleBoundTrackParameters<Acts::SinglyCharged> > >
+15:07:57    Sequencer      INFO      Add Algorithm 'TrajectoriesToPrototracks'
+15:07:57    Sequencer      INFO      <- InputSeeds 'seeds':
+15:07:57    Sequencer      INFO         std::vector<Acts::Seed<ActsExamples::SimSpacePoint>, std::allocator<Acts::Seed<A
+15:07:57    Sequencer      INFO         ctsExamples::SimSpacePoint> > >
+15:07:57    Sequencer      INFO      -> OutputProtoTracks 'seed-prototracks':
+15:07:57    Sequencer      INFO         std::vector<boost::container::small_vector<unsigned int, 3ul, void, void>, std::
+15:07:57    Sequencer      INFO         allocator<boost::container::small_vector<unsigned int, 3ul, void, void> > >
+15:07:57    Sequencer      INFO      Add Writer 'SeedingPerformanceWriter'
+15:07:57    Sequencer      INFO      <- InputHandle 'seeds':
+15:07:57    Sequencer      INFO         std::vector<Acts::Seed<ActsExamples::SimSpacePoint>, std::allocator<Acts::Seed<A
+15:07:57    Sequencer      INFO         ctsExamples::SimSpacePoint> > >
+15:07:57    Sequencer      INFO      <- InputParticles 'truth_seeds_selected':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      <- InputMeasurementParticlesMaps 'measurement_particles_map':
+15:07:57    Sequencer      INFO         boost::container::flat_multimap<unsigned int, ActsFatras::Barcode, std::less<uns
+15:07:57    Sequencer      INFO         igned int>, void>
+15:07:57    Sequencer      INFO      Add Writer 'RootTrackParameterWriter'
+15:07:57    Sequencer      INFO      <- InputHandle 'estimatedparameters':
+15:07:57    Sequencer      INFO         std::vector<Acts::SingleBoundTrackParameters<Acts::SinglyCharged>, std::allocato
+15:07:57    Sequencer      INFO         r<Acts::SingleBoundTrackParameters<Acts::SinglyCharged> > >
+15:07:57    Sequencer      INFO      <- InputProtoTracks 'seed-prototracks':
+15:07:57    Sequencer      INFO         std::vector<boost::container::small_vector<unsigned int, 3ul, void, void>, std::
+15:07:57    Sequencer      INFO         allocator<boost::container::small_vector<unsigned int, 3ul, void, void> > >
+15:07:57    Sequencer      INFO      <- InputParticles 'particles':
+15:07:57    Sequencer      INFO         boost::container::flat_set<ActsFatras::Particle, ActsExamples::detail::ComparePa
+15:07:57    Sequencer      INFO         rticleId, void>
+15:07:57    Sequencer      INFO      <- InputSimHits 'simhits':
+15:07:57    Sequencer      INFO         boost::container::flat_multiset<ActsFatras::Hit, ActsExamples::detail::CompareGe
+15:07:57    Sequencer      INFO         ometryId, void>
+15:07:57    Sequencer      INFO      <- InputMeasurementParticlesMap 'measurement_particles_map':
+15:07:57    Sequencer      INFO         boost::container::flat_multimap<unsigned int, ActsFatras::Barcode, std::less<uns
+15:07:57    Sequencer      INFO         igned int>, void>
+15:07:57    Sequencer      INFO      <- InputMeasurementSimHitsMap 'measurement_simhits_map':
+15:07:57    Sequencer      INFO         boost::container::flat_multimap<unsigned int, unsigned int, std::less<unsigned i
+15:07:57    Sequencer      INFO         nt>, void>
+15:07:57    Sequencer      INFO      Processing events [0, 10000)
+15:07:57    Sequencer      INFO      Starting event loop with -1 threads
+15:07:57    Sequencer      INFO        0 context decorators
+15:07:57    Sequencer      INFO        15 sequence elements
+15:07:57    Sequencer      INFO        1 readers
+15:07:57    Sequencer      INFO        8 algorithms
+15:07:57    Sequencer      INFO        6 writers
+15:07:58    Sequencer      INFO      100 / 10000 events processed
+15:07:58    Sequencer      INFO      200 / 10000 events processed
+15:07:58    Sequencer      INFO      300 / 10000 events processed
+15:07:58    Sequencer      INFO      401 / 10000 events processed
+15:07:58    Sequencer      INFO      500 / 10000 events processed
+15:07:58    Sequencer      INFO      600 / 10000 events processed
+15:07:58    Sequencer      INFO      700 / 10000 events processed
+15:07:58    Sequencer      INFO      801 / 10000 events processed
+15:07:58    Sequencer      INFO      900 / 10000 events processed
+15:07:58    Sequencer      INFO      1000 / 10000 events processed
+15:07:58    Sequencer      INFO      1101 / 10000 events processed
+15:07:58    Sequencer      INFO      1200 / 10000 events processed
+15:07:59    Sequencer      INFO      1300 / 10000 events processed
+15:07:59    Sequencer      INFO      1400 / 10000 events processed
+15:07:59    Sequencer      INFO      1500 / 10000 events processed
+15:08:00    Sequencer      INFO      1600 / 10000 events processed
+15:08:00    Sequencer      INFO      1700 / 10000 events processed
+15:08:01    Sequencer      INFO      1800 / 10000 events processed
+15:08:01    Sequencer      INFO      1900 / 10000 events processed
+15:08:01    Sequencer      INFO      2000 / 10000 events processed
+15:08:01    Sequencer      INFO      2100 / 10000 events processed
+15:08:01    Sequencer      INFO      2201 / 10000 events processed
+15:08:02    Sequencer      INFO      2301 / 10000 events processed
+15:08:02    Sequencer      INFO      2400 / 10000 events processed
+15:08:02    Sequencer      INFO      2500 / 10000 events processed
+15:08:02    Sequencer      INFO      2600 / 10000 events processed
+15:08:02    Sequencer      INFO      2700 / 10000 events processed
+15:08:02    Sequencer      INFO      2800 / 10000 events processed
+15:08:02    Sequencer      INFO      2900 / 10000 events processed
+15:08:02    Sequencer      INFO      3000 / 10000 events processed
+15:08:02    Sequencer      INFO      3100 / 10000 events processed
+15:08:02    Sequencer      INFO      3200 / 10000 events processed
+15:08:03    Sequencer      INFO      3300 / 10000 events processed
+15:08:03    Sequencer      INFO      3400 / 10000 events processed
+15:08:03    Sequencer      INFO      3500 / 10000 events processed
+15:08:03    Sequencer      INFO      3600 / 10000 events processed
+15:08:03    Sequencer      INFO      3700 / 10000 events processed
+15:08:03    Sequencer      INFO      3800 / 10000 events processed
+15:08:03    Sequencer      INFO      3900 / 10000 events processed
+15:08:03    Sequencer      INFO      4002 / 10000 events processed
+15:08:03    Sequencer      INFO      4101 / 10000 events processed
+15:08:03    Sequencer      INFO      4200 / 10000 events processed
+15:08:03    Sequencer      INFO      4300 / 10000 events processed
+15:08:04    Sequencer      INFO      4400 / 10000 events processed
+15:08:04    Sequencer      INFO      4501 / 10000 events processed
+15:08:04    Sequencer      INFO      4600 / 10000 events processed
+15:08:04    Sequencer      INFO      4701 / 10000 events processed
+15:08:04    Sequencer      INFO      4800 / 10000 events processed
+15:08:04    Sequencer      INFO      4900 / 10000 events processed
+15:08:04    Sequencer      INFO      5000 / 10000 events processed
+15:08:04    Sequencer      INFO      5100 / 10000 events processed
+15:08:04    Sequencer      INFO      5200 / 10000 events processed
+15:08:04    Sequencer      INFO      5300 / 10000 events processed
+15:08:04    Sequencer      INFO      5400 / 10000 events processed
+15:08:04    Sequencer      INFO      5501 / 10000 events processed
+15:08:05    Sequencer      INFO      5600 / 10000 events processed
+15:08:05    Sequencer      INFO      5700 / 10000 events processed
+15:08:05    Sequencer      INFO      5801 / 10000 events processed
+15:08:05    Sequencer      INFO      5900 / 10000 events processed
+15:08:05    Sequencer      INFO      6000 / 10000 events processed
+15:08:05    Sequencer      INFO      6100 / 10000 events processed
+15:08:05    Sequencer      INFO      6200 / 10000 events processed
+15:08:05    Sequencer      INFO      6300 / 10000 events processed
+15:08:06    Sequencer      INFO      6400 / 10000 events processed
+15:08:06    Sequencer      INFO      6500 / 10000 events processed
+15:08:06    Sequencer      INFO      6600 / 10000 events processed
+15:08:06    Sequencer      INFO      6700 / 10000 events processed
+15:08:06    Sequencer      INFO      6800 / 10000 events processed
+15:08:06    Sequencer      INFO      6900 / 10000 events processed
+15:08:07    Sequencer      INFO      7000 / 10000 events processed
+15:08:07    Sequencer      INFO      7100 / 10000 events processed
+15:08:07    Sequencer      INFO      7200 / 10000 events processed
+15:08:07    Sequencer      INFO      7300 / 10000 events processed
+15:08:07    Sequencer      INFO      7400 / 10000 events processed
+15:08:07    Sequencer      INFO      7500 / 10000 events processed
+15:08:07    Sequencer      INFO      7600 / 10000 events processed
+15:08:07    Sequencer      INFO      7700 / 10000 events processed
+15:08:07    Sequencer      INFO      7800 / 10000 events processed
+15:08:07    Sequencer      INFO      7900 / 10000 events processed
+15:08:08    Sequencer      INFO      8001 / 10000 events processed
+15:08:08    Sequencer      INFO      8100 / 10000 events processed
+15:08:08    Sequencer      INFO      8200 / 10000 events processed
+15:08:08    Sequencer      INFO      8300 / 10000 events processed
+15:08:08    Sequencer      INFO      8400 / 10000 events processed
+15:08:08    Sequencer      INFO      8500 / 10000 events processed
+15:08:08    Sequencer      INFO      8600 / 10000 events processed
+15:08:09    Sequencer      INFO      8700 / 10000 events processed
+15:08:09    Sequencer      INFO      8800 / 10000 events processed
+15:08:09    Sequencer      INFO      8900 / 10000 events processed
+15:08:09    Sequencer      INFO      9000 / 10000 events processed
+15:08:09    Sequencer      INFO      9100 / 10000 events processed
+15:08:09    Sequencer      INFO      9200 / 10000 events processed
+15:08:09    Sequencer      INFO      9300 / 10000 events processed
+15:08:09    Sequencer      INFO      9401 / 10000 events processed
+15:08:09    Sequencer      INFO      9500 / 10000 events processed
+15:08:09    Sequencer      INFO      9600 / 10000 events processed
+15:08:09    Sequencer      INFO      9700 / 10000 events processed
+15:08:09    Sequencer      INFO      9800 / 10000 events processed
+15:08:10    Sequencer      INFO      9900 / 10000 events processed
+15:08:10    Sequencer      INFO      10000 / 10000 events processed
+15:08:10    RootParticle   INFO      Wrote particles to tree 'particles' in '/net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/itk_output/particles_initial.root'
+15:08:10    RootParticle   INFO      Wrote particles to tree 'particles' in '/net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/itk_output/particles_final.root'
+15:08:10    SeedingPerfo   INFO      Efficiency (nMatchedParticles / nAllParticles) = 0
+15:08:10    SeedingPerfo   INFO      Fake rate (nUnMatchedSeeds / nAllSeeds) = -nan
+15:08:10    SeedingPerfo   INFO      Duplication rate (nDuplicatedMatchedParticles / nMatchedParticles) = -nan
+15:08:10    SeedingPerfo   INFO      Average number of duplicated seeds ((nMatchedSeeds - nMatchedParticles) / nMatchedParticles) = -nan
+15:08:10    SeedingPerfo   INFO      Wrote performance plots to '/net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/itk_output/performance_seeding.root:/'
+15:08:10    RootTrackPar   INFO      Wrote estimated parameters from seed to tree 'estimatedparams' in '/net/home/ppd/qns53259/acts_learning/acts_standalone/testarea/acts/itk_output/estimatedparams.root'
+15:08:10    Sequencer      INFO      Processed 10000 events in 12.655063 s (wall clock)
+15:08:10    Sequencer      INFO      Average time per event: 39.208878 ms/event
