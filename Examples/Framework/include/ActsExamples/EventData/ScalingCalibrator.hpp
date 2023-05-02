@@ -27,9 +27,7 @@ class ScalingCalibrator : public MeasurementCalibrator {
 
   void calibrate(
       const MeasurementContainer& measurements,
-      const std::optional<std::reference_wrapper<const ClusterContainer>>
-          clusters,
-      const Acts::GeometryContext& /*gctx*/,
+      const ClusterContainer* clusters, const Acts::GeometryContext& /*gctx*/,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const;
 

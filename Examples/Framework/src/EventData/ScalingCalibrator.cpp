@@ -15,9 +15,7 @@ ActsExamples::ScalingCalibrator::ScalingCalibrator(const char* path) {
 
 void ActsExamples::ScalingCalibrator::calibrate(
     const MeasurementContainer& measurements,
-    const std::optional<
-        std::reference_wrapper<const ClusterContainer>> /*clusters*/,
-    const Acts::GeometryContext& /*gctx*/,
+    const ClusterContainer* /*clusters*/, const Acts::GeometryContext& /*gctx*/,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
   const IndexSourceLink& sourceLink =
