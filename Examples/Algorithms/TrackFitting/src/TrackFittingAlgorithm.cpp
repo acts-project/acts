@@ -61,10 +61,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
-  std::optional<std::reference_wrapper<const ClusterContainer>> clusters;
-  if (m_inputClusters.isInitialized()) {
-    clusters = m_inputClusters(ctx);
-  }
+  const ClusterContainer* clusters =
+      m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {

@@ -24,9 +24,7 @@ class MeasurementCalibrator {
  public:
   virtual void calibrate(
       const MeasurementContainer& measurements,
-      const std::optional<std::reference_wrapper<const ClusterContainer>>
-          clusters,
-      const Acts::GeometryContext& gctx,
+      const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const = 0;
 
@@ -44,8 +42,7 @@ class PassThroughCalibrator : public MeasurementCalibrator {
   /// @param trackState The track state to calibrate
   void calibrate(
       const MeasurementContainer& measurements,
-      const std::optional<
-          std::reference_wrapper<const ClusterContainer>> /*clusters*/,
+      const ClusterContainer* /*clusters*/,
       const Acts::GeometryContext& /*gctx*/,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const override;
@@ -55,11 +52,9 @@ class PassThroughCalibrator : public MeasurementCalibrator {
 // core ACTS calibration interface
 class MeasurementCalibratorAdapter {
  public:
-  MeasurementCalibratorAdapter(
-      const MeasurementCalibrator& calibrator,
-      const MeasurementContainer& measurements,
-      const std::optional<std::reference_wrapper<const ClusterContainer>>
-          clusters = {});
+  MeasurementCalibratorAdapter(const MeasurementCalibrator& calibrator,
+                               const MeasurementContainer& measurements,
+                               const ClusterContainer* clusters = nullptr);
 
   MeasurementCalibratorAdapter() = delete;
 
@@ -71,8 +66,7 @@ class MeasurementCalibratorAdapter {
  private:
   const MeasurementCalibrator& m_calibrator;
   const MeasurementContainer& m_measurements;
-  const std::optional<std::reference_wrapper<const ClusterContainer>>
-      m_clusters;
+  const ClusterContainer* m_clusters;
 };
 
 }  // namespace ActsExamples
