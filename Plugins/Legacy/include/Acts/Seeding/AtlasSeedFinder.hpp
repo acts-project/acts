@@ -50,7 +50,57 @@ class AtlasSeedFinder {
   ///////////////////////////////////////////////////////////////////
 
   AtlasSeedFinder();
-  virtual ~AtlasSeedFinder();
+  virtual ~AtlasSeedFinder() {
+    if (r_index != nullptr) {
+      delete[] r_index;
+    }
+    if (r_map != nullptr) {
+      delete[] r_map;
+    }
+    if (r_Sorted != nullptr) {
+      delete[] r_Sorted;
+    }
+
+    // Delete seeds
+    //
+    for (i_seed = l_seeds.begin(); i_seed != l_seeds.end(); ++i_seed) {
+      delete *i_seed;
+    }
+    // Delete space points for reconstruction
+    //
+    i_spforseed = l_spforseed.begin();
+    for (; i_spforseed != l_spforseed.end(); ++i_spforseed) {
+      delete *i_spforseed;
+    }
+    if (m_seedOutput != nullptr) {
+      delete m_seedOutput;
+    }
+
+    if (m_SP != nullptr) {
+      delete[] m_SP;
+    }
+    if (m_R != nullptr) {
+      delete[] m_R;
+    }
+    if (m_Tz != nullptr) {
+      delete[] m_Tz;
+    }
+    if (m_Er != nullptr) {
+      delete[] m_Er;
+    }
+    if (m_U != nullptr) {
+      delete[] m_U;
+    }
+    if (m_V != nullptr) {
+      delete[] m_V;
+    }
+    if (m_Zo != nullptr) {
+      delete[] m_Zo;
+    }
+    if (m_OneSeeds != nullptr) {
+      delete[] m_OneSeeds;
+    }
+  }
 
   ///////////////////////////////////////////////////////////////////
   // Methods to initialize tool for new event or region

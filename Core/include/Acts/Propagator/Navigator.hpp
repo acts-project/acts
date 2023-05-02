@@ -15,7 +15,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -24,7 +23,6 @@
 #include <sstream>
 #include <string>
 
-#include <boost/algorithm/string.hpp>
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
@@ -37,7 +35,7 @@ namespace Acts {
 template <typename object_t>
 struct NavigationOptions {
   /// The navigation direction
-  NavigationDirection navDir = NavigationDirection::Forward;
+  Direction navDir = Direction::Forward;
 
   /// The boundary check directive
   BoundaryCheck boundaryCheck = true;
@@ -80,9 +78,9 @@ struct NavigationOptions {
   /// @param resolvep Boolean whether to resolve passives
   /// @param sobject Start object to check against
   /// @param eobject End object to check against
-  NavigationOptions(NavigationDirection ndir, BoundaryCheck bcheck,
-                    bool resolves = true, bool resolvem = true,
-                    bool resolvep = false, const object_t* sobject = nullptr,
+  NavigationOptions(Direction ndir, BoundaryCheck bcheck, bool resolves = true,
+                    bool resolvem = true, bool resolvep = false,
+                    const object_t* sobject = nullptr,
                     const object_t* eobject = nullptr)
       : navDir(ndir),
         boundaryCheck(std::move(bcheck)),
@@ -253,9 +251,8 @@ class Navigator {
   /// @param ssurface is the new starting surface
   /// @param tsurface is the target surface
   void resetState(State& state, const GeometryContext& geoContext,
-                  const Vector3& pos, const Vector3& dir,
-                  NavigationDirection navDir, const Surface* ssurface,
-                  const Surface* tsurface) const {
+                  const Vector3& pos, const Vector3& dir, Direction navDir,
+                  const Surface* ssurface, const Surface* tsurface) const {
     // Reset everything first
     state = State();
 
@@ -287,6 +284,13 @@ class Navigator {
 
   const TrackingVolume* currentVolume(const State& state) const {
     return state.currentVolume;
+  }
+
+  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    if (state.currentVolume == nullptr) {
+      return nullptr;
+    }
+    return state.currentVolume->volumeMaterial();
   }
 
   const Surface* startSurface(const State& state) const {
@@ -815,7 +819,7 @@ class Navigator {
           // ~ non-zero field
           double ir = (dir.cross(B).norm()) * q / mom;
           double s;
-          if (state.stepping.navDir == NavigationDirection::Forward) {
+          if (state.stepping.navDir == Direction::Forward) {
             s = state.stepping.stepSize.max();
           } else {
             s = state.stepping.stepSize.min();

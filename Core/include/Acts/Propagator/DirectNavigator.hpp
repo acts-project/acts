@@ -16,12 +16,10 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <iomanip>
+#include <algorithm>
 #include <iterator>
-#include <sstream>
-#include <string>
-
-#include <boost/algorithm/string.hpp>
+#include <memory>
+#include <vector>
 
 namespace Acts {
 
@@ -135,7 +133,7 @@ class DirectNavigator {
   /// @param tsurface is the target surface
   void resetState(State& state, const GeometryContext& /*geoContext*/,
                   const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  NavigationDirection /*navDir*/, const Surface* ssurface,
+                  Direction /*navDir*/, const Surface* ssurface,
                   const Surface* tsurface) const {
     // Reset everything except the navSurfaces
     auto navSurfaces = state.navSurfaces;
@@ -156,6 +154,13 @@ class DirectNavigator {
 
   const TrackingVolume* currentVolume(const State& state) const {
     return state.currentVolume;
+  }
+
+  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    if (state.currentVolume == nullptr) {
+      return nullptr;
+    }
+    return state.currentVolume->volumeMaterial();
   }
 
   const Surface* startSurface(const State& state) const {

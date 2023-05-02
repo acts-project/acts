@@ -25,6 +25,10 @@ const Acts::Surface& Acts::Geant4DetectorElement::surface() const {
   return *m_surface;
 }
 
+Acts::Surface& Acts::Geant4DetectorElement::surface() {
+  return *m_surface;
+}
+
 Acts::ActsScalar Acts::Geant4DetectorElement::thickness() const {
   return m_thickness;
 }

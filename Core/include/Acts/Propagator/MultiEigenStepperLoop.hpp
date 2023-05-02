@@ -191,6 +191,9 @@ class MultiEigenStepperLoop
   /// .curvilinearState()
   FinalReductionMethod m_finalReductionMethod = FinalReductionMethod::eMean;
 
+  /// The logger (used if no logger is provided by caller of methods)
+  std::unique_ptr<const Acts::Logger> m_logger;
+
   /// Small vector type for speeding up some computations where we need to
   /// accumulate stuff of components. We think 16 is a reasonable amount here.
   template <typename T>
@@ -218,9 +221,12 @@ class MultiEigenStepperLoop
   /// Constructor from a magnetic field and a optionally provided Logger
   MultiEigenStepperLoop(
       std::shared_ptr<const MagneticFieldProvider> bField,
-      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean)
+      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean,
+      std::unique_ptr<const Logger> logger = getDefaultLogger("GSF",
+                                                              Logging::INFO))
       : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
-        m_finalReductionMethod(finalReductionMethod) {}
+        m_finalReductionMethod(finalReductionMethod),
+        m_logger(std::move(logger)) {}
 
   struct State {
     /// The struct that stores the individual components
@@ -234,7 +240,7 @@ class MultiEigenStepperLoop
     SmallVector<Component> components;
 
     bool covTransport = false;
-    NavigationDirection navDir;
+    Direction navDir;
     double pathAccumulated = 0.;
     std::size_t steps = 0;
 
@@ -269,7 +275,7 @@ class MultiEigenStepperLoop
         const GeometryContext& gctx, const MagneticFieldContext& mctx,
         const std::shared_ptr<const MagneticFieldProvider>& bfield,
         const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        NavigationDirection ndir = NavigationDirection::Forward,
+        Direction ndir = Direction::Forward,
         double ssize = std::numeric_limits<double>::max(),
         double stolerance = s_onSurfaceTolerance)
         : navDir(ndir), geoContext(gctx), magContext(mctx) {
@@ -300,10 +306,10 @@ class MultiEigenStepperLoop
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const MultiComponentBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = NavigationDirection::Forward,
+                  Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State(gctx, mctx, SingleStepper::m_bField, par, ndir, ssize,
+    return State(gctx, mctx, SingleStepper::m_bField, par, navDir, ssize,
                  stolerance);
   }
 
@@ -317,8 +323,7 @@ class MultiEigenStepperLoop
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface,
-      const NavigationDirection navDir = NavigationDirection::Forward,
+      const Surface& surface, const Direction navDir = Direction::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     for (auto& component : state.components) {
       SingleStepper::resetState(component.state, boundParams, cov, surface,

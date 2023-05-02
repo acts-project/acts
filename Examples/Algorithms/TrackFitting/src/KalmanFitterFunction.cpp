@@ -6,8 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
-
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -18,8 +16,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
 namespace {
 
@@ -45,8 +47,9 @@ struct SimpleReverseFilteringLogic {
   }
 };
 
-struct KalmanFitterFunctionImpl
-    : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
+using namespace ActsExamples;
+
+struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   Fitter fitter;
   DirectFitter directFitter;
 
@@ -61,9 +64,9 @@ struct KalmanFitterFunctionImpl
   KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
       : fitter(std::move(f)), directFitter(std::move(df)) {}
 
-  auto makeKfOptions(
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
-      const {
+  template <typename calibrator_t>
+  auto makeKfOptions(const GeneralFitterOptions& options,
+                     const calibrator_t& calibrator) const {
     Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
@@ -82,30 +85,30 @@ struct KalmanFitterFunctionImpl
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
-    kfOptions.extensions.calibrator
-        .connect<&ActsExamples::MeasurementCalibrator::calibrate>(
-            &options.calibrator.get());
+    kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
+        &calibrator);
 
     return kfOptions;
   }
 
-  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<Acts::SourceLink>& sourceLinks,
-      const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      TrackContainer& tracks) const override {
-    const auto kfOptions = makeKfOptions(options);
+  TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
+                               const TrackParameters& initialParameters,
+                               const GeneralFitterOptions& options,
+                               const MeasurementCalibratorAdapter& calibrator,
+                               TrackContainer& tracks) const override {
+    const auto kfOptions = makeKfOptions(options, calibrator);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       kfOptions, tracks);
   }
 
-  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
+  TrackFitterResult operator()(
       const std::vector<Acts::SourceLink>& sourceLinks,
-      const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      const TrackParameters& initialParameters,
+      const GeneralFitterOptions& options,
+      const RefittingCalibrator& calibrator,
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
-    const auto kfOptions = makeKfOptions(options);
+    const auto kfOptions = makeKfOptions(options, calibrator);
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, kfOptions, surfaceSequence,
                             tracks);
@@ -114,7 +117,7 @@ struct KalmanFitterFunctionImpl
 
 }  // namespace
 
-std::shared_ptr<ActsExamples::TrackFittingAlgorithm::TrackFitterFunction>
+std::shared_ptr<ActsExamples::TrackFitterFunction>
 ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,

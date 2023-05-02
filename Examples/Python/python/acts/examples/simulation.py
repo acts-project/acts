@@ -571,9 +571,11 @@ def addGeant4(
     inputParticles: str = "particles_input",
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
+    recordHitsOfSecondaries=True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    killVolume: Optional[acts.Volume] = None,
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -595,6 +597,8 @@ def addGeant4(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    killVolume: acts.Volume, None
+        if given, particles are killed when going outside of this volume.
     """
 
     from acts.examples.geant4 import Geant4Simulation, makeGeant4SimulationConfig
@@ -627,6 +631,8 @@ def addGeant4(
         magneticField=field,
         volumeMappings=volumeMappings,
         materialMappings=materialMappings,
+        killVolume=killVolume,
+        recordHitsOfSecondaries=recordHitsOfSecondaries,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
