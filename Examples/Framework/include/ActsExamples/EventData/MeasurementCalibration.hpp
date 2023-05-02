@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include <ActsExamples/EventData/Measurement.hpp>
 
@@ -23,11 +24,14 @@ class MeasurementCalibrator {
  public:
   virtual void calibrate(
       const MeasurementContainer& measurements,
+      const std::optional<std::reference_wrapper<const ClusterContainer>>
+          clusters,
       const Acts::GeometryContext& gctx,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const = 0;
 
   virtual ~MeasurementCalibrator() = default;
+  virtual bool needsClusters() { return false; }
 };
 
 // Calibrator to convert an index source link to a measurement as-is
@@ -40,6 +44,8 @@ class PassThroughCalibrator : public MeasurementCalibrator {
   /// @param trackState The track state to calibrate
   void calibrate(
       const MeasurementContainer& measurements,
+      const std::optional<
+          std::reference_wrapper<const ClusterContainer>> /*clusters*/,
       const Acts::GeometryContext& /*gctx*/,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const override;
@@ -49,8 +55,13 @@ class PassThroughCalibrator : public MeasurementCalibrator {
 // core ACTS calibration interface
 class MeasurementCalibratorAdapter {
  public:
-  MeasurementCalibratorAdapter(const MeasurementCalibrator& calibrator,
-                               const MeasurementContainer& measurements);
+  MeasurementCalibratorAdapter(
+      const MeasurementCalibrator& calibrator,
+      const MeasurementContainer& measurements,
+      const std::optional<std::reference_wrapper<const ClusterContainer>>
+          clusters = {});
+
+  MeasurementCalibratorAdapter() = delete;
 
   void calibrate(
       const Acts::GeometryContext& gctx,
@@ -60,6 +71,8 @@ class MeasurementCalibratorAdapter {
  private:
   const MeasurementCalibrator& m_calibrator;
   const MeasurementContainer& m_measurements;
+  const std::optional<std::reference_wrapper<const ClusterContainer>>
+      m_clusters;
 };
 
 }  // namespace ActsExamples
