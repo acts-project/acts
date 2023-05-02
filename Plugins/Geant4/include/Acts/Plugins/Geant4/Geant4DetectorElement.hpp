@@ -43,6 +43,9 @@ class Geant4DetectorElement : public DetectorElementBase {
   /// Return surface associated with this detector element
   const Surface& surface() const override;
 
+  /// Non-const access to surface associated with this detector element
+  Surface& surface() override;
+
   /// Return the thickness of this detector element
   ActsScalar thickness() const override;
 
