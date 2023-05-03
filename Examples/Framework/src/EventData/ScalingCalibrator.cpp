@@ -9,13 +9,95 @@
 #include <Acts/Definitions/TrackParametrization.hpp>
 #include <ActsExamples/EventData/ScalingCalibrator.hpp>
 
-ActsExamples::ScalingCalibrator::ScalingCalibrator(const char* path) {
-  readMap(path);
+#include <regex>
+
+#include <TKey.h>
+
+namespace internal {
+
+std::pair<Acts::GeometryIdentifier, std::string> parseMapKey(
+    const std::string& mapkey) {
+  std::regex reg("^map_([0-9]+)-([0-9]+)-([0-9]+)_([xy]_.*)$");
+  std::smatch matches;
+
+  if (std::regex_search(mapkey, matches, reg) && matches.size() == 5) {
+    size_t vol = std::stoull(matches[1].str());
+    size_t lyr = std::stoull(matches[2].str());
+    size_t mod = std::stoull(matches[3].str());
+
+    Acts::GeometryIdentifier geoId;
+    geoId.setVolume(vol);
+    geoId.setLayer(lyr);
+    geoId.setSensitive(mod);
+
+    std::string var(matches[4].str());
+
+    return std::make_pair(geoId, var);
+  } else {
+    throw std::runtime_error("Invalid map key: " + mapkey);
+  }
 }
 
+std::map<Acts::GeometryIdentifier, ActsExamples::ScalingCalibrator::MapTuple>
+readMaps(const char* path) {
+  std::map<Acts::GeometryIdentifier, ActsExamples::ScalingCalibrator::MapTuple>
+      maps;
+
+  TFile ifile(path, "READ");
+  if (ifile.IsZombie()) {
+    throw std::runtime_error("Unable to open TFile: " + std::string(path));
+  }
+
+  TList* lst = ifile.GetListOfKeys();
+  assert(lst != nullptr);
+
+  for (auto it = lst->begin(); it != lst->end(); ++it) {
+    TKey* key = static_cast<TKey*>(*it);
+    if (std::strcmp(key->GetClassName(), "TH2D") == 0) {
+      auto [geoId, var] = parseMapKey(key->GetName());
+
+      TH2D hist;
+      key->Read(&hist);
+
+      if (var == "x_offset") {
+        maps[geoId].x_offset = hist;
+      } else if (var == "x_scale") {
+        maps[geoId].x_scale = hist;
+      } else if (var == "y_offset") {
+        maps[geoId].y_offset = hist;
+      } else if (var == "y_scale") {
+        maps[geoId].y_scale = hist;
+      } else {
+        throw std::runtime_error("Unrecognized var: " + var);
+      }
+    }
+  }
+  return maps;
+}
+
+std::bitset<3> readMask(const char* path) {
+  TFile ifile(path, "READ");
+  if (ifile.IsZombie()) {
+    throw std::runtime_error("Unable to open TFile: " + std::string(path));
+  }
+
+  TString* tstr = ifile.Get<TString>("v_mask");
+  if (tstr == nullptr) {
+    throw std::runtime_error("Unable to read mask");
+  }
+
+  return std::bitset<3>(std::string(*tstr));
+}
+
+}  // namespace internal
+
+ActsExamples::ScalingCalibrator::ScalingCalibrator(const char* path)
+    : m_calib_maps{internal::readMaps(path)},
+      m_mask{internal::readMask(path)} {}
+
 void ActsExamples::ScalingCalibrator::calibrate(
-    const MeasurementContainer& measurements,
-    const ClusterContainer* /*clusters*/, const Acts::GeometryContext& /*gctx*/,
+    const MeasurementContainer& measurements, const ClusterContainer* clusters,
+    const Acts::GeometryContext& /*gctx*/,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
   const IndexSourceLink& sourceLink =
@@ -23,8 +105,12 @@ void ActsExamples::ScalingCalibrator::calibrate(
   assert((sourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
-  auto [xoff, xscale, yoff, yscale] =
-      getOffsetAndScale(sourceLink.geometryId());
+  Acts::GeometryIdentifier mgid;
+  mgid.setVolume(sourceLink.geometryId().volume() * m_mask[2]);
+  mgid.setLayer(sourceLink.geometryId().layer() * m_mask[1]);
+  mgid.setSensitive(sourceLink.geometryId().sensitive() * m_mask[0]);
+  const Cluster& cl = clusters->at(sourceLink.index());
+  ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 
   std::visit(
       [&](const auto& meas) {
@@ -36,10 +122,10 @@ void ActsExamples::ScalingCalibrator::calibrate(
         Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
             E * meas.covariance() * E.transpose();
 
-        fpar[Acts::eBoundLoc0] += xoff;
-        fpar[Acts::eBoundLoc1] += yoff;
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) *= xscale;
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= yscale;
+        fpar[Acts::eBoundLoc0] += ct.x_offset;
+        fpar[Acts::eBoundLoc1] += ct.y_offset;
+        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
+        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
 
         constexpr size_t kSize = meas.size();
         std::array<Acts::BoundIndices, kSize> indices = meas.indices();
@@ -56,68 +142,4 @@ void ActsExamples::ScalingCalibrator::calibrate(
         trackState.setCalibrated(cmeas);
       },
       (measurements)[sourceLink.index()]);
-}
-
-ActsExamples::ScalingCalibrator::ConstantTuple
-ActsExamples::ScalingCalibrator::getOffsetAndScale(
-    Acts::GeometryIdentifier geoId) const {
-  // FIXME
-  // return m_offsetScaleMap.at(geoId.getBits(m_geoId_mask));
-  return m_offsetScaleMap.at(0);
-}
-
-template <typename T>
-std::vector<T>* ActsExamples::ScalingCalibrator::readVec(
-    TFile& tf, const char* key, size_t size_min, size_t size_max) const {
-  std::vector<T>* vec;
-  tf.GetObject(key, vec);
-
-  if (!vec) {
-    throw std::runtime_error(std::string("Vector \"") + std::string(key) +
-                             std::string("\" not found!"));
-  }
-  if (vec->size() < size_min || vec->size() > size_max) {
-    throw std::runtime_error(std::string("Vector \"") + std::string(key) +
-                             std::string("\" has invalid size!"));
-  }
-  return vec;
-}
-
-void ActsExamples::ScalingCalibrator::readMap(const char* path) {
-  TFile tf(path, "READ");
-  if (tf.IsZombie()) {
-    throw std::runtime_error(std::string("Unable to open TFile: ") + path);
-  }
-
-  std::vector<GeoId>* v_mask = readVec<GeoId>(tf, "v_mask", 1, 1);
-  m_geoId_mask = v_mask->at(0);
-
-  std::vector<GeoId>* v_geoId =
-      readVec<GeoId>(tf, "v_geoId", 1, std::numeric_limits<size_t>::max());
-
-  std::vector<Constant>* v_x_offset =
-      readVec<Constant>(tf, "v_x_offset", v_geoId->size(), v_geoId->size());
-
-  std::vector<Constant>* v_x_scale =
-      readVec<Constant>(tf, "v_x_scale", v_geoId->size(), v_geoId->size());
-
-  std::vector<Constant>* v_y_offset =
-      readVec<Constant>(tf, "v_y_offset", v_geoId->size(), v_geoId->size());
-
-  std::vector<Constant>* v_y_scale =
-      readVec<Constant>(tf, "v_y_scale", v_geoId->size(), v_geoId->size());
-
-  for (size_t i = 0; i < v_geoId->size(); i++) {
-    m_offsetScaleMap.insert({v_geoId->at(i),
-                             {v_x_offset->at(i), v_x_scale->at(i),
-                              v_y_offset->at(i), v_y_scale->at(i)}});
-  }
-
-  // Is this needed?
-  delete v_mask;
-  delete v_geoId;
-  delete v_x_offset;
-  delete v_x_scale;
-  delete v_y_offset;
-  delete v_y_scale;
 }

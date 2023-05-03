@@ -12,17 +12,39 @@
 #include <ActsExamples/EventData/MeasurementCalibration.hpp>
 
 #include <TFile.h>
+#include <TH2D.h>
 
 namespace ActsExamples {
 
-template <typename indices_t, size_t kSize>
-constexpr size_t measurementSize(
-    const Acts::Measurement<indices_t, kSize>& meas) {
-  return kSize;
-}
-
 class ScalingCalibrator : public MeasurementCalibrator {
  public:
+  struct ConstantTuple {
+    double x_offset;
+    double x_scale;
+    double y_offset;
+    double y_scale;
+  };
+
+  struct MapTuple {
+    TH2D x_offset;
+    TH2D x_scale;
+    TH2D y_offset;
+    TH2D y_scale;
+
+    ConstantTuple at(size_t sizeLoc0, size_t sizeLoc1) const {
+      ConstantTuple ct;
+      ct.x_offset =
+          x_offset.GetBinContent(x_offset.FindFixBin(sizeLoc0, sizeLoc1));
+      ct.x_scale =
+          x_scale.GetBinContent(x_scale.FindFixBin(sizeLoc0, sizeLoc1));
+      ct.y_offset =
+          y_offset.GetBinContent(y_offset.FindFixBin(sizeLoc0, sizeLoc1));
+      ct.y_scale =
+          y_scale.GetBinContent(y_scale.FindFixBin(sizeLoc0, sizeLoc1));
+      return ct;
+    }
+  };
+
   ScalingCalibrator(const char* path);
 
   void calibrate(
@@ -34,26 +56,8 @@ class ScalingCalibrator : public MeasurementCalibrator {
   bool needsClusters() { return true; }
 
  private:
-  using GeoId = Acts::GeometryIdentifier::Value;
-  using Constant = Double_t;
-
-  struct ConstantTuple {
-    Constant x_offset;
-    Constant x_scale;
-    Constant y_offset;
-    Constant y_scale;
-  };
-
-  GeoId m_geoId_mask{0};
-  std::unordered_map<GeoId, ConstantTuple> m_offsetScaleMap;
-
-  ConstantTuple getOffsetAndScale(Acts::GeometryIdentifier geoId) const;
-
-  template <typename T>
-  std::vector<T>* readVec(TFile& tf, const char* key, size_t size_min,
-                          size_t size_max) const;
-
-  void readMap(const char* path);
+  std::map<Acts::GeometryIdentifier, MapTuple> m_calib_maps;
+  std::bitset<3> m_mask;
 };
 
 }  // namespace ActsExamples
