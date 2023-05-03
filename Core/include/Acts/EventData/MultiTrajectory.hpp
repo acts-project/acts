@@ -44,7 +44,85 @@ enum TrackStateFlag {
   NumTrackStateFlags = 6
 };
 
-using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
+class ConstTrackStateType;
+
+/// View type over a bitset stored in a 64 bit integer
+/// This view allows modifications.
+class TrackStateType {
+ public:
+  using raw_type = unsigned long long;
+  /// Constructor from a reference to the underlying value container
+  /// @param raw the value container
+  TrackStateType(raw_type& raw) : m_raw{&raw} {}
+
+  /// Assign the value from another set of flags
+  /// @param other the other set of flags to assign
+  /// @return this object
+  TrackStateType& operator=(const TrackStateType& other) {
+    *m_raw = *other.m_raw;
+    return *this;
+  }
+
+  /// Assign the value from another set of flags
+  /// @param other the other set of flags to assign
+  /// @return this object
+  TrackStateType& operator=(const ConstTrackStateType& other);
+
+  /// Return if the bit at position @p pos is 1
+  /// @param pos the bit position
+  /// @return if the bit at @p pos is one or not
+  bool test(std::size_t pos) const {
+    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    return bs.test(pos);
+  }
+
+  /// Change the value of the bit at position @p pos to @p value.
+  /// @param pos the position of the bit to change
+  /// @param value the value to change the bit to
+  void set(std::size_t pos, bool value = true) {
+    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    bs.set(pos, value);
+    *m_raw = bs.to_ullong();
+  }
+
+  /// Change the value of the bit at position at @p pos to @c false
+  /// @param pos the position of the bit to change
+  void reset(std::size_t pos) { set(pos, false); }
+
+ private:
+  raw_type* m_raw{nullptr};
+};
+
+/// View type over a bitset stored in a 64 bit integer
+/// This view does not allow modifications
+class ConstTrackStateType {
+ public:
+  using raw_type = unsigned long long;
+
+  /// Constructor from a reference to the underlying value container
+  /// @param raw the value container
+  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {}
+
+  /// Return if the bit at position @p pos is 1
+  /// @param pos the bit position
+  /// @return if the bit at @p pos is one or not
+  bool test(std::size_t pos) const {
+    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    return bs.test(pos);
+  }
+
+ private:
+  friend class TrackStateType;
+  const raw_type* m_raw{nullptr};
+};
+
+inline TrackStateType& TrackStateType::operator=(
+    const ConstTrackStateType& other) {
+  *m_raw = *other.m_raw;
+  return *this;
+}
+
+// using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
 
 // forward declarations
 template <typename derived_t>
@@ -944,14 +1022,16 @@ class TrackStateProxy {
   /// reference.
   /// @return reference to the type flags.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  TrackStateType& typeFlags() {
-    return component<TrackStateType, hashString("typeFlags")>();
+  TrackStateType typeFlags() {
+    return TrackStateType{
+        component<TrackStateType::raw_type, hashString("typeFlags")>()};
   }
 
   /// Getter for the type flags. Returns a copy of the type flags value.
   /// @return The type flags of this track state
-  TrackStateType typeFlags() const {
-    return component<TrackStateType, hashString("typeFlags")>();
+  ConstTrackStateType typeFlags() const {
+    return ConstTrackStateType{
+        component<TrackStateType::raw_type, hashString("typeFlags")>()};
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
