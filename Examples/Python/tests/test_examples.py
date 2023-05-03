@@ -890,7 +890,21 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
         assert material_file.stat().st_size > 200
 
 
-def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
+DIGI_SHARE_DIR = (
+    Path(__file__).parent.parent.parent.parent
+    / "Examples/Algorithms/Digitization/share"
+)
+
+
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+    ],
+    ids=["smeared", "geometric"],
+)
+def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_file):
     from digitization import configureDigitization
 
     s = Sequencer(events=10, numThreads=-1)
@@ -902,24 +916,37 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
     assert not csv_dir.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(trk_geo, field, outputDir=tmp_path, s=s)
+    configureDigitization(
+        trk_geo, field, outputDir=tmp_path, digiConfigFile=digi_config_file, s=s
+    )
 
     s.run()
 
     assert root_file.exists()
     assert csv_dir.exists()
 
-    assert len(list(csv_dir.iterdir())) == 3 * s.config.events
-    assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
-    assert_entries(root_file, "vol9", 0)
-    assert_entries(root_file, "vol14", 0)
-    for tn in (8, 12, 13, 16, 17, 18):
-        assert_has_entries(root_file, f"vol{tn}")
+    if "smearing" in digi_config_file.name:
+        assert len(list(csv_dir.iterdir())) == 3 * s.config.events
+        assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
+        assert_entries(root_file, "vol9", 0)
+        assert_entries(root_file, "vol14", 0)
+        for tn in (8, 12, 13, 16, 17, 18):
+            assert_has_entries(root_file, f"vol{tn}")
 
     assert_root_hash(root_file.name, root_file)
 
 
-def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
+@pytest.mark.parametrize(
+    "digi_config_file",
+    [
+        DIGI_SHARE_DIR / "default-smearing-config-generic.json",
+        DIGI_SHARE_DIR / "default-geometric-config-generic.json",
+    ],
+    ids=["smeared", "geometric"],
+)
+def test_digitization_example_input(
+    trk_geo, tmp_path, assert_root_hash, digi_config_file
+):
     from particle_gun import runParticleGun
     from digitization import configureDigitization
 
@@ -947,6 +974,7 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
         trk_geo,
         field,
         outputDir=tmp_path,
+        digiConfigFile=digi_config_file,
         particlesInput=ptcl_dir / "particles.root",
         s=s,
         doMerge=True,
@@ -957,14 +985,16 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
     assert root_file.exists()
     assert csv_dir.exists()
 
-    assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
-    assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
+    if "smearing" in digi_config_file.name:
+        assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
+        assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
 
-    assert_entries(root_file, "vol7", 0)
-    assert_entries(root_file, "vol9", 0)
+        assert_entries(root_file, "vol7", 0)
+        assert_entries(root_file, "vol9", 0)
 
-    for tn in (8, 12, 13, 14, 16, 17, 18):
-        assert_has_entries(root_file, f"vol{tn}")
+        for tn in (8, 12, 13, 14, 16, 17, 18):
+            assert_has_entries(root_file, f"vol{tn}")
+
     assert_root_hash(root_file.name, root_file)
 
 
