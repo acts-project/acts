@@ -41,11 +41,15 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   if (!m_cfg.calibrator) {
     throw std::invalid_argument("Missing calibrator");
   }
+  if (m_cfg.inputClusters.empty() && m_cfg.calibrator->needsClusters()) {
+    throw std::invalid_argument("The configured calibrator needs clusters");
+  }
 
   m_inputMeasurements.initialize(m_cfg.inputMeasurements);
   m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
   m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
   m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
@@ -56,6 +60,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   const auto& sourceLinks = m_inputSourceLinks(ctx);
   const auto& protoTracks = m_inputProtoTracks(ctx);
   const auto& initialParameters = m_inputInitialTrackParameters(ctx);
+
+  const ClusterContainer* clusters =
+      m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
@@ -72,7 +79,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // measurements to construct it. The other extensions are hold by the
   // fit-function-object
   ActsExamples::MeasurementCalibratorAdapter calibrator(*(m_cfg.calibrator),
-                                                        measurements);
+                                                        measurements, clusters);
 
   TrackFitterFunction::GeneralFitterOptions options{
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),
