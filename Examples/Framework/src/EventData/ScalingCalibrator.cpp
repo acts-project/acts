@@ -42,17 +42,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
         fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= yscale;
 
         constexpr size_t kSize = meas.size();
-
-        // Is there a better way? perhaps add the method to the measurement type
-        // I'm not even sure this is right
-        // FIXME
-        std::array<Acts::BoundIndices, kSize> indices;
-        for (size_t i = 0; i < kSize; i++) {
-          Eigen::Index _, c;
-          double v = P.row(i).maxCoeff(&_, &c);
-          assert(v > 0 && "invalid indices");
-          indices[i] = static_cast<Acts::BoundIndices>(c);
-        }
+        std::array<Acts::BoundIndices, kSize> indices = meas.indices();
 
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
