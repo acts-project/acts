@@ -35,10 +35,11 @@ void addTrackFitting(Context& ctx) {
                                 inputSimHits, inputMeasurementSimHitsMap,
                                 outputProtoTracks);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFittingAlgorithm, mex, "TrackFittingAlgorithm",
-      inputMeasurements, inputSourceLinks, inputProtoTracks,
-      inputInitialTrackParameters, outputTracks, fit, pickTrack, calibrator);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFittingAlgorithm, mex,
+                                "TrackFittingAlgorithm", inputMeasurements,
+                                inputSourceLinks, inputProtoTracks,
+                                inputInitialTrackParameters, inputClusters,
+                                outputTracks, fit, pickTrack, calibrator);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::RefittingAlgorithm, mex,
                                 "RefittingAlgorithm", inputTracks, outputTracks,
