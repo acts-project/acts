@@ -9,7 +9,7 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def configureDigitization(
+def runDigitization(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     outputDir: Path,
@@ -87,4 +87,4 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    configureDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
+    runDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()

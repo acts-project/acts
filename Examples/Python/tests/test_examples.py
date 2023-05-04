@@ -905,7 +905,7 @@ DIGI_SHARE_DIR = (
     ids=["smeared", "geometric"],
 )
 def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_file):
-    from digitization import configureDigitization
+    from digitization import runDigitization
 
     s = Sequencer(events=10, numThreads=-1)
 
@@ -916,7 +916,7 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     assert not csv_dir.exists()
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(
+    runDigitization(
         trk_geo, field, outputDir=tmp_path, digiConfigFile=digi_config_file, s=s
     )
 
@@ -948,7 +948,7 @@ def test_digitization_example_input(
     trk_geo, tmp_path, assert_root_hash, digi_config_file
 ):
     from particle_gun import runParticleGun
-    from digitization import configureDigitization
+    from digitization import runDigitization
 
     ptcl_dir = tmp_path / "ptcl"
     ptcl_dir.mkdir()
@@ -970,7 +970,7 @@ def test_digitization_example_input(
     )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-    configureDigitization(
+    runDigitization(
         trk_geo,
         field,
         outputDir=tmp_path,
