@@ -134,7 +134,7 @@ class VectorMultiTrajectoryBase {
 
     double chi2 = 0;
     double pathLength = 0;
-    TrackStateType typeFlags;
+    TrackStateType::raw_type typeFlags{};
 
     IndexType iuncalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
