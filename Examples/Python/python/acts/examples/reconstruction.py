@@ -819,7 +819,6 @@ def addKalmanTracks(
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
-    clusters: str = None,
     calibrationConfigFile: str = None,
     clusters: str = None,
     logLevel: Optional[acts.logging.Level] = None,
