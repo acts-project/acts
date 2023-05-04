@@ -920,7 +920,7 @@ class CombinatorialKalmanFilter {
         trackState.allocateCalibrated(candidateTrackState.calibratedSize());
         trackState.copyFrom(candidateTrackState, mask, false);
 
-        auto& typeFlags = trackState.typeFlags();
+        auto typeFlags = trackState.typeFlags();
         if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
           typeFlags.set(TrackStateFlag::MaterialFlag);
         }
@@ -1013,7 +1013,7 @@ class CombinatorialKalmanFilter {
       // parameter
 
       // Set the track state flags
-      auto& typeFlags = trackStateProxy.typeFlags();
+      auto typeFlags = trackStateProxy.typeFlags();
       if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
         typeFlags.set(TrackStateFlag::MaterialFlag);
       }
