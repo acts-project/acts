@@ -175,7 +175,7 @@ jobs:
         run: ccache -s
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: ctest --test-dir build -j$(nproc)
 
       - name: Integration tests
         run: cmake --build build --target integrationtests
