@@ -61,7 +61,7 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
     }
 
     if (tips.empty()) {
-      ACTS_ERROR("Last trajectory is empty");
+      ACTS_DEBUG("Last trajectory is empty");
     }
 
     // last entry: move vectors

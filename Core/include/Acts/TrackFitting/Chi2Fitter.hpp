@@ -456,7 +456,7 @@ class Chi2Fitter {
         //====================================
 
         // Get and set the type flags
-        auto& typeFlags = trackStateProxy.typeFlags();
+        auto typeFlags = trackStateProxy.typeFlags();
         typeFlags.set(TrackStateFlag::ParameterFlag);
         if (surface->surfaceMaterial() != nullptr) {
           typeFlags.set(TrackStateFlag::MaterialFlag);
@@ -501,7 +501,7 @@ class Chi2Fitter {
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
           // Set the track state flags
-          auto& typeFlags = trackStateProxy.typeFlags();
+          auto typeFlags = trackStateProxy.typeFlags();
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (surface->surfaceMaterial() != nullptr) {
             typeFlags.set(TrackStateFlag::MaterialFlag);

@@ -130,7 +130,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -212,7 +212,7 @@ jobs:
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -253,7 +253,7 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -314,7 +314,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
