@@ -69,6 +69,7 @@ def assert_entries(root_file, tree_name, exp=None, non_zero=False):
     rf = ROOT.TFile.Open(str(root_file))
     keys = [k.GetName() for k in rf.GetListOfKeys()]
     assert tree_name in keys
+    print("Entries:", rf.Get(tree_name).GetEntries())
     if non_zero:
         assert rf.Get(tree_name).GetEntries() > 0, f"{root_file}:{tree_name}"
     if exp is not None:
@@ -922,16 +923,34 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 
     s.run()
 
+    import shutil
+
+    shutil.copy(root_file, "/home/benjamin/Desktop/meas_geo.root")
+
     assert root_file.exists()
     assert csv_dir.exists()
 
+    assert len(list(csv_dir.iterdir())) == 3 * s.config.events
+    assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
+
+    assert_entries(root_file, "vol9", 0)
+    assert_entries(root_file, "vol14", 0)
+
     if "smearing" in digi_config_file.name:
-        assert len(list(csv_dir.iterdir())) == 3 * s.config.events
-        assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
-        assert_entries(root_file, "vol9", 0)
-        assert_entries(root_file, "vol14", 0)
-        for tn in (8, 12, 13, 16, 17, 18):
-            assert_has_entries(root_file, f"vol{tn}")
+        filled_entries = [f"vol{tn}" for tn in (8, 12, 13, 16, 17, 18)]
+    else:
+        # fmt: off
+        filled_entries = [
+            'vol8', 'vol8_lay2', 'vol12_lay8_mod147', 'vol12_lay10', 'vol12_lay10_mod124',
+            'vol12_lay10_mod133', 'vol12_lay12', 'vol12_lay12_mod120', 'vol13',
+            'vol13_lay2', 'vol16_lay2_mod78', 'vol16_lay4', 'vol16_lay6', 'vol16_lay8',
+            'vol16_lay10', 'vol16_lay12', 'vol17', 'vol17_lay2', 'vol18_lay2',
+            'vol18_lay2_mod1', 'vol18_lay2_mod49', 'vol18_lay2_mod86', 'vol18_lay4',
+        ]
+        # fmt: on
+
+    for entry in filled_entries:
+        assert_has_entries(root_file, entry)
 
     assert_root_hash(root_file.name, root_file)
 
@@ -985,15 +1004,31 @@ def test_digitization_example_input(
     assert root_file.exists()
     assert csv_dir.exists()
 
+    assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
+    assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
+
+    assert_entries(root_file, "vol7", 0)
+    assert_entries(root_file, "vol9", 0)
+
     if "smearing" in digi_config_file.name:
-        assert len(list(csv_dir.iterdir())) == 3 * pgs.config.events
-        assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
+        filled_entries = [f"vol{tn}" for tn in (8, 12, 13, 16, 17, 18)]
+    else:
+        # fmt: off
+        filled_entries = [
+            "vol8", "vol8_lay2", "vol12_lay8_mod150", "vol12_lay10_mod114",
+            "vol12_lay10_mod150", "vol12_lay12", "vol12_lay12_mod140",
+            "vol12_lay12_mod141", "vol12_lay12_mod167", "vol13", "vol13_lay2",
+            "vol14_lay2_mod93", "vol14_lay2_mod102", "vol14_lay2_mod112",
+            "vol14_lay2_mod118", "vol14_lay4_mod112", "vol14_lay4_mod118",
+            "vol14_lay4_mod152", "vol14_lay4_mod161", "vol14_lay6_mod152",
+            "vol16_lay4", "vol16_lay6", "vol16_lay8", "vol16_lay10", "vol16_lay12",
+            "vol17", "vol17_lay2", "vol18_lay2", "vol18_lay2_mod71", "vol18_lay4",
+            "vol18_lay6", "vol18_lay8", "vol18_lay10"
+        ]
+        # fmt: on
 
-        assert_entries(root_file, "vol7", 0)
-        assert_entries(root_file, "vol9", 0)
-
-        for tn in (8, 12, 13, 14, 16, 17, 18):
-            assert_has_entries(root_file, f"vol{tn}")
+    for entry in filled_entries:
+        assert_has_entries(root_file, entry)
 
     assert_root_hash(root_file.name, root_file)
 
