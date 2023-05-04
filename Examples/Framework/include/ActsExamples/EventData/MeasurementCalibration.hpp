@@ -45,7 +45,7 @@ class PassThroughCalibrator : public MeasurementCalibrator {
       const ClusterContainer* /*clusters*/,
       const Acts::GeometryContext& /*gctx*/,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-          trackState) const;
+          trackState) const override;
 };
 
 // Adapter class that wraps a MeasurementCalibrator to conform to the
