@@ -923,10 +923,6 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
 
     s.run()
 
-    import shutil
-
-    shutil.copy(root_file, "/home/benjamin/Desktop/meas_geo.root")
-
     assert root_file.exists()
     assert csv_dir.exists()
 
