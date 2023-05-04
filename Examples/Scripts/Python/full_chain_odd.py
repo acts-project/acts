@@ -139,6 +139,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             )
             if ttbar
             else ParticleSelectorConfig(),
+            enableInteractions=True,
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
             rnd=rnd,
@@ -161,6 +162,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
         if ttbar
         else TruthSeedRanges(),
+        initialVarInflation=[100, 100, 100, 100, 100, 100],
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir,
     )
