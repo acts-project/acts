@@ -11,7 +11,7 @@ refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
 
 echo "::group::Generate validation dataset"
-CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
+CI/physmon/physmon.py $outdir 2>&1 | tee $outdir/run.log
 echo "::endgroup::"
 
 set +e
