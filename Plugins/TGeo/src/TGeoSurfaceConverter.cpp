@@ -87,16 +87,22 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
-        double phi1 = toRadian(tubeSeg->GetPhi1());
-        double phi2 = toRadian(tubeSeg->GetPhi2());
         if (not boost::starts_with(axes, "X")) {
           throw std::invalid_argument(
-              "TGeoShape -> CylinderSurface (sectorial): can only be converted "
+              "TGeoShape -> CylinderSurface (sectorial): can only be "
+              "converted "
               "with "
               "'(X)(y/Y)(*)' axes.");
         }
-        halfPhi = 0.5 * (std::max(phi1, phi2) - std::min(phi1, phi2));
-        avgPhi = 0.5 * (phi1 + phi2);
+        double phi1 = tubeSeg->GetPhi1();
+        double phi2 = tubeSeg->GetPhi2();
+        // Get the openeing angle - source is TGeo: [0, 360)
+        if (phi2 - phi1 != 360.) {
+          halfPhi = 0.5 * (phi2 - phi1);
+          halfPhi += (halfPhi < 0) ? 360 : 0.;
+          halfPhi = toRadian(halfPhi);
+          avgPhi = toRadian(0.5 * (phi1 + phi2));
+        }
       }
       bounds = std::make_shared<CylinderBounds>(medR, halfZ, halfPhi, avgPhi);
       thickness = deltaR;
@@ -242,16 +248,22 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
-        double phi1 = toRadian(tubeSeg->GetPhi1());
-        double phi2 = toRadian(tubeSeg->GetPhi2());
         if (not boost::starts_with(axes, "X")) {
           throw std::invalid_argument(
-              "TGeoShape -> CylinderSurface (sectorial): can only be converted "
+              "TGeoShape -> DiscSurface (sectorial): can only be converted "
               "with "
               "'(X)(y/Y)(*)' axes.");
         }
-        halfPhi = 0.5 * (std::max(phi1, phi2) - std::min(phi1, phi2));
-        avgPhi = 0.5 * (phi1 + phi2);
+        // Get the openeing angle - source is TGeo: [0, 360)
+        double phi1 = tubeSeg->GetPhi1();
+        double phi2 = tubeSeg->GetPhi2();
+        // Get the openeing angle - source is TGeo: [0, 360)
+        if (phi2 - phi1 != 360.) {
+          halfPhi = 0.5 * (phi2 - phi1);
+          halfPhi += (halfPhi < 0) ? 360 : 0.;
+          halfPhi = toRadian(halfPhi);
+          avgPhi = toRadian(0.5 * (phi1 + phi2));
+        }
       }
       bounds = std::make_shared<RadialBounds>(minR, maxR, halfPhi, avgPhi);
       thickness = 2 * halfZ;

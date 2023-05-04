@@ -88,4 +88,5 @@ inline bool hasParam(const std::string& key, dd4hep::DetElement& elt) {
 inline bool hasParams(dd4hep::DetElement& elt) {
   return elt.extension<dd4hep::rec::VariantParameters>(false) != nullptr;
 }
+
 }  // namespace Acts
