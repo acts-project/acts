@@ -11,6 +11,8 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <iostream>
+
 namespace ActsFatras {
 
 /// A continuous simulation process based on a physics model plus selectors.
@@ -68,7 +70,12 @@ struct ContinuousProcess {
       return false;
     }
     // modify particle according to the physics process
+    std::cout << "!!!! sim with " << particle << std::endl;
     auto children = physics(generator, slab, particle);
+    std::cout << "!!!! generated " << children.size() << " children" << std::endl;
+    for (const auto &child : children) {
+      std::cout << "!!!! child " << child << std::endl;
+    }
     // move selected child particles to the output container
     std::copy_if(std::begin(children), std::end(children),
                  std::back_inserter(generated), selectChildParticle);

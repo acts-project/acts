@@ -26,6 +26,7 @@ def configureDigitization(
         PhiConfig,
         ParticleConfig,
         addFatras,
+        addDigitization,
     )
 
     s = s or acts.examples.Sequencer(
@@ -51,6 +52,7 @@ def configureDigitization(
             orderedEvents=False,
         )
         s.addReader(evGen)
+        print("!!!!!!!!!!!!!!!!!!! wtf ", particlesInput)
 
     outputDir = Path(outputDir)
     addFatras(
@@ -59,7 +61,6 @@ def configureDigitization(
         field,
         rnd=rnd,
     )
-    from acts.examples.simulation import addDigitization
 
     addDigitization(
         s,
