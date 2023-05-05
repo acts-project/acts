@@ -683,7 +683,7 @@ class Chi2Fitter {
 
       // Catch the actor and set the measurements
       auto& chi2Actor = propOptions.actionList.template get<Chi2Actor>();
-      chi2Actor.inputMeasurements = inputMeasurements;
+      chi2Actor.inputMeasurements = std::move(inputMeasurements);
       chi2Actor.multipleScattering = chi2FitterOptions.multipleScattering;
       chi2Actor.energyLoss = chi2FitterOptions.energyLoss;
       chi2Actor.freeToBoundCorrection = chi2FitterOptions.freeToBoundCorrection;
