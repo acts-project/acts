@@ -241,7 +241,7 @@ class Chi2Fitter {
     using result_type = Chi2FitterResult<traj_t>;
 
     /// Allows retrieving measurements for a surface
-    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
+    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = false;  // TODO: add later
@@ -284,8 +284,8 @@ class Chi2Fitter {
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
       if (result.processedStates == 0) {
-        for (auto measurementIt = inputMeasurements.begin();
-             measurementIt != inputMeasurements.end(); measurementIt++) {
+        for (auto measurementIt = inputMeasurements->begin();
+             measurementIt != inputMeasurements->end(); measurementIt++) {
           navigator.insertExternalSurface(state.navigation,
                                           measurementIt->first);
         }
@@ -303,7 +303,7 @@ class Chi2Fitter {
 
       // finalization
       if (not result.finished) {
-        if (result.measurementStates == inputMeasurements.size() or
+        if (result.measurementStates == inputMeasurements->size() or
             (result.measurementStates > 0 and
              navigator.navigationBreak(state.navigation))) {
           result.missedActiveSurfaces.resize(result.measurementHoles);
@@ -353,9 +353,9 @@ class Chi2Fitter {
       result.jacobianFromStart = jacobian * result.jacobianFromStart;
 
       // Try to find the surface in all measurement surfaces
-      auto sourcelink_it = inputMeasurements.find(surface->geometryId());
+      auto sourcelink_it = inputMeasurements->find(surface->geometryId());
       // inputMeasurements is a std::map<GeometryIdentifier, source_link_t>
-      if (sourcelink_it != inputMeasurements.end()) {
+      if (sourcelink_it != inputMeasurements->end()) {
         ACTS_VERBOSE("   processSurface: Measurement surface "
                      << surface->geometryId() << " detected.");
 
@@ -683,7 +683,7 @@ class Chi2Fitter {
 
       // Catch the actor and set the measurements
       auto& chi2Actor = propOptions.actionList.template get<Chi2Actor>();
-      chi2Actor.inputMeasurements = std::move(inputMeasurements);
+      chi2Actor.inputMeasurements = &inputMeasurements;
       chi2Actor.multipleScattering = chi2FitterOptions.multipleScattering;
       chi2Actor.energyLoss = chi2FitterOptions.energyLoss;
       chi2Actor.freeToBoundCorrection = chi2FitterOptions.freeToBoundCorrection;

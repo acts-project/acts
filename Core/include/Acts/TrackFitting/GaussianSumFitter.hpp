@@ -259,7 +259,7 @@ struct GaussianSumFitter {
       // Catch the actor and set the measurements
       auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
       actor.setOptions(options);
-      actor.m_cfg.inputMeasurements = inputMeasurements;
+      actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
       actor.m_cfg.inReversePass = false;
       actor.m_cfg.logger = m_actorLogger.get();
@@ -326,7 +326,7 @@ struct GaussianSumFitter {
 
       auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
       actor.setOptions(options);
-      actor.m_cfg.inputMeasurements = inputMeasurements;
+      actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.inReversePass = true;
       actor.m_cfg.logger = m_actorLogger.get();
       actor.setOptions(options);
