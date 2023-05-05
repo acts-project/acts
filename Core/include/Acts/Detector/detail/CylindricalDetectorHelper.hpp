@@ -40,7 +40,7 @@ namespace CylindricalDetectorHelper {
 /// and exceptions are thrown if any of the tests fail
 ///
 /// @return a proto container with the outside portals
-DetectorComponent::Container connectInR(
+DetectorComponent::PortalContainer connectInR(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const std::vector<unsigned int>& selectedOnly = {},
@@ -57,7 +57,7 @@ DetectorComponent::Container connectInR(
 /// and exceptions are thrown if any of the tests fail
 ///
 /// @return a proto container with the outside portals
-DetectorComponent::Container connectInZ(
+DetectorComponent::PortalContainer connectInZ(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const std::vector<unsigned int>& selectedOnly = {},
@@ -74,7 +74,7 @@ DetectorComponent::Container connectInZ(
 /// and exceptions are thrown if any of the tests fail
 ///
 /// @return a proto container with the outside portals
-DetectorComponent::Container connectInPhi(
+DetectorComponent::PortalContainer connectInPhi(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const std::vector<unsigned int>& selectedOnly = {},
@@ -90,7 +90,7 @@ DetectorComponent::Container connectInPhi(
 /// and exceptions are thrown if any of the tests fail
 ///
 /// @return a proto container with the outside portals
-DetectorComponent::Container wrapInZR(
+DetectorComponent::PortalContainer wrapInZR(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
@@ -102,13 +102,13 @@ DetectorComponent::Container wrapInZR(
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
-/// @note not much checking is done anymore, as the DetectorComponent::Container
+/// @note not much checking is done anymore, as the DetectorComponent::PortalContainer
 /// are assumed to come properly formed from the prior methods
 ///
 /// @return a proto container with the outside portals
-DetectorComponent::Container connectInR(
+DetectorComponent::PortalContainer connectInR(
     const GeometryContext& gctx,
-    const std::vector<DetectorComponent::Container>& containers,
+    const std::vector<DetectorComponent::PortalContainer>& containers,
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
@@ -119,13 +119,13 @@ DetectorComponent::Container connectInR(
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
-/// @note not much checking is done anymore, as the DetectorComponent::Container
+/// @note not much checking is done anymore, as the DetectorComponent::PortalContainer
 /// are assumed to come properly formed from the prior methods
 ///
 /// @return a proto container with the outside portals
-DetectorComponent::Container connectInZ(
+DetectorComponent::PortalContainer connectInZ(
     const GeometryContext& gctx,
-    const std::vector<DetectorComponent::Container>& containers,
+    const std::vector<DetectorComponent::PortalContainer>& containers,
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
@@ -136,13 +136,13 @@ DetectorComponent::Container connectInZ(
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
-/// @note not much checking is done anymore, as the DetectorComponent::Container
+/// @note not much checking is done anymore, as the DetectorComponent::PortalContainer
 /// are assumed to come properly formed from the prior methods
 ///
 /// @return a proto container with the outside portals
-DetectorComponent::Container connectInPhi(
+DetectorComponent::PortalContainer connectInPhi(
     const GeometryContext& gctx,
-    const std::vector<DetectorComponent::Container>& containers,
+    const std::vector<DetectorComponent::PortalContainer>& containers,
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
@@ -152,13 +152,13 @@ DetectorComponent::Container connectInPhi(
 /// @param containers the containers, i.e. the inner volume and the wrapping container
 /// @param logLevel is the screen logging level
 ///
-/// @note not much checking is done anymore, as the DetectorComponent::Container
+/// @note not much checking is done anymore, as the DetectorComponent::PortalContainer
 /// are assumed to come properly formed from the prior methods
 ///
 /// @return a proto container with the outside portals
-DetectorComponent::Container wrapInZR(
+DetectorComponent::PortalContainer wrapInZR(
     const GeometryContext& gctx,
-    const std::vector<DetectorComponent::Container>& containers,
+    const std::vector<DetectorComponent::PortalContainer>& containers,
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
 /// @brief Helper method to extract r,z,phi boundaries for

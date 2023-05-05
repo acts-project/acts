@@ -587,10 +587,10 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
         portalGenerator, tContext, "WrappingVolume" + radStr, tf,
         std::move(wBounds), tryAllPortals());
 
-    std::vector<DetectorComponent::Container> containers;
+    std::vector<DetectorComponent::PortalContainer> containers;
     containers.push_back(innerContainer);
 
-    DetectorComponent::Container outerContainer;
+    DetectorComponent::PortalContainer outerContainer;
     for (auto [ip, p] : Acts::enumerate(wVolume->portalPtrs())) {
       outerContainer[ip] = p;
     }

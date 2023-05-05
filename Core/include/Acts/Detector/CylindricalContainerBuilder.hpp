@@ -8,23 +8,25 @@
 
 #pragma once
 
+#include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace Acts {
 namespace Experimental {
 
 /// @brief A dedicated container builder for cylindrical detector containers
 ///
-/// It relies on the detailed implementatino of the CylindricalDetectorHelper
-/// and allows for DetectorVolume attachent in z/r/phi, such as wrapping
+/// It relies on the detailed implementation of the CylindricalDetectorHelper
+/// and allows for DetectorVolume attachment in z/r/phi, such as wrapping
 /// of bevelled cylinder objects in z/r
 ///
 /// @note the builder expects a fully consistent set of sub volume builders
-/// that will be exectued in a chain
+/// that will be executed in a chain
 ///
 /// @note allowed BinningValue(s) for the cylindrical container builder are
 /// {binZ}, {binR}, {binPhi}, {binZ, binR}, whereas the last option indicates
@@ -34,14 +36,14 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   /// Nested configuration object
   struct Config {
     /// The configured volume builders
-    std::vector<std::shared_ptr<IDetectorComponentBuilder>> builders = {};
+    std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
     /// Auxilliary information, mainly for screen output
     std::string auxilliary = "";
   };
 
-  /// Constructor with configuration argumetns
+  /// Constructor with configuration arguments
   ///
   /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output

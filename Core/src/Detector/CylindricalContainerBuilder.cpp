@@ -29,12 +29,12 @@ namespace {
 ///
 /// @return a newly built container
 template <typename object_collection>
-Acts::Experimental::DetectorComponent::Container connect(
+Acts::Experimental::DetectorComponent::PortalContainer connect(
     const Acts::GeometryContext& gctx, object_collection& objects,
     const std::vector<Acts::BinningValue>& binning,
     Acts::Logging::Level logLevel) {
   // Return container object
-  Acts::Experimental::DetectorComponent::Container rContainer;
+  Acts::Experimental::DetectorComponent::PortalContainer rContainer;
   if (binning.size() == 1u) {
     Acts::BinningValue bv = binning.front();
     // 1-dimensional binning options
@@ -107,7 +107,7 @@ Acts::Experimental::DetectorComponent
 Acts::Experimental::CylindricalContainerBuilder::construct(
     RootDetectorVolumes& roots, const GeometryContext& gctx) const {
   // Return container object
-  DetectorComponent::Container rContainer;
+  DetectorComponent::PortalContainer rContainer;
 
   // Create the indivudal components, collect for both outcomes
   std::vector<DetectorComponent> components;
@@ -137,7 +137,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
     rContainer = connect(gctx, volumes, m_cfg.binning, logger().level());
   } else {
     ACTS_VERBOSE("Components contain sub containers: connect containers.");
-    std::vector<DetectorComponent::Container> containers;
+    std::vector<DetectorComponent::PortalContainer> containers;
     containers.reserve(components.size());
     std::for_each(components.begin(), components.end(),
                   [&](const auto& cmp) { containers.push_back(cmp.portals); });

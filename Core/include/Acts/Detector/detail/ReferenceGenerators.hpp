@@ -14,6 +14,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
+#include <vector>
+
 namespace Acts {
 namespace Experimental {
 namespace detail {
@@ -41,7 +43,7 @@ struct CenterReferenceGenerator {
 /// only a single bin in the indexed grid.
 struct BinningValueReferenceGenerator {
   /// The binning value
-  BinningValue bValue;
+  BinningValue bValue = BinningValue::binValues;
 
   /// Helper to access a reference postion based on binning value
   ///

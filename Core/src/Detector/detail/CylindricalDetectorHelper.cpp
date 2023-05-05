@@ -203,7 +203,7 @@ Acts::Experimental::PortalReplacement createSectorReplacement(
 std::map<unsigned int,
          std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
 stripSideVolumes(
-    const std::vector<Acts::Experimental::DetectorComponent::Container>&
+    const std::vector<Acts::Experimental::DetectorComponent::PortalContainer>&
         containers,
     const std::vector<unsigned int>& sides,
     const std::vector<unsigned int>& selectedOnly = {},
@@ -355,7 +355,7 @@ void checkBounds(
 
 }  // namespace
 
-Acts::Experimental::DetectorComponent::Container
+Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
@@ -381,7 +381,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in R.");
 
   // Return proto container
-  DetectorComponent::Container dShell;
+  DetectorComponent::PortalContainer dShell;
 
   // Innermost volume boundaries
   std::vector<ActsScalar> rBoundaries = {};
@@ -510,7 +510,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   return dShell;
 }
 
-Acts::Experimental::DetectorComponent::Container
+Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>& volumes,
@@ -535,7 +535,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in Z.");
 
   // Return proto container
-  DetectorComponent::Container dShell;
+  DetectorComponent::PortalContainer dShell;
 
   // Connect in Z ?
   // - 1u corresponds to the index of the high-z disc portal for the reference
@@ -713,7 +713,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   return dShell;
 }
 
-Acts::Experimental::DetectorComponent::Container
+Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>& volumes,
@@ -728,7 +728,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in phi.");
 
   // Return proto container
-  DetectorComponent::Container dShell;
+  DetectorComponent::PortalContainer dShell;
 
   // Check if inner cylinder and sectors are present by the number of portals
   size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
@@ -838,7 +838,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   return dShell;
 }
 
-Acts::Experimental::DetectorComponent::Container
+Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>& volumes,
@@ -855,7 +855,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   }
 
   // Return the new container
-  DetectorComponent::Container dShell;
+  DetectorComponent::PortalContainer dShell;
 
   // Keep the outer shells
   dShell[0u] = volumes[1u]->portalPtrs()[0u];
@@ -916,10 +916,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   return dShell;
 }
 
-Acts::Experimental::DetectorComponent::Container
+Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     const GeometryContext& gctx,
-    const std::vector<DetectorComponent::Container>& containers,
+    const std::vector<DetectorComponent::PortalContainer>& containers,
     const std::vector<unsigned int>& selectedOnly,
     Acts::Logging::Level logLevel) noexcept(false) {
   // The local logger
@@ -928,7 +928,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   ACTS_DEBUG("Connect " << containers.size() << " proto containers in R.");
 
   // Return the new container
-  DetectorComponent::Container dShell;
+  DetectorComponent::PortalContainer dShell;
 
   // Fuse the cylinders - portals can be reused for this operation
   for (unsigned int ic = 1; ic < containers.size(); ++ic) {
@@ -977,10 +977,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   return dShell;
 }
 
-Acts::Experimental::DetectorComponent::Container
+Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
     const GeometryContext& gctx,
-    const std::vector<DetectorComponent::Container>& containers,
+    const std::vector<DetectorComponent::PortalContainer>& containers,
     const std::vector<unsigned int>& selectedOnly,
     Acts::Logging::Level logLevel) noexcept(false) {
   // The local logger
@@ -989,7 +989,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   ACTS_DEBUG("Connect " << containers.size() << " proto containers in Z.");
 
   // Return the new container
-  DetectorComponent::Container dShell;
+  DetectorComponent::PortalContainer dShell;
 
   for (unsigned int ic = 1; ic < containers.size(); ++ic) {
     auto& formerContainer = containers[ic - 1];
@@ -1042,25 +1042,25 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   return dShell;
 }
 
-Acts::Experimental::DetectorComponent::Container
+Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
     [[maybe_unused]] const GeometryContext& gctx,
-    [[maybe_unused]] const std::vector<DetectorComponent::Container>&
+    [[maybe_unused]] const std::vector<DetectorComponent::PortalContainer>&
         containers,
     [[maybe_unused]] const std::vector<unsigned int>& selectedOnly,
     [[maybe_unused]] Acts::Logging::Level logLevel) noexcept(false) {
   throw std::invalid_argument(
       "CylindricalDetectorHelper: container connection in phi not implemented "
       "yet.");
-  DetectorComponent::Container dShell;
+  DetectorComponent::PortalContainer dShell;
   // Done.
   return dShell;
 }
 
-Acts::Experimental::DetectorComponent::Container
+Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     [[maybe_unused]] const GeometryContext& gctx,
-    const std::vector<DetectorComponent::Container>& containers,
+    const std::vector<DetectorComponent::PortalContainer>& containers,
     Acts::Logging::Level logLevel) {
   if (containers.size() != 2u) {
     throw std::invalid_argument(
@@ -1099,7 +1099,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   ACTS_DEBUG("Wrapping a container with volume `" << wrappingVolume->name()
                                                   << "'.");
   // Return the new container
-  DetectorComponent::Container dShell;
+  DetectorComponent::PortalContainer dShell;
 
   // Keep the outer shells of the proto container
   dShell[0u] = wrappingVolume->portalPtrs()[0u];

@@ -37,7 +37,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
 
   // Although only a single volume, describe it as a
   // container shell for further processing
-  DetectorComponent::Container shell;
+  DetectorComponent::PortalContainer shell;
   // The detector volume to be constructed
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
   // If there are no internals, the volume is fully defined

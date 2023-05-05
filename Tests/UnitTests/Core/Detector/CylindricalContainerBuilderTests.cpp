@@ -64,7 +64,7 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
     // Add to the roots
     roots.volumes.push_back(volume);
 
-    DetectorComponent::Container dContainer;
+    DetectorComponent::PortalContainer dContainer;
     for (auto [ip, p] : enumerate(volume->portalPtrs())) {
       dContainer[ip] = p;
     }
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
   CylindricalContainerBuilder::Config misCfg;
   BOOST_CHECK_THROW(auto a = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
-  // misconfiguration - 1D binning not in z, r, phgi
+  // misconfiguration - 1D binning not in z, r, phi
   misCfg.builders = {nullptr};
   misCfg.binning = {Acts::binX};
   BOOST_CHECK_THROW(auto b = CylindricalContainerBuilder(misCfg),

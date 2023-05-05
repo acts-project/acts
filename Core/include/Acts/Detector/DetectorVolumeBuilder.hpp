@@ -23,7 +23,7 @@ namespace Experimental {
 /// an external builder for shape and portals and an internal
 /// structure builder for volume internals.
 ///
-/// @note Although this vuilder builds only a single volume,
+/// @note Although this helper builds only a single volume,
 /// it is to the outside presented as a DetectorComponent with
 /// shell; like this it can be transparently be used for the
 /// downstream detector construction process.
@@ -34,9 +34,9 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     /// The name of the volume to be built
     std::string name = "unnamed";
     /// An external builder
-    std::shared_ptr<IExternalStructureBuilder> externalsBuilder = nullptr;
+    std::shared_ptr<const IExternalStructureBuilder> externalsBuilder = nullptr;
     /// An internal builder
-    std::shared_ptr<IInternalStructureBuilder> internalsBuilder = nullptr;
+    std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
     /// Add to the root volumes: the current volume
     bool addToRoot = true;
     /// Add eventual internal volume to root
@@ -45,7 +45,7 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     std::string auxilliary = "";
   };
 
-  /// Constructor with configuration argumetns
+  /// Constructor with configuration arguments
   ///
   /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output

@@ -34,13 +34,13 @@ class Portal;
 /// @note the map indices of the shell coating represent
 /// their respective index in the portal vector of the
 /// VolumeBounds derivative that is described by the given
-/// component/.
+/// component.
 struct DetectorComponent {
-  using Container = std::map<unsigned int, std::shared_ptr<Portal>>;
+  using PortalContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
   /// The vector of construced volume(s)
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// The current map of outside portals
-  Container portals;
+  PortalContainer portals;
 };
 
 /// @brief Holder struct for the external structure components
@@ -54,7 +54,7 @@ struct ExternalStructure {
   PortalGenerator portalGenerator;
 };
 
-/// Holder struct for the internal structure components of a DetectorVolume
+/// @brief Holder struct for the internal structure components of a DetectorVolume
 ///
 /// @note the surface surfacesUpdator needs to handle also portal providing
 /// of contained volumes.
@@ -65,12 +65,12 @@ struct InternalStructure {
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// Navigation delegate for surfaces
   SurfaceCandidatesUpdator surfacesUpdator;
-  /// Navigaiton delegate for voluems
+  // Navigation delegate for volumes
   DetectorVolumeUpdator volumeUpdator;
 };
 
 /// @brief Container to collect root volumes for the
-/// contstruction of a Detector
+/// construction of a Detector
 ///
 /// @note each root volume is expected to contain a full
 /// search tree for eventually contained sub volumes
