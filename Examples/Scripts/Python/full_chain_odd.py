@@ -78,12 +78,12 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             s,
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
             EtaConfig(-3.0, 3.0, uniform=True),
-            ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
+            ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
+                mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
                 ),
-                mean=acts.Vector4(0, 0, 0, 0),
             ),
             multiplicity=50,
             rnd=rnd,
