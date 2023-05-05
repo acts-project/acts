@@ -94,7 +94,6 @@ std::vector<int>& FpeMonitor::stack() {
 
 void FpeMonitor::push() {
   stack().push_back(fegetexcept());
-  std::cout << "fpe push " << fegetexcept() << std::endl;
   disable(FE_ALL_EXCEPT);
 }
 
@@ -102,7 +101,6 @@ void FpeMonitor::pop() {
   disable(FE_ALL_EXCEPT);
   if (!stack().empty()) {
     enable(stack().back());
-    std::cout << "fpe pop " << stack().back() << std::endl;
     stack().pop_back();
   }
 }
