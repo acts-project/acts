@@ -118,8 +118,7 @@ struct SourceLinkAdapterIterator {
   }
 
   Acts::SourceLink operator*() const {
-    const auto& sl = *m_iterator;
-    return Acts::SourceLink{sl};
+    return *m_iterator;
   }
 
   auto operator-(const SourceLinkAdapterIterator& other) const {

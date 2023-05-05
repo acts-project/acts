@@ -75,8 +75,7 @@ struct GsfActor {
     std::size_t maxComponents = 16;
 
     /// Input measurements
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
     /// instance TODO if we somehow could initialize a reference here...

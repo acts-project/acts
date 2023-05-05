@@ -234,11 +234,11 @@ struct GaussianSumFitter {
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(begin, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (auto it = begin; it != end; ++it) {
-      const SourceLink& sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), sl);
+      SourceLink sl = *it;
+      auto geoId = sl.geometryId();
+      inputMeasurements.emplace(geoId, std::move(sl));
     }
 
     ACTS_VERBOSE(
