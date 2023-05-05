@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Optional
 import math
+from math import sqrt
 
 import acts
 import acts.examples
@@ -70,46 +71,46 @@ def buildITkGeometry(
     # radial cuts that describe different module segmentation regions within a
     # volume, e.g. endcap rings
     volumeRadiusCutsMap = {
-        8: [0.0, 78.0],          # Pixel negative z
-        8: [78.0, 130.0],        # Pixel negative z
-        10: [0.0, 78.0],         # Pixel positive z
-        10: [78.0, 130.0],       # Pixel positive z
-        22: [384.5, 403.481],    # Strip negative z, Ring 0, Row 0
-        22: [403.481, 427.462],  # Strip negative z, Ring 0, Row 1
-        22: [427.462, 456.442],  # Strip negative z, Ring 0, Row 2
-        22: [456.442, 488.423],  # Strip negative z, Ring 0, Row 3
-        22: [489.823, 507.916],  # Strip negative z, Ring 1, Row 0
-        22: [507.916, 535.009],  # Strip negative z, Ring 1, Row 1
-        22: [535.009, 559.101],  # Strip negative z, Ring 1, Row 2
-        22: [559.101, 574.194],  # Strip negative z, Ring 1, Row 3
-        22: [575.594, 606.402],  # Strip negative z, Ring 2, Row 0
-        22: [606.402, 637.209],  # Strip negative z, Ring 2, Row 1
-        22: [638.609, 670.832],  # Strip negative z, Ring 3, Row 0
-        22: [670.832, 697.055],  # Strip negative z, Ring 3, Row 1
-        22: [697.055, 723.278],  # Strip negative z, Ring 3, Row 2
-        22: [723.278, 755.501],  # Strip negative z, Ring 3, Row 3
-        22: [756.901, 811.482],  # Strip negative z, Ring 4, Row 0
-        22: [811.482, 866.062],  # Strip negative z, Ring 4, Row 1
-        22: [867.462, 907.623],  # Strip negative z, Ring 5, Row 0
-        22: [907.623, 967.785],  # Strip negative z, Ring 5, Row 1
-        24: [384.5, 403.481],    # Strip positive z, Ring 0, Row 0
-        24: [403.481, 427.462],  # Strip positive z, Ring 0, Row 1
-        24: [427.462, 456.442],  # Strip positive z, Ring 0, Row 2
-        24: [456.442, 488.423],  # Strip positive z, Ring 0, Row 3
-        24: [489.823, 507.916],  # Strip positive z, Ring 1, Row 0
-        24: [507.916, 535.009],  # Strip positive z, Ring 1, Row 1
-        24: [535.009, 559.101],  # Strip positive z, Ring 1, Row 2
-        24: [559.101, 574.194],  # Strip positive z, Ring 1, Row 3
-        24: [575.594, 606.402],  # Strip positive z, Ring 2, Row 0
-        24: [606.402, 637.209],  # Strip positive z, Ring 2, Row 1
-        24: [638.609, 670.832],  # Strip positive z, Ring 3, Row 0
-        24: [670.832, 697.055],  # Strip positive z, Ring 3, Row 1
-        24: [697.055, 723.278],  # Strip positive z, Ring 3, Row 2
-        24: [723.278, 755.501],  # Strip positive z, Ring 3, Row 3
-        24: [756.901, 811.482],  # Strip positive z, Ring 4, Row 0
-        24: [811.482, 866.062],  # Strip positive z, Ring 4, Row 1
-        24: [867.462, 907.623],  # Strip positive z, Ring 5, Row 0
-        24: [907.623, 967.785],  # Strip positive z, Ring 5, Row 1
+        8:  [[0.0, 78.0],         # Pixel negative z
+            [78.0, 130.0]],       # Pixel negative z
+        10: [[0.0, 78.0],         # Pixel positive z
+            [78.0, 130.0]],       # Pixel positive z
+        22: [[384.5, 403.481],   # Strip negative z, Ring 0, Row 0
+            [403.481, 427.462],  # Strip negative z, Ring 0, Row 1
+            [427.462, 456.442],  # Strip negative z, Ring 0, Row 2
+            [456.442, 488.423],  # Strip negative z, Ring 0, Row 3
+            [489.823, 507.916],  # Strip negative z, Ring 1, Row 0
+            [507.916, 535.009],  # Strip negative z, Ring 1, Row 1
+            [535.009, 559.101],  # Strip negative z, Ring 1, Row 2
+            [559.101, 574.194],  # Strip negative z, Ring 1, Row 3
+            [575.594, 606.402],  # Strip negative z, Ring 2, Row 0
+            [606.402, 637.209],  # Strip negative z, Ring 2, Row 1
+            [638.609, 670.832],  # Strip negative z, Ring 3, Row 0
+            [670.832, 697.055],  # Strip negative z, Ring 3, Row 1
+            [697.055, 723.278],  # Strip negative z, Ring 3, Row 2
+            [723.278, 755.501],  # Strip negative z, Ring 3, Row 3
+            [756.901, 811.482],  # Strip negative z, Ring 4, Row 0
+            [811.482, 866.062],  # Strip negative z, Ring 4, Row 1
+            [867.462, 907.623],  # Strip negative z, Ring 5, Row 0
+            [907.623, 967.785]], # Strip negative z, Ring 5, Row 1
+        24: [[384.5, 403.481],   # Strip positive z, Ring 0, Row 0
+            [403.481, 427.462],  # Strip positive z, Ring 0, Row 1
+            [427.462, 456.442],  # Strip positive z, Ring 0, Row 2
+            [456.442, 488.423],  # Strip positive z, Ring 0, Row 3
+            [489.823, 507.916],  # Strip positive z, Ring 1, Row 0
+            [507.916, 535.009],  # Strip positive z, Ring 1, Row 1
+            [535.009, 559.101],  # Strip positive z, Ring 1, Row 2
+            [559.101, 574.194],  # Strip positive z, Ring 1, Row 3
+            [575.594, 606.402],  # Strip positive z, Ring 2, Row 0
+            [606.402, 637.209],  # Strip positive z, Ring 2, Row 1
+            [638.609, 670.832],  # Strip positive z, Ring 3, Row 0
+            [670.832, 697.055],  # Strip positive z, Ring 3, Row 1
+            [697.055, 723.278],  # Strip positive z, Ring 3, Row 2
+            [723.278, 755.501],  # Strip positive z, Ring 3, Row 3
+            [756.901, 811.482],  # Strip positive z, Ring 4, Row 0
+            [811.482, 866.062],  # Strip positive z, Ring 4, Row 1
+            [867.462, 907.623],  # Strip positive z, Ring 5, Row 0
+            [907.623, 967.785]], # Strip positive z, Ring 5, Row 1
     }
 
     # Set the extra byte to encode which digitization config to apply
@@ -119,18 +120,20 @@ def buildITkGeometry(
 
             # The surface center lies outside of the annulus bounds.
             # Use r-bounds instead
-            bounds = surface.bounds()
+            bounds = surface.Bounds()
             if bounds.type() == Acts.SurfaceBounds.eAnnulus:
                 bound_values = bounds.values()
                 minR = bound_values[Acts.AnnulusBounds.eMinR]
                 maxR = bound_values[Acts.AnnulusBounds.eMaxR]
                 r = minR + 0.5 * (maxR - minR)
 
-            # 
-            geoid.setExtra(1)
+            # Enumerate the digi config by subrange in the volume
+            geoid.setExtra(0)
+            config_no = 0
             for cut in volumeRadiusCutsMap[geoid.volume()]:
-                if r > cut:
-                    geoid.setExtra(geoid.extra() + 1)
+                config_no = config_no + 1
+                if r > cut[0] and r < cut[1]:
+                    geoid.setExtra(config_no)
 
         return geoid
 
@@ -152,13 +155,13 @@ def buildITkGeometry(
     # This specification should be kept in sync with `itk-hgtd/tgeo-atlas-itk-hgtd.json`.
     return TGeoDetector.create(
         fileName=str(tgeo_fileName),
-        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook)
         mdecorator=matDeco,
         buildBeamPipe=True,
         unitScalor=1.0,  # explicit units
         beamPipeRadius=23.934 * u.mm,
         beamPipeHalflengthZ=3000.0 * u.mm,
         beamPipeLayerThickness=0.8 * u.mm,
+        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
         surfaceLogLevel=customLogLevel(),
         layerLogLevel=customLogLevel(),
         volumeLogLevel=customLogLevel(),

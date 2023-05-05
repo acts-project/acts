@@ -97,6 +97,16 @@ void addGeometry(Context& ctx) {
         }));
   }
 
+  /*{
+    py::class_<ActsExamples::ITkGeometryIdentifierHelper>(
+        m, "ITkGeometryIdentifierHelper")
+        .def(py::init([](py::object callable) {
+          auto hook = std::make_shared<ActsExamples::ITkGeometryIdentifierHelper>();
+          hook->callable = callable;
+          return hook;
+        }));
+  }*/
+
   {
     py::class_<Acts::Experimental::Detector,
                std::shared_ptr<Acts::Experimental::Detector>>(m, "Detector");
