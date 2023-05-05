@@ -39,8 +39,8 @@ void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
 
   if (outOfVolume or outOfTime) {
     ACTS_DEBUG("Kill track with internal track ID "
-               << track->GetTrackID() << " at " << pos << " and time " << time
-               << "ns");
+               << track->GetTrackID() << " at " << pos << " and global time "
+               << time / Acts::UnitConstants::ns << "ns");
     track->SetTrackStatus(G4TrackStatus::fStopAndKill);
   }
 }
