@@ -8,6 +8,7 @@
 
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
@@ -200,8 +201,10 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       VwgtMat += vertexingOptions.vertexConstraint.fullCovariance().inverse();
     }
 
+    Acts::FpeMonitor::push();
     // cov(deltaV) = VwgtMat^-1
-    SymMatrix4 covDeltaVmat = Eigen::FullPivLU<SymMatrix4>(VwgtMat).inverse();
+    SymMatrix4 covDeltaVmat = VwgtMat.inverse();
+    Acts::FpeMonitor::pop();
     // deltaV = cov_(deltaV) * Vdel;
     Vector4 deltaV = covDeltaVmat * Vdel;
     //--------------------------------------------------------------------------------------
