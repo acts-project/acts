@@ -52,7 +52,6 @@ def configureDigitization(
             orderedEvents=False,
         )
         s.addReader(evGen)
-        print("!!!!!!!!!!!!!!!!!!! wtf ", particlesInput)
 
     outputDir = Path(outputDir)
     addFatras(

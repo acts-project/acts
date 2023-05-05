@@ -893,7 +893,7 @@ def test_geometry_example(geoFactory, nobj, tmp_path):
 def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
     from digitization import configureDigitization
 
-    s = Sequencer(events=10, numThreads=1)
+    s = Sequencer(events=10, numThreads=-1)
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "measurements.root"
@@ -929,7 +929,7 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
     runParticleGun(str(ptcl_dir), s=pgs)
     pgs.run()
 
-    s = Sequencer(numThreads=1)
+    s = Sequencer(numThreads=-1)
 
     csv_dir = tmp_path / "csv"
     root_file = tmp_path / "measurements.root"

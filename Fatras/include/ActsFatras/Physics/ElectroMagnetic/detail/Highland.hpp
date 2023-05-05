@@ -11,7 +11,6 @@
 #include "Acts/Material/Interactions.hpp"
 
 #include <random>
-#include <iostream>
 
 namespace ActsFatras {
 namespace detail {
@@ -33,9 +32,6 @@ struct Highland {
   double operator()(generator_t &generator, const Acts::MaterialSlab &slab,
                     Particle &particle) const {
     // compute the planar scattering angle
-    std::cout << "hihihi " << particle.pdg() << " " << particle.mass() << " "
-              << particle.charge() / particle.absoluteMomentum() << " "
-              << particle.charge() << std::endl;
     const auto theta0 = Acts::computeMultipleScatteringTheta0(
         slab, particle.pdg(), particle.mass(),
         particle.charge() / particle.absoluteMomentum(), particle.charge());
