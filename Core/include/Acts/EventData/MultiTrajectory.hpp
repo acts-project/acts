@@ -470,7 +470,6 @@ class TrackStateProxy {
     pathLength() = other.pathLength();
     typeFlags() = other.typeFlags();
 
-    // can be nullptr, but we just take that
     if (other.hasReferenceSurface()) {
       setReferenceSurface(other.referenceSurface().getSharedPtr());
     }
