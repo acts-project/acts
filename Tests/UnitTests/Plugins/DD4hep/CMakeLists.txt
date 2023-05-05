@@ -9,7 +9,7 @@ target_include_directories(
 target_link_libraries(
     ActsTestsDD4hepFactories PUBLIC ActsPluginDD4hep DD4hep::DDCore)
 
-set(ENV{LD_LIBRARY_PATH} ${CMAKE_INSTALL_PREFIX}/bin:$ENV{LD_LIBRARY_PATH})
+set(ENV{LD_LIBRARY_PATH} ${CMAKE_INSTALL_PREFIX}/lib:$ENV{LD_LIBRARY_PATH})
 
 set(unittest_extra_libraries ActsTestsDD4hepFactories ActsPluginDD4hep)
 add_unittest(DD4hepDetectorElement DD4hepDetectorElementTests.cpp)
