@@ -136,8 +136,10 @@ std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
   timer.start();
 
   // At this point, buildEdgesBruteForce could be used instead
-  std::optional<torch::Tensor> edgeList = buildEdges(
-      *eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
+  std::optional<torch::Tensor> edgeList =
+      buildEdges(*eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal,
+                 m_cfg.knnVal)
+          .to(device);
   eOutput.reset();
 
   ACTS_VERBOSE("Shape of built edges: (" << edgeList->size(0) << ", "
