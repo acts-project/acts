@@ -89,7 +89,7 @@ struct TestTrackState {
 // @param[in] mask Specifies which components are used/filled
 // @param[out] ts TrackStateProxy which is filled
 // @param [in] measdim Dimension of the measurement
-template <typename track_state_t>
+template <typename trajectory_t, typename track_state_t>
 void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
                     track_state_t& ts) {
   // always set the reference surface
@@ -119,8 +119,7 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   ts.setUncalibratedSourceLink(Acts::SourceLink{pc.sourceLink});
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-    testSourceLinkCalibrator<VectorMultiTrajectory>(Acts::GeometryContext{},
-                                                    ts);
+    testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{}, ts);
   }
 }
 

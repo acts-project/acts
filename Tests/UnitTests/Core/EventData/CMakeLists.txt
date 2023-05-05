@@ -12,5 +12,6 @@ add_unittest(CorrectedTransformFreeToBound CorrectedTransformFreeToBoundTests.cp
 add_unittest(Track TrackTests.cpp)
 add_unittest(SourceLink SourceLinkTests.cpp)
 
+add_unittest(TrackStatePropMask TrackStatePropMaskTests.cpp)
 
 add_non_compile_test(MultiTrajectory TrackContainerComplianceTests.cpp)
