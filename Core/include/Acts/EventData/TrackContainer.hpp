@@ -14,6 +14,7 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -47,8 +48,8 @@ class TrackContainer {
                 "Either both track container and track state container need to "
                 "be readonly or both have to be readwrite");
 
-  using IndexType = MultiTrajectoryTraits::IndexType;
-  static constexpr IndexType kInvalid = MultiTrajectoryTraits::kInvalid;
+  using IndexType = TrackIndexType;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   using TrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, false>;
