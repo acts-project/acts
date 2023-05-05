@@ -106,9 +106,12 @@ void ActsExamples::ScalingCalibrator::calibrate(
          "Source link index is outside the container bounds");
 
   Acts::GeometryIdentifier mgid;
-  mgid.setVolume(sourceLink.geometryId().volume() * m_mask[2]);
-  mgid.setLayer(sourceLink.geometryId().layer() * m_mask[1]);
-  mgid.setSensitive(sourceLink.geometryId().sensitive() * m_mask[0]);
+  mgid.setVolume(sourceLink.geometryId().volume() *
+                 static_cast<Acts::GeometryIdentifier::Value>(m_mask[2]));
+  mgid.setLayer(sourceLink.geometryId().layer() *
+                static_cast<Acts::GeometryIdentifier::Value>(m_mask[1]));
+  mgid.setSensitive(sourceLink.geometryId().sensitive() *
+                    static_cast<Acts::GeometryIdentifier::Value>(m_mask[0]));
   const Cluster& cl = clusters->at(sourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 

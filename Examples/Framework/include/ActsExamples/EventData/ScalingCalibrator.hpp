@@ -19,10 +19,10 @@ namespace ActsExamples {
 class ScalingCalibrator : public MeasurementCalibrator {
  public:
   struct ConstantTuple {
-    double x_offset;
-    double x_scale;
-    double y_offset;
-    double y_scale;
+    double x_offset{0};
+    double x_scale{1};
+    double y_offset{0};
+    double y_scale{1};
   };
 
   struct MapTuple {
@@ -51,9 +51,9 @@ class ScalingCalibrator : public MeasurementCalibrator {
       const MeasurementContainer& measurements,
       const ClusterContainer* clusters, const Acts::GeometryContext& /*gctx*/,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-          trackState) const;
+          trackState) const override;
 
-  bool needsClusters() { return true; }
+  bool needsClusters() const override { return true; }
 
  private:
   std::map<Acts::GeometryIdentifier, MapTuple> m_calib_maps;
