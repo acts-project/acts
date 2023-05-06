@@ -83,18 +83,18 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   MeasurementData meas;
   CellData cell;
 
-  // Will be reused as measurment counter
+  // Will be reused as measurement counter
   meas.measurement_id = 0;
 
   ACTS_VERBOSE("Writing " << measurements.size()
                           << " measurements in this event.");
 
-  for (Index hitIdx = 0u; hitIdx < measurements.size(); ++hitIdx) {
-    const auto& measurement = measurements[hitIdx];
+  for (Index measIdx = 0u; measIdx < measurements.size(); ++measIdx) {
+    const auto& measurement = measurements[measIdx];
 
-    auto simHitIndices = makeRange(measurementSimHitsMap.equal_range(hitIdx));
+    auto simHitIndices = makeRange(measurementSimHitsMap.equal_range(measIdx));
     for (auto [_, simHitIdx] : simHitIndices) {
-      writerMeasurementSimHitMap.append({hitIdx, simHitIdx});
+      writerMeasurementSimHitMap.append({measIdx, simHitIdx});
     }
 
     std::visit(
@@ -131,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
 
           // CLUSTER / channel information ------------------------------
           if (not clusters.empty() && writerCells) {
-            auto cluster = clusters[hitIdx];
+            auto cluster = clusters[measIdx];
             cell.geometry_id = meas.geometry_id;
             cell.measurement_id = meas.measurement_id;
             for (auto& c : cluster.channels) {
