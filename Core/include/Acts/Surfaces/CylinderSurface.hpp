@@ -177,6 +177,7 @@ class CylinderSurface : public Surface {
   /// @param position The position to start from
   /// @param direction The direction at start
   /// @param bcheck the Boundary Check
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// If possible returns both solutions for the cylinder
   ///

@@ -156,6 +156,7 @@ class PlaneSurface : public Surface {
   /// @param direction The direction of the interesection attempt,
   /// (@note expected to be normalized)
   /// @param bcheck The boundary check directive
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
   ///

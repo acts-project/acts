@@ -243,6 +243,7 @@ class DiscSurface : public Surface {
   /// @param direction The global direction at the starting point
   ///        @note expected to be normalized (no checking)
   /// @param bcheck The boundary check prescription
+  /// @param tolerance the tolerance used for the intersection
   ///
   ///  <b>mathematical motivation:</b>
   ///
