@@ -23,14 +23,20 @@ namespace Experimental {
 
 class DetectorVolume;
 
-/// Definition of a portal replacement when building proto containers
+/// @brief Definition of a portal replacement when building proto containers
+///
 /// It consists of the new portal, the index, the direction, the parameters
 /// gathered from the sub volumes, the binning description
 using PortalReplacement =
     std::tuple<std::shared_ptr<Experimental::Portal>, unsigned int, Direction,
                std::vector<ActsScalar>, BinningValue>;
 
-/// @brief Create and attach the multi link updator
+namespace detail {
+namespace PortalHelper {
+
+/// @brief Create and attach the multi link updator, the portal will get
+/// a volume updator attached, that points to the different sub volumes
+/// depending on the global position and binning
 ///
 /// @param gctx the geometry context
 /// @param volumes are the volumes that are pointed to
@@ -41,7 +47,8 @@ void attachDetectorVolumeUpdators(
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     std::vector<PortalReplacement>& pReplacements);
 
-/// @brief  Method that strips out attached volumes from portals
+/// @brief Method that strips out attached volumes from portals and
+/// provides them back to the caller.
 ///
 /// @note it throws an exception if both sides are already taken
 ///
@@ -51,5 +58,7 @@ void attachDetectorVolumeUpdators(
 std::vector<std::shared_ptr<DetectorVolume>> attachedDetectorVolumes(
     Portal& portal) noexcept(false);
 
+}  // namespace PortalHelper
+}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts
