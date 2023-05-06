@@ -177,8 +177,7 @@ class PlaneSurface : public Surface {
   /// @return the SurfaceIntersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false,
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
