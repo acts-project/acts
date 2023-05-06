@@ -181,10 +181,10 @@ class CylinderSurface : public Surface {
   /// If possible returns both solutions for the cylinder
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceIntersection intersect(const GeometryContext& gctx,
-                                const Vector3& position,
-                                const Vector3& direction,
-                                const BoundaryCheck& bcheck) const final;
+  SurfaceIntersection intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
   ///
