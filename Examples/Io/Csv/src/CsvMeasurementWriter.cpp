@@ -133,7 +133,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
           if (not clusters.empty() && writerCells) {
             auto cluster = clusters[hitIdx];
             cell.geometry_id = meas.geometry_id;
-            cell.hit_id = meas.measurement_id;
+            cell.measurement_id = meas.measurement_id;
             for (auto& c : cluster.channels) {
               cell.channel0 = c.bin[0];
               cell.channel1 = c.bin[1];
