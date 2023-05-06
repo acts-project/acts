@@ -83,7 +83,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   MeasurementData meas;
   CellData cell;
 
-  // Will be reused as hit counter
+  // Will be reused as measurment counter
   meas.measurement_id = 0;
 
   ACTS_VERBOSE("Writing " << measurements.size()
