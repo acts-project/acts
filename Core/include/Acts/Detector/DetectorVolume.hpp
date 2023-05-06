@@ -474,6 +474,8 @@ struct IndexedSurfacesExtractor {
   /// @param nState is the current navigation state
   /// @param indices are access indices into the surfaces store
   ///
+  /// @note no out of boudns checking is done
+  ///
   /// @return a vector of raw Surface pointers
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
