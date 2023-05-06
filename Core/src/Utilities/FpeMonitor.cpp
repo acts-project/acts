@@ -93,16 +93,26 @@ std::vector<int>& FpeMonitor::stack() {
 }
 
 void FpeMonitor::push() {
+#if defined(__APPLE__)
+  std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
+  (void)excepts;
+#else
   stack().push_back(fegetexcept());
   disable(FE_ALL_EXCEPT);
+#endif
 }
 
 void FpeMonitor::pop() {
+#if defined(__APPLE__)
+  std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
+  (void)excepts;
+#else
   disable(FE_ALL_EXCEPT);
   if (!stack().empty()) {
     enable(stack().back());
     stack().pop_back();
   }
+#endif
 }
 
 }  // namespace Acts
