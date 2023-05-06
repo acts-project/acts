@@ -10,7 +10,7 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
-#include "Acts/Detector/PortalHelper.hpp"
+#include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -176,6 +176,53 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
 
   // We should have 12 candidates, 6 inner, 6 outer portals
   BOOST_CHECK(nState.surfaceCandidates.size() == 12u);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
+  auto portalGenerator = defaultPortalGenerator();
+
+  std::vector<Acts::ActsScalar> radii = {100, 102, 104, 106, 108, 110};
+  auto cylinderVoumeBounds =
+      std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
+  std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
+  for (const auto& r : radii) {
+    surfaces.push_back(Acts::Surface::makeShared<Acts::CylinderSurface>(
+        Acts::Transform3::Identity(),
+        std::make_shared<Acts::CylinderBounds>(r, 190)));
+  }
+
+  // A full cylinder
+  auto cylinderVolume = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "CylinderVolume", Acts::Transform3::Identity(),
+      std::move(cylinderVoumeBounds), surfaces, {}, tryNoVolumes(),
+      tryAllPortalsAndSurfaces());
+
+  // The navigation state
+  NavigationState nState;
+  AllPortalsExtractor allPortals;
+  AllSurfacesExtractor allSurfaces;
+  IndexedSurfacesExtractor indexedSurfaces;
+
+  // First check exception behaviour
+  BOOST_CHECK_THROW(allPortals.extract(tContext, nState), std::runtime_error);
+  BOOST_CHECK_THROW(allSurfaces.extract(tContext, nState), std::runtime_error);
+  BOOST_CHECK_THROW(indexedSurfaces.extract(tContext, nState, {0u, 1u}),
+                    std::runtime_error);
+
+  // A volume needs to be set
+  nState.currentVolume = cylinderVolume.get();
+
+  // This extracts all portals as candidates
+  auto eportals = allPortals.extract(tContext, nState);
+  BOOST_CHECK(eportals.size() == 4u);
+
+  auto esurfaces = allSurfaces.extract(tContext, nState);
+  BOOST_CHECK(esurfaces.size() == 6u);
+
+  esurfaces = indexedSurfaces.extract(tContext, nState, {2u, 4u});
+  BOOST_CHECK(esurfaces.size() == 2u);
+  BOOST_CHECK(esurfaces[0u] == surfaces[2u].get());
+  BOOST_CHECK(esurfaces[1u] == surfaces[4u].get());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

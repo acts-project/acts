@@ -9,7 +9,6 @@
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Detector/PortalHelper.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
