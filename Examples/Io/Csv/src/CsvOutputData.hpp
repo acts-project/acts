@@ -139,9 +139,9 @@ struct MeasurementData {
 struct CellData {
   /// Hit surface identifier.
   uint64_t geometry_id = 0u;
-  /// Event-unique measurement identifier. As defined for the measurement above and
-  /// used to link back to it; same value can appear multiple times for clusters
-  /// with more than one active cell.
+  /// Event-unique measurement identifier. As defined for the measurement above
+  /// and used to link back to it; same value can appear multiple times for
+  /// clusters with more than one active cell.
   uint64_t measurement_id = 0;
   /// Digital cell address/ channel
   int32_t channel0 = 0, channel1 = 0;
@@ -150,8 +150,8 @@ struct CellData {
   /// (Digital) measured cell value, e.g. amplitude or time-over-threshold.
   float value = 0;
 
-  DFE_NAMEDTUPLE(CellData, geometry_id, measurement_id, channel0, channel1, timestamp,
-                 value);
+  DFE_NAMEDTUPLE(CellData, geometry_id, measurement_id, channel0, channel1,
+                 timestamp, value);
 };
 
 struct SurfaceData {
