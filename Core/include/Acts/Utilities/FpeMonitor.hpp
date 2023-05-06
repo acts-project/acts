@@ -10,6 +10,9 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <stack>
+#include <vector>
+
 namespace Acts {
 
 class FpeMonitor {
@@ -27,7 +30,9 @@ class FpeMonitor {
  private:
   int m_excepts{0};
 
-  static std::vector<int>& stack();
+  using Stack = std::stack<int, std::vector<int>>;
+
+  static Stack& stack();
 };
 
 }  // namespace Acts

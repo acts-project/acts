@@ -87,8 +87,8 @@ void FpeMonitor::disable(int excepts) {
 #endif
 }
 
-std::vector<int>& FpeMonitor::stack() {
-  static thread_local std::vector<int> stack;
+FpeMonitor::Stack& FpeMonitor::stack() {
+  static thread_local Stack stack;
   return stack;
 }
 
@@ -96,7 +96,7 @@ void FpeMonitor::push() {
 #if defined(__APPLE__)
   std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
 #else
-  stack().push_back(fegetexcept());
+  stack().push(fegetexcept());
   disable(FE_ALL_EXCEPT);
 #endif
 }
@@ -107,8 +107,8 @@ void FpeMonitor::pop() {
 #else
   disable(FE_ALL_EXCEPT);
   if (!stack().empty()) {
-    enable(stack().back());
-    stack().pop_back();
+    enable(stack().top());
+    stack().pop();
   }
 #endif
 }
