@@ -239,7 +239,9 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
                           py::object /*exc_value*/,
                           py::object /*traceback*/) { fm.mon.reset(); })
       .def_static("enable", &Acts::FpeMonitor::enable)
-      .def_static("disable", &Acts::FpeMonitor::disable);
+      .def_static("disable", &Acts::FpeMonitor::disable)
+      .def_static("push", &Acts::FpeMonitor::push)
+      .def_static("pop", &Acts::FpeMonitor::pop);
 
   using ActsExamples::RandomNumbers;
   auto randomNumbers =
