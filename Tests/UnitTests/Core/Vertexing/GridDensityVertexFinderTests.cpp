@@ -114,6 +114,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
+    // project the position on the surface
+    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
+    pos = intersection.intersection.position;
+
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
                            makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
@@ -219,10 +224,16 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
+
+    // project the position on the surface
+    Vector3 pos = {x, y, z};
+    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
+    pos = intersection.intersection.position;
+
     trackVec.push_back(BoundTrackParameters::create(
-                           perigeeSurface, geoContext, Vector4(x, y, z, 0),
-                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
-                           covMat)
+                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           direction, pt, charge, covMat)
                            .value());
   }
 
@@ -373,10 +384,16 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
+
+    // project the position on the surface
+    Vector3 pos = {x, y, z};
+    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
+    pos = intersection.intersection.position;
+
     trackVec.push_back(BoundTrackParameters::create(
-                           perigeeSurface, geoContext, Vector4(x, y, z, 0),
-                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
-                           covMat)
+                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           direction, pt, charge, covMat)
                            .value());
   }
 
