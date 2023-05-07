@@ -239,8 +239,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge,
-                           covMat)
+                           direction, pt, charge, covMat)
                            .value());
   }
 
