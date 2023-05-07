@@ -75,8 +75,7 @@ struct GsfActor {
     std::size_t maxComponents = 16;
 
     /// Input measurements
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
     /// instance TODO if we somehow could initialize a reference here...
@@ -219,12 +218,12 @@ struct GsfActor {
 
     // Check what we have on this surface
     const auto found_source_link =
-        m_cfg.inputMeasurements.find(surface.geometryId());
+        m_cfg.inputMeasurements->find(surface.geometryId());
     const bool haveMaterial =
         navigator.currentSurface(state.navigation)->surfaceMaterial() &&
         !m_cfg.disableAllMaterialHandling;
     const bool haveMeasurement =
-        found_source_link != m_cfg.inputMeasurements.end();
+        found_source_link != m_cfg.inputMeasurements->end();
 
     ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
                                 << ", haveMeasurement: " << haveMeasurement);
