@@ -54,7 +54,8 @@ struct TrackFinderFunctionImpl
 std::shared_ptr<ActsExamples::TrackFindingAlgorithm::TrackFinderFunction>
 ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    const Acts::Logger& logger) {
   Stepper stepper(std::move(magneticField));
   Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
@@ -62,7 +63,7 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
   cfg.resolveSensitive = true;
   Navigator navigator(cfg);
   Propagator propagator(std::move(stepper), std::move(navigator));
-  CKF trackFinder(std::move(propagator));
+  CKF trackFinder(std::move(propagator), logger.cloneWithSuffix("CKF"));
 
   // build the track finder functions. owns the track finder object.
   return std::make_shared<TrackFinderFunctionImpl>(std::move(trackFinder));
