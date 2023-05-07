@@ -157,9 +157,7 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    ParticleSmearingSigmas(
-        pRel=0.01
-    ),  # only used by SeedingAlgorithm.TruthSmeared
+    ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None)),
     SeedFinderConfigArg(
         r=(33 * u.mm, 200 * u.mm),
