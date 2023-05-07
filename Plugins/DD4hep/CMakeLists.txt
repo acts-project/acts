@@ -6,6 +6,7 @@ add_library(
   src/ConvertDD4hepMaterial.cpp
   src/DD4hepDetectorElement.cpp
   src/DD4hepLayerBuilder.cpp
+  src/DD4hepLayerStructure.cpp
   src/DD4hepVolumeBuilder.cpp)
 target_include_directories(
   ActsPluginDD4hep
