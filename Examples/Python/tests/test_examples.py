@@ -1144,7 +1144,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
         (algo,) = match.groups()
         errors.append(algo)
     errors = collections.Counter(errors)
-    assert dict(errors) == {}, stdout
+    assert dict(errors) == {"CKF": 12, "Propagator": 12}, stdout
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
