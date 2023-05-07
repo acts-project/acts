@@ -79,9 +79,7 @@ if not ttbar:
         ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         ),
         multiplicity=50,
         rnd=rnd,
@@ -92,9 +90,7 @@ else:
         hardProcess=["Top:qqbar2ttbar=on"],
         npileup=50,
         vtxGen=acts.examples.GaussianVertexGenerator(
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
             mean=acts.Vector4(0, 0, 0, 0),
         ),
         rnd=rnd,
@@ -186,9 +182,7 @@ if ambiguity_MLSolver:
     addAmbiguityResolutionML(
         s,
         AmbiguityResolutionMLConfig(nMeasurementsMin=7),
-        CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar else 0.0, nMeasurementsMin=7
-        ),
+        CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar else 0.0, nMeasurementsMin=7),
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
         onnxModelFile=os.path.dirname(__file__)

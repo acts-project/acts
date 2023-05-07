@@ -201,13 +201,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       VwgtMat += vertexingOptions.vertexConstraint.fullCovariance().inverse();
     }
 
-    Acts::FpeMonitor::push();
     // cov(deltaV) = VwgtMat^-1
     SymMatrix4 covDeltaVmat = VwgtMat.inverse();
-    if (!covDeltaVmat.array().isFinite().all()) {
-      return VertexingError::NumericFailure;
-    }
-    Acts::FpeMonitor::pop();
     // deltaV = cov_(deltaV) * Vdel;
     Vector4 deltaV = covDeltaVmat * Vdel;
     //--------------------------------------------------------------------------------------
