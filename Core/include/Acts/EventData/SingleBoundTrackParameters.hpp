@@ -182,7 +182,7 @@ class SingleBoundTrackParameters {
   Vector4 fourPosition(const GeometryContext& geoCtx) const {
     Vector4 pos4;
     pos4.segment<3>(ePos0) =
-        m_surface->localToGlobal(geoCtx, localPosition(), momentum());
+        m_surface->localToGlobal(geoCtx, localPosition(), unitDirection());
     pos4[eTime] = m_params[eBoundTime];
     return pos4;
   }
@@ -196,7 +196,7 @@ class SingleBoundTrackParameters {
   /// select the appropriate transformation and might be a computationally
   /// expensive operation.
   Vector3 position(const GeometryContext& geoCtx) const {
-    return m_surface->localToGlobal(geoCtx, localPosition(), momentum());
+    return m_surface->localToGlobal(geoCtx, localPosition(), unitDirection());
   }
   /// Time coordinate.
   Scalar time() const { return m_params[eBoundTime]; }
