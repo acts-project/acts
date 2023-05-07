@@ -9,9 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/GridAxisGenerators.hpp"
-#include "Acts/Detector/IndexedGridFiller.hpp"
-#include "Acts/Detector/IndexedSurfacesGenerator.hpp"
+#include "Acts/Detector/detail/GridAxisGenerators.hpp"
+#include "Acts/Detector/detail/IndexedGridFiller.hpp"
+#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -22,6 +22,7 @@
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::Experimental;
+using namespace Acts::Experimental::detail;
 
 GeometryContext tContext;
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
