@@ -21,13 +21,8 @@ class FpeMonitor {
   static void enable(int excepts);
   static void disable(int excepts);
 
-  static void push();
-  static void pop();
-
  private:
-  int m_excepts{0};
-
-  static std::vector<int>& stack();
+  int m_excepts;
 };
 
 }  // namespace Acts

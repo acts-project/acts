@@ -25,7 +25,6 @@ from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
     EtaConfig,
-    PhiConfig,
     ParticleConfig,
     addFatras,
     addDigitization,
@@ -351,39 +350,37 @@ def run_vertexing(fitter, mu, events):
         )
 
 
-with acts.FpeMonitor():
+### Truth tracking with Kalman Filter
 
-    ### Truth tracking with Kalman Filter
+truth_tracking_kalman()
 
-    truth_tracking_kalman()
+### GSF
 
-    ### GSF
+truth_tracking_gsf()
 
-    truth_tracking_gsf()
+### CKF track finding variations
 
-    ### CKF track finding variations
+for truthSmearedSeeded, truthEstimatedSeeded, label in [
+    (True, False, "truth_smeared"),  # if first is true, second is ignored
+    (False, True, "truth_estimated"),
+    (False, False, "seeded"),
+    (False, False, "orthogonal"),
+]:
+    run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
 
-    for truthSmearedSeeded, truthEstimatedSeeded, label in [
-        (True, False, "truth_smeared"),  # if first is true, second is ignored
-        (False, True, "truth_estimated"),
-        (False, False, "seeded"),
-        (False, False, "orthogonal"),
-    ]:
-        run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
+### VERTEX MU SCAN
 
-    ### VERTEX MU SCAN
+for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
+    for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
+        start = datetime.datetime.now()
 
-    for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
-        for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
-            start = datetime.datetime.now()
+        events = 5
+        run_vertexing(fitter, mu, events)
 
-            events = 5
-            run_vertexing(fitter, mu, events)
+        delta = datetime.datetime.now() - start
 
-            delta = datetime.datetime.now() - start
+        duration = delta.total_seconds() / events
 
-            duration = delta.total_seconds() / events
-
-            (
-                outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
-            ).write_text(str(duration))
+        (
+            outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
+        ).write_text(str(duration))
