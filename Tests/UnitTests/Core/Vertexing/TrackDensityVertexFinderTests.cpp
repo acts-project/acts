@@ -221,21 +221,23 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
-    double x = xdist(gen);
-    double y = ydist(gen);
-    // Produce most of the tracks at near z1 position,
-    // some near z2. Highest track density then expected at z1
-    double z = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
+    // The position of the particle
+    Vector3 pos(xdist(gen), ydist(gen), 0);
+
+    // Create momentum and charge of track
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 pos = {x, y, z};
     Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
+
+    // Produce most of the tracks at near z1 position,
+    // some near z2. Highest track density then expected at z1
+    pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
