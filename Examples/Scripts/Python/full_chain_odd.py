@@ -16,6 +16,8 @@ from acts.examples.reconstruction import (
     TruthSeedRanges,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
+    SeedingAlgorithm,
+    ParticleSmearingSigmas,
     addCKFTracks,
     CKFPerformanceConfig,
     TrackSelectorRanges,
@@ -155,7 +157,10 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(500 * u.MeV, None), eta=(-3.0, 3.0), nHits=(9, None)),
+    ParticleSmearingSigmas(
+        pRel=0.01
+    ),  # only used by SeedingAlgorithm.TruthSmeared
+    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None)),
     SeedFinderConfigArg(
         r=(33 * u.mm, 200 * u.mm),
         deltaR=(1 * u.mm, 60 * u.mm),
@@ -164,10 +169,11 @@ addSeeding(
         maxSeedsPerSpM=1,
         sigmaScattering=5,
         radLengthPerSeed=0.1,
-        minPt=500 * u.MeV,
+        minPt=1.0 * u.GeV,
         impactMax=3 * u.mm,
     ),
     SeedFinderOptionsArg(bFieldInZ=2 * u.T),
+    seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
     initialVarInflation=[100, 100, 100, 100, 100, 100],
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
