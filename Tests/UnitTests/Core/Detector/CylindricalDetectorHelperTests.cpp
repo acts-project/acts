@@ -33,8 +33,9 @@
 
 using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;
+using namespace Acts::Experimental::detail::CylindricalDetectorHelper;
 
-Acts::Logging::Level logLevel = Acts::Logging::INFO;
+Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 
 Acts::GeometryContext tContext;
 std::vector<std::shared_ptr<DetectorVolume>> eVolumes = {};
@@ -62,9 +63,8 @@ BOOST_AUTO_TEST_CASE(ConnectVolumeExceptions) {
   // Invalid arguments: nullptr
   std::vector<std::shared_ptr<DetectorVolume>> volumesWithNullptr = {
       volume0, nullptr, volume1};
-  BOOST_CHECK_THROW(
-      connectDetectorVolumesInR(tContext, volumesWithNullptr, {}, logLevel),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(connectInR(tContext, volumesWithNullptr, {}, logLevel),
+                    std::invalid_argument);
 
   ACTS_INFO("*** Test: non-cylinder in the list of volumes");
 
@@ -76,9 +76,8 @@ BOOST_AUTO_TEST_CASE(ConnectVolumeExceptions) {
   // Invalid arguments: cube
   std::vector<std::shared_ptr<DetectorVolume>> volumesWithCube = {
       volume0, volume1, cube};
-  BOOST_CHECK_THROW(
-      connectDetectorVolumesInR(tContext, volumesWithCube, {}, logLevel),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(connectInR(tContext, volumesWithCube, {}, logLevel),
+                    std::invalid_argument);
 
   ACTS_INFO("*** Test: non-aligned volume in the list of volumes");
   Acts::Transform3 rotated = Acts::Transform3::Identity();
@@ -93,16 +92,15 @@ BOOST_AUTO_TEST_CASE(ConnectVolumeExceptions) {
   // Invalid arguments: non-aligned
   std::vector<std::shared_ptr<DetectorVolume>> volumesWithNonaligned = {
       volume0, volume1, volume2};
-  BOOST_CHECK_THROW(
-      connectDetectorVolumesInR(tContext, volumesWithNonaligned, {}, logLevel),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(connectInR(tContext, volumesWithNonaligned, {}, logLevel),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(ConnectInR) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Connect: R", logLevel));
   ACTS_INFO("*** Test: connect DetectorVolumes in R, create proto container");
-  // Test with different opening angles: @TODO to be added, not used yet
-  std::vector<Acts::ActsScalar> testOpenings = {M_PI};
+  // Test with different opening angles
+  std::vector<Acts::ActsScalar> testOpenings = {M_PI, 0.5 * M_PI};
 
   std::vector<Acts::ActsScalar> radii = {0., 10., 100., 200.};
   Acts::ActsScalar halfZ = 100.;
@@ -123,8 +121,7 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
       }
     }
 
-    auto protoContainer =
-        connectDetectorVolumesInR(tContext, rVolumes, {}, logLevel);
+    auto protoContainer = connectInR(tContext, rVolumes, {}, logLevel);
     // Check the portal setup
     BOOST_CHECK(rVolumes[0u]->portalPtrs()[2u] ==
                 rVolumes[1u]->portalPtrs()[3u]);
@@ -159,7 +156,7 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
 
   // Invalid arguments
   ACTS_INFO("*** Test: faulty empty vector");
-  BOOST_CHECK_THROW(connectDetectorVolumesInR(tContext, eVolumes, {}, logLevel),
+  BOOST_CHECK_THROW(connectInR(tContext, eVolumes, {}, logLevel),
                     std::invalid_argument);
 
   // Faulty setups, not matchint in R
@@ -178,9 +175,8 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
 
   std::vector<std::shared_ptr<DetectorVolume>> volumesNotMatching = {volume00,
                                                                      volume01};
-  BOOST_CHECK_THROW(
-      connectDetectorVolumesInR(tContext, volumesNotMatching, {}, logLevel),
-      std::runtime_error);
+  BOOST_CHECK_THROW(connectInR(tContext, volumesNotMatching, {}, logLevel),
+                    std::runtime_error);
 
   ACTS_INFO("*** Test: volume bounds are not aligned");
   Acts::Transform3 shifted = Acts::Transform3::Identity();
@@ -198,9 +194,8 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
 
   std::vector<std::shared_ptr<DetectorVolume>> volumesNotAligned = {volume10,
                                                                     volume11};
-  BOOST_CHECK_THROW(
-      connectDetectorVolumesInR(tContext, volumesNotAligned, {}, logLevel),
-      std::runtime_error);
+  BOOST_CHECK_THROW(connectInR(tContext, volumesNotAligned, {}, logLevel),
+                    std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ConnectInZ) {
@@ -241,8 +236,7 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
         }
       }
       // Now call the connector
-      auto protoContainer =
-          connectDetectorVolumesInZ(tContext, zVolumes, {}, logLevel);
+      auto protoContainer = connectInZ(tContext, zVolumes, {}, logLevel);
 
       // Check the portal setup.
       // Glued, remainders are outside skin
@@ -277,7 +271,7 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
   }
 
   // Invalid arguments
-  BOOST_CHECK_THROW(connectDetectorVolumesInZ(tContext, eVolumes, {}, logLevel),
+  BOOST_CHECK_THROW(connectInZ(tContext, eVolumes, {}, logLevel),
                     std::invalid_argument);
 
   // Volumes have different radii - other bounds will be the same
@@ -295,8 +289,7 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
 
   std::vector<std::shared_ptr<DetectorVolume>> volumesNonalingedBounds = {
       volume00, volume01};
-  BOOST_CHECK_THROW(connectDetectorVolumesInZ(tContext, volumesNonalingedBounds,
-                                              {}, logLevel),
+  BOOST_CHECK_THROW(connectInZ(tContext, volumesNonalingedBounds, {}, logLevel),
                     std::runtime_error);
 
   // Volumes are not attached
@@ -314,9 +307,8 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
 
   std::vector<std::shared_ptr<DetectorVolume>> volumesNotAttached = {volume10,
                                                                      volume11};
-  BOOST_CHECK_THROW(
-      connectDetectorVolumesInZ(tContext, volumesNotAttached, {}, logLevel),
-      std::runtime_error);
+  BOOST_CHECK_THROW(connectInZ(tContext, volumesNotAttached, {}, logLevel),
+                    std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ConnectInPhi) {
@@ -342,8 +334,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
           std::move(cBounds), tryAllPortals()));
     }
 
-    auto protoContainer =
-        connectDetectorVolumesInPhi(tContext, phiVolumes, {}, logLevel);
+    auto protoContainer = connectInPhi(tContext, phiVolumes, {}, logLevel);
 
     // All phiVolumes share : inner tube, outer cover, negative & positive disc
     std::vector<unsigned int> checkShared = {0u, 1u, 2u, 3u};
@@ -362,9 +353,8 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
   }
 
   // Invalid arguments
-  BOOST_CHECK_THROW(
-      connectDetectorVolumesInPhi(tContext, eVolumes, {}, logLevel),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(connectInPhi(tContext, eVolumes, {}, logLevel),
+                    std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(WrapVolumeinRZ) {
@@ -410,12 +400,12 @@ BOOST_AUTO_TEST_CASE(WrapVolumeinRZ) {
           portalGenerator, tContext, "WrappingCylinder" + radStr + trfStr, tf,
           std::move(wBounds), tryAllPortals()));
 
-      wrapDetectorVolumesInZR(tContext, volumes, logLevel);
+      wrapInZR(tContext, volumes, logLevel);
     }
   }
 
   // Invalid arguments
-  BOOST_CHECK_THROW(wrapDetectorVolumesInZR(tContext, eVolumes, logLevel),
+  BOOST_CHECK_THROW(wrapInZR(tContext, eVolumes, logLevel),
                     std::invalid_argument);
 }
 
@@ -462,8 +452,7 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
       }
     }
 
-    auto protoContainerInR =
-        connectDetectorVolumesInR(tContext, rVolumes, {}, logLevel);
+    auto protoContainerInR = connectInR(tContext, rVolumes, {}, logLevel);
 
     std::vector<Acts::ActsScalar> zValues = {-200., -120, 10., 100., 200.};
     std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {};
@@ -484,9 +473,8 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
       }
     }
     // Now call the connector
-    auto protoContainerInZ =
-        connectDetectorVolumesInZ(tContext, zVolumes, {}, logLevel);
-    auto centralContainer = connectContainersInR(
+    auto protoContainerInZ = connectInZ(tContext, zVolumes, {}, logLevel);
+    auto centralContainer = connectInR(
         tContext, {ipContainer, protoContainerInR, protoContainerInZ}, {},
         logLevel);
 
@@ -524,10 +512,9 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
 
     std::vector<std::shared_ptr<DetectorVolume>> pecVolumes = {pecInner,
                                                                pecOuter};
-    auto pecContainer =
-        connectDetectorVolumesInR(tContext, pecVolumes, {}, logLevel);
+    auto pecContainer = connectInR(tContext, pecVolumes, {}, logLevel);
 
-    auto overallContainer = connectContainersInZ(
+    auto overallContainer = connectInZ(
         tContext, {necContainer, centralContainer, pecContainer}, {}, logLevel);
 
     //  Add them togeter
@@ -562,7 +549,6 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
   // Set up all the different tests
   for (auto [ir, r] : Acts::enumerate(radii)) {
     std::string radStr = "_radii_" + std::to_string(ir);
-
     ACTS_INFO("    -> test series innermost radius setup " << radii[ir][0u]);
 
     // Let's create the inner container first
@@ -592,8 +578,7 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
         portalGenerator, tContext, "InnerPec" + radStr, ptf,
         std::move(iPecBounds), tryAllPortals()));
 
-    auto innerContainer =
-        connectDetectorVolumesInZ(tContext, iVolumes, {}, logLevel);
+    auto innerContainer = connectInZ(tContext, iVolumes, {}, logLevel);
 
     // Create the wrapping volume
     auto wBounds = std::make_unique<Acts::CutoutCylinderVolumeBounds>(
@@ -602,8 +587,16 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
         portalGenerator, tContext, "WrappingVolume" + radStr, tf,
         std::move(wBounds), tryAllPortals());
 
-    auto detector =
-        wrapContainerInZR(tContext, innerContainer, *wVolume, logLevel);
+    std::vector<DetectorComponent::PortalContainer> containers;
+    containers.push_back(innerContainer);
+
+    DetectorComponent::PortalContainer outerContainer;
+    for (auto [ip, p] : Acts::enumerate(wVolume->portalPtrs())) {
+      outerContainer[ip] = p;
+    }
+    containers.push_back(outerContainer);
+
+    auto detector = wrapInZR(tContext, containers, logLevel);
   }
 }
 
