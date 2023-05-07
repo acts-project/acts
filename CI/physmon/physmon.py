@@ -381,6 +381,6 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
 
         duration = delta.total_seconds() / events
 
-        (
-            outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
-        ).write_text(str(duration))
+        (outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt").write_text(
+            str(duration)
+        )
