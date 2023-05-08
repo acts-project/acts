@@ -171,7 +171,7 @@ addSeeding(
         impactMax=3 * u.mm,
     ),
     SeedFinderOptionsArg(bFieldInZ=2 * u.T),
-    seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+    seedingAlgorithm=SeedingAlgorithm.Default,
     initialVarInflation=[100, 100, 100, 100, 100, 100],
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
