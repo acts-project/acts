@@ -8,7 +8,6 @@
 
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
