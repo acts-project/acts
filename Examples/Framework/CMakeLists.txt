@@ -1,7 +1,7 @@
 include(ActsTargetLinkLibrariesSystem)
 
-add_library(
-  ActsExamplesFramework SHARED
+set(ActsExamplesFramework_SOURCES)
+list(APPEND ActsExamplesFramework_SOURCES
   src/EventData/MeasurementCalibration.cpp
   src/EventData/ScalingCalibrator.cpp
   src/Framework/IAlgorithm.cpp
@@ -19,17 +19,37 @@ add_library(
   src/Validation/ResPlotTool.cpp
   src/Validation/TrackClassification.cpp
   src/Validation/TrackSummaryPlotTool.cpp
-)
+  )
+
+if (ACTS_BUILD_PLUGIN_ONNX)
+  list(APPEND ActsExamplesFramework_SOURCES
+    src/EventData/NeuralCalibrator.cpp)
+endif()
+
+add_library(
+  ActsExamplesFramework SHARED
+  ${ActsExamplesFramework_SOURCES})
+
 target_include_directories(
   ActsExamplesFramework
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras ActsPluginFpeMonitoring Boost::boost ROOT::Core ROOT::Hist
   PRIVATE std::filesystem)
+
+if (ACTS_BUILD_PLUGIN_ONNX)
+target_link_libraries(
+  ActsExamplesFramework
+  PUBLIC ActsPluginOnnx)
+endif()
+
+
 acts_target_link_libraries_system(
   ActsExamplesFramework
   PRIVATE dfelibs)
+
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
