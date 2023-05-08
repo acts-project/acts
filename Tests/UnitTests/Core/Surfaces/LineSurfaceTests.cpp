@@ -19,6 +19,7 @@
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <limits>
+#include <tuple>
 
 namespace utf = boost::unit_test;
 
@@ -195,6 +196,41 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << 1 / std::sqrt(2), 1 / std::sqrt(2), 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
+  LineSurfaceStub surface(Transform3::Identity());
+
+  auto roundTrip = [&surface](const Vector3& pos, const Vector3& dir) {
+    auto intersection = surface.intersect(tgContext, pos, dir);
+    std::cout << "global before intersection " << pos.transpose() << std::endl;
+    Vector3 global = intersection.intersection.position;
+    std::cout << "global after intersection " << global.transpose()
+              << std::endl;
+    Vector2 local = *surface.globalToLocal(tgContext, global, dir);
+    std::cout << "local after intersection " << local.transpose() << std::endl;
+    Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
+    std::cout << "global localToGlobal " << global2.transpose() << std::endl;
+    return std::make_tuple(global, local, global2);
+  };
+
+  {
+    Vector3 pos = {-0.02801, 0.00475611, 0.285106};
+    Vector3 dir = Vector3(-0.03951, -0.221457, -0.564298).normalized();
+
+    auto [global, local, global2] = roundTrip(pos, dir);
+
+    CHECK_CLOSE_ABS(global, global2, 1e-10);
+  }
+
+  {
+    Vector3 pos = {-64.2892, 65.2697, -0.839014};
+    Vector3 dir = Vector3(-0.236602, -0.157616, 0.956786).normalized();
+
+    auto [global, local, global2] = roundTrip(pos, dir);
+
+    CHECK_CLOSE_ABS(global, global2, 1e-10);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
