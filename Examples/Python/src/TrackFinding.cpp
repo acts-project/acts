@@ -98,7 +98,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
-    ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
@@ -111,7 +110,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
-    ACTS_PYTHON_MEMBER(arithmeticAverageCotTheta);
     ACTS_PYTHON_MEMBER(useDetailedDoubleMeasurementInfo);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
@@ -153,7 +151,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rMin);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(deltaZMax);
-    ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(deltaPhiMax);
     ACTS_PYTHON_MEMBER(highland);

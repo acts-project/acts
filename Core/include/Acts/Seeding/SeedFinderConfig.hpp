@@ -64,15 +64,8 @@ struct SeedFinderConfig {
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
-  // use arithmetic average in the calculation of the squared error on the
-  // difference in tan(theta)
-  bool arithmeticAverageCotTheta = false;
-
   // non equidistant binning in z
   std::vector<float> zBinEdges;
-
-  // skip top SPs based on cotTheta sorting when producing triplets
-  bool skipPreviousTopSP = false;
 
   // seed confirmation
   bool seedConfirmation = false;
