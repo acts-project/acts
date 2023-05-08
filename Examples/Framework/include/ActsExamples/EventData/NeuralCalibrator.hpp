@@ -8,23 +8,19 @@
 
 #pragma once
 
-#include <ActsExamples/EventData/MeasurementCalibration.hpp>
 #include <Acts/Plugins/Onnx/OnnxRuntimeBase.hpp>
+#include <ActsExamples/EventData/MeasurementCalibration.hpp>
 
 #include <filesystem>
 
 namespace ActsExamples {
 
-class MDN_Model : public Acts::OnnxRuntimeBase {
-public:
-  MDN_Model(const std::filesystem::path& path);
-  std::tuple<float, float, float, float> evaluate(
-      const std::vector<float>& input) const;
-};
-
 class NeuralCalibrator : public MeasurementCalibrator {
  public:
-  NeuralCalibrator(const std::filesystem::path& path);
+  size_t n_inputs = 55;  // TODO: set this dynamically
+
+  NeuralCalibrator(const std::filesystem::path& modelPath,
+                   const std::filesystem::path& normalizationPath);
 
   void calibrate(
       const MeasurementContainer& measurements,
@@ -35,7 +31,13 @@ class NeuralCalibrator : public MeasurementCalibrator {
   bool needsClusters() const override { return true; }
 
  private:
-  MDN_Model m_mdn;
+  Ort::Env m_env;
+  Acts::OnnxRuntimeBase m_model;
+  // NN input normalization constants
+  std::vector<float> m_offsets;
+  std::vector<float> m_scales;
+
+  void readNormalization(const std::filesystem::path& modelPath);
 };
 
 }  // namespace ActsExamples

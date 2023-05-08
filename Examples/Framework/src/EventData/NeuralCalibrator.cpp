@@ -8,6 +8,8 @@
 
 #include <ActsExamples/EventData/NeuralCalibrator.hpp>
 
+#include <TFile.h>
+
 namespace detail {
 
 // TODO make size configurable
@@ -42,18 +44,35 @@ std::array<float, 7 * 7> chargeMatrix(const ActsExamples::Cluster& cl) {
 
 }  // namespace detail
 
-ActsExamples::MDN_Model::MDN_Model(const std::filesystem::path& /*path*/) {
-  // TODO
-}
-
-std::tuple<float, float, float, float> ActsExamples::MDN_Model::evaluate(
-  const std::vector<float>& /*input*/) const {
-  return std::make_tuple(0, 0, 1, 1);  // TODO
-}
-
 ActsExamples::NeuralCalibrator::NeuralCalibrator(
-    const std::filesystem::path& path)
-    : m_mdn{path} {}
+    const std::filesystem::path& modelPath,
+    const std::filesystem::path& normalizationPath)
+    : m_env(ORT_LOGGING_LEVEL_WARNING, "NeuralCalibrator"),
+      m_model(m_env, modelPath.c_str()) {
+  readNormalization(normalizationPath);
+}
+
+void ActsExamples::NeuralCalibrator::readNormalization(
+    const std::filesystem::path& normalizationPath) {
+  TFile ifile(normalizationPath.c_str(), "READ");
+  if (ifile.IsZombie()) {
+    throw std::runtime_error("Unable to read input normalization from " +
+                             normalizationPath.string());
+  }
+
+  std::vector<float>* offsets = ifile.Get<std::vector<float>>("offsets");
+  if (offsets == nullptr || offsets->size() != n_inputs) {
+    throw std::runtime_error("Unable to normalization constants (offsets)");
+  }
+
+  std::vector<float>* scales = ifile.Get<std::vector<float>>("scales");
+  if (scales == nullptr || scales->size() != n_inputs) {
+    throw std::runtime_error("Unable to normalization constants (scales)");
+  }
+
+  m_offsets = *offsets;
+  m_scales = *scales;
+}
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
@@ -65,7 +84,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
   assert((sourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
-  std::array<float, 7 * 7> matrix = ::detail::chargeMatrix((*clusters)[sourceLink.index()]);
+  std::array<float, 7 * 7> matrix =
+      ::detail::chargeMatrix((*clusters)[sourceLink.index()]);
   std::vector<float> input;
   input.assign(matrix.begin(), matrix.end());
   input.push_back(sourceLink.geometryId().volume());
@@ -74,39 +94,50 @@ void ActsExamples::NeuralCalibrator::calibrate(
   input.push_back(trackState.parameters()[Acts::eBoundTheta]);
 
   std::visit(
-    [&](const auto& meas) {
-      // Evaluate the MDN
-      auto E = meas.expander();
-      auto P = meas.projector();
-      Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
+      [&](const auto& meas) {
+        // Evaluate the MDN
+        auto E = meas.expander();
+        auto P = meas.projector();
+        Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
 
-      input.push_back(fpar[Acts::eBoundLoc0]);
-      input.push_back(fpar[Acts::eBoundLoc1]);
+        input.push_back(fpar[Acts::eBoundLoc0]);
+        input.push_back(fpar[Acts::eBoundLoc1]);
+        assert(input.size() == n_inputs && "Missing some inputs!");
 
-      auto [cLoc0, cLoc1, cPrec0, cPrec1] = m_mdn.evaluate(input);
+        // normalize
+        for (size_t i = 0; i < n_inputs; i++) {
+          input[i] += m_offsets[i];
+          input[i] *= m_scales[i];
+        }
 
-      // Save the calibrated positions
+        std::vector<float> output = m_model.runONNXInference(input);
+        if (output.size() != 4) {
+          throw std::runtime_error("Expected output size of 4, got: " +
+                                   std::to_string(output.size()));
+        }
 
-      Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
-	E * meas.covariance() * E.transpose();
+        // Save the calibrated positions
 
-      fpar[Acts::eBoundLoc0] = cLoc0;
-      fpar[Acts::eBoundLoc1] = cLoc1;
-      fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1.0 / cPrec0;
-      fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 / cPrec1;
+        Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
+            E * meas.covariance() * E.transpose();
 
-      constexpr size_t kSize = std::decay_t<decltype(meas)>::size();
-      std::array<Acts::BoundIndices, kSize> indices = meas.indices();
-      Acts::ActsVector<kSize> cpar = P * fpar;
-      Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
+        fpar[Acts::eBoundLoc0] = output[0];
+        fpar[Acts::eBoundLoc1] = output[1];
+        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1.0 / output[2];
+        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 / output[3];
 
-      Acts::SourceLink sl{sourceLink.geometryId(), sourceLink};
+        constexpr size_t kSize = std::decay_t<decltype(meas)>::size();
+        std::array<Acts::BoundIndices, kSize> indices = meas.indices();
+        Acts::ActsVector<kSize> cpar = P * fpar;
+        Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
 
-      Acts::Measurement<Acts::BoundIndices, kSize> cmeas(
-	std::move(sl), indices, cpar, ccov);
+        Acts::SourceLink sl{sourceLink.geometryId(), sourceLink};
 
-      trackState.allocateCalibrated(cmeas.size());
-      trackState.setCalibrated(cmeas);
-    },
-    (measurements)[sourceLink.index()]);
+        Acts::Measurement<Acts::BoundIndices, kSize> cmeas(std::move(sl),
+                                                           indices, cpar, ccov);
+
+        trackState.allocateCalibrated(cmeas.size());
+        trackState.setCalibrated(cmeas);
+      },
+      (measurements)[sourceLink.index()]);
 }
