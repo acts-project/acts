@@ -17,7 +17,9 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
+#include <cmath>
 #include <limits>
 #include <tuple>
 
@@ -203,14 +205,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
 
   auto roundTrip = [&surface](const Vector3& pos, const Vector3& dir) {
     auto intersection = surface.intersect(tgContext, pos, dir);
-    std::cout << "global before intersection " << pos.transpose() << std::endl;
     Vector3 global = intersection.intersection.position;
-    std::cout << "global after intersection " << global.transpose()
-              << std::endl;
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
-    std::cout << "local after intersection " << local.transpose() << std::endl;
     Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
-    std::cout << "global localToGlobal " << global2.transpose() << std::endl;
     return std::make_tuple(global, local, global2);
   };
 
@@ -230,6 +227,27 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
     auto [global, local, global2] = roundTrip(pos, dir);
 
     CHECK_CLOSE_ABS(global, global2, 1e-10);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
+  LineSurfaceStub surface(Transform3::Identity());
+
+  const std::vector<double> etas = {0, 1, 2, 3, 4, 5};
+
+  for (double eta : etas) {
+    Vector3 pca = {5, 0, 0};
+    Vector3 dir = makeDirectionUnitFromPhiEta(M_PI_2, eta);
+    Vector3 pos = pca + dir;
+
+    auto intersection = surface.intersect(tgContext, pos, dir);
+
+    Vector3 global = intersection.intersection.position;
+    Vector2 local = *surface.globalToLocal(tgContext, global, dir);
+    Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
+
+    CHECK_CLOSE_ABS(global, global2, 1e-10);
+    CHECK_CLOSE_ABS(pca, global2, 1e-10);
   }
 }
 
