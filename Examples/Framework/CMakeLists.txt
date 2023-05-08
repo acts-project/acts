@@ -1,7 +1,10 @@
 include(ActsTargetLinkLibrariesSystem)
 
 set(ActsExamplesFramework_SOURCES)
-list(APPEND ActsExamplesFramework_SOURCES
+
+
+add_library(
+  ActsExamplesFramework SHARED
   src/EventData/MeasurementCalibration.cpp
   src/EventData/ScalingCalibrator.cpp
   src/Framework/IAlgorithm.cpp
@@ -21,38 +24,24 @@ list(APPEND ActsExamplesFramework_SOURCES
   src/Validation/TrackSummaryPlotTool.cpp
   )
 
-if (ACTS_BUILD_PLUGIN_ONNX)
-  list(APPEND ActsExamplesFramework_SOURCES
-    src/EventData/NeuralCalibrator.cpp)
-endif()
-
-add_library(
-  ActsExamplesFramework SHARED
-  ${ActsExamplesFramework_SOURCES})
-
 target_include_directories(
   ActsExamplesFramework
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
-
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras ActsPluginFpeMonitoring Boost::boost ROOT::Core ROOT::Hist
   PRIVATE std::filesystem)
-
-if (ACTS_BUILD_PLUGIN_ONNX)
-target_link_libraries(
-  ActsExamplesFramework
-  PUBLIC ActsPluginOnnx)
-endif()
-
-
 acts_target_link_libraries_system(
   ActsExamplesFramework
   PRIVATE dfelibs)
-
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
+
+if (ACTS_BUILD_PLUGIN_ONNX)
+  target_sources(ActsExamplesFramework PUBLIC src/EventData/NeuralCalibrator.cpp)
+  target_link_libraries(ActsExamplesFramework PUBLIC ActsPluginOnnx)
+endif()
 
 if(ACTS_USE_EXAMPLES_TBB)
   # newer DD4hep version require TBB and search internally for TBB in
