@@ -94,8 +94,8 @@ else:
         hardProcess=["Top:qqbar2ttbar=on"],
         npileup=50,
         vtxGen=acts.examples.GaussianVertexGenerator(
-            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
             mean=acts.Vector4(0, 0, 0, 0),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         ),
         rnd=rnd,
         outputDirRoot=outputDir,
@@ -171,7 +171,7 @@ addSeeding(
         impactMax=3 * u.mm,
     ),
     SeedFinderOptionsArg(bFieldInZ=2 * u.T),
-    seedingAlgorithm=SeedingAlgorithm.Default,
+    seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
     initialVarInflation=[100, 100, 100, 100, 100, 100],
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
