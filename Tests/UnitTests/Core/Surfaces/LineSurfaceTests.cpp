@@ -233,6 +233,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
 BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
   LineSurfaceStub surface(Transform3::Identity());
 
+  // eta=6 is already crashing
   const std::vector<double> etas = {0, 1, 2, 3, 4, 5};
 
   for (double eta : etas) {
