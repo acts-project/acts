@@ -172,8 +172,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     // filter candidates
-    filterCandidates<Acts::DetectorMeasurementInfo::DEFAULT>(
-        state.spacePointData, *spM.get(), options, seedFilterState, state);
+    if (m_config.useDetailedDoubleMeasurementInfo) {
+      filterCandidates<Acts::DetectorMeasurementInfo::DETAILED>(
+          state.spacePointData, *spM.get(), options, seedFilterState, state);
+    } else {
+      filterCandidates<Acts::DetectorMeasurementInfo::DEFAULT>(
+          state.spacePointData, *spM.get(), options, seedFilterState, state);
+    }
 
     m_config.seedFilter->filterSeeds_1SpFixed(
         state.spacePointData, state.candidates_collector,
