@@ -451,7 +451,7 @@ struct GenericDenseEnvironmentExtension {
                         const stepper_t& stepper, const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
-    energy[i] = std::hypot(currentMomentum, mass);
+    energy[i] = std::hypot(currentMomentum, static_cast<Scalar>(mass));
     dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state.stepping) / currentMomentum;
     // Calculate term for later error propagation
