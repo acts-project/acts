@@ -483,6 +483,13 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float vb = 0.;
       float ut = 0.;
       float vt = 0.;
+      double rMTransf[3];
+      float xB = 0.;
+      float yB = 0.;
+      float xT = 0.;
+      float yT = 0.;
+      float iDeltaRB2 = 0.;
+      float iDeltaRT2 = 0.;
 
       if constexpr (detailedMeasurement ==
                     Acts::DetectorMeasurementInfo::DETAILED) {
@@ -504,7 +511,6 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
             zPositionMiddle};
 
-        double rMTransf[3];
         if (!xyzCoordinateCheck(spacePointData, m_config, spM, positionMiddle,
                                 rMTransf)) {
           continue;
@@ -542,32 +548,24 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         }
 
         // bottom and top coordinates in the spM reference frame
-        float xB = rBTransf[0] - rMTransf[0];
-        float yB = rBTransf[1] - rMTransf[1];
+        xB = rBTransf[0] - rMTransf[0];
+        yB = rBTransf[1] - rMTransf[1];
         float zB = rBTransf[2] - rMTransf[2];
-        float xT = rTTransf[0] - rMTransf[0];
-        float yT = rTTransf[1] - rMTransf[1];
+        xT = rTTransf[0] - rMTransf[0];
+        yT = rTTransf[1] - rMTransf[1];
         float zT = rTTransf[2] - rMTransf[2];
 
-        float iDeltaRB2 = 1. / (xB * xB + yB * yB);
-        float iDeltaRT2 = 1. / (xT * xT + yT * yT);
+        iDeltaRB2 = 1. / (xB * xB + yB * yB);
+        iDeltaRT2 = 1. / (xT * xT + yT * yT);
 
         cotThetaB = -zB * std::sqrt(iDeltaRB2);
         cotThetaT = zT * std::sqrt(iDeltaRT2);
-
-        rMxy = std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
-        float Ax = rMTransf[0] / rMxy;
-        float Ay = rMTransf[1] / rMxy;
-
-        ub = (xB * Ax + yB * Ay) * iDeltaRB2;
-        vb = (yB * Ax - xB * Ay) * iDeltaRB2;
-        ut = (xT * Ax + yT * Ay) * iDeltaRT2;
-        vt = (yT * Ax - xT * Ay) * iDeltaRT2;
       }
 
       // use geometric average
       float cotThetaAvg2 = cotThetaB * cotThetaT;
-      if (m_config.arithmeticAverageCotTheta) {
+      if constexpr (detailedMeasurement ==
+                    Acts::DetectorMeasurementInfo::DETAILED) {
         // use arithmetic average
         float averageCotTheta = 0.5 * (cotThetaB + cotThetaT);
         cotThetaAvg2 = averageCotTheta * averageCotTheta;
@@ -596,8 +594,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
-				if constexpr (detailedMeasurement ==
-											Acts::DetectorMeasurementInfo::DETAILED) {
+        if constexpr (detailedMeasurement ==
+                      Acts::DetectorMeasurementInfo::DETAILED) {
           continue;
         }
         // break if cotTheta from bottom SP < cotTheta from top SP because
@@ -607,6 +605,19 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         }
         t0 = index_t + 1;
         continue;
+      }
+
+      if constexpr (detailedMeasurement ==
+                    Acts::DetectorMeasurementInfo::DETAILED) {
+        rMxy = std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
+        float irMxy = 1 / rMxy;
+        float Ax = rMTransf[0] * irMxy;
+        float Ay = rMTransf[1] * irMxy;
+
+        ub = (xB * Ax + yB * Ay) * iDeltaRB2;
+        vb = (yB * Ax - xB * Ay) * iDeltaRB2;
+        ut = (xT * Ax + yT * Ay) * iDeltaRT2;
+        vt = (yT * Ax - xT * Ay) * iDeltaRT2;
       }
 
       float dU = 0;
@@ -667,8 +678,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-				if constexpr (detailedMeasurement ==
-											Acts::DetectorMeasurementInfo::DETAILED) {
+        if constexpr (detailedMeasurement ==
+                      Acts::DetectorMeasurementInfo::DETAILED) {
           continue;
         }
         if (cotThetaB - cotThetaT < 0) {
