@@ -392,7 +392,8 @@ struct GenericDenseEnvironmentExtension {
   /// @param [in] state Deliverer of configurations
   template <typename propagator_state_t>
   void initializeEnergyLoss(const propagator_state_t& state) {
-    energy[0] = std::hypot(initialMomentum, state.options.mass);
+    energy[0] = std::sqrt(initialMomentum * initialMomentum +
+                          state.options.mass * state.options.mass);
     // use unit length as thickness to compute the energy loss per unit length
     Acts::MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
