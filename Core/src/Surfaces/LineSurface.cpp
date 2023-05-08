@@ -81,7 +81,6 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
 
   if ((localToGlobal(gctx, lposition, momentum) - position).norm() >
       tolerance) {
-    std::cout << "ERROR: locToGLob " << (localToGlobal(gctx, lposition, momentum) - position).norm() << std::endl;
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
 
