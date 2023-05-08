@@ -414,7 +414,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       if (predicted and tsReader.predicted->at(i)) {
         auto x_prt = tsReader.g_x_prt->at(i);
         auto y_prt = tsReader.g_y_prt->at(i);
-        auto r_prt = std::hypot(x_prt * x_prt + y_prt * y_prt);
+        auto r_prt = std::hypot(x_prt, y_prt);
         auto z_prt = tsReader.g_z_prt->at(i);
         p2d_res_zr_prt[0]->Fill(z_prt, r_prt, tsReader.res_LOC0_prt->at(i));
         p2d_res_zr_prt[1]->Fill(z_prt, r_prt, tsReader.res_LOC1_prt->at(i));
