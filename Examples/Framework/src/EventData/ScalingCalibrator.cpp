@@ -39,13 +39,13 @@ std::pair<Acts::GeometryIdentifier, std::string> parseMapKey(
 }
 
 std::map<Acts::GeometryIdentifier, ActsExamples::ScalingCalibrator::MapTuple>
-readMaps(const char* path) {
+readMaps(const std::filesystem::path& path) {
   std::map<Acts::GeometryIdentifier, ActsExamples::ScalingCalibrator::MapTuple>
       maps;
 
-  TFile ifile(path, "READ");
+  TFile ifile(path.c_str(), "READ");
   if (ifile.IsZombie()) {
-    throw std::runtime_error("Unable to open TFile: " + std::string(path));
+    throw std::runtime_error("Unable to open TFile: " + path.string());
   }
 
   TList* lst = ifile.GetListOfKeys();
@@ -75,10 +75,10 @@ readMaps(const char* path) {
   return maps;
 }
 
-std::bitset<3> readMask(const char* path) {
-  TFile ifile(path, "READ");
+std::bitset<3> readMask(const std::filesystem::path& path) {
+  TFile ifile(path.c_str(), "READ");
   if (ifile.IsZombie()) {
-    throw std::runtime_error("Unable to open TFile: " + std::string(path));
+    throw std::runtime_error("Unable to open TFile: " + path.string());
   }
 
   TString* tstr = ifile.Get<TString>("v_mask");
@@ -91,7 +91,8 @@ std::bitset<3> readMask(const char* path) {
 
 }  // namespace detail
 
-ActsExamples::ScalingCalibrator::ScalingCalibrator(const char* path)
+ActsExamples::ScalingCalibrator::ScalingCalibrator(
+    const std::filesystem::path& path)
     : m_calib_maps{::detail::readMaps(path)},
       m_mask{::detail::readMask(path)} {}
 

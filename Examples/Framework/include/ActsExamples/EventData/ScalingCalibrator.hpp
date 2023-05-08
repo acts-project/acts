@@ -11,6 +11,8 @@
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <ActsExamples/EventData/MeasurementCalibration.hpp>
 
+#include <filesystem>
+
 #include <TFile.h>
 #include <TH2D.h>
 
@@ -45,7 +47,7 @@ class ScalingCalibrator : public MeasurementCalibrator {
     }
   };
 
-  ScalingCalibrator(const char* path);
+  ScalingCalibrator(const std::filesystem::path& path);
 
   void calibrate(
       const MeasurementContainer& measurements,
