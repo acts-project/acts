@@ -77,6 +77,18 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
   // assign the right sign
   double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
   lposition[eBoundLoc0] *= sign;
+<<<<<<< Updated upstream
+=======
+
+  Vector3 global2 = localToGlobal(gctx, lposition, momentum);
+  double distance = (global2 - position).norm();
+  std::cout << "LineSurface::globalToLocal " << global2.transpose()
+            << " distance " << distance << std::endl;
+  if (distance > tolerance) {
+    return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+
+>>>>>>> Stashed changes
   return Result<Vector2>::success(lposition);
 }
 
@@ -143,11 +155,14 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
   Intersection3D::Status status = Intersection3D::Status::unreachable;
   if (std::abs(denom) > std::abs(s_onSurfaceTolerance)) {
     double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
+    std::cout << "LineSurface::intersect "
+              << (mab.dot(ea) - mab.dot(eb) * eaTeb) << " / " << denom << " = "
+              << u << std::endl;
     // Check if we are on the surface already
     status = std::abs(u) < std::abs(s_onSurfaceTolerance)
                  ? Intersection3D::Status::onSurface
                  : Intersection3D::Status::reachable;
-    Vector3 result = (ma + u * ea);
+    Vector3 result = ma + u * ea;
     // Evaluate the boundary check if requested
     // m_bounds == nullptr prevents unecessary calulations for PerigeeSurface
     if (bcheck and m_bounds) {

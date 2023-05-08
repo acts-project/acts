@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
+#include <cmath>
 #include <functional>
 
 namespace Acts {
@@ -188,9 +189,8 @@ struct GenericDenseEnvironmentExtension {
     // Add derivative dlambda/ds = Lambda''
     using std::sqrt;
     state.stepping.derivative(7) =
-        -sqrt(state.options.mass * state.options.mass +
-              newMomentum * newMomentum) *
-        g / (newMomentum * newMomentum * newMomentum);
+        -std::hypot(state.options.mass, newMomentum) * g /
+        (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
     state.stepping.pars[eFreeQOverP] =
@@ -451,8 +451,7 @@ struct GenericDenseEnvironmentExtension {
                         const stepper_t& stepper, const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
-    using std::sqrt;
-    energy[i] = sqrt(currentMomentum * currentMomentum + mass * mass);
+    energy[i] = std::hypot(currentMomentum, mass);
     dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state.stepping) / currentMomentum;
     // Calculate term for later error propagation
