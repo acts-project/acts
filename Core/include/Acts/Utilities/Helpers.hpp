@@ -99,7 +99,7 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
       std::abort();
     }
   }
-  return std::sqrt(v[0] * v[0] + v[1] * v[1]);
+  return std::hypot(v[0], v[1]);
 }
 
 /// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector
@@ -122,7 +122,7 @@ double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
     }
   }
 
-  return std::atan2(std::sqrt(v[0] * v[0] + v[1] * v[1]), v[2]);
+  return std::atan2(perp(v), v[2]);
 }
 
 /// @brief Fast evaluation of trigonomic functions.
