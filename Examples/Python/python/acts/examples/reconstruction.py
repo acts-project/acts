@@ -817,6 +817,7 @@ def addKalmanTracks(
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
+    clusters: str = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -846,6 +847,7 @@ def addKalmanTracks(
         inputSourceLinks="sourcelinks",
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
+        inputClusters=clusters if clusters is not None else "",
         outputTracks="kfTracks",
         pickTrack=-1,
         fit=acts.examples.makeKalmanFitterFunction(

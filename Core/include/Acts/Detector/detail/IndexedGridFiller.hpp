@@ -10,10 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -27,6 +27,7 @@
 
 namespace Acts {
 namespace Experimental {
+namespace detail {
 
 /// @brief Helper method to generate completely populated bin sequences
 /// that respect the boundary type of the axis
@@ -41,7 +42,7 @@ namespace Experimental {
 /// @return a vector of bins to be filled
 std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
                                      std::size_t expand, std::size_t nBins,
-                                     detail::AxisBoundaryType type) {
+                                     Acts::detail::AxisBoundaryType type) {
   // Return vector for iterations
   std::vector<std::size_t> rBins;
   /// Helper method to fill a range
@@ -57,7 +58,7 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
   std::size_t bmax = minMaxBins[1u];
 
   // Open/Bound cases
-  if (type != detail::AxisBoundaryType::Closed) {
+  if (type != Acts::detail::AxisBoundaryType::Closed) {
     rBins.reserve(bmax - bmin + 1u + 2 * expand);
     // handle bmin:/max expand it down (for bound, don't fill underflow)
     if (type == Acts::detail::AxisBoundaryType::Bound) {
@@ -75,7 +76,7 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
     if (2 * span < nBins and (bmax + expand <= nBins) and
         (int(bmin) - int(expand) > 0)) {
       return binSequence({bmin, bmax}, expand, nBins,
-                         detail::AxisBoundaryType::Bound);
+                         Acts::detail::AxisBoundaryType::Bound);
     } else if (2 * span < nBins) {
       bmin = int(bmin) - int(expand) > 0 ? bmin - expand : 1u;
       bmax = bmax + expand <= nBins ? bmax + expand : nBins;
@@ -213,81 +214,6 @@ std::string outputIndices(const std::set<local_bin>& lbins) {
   return rString;
 }
 
-/// A struct to access the center position
-///
-/// This generator will provide only one filling point and hence
-/// only a single bin in the indexed grid.
-struct CenterReferenceGenerator {
-  /// Helper to access the Center point of for filling the grid
-  ///
-  /// @param gctx the geometry context of this operation
-  /// @param surface the surface for which the reference point is to be accessed
-  ///
-  /// @return a vector of referene points for filling
-  const std::vector<Vector3> references(const GeometryContext& gctx,
-                                        const Surface& surface) const {
-    return {surface.center(gctx)};
-  }
-};
-
-/// A struct to access reference postions based on bin values
-///
-/// This generator will provide only one filling point and hence
-/// only a single bin in the indexed grid.
-struct BinningValueReferenceGenerator {
-  /// The binning value
-  BinningValue bValue;
-
-  /// Helper to access a reference postion based on binning value
-  ///
-  /// @param gctx the geometry context of this operation
-  /// @param surface the surface for which the reference point is to be accessed
-  ///
-  /// @return a vector of referene points for filling
-  const std::vector<Vector3> references(const GeometryContext& gctx,
-                                        const Surface& surface) const {
-    return {surface.binningPosition(gctx, bValue)};
-  }
-};
-
-/// A struct to access generated vertices from surface polyhedrons
-/// These vertices are then used to find the bin boundary box for the
-/// indexed grid.
-///
-/// The grid filling then completes the empty bins in between and
-/// expands if necessary.
-struct PolyhedronReferenceGenerator {
-  /// Also use the barycenter
-  bool addBarycenter = true;
-
-  /// The number of segments to approximate (1 means extrema points only)
-  unsigned int nSegments = 1;
-
-  /// Helper to access the Center point of for filling the grid
-  ///
-  /// @param gctx the geometry context of this operation
-  /// @param surface the surface for which the reference point is to be accessed
-  ///
-  /// @return a vector of referene points for filling
-  const std::vector<Vector3> references(const GeometryContext& gctx,
-                                        const Surface& surface) const {
-    // Create the return  vector
-    std::vector<Vector3> rPositions;
-    auto pHedron = surface.polyhedronRepresentation(gctx, nSegments);
-    rPositions.insert(rPositions.end(), pHedron.vertices.begin(),
-                      pHedron.vertices.end());
-    // Add the barycenter if configured
-    if (addBarycenter) {
-      Vector3 bc(0., 0., 0.);
-      std::for_each(rPositions.begin(), rPositions.end(),
-                    [&](const auto& p) { bc += p; });
-      bc *= 1. / rPositions.size();
-      rPositions.push_back(bc);
-    }
-    return rPositions;
-  }
-};
-
 /// A helper class that fills surfaces into predefined grids
 struct IndexedGridFiller {
   /// Bin expansion where needed
@@ -381,5 +307,6 @@ struct IndexedGridFiller {
   const Logger& logger() const { return (*oLogger); }
 };
 
+}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts

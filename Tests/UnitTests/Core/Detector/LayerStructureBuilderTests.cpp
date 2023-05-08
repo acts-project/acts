@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
 
   auto [surfaces0, volumes0, surfacesUpdator0, volumeUpdator0] =
-      endcapBuilder.create(tContext);
+      endcapBuilder.construct(tContext);
 
   BOOST_CHECK(surfaces0.size() == 22u);
   BOOST_CHECK(surfacesUpdator0.connected());
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
 
   auto [surfaces1, volumes1, surfacesUpdator1, volumeUpdator1] =
-      endcapBuilder.create(tContext);
+      endcapBuilder.construct(tContext);
 
   BOOST_CHECK(surfaces1.size() == 22u + 1u);
   BOOST_CHECK(surfaces1.back()->type() == Acts::Surface::SurfaceType::Disc);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
 
   auto [surfaces2, volumes2, surfacesUpdator2, volumeUpdator2] =
-      endcapBuilder.create(tContext);
+      endcapBuilder.construct(tContext);
 
   BOOST_CHECK(surfaces2.size() == 22u + 11u);
   BOOST_CHECK(surfaces2.back()->type() == Acts::Surface::SurfaceType::Plane);
@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));
 
   auto [surfaces0, volumes0, surfacesUpdator0, volumeUpdator0] =
-      barrelBuilder.create(tContext);
+      barrelBuilder.construct(tContext);
 
   BOOST_CHECK(surfaces0.size() == 448u);
   BOOST_CHECK(surfacesUpdator0.connected());
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));
 
   auto [surfaces1, volumes1, surfacesUpdator1, volumeUpdator1] =
-      barrelBuilder.create(tContext);
+      barrelBuilder.construct(tContext);
 
   BOOST_CHECK(surfaces1.size() == 448u + 1u);
   BOOST_CHECK(surfacesUpdator1.connected());
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));
 
   auto [surfaces2, volumes2, surfacesUpdator2, volumeUpdator2] =
-      barrelBuilder.create(tContext);
+      barrelBuilder.construct(tContext);
 
   BOOST_CHECK(surfaces2.size() == 448u + 32u);
   BOOST_CHECK(surfacesUpdator2.connected());
