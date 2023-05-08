@@ -363,25 +363,6 @@ linux_ubuntu_2204_clang:
 
     - ctest --test-dir build -j$(nproc)
 
-lcg_101:
-  <<: *lcg_base_job
-
-  variables:
-    LCG_VERSION: "101"
-
-  parallel:
-    matrix:
-      - OS: [centos7]
-        COMPILER: [gcc10, gcc11, clang12]
-
-      - OS: [centos8]
-        COMPILER: [gcc11]
-
-  rules:
-    - if: '$COMPILER == "clang12"'
-      allow_failure: true
-    - when: on_success
-
 
 lcg_102b:
   <<: *lcg_base_job
@@ -392,15 +373,10 @@ lcg_102b:
   parallel:
     matrix:
       - OS: [centos7]
-        COMPILER: [gcc11, gcc12, clang12]
+        COMPILER: [gcc11]
 
       - OS: [centos8, alma9]
         COMPILER: [gcc11]
-
-  rules:
-    - if: '$COMPILER == "clang12" || $COMPILER == "gcc12"'
-      allow_failure: true
-    - when: on_success
 
 lcg_103:
   <<: *lcg_base_job

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Detector/SupportBuilder.hpp"
+#include "Acts/Detector/detail/SupportHelper.hpp"
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -19,7 +19,7 @@
 #include <stdexcept>
 
 std::vector<std::shared_ptr<Acts::Surface>>
-Acts::Experimental::SupportBuilder::cylindricalSupport(
+Acts::Experimental::detail::SupportHelper::cylindricalSupport(
     const Transform3& transform, const std::array<ActsScalar, 6u>& bounds,
     unsigned int splits) {
   // Return vector preparation
@@ -74,7 +74,7 @@ Acts::Experimental::SupportBuilder::cylindricalSupport(
 }
 
 std::vector<std::shared_ptr<Acts::Surface>>
-Acts::Experimental::SupportBuilder::discSupport(
+Acts::Experimental::detail::SupportHelper::discSupport(
     const Transform3& transform, const std::array<ActsScalar, 4u>& bounds,
     unsigned int splits) {
   // Return vector
@@ -118,7 +118,7 @@ Acts::Experimental::SupportBuilder::discSupport(
   return dSupport;
 }
 
-void Acts::Experimental::SupportBuilder::addSupport(
+void Acts::Experimental::detail::SupportHelper::addSupport(
     std::vector<std::shared_ptr<Surface>>& layerSurfaces,
     std::vector<size_t>& assignToAll, const Extent& layerExtent,
     Surface::SurfaceType layerRepresentation,
@@ -130,7 +130,7 @@ void Acts::Experimental::SupportBuilder::addSupport(
     // Bail out if you have no measure of R, Z
     if (not layerExtent.constrains(binZ) or not layerExtent.constrains(binR)) {
       throw std::runtime_error(
-          "SupportBuilder::addSupport(...) - z or phi are not constrained.");
+          "SupportHelper::addSupport(...) - z or phi are not constrained.");
     }
     /// Overall parameters of support surfaces
     ActsScalar minZ = layerExtent.min(binZ);
@@ -182,7 +182,7 @@ void Acts::Experimental::SupportBuilder::addSupport(
       } else {
         sTransform.pretranslate(Vector3(0., 0., midZ));
       }
-      auto cSupport = SupportBuilder::cylindricalSupport(
+      auto cSupport = SupportHelper::cylindricalSupport(
           sTransform, {layerR, halfZ, halfPhi, avgPhi, 0., 0.}, supportSplits);
       // Remember the surfaces to be assigned to all bins, once the
       // support surfaces are split they enter the standard bin assignment
@@ -200,7 +200,7 @@ void Acts::Experimental::SupportBuilder::addSupport(
       maxR += std::abs(demax);
       Transform3 sTransform = Transform3::Identity();
       sTransform.pretranslate(Vector3(0., 0., layerZ));
-      auto dSupport = SupportBuilder::discSupport(
+      auto dSupport = SupportHelper::discSupport(
           sTransform, {minR, maxR, halfPhi, avgPhi}, supportSplits);
       // Remember the surfaces to be assigned to all bins, once the
       // support surfaces are split they enter the standard bin assignment
@@ -213,7 +213,7 @@ void Acts::Experimental::SupportBuilder::addSupport(
     }
   } else {
     throw std::invalid_argument(
-        "SupportBuilder: currently only cylindrical/disc support building "
+        "SupportHelper: currently only cylindrical/disc support building "
         "possible.");
   }
 }
