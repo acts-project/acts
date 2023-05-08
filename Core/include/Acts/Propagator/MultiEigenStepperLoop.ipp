@@ -43,9 +43,37 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  const auto [mean, cov] =
+  // To ensure we are in perigee representation when taking the mean over the
+  // components in bound representation, we do the mean over the free
+  // represenation and then go back to bound representation.
+  Acts::FreeVector freeMean = Acts::FreeVector::Zero();
+  for (const auto& [w, p, c] : states) {
+    freeMean += w * Acts::detail::transformBoundToFreeParameters(
+                        surface, state.geoContext, p);
+  }
+  
+  std::cout << "mean before intersect: " << freeMean.transpose() << std::endl;
+
+  freeMean.segment<3>(eFreePos0) =
+      surface
+          .intersect(state.geoContext, freeMean.segment<3>(eFreePos0),
+                     freeMean.segment<3>(eFreeDir0), false)
+          .template intersection.position;
+          
+  std::cout << "mean after intersect: " << freeMean.transpose() << std::endl;
+
+  // TODO Needed to reduce tolerance here in order to avoid free-to-bound-errors
+  auto boundMeanRes = Acts::detail::transformFreeToBoundParameters(
+      freeMean, surface, state.geoContext);
+  if(not boundMeanRes.ok()) {
+    std::cout << boundMeanRes.error().message() << std::endl;
+  }
+  assert(boundMeanRes.ok());
+
+  // TODO Not sure if this is entirely correct, visit again later
+  const auto cov =
       detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-        return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
+        return detail::combineCov(states, *boundMeanRes, 1.0, Acts::Identity{}, desc);
       });
 
   const auto finalPars =
@@ -55,7 +83,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
                 [](const auto& a, const auto& b) {
                   return std::get<double>(a) < std::get<double>(b);
                 }))
-          : mean;
+          : *boundMeanRes;
 
   std::optional<BoundSymMatrix> finalCov = std::nullopt;
   if (cov != BoundSymMatrix::Zero()) {
