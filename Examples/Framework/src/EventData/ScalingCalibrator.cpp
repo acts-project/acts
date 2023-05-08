@@ -13,7 +13,7 @@
 
 #include <TKey.h>
 
-namespace internal {
+namespace detail {
 
 std::pair<Acts::GeometryIdentifier, std::string> parseMapKey(
     const std::string& mapkey) {
@@ -89,11 +89,11 @@ std::bitset<3> readMask(const char* path) {
   return std::bitset<3>(std::string(*tstr));
 }
 
-}  // namespace internal
+}  // namespace detail
 
 ActsExamples::ScalingCalibrator::ScalingCalibrator(const char* path)
-    : m_calib_maps{internal::readMaps(path)},
-      m_mask{internal::readMask(path)} {}
+    : m_calib_maps{::detail::readMaps(path)},
+      m_mask{::detail::readMask(path)} {}
 
 void ActsExamples::ScalingCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
