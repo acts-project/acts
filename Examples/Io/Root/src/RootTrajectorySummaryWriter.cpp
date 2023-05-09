@@ -285,15 +285,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
             }
           }
         } else {
-          ACTS_WARNING("Truth particle with barcode "
-                       << majorityParticleId << "="
-                       << majorityParticleId.value()
-                       << " not found in the input collection!");
+          ACTS_DEBUG("Truth particle with barcode "
+                     << majorityParticleId << "=" << majorityParticleId.value()
+                     << " not found in the input collection!");
         }
       }
       if (not foundMajorityParticle) {
-        ACTS_WARNING("Truth particle for mj " << itraj << " subtraj "
-                                              << isubtraj << " not found!");
+        ACTS_DEBUG("Truth particle for mj " << itraj << " subtraj " << isubtraj
+                                            << " not found!");
       }
 
       // Push the corresponding truth particle info for the track.

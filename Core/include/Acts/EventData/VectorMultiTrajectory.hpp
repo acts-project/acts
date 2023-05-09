@@ -134,7 +134,7 @@ class VectorMultiTrajectoryBase {
 
     double chi2 = 0;
     double pathLength = 0;
-    TrackStateType typeFlags;
+    TrackStateType::raw_type typeFlags{};
 
     IndexType iuncalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
@@ -215,16 +215,8 @@ class VectorMultiTrajectoryBase {
         return &instance.m_index[istate].ifiltered;
       case "smoothed"_hash:
         return &instance.m_index[istate].ismoothed;
-      case "calibrated"_hash:
-        return &instance.m_measOffset[istate];
-      case "calibratedCov"_hash:
-        return &instance.m_measCovOffset[istate];
-      case "jacobian"_hash:
-        return &instance.m_index[istate].ijacobian;
       case "projector"_hash:
         return &instance.m_projectors[instance.m_index[istate].iprojector];
-      case "referenceSurface"_hash:
-        return &instance.m_referenceSurfaces[istate];
       case "measdim"_hash:
         return &instance.m_index[istate].measdim;
       case "chi2"_hash:
@@ -270,6 +262,9 @@ class VectorMultiTrajectoryBase {
     }
   }
 
+  // END INTERFACE HELPER
+
+ public:
   IndexType calibratedSize_impl(IndexType istate) const {
     return m_index[istate].measdim;
   }
@@ -278,8 +273,11 @@ class VectorMultiTrajectoryBase {
     return m_sourceLinks[m_index[istate].iuncalibrated].value();
   }
 
-  // END INTERFACE HELPER
+  const Surface* referenceSurface_impl(IndexType istate) const {
+    return m_referenceSurfaces[istate].get();
+  }
 
+ protected:
   /// index to map track states to the corresponding
   std::vector<IndexData> m_index;
   std::vector<IndexType> m_previous;
@@ -331,7 +329,6 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
   }
 
- private:
   // BEGIN INTERFACE
   TrackStateProxy::Parameters parameters_impl(IndexType parIdx) {
     return TrackStateProxy::Parameters{m_params[parIdx].data()};
@@ -349,34 +346,40 @@ class VectorMultiTrajectory final
     return ConstTrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
 
-  TrackStateProxy::Covariance jacobian_impl(IndexType parIdx) {
-    return TrackStateProxy::Covariance{m_jac[parIdx].data()};
+  TrackStateProxy::Covariance jacobian_impl(IndexType istate) {
+    IndexType jacIdx = m_index[istate].ijacobian;
+    return TrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance jacobian_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Covariance{m_jac[parIdx].data()};
+  ConstTrackStateProxy::Covariance jacobian_impl(IndexType istate) const {
+    IndexType jacIdx = m_index[istate].ijacobian;
+    return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
   template <size_t measdim>
-  TrackStateProxy::Measurement<measdim> measurement_impl(IndexType offset) {
+  TrackStateProxy::Measurement<measdim> measurement_impl(IndexType istate) {
+    IndexType offset = m_measOffset[istate];
     return TrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
   template <size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
-      IndexType offset) const {
+      IndexType istate) const {
+    IndexType offset = m_measOffset[istate];
     return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
   template <size_t measdim>
   TrackStateProxy::MeasurementCovariance<measdim> measurementCovariance_impl(
-      IndexType offset) {
+      IndexType istate) {
+    IndexType offset = m_measCovOffset[istate];
     return TrackStateProxy::MeasurementCovariance<measdim>{&m_measCov[offset]};
   }
 
   template <size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
-  measurementCovariance_impl(IndexType offset) const {
+  measurementCovariance_impl(IndexType istate) const {
+    IndexType offset = m_measCovOffset[istate];
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         &m_measCov[offset]};
   }
@@ -441,6 +444,11 @@ class VectorMultiTrajectory final
     m_sourceLinks[m_index[istate].iuncalibrated] = std::move(sourceLink);
   }
 
+  void setReferenceSurface_impl(IndexType istate,
+                                std::shared_ptr<const Surface> surface) {
+    m_referenceSurfaces[istate] = std::move(surface);
+  }
+
   // END INTERFACE
 };
 
@@ -474,7 +482,6 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
   }
 
- private:
   // BEGIN INTERFACE
 
   ConstTrackStateProxy::Parameters parameters_impl(IndexType parIdx) const {
@@ -485,19 +492,22 @@ class ConstVectorMultiTrajectory final
     return ConstTrackStateProxy::Covariance{m_cov[parIdx].data()};
   }
 
-  ConstTrackStateProxy::Covariance jacobian_impl(IndexType parIdx) const {
-    return ConstTrackStateProxy::Covariance{m_jac[parIdx].data()};
+  ConstTrackStateProxy::Covariance jacobian_impl(IndexType istate) const {
+    IndexType jacIdx = m_index[istate].ijacobian;
+    return ConstTrackStateProxy::Covariance{m_jac[jacIdx].data()};
   }
 
   template <size_t measdim>
   ConstTrackStateProxy::Measurement<measdim> measurement_impl(
-      IndexType offset) const {
+      IndexType istate) const {
+    IndexType offset = m_measOffset[istate];
     return ConstTrackStateProxy::Measurement<measdim>{&m_meas[offset]};
   }
 
   template <size_t measdim>
   ConstTrackStateProxy::MeasurementCovariance<measdim>
-  measurementCovariance_impl(IndexType offset) const {
+  measurementCovariance_impl(IndexType istate) const {
+    IndexType offset = m_measCovOffset[istate];
     return ConstTrackStateProxy::MeasurementCovariance<measdim>{
         &m_measCov[offset]};
   }

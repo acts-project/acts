@@ -272,13 +272,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
       auto ts =
           traj.getTrackState(traj.addTrackState(TrackStatePropMask::All, prev));
       TestTrackState pc(rng, 2u);
-      fillTrackState(pc, TrackStatePropMask::All, ts);
+      fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
       return ts;
     } else {
       auto ts = traj.getTrackState(
           traj.addTrackState(TrackStatePropMask::All, prev.index()));
       TestTrackState pc(rng, 2u);
-      fillTrackState(pc, TrackStatePropMask::All, ts);
+      fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
       return ts;
     }
   };

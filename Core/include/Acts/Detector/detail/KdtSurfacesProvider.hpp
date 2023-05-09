@@ -9,10 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/GridAxisGenerators.hpp"
-#include "Acts/Detector/IndexedGridFiller.hpp"
-#include "Acts/Detector/IndexedSurfacesGenerator.hpp"
-#include "Acts/Detector/SupportBuilder.hpp"
+#include "Acts/Detector/detail/GridAxisGenerators.hpp"
+#include "Acts/Detector/detail/IndexedGridFiller.hpp"
+#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
+#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -132,16 +132,12 @@ class KdtSurfaces {
   /// @param positions are the reference positions that go in
   /// @note will do nothing if vector size is equal to 1
   ///
+  /// @note no checking on positions.empty() is done as the
+  /// positions are to be provided by a generator which itself
+  /// is tested for consistency
+  ///
   /// @return the center of gravity
   Vector3 cog(const std::vector<Vector3>& positions) const {
-    // Throw exception if misconfigured, or generation did not work
-    if (positions.empty()) {
-      throw std::runtime_error("KdtSurfaces: reference points empty.");
-    }
-    // Return the single one you have
-    if (positions.size() == 1u) {
-      return positions[0u];
-    }
     // Build the center of gravity of the n positions
     Vector3 c(0., 0., 0.);
     ActsScalar weight = 1. / positions.size();
