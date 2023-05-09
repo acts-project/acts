@@ -68,7 +68,7 @@ class StraightLineStepper {
                    double stolerance = s_onSurfaceTolerance)
         : q(par.charge()),
           navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           tolerance(stolerance),
           geoContext(gctx) {
       (void)mctx;

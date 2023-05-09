@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), time, eps, eps);
   BOOST_CHECK_EQUAL(slsState.navDir, navDir);
   BOOST_CHECK_EQUAL(slsState.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(slsState.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(slsState.tolerance, tolerance);
 
@@ -138,12 +138,12 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
-  sls.setStepSize(slsState, 1337.);
-  BOOST_CHECK_EQUAL(slsState.previousStepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(slsState.stepSize.value(), 1337.);
+  sls.setStepSize(slsState, 17.);
+  BOOST_CHECK_EQUAL(slsState.previousStepSize, stepSize);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), 17.);
 
   sls.releaseStepSize(slsState);
-  BOOST_CHECK_EQUAL(slsState.stepSize.value(), -123.);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 
   // Test the curvilinear state construction
