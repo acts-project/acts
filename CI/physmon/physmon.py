@@ -165,7 +165,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             s,
             trackingGeometry,
             field,
-            TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
+            TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(9, None)),
             ParticleSmearingSigmas(
                 pRel=0.01
             ),  # only used by SeedingAlgorithm.TruthSmeared
@@ -177,7 +177,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 maxSeedsPerSpM=1,
                 sigmaScattering=5,
                 radLengthPerSeed=0.1,
-                minPt=500 * u.MeV,
+                minPt=400 * u.MeV,
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
@@ -200,7 +200,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             field,
             TrackSelectorConfig(
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
-                pt=(500 * u.MeV, None),
+                pt=(400 * u.MeV, None),
                 nMeasurementsMin=6,
             ),
             outputDirRoot=tp,
@@ -295,7 +295,7 @@ def run_vertexing(fitter, mu, events):
                 maxSeedsPerSpM=1,
                 sigmaScattering=5,
                 radLengthPerSeed=0.1,
-                minPt=500 * u.MeV,
+                minPt=400 * u.MeV,
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
@@ -309,7 +309,7 @@ def run_vertexing(fitter, mu, events):
             trackingGeometry,
             field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
+                pt=(400 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 absEta=(None, 3.0),
                 nMeasurementsMin=6,
