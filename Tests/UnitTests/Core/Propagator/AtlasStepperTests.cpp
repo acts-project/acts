@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   BOOST_CHECK_EQUAL(state.pVector[7], charge / absMom);
   BOOST_CHECK_EQUAL(state.navDir, navDir);
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(state.tolerance, tolerance);
 }
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   BOOST_CHECK_EQUAL(state.pVector[7], charge / absMom);
   BOOST_CHECK_EQUAL(state.navDir, navDir);
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(state.tolerance, tolerance);
 }
@@ -525,12 +525,12 @@ BOOST_AUTO_TEST_CASE(StepSize) {
   // TODO figure out why this fails and what it should be
   // BOOST_CHECK_EQUAL(stepper.overstepLimit(state), tolerance);
 
-  stepper.setStepSize(state, 5_cm);
-  BOOST_CHECK_EQUAL(state.previousStepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), 5_cm);
+  stepper.setStepSize(state, 5_mm);
+  BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), 5_mm);
 
   stepper.releaseStepSize(state);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
 // test step size modification with target surfaces
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),
       false);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value() * navDir, distance);
 
   // start with a different step size
   state.stepSize.setValue(navDir * stepSize);
@@ -564,7 +564,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),
       true);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value() * navDir, distance);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

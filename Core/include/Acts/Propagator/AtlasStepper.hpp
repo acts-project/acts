@@ -63,7 +63,7 @@ class AtlasStepper {
           double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
           field(0., 0., 0.),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
