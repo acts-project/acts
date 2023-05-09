@@ -128,7 +128,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
       mCfg.toleranceOverlap;
 
   auto detectorVolumeBounds =
-      std::make_unique<Acts::CuboidVolumeBounds>(hx, hy, hz);
+      std::make_shared<Acts::CuboidVolumeBounds>(hx, hy, hz);
 
   Acts::Vector3 chamber_position = {(maxValues.x() + minValues.x()) / 2,
                                     (maxValues.y() + minValues.y()) / 2,
@@ -197,7 +197,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   std::vector<float> rmins(detVolumesSize);
   std::vector<float> rmaxs(detVolumesSize);
   std::vector<float> halfZ(detVolumesSize);
-  std::vector<std::unique_ptr<Acts::CylinderVolumeBounds>>
+  std::vector<std::shared_ptr<Acts::CylinderVolumeBounds>>
       cylinderVolumesBounds(detVolumesSize);
 
   for (int i = 0; i < detVolumesSize; i++) {
@@ -211,7 +211,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
                mCfg.toleranceOverlap;
     halfZ[i] = detVol->volumeBounds().values()[2];
 
-    cylinderVolumesBounds[i] = std::make_unique<Acts::CylinderVolumeBounds>(
+    cylinderVolumesBounds[i] = std::make_shared<Acts::CylinderVolumeBounds>(
         rmins[i], rmaxs[i], halfZ[i], sectorAngle);
   }
 
@@ -293,7 +293,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   }  // end of cylinder volumes
 
   auto cylinderVolumesBoundsOfMother =
-      std::make_unique<Acts::CylinderVolumeBounds>(
+      std::make_shared<Acts::CylinderVolumeBounds>(
           rmins.front(), rmaxs.back(),
           *std::max_element(halfZ.begin(), halfZ.end()), sectorAngle);
 
