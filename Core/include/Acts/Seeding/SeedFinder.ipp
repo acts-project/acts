@@ -696,7 +696,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
         // To avoid 0-divison the pT check is skipped in case of B2==0, and
-        // p2scatterSigma is calculated directly from pTscatterSigma
+        // p2scatterSigma is calculated directly from maxPtScattering
         if (B2 == 0) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
