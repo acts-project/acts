@@ -132,7 +132,7 @@ struct GenericDenseEnvironmentExtension {
       Lambdappi[0] =
           -qop[0] * qop[0] * qop[0] * g * energy[0] /
           (stepper.charge(state.stepping) * stepper.charge(state.stepping));
-      //~ tKi[0] = hypot(1, state.options.mass / initialMomentum);
+      //~ tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
       tKi[0] = hypot(1, state.options.mass * qop[0]);
       kQoP[0] = Lambdappi[0];
     } else {
@@ -347,7 +347,7 @@ struct GenericDenseEnvironmentExtension {
     //~ state.options.meanEnergyLoss));
 
     double dtp1dl = qop[0] * state.options.mass * state.options.mass /
-                    hypot(1, qop[0] * state.options.mass);
+                    std::hypot(1, qop[0] * state.options.mass);
     double qopNew = qop[0] + half_h * Lambdappi[0];
 
     //~ double dtpp2dl = -state.options.mass * state.options.mass * qopNew *
@@ -358,7 +358,7 @@ struct GenericDenseEnvironmentExtension {
     //~ state.options.meanEnergyLoss));
 
     double dtp2dl = qopNew * state.options.mass * state.options.mass /
-                    hypot(1, qopNew * state.options.mass);
+                    std::hypot(1, qopNew * state.options.mass);
     qopNew = qop[0] + half_h * Lambdappi[1];
 
     //~ double dtpp3dl = -state.options.mass * state.options.mass * qopNew *
@@ -369,13 +369,13 @@ struct GenericDenseEnvironmentExtension {
     //~ state.options.meanEnergyLoss));
 
     double dtp3dl = qopNew * state.options.mass * state.options.mass /
-                    hypot(1, qopNew * state.options.mass);
+                    std::hypot(1, qopNew * state.options.mass);
     qopNew = qop[0] + half_h * Lambdappi[2];
     double dtp4dl = qopNew * state.options.mass * state.options.mass /
-                    hypot(1, qopNew * state.options.mass);
+                    std::hypot(1, qopNew * state.options.mass);
 
     //~ D(3, 7) = h * state.options.mass * state.options.mass * qop[0] /
-    //~ hypot(1., state.options.mass * qop[0])
+    //~ std::hypot(1., state.options.mass * qop[0])
     //~ + h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
 
     D(3, 7) = (h / 6.) * (dtp1dl + 2. * (dtp2dl + dtp3dl) + dtp4dl);
@@ -445,7 +445,7 @@ struct GenericDenseEnvironmentExtension {
                         const stepper_t& stepper, const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
-    energy[i] = hypot(currentMomentum, static_cast<Scalar>(mass));
+    energy[i] = hypot(currentMomentum, mass);
     dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state.stepping) / currentMomentum;
     // Calculate term for later error propagation
