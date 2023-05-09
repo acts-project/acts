@@ -201,7 +201,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             TrackSelectorConfig(
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
-                minMeasurements=6,
+                nMeasurementsMin=6,
             ),
             outputDirRoot=tp,
         )
@@ -312,7 +312,7 @@ def run_vertexing(fitter, mu, events):
                 pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 absEta=(None, 3.0),
-                minMeasurements=6,
+                nMeasurementsMin=6,
             ),
         )
 
