@@ -450,7 +450,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
           break;
         }
         t0 = index_t;
-        continue;
+         continue;
       }
 
       // A and B allow calculation of impact params in U/V plane with linear
