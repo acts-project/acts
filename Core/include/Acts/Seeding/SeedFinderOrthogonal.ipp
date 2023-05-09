@@ -411,6 +411,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
           break;
         }
         t0 = index_t + 1;
+        continue;
       }
 
       float dU = lt.U - Ub;
@@ -449,6 +450,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
           break;
         }
         t0 = index_t;
+        continue;
       }
 
       // A and B allow calculation of impact params in U/V plane with linear
