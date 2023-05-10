@@ -289,7 +289,7 @@ jobs:
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && echo "::endgroup::"
           && export PYTHONPATH="${PYTHONPATH}":"${GITHUB_WORKSPACE}/Examples/Scripts/Python"
-          && CI/physmon/phys_perf_mon.sh physmon
+          && CI/physmon/phys_perf_mon.sh all physmon
 
       - uses: actions/upload-artifact@v3
         if: always()
