@@ -76,9 +76,10 @@ auto angleDescriptionSwitch(const Surface &surface, Callable &&callable) {
 
 template <int D, typename components_t, typename projector_t,
           typename angle_desc_t>
-auto combineCov(const components_t components, const ActsVector<D> &mean,
-                double sumOfWeights, projector_t &&projector,
-                const angle_desc_t &angleDesc) {
+auto gaussianMixtureCov(const components_t components,
+                        const ActsVector<D> &mean, double sumOfWeights,
+                        projector_t &&projector,
+                        const angle_desc_t &angleDesc) {
   ActsSymMatrix<D> cov = ActsSymMatrix<D>::Zero();
 
   for (const auto &cmp : components) {
@@ -124,7 +125,7 @@ auto combineCov(const components_t components, const ActsVector<D> &mean,
 /// angles in the bound parameters
 template <typename components_t, typename projector_t = Identity,
           typename angle_desc_t = AngleDescription<Surface::Plane>::Desc>
-auto combineGaussianMixture(const components_t components,
+auto gaussianMixtureMeanCov(const components_t components,
                             projector_t &&projector = projector_t{},
                             const angle_desc_t &angleDesc = angle_desc_t{}) {
   // Extract the first component
@@ -195,10 +196,48 @@ auto combineGaussianMixture(const components_t components,
   std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
 
   const auto cov =
-      combineCov(components, mean, sumOfWeights, projector, angleDesc);
+      gaussianMixtureCov(components, mean, sumOfWeights, projector, angleDesc);
 
   return RetType{mean, cov};
 }
 
 }  // namespace detail
+
+/// @enum MixtureReductionMethod
+///
+/// Available reduction methods for the reduction of a Gaussian mixture
+enum class MixtureReductionMethod { eMean, eMaxWeight };
+
+/// Reduce Gaussian mixture
+///
+/// @param mixture The mixture iterable
+/// @param surface The surface, on which the bound state is
+/// @param method How to reduce the mixture
+/// @param projector How to project a element of the iterable to something
+/// like a std::tuple< double, BoundVector, BoundMatrix >
+///
+/// @return parameters and covariance as std::tuple< BoundVector, BoundMatrix >
+template <typename mixture_t, typename projector_t = Acts::Identity>
+auto reduceGaussianMixture(const mixture_t &mixture, const Surface &surface,
+                           MixtureReductionMethod method,
+                           projector_t &&projector = projector_t{}) {
+  using R = std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>;
+  const auto [mean, cov] =
+      detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+        return detail::gaussianMixtureMeanCov(mixture, projector, desc);
+      });
+
+  if (method == MixtureReductionMethod::eMean) {
+    return R{mean, cov};
+  } else {
+    const auto maxWeightIt = std::max_element(
+        mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
+          return std::get<0>(projector(a)) < std::get<0>(projector(b));
+        });
+    const BoundVector meanMaxWeight = std::get<1>(projector(*maxWeightIt));
+
+    return R{meanMaxWeight, cov};
+  }
+}
+
 }  // namespace Acts

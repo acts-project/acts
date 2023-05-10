@@ -364,8 +364,8 @@ struct GaussianSumFitter {
 
       auto proxy =
           r.fittedStates->getTrackState(fwdGsfResult.lastMeasurementTip);
-      proxy.filtered() = proxy.predicted();
-      proxy.filteredCovariance() = proxy.predictedCovariance();
+      proxy.shareFrom(TrackStatePropMask::Filtered,
+                      TrackStatePropMask::Smoothed);
 
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());
@@ -424,6 +424,7 @@ struct GaussianSumFitter {
       if (not found && state.typeFlags().test(MeasurementFlag)) {
         state.typeFlags().set(OutlierFlag);
         state.typeFlags().reset(MeasurementFlag);
+        state.unset(TrackStatePropMask::Smoothed);
       }
 
       measurementStatesFinal +=
