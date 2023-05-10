@@ -527,7 +527,7 @@ class CombinatorialKalmanFilter {
                 state.stepping.navDir = state.stepping.navDir.invert();
                 // To avoid meaningless navigation target call
                 state.stepping.stepSize =
-                    ConstrainedStep(std::abs(state.options.maxStepSize));
+                    ConstrainedStep(state.options.maxStepSize);
               } else {
                 ACTS_VERBOSE("Finish Kalman filtering and smoothing");
                 // Remember that track finding is done
@@ -1206,8 +1206,7 @@ class CombinatorialKalmanFilter {
       state.stepping.jacTransport = FreeMatrix::Identity();
       state.stepping.derivative = FreeVector::Zero();
       // Reset the step size
-      state.stepping.stepSize =
-          ConstrainedStep(std::abs(state.options.maxStepSize));
+      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 

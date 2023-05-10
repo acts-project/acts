@@ -133,7 +133,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
     eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
-    eoptions.maxStepSize = direction * std::abs(maxStepSize);
+    eoptions.maxStepSize = maxStepSize;
     eoptions.targetTolerance = targetTolerance;
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
