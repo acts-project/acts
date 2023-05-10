@@ -546,8 +546,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       pos + navDir * distance * unitDir, unitDir);
 
   stepper.updateSurfaceStatus(state, *target, BoundaryCheck(false));
-  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor),
-                    navDir * distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
 
   // test the step size modification in the context of a surface
   stepper.updateStepSize(
@@ -555,7 +554,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),
       false);
-  BOOST_CHECK_EQUAL(state.stepSize.value() * navDir, distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
   state.stepSize.setValue(navDir * stepSize);
@@ -564,7 +563,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),
       true);
-  BOOST_CHECK_EQUAL(state.stepSize.value() * navDir, distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
