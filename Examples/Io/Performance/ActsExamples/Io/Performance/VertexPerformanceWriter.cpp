@@ -85,9 +85,9 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::bad_alloc();
   } else {
     // I/O parameters
-    m_outputTree->Branch("diffx", &m_resX);
-    m_outputTree->Branch("diffy", &m_resY);
-    m_outputTree->Branch("diffz", &m_resZ);
+    m_outputTree->Branch("resX", &m_resX);
+    m_outputTree->Branch("resY", &m_resY);
+    m_outputTree->Branch("resZ", &m_resZ);
 
     m_outputTree->Branch("pullX", &m_pullX);
     m_outputTree->Branch("pullY", &m_pullY);
