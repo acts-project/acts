@@ -604,9 +604,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         rMxy = std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
         double irMxy = 1 / rMxy;
-        float Ax = rMTransf[0] * irMxy;
-        float Ay = rMTransf[1] * irMxy;
-
+        float Ax = static_cast<float>(rMTransf[0] * irMxy);
+        float Ay = static_cast<float>(rMTransf[1] * irMxy);
         ub = (xB * Ax + yB * Ay) * iDeltaRB2;
         vb = (yB * Ax - xB * Ay) * iDeltaRB2;
         ut = (xT * Ax + yT * Ay) * iDeltaRT2;
