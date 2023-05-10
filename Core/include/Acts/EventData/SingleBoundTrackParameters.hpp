@@ -169,7 +169,7 @@ class SingleBoundTrackParameters {
   }
 
   /// Local spatial position two-vector.
-  Vector2 localPosition() const { return m_params.head<2>(); }
+  Vector2 localPosition() const { return m_params.segment<2>(eBoundLoc0); }
   /// Space-time position four-vector.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global
