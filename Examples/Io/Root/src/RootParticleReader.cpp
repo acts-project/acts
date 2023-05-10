@@ -10,9 +10,11 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <iostream>
 
@@ -143,11 +145,14 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     for (unsigned int i = 0; i < nParticles; i++) {
       SimParticle p;
 
+      p.setProcess(static_cast<ActsFatras::ProcessType>((*m_process)[i]));
+      p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType)[i]));
+      p.setCharge((*m_q)[i]);
+      p.setMass((*m_m)[i]);
       p.setParticleId((*m_particleId)[i]);
       p.setPosition4((*m_vx)[i], (*m_vy)[i], (*m_vz)[i], (*m_vt)[i]);
       p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
       p.setAbsoluteMomentum((*m_p)[i]);
-      p.setCharge((*m_q)[i]);
 
       particleContainer.insert(particleContainer.end(), p);
       priVtxCollection.push_back((*m_vertexPrimary)[i]);
