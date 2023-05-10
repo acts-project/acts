@@ -487,7 +487,7 @@ class CombinatorialKalmanFilter {
               // --> Call the smoothing
               // --> Set a stop condition when all track states have been
               // handled
-              auto res = finalize(state, stepper, result);
+              auto res = finalize(state, stepper, navigator, result);
               if (!res.ok()) {
                 ACTS_ERROR("Error in finalize: " << res.error());
                 result.result = res.error();
@@ -1089,12 +1089,16 @@ class CombinatorialKalmanFilter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
+                          const navigator_t& navigator,
                           result_type& result) const {
       // The measurement tip of the track being smoothed
       const auto& lastMeasurementIndex =
@@ -1209,6 +1213,11 @@ class CombinatorialKalmanFilter {
       state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
+
+      // Reset the navigation state to enable propagation towards the target
+      // surface
+      navigator.targetReached(state.navigation, false);
+      navigator.currentSurface(state.navigation, nullptr);
 
       return Result<void>::success();
     }

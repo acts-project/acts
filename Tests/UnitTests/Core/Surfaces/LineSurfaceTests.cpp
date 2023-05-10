@@ -17,8 +17,11 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
+#include <cmath>
 #include <limits>
+#include <tuple>
 
 namespace utf = boost::unit_test;
 
@@ -195,6 +198,58 @@ BOOST_AUTO_TEST_CASE(LineSurfaceAlignment) {
   ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << 1 / std::sqrt(2), 1 / std::sqrt(2), 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
+  LineSurfaceStub surface(Transform3::Identity());
+
+  auto roundTrip = [&surface](const Vector3& pos, const Vector3& dir) {
+    auto intersection = surface.intersect(tgContext, pos, dir);
+    Vector3 global = intersection.intersection.position;
+    Vector2 local = *surface.globalToLocal(tgContext, global, dir);
+    Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
+    return std::make_tuple(global, local, global2);
+  };
+
+  {
+    Vector3 pos = {-0.02801, 0.00475611, 0.285106};
+    Vector3 dir = Vector3(-0.03951, -0.221457, -0.564298).normalized();
+
+    auto [global, local, global2] = roundTrip(pos, dir);
+
+    CHECK_CLOSE_ABS(global, global2, 1e-10);
+  }
+
+  {
+    Vector3 pos = {-64.2892, 65.2697, -0.839014};
+    Vector3 dir = Vector3(-0.236602, -0.157616, 0.956786).normalized();
+
+    auto [global, local, global2] = roundTrip(pos, dir);
+
+    CHECK_CLOSE_ABS(global, global2, 1e-10);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
+  LineSurfaceStub surface(Transform3::Identity());
+
+  // eta=6 is already crashing
+  const std::vector<double> etas = {0, 1, 2, 3, 4, 5};
+
+  for (double eta : etas) {
+    Vector3 pca = {5, 0, 0};
+    Vector3 dir = makeDirectionUnitFromPhiEta(M_PI_2, eta);
+    Vector3 pos = pca + dir;
+
+    auto intersection = surface.intersect(tgContext, pos, dir);
+
+    Vector3 global = intersection.intersection.position;
+    Vector2 local = *surface.globalToLocal(tgContext, global, dir);
+    Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
+
+    CHECK_CLOSE_ABS(global, global2, 1e-10);
+    CHECK_CLOSE_ABS(pca, global2, 1e-10);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

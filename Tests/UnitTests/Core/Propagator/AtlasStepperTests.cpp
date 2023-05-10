@@ -473,7 +473,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // 2) Perigee surface
   // Setting some parameters
-  newPos << 1.5, -2.5, 3.5;
+  newPos << -2.06155, -2.06155, 3.5;
   newAbsMom *= 0.45;
   newTime = 2.3;
   newCharge = 1.;
