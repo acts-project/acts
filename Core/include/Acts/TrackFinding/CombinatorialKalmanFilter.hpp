@@ -1216,7 +1216,8 @@ class CombinatorialKalmanFilter {
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 
-      // Reset the navigation state to enable propagation towards the target surface
+      // Reset the navigation state to enable propagation towards the target
+      // surface
       navigator.targetReached(state.navigation, false);
       navigator.currentSurface(state.navigation, nullptr);
 

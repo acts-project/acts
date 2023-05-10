@@ -174,7 +174,7 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   mean.segment<3>(eFreeDir0).normalize();
 
   // Project the position on the surface.
-  // This is mainly necessary for the perigee surface, where 
+  // This is mainly necessary for the perigee surface, where
   // the mean might not fulfill the perigee condition.
   Vector3 position = mean.head<3>();
   Vector3 direction = mean.segment<3>(eFreeDir0);
