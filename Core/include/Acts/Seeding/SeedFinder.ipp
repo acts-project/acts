@@ -652,7 +652,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         if (cotThetaB - cotThetaT < 0) {
           break;
         }
-//        t0 = index_t + 1;
+        t0 = index_t + 1;
         continue;
       }
 
