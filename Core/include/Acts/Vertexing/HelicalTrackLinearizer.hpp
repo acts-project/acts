@@ -94,13 +94,15 @@ class HelicalTrackLinearizer {
       : m_cfg(config), m_logger{std::move(_logger)} {}
 
   /// @brief Function that linearizes BoundTrackParameters at
-  /// given linearization point
+  /// the PCA to a given Perigee surface
   ///
   /// @param params Parameters to linearize
-  /// @param linPoint Linearization point
-  /// @param gctx The geometry context
-  /// @param mctx The magnetic field context
-  /// @param state The state object
+  /// @param linPoint Point which defines the Perigee.
+  /// Transverse plane of Perigee is parallel to the global 
+  /// x-y plane
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
+  /// @param state Linearizer state object
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
