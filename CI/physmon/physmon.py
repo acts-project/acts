@@ -6,10 +6,6 @@ import shutil
 import datetime
 import sys
 
-sys.path += [
-    str(Path(__file__).parent.parent.parent / "Examples/Scripts/Python/"),
-]
-
 # this has to happen before we import the ACTS module
 import acts.examples
 

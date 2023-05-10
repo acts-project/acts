@@ -9,8 +9,13 @@ mkdir -p $outdir
 refdir=CI/physmon/reference
 refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
+source $SCRIPT_DIR/setup.sh
 echo "::group::Generate validation dataset"
+echo $PYTHONPATH
+
+exit
 CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
 echo "::endgroup::"
 
