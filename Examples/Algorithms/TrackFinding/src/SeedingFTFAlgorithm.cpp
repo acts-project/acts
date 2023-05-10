@@ -60,6 +60,8 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
+    
+    //this is now calling to a core algorithm 
     m_seedFinder = Acts::SeedFinderFTF<SimSpacePoint>(m_cfg.seedFinderConfig);
       } //want to change 37 to SeedFinderFTF
 
@@ -79,7 +81,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   } 
 
   Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig); 
-  //want to change 50 to SeedFinderFTF
+  //this is now calling on a core algorithm 
 
   //need this function as create_coords is needed for seeds 
   std::function<std::pair<Acts::Vector3, Acts::Vector2>(
@@ -94,7 +96,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       //output of function needed for seed
 
 
- 
+  //this createseeds function is defined in SeedFInderFTF in core 
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               spacePoints, create_coordinates);
 
@@ -146,36 +148,36 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       if (source_link.empty()){
         //warning in officaial acts format 
         ACTS_WARNING("warning source link vector is empty");
-
+        continue; 
       }
-      //continue if source link okay 
-      else {
-        int ACTS_vol_id = source_link.front().geometryId().volume() ;
-        int ACTS_lay_id = source_link.front().geometryId().layer() ; 
-        auto key = std::make_pair(ACTS_vol_id,ACTS_lay_id) ; 
-        auto Find = ACTS_FTF.find(key) ;
+
+
+      int ACTS_vol_id = source_link.front().geometryId().volume() ;
+      int ACTS_lay_id = source_link.front().geometryId().layer() ; 
+      auto key = std::make_pair(ACTS_vol_id,ACTS_lay_id) ; 
+      auto Find = ACTS_FTF.find(key) ;
         
-        //dont want strips or HGTD 
-        if (ACTS_vol_id == 2 or  ACTS_vol_id == 22 or ACTS_vol_id == 23 or ACTS_vol_id == 24){ 
-          continue; 
-        }
+      //dont want strips or HGTD, at the moment never called so commented out 
+      // if (ACTS_vol_id == 2 or  ACTS_vol_id == 22 or ACTS_vol_id == 23 or ACTS_vol_id == 24){ 
+      //   continue; 
+      // }
 
-        //warning if key not in map 
-        if (Find == ACTS_FTF.end()){
-          ACTS_WARNING("Key not found in map");
-          
-        } 
+      //warning if key not in map 
+      if (Find == ACTS_FTF.end()){
+        ACTS_WARNING("Key not found in FTF map for volume id: " << ACTS_vol_id << " and layer id: " << ACTS_lay_id  );
+        continue; 
+      } 
 
-        //now should be pixel with FTF ID: 
-        int FTF_id = Find->second ;
+      //now should be pixel with FTF ID: 
+      int FTF_id = Find->second ;
 
-        //backup warning shouldnt need as no 0 in csv 
-        if (FTF_id == 0) {
-          ACTS_WARNING("No assigned FTF ID for key") ;
-        }
+      //backup warning shouldnt need as no 0 in csv 
+      if (FTF_id == 0) {
+        ACTS_WARNING("No assigned FTF ID for key for volume id: " << ACTS_vol_id << " and layer id: " << ACTS_lay_id) ;
+      }
  
 
-      }
+
       
     }
   }

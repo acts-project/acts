@@ -229,6 +229,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
           for (auto& [dParameters, simhits] :
                moduleClusters.digitizedParameters()) {
+
             // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index measurementIdx = measurements.size();
@@ -252,6 +253,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                                  measurementIdx, simHitIdx);
             }
+          //rosie trying to print stuff 
+          std::cout<<" Rosie in digitization printing sizes " << dParameters.cluster.sizeLoc0; 
+  
           }
         },
         *digitizerItr);
@@ -262,6 +266,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   m_clusterWriteHandle(ctx, std::move(clusters));
   m_measurementParticlesMapWriteHandle(ctx, std::move(measurementParticlesMap));
   m_measurementSimHitsMapWriteHandle(ctx, std::move(measurementSimHitsMap));
+
   return ProcessCode::SUCCESS;
 }
 
@@ -340,6 +345,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
 
     dParameters.cluster.sizeLoc0 = size0;
     dParameters.cluster.sizeLoc1 = size1;
+
   }
 
   return dParameters;

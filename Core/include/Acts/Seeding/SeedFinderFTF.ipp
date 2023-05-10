@@ -29,13 +29,14 @@ template <typename external_spacepoint_t>
 SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
     const SeedFinderFTFConfig<external_spacepoint_t> &config)
     : m_config(config) {
+  m_storage = new TrigFTF_GNN_DataStorage(); //when define find relevant input 
   //schecks if internal units funciton used 
   // if (not config.isInInternalUnits) {
   //   throw std::runtime_error(
   //       "SeedFinderOrthogonalConfig not in ACTS internal units in "
   //       "SeedFinderOrthogonal");
 }
-
+//destructor too? deletes m_storage 
 
 
 //filter canditates function 
@@ -43,8 +44,7 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
 
 //create tree function- called in seeds 
 
-//need create seeds function 
-
+//need create seeds function- at same level as TrigTrackSeedGenerator_itk  
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t,
           typename callable_t>
@@ -68,7 +68,25 @@ SeedFinderFTF<external_spacepoint_t>::createSeeds(
   return r;
 }
 
+//define loadspace points funciton 
+ //when calling put input of vector<simspacepoints>, now can call space_point_t
+template <typename space_point_t>  
+void SeedFInderFTF::loadSpacePoints(const std::vector<space_point_t>& &vSP){ 
+// void SeedFInderFTF::loadSpacePoints(const std::vector<TrigSiSpacePointBase>& vSP) {
 
+  for(std::vector<space_point_t>::const_iterator it = vSP.begin();it != vSP.end();++it) {
+    //could check if pixel as pixels only have 1 source link (strip have 2)
+    bool isPixel = (*it).isPixel();
+
+    if(!isPixel) continue;
+    //think not using trigseedML for now 
+    //when called input should be simspace point 
+    m_storage->addSpacePoint((*it), (m_settings.m_useTrigSeedML > 0));
+  }
+  m_storage->sortByPhi();
+  m_storage->generatePhiIndexing(1.5*m_phiSliceWidth);
+
+}
 
 
 
