@@ -168,6 +168,8 @@ class SingleBoundTrackParameters {
     return m_params[kIndex];
   }
 
+  /// Local spatial position two-vector.
+  Vector2 localPosition() const { return m_params.segment<2>(eBoundLoc0); }
   /// Space-time position four-vector.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global
@@ -178,11 +180,9 @@ class SingleBoundTrackParameters {
   /// select the appropriate transformation and might be a computationally
   /// expensive operation.
   Vector4 fourPosition(const GeometryContext& geoCtx) const {
-    const Vector2 loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
-    const Vector3 dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
-                                                      m_params[eBoundTheta]);
     Vector4 pos4;
-    pos4.segment<3>(ePos0) = m_surface->localToGlobal(geoCtx, loc, dir);
+    pos4.segment<3>(ePos0) =
+        m_surface->localToGlobal(geoCtx, localPosition(), unitDirection());
     pos4[eTime] = m_params[eBoundTime];
     return pos4;
   }
@@ -196,10 +196,7 @@ class SingleBoundTrackParameters {
   /// select the appropriate transformation and might be a computationally
   /// expensive operation.
   Vector3 position(const GeometryContext& geoCtx) const {
-    const Vector2 loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
-    const Vector3 dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
-                                                      m_params[eBoundTheta]);
-    return m_surface->localToGlobal(geoCtx, loc, dir);
+    return m_surface->localToGlobal(geoCtx, localPosition(), unitDirection());
   }
   /// Time coordinate.
   Scalar time() const { return m_params[eBoundTime]; }

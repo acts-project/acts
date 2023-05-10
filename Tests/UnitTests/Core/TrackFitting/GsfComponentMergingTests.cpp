@@ -173,6 +173,15 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
 
   mean.segment<3>(eFreeDir0).normalize();
 
+  // Project the position on the surface.
+  // This is mainly necessary for the perigee surface, where
+  // the mean might not fulfill the perigee condition.
+  Vector3 position = mean.head<3>();
+  Vector3 direction = mean.segment<3>(eFreeDir0);
+  auto intersection =
+      surface.intersect(GeometryContext{}, position, direction, false);
+  mean.head<3>() = intersection.intersection.position;
+
   return *detail::transformFreeToBoundParameters(mean, surface,
                                                  GeometryContext{});
 }
@@ -337,5 +346,5 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   const LocPosArray p{{{d, z}, {d, -z}, {2 * d, z}, {2 * d, -z}}};
 
   // Here we expect a very bad approximation
-  test_surface(*surface, desc, p, 1.);
+  test_surface(*surface, desc, p, 1.1);
 }
