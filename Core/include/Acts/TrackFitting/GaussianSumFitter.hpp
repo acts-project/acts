@@ -243,7 +243,8 @@ struct GaussianSumFitter {
 
     ACTS_VERBOSE(
         "Gsf: Final measuerement map size: " << inputMeasurements.size());
-    if (sParameters.covariance() != std::nullopt) {
+
+    if (sParameters.covariance() == std::nullopt) {
       return GsfError::StartParametersHaveNoCovariance;
     }
 
