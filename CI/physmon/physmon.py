@@ -122,9 +122,7 @@ def truth_tracking_gsf():
         shutil.copy(perf_file, outdir / "performance_gsf.root")
 
 
-def run_ckf_tracking(
-    truthSmearedSeeded, truthEstimatedSeeded, iterativeVertexFinder, label
-):
+def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
             events=500, numThreads=-1, logLevel=acts.logging.INFO
