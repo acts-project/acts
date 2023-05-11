@@ -344,37 +344,39 @@ def run_vertexing(fitter, mu, events):
         )
 
 
-### Truth tracking with Kalman Filter
-if args.mode == "all" or args.mode == "kalman":
-    truth_tracking_kalman()
+with acts.FpeMonitor():
 
-### GSF
-if args.mode == "all" or args.mode == "gsf":
-    truth_tracking_gsf()
+    ### Truth tracking with Kalman Filter
+    if args.mode == "all" or args.mode == "kalman":
+        truth_tracking_kalman()
 
-### CKF track finding variations
-if args.mode == "all" or args.mode == "fullchains":
-    for truthSmearedSeeded, truthEstimatedSeeded, label in [
-        (True, False, "truth_smeared"),  # if first is true, second is ignored
-        (False, True, "truth_estimated"),
-        (False, False, "seeded"),
-        (False, False, "orthogonal"),
-    ]:
-        run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
+    ### GSF
+    if args.mode == "all" or args.mode == "gsf":
+        truth_tracking_gsf()
 
-### VERTEX MU SCAN
-if args.mode == "all" or args.mode == "vertexing":
-    for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
-        for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
-            start = datetime.datetime.now()
+    ### CKF track finding variations
+    if args.mode == "all" or args.mode == "fullchains":
+        for truthSmearedSeeded, truthEstimatedSeeded, label in [
+            (True, False, "truth_smeared"),  # if first is true, second is ignored
+            (False, True, "truth_estimated"),
+            (False, False, "seeded"),
+            (False, False, "orthogonal"),
+        ]:
+            run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
 
-            events = 5
-            run_vertexing(fitter, mu, events)
+    ### VERTEX MU SCAN
+    if args.mode == "all" or args.mode == "vertexing":
+        for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
+            for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
+                start = datetime.datetime.now()
 
-            delta = datetime.datetime.now() - start
+                events = 5
+                run_vertexing(fitter, mu, events)
 
-            duration = delta.total_seconds() / events
+                delta = datetime.datetime.now() - start
 
-            (
-                outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
-            ).write_text(str(duration))
+                duration = delta.total_seconds() / events
+
+                (
+                    outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
+                ).write_text(str(duration))
