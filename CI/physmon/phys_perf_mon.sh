@@ -71,7 +71,7 @@ function full_chain() {
 
     Examples/Scripts/generic_plotter.py \
         $outdir/performance_ivf_${suffix}.root \
-        ivf \
+        vertexing \
         $outdir/performance_ivf_${suffix}_hist.root \
         --silent \
         --config CI/physmon/vertexing_config.yml
@@ -89,7 +89,7 @@ function full_chain() {
 
     Examples/Scripts/generic_plotter.py \
         $outdir/performance_amvf_${suffix}.root \
-        amvf \
+        vertexing \
         $outdir/performance_amvf_${suffix}_hist.root \
         --silent \
         --config CI/physmon/vertexing_config.yml
