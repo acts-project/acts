@@ -98,8 +98,8 @@ class HelicalTrackLinearizer {
   ///
   /// @param params Parameters to linearize
   /// @param linPoint Point which defines the Perigee.
-  /// Transverse plane of Perigee is parallel to the global 
-  /// x-y plane
+  /// @note Transverse plane of the Perigee corresponding to @p linPoint is
+  /// parallel to the global x-y plane
   /// @param gctx Geometry context
   /// @param mctx Magnetic field context
   /// @param state Linearizer state object
