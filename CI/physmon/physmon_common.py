@@ -1,34 +1,54 @@
 import collections
+import argparse
+from pathlib import Path
 
 import acts
 
-Setup = collections.namedtuple("Setup", ["detector", "trackingGeometry", "decorators", "field", "digiConfig", "geoSel", "outdir"])
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
+
+Setup = collections.namedtuple(
+    "Setup",
+    [
+        "detector",
+        "trackingGeometry",
+        "decorators",
+        "field",
+        "digiConfig",
+        "geoSel",
+        "outdir",
+    ],
+)
 
 
 def makeSetup() -> Setup:
     u = acts.UnitConstants
-
-    setup = Setup()
-    setup.matDeco = acts.IMaterialDecorator.fromFile(
-        srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
-        level=acts.logging.INFO,
-    )
-    setup.detector, setup.trackingGeometry, setup.decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory(), setup.matDeco
-    )
-    setup.digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-    setup.geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
-
-    setup.field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+    srcdir = Path(__file__).resolve().parent.parent.parent
 
     parser = argparse.ArgumentParser()
     parser.add_argument("outdir")
 
     args = parser.parse_args()
 
-    setup.outdir = Path(args.outdir)
+    matDeco = acts.IMaterialDecorator.fromFile(
+        srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
+        level=acts.logging.INFO,
+    )
+
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(), matDeco
+    )
+    setup = Setup(
+        detector=detector,
+        trackingGeometry=trackingGeometry,
+        decorators=decorators,
+        digiConfig=srcdir
+        / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
+        geoSel=srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json",
+        field=acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T)),
+        outdir=Path(args.outdir),
+    )
+
     setup.outdir.mkdir(exist_ok=True)
 
     return setup
-
-

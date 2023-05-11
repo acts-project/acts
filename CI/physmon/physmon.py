@@ -15,8 +15,6 @@ acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 from truth_tracking_gsf import runTruthTrackingGsf
-from common import getOpenDataDetectorDirectory
-from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -43,32 +41,12 @@ from acts.examples.reconstruction import (
     TrackSelectorRanges,
 )
 
+from physmon_common import makeSetup
 
-parser = argparse.ArgumentParser()
-parser.add_argument("outdir")
-
-args = parser.parse_args()
-
-outdir = Path(args.outdir)
-outdir.mkdir(exist_ok=True)
-
-
-srcdir = Path(__file__).resolve().parent.parent.parent
-
+setup = makeSetup()
 
 u = acts.UnitConstants
 
-matDeco = acts.IMaterialDecorator.fromFile(
-    srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
-    level=acts.logging.INFO,
-)
-detector, trackingGeometry, decorators = getOpenDataDetector(
-    getOpenDataDetectorDirectory(), matDeco
-)
-digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
-
-field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
 
 def truth_tracking_kalman():
@@ -79,9 +57,9 @@ def truth_tracking_kalman():
 
         tp = Path(temp)
         runTruthTrackingKalman(
-            trackingGeometry,
-            field,
-            digiConfigFile=digiConfig,
+            setup.trackingGeometry,
+            setup.field,
+            digiConfigFile=setup.digiConfig,
             outputDir=tp,
             s=s,
         )
@@ -91,7 +69,7 @@ def truth_tracking_kalman():
 
         perf_file = tp / "performance_track_fitter.root"
         assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
+        shutil.copy(perf_file, setup.outdir / "performance_truth_tracking.root")
 
 
 def truth_tracking_gsf():
@@ -102,9 +80,9 @@ def truth_tracking_gsf():
 
         tp = Path(temp)
         runTruthTrackingGsf(
-            trackingGeometry,
-            digiConfig,
-            field,
+            setup.trackingGeometry,
+            setup.digiConfig,
+            setup.field,
             outputDir=tp,
             s=s,
         )
@@ -114,7 +92,7 @@ def truth_tracking_gsf():
 
         perf_file = tp / "performance_gsf.root"
         assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, outdir / "performance_gsf.root")
+        shutil.copy(perf_file, setup.outdir / "performance_gsf.root")
 
 
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
@@ -125,7 +103,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
         tp = Path(temp)
 
-        for d in decorators:
+        for d in setup.decorators:
             s.addContextDecorator(d)
 
         rnd = acts.examples.RandomNumbers(seed=42)
@@ -145,23 +123,23 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
         addFatras(
             s,
-            trackingGeometry,
-            field,
+            setup.trackingGeometry,
+            setup.field,
             rnd=rnd,
         )
 
         addDigitization(
             s,
-            trackingGeometry,
-            field,
-            digiConfigFile=digiConfig,
+            setup.trackingGeometry,
+            setup.field,
+            digiConfigFile=setup.digiConfig,
             rnd=rnd,
         )
 
         addSeeding(
             s,
-            trackingGeometry,
-            field,
+            setup.trackingGeometry,
+            setup.field,
             TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
             ParticleSmearingSigmas(
                 pRel=0.01
@@ -186,15 +164,15 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             else SeedingAlgorithm.Default
             if label == "seeded"
             else SeedingAlgorithm.Orthogonal,
-            geoSelectionConfigFile=geoSel,
+            geoSelectionConfigFile=setup.geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
         )
 
         addCKFTracks(
             s,
-            trackingGeometry,
-            field,
+            setup.trackingGeometry,
+            setup.field,
             CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
             TrackSelectorRanges(
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
@@ -213,7 +191,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
         addVertexFitting(
             s,
-            field,
+            setup.field,
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
@@ -237,7 +215,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         ):
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
-            shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
+            shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
 
 
 def run_vertexing(fitter, mu, events):
@@ -248,7 +226,7 @@ def run_vertexing(fitter, mu, events):
 
         tp = Path(temp)
 
-        for d in decorators:
+        for d in setup.decorators:
             s.addContextDecorator(d)
 
         rnd = acts.examples.RandomNumbers(seed=42)
@@ -268,23 +246,23 @@ def run_vertexing(fitter, mu, events):
 
         addFatras(
             s,
-            trackingGeometry,
-            field,
+            setup.trackingGeometry,
+            setup.field,
             rnd=rnd,
         )
 
         addDigitization(
             s,
-            trackingGeometry,
-            field,
-            digiConfigFile=digiConfig,
+            setup.trackingGeometry,
+            setup.field,
+            digiConfigFile=setup.digiConfig,
             rnd=rnd,
         )
 
         addSeeding(
             s,
-            trackingGeometry,
-            field,
+            setup.trackingGeometry,
+            setup.field,
             SeedFinderConfigArg(
                 r=(None, 200 * u.mm),  # rMin=default, 33mm
                 deltaR=(1 * u.mm, 60 * u.mm),
@@ -298,14 +276,14 @@ def run_vertexing(fitter, mu, events):
             ),
             SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
-            geoSelectionConfigFile=geoSel,
+            geoSelectionConfigFile=setup.geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
         addCKFTracks(
             s,
-            trackingGeometry,
-            field,
+            setup.trackingGeometry,
+            setup.field,
             CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
             TrackSelectorRanges(
                 pt=(500 * u.MeV, None),
@@ -322,7 +300,7 @@ def run_vertexing(fitter, mu, events):
 
         addVertexFitting(
             s,
-            field,
+            setup.field,
             vertexFinder=fitter,
             outputDirRoot=tp,
         )
@@ -335,7 +313,7 @@ def run_vertexing(fitter, mu, events):
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(
             perf_file,
-            outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root",
+            setup.outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root",
         )
 
 
@@ -373,5 +351,5 @@ with acts.FpeMonitor():
             duration = delta.total_seconds() / events
 
             (
-                outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
+                setup.outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
             ).write_text(str(duration))
