@@ -224,19 +224,34 @@ def run_ckf_tracking(
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
-            vertexFinder=VertexFinder.Iterative
-            if iterativeVertexFinder
-            else VertexFinder.AMVF,
-            outputDirRoot=tp,
+            vertexFinder=VertexFinder.Iterative,
+            outputDirRoot=tp / "ivf",
+        )
+
+        addVertexFitting(
+            s,
+            field,
+            associatedParticles=None
+            if label in ["seeded", "orthogonal"]
+            else "particles_input",
+            vertexFinder=VertexFinder.AMVF,
+            outputDirRoot=tp / "amvf",
         )
 
         s.run()
         del s
 
+        for vertexing in ["ivf", "amvf"]:
+            shutil.move(
+                tp / f"{vertexing}/performance_vertexing.root",
+                f"performance_{vertexing}.root",
+            )
+
         for stem in [
             "performance_ckf",
             "tracksummary_ckf",
-            "performance_vertexing",
+            "performance_ivf",
+            "performance_amvf",
         ] + (
             ["performance_seeding", "performance_ambi"]
             if label in ["seeded", "orthogonal"]
@@ -366,13 +381,7 @@ with acts.FpeMonitor():
             (False, False, "seeded"),
             (False, False, "orthogonal"),
         ]:
-            for iterativeVertexFinder, postfix in [(True, "ivf"), (False, "amvf")]:
-                run_ckf_tracking(
-                    truthSmearedSeeded,
-                    truthEstimatedSeeded,
-                    iterativeVertexFinder,
-                    f"{label}_{postfix}",
-                )
+            run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
 
     ### VERTEX MU SCAN
     if args.mode == "all" or args.mode == "vertexing":

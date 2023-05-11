@@ -70,19 +70,34 @@ function full_chain() {
         -p $outdir/ckf_${suffix}_plots
 
     Examples/Scripts/generic_plotter.py \
-        $outdir/performance_vertexing_${suffix}.root \
-        vertexing \
-        $outdir/performance_vertexing_${suffix}_hist.root \
+        $outdir/performance_ivf_${suffix}.root \
+        ivf \
+        $outdir/performance_ivf_${suffix}_hist.root \
         --silent \
-        --config CI/physmon/vertexing_config.yml
+        --config CI/physmon/ivf_config.yml
     ec=$(($ec | $?))
 
     run \
-        $outdir/performance_vertexing_${suffix}_hist.root \
-        $refdir/performance_vertexing_${suffix}_hist.root \
+        $outdir/performance_ivf_${suffix}_hist.root \
+        $refdir/performance_ivf_${suffix}_hist.root \
         --title "IVF ${suffix}" \
         -o $outdir/ivf_${suffix}.html \
         -p $outdir/ivf_${suffix}_plots
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/performance_amvf_${suffix}.root \
+        amvf \
+        $outdir/performance_amvf_${suffix}_hist.root \
+        --silent \
+        --config CI/physmon/amvf_config.yml
+    ec=$(($ec | $?))
+
+    run \
+        $outdir/performance_amvf_${suffix}_hist.root \
+        $refdir/performance_amvf_${suffix}_hist.root \
+        --title "AMVF ${suffix}" \
+        -o $outdir/amvf_${suffix}.html \
+        -p $outdir/amvf_${suffix}_plots
 
     Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_ckf_${suffix}.root \
