@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/LineSurface.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
@@ -63,7 +64,7 @@ Acts::Vector3 Acts::LineSurface::localToGlobal(const GeometryContext& gctx,
 
 Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& momentum, double /*tolerance*/) const {
+    const Vector3& momentum, double tolerance) const {
   using VectorHelpers::perp;
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
@@ -77,6 +78,12 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
   // assign the right sign
   double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
   lposition[eBoundLoc0] *= sign;
+
+  if ((localToGlobal(gctx, lposition, momentum) - position).norm() >
+      tolerance) {
+    return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
+  }
+
   return Result<Vector2>::success(lposition);
 }
 
