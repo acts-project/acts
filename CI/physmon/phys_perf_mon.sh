@@ -2,7 +2,14 @@
 
 set -e
 
-outdir=$1
+
+mode=$1
+if ! [[ $mode = @(all|kalman|gsf|fullchains|vertexing) ]]; then
+    echo "Usage: $0 <all|kalman|gsf|fullchains|vertexing> (outdir)"
+    exit 1
+fi
+
+outdir=$2
 [ -z "$outdir" ] && outdir=physmon
 mkdir -p $outdir
 
@@ -11,7 +18,7 @@ refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
 
 echo "::group::Generate validation dataset"
-CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
+CI/physmon/physmon.py $mode $outdir 2>&1 > $outdir/run.log
 echo "::endgroup::"
 
 set +e
@@ -98,45 +105,53 @@ function full_chain() {
 
 }
 
-full_chain truth_smeared
-full_chain truth_estimated
-full_chain seeded
-full_chain orthogonal
+if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
+    full_chain truth_smeared
+    full_chain truth_estimated
+    full_chain seeded
+    full_chain orthogonal
 
-run \
-    $outdir/performance_gsf.root \
-    $refdir/performance_gsf.root \
-    --title "Truth tracking (GSF)" \
-    -c CI/physmon/gsf.yml \
-    -o $outdir/gsf.html \
-    -p $outdir/gsf_plots
+    run \
+        $outdir/performance_ambi_seeded.root \
+        $refdir/performance_ambi_seeded.root \
+        --title "Ambisolver seeded" \
+        -o $outdir/ambi_seeded.html \
+        -p $outdir/ambi_seeded_plots
 
-run \
-    $outdir/performance_truth_tracking.root \
-    $refdir/performance_truth_tracking.root \
-    --title "Truth tracking" \
-    -c CI/physmon/truth_tracking.yml \
-    -o $outdir/truth_tracking.html \
-    -p $outdir/truth_tracking_plots
+    run \
+        $outdir/performance_ambi_orthogonal.root \
+        $refdir/performance_ambi_orthogonal.root \
+        --title "Ambisolver orthogonal" \
+        -o $outdir/ambi_orthogonal.html \
+        -p $outdir/ambi_orthogonal_plots
+fi
 
-run \
-    $outdir/performance_ambi_seeded.root \
-    $refdir/performance_ambi_seeded.root \
-    --title "Ambisolver seeded" \
-    -o $outdir/ambi_seeded.html \
-    -p $outdir/ambi_seeded_plots
-    
-run \
-    $outdir/performance_ambi_orthogonal.root \
-    $refdir/performance_ambi_orthogonal.root \
-    --title "Ambisolver orthogonal" \
-    -o $outdir/ambi_orthogonal.html \
-    -p $outdir/ambi_orthogonal_plots
+if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
+    run \
+        $outdir/performance_gsf.root \
+        $refdir/performance_gsf.root \
+        --title "Truth tracking (GSF)" \
+        -c CI/physmon/gsf.yml \
+        -o $outdir/gsf.html \
+        -p $outdir/gsf_plots
+fi
 
-Examples/Scripts/vertex_mu_scan.py \
-    $outdir/performance_vertexing_*mu*.root \
-    $outdir/vertexing_mu_scan.pdf
+if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
+    run \
+        $outdir/performance_truth_tracking.root \
+        $refdir/performance_truth_tracking.root \
+        --title "Truth tracking" \
+        -c CI/physmon/truth_tracking.yml \
+        -o $outdir/truth_tracking.html \
+        -p $outdir/truth_tracking_plots
+fi
 
-rm $outdir/performance_vertexing_*mu*
+if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
+    Examples/Scripts/vertex_mu_scan.py \
+        $outdir/performance_vertexing_*mu*.root \
+        $outdir/vertexing_mu_scan.pdf
+
+    rm $outdir/performance_vertexing_*mu*
+fi
 
 exit $ec
