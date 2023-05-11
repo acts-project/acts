@@ -101,8 +101,10 @@ void ActsExamples::ScalingCalibrator::calibrate(
     const Acts::GeometryContext& /*gctx*/,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
-  const IndexSourceLink& sourceLink =
-      trackState.getUncalibratedSourceLink().get<IndexSourceLink>();
+
+  Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
+  const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
+
   assert((sourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
