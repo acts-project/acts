@@ -122,7 +122,9 @@ def truth_tracking_gsf():
         shutil.copy(perf_file, outdir / "performance_gsf.root")
 
 
-def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
+def run_ckf_tracking(
+    truthSmearedSeeded, truthEstimatedSeeded, iterativeVertexFinder, label
+):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
             events=500, numThreads=-1, logLevel=acts.logging.INFO
@@ -222,7 +224,9 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
-            vertexFinder=VertexFinder.Iterative,
+            vertexFinder=VertexFinder.Iterative
+            if iterativeVertexFinder
+            else VertexFinder.AMVF,
             outputDirRoot=tp,
         )
 
@@ -362,7 +366,13 @@ with acts.FpeMonitor():
             (False, False, "seeded"),
             (False, False, "orthogonal"),
         ]:
-            run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
+            for iterativeVertexFinder, postfix in [(True, "ivf"), (False, "amvf")]:
+                run_ckf_tracking(
+                    truthSmearedSeeded,
+                    truthEstimatedSeeded,
+                    iterativeVertexFinder,
+                    f"{label}_{postfix}",
+                )
 
     ### VERTEX MU SCAN
     if args.mode == "all" or args.mode == "vertexing":
