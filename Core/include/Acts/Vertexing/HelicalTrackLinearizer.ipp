@@ -86,6 +86,11 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   //Momentu at the PCA
   Vector3 momentumAtPCA(phi, theta, qOvP);
 
+  // Define Jacobians, which will be filled later
+  ActsMatrix<eBoundSize, 4> positionJacobian;
+  positionJacobian.setZero();
+  ActsMatrix<eBoundSize, 3> momentumJacobian;
+  momentumJacobian.setZero();
   // get the z-component of the B-field at the PCA
   auto field = m_cfg.bField->getField(VectorHelpers::position(PCA),
                                       state.fieldCache);
@@ -94,69 +99,99 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
   double Bz = (*field)[eZ];
   
-  // Helix radius
-  double rho = 0;
-  // Radius is infinite when B-field is 0
-  // Comparison of floats - should we handle this differently?
+  // If there is no magnetic field the particle has a straight trajectory
+  // If there is a constant magnetic field it has a helical trajectory
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
-    rho = sgnH * m_cfg.maxRho;
-  } else {
-    rho = sinTh * (1. / qOvP) / Bz;
+    // Fill position Jacobian, i.e., matrix A from Eq. 5.39 in Ref(1)
+    // First row
+    positionJacobian(0, 0) = -sinPhi;
+    positionJacobian(0, 1) = cosPhi;
+
+    // Second row
+    positionJacobian(1, 0) = -cosPhi / tanTh;
+    positionJacobian(1, 1) = -sinPhi / tanTh;
+    positionJacobian(1, 2) = 1.;
+
+    // TODO: include timing in track linearization - will be added 
+    // in next PR
+    // Sixth row
+    positionJacobian(5, 3) = 1.;
+
+    //Quantities from Eq. 5.41 and 5.42 in Ref (1)
+    double R = (PCA(0) - linPointPos.x()) * cosPhi + (PCA(1) - linPointPos.y()) * sinPhi;
+    double Q = (PCA(0) - linPointPos.x()) * sinPhi - (PCA(1) - linPointPos.y()) * cosPhi;
+
+    // Fill momentum Jacobian, i.e., matrix B from Eq. 5.40 in Ref(1)
+    // First row
+    momentumJacobian(0, 0) = -R;
+
+    // Second row
+    momentumJacobian(1, 0) = Q / tanTh;
+    momentumJacobian(1, 1) = R / (sinTh*sinTh);
+
+    // Third row
+    momentumJacobian(2, 0) = 1.;
+
+    // Fourth row
+    momentumJacobian(3, 1) = 1.;
+    
+    //Fifth row
+    momentumJacobian(4, 2) = 1.;
+
+    // TODO: Derivatives of time --> Next PR
+  } 
+  else {
+    //Helix radius
+    double rho {sinTh * (1. / qOvP) / Bz};
+
+    // Quantities from Eq. 5.34 in Ref(1) (see .hpp)
+    double X = PCA(0) - linPointPos.x() + rho * sinPhi;
+    double Y = PCA(1) - linPointPos.y() - rho * cosPhi;
+    const double S2 = (X * X + Y * Y);
+    // S is the 2D distance from the helix center to linPointPos
+    // in the x-y plane
+    const double S = std::sqrt(S2);
+
+    // Fill position Jacobian, i.e., matrix A from Eq. 5.36 in Ref(1)
+    // First row
+    positionJacobian(0, 0) = -sgnH * X / S;
+    positionJacobian(0, 1) = -sgnH * Y / S;
+
+    const double S2tanTh = S2 * tanTh;
+
+    // Second row
+    positionJacobian(1, 0) = rho * Y / S2tanTh;
+    positionJacobian(1, 1) = -rho * X / S2tanTh;
+    positionJacobian(1, 2) = 1.;
+
+    // Third row
+    positionJacobian(2, 0) = -Y / S2;
+    positionJacobian(2, 1) = X / S2;
+
+    // TODO: include timing in track linearization - will be added 
+    // in next PR
+    // Sixth row
+    positionJacobian(5, 3) = 1.;
+
+    // Fill momentum Jacobian, i.e., B matrix from Eq. 5.37 in Ref(1).
+    // Since we propagated to the PCA (point P in Ref(1)), the points
+    // P and V coincide and we can choose deltaPhi = 0. 
+    // One can show that if deltaPhi = 0 --> R = 0 and Q = sgnH * S.
+    // As a consequence, many terms of the B matrix from Eq. 5.37 vanish.
+    double rhoOverS {sgnH * rho / S};
+
+    // Second row
+    momentumJacobian(1, 0) = (1. - rhoOverS) * rho / tanTh;
+
+    // Third row
+    momentumJacobian(2, 0) = rhoOverS;
+
+    //Fourth and fifth row
+    momentumJacobian(3, 1) = 1.;
+    momentumJacobian(4, 2) = 1.;
+    
+    // TODO: Derivatives of time --> Next PR
   }
-
-  // Quantities from Eq. 5.34 in Ref(1) (see .hpp)
-  double X = PCA(0) - linPointPos.x() + rho * sinPhi;
-  double Y = PCA(1) - linPointPos.y() - rho * cosPhi;
-  const double S2 = (X * X + Y * Y);
-  // S is the 2D distance from the helix center to linPointPos
-  // in the x-y plane
-  const double S = std::sqrt(S2);
-
-  // Fill position Jacobian, i.e., matrix A from Eq. 5.36 in Ref(1)
-  ActsMatrix<eBoundSize, 4> positionJacobian;
-  positionJacobian.setZero();
-  
-  // First row
-  positionJacobian(0, 0) = -sgnH * X / S;
-  positionJacobian(0, 1) = -sgnH * Y / S;
-
-  const double S2tanTh = S2 * tanTh;
-
-  // Second row
-  positionJacobian(1, 0) = rho * Y / S2tanTh;
-  positionJacobian(1, 1) = -rho * X / S2tanTh;
-  positionJacobian(1, 2) = 1.;
-
-  // Third row
-  positionJacobian(2, 0) = -Y / S2;
-  positionJacobian(2, 1) = X / S2;
-
-  // TODO: include timing in track linearization - will be added 
-  // in next PR
-  // Last row
-  positionJacobian(5, 3) = 1;
-
-  // Fill momentum Jacobian, i.e., B matrix from Eq. 5.37 in Ref(1).
-  // Since we propagated to the PCA (point P in Ref(1)), the points
-  // P and V coincide and we can choose deltaPhi = 0. 
-  // One can show that if deltaPhi = 0 --> R = 0 and Q = sgnH * S.
-  // As a consequence, many terms of the B matrix from Eq. 5.37 vanish.
-  ActsMatrix<eBoundSize, 3> momentumJacobian;
-  momentumJacobian.setZero();
-
-  double rhoOverS {sgnH * rho / S};
-
-  // Second row
-  momentumJacobian(1, 0) = (1. - rhoOverS) * rho / tanTh;
-
-  // Third row
-  momentumJacobian(2, 0) = rhoOverS;
-
-  //Fourth and fifth row
-  momentumJacobian(3, 1) = 1.;
-  momentumJacobian(4, 2) = 1.;
-
-  // TODO: Derivatives of time --> Next PR
 
   // const term in Talyor expansion from Eq. 5.38 in Ref(1)
   BoundVector constTerm = paramsAtPCA - positionJacobian * PCA -
