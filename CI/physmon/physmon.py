@@ -247,7 +247,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         for vertexing in ["ivf", "amvf"]:
             shutil.move(
                 tp / f"{vertexing}/performance_vertexing.root",
-                f"performance_{vertexing}.root",
+                tp / f"performance_{vertexing}.root",
             )
 
         for stem in [
