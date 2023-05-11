@@ -74,7 +74,7 @@ function full_chain() {
         ivf \
         $outdir/performance_ivf_${suffix}_hist.root \
         --silent \
-        --config CI/physmon/ivf_config.yml
+        --config CI/physmon/vertexing_config.yml
     ec=$(($ec | $?))
 
     run \
@@ -89,7 +89,7 @@ function full_chain() {
         amvf \
         $outdir/performance_amvf_${suffix}_hist.root \
         --silent \
-        --config CI/physmon/amvf_config.yml
+        --config CI/physmon/vertexing_config.yml
     ec=$(($ec | $?))
 
     run \
