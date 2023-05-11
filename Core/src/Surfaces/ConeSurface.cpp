@@ -281,7 +281,7 @@ Acts::detail::RealQuadraticEquation Acts::ConeSurface::intersectionSolver(
 Acts::SurfaceIntersection Acts::ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
-    double tolerance) const {
+    ActsScalar tolerance) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 

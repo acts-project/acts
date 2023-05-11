@@ -265,7 +265,7 @@ class DiscSurface : public Surface {
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
-      double tolerance = s_onSurfaceTolerance) const final;
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue
   ///

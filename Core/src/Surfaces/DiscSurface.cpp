@@ -288,7 +288,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
 Acts::SurfaceIntersection Acts::DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
-    double tolerance) const {
+    ActsScalar tolerance) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces

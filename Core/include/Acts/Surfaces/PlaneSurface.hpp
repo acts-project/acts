@@ -179,7 +179,7 @@ class PlaneSurface : public Surface {
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
-      double tolerance = s_onSurfaceTolerance) const final;
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
   ///

@@ -211,7 +211,7 @@ Acts::detail::RealQuadraticEquation Acts::CylinderSurface::intersectionSolver(
 Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
-    double tolerance) const {
+    ActsScalar tolerance) const {
   const auto& gctxTransform = transform(gctx);
 
   // Solve the quadratic equation

@@ -173,7 +173,7 @@ double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
 Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
-    double tolerance) const {
+    ActsScalar tolerance) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces

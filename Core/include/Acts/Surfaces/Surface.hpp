@@ -404,7 +404,7 @@ class Surface : public virtual GeometryObject,
   virtual SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
-      double tolerance = s_onSurfaceTolerance) const = 0;
+      ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///

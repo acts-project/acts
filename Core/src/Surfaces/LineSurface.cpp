@@ -127,7 +127,7 @@ const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
 Acts::SurfaceIntersection Acts::LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
-    double tolerance) const {
+    ActsScalar tolerance) const {
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track
   const Vector3& ma = position;
