@@ -963,7 +963,7 @@ def addCKFTracks(
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="ckfTracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
-            trackingGeometry, field
+            trackingGeometry, field, customLogLevel()
         ),
     )
     s.addAlgorithm(trackFinder)
