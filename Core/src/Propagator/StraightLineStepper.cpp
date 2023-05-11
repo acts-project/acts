@@ -70,7 +70,7 @@ void StraightLineStepper::resetState(State& state,
                                      const BoundVector& boundParams,
                                      const BoundSymMatrix& cov,
                                      const Surface& surface,
-                                     const NavigationDirection navDir,
+                                     const Direction navDir,
                                      const double stepSize) const {
   // Update the stepping state
   update(state,

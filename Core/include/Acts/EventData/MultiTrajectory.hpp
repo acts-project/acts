@@ -44,14 +44,92 @@ enum TrackStateFlag {
   NumTrackStateFlags = 6
 };
 
-using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
+class ConstTrackStateType;
+
+/// View type over a bitset stored in a 64 bit integer
+/// This view allows modifications.
+class TrackStateType {
+ public:
+  using raw_type = std::uint64_t;
+  /// Constructor from a reference to the underlying value container
+  /// @param raw the value container
+  TrackStateType(raw_type& raw) : m_raw{&raw} {}
+
+  /// Assign the value from another set of flags
+  /// @param other the other set of flags to assign
+  /// @return this object
+  TrackStateType& operator=(const TrackStateType& other) {
+    *m_raw = *other.m_raw;
+    return *this;
+  }
+
+  /// Assign the value from another set of flags
+  /// @param other the other set of flags to assign
+  /// @return this object
+  TrackStateType& operator=(const ConstTrackStateType& other);
+
+  /// Return if the bit at position @p pos is 1
+  /// @param pos the bit position
+  /// @return if the bit at @p pos is one or not
+  bool test(std::size_t pos) const {
+    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    return bs.test(pos);
+  }
+
+  /// Change the value of the bit at position @p pos to @p value.
+  /// @param pos the position of the bit to change
+  /// @param value the value to change the bit to
+  void set(std::size_t pos, bool value = true) {
+    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    bs.set(pos, value);
+    *m_raw = bs.to_ullong();
+  }
+
+  /// Change the value of the bit at position at @p pos to @c false
+  /// @param pos the position of the bit to change
+  void reset(std::size_t pos) { set(pos, false); }
+
+ private:
+  raw_type* m_raw{nullptr};
+};
+
+/// View type over a bitset stored in a 64 bit integer
+/// This view does not allow modifications
+class ConstTrackStateType {
+ public:
+  using raw_type = std::uint64_t;
+
+  /// Constructor from a reference to the underlying value container
+  /// @param raw the value container
+  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {}
+
+  /// Return if the bit at position @p pos is 1
+  /// @param pos the bit position
+  /// @return if the bit at @p pos is one or not
+  bool test(std::size_t pos) const {
+    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    return bs.test(pos);
+  }
+
+ private:
+  friend class TrackStateType;
+  const raw_type* m_raw{nullptr};
+};
+
+inline TrackStateType& TrackStateType::operator=(
+    const ConstTrackStateType& other) {
+  *m_raw = *other.m_raw;
+  return *this;
+}
+
+// using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
 
 // forward declarations
 template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
-using ProjectorBitset = std::bitset<eBoundSize * eBoundSize>;
+using ProjectorBitset = uint64_t;
 
 namespace detail_lt {
 /// Either type T or const T depending on the boolean.
@@ -392,8 +470,9 @@ class TrackStateProxy {
     pathLength() = other.pathLength();
     typeFlags() = other.typeFlags();
 
-    // can be nullptr, but we just take that
-    setReferenceSurface(other.referenceSurfacePointer());
+    if (other.hasReferenceSurface()) {
+      setReferenceSurface(other.referenceSurface().getSharedPtr());
+    }
   }
 
   /// Unset an optional track state component
@@ -406,9 +485,15 @@ class TrackStateProxy {
   /// Reference surface.
   /// @return the reference surface
   const Surface& referenceSurface() const {
-    assert(has<hashString("referenceSurface")>());
-    return *component<std::shared_ptr<const Surface>,
-                      hashString("referenceSurface")>();
+    assert(hasReferenceSurface() &&
+           "TrackState does not have reference surface");
+    return *m_traj->referenceSurface(m_istate);
+  }
+
+  /// Returns if the track state has a non nullptr surface associated
+  /// @return whether a surface exists or not
+  bool hasReferenceSurface() const {
+    return m_traj->referenceSurface(m_istate) != nullptr;
   }
 
   // NOLINTBEGIN(performance-unnecessary-value-param)
@@ -419,8 +504,7 @@ class TrackStateProxy {
   /// @note This overload is only present in case @c ReadOnly is false.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setReferenceSurface(std::shared_ptr<const Surface> srf) {
-    component<std::shared_ptr<const Surface>,
-              hashString("referenceSurface")>() = std::move(srf);
+    m_traj->setReferenceSurface(m_istate, std::move(srf));
   }
   // NOLINTEND(performance-unnecessary-value-param)
 
@@ -508,14 +592,14 @@ class TrackStateProxy {
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed parameters
-  Parameters parameters() const;
+  ConstParameters parameters() const;
 
   /// Track parameters covariance matrix. This tries to be somewhat smart and
   /// return the
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed covariances
-  Covariance covariance() const;
+  ConstCovariance covariance() const;
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
@@ -640,8 +724,7 @@ class TrackStateProxy {
   /// @note Const version
   ConstCovariance jacobian() const {
     assert(has<hashString("jacobian")>());
-    return m_traj->self().jacobian(
-        component<IndexType, hashString("jacobian")>());
+    return m_traj->self().jacobian(m_istate);
   }
 
   /// Returns the jacobian from the previous trackstate to this one
@@ -650,8 +733,7 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   Covariance jacobian() {
     assert(has<hashString("jacobian")>());
-    return m_traj->self().jacobian(
-        component<IndexType, hashString("jacobian")>());
+    return m_traj->self().jacobian(m_istate);
   }
 
   /// Returns whether a jacobian is set for this trackstate
@@ -709,8 +791,30 @@ class TrackStateProxy {
     fullProjector.template topLeftCorner<rows, cols>() = projector;
 
     // convert to bitset before storing
+    auto projectorBitset = matrixToBitset(fullProjector);
     component<ProjectorBitset, hashString("projector")>() =
-        matrixToBitset(fullProjector);
+        projectorBitset.to_ullong();
+  }
+
+  /// Get the projector bitset, a compressed form of a projection matrix
+  /// @note This is mainly to copy explicitly a projector from one state
+  /// to another. Use the `projector` or `effectiveProjector` method if
+  /// you want to access the matrix.
+  /// @return The projector bitset
+  ProjectorBitset projectorBitset() const {
+    assert(has<hashString("projector")>());
+    return component<ProjectorBitset, hashString("projector")>();
+  }
+
+  /// Set the projector bitset, a compressed form of a projection matrix
+  /// @param proj The projector bitset
+  ///
+  /// @note This is mainly to copy explicitly a projector from one state
+  /// to another. If you have a projection matrix, set it with `setProjector`.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setProjectorBitset(ProjectorBitset proj) {
+    assert(has<hashString("projector")>());
+    component<ProjectorBitset, hashString("projector")>() = proj;
   }
 
   /// Uncalibrated measurement in the form of a source link. Const version
@@ -741,8 +845,7 @@ class TrackStateProxy {
   template <size_t measdim>
   ConstMeasurement<measdim> calibrated() const {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().template measurement<measdim>(
-        component<IndexType, hashString("calibrated")>());
+    return m_traj->self().template measurement<measdim>(m_istate);
   }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
@@ -753,8 +856,7 @@ class TrackStateProxy {
             typename = std::enable_if_t<!RO>>
   Measurement<measdim> calibrated() {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().template measurement<measdim>(
-        component<IndexType, hashString("calibrated")>());
+    return m_traj->self().template measurement<measdim>(m_istate);
   }
 
   /// Full calibrated measurement covariance matrix. The effective covariance
@@ -764,8 +866,7 @@ class TrackStateProxy {
   template <size_t measdim>
   ConstMeasurementCovariance<measdim> calibratedCovariance() const {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template measurementCovariance<measdim>(
-        component<IndexType, hashString("calibratedCov")>());
+    return m_traj->self().template measurementCovariance<measdim>(m_istate);
   }
 
   /// Full calibrated measurement covariance matrix. The effective covariance
@@ -776,8 +877,7 @@ class TrackStateProxy {
             typename = std::enable_if_t<!RO>>
   MeasurementCovariance<measdim> calibratedCovariance() {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template measurementCovariance<measdim>(
-        component<IndexType, hashString("calibratedCov")>());
+    return m_traj->self().template measurementCovariance<measdim>(m_istate);
   }
 
   /// Dynamic measurement vector with only the valid dimensions.
@@ -922,14 +1022,16 @@ class TrackStateProxy {
   /// reference.
   /// @return reference to the type flags.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  TrackStateType& typeFlags() {
-    return component<TrackStateType, hashString("typeFlags")>();
+  TrackStateType typeFlags() {
+    return TrackStateType{
+        component<TrackStateType::raw_type, hashString("typeFlags")>()};
   }
 
   /// Getter for the type flags. Returns a copy of the type flags value.
   /// @return The type flags of this track state
-  TrackStateType typeFlags() const {
-    return component<TrackStateType, hashString("typeFlags")>();
+  ConstTrackStateType typeFlags() const {
+    return ConstTrackStateType{
+        component<TrackStateType::raw_type, hashString("typeFlags")>()};
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
@@ -943,22 +1045,6 @@ class TrackStateProxy {
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
                   IndexType istate);
-
-  const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
-    return component<std::shared_ptr<const Surface>,
-                     hashString("referenceSurface")>();
-  }
-
-  ProjectorBitset projectorBitset() const {
-    assert(has<hashString("projector")>());
-    return component<ProjectorBitset, hashString("projector")>();
-  }
-
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setProjectorBitset(ProjectorBitset proj) {
-    assert(has<hashString("projector")>());
-    component<ProjectorBitset, hashString("projector")>() = proj;
-  }
 
   TransitiveConstPointer<ConstIf<MultiTrajectory<Trajectory>, ReadOnly>> m_traj;
   IndexType m_istate;
@@ -1015,6 +1101,7 @@ class TrackStateRange {
   };
 
   TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+  TrackStateRange() : m_begin{std::nullopt} {}
 
   Iterator begin() { return m_begin; }
   Iterator end() { return Iterator{std::nullopt}; }
@@ -1131,7 +1218,13 @@ class MultiTrajectory {
   /// @return Iterator pair to iterate over
   /// @note Const version
   auto trackStateRange(IndexType iendpoint) const {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Range for the track states from @p iendpoint to the trajectory start
@@ -1140,7 +1233,13 @@ class MultiTrajectory {
   /// @note Mutable version
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStateRange(IndexType iendpoint) {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Apply a function to all previous states starting at a given endpoint.
@@ -1433,6 +1532,16 @@ class MultiTrajectory {
 
   SourceLink getUncalibratedSourceLink(IndexType istate) const {
     return self().getUncalibratedSourceLink_impl(istate);
+  }
+
+  const Surface* referenceSurface(IndexType istate) const {
+    return self().referenceSurface_impl(istate);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setReferenceSurface(IndexType istate,
+                           std::shared_ptr<const Surface> surface) {
+    self().setReferenceSurface_impl(istate, std::move(surface));
   }
 
  private:

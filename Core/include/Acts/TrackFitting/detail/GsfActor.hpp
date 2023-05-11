@@ -75,8 +75,7 @@ struct GsfActor {
     std::size_t maxComponents = 16;
 
     /// Input measurements
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
     /// instance TODO if we somehow could initialize a reference here...
@@ -157,7 +156,7 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& navigator, result_type& result,
                   const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
 
@@ -179,14 +178,14 @@ struct GsfActor {
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
     const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
-                                                         logger());
+                                                         navigator, logger());
 
     // We only need to do something if we are on a surface
-    if (not state.navigation.currentSurface) {
+    if (not navigator.currentSurface(state.navigation)) {
       return;
     }
 
-    const auto& surface = *state.navigation.currentSurface;
+    const auto& surface = *navigator.currentSurface(state.navigation);
     ACTS_VERBOSE("Step is at surface " << surface.geometryId());
 
     // All components must be normalized at the beginning here, otherwise the
@@ -219,12 +218,12 @@ struct GsfActor {
 
     // Check what we have on this surface
     const auto found_source_link =
-        m_cfg.inputMeasurements.find(surface.geometryId());
+        m_cfg.inputMeasurements->find(surface.geometryId());
     const bool haveMaterial =
-        state.navigation.currentSurface->surfaceMaterial() &&
+        navigator.currentSurface(state.navigation)->surfaceMaterial() &&
         !m_cfg.disableAllMaterialHandling;
     const bool haveMeasurement =
-        found_source_link != m_cfg.inputMeasurements.end();
+        found_source_link != m_cfg.inputMeasurements->end();
 
     ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
                                 << ", haveMeasurement: " << haveMeasurement);
@@ -238,7 +237,7 @@ struct GsfActor {
       // No hole before first measurement
       if (result.processedStates > 0 && surface.associatedDetectorElement()) {
         TemporaryStates tmpStates;
-        noMeasurementUpdate(state, stepper, result, tmpStates, true);
+        noMeasurementUpdate(state, stepper, navigator, result, tmpStates, true);
       }
       return;
     }
@@ -251,9 +250,10 @@ struct GsfActor {
 
     if (haveMaterial) {
       if (haveMeasurement) {
-        applyMultipleScattering(state, stepper, MaterialUpdateStage::PreUpdate);
+        applyMultipleScattering(state, stepper, navigator,
+                                MaterialUpdateStage::PreUpdate);
       } else {
-        applyMultipleScattering(state, stepper,
+        applyMultipleScattering(state, stepper, navigator,
                                 MaterialUpdateStage::FullUpdate);
       }
     }
@@ -264,7 +264,7 @@ struct GsfActor {
     if (not haveMaterial) {
       TemporaryStates tmpStates;
 
-      auto res = kalmanUpdate(state, stepper, result, tmpStates,
+      auto res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
                               found_source_link->second);
 
       if (not res.ok()) {
@@ -282,10 +282,11 @@ struct GsfActor {
       Result<void> res;
 
       if (haveMeasurement) {
-        res = kalmanUpdate(state, stepper, result, tmpStates,
+        res = kalmanUpdate(state, stepper, navigator, result, tmpStates,
                            found_source_link->second);
       } else {
-        res = noMeasurementUpdate(state, stepper, result, tmpStates, false);
+        res = noMeasurementUpdate(state, stepper, navigator, result, tmpStates,
+                                  false);
       }
 
       if (not res.ok()) {
@@ -294,29 +295,41 @@ struct GsfActor {
       }
 
       std::vector<ComponentCache> componentCache;
-      convoluteComponents(state, stepper, tmpStates, componentCache);
+      convoluteComponents(state, stepper, navigator, tmpStates, componentCache);
+
+      if (componentCache.empty()) {
+        ACTS_WARNING(
+            "No components left after applying energy loss. "
+            "Is the weight cutoff "
+            << m_cfg.weightCutoff << " too high?");
+        ACTS_WARNING("Return to propagator without applying energy loss");
+        return;
+      }
 
       reduceComponents(stepper, surface, componentCache);
 
       removeLowWeightComponents(componentCache);
 
-      updateStepper(state, stepper, componentCache);
+      updateStepper(state, stepper, navigator, componentCache);
     }
 
     // If we only done preUpdate before, now do postUpdate
     if (haveMaterial && haveMeasurement) {
-      applyMultipleScattering(state, stepper, MaterialUpdateStage::PostUpdate);
+      applyMultipleScattering(state, stepper, navigator,
+                              MaterialUpdateStage::PostUpdate);
     }
 
     // Break the navigation if we found all measurements
     if (m_cfg.numberMeasurements &&
         result.measurementStates == m_cfg.numberMeasurements) {
-      state.navigation.targetReached = true;
+      navigator.targetReached(state.navigation, true);
     }
   }
 
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void convoluteComponents(propagator_state_t& state, const stepper_t& stepper,
+                           const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
                            std::vector<ComponentCache>& componentCache) const {
     auto cmps = stepper.componentIterable(state.stepping);
@@ -334,17 +347,18 @@ struct GsfActor {
       BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
                                  proxy.filtered(), proxy.filteredCovariance());
 
-      applyBetheHeitler(state, bound, tmpStates.weights.at(idx), mcache,
-                        componentCache);
+      applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
+                        mcache, componentCache);
     }
   }
 
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename navigator_t>
   void applyBetheHeitler(const propagator_state_t& state,
+                         const navigator_t& navigator,
                          const BoundTrackParameters& old_bound,
                          const double old_weight, const MetaCache& metaCache,
                          std::vector<ComponentCache>& componentCaches) const {
-    const auto& surface = *state.navigation.currentSurface;
+    const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
 
     // Evaluate material slab
@@ -390,7 +404,7 @@ struct GsfActor {
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
-        if (state.stepping.navDir == NavigationDirection::Forward) {
+        if (state.stepping.navDir == Direction::Forward) {
           return p_prev * (gaussian.mean - 1.);
         } else {
           return p_prev * (1. / gaussian.mean - 1.);
@@ -407,7 +421,7 @@ struct GsfActor {
       auto new_cov = old_bound.covariance().value();
 
       const auto varInvP = [&]() {
-        if (state.stepping.navDir == NavigationDirection::Forward) {
+        if (state.stepping.navDir == Direction::Forward) {
           const auto f = 1. / (p_prev * gaussian.mean);
           return f * f * gaussian.var;
         } else {
@@ -499,10 +513,12 @@ struct GsfActor {
   }
 
   /// Function that updates the stepper from the ComponentCache
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void updateStepper(propagator_state_t& state, const stepper_t& stepper,
+                     const navigator_t& navigator,
                      const std::vector<ComponentCache>& componentCache) const {
-    const auto& surface = *state.navigation.currentSurface;
+    const auto& surface = *navigator.currentSurface(state.navigation);
 
     // Clear components before adding new ones
     stepper.clearComponents(state.stepping);
@@ -534,11 +550,13 @@ struct GsfActor {
 
   /// This function performs the kalman update, computes the new posterior
   /// weights, renormalizes all components, and does some statistics.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   Result<void> kalmanUpdate(propagator_state_t& state, const stepper_t& stepper,
-                            result_type& result, TemporaryStates& tmpStates,
+                            const navigator_t& navigator, result_type& result,
+                            TemporaryStates& tmpStates,
                             const SourceLink& source_link) const {
-    const auto& surface = *state.navigation.currentSurface;
+    const auto& surface = *navigator.currentSurface(state.navigation);
 
     // Boolean flag, to distinguish measurement and outlier states. This flag
     // is only modified by the valid-measurement-branch, so only if there
@@ -613,13 +631,15 @@ struct GsfActor {
     return Acts::Result<void>::success();
   }
 
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   Result<void> noMeasurementUpdate(propagator_state_t& state,
                                    const stepper_t& stepper,
+                                   const navigator_t& navigator,
                                    result_type& result,
                                    TemporaryStates& tmpStates,
                                    bool doCovTransport) const {
-    const auto& surface = *state.navigation.currentSurface;
+    const auto& surface = *navigator.currentSurface(state.navigation);
 
     // Initialize as true, so that any component can flip it. However, all
     // components should behave the same
@@ -663,12 +683,14 @@ struct GsfActor {
   }
 
   /// Apply the multipe scattering to the state
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void applyMultipleScattering(propagator_state_t& state,
                                const stepper_t& stepper,
+                               const navigator_t& navigator,
                                const MaterialUpdateStage& updateStage =
                                    MaterialUpdateStage::FullUpdate) const {
-    const auto& surface = *state.navigation.currentSurface;
+    const auto& surface = *navigator.currentSurface(state.navigation);
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
@@ -676,7 +698,8 @@ struct GsfActor {
 
       detail::PointwiseMaterialInteraction interaction(&surface, singleState,
                                                        singleStepper);
-      if (interaction.evaluateMaterialSlab(singleState, updateStage)) {
+      if (interaction.evaluateMaterialSlab(singleState, navigator,
+                                           updateStage)) {
         // In the Gsf we only need to handle the multiple scattering
         interaction.evaluatePointwiseMaterialInteraction(
             m_cfg.multipleScattering, false);
@@ -767,6 +790,45 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
+  }
+};
+
+/// An actor that collects the final multi component state once the propagation
+/// finished
+struct FinalStateCollector {
+  using MultiPars = Acts::Experimental::GsfConstants::FinalMultiComponentState;
+
+  struct result_type {
+    MultiPars pars;
+  };
+
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& /*logger*/) const {
+    if (not(navigator.targetReached(state.navigation) and
+            navigator.currentSurface(state.navigation))) {
+      return;
+    }
+
+    const auto& surface = *navigator.currentSurface(state.navigation);
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+        states;
+
+    for (auto cmp : stepper.componentIterable(state.stepping)) {
+      auto singleState = cmp.singleState(state);
+      auto bs = cmp.singleStepper(stepper).boundState(singleState.stepping,
+                                                      surface, true);
+
+      if (bs.ok()) {
+        const auto& btp = std::get<BoundTrackParameters>(*bs);
+        states.emplace_back(cmp.weight(), btp.parameters(), btp.covariance());
+      }
+    }
+
+    result.pars =
+        typename MultiPars::value_type(surface.getSharedPtr(), states);
   }
 };
 

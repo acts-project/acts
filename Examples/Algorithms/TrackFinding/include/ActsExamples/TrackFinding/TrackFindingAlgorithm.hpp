@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -58,7 +58,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   /// contains shared_ptr anyways.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const Acts::Logger& logger);
 
   struct Config {
     /// Input measurements collection.

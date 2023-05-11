@@ -61,6 +61,11 @@ void setupGeant4Simulation(
   auto g4loglevel =
       Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
 
+  if (runActions.size() > 1 or eventActions.size() > 1 or
+      trackingActions.size() > 1 or steppingActions.size() > 1) {
+    throw std::invalid_argument("Only one user action per category allowed");
+  }
+
   size_t seed = vars["g4-seed"].as<size_t>();
 
   // Set the main Geant4 algorithm, primary generation, detector construction
@@ -69,11 +74,12 @@ void setupGeant4Simulation(
   g4Cfg.runManager = std::move(runManager);
   g4Cfg.randomNumbers = std::make_shared<ActsExamples::RandomNumbers>(
       ActsExamples::RandomNumbers::Config{seed});
+  g4Cfg.inputParticles = materialRecording ? Simulation::kParticlesInitial
+                                           : Simulation::kParticlesSelection;
 
   // Read the particle from the generator
   SimParticleTranslation::Config g4PrCfg;
-  g4PrCfg.inputParticles = materialRecording ? Simulation::kParticlesInitial
-                                             : Simulation::kParticlesSelection;
+
   if (materialRecording) {
     g4PrCfg.forcedPdgCode = 0;
     g4PrCfg.forcedCharge = 0.;
@@ -88,10 +94,12 @@ void setupGeant4Simulation(
   g4Cfg.detectorConstruction = detector.release();
 
   // Set the user actions
-  g4Cfg.runActions = std::move(runActions);
-  g4Cfg.eventActions = std::move(eventActions);
-  g4Cfg.trackingActions = std::move(trackingActions);
-  g4Cfg.steppingActions = std::move(steppingActions);
+  g4Cfg.runAction = runActions.empty() ? nullptr : runActions.front();
+  g4Cfg.eventAction = eventActions.empty() ? nullptr : eventActions.front();
+  g4Cfg.trackingAction =
+      trackingActions.empty() ? nullptr : trackingActions.front();
+  g4Cfg.steppingAction =
+      steppingActions.empty() ? nullptr : steppingActions.front();
 
   // An ACTS Magnetic field is provided
   if (magneticField) {

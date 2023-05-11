@@ -15,8 +15,8 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 auto ActsExamples::Telescope::TelescopeDetector::finalize(
-    const Config& cfg, const std::shared_ptr<const Acts::IMaterialDecorator> &
-    /*unused*/) -> std::pair<TrackingGeometryPtr, ContextDecorators> {
+    const Config& cfg, const std::shared_ptr<const Acts::IMaterialDecorator>&
+    /*mdecorator*/) -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   DetectorElement::ContextType nominalContext;
 
   if (cfg.surfaceType > 1) {

@@ -47,7 +47,8 @@ TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
+inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const
+    -> ConstParameters {
   if (hasSmoothed()) {
     return smoothed();
   } else if (hasFiltered()) {
@@ -58,7 +59,8 @@ inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const -> Covariance {
+inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const
+    -> ConstCovariance {
   if (hasSmoothed()) {
     return smoothedCovariance();
   } else if (hasFiltered()) {

@@ -75,7 +75,7 @@ class EigenStepper {
     explicit State(const GeometryContext& gctx,
                    MagneticFieldProvider::Cache fieldCacheIn,
                    const SingleBoundTrackParameters<charge_t>& par,
-                   NavigationDirection ndir = NavigationDirection::Forward,
+                   Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : q(par.charge()),
@@ -112,7 +112,7 @@ class EigenStepper {
     Covariance cov = Covariance::Zero();
 
     /// Navigation direction, this is needed for searching
-    NavigationDirection navDir;
+    Direction navDir;
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
@@ -171,7 +171,7 @@ class EigenStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = NavigationDirection::Forward,
+                  Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const;
 
@@ -185,8 +185,7 @@ class EigenStepper {
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface,
-      const NavigationDirection navDir = NavigationDirection::Forward,
+      const Surface& surface, const Direction navDir = Direction::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, it checks first if the access is still
@@ -385,13 +384,15 @@ class EigenStepper {
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param [in,out] state is the propagation
+  /// @param [in,out] state the propagation state
+  /// @param [in] navigator the navigator of the propagation
   /// @note The state contains the desired step size.  It can be negative during
   ///       backwards track propagation, and since we're using an adaptive
   ///       algorithm, it can be modified by the stepper class during
   ///       propagation.
-  template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const;
+  template <typename propagator_state_t, typename navigator_t>
+  Result<double> step(propagator_state_t& state,
+                      const navigator_t& navigator) const;
 
   /// Method that reset the Jacobian to the Identity for when no bound state are
   /// available

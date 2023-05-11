@@ -44,8 +44,6 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string inputMeasurements;
     /// Which cluster collection to write (optional)
     std::string inputClusters = "";
-    /// Which simulated (truth) hits collection to use.
-    std::string inputSimHits;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
     /// Where to place output files
@@ -79,6 +77,10 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples

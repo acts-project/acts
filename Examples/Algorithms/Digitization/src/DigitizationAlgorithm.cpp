@@ -304,7 +304,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
   for (const auto& ch : channels) {
     auto bin = ch.bin;
     Acts::ActsScalar charge =
-        geoCfg.digital ? 1. : geoCfg.charge(ch.activation, ch.activation, rng);
+        geoCfg.digital ? 1. : geoCfg.charge(ch.activation, rng);
     if (geoCfg.digital or charge > geoCfg.threshold) {
       totalWeight += charge;
       size_t b0 = bin[0];
@@ -336,6 +336,15 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     } else {
       dParameters.variances =
           std::vector<Acts::ActsScalar>(dParameters.indices.size(), -1.);
+    }
+
+    if (dParameters.variances[0] == -1) {
+      size_t ictr = b0min + size0 / 2;
+      dParameters.variances[0] = std::pow(binningData[0].width(ictr), 2) / 12.0;
+    }
+    if (dParameters.variances[1] == -1) {
+      size_t ictr = b1min + size1 / 2;
+      dParameters.variances[1] = std::pow(binningData[1].width(ictr), 2) / 12.0;
     }
 
     dParameters.cluster.sizeLoc0 = size0;

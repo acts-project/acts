@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
@@ -49,6 +52,16 @@ class TrackModifier final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
+  WriteDataHandle<TrajectoriesContainer> m_outputTrajectories{
+      this, "OutputTrajectories"};
 };
 
 }  // namespace ActsExamples

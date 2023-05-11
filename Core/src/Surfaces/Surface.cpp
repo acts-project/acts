@@ -16,6 +16,10 @@
 #include <sstream>
 #include <utility>
 
+std::array<std::string, Acts::Surface::SurfaceType::Other>
+    Acts::Surface::s_surfaceTypeNames = {
+        "Cone", "Cylinder", "Disc", "Perigee", "Plane", "Straw", "Curvilinear"};
+
 Acts::Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(transform) {}
 
@@ -227,7 +231,7 @@ Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
 }
 
 Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
-                                    const Vector3& /*unused*/) const {
+                                    const Vector3& /*position*/) const {
   return normal(gctx, Vector2(Vector2::Zero()));
 }
 
@@ -245,8 +249,8 @@ bool Acts::Surface::insideBounds(const Vector2& lposition,
 }
 
 Acts::RotationMatrix3 Acts::Surface::referenceFrame(
-    const GeometryContext& gctx, const Vector3& /*unused*/,
-    const Vector3& /*unused*/) const {
+    const GeometryContext& gctx, const Vector3& /*position*/,
+    const Vector3& /*momentum*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 

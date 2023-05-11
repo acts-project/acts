@@ -32,6 +32,9 @@ ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
     throw std::invalid_argument("Missing input filename");
   }
 
+  m_outputTrackParameters.initialize(m_cfg.outputTracks);
+  m_outputParticles.initialize(m_cfg.outputParticles);
+
   // Set the branches
   m_inputChain->SetBranchAddress("event_nr", &m_eventNr);
   m_inputChain->SetBranchAddress("multiTraj_nr", &m_multiTrajNr);
@@ -214,10 +217,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
                                      truthParticle);
     }
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.outputTracks,
-                           std::move(trackParameterCollection));
-    context.eventStore.add(m_cfg.outputParticles,
-                           std::move(truthParticleCollection));
+    m_outputTrackParameters(context, std::move(trackParameterCollection));
+    m_outputParticles(context, std::move(truthParticleCollection));
   } else {
     ACTS_WARNING("Could not read in event.");
   }

@@ -66,10 +66,10 @@ struct StepWiseActor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& navigator, result_type& result,
                   const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
-    auto surface = state.navigation.currentSurface;
+    auto surface = navigator.currentSurface(state.navigation);
     if (surface and surface->associatedDetectorElement()) {
       // Create a bound state and log the jacobian
       auto boundState = stepper.boundState(state.stepping, *surface).value();
@@ -77,7 +77,8 @@ struct StepWiseActor {
       result.paths.push_back(std::get<double>(boundState));
     }
     // Also store the jacobian and full path
-    if ((state.navigation.navigationBreak or state.navigation.targetReached) and
+    if ((navigator.navigationBreak(state.navigation) or
+         navigator.targetReached(state.navigation)) and
         not result.finalized) {
       // Set the last stepping parameter
       result.paths.push_back(state.stepping.pathAccumulated);
@@ -87,21 +88,6 @@ struct StepWiseActor {
       result.finalized = true;
     }
   }
-
-  /// @brief Kalman sequence operation - void operation
-  ///
-  /// @tparam propagator_state_t is the type of Propagagor state
-  /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
-  ///
-  /// @param state is the mutable propagator state object
-  /// @param stepper Stepper used by the propagation
-  /// @param navigator Navigator used by the propagation
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                  const navigator_t& /*navigator*/,
-                  const Logger& /*logger*/) const {}
 };
 
 ///

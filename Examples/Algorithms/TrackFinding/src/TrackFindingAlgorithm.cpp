@@ -9,13 +9,14 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -63,14 +64,16 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   Acts::PropagatorPlainOptions pOptions;
   pOptions.maxSteps = 100000;
 
-  MeasurementCalibrator calibrator{measurements};
+  PassThroughCalibrator pcalibrator;
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
       extensions;
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
+      &calibrator);
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);

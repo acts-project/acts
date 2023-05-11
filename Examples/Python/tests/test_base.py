@@ -12,7 +12,7 @@ def test_logging():
 
 
 def test_pgd_particle():
-    assert len(acts.PdgParticle.__members__) == 16
+    assert len(acts.PdgParticle.__members__) == 17
 
 
 def test_algebra():

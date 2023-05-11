@@ -8,10 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <bitset>
+#include <limits>
+#include <vector>
 
 using namespace Acts::VectorHelpers;
 
@@ -177,6 +180,34 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
     BOOST_CHECK(ref.isApprox(res));
     BOOST_CHECK(res.isApprox(ref));
   }
+}
+
+BOOST_AUTO_TEST_CASE(min_max) {
+  std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
+  auto [min0, max0] = Acts::min_max(ordered);
+
+  CHECK_CLOSE_ABS(min0, -3., std::numeric_limits<ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(max0, 3., std::numeric_limits<ActsScalar>::epsilon());
+
+  std::vector<ActsScalar> unordered = {3., -3., -2., -1., 0., 1., 2.};
+  auto [min1, max1] = Acts::min_max(unordered);
+
+  CHECK_CLOSE_ABS(min1, -3., std::numeric_limits<ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(max1, 3., std::numeric_limits<ActsScalar>::epsilon());
+}
+
+BOOST_AUTO_TEST_CASE(range_medium) {
+  std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
+  auto [range0, medium0] = Acts::range_medium(ordered);
+
+  CHECK_CLOSE_ABS(range0, 6., std::numeric_limits<ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(medium0, 0., std::numeric_limits<ActsScalar>::epsilon());
+
+  std::vector<ActsScalar> unordered = {-2., -1., 0., 1., 2., 3., -3.};
+  auto [range1, medium1] = Acts::range_medium(unordered);
+
+  CHECK_CLOSE_ABS(range1, 6., std::numeric_limits<ActsScalar>::epsilon());
+  CHECK_CLOSE_ABS(medium1, 0., std::numeric_limits<ActsScalar>::epsilon());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

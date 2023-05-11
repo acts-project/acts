@@ -76,7 +76,7 @@ auto kalmanHandleMeasurement(
   extensions.calibrator(state.geoContext, trackStateProxy);
 
   // Get and set the type flags
-  auto &typeFlags = trackStateProxy.typeFlags();
+  auto typeFlags = trackStateProxy.typeFlags();
   typeFlags.set(TrackStateFlag::ParameterFlag);
   if (surface.surfaceMaterial() != nullptr) {
     typeFlags.set(TrackStateFlag::MaterialFlag);
@@ -142,7 +142,7 @@ auto kalmanHandleNoMeasurement(
   trackStateProxy.setReferenceSurface(surface.getSharedPtr());
 
   // Set the track state flags
-  auto &typeFlags = trackStateProxy.typeFlags();
+  auto typeFlags = trackStateProxy.typeFlags();
   typeFlags.set(TrackStateFlag::ParameterFlag);
   if (surface.surfaceMaterial() != nullptr) {
     typeFlags.set(TrackStateFlag::MaterialFlag);

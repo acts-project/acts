@@ -54,6 +54,9 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
@@ -148,13 +151,9 @@ ActsExamples::RootTrajectorySummaryWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // Read additional input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -275,9 +274,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           t_pT = t_p * perp(particle.unitDirection());
 
           if (pSurface != nullptr) {
+            auto intersection =
+                pSurface->intersect(ctx.geoContext, particle.position(),
+                                    particle.unitDirection(), false);
+            auto position = intersection.intersection.position;
+
             // get the truth perigee parameter
-            auto lpResult = pSurface->globalToLocal(
-                ctx.geoContext, particle.position(), particle.unitDirection());
+            auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,
+                                                    particle.unitDirection());
             if (lpResult.ok()) {
               t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
               t_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
@@ -286,15 +290,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
             }
           }
         } else {
-          ACTS_WARNING("Truth particle with barcode "
-                       << majorityParticleId << "="
-                       << majorityParticleId.value()
-                       << " not found in the input collection!");
+          ACTS_DEBUG("Truth particle with barcode "
+                     << majorityParticleId << "=" << majorityParticleId.value()
+                     << " not found in the input collection!");
         }
       }
       if (not foundMajorityParticle) {
-        ACTS_WARNING("Truth particle for mj " << itraj << " subtraj "
-                                              << isubtraj << " not found!");
+        ACTS_DEBUG("Truth particle for mj " << itraj << " subtraj " << isubtraj
+                                            << " not found!");
       }
 
       // Push the corresponding truth particle info for the track.

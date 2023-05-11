@@ -61,6 +61,11 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
@@ -236,18 +241,12 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-  using HitSimHitsMap = IndexMultimap<Index>;
-
   auto& gctx = ctx.geoContext;
   // Read additional input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto& hitSimHitsMap =
-      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -304,8 +303,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
           // Get the truth particle charge
           truthQ = static_cast<int>(particle.charge());
         } else {
-          ACTS_WARNING("Truth particle with barcode "
-                       << barcode << "=" << barcode.value() << " not found!");
+          ACTS_DEBUG("Truth particle with barcode "
+                     << barcode << "=" << barcode.value() << " not found!");
         }
       }
 
@@ -425,12 +424,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
               //
               // local hit residual info
               auto H = state.effectiveProjector();
-              auto resCov = state.effectiveCalibratedCovariance() +
-                            H * covariance * H.transpose();
+              auto hitCov = state.effectiveCalibratedCovariance();
+              auto resCov = hitCov + H * covariance * H.transpose();
               auto res = state.effectiveCalibrated() - H * parameters;
+
               m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
               m_err_x_hit.push_back(
-                  sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                  sqrt(hitCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
               m_pull_x_hit.push_back(
                   res[Acts::eBoundLoc0] /
                   sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
@@ -441,7 +441,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
                     sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
                 m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
                 m_err_y_hit.push_back(
-                    sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                    sqrt(hitCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
               } else {
                 float nan = std::numeric_limits<float>::quiet_NaN();
                 m_pull_y_hit.push_back(nan);
