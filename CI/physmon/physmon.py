@@ -351,7 +351,7 @@ def run_vertexing(fitter, mu, events):
             outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root",
         )
 
-        
+
 ### Truth tracking with Kalman Filter
 if args.mode == "all" or args.mode == "kalman":
     truth_tracking_kalman()
