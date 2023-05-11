@@ -159,15 +159,18 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   float deltaR = rH - rL;
 
   float deltaZ = (zH - zL);
-  float cotTheta = deltaZ / deltaR;
   /*
    * Cut: Ensure that the origin of the dublet (the intersection of the line
    * between them with the z axis) lies within the collision region.
+   * the longitudinal impact parameter zOrigin is defined as (zM - rM *
+   * cotTheta) where cotTheta is the ratio Z/R (forward angle) of space point
+   * duplet but instead we calculate (zOrigin * deltaR) and multiply
+   * collisionRegion by deltaR to avoid divisions
    */
-  float zOrigin = zL - rL * cotTheta;
-  if (zOrigin < m_config.collisionRegionMin ||
-      zOrigin > m_config.collisionRegionMax) {
-    return false;
+  const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
+  if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR or
+      zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
+    continue;
   }
 
   // cut on the max curvature calculated from dublets
@@ -215,14 +218,17 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   /*
    * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
    * which is to say the absolute value must be smaller than the max cot(θ).
+   * cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+   * cotThetaMax by deltaR to avoid division
    */
-  if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+  if (deltaZ > m_config.cotThetaMax * deltaR or
+      deltaZ < -m_config.cotThetaMax * deltaR) {
     return false;
   }
   /*
    * Cut: Ensure that z-distance between SPs is within max and min values.
    */
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
+  if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
     return false;
   }
 
