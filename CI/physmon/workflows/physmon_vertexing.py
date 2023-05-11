@@ -38,6 +38,7 @@ u = acts.UnitConstants
 
 setup = makeSetup()
 
+
 def run_vertexing(fitter, mu, events):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
@@ -135,6 +136,7 @@ def run_vertexing(fitter, mu, events):
             perf_file,
             setup.outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root",
         )
+
 
 with acts.FpeMonitor():
     for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):

@@ -37,6 +37,7 @@ u = acts.UnitConstants
 
 setup = makeSetup()
 
+
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
@@ -158,6 +159,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
+
 
 with acts.FpeMonitor():
     for truthSmearedSeeded, truthEstimatedSeeded, label in [
