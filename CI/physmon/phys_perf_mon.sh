@@ -77,6 +77,9 @@ function full_chain() {
         --config CI/physmon/vertexing_config.yml
     ec=$(($ec | $?))
 
+    # remove ntuple file because it's large
+    rm $outdir/performance_ivf_${suffix}.root
+
     run \
         $outdir/performance_ivf_${suffix}_hist.root \
         $refdir/performance_ivf_${suffix}_hist.root \
@@ -91,6 +94,9 @@ function full_chain() {
         --silent \
         --config CI/physmon/vertexing_config.yml
     ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/performance_amvf_${suffix}.root
 
     run \
         $outdir/performance_amvf_${suffix}_hist.root \
