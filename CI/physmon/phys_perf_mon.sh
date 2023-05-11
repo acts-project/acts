@@ -13,10 +13,10 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  
 
 source $SCRIPT_DIR/setup.sh
 echo "::group::Generate validation dataset"
-echo $PYTHONPATH
-
-exit
-CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
+CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
+CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
+CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
+CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
 echo "::endgroup::"
 
 set +e

@@ -7,7 +7,7 @@ import acts
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
-Setup = collections.namedtuple(
+PhysmonSetup = collections.namedtuple(
     "Setup",
     [
         "detector",
@@ -21,7 +21,7 @@ Setup = collections.namedtuple(
 )
 
 
-def makeSetup() -> Setup:
+def makeSetup() -> PhysmonSetup:
     u = acts.UnitConstants
     srcdir = Path(__file__).resolve().parent.parent.parent
 
@@ -38,7 +38,7 @@ def makeSetup() -> Setup:
     detector, trackingGeometry, decorators = getOpenDataDetector(
         getOpenDataDetectorDirectory(), matDeco
     )
-    setup = Setup(
+    setup = PhysmonSetup(
         detector=detector,
         trackingGeometry=trackingGeometry,
         decorators=decorators,
