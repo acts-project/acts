@@ -74,13 +74,30 @@ void Acts::KalmanVertexUpdater::updatePosition(
   const ActsSymMatrix<5> trkParamWeight =
       linTrack.weightAtPCA.block<5, 5>(0, 0);
 
+  ActsMatrix<3, 3> tmp_inverse = ActsMatrix<3, 3>::Zero();
+  long double threshold = Eigen::NumTraits<long double>::dummy_precision();
+  // Determant threshold is Eigen::NumTraits<double>::dummy_precision() 1e-12
+  // Which is used in computeInverseWithCheck
+
+  bool is_invertible_vtx_cov = false;
+  bool is_invertible_vtx_transpose_weight_Jac = false;
+  bool is_invertible_new_vtx_cov = false;
+
   // Vertex to be updated
   const Vector3& oldVtxPos = vtx.position();
-  matrixCache.oldVertexWeight = (vtx.covariance()).inverse();
+  (vtx.covariance())
+      .computeInverseWithCheck(tmp_inverse, is_invertible_vtx_cov, threshold);
+  if (is_invertible_vtx_cov) {
+    matrixCache.oldVertexWeight = tmp_inverse;
+  }
 
   // W_k matrix
-  matrixCache.momWeightInv =
-      (momJac.transpose() * (trkParamWeight * momJac)).inverse();
+  (momJac.transpose() * (trkParamWeight * momJac))
+      .computeInverseWithCheck(
+          tmp_inverse, is_invertible_vtx_transpose_weight_Jac, threshold);
+  if (is_invertible_vtx_transpose_weight_Jac) {
+    matrixCache.momWeightInv = tmp_inverse;
+  }
 
   // G_b = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
   ActsSymMatrix<5> gBmat =
@@ -88,18 +105,29 @@ void Acts::KalmanVertexUpdater::updatePosition(
       trkParamWeight *
           (momJac * (matrixCache.momWeightInv * momJac.transpose())) *
           trkParamWeight.transpose();
+  if (is_invertible_vtx_cov && is_invertible_vtx_transpose_weight_Jac) {
+    // New vertex cov matrix
+    matrixCache.newVertexWeight =
+        matrixCache.oldVertexWeight +
+        trackWeight * sign * posJac.transpose() * (gBmat * posJac);
+    matrixCache.newVertexWeight.computeInverseWithCheck(
+        tmp_inverse, is_invertible_new_vtx_cov, threshold);
+    if (is_invertible_new_vtx_cov) {
+      matrixCache.newVertexCov = tmp_inverse;
 
-  // New vertex cov matrix
-  matrixCache.newVertexWeight =
-      matrixCache.oldVertexWeight +
-      trackWeight * sign * posJac.transpose() * (gBmat * posJac);
-  matrixCache.newVertexCov = matrixCache.newVertexWeight.inverse();
-
-  // New vertex position
-  matrixCache.newVertexPos =
-      matrixCache.newVertexCov * (matrixCache.oldVertexWeight * oldVtxPos +
-                                  trackWeight * sign * posJac.transpose() *
-                                      gBmat * (trkParams - constTerm));
+      // New vertex position
+      matrixCache.newVertexPos =
+          matrixCache.newVertexCov * (matrixCache.oldVertexWeight * oldVtxPos +
+                                      trackWeight * sign * posJac.transpose() *
+                                          gBmat * (trkParams - constTerm));
+    } else {  // if not invertible
+      matrixCache.newVertexCov = vtx.covariance();
+      matrixCache.newVertexPos = vtx.position();
+    }
+  } else {  // if not invertible
+    matrixCache.newVertexCov = vtx.covariance();
+    matrixCache.newVertexPos = vtx.position();
+  }
 }
 
 template <typename input_track_t>

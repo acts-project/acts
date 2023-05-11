@@ -321,8 +321,15 @@ bool Acts::AdaptiveMultiVertexFitter<
   for (auto vtx : state.vertexCollection) {
     Vector3 diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
                    vtx->fullPosition().template head<3>();
-    SymMatrix3 vtxWgt =
-        (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
+    ActsMatrix<3, 3> tmp_inverse = ActsMatrix<3, 3>::Zero();
+    bool is_invertible_vtx_cov = false;
+    SymMatrix3 vtxWgt = SymMatrix3::Zero();
+    long double threshold = Eigen::NumTraits<long double>::dummy_precision();
+    (vtx->fullCovariance().template block<3, 3>(0, 0))
+        .computeInverseWithCheck(tmp_inverse, is_invertible_vtx_cov, threshold);
+    if (is_invertible_vtx_cov) {
+      vtxWgt = tmp_inverse;
+    }
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
       return false;
