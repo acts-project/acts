@@ -411,10 +411,7 @@ struct GsfActor {
         }
       }();
 
-      throw_assert(p_prev + delta_p > 0.,
-                   "new momentum after bethe-heitler must be > 0, p_prev= "
-                       << p_prev << ", delta_p=" << delta_p
-                       << ", gaussian mean: " << gaussian.mean);
+      assert(p_prev + delta_p > 0. && "new momentum must be > 0");
       new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
 
       // compute inverse variance of p from mixture and update covariance
@@ -430,10 +427,8 @@ struct GsfActor {
       }();
 
       new_cov(eBoundQOverP, eBoundQOverP) += varInvP;
-      throw_assert(std::isfinite(new_cov(eBoundQOverP, eBoundQOverP)),
-                   "cov not finite, varInvP="
-                       << varInvP << ", p_prev=" << p_prev << ", gaussian.mean="
-                       << gaussian.mean << ", gaussian.var=" << gaussian.var);
+      assert(std::isfinite(new_cov(eBoundQOverP, eBoundQOverP)) &&
+             "new cov not finite");
 
       // Set the remaining things and push to vector
       componentCaches.push_back(
@@ -717,8 +712,8 @@ struct GsfActor {
         // Update the state and stepper with material effects
         interaction.updateState(singleState, singleStepper, addNoise);
 
-        throw_assert(singleState.stepping.cov.array().isFinite().all(),
-                     "covariance not finite after update");
+        assert(singleState.stepping.cov.array().isFinite().all() &&
+               "covariance not finite after multi scattering");
       }
     }
   }
