@@ -169,7 +169,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         trackingGeometry,
         field,
         TrackSelectorConfig(
-            pt=(1.0 * u.GeV, None),
+            pt=(1.0 * u.GeV if ttbar else 0.0, None),
             absEta=(None, 3.0),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
             nMeasurementsMin=7,
