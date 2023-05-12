@@ -813,6 +813,7 @@ def addKalmanTracks(
     energyLoss: bool = True,
     calibrationConfigFile: str = None,
     clusters: str = None,
+    calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
