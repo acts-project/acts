@@ -79,8 +79,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
     const Acts::GeometryContext& /*gctx*/,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
-  const IndexSourceLink& sourceLink =
-      trackState.getUncalibratedSourceLink().get<IndexSourceLink>();
+  Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
+  const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
   assert((sourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
@@ -126,7 +126,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
         fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1.0 / output[2];
         fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 / output[3];
 
-        constexpr size_t kSize = std::decay_t<decltype(meas)>::size();
+        constexpr size_t kSize =
+            std::remove_reference_t<decltype(meas)>::size();
         std::array<Acts::BoundIndices, kSize> indices = meas.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
