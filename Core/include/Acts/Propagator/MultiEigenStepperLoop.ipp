@@ -58,19 +58,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  const auto [mean, cov] =
-      detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-        return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
-      });
-
-  const auto finalPars =
-      (m_finalReductionMethod == FinalReductionMethod::eMaxWeight)
-          ? std::get<BoundVector>(*std::max_element(
-                states.begin(), states.end(),
-                [](const auto& a, const auto& b) {
-                  return std::get<double>(a) < std::get<double>(b);
-                }))
-          : mean;
+  const auto [finalPars, cov] =
+      Acts::reduceGaussianMixture(states, surface, m_finalReductionMethod);
 
   std::optional<BoundSymMatrix> finalCov = std::nullopt;
   if (cov != BoundSymMatrix::Zero()) {
@@ -91,7 +80,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
   if (numberComponents(state) == 1) {
     return SingleStepper::curvilinearState(state.components.front().state,
                                            transportCov);
-  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+  } else if (m_finalReductionMethod == MixtureReductionMethod::eMaxWeight) {
     auto cmpIt = std::max_element(
         state.components.begin(), state.components.end(),
         [](const auto& a, const auto& b) { return a.weight < b.weight; });

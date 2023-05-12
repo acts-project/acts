@@ -20,9 +20,9 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -159,12 +159,6 @@ struct MaxMomentumReducerLoop {
   }
 };
 
-/// @enum FinalReductionMethod
-///
-/// Available reduction methods for the reduction in the boundState and
-/// curvilinearState member functions of the MultiEigenStepperLoop.
-enum class FinalReductionMethod { eMean, eMaxWeight };
-
 /// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
 /// (e.g., for the GSF). Internally, this only manages a vector of
 /// EigenStepper::States. This simplifies implementation, but has several
@@ -189,7 +183,7 @@ class MultiEigenStepperLoop
 
   /// How to extract a single component state when calling .boundState() or
   /// .curvilinearState()
-  FinalReductionMethod m_finalReductionMethod = FinalReductionMethod::eMean;
+  MixtureReductionMethod m_finalReductionMethod = MixtureReductionMethod::eMean;
 
   /// The logger (used if no logger is provided by caller of methods)
   std::unique_ptr<const Acts::Logger> m_logger;
@@ -219,11 +213,11 @@ class MultiEigenStepperLoop
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
   /// Constructor from a magnetic field and a optionally provided Logger
-  MultiEigenStepperLoop(
-      std::shared_ptr<const MagneticFieldProvider> bField,
-      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean,
-      std::unique_ptr<const Logger> logger = getDefaultLogger("GSF",
-                                                              Logging::INFO))
+  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
+                        MixtureReductionMethod finalReductionMethod =
+                            MixtureReductionMethod::eMean,
+                        std::unique_ptr<const Logger> logger =
+                            getDefaultLogger("GSF", Logging::INFO))
       : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
         m_finalReductionMethod(finalReductionMethod),
         m_logger(std::move(logger)) {}
