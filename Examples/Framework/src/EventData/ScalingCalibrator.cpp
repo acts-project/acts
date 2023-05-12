@@ -101,7 +101,6 @@ void ActsExamples::ScalingCalibrator::calibrate(
     const Acts::GeometryContext& /*gctx*/,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
-
   Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
   const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
 
@@ -133,7 +132,8 @@ void ActsExamples::ScalingCalibrator::calibrate(
         fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) *= ct.x_scale;
         fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) *= ct.y_scale;
 
-        constexpr size_t kSize = std::decay_t<decltype(meas)>::size();
+        constexpr size_t kSize =
+            std::remove_reference_t<decltype(meas)>::size();
         std::array<Acts::BoundIndices, kSize> indices = meas.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
