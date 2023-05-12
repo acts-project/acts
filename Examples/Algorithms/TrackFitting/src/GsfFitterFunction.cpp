@@ -54,6 +54,8 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   double weightCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
+  Acts::MixtureReductionMethod reductionMethod =
+      Acts::MixtureReductionMethod::eMaxWeight;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
       : fitter(std::move(f)), directFitter(std::move(df)) {}
@@ -130,7 +132,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
+    double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
   // Standard fitter
@@ -166,6 +168,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
   fitterFunction->weightCutoff = weightCutoff;
   fitterFunction->abortOnError = abortOnError;
   fitterFunction->disableAllMaterialHandling = disableAllMaterialHandling;
+  fitterFunction->reductionMethod = finalReductionMethod;
 
   return fitterFunction;
 }
