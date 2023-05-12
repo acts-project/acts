@@ -154,4 +154,6 @@ if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
     rm $outdir/performance_vertexing_*mu*
 fi
 
+CI/physmon/summary.py $outdir/*.html $outdir/summary.html
+
 exit $ec
