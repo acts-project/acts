@@ -983,7 +983,7 @@ def addCKFTracks(
     addTrajectoryWriters(
         s,
         name="ckf",
-        trajectories=trackConverter.config.outputTrajectories,
+        trajectories="trajectories",
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
