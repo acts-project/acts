@@ -39,8 +39,8 @@ target_compile_definitions(
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
 
 if (ACTS_BUILD_PLUGIN_ONNX)
-  target_sources(ActsExamplesFramework PUBLIC src/EventData/NeuralCalibrator.cpp)
-  target_link_libraries(ActsExamplesFramework PUBLIC ActsPluginOnnx)
+  target_sources(ActsExamplesFramework PRIVATE src/EventData/NeuralCalibrator.cpp)
+  target_link_libraries(ActsExamplesFramework PRIVATE ActsPluginOnnx)
 endif()
 
 if(ACTS_USE_EXAMPLES_TBB)
