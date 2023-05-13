@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import argparse
 import re
@@ -17,7 +18,7 @@ re_check = re.compile(r'<a.*title="(.*)">\s*(.)\s*<\/a>', re.RegexFlag.MULTILINE
 summary = {}
 
 for h in args.html:
-    with open(h, "r") as f:
+    with open(h, "r", "utf-8") as f:
         try:
             content = f.read()
             print(h, re_title.findall(content))
@@ -33,7 +34,7 @@ for h in args.html:
         except Exception as e:
             print(r"could not parse {h}", e)
 
-with open(args.output, "w") as f:
+with open(args.output, "w", "utf-8") as f:
     f.write(
         """<html>
 <head>
