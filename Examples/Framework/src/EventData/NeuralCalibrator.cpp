@@ -111,8 +111,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
         }
 
         std::vector<float> output = m_model.runONNXInference(input);
-        if (output.size() != 4) {
-          throw std::runtime_error("Expected output size of 4, got: " +
+        if (output.size() != 5) {
+          throw std::runtime_error("Expected output size of 5, got: " +
                                    std::to_string(output.size()));
         }
 
