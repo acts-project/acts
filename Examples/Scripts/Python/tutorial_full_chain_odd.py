@@ -76,7 +76,6 @@ addSeeding(
     outputDirRoot=outputDir,
 )
 
-"""
 # tutorial algorithm
 s.addAlgorithm(
     acts.examples.TutorialAlgorithm(
@@ -84,7 +83,6 @@ s.addAlgorithm(
         message="hello world from python!",
     )
 )
-"""
 
 addCKFTracks(
     s,
