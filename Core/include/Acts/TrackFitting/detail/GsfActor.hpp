@@ -107,6 +107,9 @@ struct GsfActor {
     /// be started backwards in the first pass
     bool inReversePass = false;
 
+    /// How to reduce the states that are stored in the multi trajectory
+    MixtureReductionMethod reductionMethod = MixtureReductionMethod::eMaxWeight;
+
     const Logger* logger{nullptr};
   } m_cfg;
 
@@ -720,56 +723,67 @@ struct GsfActor {
 
   void addCombinedState(result_type& result, const TemporaryStates& tmpStates,
                         const Surface& surface) const {
-    using PredProjector =
+    using PrtProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
-    using FiltProjector =
+    using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
-    // We do not need smoothed and jacobian for now
-    const auto mask = TrackStatePropMask::Calibrated |
-                      TrackStatePropMask::Predicted |
-                      TrackStatePropMask::Filtered;
-
     if (not m_cfg.inReversePass) {
-      // The predicted state is the forward pass
-      const auto [filtMean, filtCov] =
-          angleDescriptionSwitch(surface, [&](const auto& desc) {
-            return combineGaussianMixture(
-                tmpStates.tips,
-                FiltProjector{tmpStates.traj, tmpStates.weights}, desc);
-          });
+      const auto firstCmpProxy =
+          tmpStates.traj.getTrackState(tmpStates.tips.front());
+      const auto isMeasurement =
+          firstCmpProxy.typeFlags().test(MeasurementFlag);
+
+      const auto mask =
+          isMeasurement
+              ? TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted |
+                    TrackStatePropMask::Filtered | TrackStatePropMask::Smoothed
+              : TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted;
 
       result.currentTip =
           result.fittedStates->addTrackState(mask, result.currentTip);
       auto proxy = result.fittedStates->getTrackState(result.currentTip);
-      auto firstCmpProxy = tmpStates.traj.getTrackState(tmpStates.tips.front());
 
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
 
-      // We set predicted & filtered the same so that the fields are not
-      // uninitialized when not finding this state in the reverse pass.
-      proxy.predicted() = filtMean;
-      proxy.predictedCovariance() = filtCov;
-      proxy.filtered() = filtMean;
-      proxy.filteredCovariance() = filtCov;
+      auto [prtMean, prtCov] = reduceGaussianMixture(
+          tmpStates.tips, surface, m_cfg.reductionMethod,
+          PrtProjector{tmpStates.traj, tmpStates.weights});
+      proxy.predicted() = prtMean;
+      proxy.predictedCovariance() = prtCov;
+
+      if (isMeasurement) {
+        auto [fltMean, fltCov] = reduceGaussianMixture(
+            tmpStates.tips, surface, m_cfg.reductionMethod,
+            FltProjector{tmpStates.traj, tmpStates.weights});
+        proxy.filtered() = fltMean;
+        proxy.filteredCovariance() = fltCov;
+        proxy.smoothed() = BoundVector::Constant(-2);
+        proxy.smoothedCovariance() = BoundSymMatrix::Constant(-2);
+      } else {
+        proxy.shareFrom(TrackStatePropMask::Predicted,
+                        TrackStatePropMask::Filtered);
+      }
+
     } else {
       assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
               "tip not valid"));
+
       result.fittedStates->applyBackwards(
           result.currentTip, [&](auto trackState) {
             auto fSurface = &trackState.referenceSurface();
             if (fSurface == &surface) {
-              const auto [filtMean, filtCov] =
-                  angleDescriptionSwitch(surface, [&](const auto& desc) {
-                    return combineGaussianMixture(
-                        tmpStates.tips,
-                        FiltProjector{tmpStates.traj, tmpStates.weights}, desc);
-                  });
-
-              trackState.filtered() = filtMean;
-              trackState.filteredCovariance() = filtCov;
               result.surfacesVisitedBwdAgain.push_back(&surface);
+
+              if (trackState.hasSmoothed()) {
+                const auto [smtMean, smtCov] = reduceGaussianMixture(
+                    tmpStates.tips, surface, m_cfg.reductionMethod,
+                    FltProjector{tmpStates.traj, tmpStates.weights});
+
+                trackState.smoothed() = smtMean;
+                trackState.smoothedCovariance() = smtCov;
+              }
               return false;
             }
             return true;
@@ -785,6 +799,7 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
+    m_cfg.reductionMethod = options.stateReductionMethod;
   }
 };
 
