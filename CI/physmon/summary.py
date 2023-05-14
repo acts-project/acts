@@ -36,9 +36,11 @@ for h in args.html:
 
 with open(args.output, mode="w", encoding="utf-8") as f:
     f.write(
-        """<html>
+        """<!DOCTYPE html>
+<html>
 <head>
   <title>physmon summary</title>
+  <meta charset="UTF-8">
 </head>
 <body>
   <h1>physmon summary</h1>
