@@ -110,7 +110,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   predParamsAtPCA[2] = phiAtPCA;
   predParamsAtPCA[3] = th;
   predParamsAtPCA[4] = qOvP;
-  predParamsAtPCA[5] = 0.;
+  predParamsAtPCA[5] = positionAtPCA[eTime];
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
   ActsMatrix<eBoundSize, 4> positionJacobian;
