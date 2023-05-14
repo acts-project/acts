@@ -100,6 +100,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
+  finderConfig.maxIterations = 200;
 
   // Instantiate the finder
   Finder finder(finderConfig, logger().cloneWithSuffix("AMVFinder"));
