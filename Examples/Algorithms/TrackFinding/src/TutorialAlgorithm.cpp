@@ -14,6 +14,8 @@ ActsExamples::TutorialAlgorithm::TutorialAlgorithm(const Config& cfg,
 
 ActsExamples::ProcessCode ActsExamples::TutorialAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  (void)ctx;
+
   ACTS_INFO(m_cfg.message);
 
   return ActsExamples::ProcessCode::SUCCESS;
