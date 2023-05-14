@@ -155,5 +155,6 @@ if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
 fi
 
 CI/physmon/summary.py $outdir/*.html $outdir/summary.html
+ec=$(($ec | $?))
 
 exit $ec
