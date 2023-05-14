@@ -48,16 +48,6 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
   BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
 
-  if (parCovarianceAtPCA.determinant() <= 0) {
-    // Use the original parameters
-    paramsAtPCA = params.parameters();
-    auto pos = endParams.position(gctx);
-    positionAtPCA[ePos0] = pos[ePos0];
-    positionAtPCA[ePos1] = pos[ePos1];
-    positionAtPCA[ePos2] = pos[ePos2];
-    parCovarianceAtPCA = params.covariance().value();
-  }
-
   // phiV and functions
   double phiV = paramsAtPCA(BoundIndices::eBoundPhi);
   double sinPhiV = std::sin(phiV);
