@@ -34,7 +34,6 @@ histograms:
     min: -200
     max: 200
     nbins: 100
-    
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]
@@ -53,3 +52,5 @@ extra_histograms:
     min: 0.0
     max: 1.0
 
+exclude:
+  - timeMS
