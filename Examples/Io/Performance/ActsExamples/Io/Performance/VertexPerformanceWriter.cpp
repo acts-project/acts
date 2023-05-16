@@ -370,12 +370,17 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           m_resY.push_back(vtx.position()[1] - truePos[1]);
           m_resZ.push_back(vtx.position()[2] - truePos[2]);
 
-          m_pullX.push_back((vtx.position()[0] - truePos[0]) /
-                            std::sqrt(vtx.covariance()(0, 0)));
-          m_pullY.push_back((vtx.position()[1] - truePos[1]) /
-                            std::sqrt(vtx.covariance()(1, 1)));
-          m_pullZ.push_back((vtx.position()[2] - truePos[2]) /
-                            std::sqrt(vtx.covariance()(2, 2)));
+          auto pull = [&](int i) {
+            double error = std::sqrt(vtx.covariance()(i, i));
+            if (error == 0) {
+              return std::numeric_limits<double>::quiet_NaN();
+            }
+            return (vtx.position()[i] - truePos[i]) / error;
+          };
+
+          m_pullX.push_back(pull(0));
+          m_pullY.push_back(pull(1));
+          m_pullZ.push_back(pull(2));
 
           m_truthX.push_back(truePos[0]);
           m_truthY.push_back(truePos[1]);
