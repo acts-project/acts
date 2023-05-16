@@ -95,12 +95,14 @@ class VertexPerformanceWriter final
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
 
-  std::vector<float>
-      m_diffx;  ///< Difference in x positon between reco and true vtx
-  std::vector<float>
-      m_diffy;  ///< Difference in y positon between reco and true vtx
-  std::vector<float>
-      m_diffz;  ///< Difference in z positon between reco and true vtx
+  /// Difference in x positon between reco and true vtx
+  std::vector<float> m_resX;
+  std::vector<float> m_resY;
+  std::vector<float> m_resZ;
+
+  std::vector<float> m_pullX;
+  std::vector<float> m_pullY;
+  std::vector<float> m_pullZ;
 
   std::vector<float> m_truthX;
   std::vector<float> m_truthY;
@@ -112,8 +114,11 @@ class VertexPerformanceWriter final
 
   std::vector<float> m_covXX;
   std::vector<float> m_covYY;
+  std::vector<float> m_covZZ;
   std::vector<float> m_covXY;
-  std::vector<float> m_covYX;
+  std::vector<float> m_covXZ;
+  std::vector<float> m_covYZ;
+
   std::vector<float> m_trackVtxMatchFraction;
 
   int m_nrecoVtx = -1;           ///< Number of reconstructed vertices
