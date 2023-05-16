@@ -371,7 +371,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           m_resZ.push_back(vtx.position()[2] - truePos[2]);
 
           auto pull = [&](int i) {
-            double error = std::sqrt(vtx.covariance()(i, i));
+            double var = vtx.covariance()(i, i);
+            if (var < 0) {
+              return std::numeric_limits<double>::quiet_NaN();
+            }
+            double error = std::sqrt(var);
             if (error == 0) {
               return std::numeric_limits<double>::quiet_NaN();
             }
