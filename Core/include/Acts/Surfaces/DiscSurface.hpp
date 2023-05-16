@@ -243,6 +243,7 @@ class DiscSurface : public Surface {
   /// @param direction The global direction at the starting point
   ///        @note expected to be normalized (no checking)
   /// @param bcheck The boundary check prescription
+  /// @param tolerance the tolerance used for the intersection
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -263,8 +264,8 @@ class DiscSurface : public Surface {
   /// @return The SurfaceIntersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue
   ///
