@@ -373,13 +373,15 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           auto pull = [&](int i) {
             double var = vtx.covariance()(i, i);
             if (var < 0) {
+              ACTS_WARNING("var(" << i << ") = " << var << " < 0");
               return std::numeric_limits<double>::quiet_NaN();
             }
-            double error = std::sqrt(var);
-            if (error == 0) {
+            double std = std::sqrt(var);
+            if (std == 0) {
+              ACTS_WARNING("std(" << i << ") = 0");
               return std::numeric_limits<double>::quiet_NaN();
             }
-            return (vtx.position()[i] - truePos[i]) / error;
+            return (vtx.position()[i] - truePos[i]) / std;
           };
 
           m_pullX.push_back(pull(0));
