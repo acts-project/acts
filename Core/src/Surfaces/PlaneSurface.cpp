@@ -172,12 +172,13 @@ double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
 
 Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction);
+      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status != Intersection3D::Status::unreachable and bcheck) {
     // Built-in local to global for speed reasons

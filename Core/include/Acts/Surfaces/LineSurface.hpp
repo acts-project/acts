@@ -197,6 +197,7 @@ class LineSurface : public Surface {
   /// @param direction The global direction at the starting point
   ///        @note exptected to be normalized
   /// @param bcheck The boundary check directive for the estimate
+  /// @param tolerance the tolerance used for the intersection
   ///
   ///   <b>mathematical motivation:</b>
   ///   Given two lines in parameteric form:<br>
@@ -228,8 +229,8 @@ class LineSurface : public Surface {
   /// @return is the intersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
