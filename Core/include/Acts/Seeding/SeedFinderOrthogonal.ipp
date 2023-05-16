@@ -167,10 +167,10 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * duplet but instead we calculate (zOrigin * deltaR) and multiply
    * collisionRegion by deltaR to avoid divisions
    */
-  const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
+  const float zOriginTimesDeltaR = (zL * deltaR - rL * deltaZ);
   if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR or
       zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
-    continue;
+    return false;
   }
 
   // cut on the max curvature calculated from dublets
