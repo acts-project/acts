@@ -4,6 +4,7 @@
 > This is likely a physmon job failure
 {% endif %}
 
+[Summary]({{ url }}/summary.html)
 [Full report]({{ url }}/)
 Seeding: {{ make_url("seeded", "seeding_seeded.html") }}, {{ make_url("truth estimated", "seeding_truth_estimated.html") }}, {{ make_url("orthogonal", "seeding_orthogonal.html") }}
 CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}, {{ make_url("orthogonal", "ckf_orthogonal.html") }}

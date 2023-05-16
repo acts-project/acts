@@ -133,7 +133,8 @@ const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
 
 Acts::SurfaceIntersection Acts::LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track
   const Vector3& ma = position;
@@ -148,10 +149,10 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
   double denom = 1 - eaTeb * eaTeb;
   // validity parameter
   Intersection3D::Status status = Intersection3D::Status::unreachable;
-  if (std::abs(denom) > std::abs(s_onSurfaceTolerance)) {
+  if (std::abs(denom) > std::abs(tolerance)) {
     double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
     // Check if we are on the surface already
-    status = std::abs(u) < std::abs(s_onSurfaceTolerance)
+    status = std::abs(u) < std::abs(tolerance)
                  ? Intersection3D::Status::onSurface
                  : Intersection3D::Status::reachable;
     Vector3 result = (ma + u * ea);
@@ -161,11 +162,10 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
       // At closest approach: check inside R or and inside Z
       const Vector3 vecLocal(result - mb);
       double cZ = vecLocal.dot(eb);
-      double hZ =
-          m_bounds->get(LineBounds::eHalfLengthZ) + s_onSurfaceTolerance;
+      double hZ = m_bounds->get(LineBounds::eHalfLengthZ) + tolerance;
       if ((std::abs(cZ) > std::abs(hZ)) or
           ((vecLocal - cZ * eb).norm() >
-           m_bounds->get(LineBounds::eR) + s_onSurfaceTolerance)) {
+           m_bounds->get(LineBounds::eR) + tolerance)) {
         status = Intersection3D::Status::missed;
       }
     }

@@ -25,7 +25,8 @@ namespace PlanarHelper {
 /// @return The intersection
 inline Intersection3D intersect(const Transform3& transform,
                                 const Vector3& position,
-                                const Vector3& direction) {
+                                const Vector3& direction,
+                                ActsScalar tolerance) {
   // Get the matrix from the transform (faster access)
   const auto& tMatrix = transform.matrix();
   const Vector3 pnormal = tMatrix.block<3, 1>(0, 2).transpose();
@@ -36,10 +37,9 @@ inline Intersection3D intersect(const Transform3& transform,
     // Translate that into a path
     ActsScalar path = (pnormal.dot((pcenter - position))) / (denom);
     // Is valid hence either on surface or reachable
-    Intersection3D::Status status =
-        std::abs(path) < std::abs(s_onSurfaceTolerance)
-            ? Intersection3D::Status::onSurface
-            : Intersection3D::Status::reachable;
+    Intersection3D::Status status = std::abs(path) < std::abs(tolerance)
+                                        ? Intersection3D::Status::onSurface
+                                        : Intersection3D::Status::reachable;
     // Return the intersection
     return Intersection3D{(position + path * direction), path, status};
   }

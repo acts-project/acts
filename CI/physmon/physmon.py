@@ -222,17 +222,39 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
+            outputProtoVertices="ivf_protovertices",
+            outputVertices="ivf_fittedVertices",
             vertexFinder=VertexFinder.Iterative,
-            outputDirRoot=tp,
+            outputDirRoot=tp / "ivf",
+        )
+
+        addVertexFitting(
+            s,
+            field,
+            associatedParticles=None
+            if label in ["seeded", "orthogonal"]
+            else "particles_input",
+            outputProtoVertices="amvf_protovertices",
+            outputVertices="amvf_fittedVertices",
+            outputTime="amvf_outputTime",
+            vertexFinder=VertexFinder.AMVF,
+            outputDirRoot=tp / "amvf",
         )
 
         s.run()
         del s
 
+        for vertexing in ["ivf", "amvf"]:
+            shutil.move(
+                tp / f"{vertexing}/performance_vertexing.root",
+                tp / f"performance_{vertexing}.root",
+            )
+
         for stem in [
             "performance_ckf",
             "tracksummary_ckf",
-            "performance_vertexing",
+            "performance_ivf",
+            "performance_amvf",
         ] + (
             ["performance_seeding", "performance_ambi"]
             if label in ["seeded", "orthogonal"]
