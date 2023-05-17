@@ -137,13 +137,13 @@ class Connections {};
 // On 1-D grid, cells have 1 backward neighbor
 template <>
 struct Connections<1> : public ConnectionsBase<1> {
-  Connections() : ConnectionsBase() {}
+  using ConnectionsBase::ConnectionsBase;
 };
 
 // On a 2-D grid, cells have 4 backward neighbors
 template <>
 struct Connections<2> : public ConnectionsBase<4> {
-  Connections() : ConnectionsBase() {}
+  using ConnectionsBase::ConnectionsBase;
 };
 
 // Cell collection logic
