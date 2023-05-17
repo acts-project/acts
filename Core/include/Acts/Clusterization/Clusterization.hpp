@@ -81,7 +81,7 @@ void labelClusters(CellCollection& cells, Connect connect = Connect());
 ///
 /// @return nothing
 template <typename CellCollection, typename ClusterCollection, size_t GridDim>
-typename std::enable_if<GridDim != 1 and GridDim != 2, ClusterCollection>::type
+typename std::enable_if_t<GridDim != 1 and GridDim != 2, ClusterCollection>
 mergeClusters(CellCollection& /*cells*/) {
   static_assert(GridDim == 1 and GridDim == 2,
                 "mergeClusters is only defined for grid dimensions of 1 or 2. "

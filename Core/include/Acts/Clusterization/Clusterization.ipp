@@ -283,7 +283,7 @@ void labelClusters(CellCollection& cells, Connect connect) {
 
 template <typename CellCollection, typename ClusterCollection,
           size_t GridDim = 2>
-typename std::enable_if<GridDim == 2, ClusterCollection>::type mergeClusters(
+typename std::enable_if_t<GridDim == 2, ClusterCollection> mergeClusters(
     CellCollection& cells) {
   using Cell = typename CellCollection::value_type;
   using Cluster = typename ClusterCollection::value_type;
@@ -300,7 +300,7 @@ typename std::enable_if<GridDim == 2, ClusterCollection>::type mergeClusters(
 
 // Specialization for 1-D grid -- no need to re-sort the cells
 template <typename CellCollection, typename ClusterCollection, size_t GridDim>
-typename std::enable_if<GridDim == 1, ClusterCollection>::type mergeClusters(
+typename std::enable_if_t<GridDim == 1, ClusterCollection> mergeClusters(
     CellCollection& cells) {
   using Cell = typename CellCollection::value_type;
   using Cluster = typename ClusterCollection::value_type;
