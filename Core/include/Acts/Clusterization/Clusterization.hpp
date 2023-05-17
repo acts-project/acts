@@ -11,8 +11,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-namespace Ccl {
+namespace Acts::Ccl {
 
 using Label = int;
 constexpr Label NO_LABEL = 0;
@@ -98,7 +97,6 @@ template <typename CellCollection, typename ClusterCollection,
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect connect = Connect());
 
-}  // namespace Ccl
-}  // namespace Acts
+}  // namespace Acts::Ccl
 
 #include "Acts/Clusterization/Clusterization.ipp"
