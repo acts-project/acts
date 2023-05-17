@@ -16,15 +16,14 @@
 #include <vector>
 
 namespace Acts {
-
 namespace Experimental {
-
+namespace detail {
 /// @brief  This file contains helper methods to build common support structures
 /// such as support cylinders or discs.
 ///
 /// It allows to model those as Disc/CylinderSurface objects, but also - if
 /// configured such - as approximations built from palanr surfaces
-namespace SupportBuilder {
+namespace SupportHelper {
 
 /// @brief Helper method to build cylindrical support structure
 ///
@@ -66,6 +65,7 @@ void addSupport(std::vector<std::shared_ptr<Surface>>& layerSurfaces,
                 std::optional<Transform3> layerTransform = std::nullopt,
                 unsigned int supportSplits = 1u);
 
-}  // namespace SupportBuilder
+}  // namespace SupportHelper
+}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts
