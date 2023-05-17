@@ -577,7 +577,6 @@ def addGeant4(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
-    keepParticlesWithoutHits=True,
 ) -> None:
     """This function steers the detector simulation using Geant4
 
