@@ -44,9 +44,9 @@ struct clusterTypeHasRequiredFunctions<
 
 template <size_t GridDim>
 constexpr void staticCheckGridDim() {
-  static_assert(GridDim == 1 || GridDim == 2,
-                "mergeClusters is only defined for grid dimensions of 1 or 2. ");
-
+  static_assert(
+      GridDim == 1 || GridDim == 2,
+      "mergeClusters is only defined for grid dimensions of 1 or 2. ");
 }
 
 template <typename T, size_t GridDim>
@@ -208,12 +208,13 @@ ClusterCollection mergeClustersImpl(CellCollection& cells) {
   return outv;
 }
 
-} // namespace Acts::Ccl::internal
+}  // namespace Acts::Ccl::internal
 
 namespace Acts::Ccl {
 
 template <typename Cell>
-ConnectResult Connect2D<Cell>::operator()(const Cell& ref, const Cell& iter) const {
+ConnectResult Connect2D<Cell>::operator()(const Cell& ref,
+                                          const Cell& iter) const {
   int deltaRow = std::abs(getCellRow(ref) - getCellRow(iter));
   int deltaCol = std::abs(getCellColumn(ref) - getCellColumn(iter));
   // Iteration is column-wise, so if too far in column, can
@@ -235,14 +236,15 @@ ConnectResult Connect2D<Cell>::operator()(const Cell& ref, const Cell& iter) con
 }
 
 template <typename Cell>
-ConnectResult Connect1D<Cell>::operator()(const Cell& ref, const Cell& iter) const {
+ConnectResult Connect1D<Cell>::operator()(const Cell& ref,
+                                          const Cell& iter) const {
   int deltaCol = std::abs(getCellColumn(ref) - getCellColumn(iter));
   return deltaCol == 1 ? ConnectResult::eConn : ConnectResult::eNoConnStop;
 }
 
 template <size_t GridDim>
 void recordEquivalences(const internal::Connections<GridDim> seen,
-			internal::DisjointSets& ds) {
+                        internal::DisjointSets& ds) {
   // Sanity check: first element should always have
   // label if nconn > 0
   if (seen.nconn > 0 && seen.buf[0] == NO_LABEL) {
@@ -293,7 +295,8 @@ void labelClusters(CellCollection& cells, Connect connect) {
   }
 }
 
-template <typename CellCollection, typename ClusterCollection, size_t GridDim = 2>
+template <typename CellCollection, typename ClusterCollection,
+          size_t GridDim = 2>
 ClusterCollection mergeClusters(CellCollection& cells) {
   using Cell = typename CellCollection::value_type;
   using Cluster = typename ClusterCollection::value_type;
@@ -301,7 +304,7 @@ ClusterCollection mergeClusters(CellCollection& cells) {
   internal::staticCheckCellType<Cell, GridDim>();
   internal::staticCheckClusterType<Cluster&, const Cell&>();
 
-  if constexpr(GridDim > 1) {
+  if constexpr (GridDim > 1) {
     // Sort the cells by their cluster label, only needed if more than
     // one spatial dimension
     std::sort(cells.begin(), cells.end(), [](Cell& lhs, Cell& rhs) {
@@ -311,7 +314,6 @@ ClusterCollection mergeClusters(CellCollection& cells) {
 
   return internal::mergeClustersImpl<CellCollection, ClusterCollection>(cells);
 }
-
 
 template <typename CellCollection, typename ClusterCollection, size_t GridDim,
           typename Connect>
