@@ -42,6 +42,13 @@ struct clusterTypeHasRequiredFunctions<
     std::void_t<decltype(clusterAddCell(std::declval<T>(), std::declval<U>()))>>
     : std::true_type {};
 
+template <size_t GridDim>
+constexpr void staticCheckGridDim() {
+  static_assert(GridDim == 1 || GridDim == 2,
+                "mergeClusters is only defined for grid dimensions of 1 or 2. ");
+
+}
+
 template <typename T, size_t GridDim>
 constexpr void staticCheckCellType() {
   constexpr bool hasFns = cellTypeHasRequiredFunctions<T, GridDim>();
@@ -286,33 +293,25 @@ void labelClusters(CellCollection& cells, Connect connect) {
   }
 }
 
-template <typename CellCollection, typename ClusterCollection,
-          size_t GridDim = 2>
-typename std::enable_if_t<GridDim == 2, ClusterCollection> mergeClusters(
-    CellCollection& cells) {
+template <typename CellCollection, typename ClusterCollection, size_t GridDim = 2>
+ClusterCollection mergeClusters(CellCollection& cells) {
   using Cell = typename CellCollection::value_type;
   using Cluster = typename ClusterCollection::value_type;
+  internal::staticCheckGridDim<GridDim>();
   internal::staticCheckCellType<Cell, GridDim>();
   internal::staticCheckClusterType<Cluster&, const Cell&>();
 
-  // Sort the cells by their cluster label
-  std::sort(cells.begin(), cells.end(), [](Cell& lhs, Cell& rhs) {
-    return getCellLabel(lhs) < getCellLabel(rhs);
-  });
+  if constexpr(GridDim > 1) {
+    // Sort the cells by their cluster label, only needed if more than
+    // one spatial dimension
+    std::sort(cells.begin(), cells.end(), [](Cell& lhs, Cell& rhs) {
+      return getCellLabel(lhs) < getCellLabel(rhs);
+    });
+  }
 
   return internal::mergeClustersImpl<CellCollection, ClusterCollection>(cells);
 }
 
-// Specialization for 1-D grid -- no need to re-sort the cells
-template <typename CellCollection, typename ClusterCollection, size_t GridDim>
-typename std::enable_if_t<GridDim == 1, ClusterCollection> mergeClusters(
-    CellCollection& cells) {
-  using Cell = typename CellCollection::value_type;
-  using Cluster = typename ClusterCollection::value_type;
-  internal::staticCheckCellType<Cell, GridDim>();
-  internal::staticCheckClusterType<Cluster&, const Cell&>();
-  return internal::mergeClustersImpl<CellCollection, ClusterCollection>(cells);
-}
 
 template <typename CellCollection, typename ClusterCollection, size_t GridDim,
           typename Connect>
