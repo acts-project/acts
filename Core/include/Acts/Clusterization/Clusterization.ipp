@@ -94,7 +94,7 @@ struct Compare<Cell, 1> {
 // wrapping, but it's way slower
 class DisjointSets {
  public:
-  DisjointSets(size_t initial_size = 128)
+  explicit DisjointSets(size_t initial_size = 128)
       : m_size(initial_size),
         m_rank(m_size),
         m_parent(m_size),

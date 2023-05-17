@@ -31,7 +31,7 @@ template <typename Cell>
 struct Connect2D {
   bool conn8;
   Connect2D() : conn8{true} {}
-  Connect2D(bool commonCorner) : conn8{commonCorner} {}
+  explicit Connect2D(bool commonCorner) : conn8{commonCorner} {}
   ConnectResult operator()(const Cell& ref, const Cell& iter);
 };
 
@@ -50,7 +50,7 @@ struct DefaultConnect {
 
 template <typename Cell>
 struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
-  DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
+  explicit DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
   DefaultConnect() : DefaultConnect(true) {}
 };
 
