@@ -206,7 +206,7 @@ ClusterCollection mergeClustersImpl(CellCollection& cells) {
 namespace Acts::Ccl {
 
 template <typename Cell>
-ConnectResult Connect2D<Cell>::operator()(const Cell& ref, const Cell& iter) {
+ConnectResult Connect2D<Cell>::operator()(const Cell& ref, const Cell& iter) const {
   int deltaRow = std::abs(getCellRow(ref) - getCellRow(iter));
   int deltaCol = std::abs(getCellColumn(ref) - getCellColumn(iter));
   // Iteration is column-wise, so if too far in column, can
@@ -228,7 +228,7 @@ ConnectResult Connect2D<Cell>::operator()(const Cell& ref, const Cell& iter) {
 }
 
 template <typename Cell>
-ConnectResult Connect1D<Cell>::operator()(const Cell& ref, const Cell& iter) {
+ConnectResult Connect1D<Cell>::operator()(const Cell& ref, const Cell& iter) const {
   int deltaCol = std::abs(getCellColumn(ref) - getCellColumn(iter));
   return deltaCol == 1 ? ConnectResult::eConn : ConnectResult::eNoConnStop;
 }

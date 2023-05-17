@@ -32,13 +32,13 @@ struct Connect2D {
   bool conn8;
   Connect2D() : conn8{true} {}
   explicit Connect2D(bool commonCorner) : conn8{commonCorner} {}
-  ConnectResult operator()(const Cell& ref, const Cell& iter);
+  ConnectResult operator()(const Cell& ref, const Cell& iter) const;
 };
 
 // Default connection type for 1-D grids: 2-cell connectivity
 template <typename Cell>
 struct Connect1D {
-  ConnectResult operator()(const Cell& ref, const Cell& iter);
+  ConnectResult operator()(const Cell& ref, const Cell& iter) const;
 };
 
 // Default connection type based on GridDim
