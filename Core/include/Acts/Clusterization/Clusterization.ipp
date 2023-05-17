@@ -159,13 +159,13 @@ Connections<GridDim> getConnections(typename std::vector<Cell>::iterator it,
     it_2 = std::prev(it_2);
 
     ConnectResult cr = connect(*it, *it_2);
-    if (cr == eNoConnStop) {
+    if (cr == ConnectResult::eNoConnStop) {
       break;
     }
-    if (cr == eNoConn) {
+    if (cr == ConnectResult::eNoConn) {
       continue;
     }
-    if (cr == eConn) {
+    if (cr == ConnectResult::eConn) {
       seen.buf[seen.nconn++] = getCellLabel(*it_2);
       if (seen.nconn == seen.buf.size()) {
         break;

@@ -21,7 +21,7 @@ constexpr Label NO_LABEL = 0;
 // code always loops backward, starting from the reference cell. Since
 // the cells are globally sorted column-wise, the connection function
 // can therefore tell when the search should be stopped.
-enum ConnectResult {
+enum class ConnectResult {
   eNoConn,      // No connections, keep looking
   eNoConnStop,  // No connections, stop looking
   eConn         // Found connection
