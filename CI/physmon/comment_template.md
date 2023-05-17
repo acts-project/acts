@@ -46,6 +46,8 @@ Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, {{ make_url(
 {{- make_image("ivf_"+mode+"_plots/"+url, "50%") -}}
 {%- endfor %}
 
+{% endcall %}
+
 {% for mode in ["seeded", "truth_smeared", "truth_estimated", "orthogonal"] %}
 
 {% call detail_block("AMVF "+mode, "amvf_"+mode+"_plots") %}
