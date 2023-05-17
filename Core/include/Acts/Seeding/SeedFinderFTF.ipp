@@ -35,7 +35,8 @@ template <typename external_spacepoint_t>
 SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
     const SeedFinderFTFConfig<external_spacepoint_t> &config)
     : m_config(config) {
-  // m_storage = new TrigFTF_GNN_DataStorage<external_spacepoint_t>(); //when define find relevant input 
+  m_storage = new TrigFTF_GNN_DataStorage<external_spacepoint_t>(m_config.mGNNgeo); //when define find relevant input 
+  
   //schecks if internal units funciton used 
   // if (not config.isInInternalUnits) {
   //   throw std::runtime_error(
@@ -49,21 +50,27 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
  //when calling put input of vector<simspacepoints>, now can call space_point_t 
 template <typename external_spacepoint_t>
 void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<external_spacepoint_t>& SP){ 
-// void SeedFInderFTF::loadSpacePoints(const std::vector<TrigSiSpacePointBase>& vSP) {
 
   for(auto sp : SP) {
     //could check if pixel as pixels only have 1 source link (strip have 2)
-    // bool isPixel = (sp).isPixel();
+    bool isPixel = sp.isPixel(); 
 
-    // if(!isPixel) continue;
+    if(!isPixel) continue;
     // //think not using trigseedML for now 
     // //when called input should be simspace point 
-    // m_storage->addSpacePoint((sp), (m_settings.m_useTrigSeedML > 0));
+    
+    m_storage->addSpacePoint((sp), (m_config.m_useTrigSeedML > 0));
 
     std::cout<<("in seed finder load space point function") ; 
   }
-  // m_storage->sortByPhi();
-  // m_storage->generatePhiIndexing(1.5*m_phiSliceWidth);
+
+  //cant find M_PI set to number for now 
+  int M_PI = 1 ; 
+  m_phiSliceWidth = 2*M_PI/m_config.m_nMaxPhiSlice;
+
+
+  m_storage->sortByPhi();
+  m_storage->generatePhiIndexing(1.5*m_phiSliceWidth);
 
 }
 //filter canditates function 

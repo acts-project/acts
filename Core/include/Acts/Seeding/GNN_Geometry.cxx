@@ -120,7 +120,8 @@ TrigFTF_GNN_Layer<space_point_t>::TrigFTF_GNN_Layer(const TrigInDetSiLayer& ls, 
   }
 }
 
-// bool TrigFTF_GNN_Layer::verifyBin(const TrigFTF_GNN_Layer* pL, int b1, int b2, float min_z0, float max_z0) const {
+template <typename space_point_t> 
+bool TrigFTF_GNN_Layer<space_point_t>::verifyBin(const TrigFTF_GNN_Layer<space_point_t>* pL, int b1, int b2, float min_z0, float max_z0) const {
 
 //   float z1min = m_minBinCoord.at(b1);
 //   float z1max = m_maxBinCoord.at(b1);
@@ -176,8 +177,8 @@ TrigFTF_GNN_Layer<space_point_t>::TrigFTF_GNN_Layer(const TrigInDetSiLayer& ls, 
 //     return true;
 //   }
 
-//    return true;
-// }
+   return true;
+}
 
 template <typename space_point_t>  
 int TrigFTF_GNN_Layer<space_point_t>::getEtaBin(float zh, float rh) const {
@@ -197,25 +198,29 @@ int TrigFTF_GNN_Layer<space_point_t>::getEtaBin(float zh, float rh) const {
   return m_bins.at(idx);//index in the global storage
 }
 
-// float TrigFTF_GNN_Layer::getMinBinRadius(int idx) const {
+template <typename space_point_t> 
+float TrigFTF_GNN_Layer<space_point_t>::getMinBinRadius(int idx) const {
 //   if(idx >= static_cast<int>(m_minRadius.size())) idx = idx-1;
 //   if(idx < 0) idx = 0;
   
 //   return m_minRadius.at(idx);
-// }
+}
 
-// float TrigFTF_GNN_Layer::getMaxBinRadius(int idx) const {
+template <typename space_point_t> 
+float TrigFTF_GNN_Layer<space_point_t>::getMaxBinRadius(int idx) const {
 //   if(idx >= static_cast<int>(m_maxRadius.size())) idx = idx-1;
 //   if(idx < 0) idx = 0;
   
 //   return m_maxRadius.at(idx);
-// }
+}
+
 template <typename space_point_t>  
 TrigFTF_GNN_Layer<space_point_t>::~TrigFTF_GNN_Layer() {
   m_bins.clear();
 }
 
-// TrigFTF_GNN_Geometry::TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>& layers, const FASTRACK_CONNECTOR* conn) : m_nEtaBins(0) {
+template <typename space_point_t> 
+TrigFTF_GNN_Geometry<space_point_t>::TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>& layers, const FASTRACK_CONNECTOR* conn) : m_nEtaBins(0) {
 
 //   const float min_z0 = -168.0;
 //   const float max_z0 =  168.0;
@@ -263,30 +268,34 @@ TrigFTF_GNN_Layer<space_point_t>::~TrigFTF_GNN_Layer() {
 //       }
 //     }
 //   }
-// }
+}
 
-// TrigFTF_GNN_Geometry::~TrigFTF_GNN_Geometry() {
+template <typename space_point_t> 
+TrigFTF_GNN_Geometry<space_point_t>::~TrigFTF_GNN_Geometry() {
 //   for(std::vector<TrigFTF_GNN_Layer*>::iterator it =  m_layArray.begin();it!=m_layArray.end();++it) {
 //     delete (*it);
 //   }
 //   m_layMap.clear();m_layArray.clear();
-// }
+}
 
-// const TrigFTF_GNN_Layer* TrigFTF_GNN_Geometry::getTrigFTF_GNN_LayerByKey(unsigned int key) const {
+template <typename space_point_t> 
+const TrigFTF_GNN_Layer<space_point_t>* TrigFTF_GNN_Geometry<space_point_t>::getTrigFTF_GNN_LayerByKey(unsigned int key) const {
 //   std::map<unsigned int, TrigFTF_GNN_Layer*>::const_iterator it = m_layMap.find(key);
 //   if(it == m_layMap.end()) {
 //     return nullptr;
 //   }
 //   return (*it).second;
-// }
+}
+
+
 template <typename space_point_t>  
 const TrigFTF_GNN_Layer<space_point_t>* TrigFTF_GNN_Geometry<space_point_t>::getTrigFTF_GNN_LayerByIndex(int idx) const {
   return m_layArray.at(idx);
 }
 
 
-
-// const TrigFTF_GNN_Layer* TrigFTF_GNN_Geometry::addNewLayer(const TrigInDetSiLayer& l, int bin0) {
+template <typename space_point_t> 
+const TrigFTF_GNN_Layer<space_point_t>* TrigFTF_GNN_Geometry<space_point_t>::addNewLayer(const TrigInDetSiLayer& l, int bin0) {
 
 //   unsigned int layerKey = l.m_subdet;
 
@@ -297,4 +306,4 @@ const TrigFTF_GNN_Layer<space_point_t>* TrigFTF_GNN_Geometry<space_point_t>::get
 //   m_layMap.insert(std::pair<unsigned int, TrigFTF_GNN_Layer*>(layerKey, pHL));
 //   m_layArray.push_back(pHL);
 //   return pHL;
-// }
+}

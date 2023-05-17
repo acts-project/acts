@@ -24,31 +24,31 @@ public:
   };
   //want constructor to take simspace point 
   TrigFTF_GNN_Node(const space_point_t&, float, float);  
-  // TrigFTF_GNN_Node(const TrigSiSpacePointBase&, float, float);
   ~TrigFTF_GNN_Node();
   
 
-//  inline void addIn(int i) {
+ inline void addIn(int i) {
 //     if(m_in.size()<MAX_SEG_PER_NODE) {
 //       m_in.push_back(i);
 //     }
-//   }
+  }
 
-//   inline void addOut(int i) {
+  inline void addOut(int i) {
 //     if(m_out.size()<MAX_SEG_PER_NODE) {
 //       m_out.push_back(i);
 //     }
-//   }
+  }
   
-//   inline bool isConnector() const {
+  inline bool isConnector() const {
 //     if(m_in.empty() || m_out.empty()) return false;
 //     return true;
-//   }
+  }
 
-//   inline bool isFull() const {
+  inline bool isFull() const {
 //     if(m_in.size()==MAX_SEG_PER_NODE && m_out.size()==MAX_SEG_PER_NODE) return true;
 //     else return false;
-  // }
+  }
+
   const std::vector<space_point_t>& m_sp;
   
   std::vector<unsigned int> m_in;//indices of the edges in the edge storage
@@ -63,13 +63,14 @@ public:
   TrigFTF_GNN_EtaBin();
   ~TrigFTF_GNN_EtaBin();
 
-  // void sortByPhi();
+  void 
+  hi();
 
-  // bool empty() const {
+  bool empty() const {
   //   return m_vn.empty();
-  // }
+  }
   
-  // void generatePhiIndexing(float);
+  void generatePhiIndexing(float);
   
   std::vector<TrigFTF_GNN_Node<space_point_t>*> m_vn;
   std::vector<std::pair<float, unsigned int> > m_vPhiNodes;
@@ -84,22 +85,22 @@ public:
  
   int addSpacePoint(const space_point_t&, bool); 
 
-  // unsigned int numberOfNodes() const;
-  // void getConnectingNodes(std::vector<const TrigFTF_GNN_Node*>&);
-  // void sortByPhi();
-  // void generatePhiIndexing(float);
+  unsigned int numberOfNodes() const;
+  void getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t>*>&);
+  void sortByPhi();
+  void generatePhiIndexing(float);
 
 
-  // const TrigFTF_GNN_EtaBin& getEtaBin(int idx) const {
+  const TrigFTF_GNN_EtaBin<space_point_t>& getEtaBin(int idx) const {
   //   if(idx >= static_cast<int>(m_etaBins.size())) idx = idx-1;
   //   return m_etaBins.at(idx);
-  // }
+  }
 
 protected:
 
   const TrigFTF_GNN_Geometry<space_point_t>&  m_geo;
 
-  // std::vector<TrigFTF_GNN_EtaBin> m_etaBins; 
+  std::vector<TrigFTF_GNN_EtaBin<space_point_t>> m_etaBins; 
 
 };
 
@@ -107,12 +108,12 @@ template <typename space_point_t>
 class TrigFTF_GNN_Edge {
 public:
 
-  // struct CompareLevel {
+  struct CompareLevel {
   // public:
   //   bool operator()(const TrigFTF_GNN_Edge* pS1, const TrigFTF_GNN_Edge* pS2) {
   //     return pS1->m_level > pS2->m_level;
   //   }
-  // };
+  };
 
  TrigFTF_GNN_Edge() : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0) {};
 

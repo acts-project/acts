@@ -23,12 +23,12 @@ public:
 
   int getEtaBin(float, float) const;
 
-  // float getMinBinRadius(int) const;
-  // float getMaxBinRadius(int) const;
+  float getMinBinRadius(int) const;
+  float getMaxBinRadius(int) const;
 
-  // int num_bins() const {return m_bins.size();} 
+  int num_bins() const {return m_bins.size();} 
 
-  // bool verifyBin(const TrigFTF_GNN_Layer*, int, int, float, float) const;
+  bool verifyBin(const TrigFTF_GNN_Layer<space_point_t>*, int, int, float, float) const;
 
   const TrigInDetSiLayer& m_layer;
   std::vector<int> m_bins;//eta-bin indices
@@ -56,14 +56,14 @@ public:
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>&, const FASTRACK_CONNECTOR*);
   ~TrigFTF_GNN_Geometry();
   
-  // const TrigFTF_GNN_Layer* getTrigFTF_GNN_LayerByKey(unsigned int) const;
+  const TrigFTF_GNN_Layer<space_point_t>* getTrigFTF_GNN_LayerByKey(unsigned int) const;
   const TrigFTF_GNN_Layer<space_point_t>* getTrigFTF_GNN_LayerByIndex(int) const;
 
   int num_bins() const {return m_nEtaBins;}
 
 protected:
 
-  // const TrigFTF_GNN_Layer* addNewLayer(const TrigInDetSiLayer&, int);
+  const TrigFTF_GNN_Layer<space_point_t>* addNewLayer(const TrigInDetSiLayer&, int);
 
   float m_etaBinWidth;
 
