@@ -75,6 +75,15 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
                << " != " << inputTrackPointers.size());
   }
 
+  for (const auto& trk : inputTrackParameters) {
+    if (trk.covariance() && trk.covariance()->determinant() <= 0) {
+      // actually we should consider this as an error but I do not want the CI
+      // to fail
+      ACTS_WARNING("input track " << trk << " has det(cov) = "
+                                  << trk.covariance()->determinant());
+    }
+  }
+
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
