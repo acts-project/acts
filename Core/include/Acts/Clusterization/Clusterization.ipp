@@ -233,6 +233,28 @@ ConnectResult Connect1D<Cell>::operator()(const Cell& ref, const Cell& iter) con
   return deltaCol == 1 ? ConnectResult::eConn : ConnectResult::eNoConnStop;
 }
 
+template <size_t GridDim>
+void recordEquivalences(const internal::Connections<GridDim> seen,
+			internal::DisjointSets& ds) {
+  // Sanity check: first element should always have
+  // label if nconn > 0
+  if (seen.nconn > 0 && seen.buf[0] == NO_LABEL) {
+    throw std::logic_error("seen.nconn > 0 but seen.buf[0] == NO_LABEL");
+  }
+  for (size_t i = 1; i < seen.nconn; i++) {
+    // Sanity check: since connection lookup is always backward
+    // while iteration is forward, all connected cells found here
+    // should have a label
+    if (seen.buf[i] == NO_LABEL) {
+      throw std::logic_error("i < seen.nconn but see.buf[i] == NO_LABEL");
+    }
+    // Only record equivalence if needed
+    if (seen.buf[0] != seen.buf[i]) {
+      ds.unionSet(seen.buf[0], seen.buf[i]);
+    }
+  }
+}
+
 template <typename CellCollection, size_t GridDim, typename Connect>
 void labelClusters(CellCollection& cells, Connect connect) {
   using Cell = typename CellCollection::value_type;
@@ -251,25 +273,7 @@ void labelClusters(CellCollection& cells, Connect connect) {
       // Allocate new label
       getCellLabel(*it) = ds.makeSet();
     } else {
-      // Sanity check: first element should always have
-      // label if nconn > 0
-      if (seen.buf[0] == NO_LABEL) {
-        throw std::logic_error("seen.nconn > 0 but seen.buf[0] == NO_LABEL");
-      }
-
-      // Record equivalences
-      for (size_t i = 1; i < seen.nconn; i++) {
-        // Sanity check: since connection lookup is always backward
-        // while iteration is forward, all connected cells found here
-        // should have a label
-        if (seen.buf[i] == NO_LABEL) {
-          throw std::logic_error("i < seen.nconn but see.buf[i] == NO_LABEL");
-        }
-        // Only record equivalence if needed
-        if (seen.buf[0] != seen.buf[i]) {
-          ds.unionSet(seen.buf[0], seen.buf[i]);
-        }
-      }
+      recordEquivalences(seen, ds);
       // Set label for current cell
       getCellLabel(*it) = seen.buf[0];
     }
