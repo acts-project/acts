@@ -164,7 +164,8 @@ Connections<GridDim> getConnections(typename std::vector<Cell>::iterator it,
       continue;
     }
     if (cr == ConnectResult::eConn) {
-      seen.buf[seen.nconn++] = getCellLabel(*it_2);
+      seen.buf[seen.nconn] = getCellLabel(*it_2);
+      seen.nconn += 1;
       if (seen.nconn == seen.buf.size()) {
         break;
       }
