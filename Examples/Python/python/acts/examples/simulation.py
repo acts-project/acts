@@ -572,10 +572,12 @@ def addGeant4(
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
     recordHitsOfSecondaries=True,
+    keepParticlesWithoutHits=True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
+    keepParticlesWithoutHits=True,
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -633,6 +635,7 @@ def addGeant4(
         materialMappings=materialMappings,
         killVolume=killVolume,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
+        keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
