@@ -280,7 +280,8 @@ Acts::detail::RealQuadraticEquation Acts::ConeSurface::intersectionSolver(
 
 Acts::SurfaceIntersection Acts::ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
@@ -291,10 +292,9 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
 
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
-  Intersection3D::Status status1 =
-      std::abs(qe.first) < std::abs(s_onSurfaceTolerance)
-          ? Intersection3D::Status::onSurface
-          : Intersection3D::Status::reachable;
+  Intersection3D::Status status1 = std::abs(qe.first) < std::abs(tolerance)
+                                       ? Intersection3D::Status::onSurface
+                                       : Intersection3D::Status::reachable;
 
   if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection3D::Status::missed;
@@ -302,10 +302,9 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
 
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.first * direction;
-  Intersection3D::Status status2 =
-      std::abs(qe.second) < std::abs(s_onSurfaceTolerance)
-          ? Intersection3D::Status::onSurface
-          : Intersection3D::Status::reachable;
+  Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
+                                       ? Intersection3D::Status::onSurface
+                                       : Intersection3D::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection3D::Status::missed;
   }
