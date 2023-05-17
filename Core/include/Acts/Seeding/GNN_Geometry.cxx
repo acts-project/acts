@@ -2,15 +2,14 @@
   Copyright (C) 2002-2023 CERN for the benefit of the ATLAS collaboration
 */
 
-#include "TrigInDetEvent/TrigSiSpacePointBase.h"
-#include "TrigInDetPattRecoEvent/TrigInDetSiLayer.h"
-#include "TrigInDetPattRecoTools/GNN_Geometry.h"
+#include "Acts/Seeding/GNN_Geometry.h"
 
 #include<cmath>
 #include<cstring>
 #include<algorithm>
 
-TrigFTF_GNN_Layer::TrigFTF_GNN_Layer(const TrigInDetSiLayer& ls, float ew, int bin0) : m_layer(ls), m_etaBinWidth(ew) {
+template <typename space_point_t>  
+TrigFTF_GNN_Layer<space_point_t>::TrigFTF_GNN_Layer(const TrigInDetSiLayer& ls, float ew, int bin0) : m_layer(ls), m_etaBinWidth(ew) {
 
   if(m_layer.m_type == 0) {//barrel
     m_r1 = m_layer.m_refCoord;
@@ -180,8 +179,8 @@ TrigFTF_GNN_Layer::TrigFTF_GNN_Layer(const TrigInDetSiLayer& ls, float ew, int b
 //    return true;
 // }
 
-
-int TrigFTF_GNN_Layer::getEtaBin(float zh, float rh) const {
+template <typename space_point_t>  
+int TrigFTF_GNN_Layer<space_point_t>::getEtaBin(float zh, float rh) const {
   
   if(m_bins.size() == 1) return m_bins.at(0);
 
@@ -211,8 +210,8 @@ int TrigFTF_GNN_Layer::getEtaBin(float zh, float rh) const {
   
 //   return m_maxRadius.at(idx);
 // }
-
-TrigFTF_GNN_Layer::~TrigFTF_GNN_Layer() {
+template <typename space_point_t>  
+TrigFTF_GNN_Layer<space_point_t>::~TrigFTF_GNN_Layer() {
   m_bins.clear();
 }
 
@@ -280,9 +279,8 @@ TrigFTF_GNN_Layer::~TrigFTF_GNN_Layer() {
 //   }
 //   return (*it).second;
 // }
-
-const TrigFTF_GNN_Layer* Tri
-gFTF_GNN_Geometry::getTrigFTF_GNN_LayerByIndex(int idx) const {
+template <typename space_point_t>  
+const TrigFTF_GNN_Layer<space_point_t>* TrigFTF_GNN_Geometry<space_point_t>::getTrigFTF_GNN_LayerByIndex(int idx) const {
   return m_layArray.at(idx);
 }
 

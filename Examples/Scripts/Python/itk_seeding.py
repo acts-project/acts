@@ -12,7 +12,7 @@ from acts.examples import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    addStandardSeeding,
+    addStandardSeeding, #import ftf here too 
     SeedingAlgorithm,
 )
 
@@ -112,7 +112,7 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
         s.addReader(evReader)
         spacePoints = evReader.config.outputSpacePoints
 
-        # run seeding
+        # run seeding this is where I would change to mine, add ftf seeding 
         inputSeeds = addStandardSeeding(
             s,
             spacePoints,

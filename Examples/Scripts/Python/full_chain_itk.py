@@ -74,7 +74,7 @@ addDigitization(
     s,
     trackingGeometry,
     field,
-    digiConfigFile=geo_dir / "itk-hgtd/itk-smearing-config.json",
+    digiConfigFile=geo_dir / "itk-hgtd/itk-smearing-config.json", #change this file to make it do digitization 
     outputDirRoot=outputDir,
     rnd=rnd,
 )

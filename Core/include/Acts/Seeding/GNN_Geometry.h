@@ -5,10 +5,17 @@
 #include<map>
 #include<algorithm>
 
-#include "FasTrackConnector.h" 
+#include "FastTrackConnector.h" 
 
-class TrigInDetSiLayer;
+class TrigInDetSiLayer {
+public:
+  int m_subdet;//1 : Pixel, 2 : SCT
+  int m_type;//0: barrel, +/-n : endcap
+  float m_refCoord;
+  float m_minBound, m_maxBound;
+};
 
+template <typename space_point_t>  
 class TrigFTF_GNN_Layer {
 public:
   TrigFTF_GNN_Layer(const TrigInDetSiLayer&, float, int);
@@ -43,13 +50,14 @@ protected:
 
 };
 
+template <typename space_point_t>  
 class TrigFTF_GNN_Geometry {
 public:
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>&, const FASTRACK_CONNECTOR*);
   ~TrigFTF_GNN_Geometry();
   
   // const TrigFTF_GNN_Layer* getTrigFTF_GNN_LayerByKey(unsigned int) const;
-  const TrigFTF_GNN_Layer* getTrigFTF_GNN_LayerByIndex(int) const;
+  const TrigFTF_GNN_Layer<space_point_t>* getTrigFTF_GNN_LayerByIndex(int) const;
 
   int num_bins() const {return m_nEtaBins;}
 
@@ -59,12 +67,11 @@ protected:
 
   float m_etaBinWidth;
 
-  std::map<unsigned int, TrigFTF_GNN_Layer*> m_layMap;
-  std::vector<TrigFTF_GNN_Layer*> m_layArray;
+  std::map<unsigned int, TrigFTF_GNN_Layer<space_point_t>*> m_layMap;
+  std::vector<TrigFTF_GNN_Layer<space_point_t>*> m_layArray;
 
   int m_nEtaBins;
 
 };
 
 
-#endif

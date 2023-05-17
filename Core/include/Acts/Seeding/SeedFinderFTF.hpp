@@ -11,7 +11,7 @@
 #include "Acts/Utilities/KDTree.hpp"
 
 //load space point needs this: 
-#include "TrigInDetPattRecoTools/TrigCombinatorialSettings.h"
+
 
 #include <array>
 #include <iostream>
@@ -26,10 +26,10 @@
 
 namespace Acts {
     //classes from load space point 
-class TrigSiSpacePointBase; 
-class TrigInDetTriplet;
-class TrigFTF_GNN_DataStorage;
-class IRoiDescriptor;
+// class TrigSiSpacePointBase; 
+// class TrigInDetTriplet;
+// class TrigFTF_GNN_DataStorage;
+// class IRoiDescriptor;
 
 template <typename external_spacepoint_t>
 class SeedFinderFTF { 
@@ -55,6 +55,11 @@ class SeedFinderFTF {
       const SeedFinderFTF<external_spacepoint_t> &) = default;
 
 
+ //definition of function not the calling of it, define what input type it needs 
+ //know eventually will have vector of simspacepoints, here need generic space point type 
+
+ void loadSpacePoints(const std::vector<external_spacepoint_t>&); 
+
  //create seeeds function 
 
   template <typename input_container_t, typename output_container_t,
@@ -69,13 +74,8 @@ class SeedFinderFTF {
                                   const input_container_t &spacePoints,
                                   callable_t &&extract_coordinates) const; 
 
- //definition of function not the calling of it, define what input type it needs 
- //know eventually will have vector of simspacepoints, here need generic space point type 
 
- template <typename space_point_t>  
- void loadSpacePoints(const std::vector<space_point_t>&); 
 
-//  void loadSpacePoints(const std::vector<TrigSiSpacePointBase>&); 
  
  
  private:  
