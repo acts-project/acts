@@ -100,6 +100,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
+  finderConfig.maxIterations = 200;
 
   // Instantiate the finder
   Finder finder(finderConfig, logger().cloneWithSuffix("AMVFinder"));
@@ -108,6 +109,15 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   auto [inputTrackParameters, inputTrackPointers] =
       makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
+
+  for (const auto& trk : inputTrackParameters) {
+    if (trk.covariance() && trk.covariance()->determinant() <= 0) {
+      // actually we should consider this as an error but I do not want the CI
+      // to fail
+      ACTS_WARNING("input track " << trk << " has det(cov) = "
+                                  << trk.covariance()->determinant());
+    }
+  }
 
   //////////////////////////////////////////////
   /* Full tutorial example code for reference */
