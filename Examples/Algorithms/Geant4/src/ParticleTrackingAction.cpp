@@ -61,16 +61,18 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
 
   const auto barcode = eventData.trackIdMapping.at(aTrack->GetTrackID());
 
-  auto hasHits = eventData.particleHitCount.find(barcode) != eventData.particleHitCount.end() and eventData.particleHitCount.at(barcode) > 0;
+  auto hasHits = eventData.particleHitCount.find(barcode) !=
+                     eventData.particleHitCount.end() and
+                 eventData.particleHitCount.at(barcode) > 0;
 
-  if( not m_cfg.keepParticlesWithoutHits and not hasHits ) {
-    auto n = eventData.particlesInitial.erase(ActsExamples::SimParticle{barcode, Acts::PdgParticle::eInvalid});
+  if (not m_cfg.keepParticlesWithoutHits and not hasHits) {
+    auto n = eventData.particlesInitial.erase(
+        ActsExamples::SimParticle{barcode, Acts::PdgParticle::eInvalid});
     assert(n == 1);
     return;
   }
 
-  auto particle =
-      convert(*aTrack, barcode);
+  auto particle = convert(*aTrack, barcode);
   auto [it, success] = eventData.particlesFinal.insert(particle);
 
   if (not success) {
