@@ -73,7 +73,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
               });
   }
 
-  // -> weaker requirement for a good seed
+  // vector containing the radius of all compatible seeds
   std::vector<float> compatibleSeedR;
   compatibleSeedR.reserve(m_cfg.compatSeedLimit);
 
