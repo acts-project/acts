@@ -236,8 +236,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       continue;
     }
 
-    /// we make a copy of the iterator here since we need it to remain
-    /// the same in the Neighbour object
+    // we make a copy of the iterator here since we need it to remain
+    // the same in the Neighbour object
     auto min_itr = otherSPCol.itr;
     bool found = false;
 
@@ -269,9 +269,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         }
       }
 
-      /// We update the iterator in the Neighbout object
-      /// that mean that we have changed the middle space point
-      /// and the lower bound has moved accordingly
+      // We update the iterator in the Neighbout object
+      // that mean that we have changed the middle space point
+      // and the lower bound has moved accordingly
       if (not found) {
         found = true;
         otherSPCol.itr = min_itr;
@@ -283,13 +283,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         deltaZ = (otherSP->z() - zM);
       }
 
-      // ratio Z/R (forward angle) of space point duplet
-      float cotTheta = deltaZ / deltaR;
-      // longitudinal impact parameter
-      float zOrigin = zM - rM * cotTheta;
+      // the longitudinal impact parameter zOrigin is defined as (zM - rM *
+      // cotTheta) where cotTheta is the ratio Z/R (forward angle) of space
+      // point duplet but instead we calculate (zOrigin * deltaR) and multiply
+      // collisionRegion by deltaR to avoid divisions
+      const float zOriginTimesDeltaR = (zM * deltaR - rM * deltaZ);
       // check if duplet origin on z axis within collision region
-      if (zOrigin < m_config.collisionRegionMin or
-          zOrigin > m_config.collisionRegionMax) {
+      if (zOriginTimesDeltaR < m_config.collisionRegionMin * deltaR or
+          zOriginTimesDeltaR > m_config.collisionRegionMax * deltaR) {
         continue;
       }
 
@@ -299,8 +300,10 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // is more frequent but requires the coordinate transformation
       if (not m_config.interactionPointCut) {
         // check if duplet cotTheta is within the region of interest
-        if (cotTheta > m_config.cotThetaMax or
-            cotTheta < -m_config.cotThetaMax) {
+        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+        // cotThetaMax by deltaR to avoid division
+        if (deltaZ > m_config.cotThetaMax * deltaR or
+            deltaZ < -m_config.cotThetaMax * deltaR) {
           continue;
         }
         // if z-distance between SPs is within max and min values
@@ -322,7 +325,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         const float vT = yNewFrame * iDeltaR2;
 
         const float iDeltaR = std::sqrt(iDeltaR2);
-        cotTheta = deltaZ * iDeltaR;
+        const float cotTheta = deltaZ * iDeltaR;
 
         const float Er =
             ((varianceZM + otherSP->varianceZ()) +
@@ -355,13 +358,15 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // coordinate transformation to avoid unnecessary calculations
       if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
         // check if duplet cotTheta is within the region of interest
-        if (cotTheta > m_config.cotThetaMax or
-            cotTheta < -m_config.cotThetaMax) {
+        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+        // cotThetaMax by deltaR to avoid division
+        if (deltaZ > m_config.cotThetaMax * deltaR or
+            deltaZ < -m_config.cotThetaMax * deltaR) {
           continue;
         }
 
         const float iDeltaR = std::sqrt(iDeltaR2);
-        cotTheta = deltaZ * iDeltaR;
+        const float cotTheta = deltaZ * iDeltaR;
 
         const float Er =
             ((varianceZM + otherSP->varianceZ()) +
@@ -373,7 +378,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
                                   yNewFrame);
         spacePointData.setDeltaR(otherSP->index(),
                                  std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-        outVec.push_back(otherSP.get());
+        outVec.emplace_back(otherSP.get());
         continue;
       }
 
@@ -394,12 +399,15 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       // check if duplet cotTheta is within the region of interest
-      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+      // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+      // cotThetaMax by deltaR to avoid division
+      if (deltaZ > m_config.cotThetaMax * deltaR or
+          deltaZ < -m_config.cotThetaMax * deltaR) {
         continue;
       }
 
       const float iDeltaR = std::sqrt(iDeltaR2);
-      cotTheta = deltaZ * iDeltaR;
+      const float cotTheta = deltaZ * iDeltaR;
 
       const float Er =
           ((varianceZM + otherSP->varianceZ()) +
@@ -411,7 +419,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
                                 yNewFrame);
       spacePointData.setDeltaR(otherSP->index(),
                                std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-      outVec.push_back(otherSP.get());
+      outVec.emplace_back(otherSP.get());
     }
   }
 }
