@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 
 #include <iostream>
 #include <string>
@@ -24,9 +25,13 @@ namespace ActsExamples {
 /// This is a class that builds a chamber by reading a gdml file
 
 class MockupSectorBuilder {
+  friend struct ChamberConfig;
+
  public:
-  /// Nested configuration struct
+  // Nested configuration struct
   struct Config {
+    friend struct ChamberConfig;
+
     // The path of the gdml file that holds the mockup geometry
     std::string gdmlPath = "";
 
@@ -38,6 +43,9 @@ class MockupSectorBuilder {
 
   /// Nested configuration struct for chamber
   struct ChamberConfig {
+    friend class MockupSectorBuilder;
+    friend struct Config;
+
     // The name of the chamber
     std::string name;
 
@@ -46,6 +54,19 @@ class MockupSectorBuilder {
 
     // The names of the passive surfaces
     std::vector<std::string> PassiveNames;
+
+    // The indexed surfaces
+    // SurfaceCandidatesUpdator
+    // getIndexedStraws(std::vector<std::shared_ptr<Acts::Surface>>);
+
+    // Function that returns the straws of the chamber of a specific chamber
+    std::vector<std::shared_ptr<Acts::Surface>> getStraws() {
+      return ChambersStraws;
+    };
+
+   private:
+    // void setStraws
+    std::vector<std::shared_ptr<Acts::Surface>> ChambersStraws;
   };
 
   /// Constructor
@@ -59,7 +80,7 @@ class MockupSectorBuilder {
   /// @param gctx The current geometry context object
   /// @param chamber_config The configuration chamber struct
   std::shared_ptr<Acts::Experimental::DetectorVolume> buildChamber(
-      const ChamberConfig& chamberConfig);
+      ChamberConfig& chamberConfig);
 
   /// Build Sector
   /// @param det_volumes The vector that contains the detector volumes of the Sector
@@ -80,6 +101,14 @@ class MockupSectorBuilder {
   G4VPhysicalVolume* g4World = nullptr;
 
   int maxNumberOfSectors = 8;
+
+  /// Build multi-layer
+  /// @param strawSurfaces The straw surfaces from the chamber
+  /// @param chamber_pos The position of the chamber that includes the multilayers
+  /// @param multilayer_name The name of the multilayer (wether it is the up or the bottom multilayer)
+  std::shared_ptr<Acts::Experimental::DetectorVolume> buildMultiLayer(
+      const std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces,
+      std::string multilayer_name);
 };
 
 }  // namespace ActsExamples
