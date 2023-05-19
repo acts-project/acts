@@ -80,6 +80,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // seeds span 5 layers
     // -> weaker requirement for a good seed
     std::vector<float> compatibleSeedR;
+    compatibleSeedR.reserve(m_cfg.compatSeedLimit);
 
     float invHelixDiameter = invHelixDiameterVec[topSPIndex];
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
