@@ -191,9 +191,8 @@ Acts::Vector2 Acts::DiscSurface::localPolarToCartesian(
 
 Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
     const Vector2& lcart) const {
-  return Vector2(sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] +
-                      lcart[eBoundLoc1] * lcart[eBoundLoc1]),
-                 atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
+  return Vector2(std::hypot(lcart[eBoundLoc0], lcart[eBoundLoc1]),
+                 std::atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
@@ -251,7 +250,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
+  const double sinTheta = std::hypot(x, y);
   const double invSinTheta = 1. / sinTheta;
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
