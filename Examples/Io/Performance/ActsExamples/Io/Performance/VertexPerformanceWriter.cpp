@@ -209,7 +209,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                << m_nVtxDetAcceptance);
 
   std::vector<Acts::BoundTrackParameters> trackParameters;
-  SimParticleContainer associatedTruthParticles;
+  std::vector<SimParticle> associatedTruthParticles;
 
   if (!m_cfg.inputAssociatedTruthParticles.empty()) {
     if (!m_cfg.inputTrackParameters.empty()) {
@@ -228,7 +228,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     }
 
     // Read track-associated truth particle input collection
-    associatedTruthParticles = m_inputAssociatedTruthParticles(ctx);
+    associatedTruthParticles =
+        std::vector<SimParticle>(m_inputAssociatedTruthParticles(ctx).begin(),
+                                 m_inputAssociatedTruthParticles(ctx).end());
 
     /*****************  Start x,y,z resolution plots here *****************/
     // Matching tracks at vertex to fitted tracks that are in turn matched
@@ -265,8 +267,6 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           continue;
         }
 
-        trackParameters.push_back(trajectories.trackParameters(tip));
-
         identifyContributingParticles(hitParticlesMap, trajectories, tip,
                                       particleHitCounts);
         ActsFatras::Barcode majorityParticleId =
@@ -291,19 +291,19 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         }
 
         const auto& majorityParticle = *it;
-        associatedTruthParticles.emplace_hint(associatedTruthParticles.end(),
-                                              majorityParticle);
+        trackParameters.push_back(trajectories.trackParameters(tip));
+        associatedTruthParticles.push_back(majorityParticle);
       }
     }
   }
 
-  ACTS_VERBOSE(
-      "Total number of reconstructed tracks : " << trackParameters.size());
-
   // Get number of track-associated true primary vertices
   m_nVtxReconstructable =
-      getNumberOfReconstructableVertices(associatedTruthParticles);
+      getNumberOfReconstructableVertices(SimParticleContainer(
+          associatedTruthParticles.begin(), associatedTruthParticles.end()));
 
+  ACTS_INFO(
+      "Total number of reconstructed tracks : " << trackParameters.size());
   ACTS_INFO("Total number of reco track-associated truth particles in event : "
             << associatedTruthParticles.size());
   ACTS_INFO("Total number of reco track-associated truth primary vertices : "
@@ -322,15 +322,14 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       Acts::BoundTrackParameters origTrack = *(trk.originalParams);
 
       // Find associated truth particle now
-      int idx = 0;
-      for (const auto& particle : associatedTruthParticles) {
-        if (origTrack.parameters() == trackParameters[idx].parameters()) {
+      for (std::size_t i = 0; i < trackParameters.size(); ++i) {
+        const auto& particle = associatedTruthParticles[i];
+        if (origTrack.parameters() == trackParameters[i].parameters()) {
           particleAtVtx.insert(particleAtVtx.end(), particle);
 
           int priVtxId = particle.particleId().vertexPrimary();
           contributingTruthVertices.push_back(priVtxId);
         }
-        idx++;
       }
     }  // end loop tracks
 
