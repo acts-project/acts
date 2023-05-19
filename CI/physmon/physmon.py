@@ -38,12 +38,11 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
-    CKFPerformanceConfig,
+    TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
-    TrackSelectorRanges,
 )
 
 
@@ -203,10 +202,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             s,
             trackingGeometry,
             field,
-            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-            TrackSelectorRanges(
+            TrackSelectorConfig(
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
+                nMeasurementsMin=6,
             ),
             outputDirRoot=tp,
         )
@@ -215,7 +214,6 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             addAmbiguityResolution(
                 s,
                 AmbiguityResolutionConfig(maximumSharedHits=3),
-                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
                 outputDirRoot=tp,
             )
 
@@ -341,18 +339,17 @@ def run_vertexing(fitter, mu, events):
             s,
             trackingGeometry,
             field,
-            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-            TrackSelectorRanges(
+            TrackSelectorConfig(
                 pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 absEta=(None, 3.0),
+                nMeasurementsMin=6,
             ),
         )
 
         addAmbiguityResolution(
             s,
             AmbiguityResolutionConfig(maximumSharedHits=3),
-            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
         )
 
         addVertexFitting(

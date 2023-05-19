@@ -155,6 +155,7 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(absEtaMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(minMeasurements);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
