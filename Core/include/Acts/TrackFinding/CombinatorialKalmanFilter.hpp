@@ -950,7 +950,7 @@ class CombinatorialKalmanFilter {
         } else {
           // Kalman update
           auto updateRes = m_extensions.updater(
-              gctx, trackState, Direction::Forward, getDummyLogger());
+              gctx, trackState, Direction::Forward, *logger().clone("updater"));
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -1129,9 +1129,9 @@ class CombinatorialKalmanFilter {
       ACTS_VERBOSE("Apply smoothing on " << nStates
                                          << " filtered track states.");
       // Smooth the track states
-      auto smoothRes =
-          m_extensions.smoother(state.geoContext, *result.fittedStates,
-                                lastMeasurementIndex, getDummyLogger());
+      auto smoothRes = m_extensions.smoother(
+          state.geoContext, *result.fittedStates, lastMeasurementIndex,
+          *logger().clone("smoother"));
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
