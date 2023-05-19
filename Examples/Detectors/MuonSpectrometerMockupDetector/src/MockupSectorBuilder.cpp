@@ -118,6 +118,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   strawSurfaces_multilayer1.reserve(strawSurfaces.size() / 2);
   strawSurfaces_multilayer2.reserve(strawSurfaces.size() / 2);
 
+
   auto centerY = (min_max_y.first + min_max_y.second) / 2;
 
   for (auto& surf : strawSurfaces) {
@@ -316,6 +317,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
         detectorVolumesMultiLayer.push_back(detectorVolumeML);
 
         shiftedSurfaces.clear();
+
 
       }  // inner volumes
 

@@ -37,7 +37,6 @@ class MockupSectorBuilder {
  public:
   // Nested configuration struct
   struct Config {
-    // friend struct ChamberConfig;
 
     // The path of the gdml file that holds the mockup geometry
     std::string gdmlPath = "";
@@ -50,6 +49,7 @@ class MockupSectorBuilder {
 
   // Nested configuration struct for chamber
   struct ChamberConfig {
+
     // The name of the chamber
     std::string name;
 
@@ -58,7 +58,10 @@ class MockupSectorBuilder {
 
     // The names of the passive surfaces
     std::vector<std::string> passiveNames;
+
+    }
   };
+
 
   /// Constructor
   ///@param config The configuration struct
