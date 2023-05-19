@@ -381,7 +381,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab, int pdg,
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const auto momentum = q / qOverP;
-  const auto energy = std::sqrt(m * m + momentum * momentum);
+  const auto energy = std::hypot(m, momentum);
 
   auto dEdx = computeBremsstrahlungLossMean(m, energy);
   if (((pdg == PdgParticle::eMuon) or (pdg == PdgParticle::eAntiMuon)) and
@@ -406,7 +406,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab, int pdg,
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const auto momentum = q / qOverP;
-  const auto energy = std::sqrt(m * m + momentum * momentum);
+  const auto energy = std::hypot(m, momentum);
 
   // compute derivative w/ respect to energy.
   auto derE = deriveBremsstrahlungLossMeanE(m);
