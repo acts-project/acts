@@ -35,7 +35,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
     const ActsScalar x = direction(0);  // == cos(phi) * sin(theta)
     const ActsScalar y = direction(1);  // == sin(phi) * sin(theta)
     const ActsScalar z = direction(2);  // == cos(theta)
-    const ActsScalar c = std::sqrt(y * y + z * z);
+    const ActsScalar c = std::hypot(y, z);
     const ActsScalar invC = 1. / c;
     freeToCurvJacobian(eBoundLoc0, eFreePos1) = -z * invC;
     freeToCurvJacobian(eBoundLoc0, eFreePos2) = y * invC;

@@ -228,7 +228,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceExtent) {
   CHECK_CLOSE_ABS(planeExtent.min(binY), yPs, s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(planeExtent.max(binY), yPs, s_onSurfaceTolerance);
   CHECK_CLOSE_ABS(planeExtent.min(binR), yPs, s_onSurfaceTolerance);
-  CHECK_CLOSE_ABS(planeExtent.max(binR), std::sqrt(yPs * yPs + rHy * rHy),
+  CHECK_CLOSE_ABS(planeExtent.max(binR), std::hypot(yPs, rHy),
                   s_onSurfaceTolerance);
 
   // Now rotate

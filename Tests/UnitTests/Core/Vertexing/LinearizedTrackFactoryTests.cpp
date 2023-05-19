@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   double z = vZDist(gen);
 
   // Calculate d0 and z0 corresponding to vertex position
-  double d0v = sqrt(x * x + y * y);
+  double d0v = std::hypot(x, y);
   double z0v = z;
 
   // Start constructing nTracks tracks in the following
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
   double z = vZDist(gen);
 
   // Calculate d0 and z0 corresponding to vertex position
-  double d0v = sqrt(x * x + y * y);
+  double d0v = std::hypot(x, y);
   double z0v = z;
 
   // Start constructing nTracks tracks in the following
