@@ -414,7 +414,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       if (predicted and tsReader.predicted->at(i)) {
         auto x_prt = tsReader.g_x_prt->at(i);
         auto y_prt = tsReader.g_y_prt->at(i);
-        auto r_prt = std::sqrt(x_prt * x_prt + y_prt * y_prt);
+        auto r_prt = std::hypot(x_prt, y_prt);
         auto z_prt = tsReader.g_z_prt->at(i);
         p2d_res_zr_prt[0]->Fill(z_prt, r_prt, tsReader.res_LOC0_prt->at(i));
         p2d_res_zr_prt[1]->Fill(z_prt, r_prt, tsReader.res_LOC1_prt->at(i));
@@ -432,7 +432,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       if (filtered and tsReader.filtered->at(i)) {
         auto x_flt = tsReader.g_x_flt->at(i);
         auto y_flt = tsReader.g_y_flt->at(i);
-        auto r_flt = std::sqrt(x_flt * x_flt + y_flt * y_flt);
+        auto r_flt = std::hypot(x_flt, y_flt);
         auto z_flt = tsReader.g_z_flt->at(i);
         p2d_res_zr_flt[0]->Fill(z_flt, r_flt, tsReader.res_LOC0_flt->at(i));
         p2d_res_zr_flt[1]->Fill(z_flt, r_flt, tsReader.res_LOC1_flt->at(i));
@@ -450,7 +450,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       if (smoothed and tsReader.smoothed->at(i)) {
         auto x_smt = tsReader.g_x_smt->at(i);
         auto y_smt = tsReader.g_y_smt->at(i);
-        auto r_smt = std::sqrt(x_smt * x_smt + y_smt * y_smt);
+        auto r_smt = std::hypot(x_smt, y_smt);
         auto z_smt = tsReader.g_z_smt->at(i);
         p2d_res_zr_smt[0]->Fill(z_smt, r_smt, tsReader.res_LOC0_smt->at(i));
         p2d_res_zr_smt[1]->Fill(z_smt, r_smt, tsReader.res_LOC1_smt->at(i));
