@@ -115,10 +115,10 @@ printBField(std::string inFile,
   for (int i = 0; i < entries; i++) {
     tree->GetEvent(i);
     if (cylinderCoordinates) {
-      float bFieldValue = sqrt(Br * Br + Bz * Bz);
+      float bFieldValue = std::hypot(Br, Bz);
       bField_rz->Fill(z / 1000., r / 1000., bFieldValue);
     } else {
-      float bFieldValue = sqrt(Bx * Bx + By * By + Bz * Bz);
+      float bFieldValue = std::hypot(Bx, By, Bz);
 
       bField_xy->Fill(x / 1000., y / 1000., bFieldValue);
       bField_yz->Fill(z / 1000., y / 1000., bFieldValue);

@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <cmath>
 #include <iostream>
 #include <map>
 #include <string>
@@ -183,7 +184,7 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
         float x = stepX->at(is);
         float y = stepY->at(is);
         float z = stepZ->at(is);
-        float r = sqrt(x * x + y * y);
+        float r = std::hypot(x, y);
 
         if (minR > r or minZ > z or maxR < r or maxZ < z) {
           continue;

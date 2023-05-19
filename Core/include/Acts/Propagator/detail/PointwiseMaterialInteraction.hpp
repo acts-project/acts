@@ -136,8 +136,7 @@ struct PointwiseMaterialInteraction {
                    NoiseUpdateMode updateMode = addNoise) {
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
-    const auto nextE =
-        std::sqrt(mass * mass + momentum * momentum) - Eloss * navDir;
+    const auto nextE = std::hypot(mass, momentum) - Eloss * navDir;
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // minimum momentum below which we will not push particles via material

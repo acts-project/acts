@@ -57,8 +57,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_helper) {
   sinTheta = std::sin(theta);
   cosTheta = std::cos(theta);
 
-  const ActsScalar c =
-      std::sqrt(direction.y() * direction.y() + direction.z() * direction.z());
+  const ActsScalar c = std::hypot(direction.y(), direction.z());
   const ActsScalar invC = 1. / c;
   CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos1), -direction.z() * invC,
                   1e-5);
