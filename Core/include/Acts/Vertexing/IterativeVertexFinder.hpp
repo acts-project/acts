@@ -105,6 +105,7 @@ class IterativeVertexFinder {
     bool doMaxTracksCut = false;
     int maxTracks = 5000;
     double cutOffTrackWeight = 0.01;
+    double cutOffTrackWeightReassign = 1;
   };
 
   /// State struct

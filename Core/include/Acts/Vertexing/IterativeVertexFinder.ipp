@@ -87,7 +87,8 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
       }
     }
     /// End vertex fit
-    ACTS_DEBUG("Vertex position after fit: " << currentVertex.fullPosition());
+    ACTS_DEBUG("Vertex position after fit: "
+               << currentVertex.fullPosition().transpose());
 
     // Number degrees of freedom
     double ndf = currentVertex.fitQuality().second;
@@ -231,7 +232,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
        (vertex.fullCovariance() * linTrack.positionJacobian.transpose()))
           .template block<2, 2>(0, 0);
   weightReduced += errorVertexReduced;
-  weightReduced = weightReduced.inverse();
+  weightReduced = weightReduced.inverse().eval();
 
   // Calculate compatibility / chi2
   Vector2 trackParameters2D =
@@ -392,8 +393,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
       }
 
       if (*distanceRes / error < m_cfg.significanceCutSeeding) {
-        if (count % m_cfg.splitVerticesTrkInvFraction == 0 ||
-            !m_cfg.createSplitVertices) {
+        if (!m_cfg.createSplitVertices || count % m_cfg.splitVerticesTrkInvFraction == 0) {
           perigeesToFitOut.push_back(sTrack);
           ++count;
         } else {
@@ -429,7 +429,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     for (auto tracksIter = tracksBegin; tracksIter != tracksEnd;) {
       // consider only tracks that are not too tightly assigned to other
       // vertex
-      if (tracksIter->trackWeight > m_cfg.cutOffTrackWeight) {
+      if (tracksIter->trackWeight > m_cfg.cutOffTrackWeightReassign) {
         tracksIter++;
         continue;
       }
@@ -525,7 +525,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
   if (!isGoodVertex) {
     removeAllTracks(perigeesToFit, seedTracks);
 
-    ACTS_DEBUG("Going to new  iteration with "
+    ACTS_DEBUG("Going to new iteration with "
                << seedTracks.size() << "seed tracks after BAD vertex.");
   }
 
