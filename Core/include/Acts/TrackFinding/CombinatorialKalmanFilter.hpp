@@ -949,8 +949,9 @@ class CombinatorialKalmanFilter {
 
         } else {
           // Kalman update
-          auto updateRes = m_extensions.updater(
-              gctx, trackState, Direction::Forward, *logger().cloneWithSuffix("updater"));
+          auto updateRes =
+              m_extensions.updater(gctx, trackState, Direction::Forward,
+                                   *logger().cloneWithSuffix("updater"));
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
