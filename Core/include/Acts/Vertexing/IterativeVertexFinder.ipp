@@ -19,46 +19,17 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
   // List of vertices to be filled below
   std::vector<Vertex<InputTrack_t>> vertexCollection;
 
-  std::vector<Vertex<InputTrack_t>> vertexSeeds;
-  bool doSeeding = true;
-
   int nInterations = 0;
   // begin iterating
   while (seedTracks.size() > 1 && nInterations < m_cfg.maxVertices) {
-    if (doSeeding) {
-      /// Do seeding
-      typename sfinder_t::State finderState;
-      auto seedsRes =
-          m_cfg.seedFinder.find(seedTracks, vertexingOptions, finderState);
+    /// Do seeding
+    auto seedRes = getVertexSeed(seedTracks, vertexingOptions);
 
-      if (!seedsRes.ok()) {
-        ACTS_DEBUG(
-            "No seed found. Number of input tracks: " << seedTracks.size());
-        return VertexingError::SeedingError;
-      }
-
-      vertexSeeds = *seedsRes;
-      doSeeding = false;
-
-      ACTS_DEBUG("Found " << vertexSeeds.size() << " seeds");
+    if (!seedRes.ok()) {
+      return seedRes.error();
     }
 
-    if (vertexSeeds.empty()) {
-      ACTS_DEBUG(
-          "No seed found. Number of input tracks: " << seedTracks.size());
-      break;
-    }
-
-    // retrieve the seed vertex as the last element in
-    // the seed vertexCollection
-    Vertex<InputTrack_t>& seedVertex = vertexSeeds.back();
-    vertexSeeds.pop_back();
-
-    ACTS_DEBUG("Considering seed at position: ("
-               << seedVertex.fullPosition()[eX] << ", "
-               << seedVertex.fullPosition()[eY] << ", "
-               << seedVertex.fullPosition()[eZ] << ", " << seedVertex.time()
-               << "). Number of input tracks: " << seedTracks.size());
+    const auto& seedVertex = *seedRes;
 
     if (seedVertex.fullPosition()[eZ] ==
         vertexingOptions.vertexConstraint.position().z()) {
@@ -178,14 +149,47 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
       vertexCollection.push_back(currentSplitVertex);
     }
 
-    if (isGoodVertex || isGoodSplitVertex) {
-      doSeeding = true;
-    }
-
     nInterations++;
   }  // end while loop
 
   return vertexCollection;
+}
+
+template <typename vfitter_t, typename sfinder_t>
+auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
+    const std::vector<const InputTrack_t*>& seedTracks,
+    const VertexingOptions<InputTrack_t>& vertexingOptions) const
+    -> Result<Vertex<InputTrack_t>> {
+  typename sfinder_t::State finderState;
+  auto res = m_cfg.seedFinder.find(seedTracks, vertexingOptions, finderState);
+
+  if (!res.ok()) {
+    ACTS_DEBUG("Seeding error: internal. Number of input tracks: "
+               << seedTracks.size());
+    return VertexingError::SeedingError;
+  }
+
+  const auto& vertexCollection = *res;
+
+  if (vertexCollection.empty()) {
+    ACTS_DEBUG("Seeding error: no seeds. Number of input tracks: "
+               << seedTracks.size());
+    return VertexingError::SeedingError;
+  }
+
+  ACTS_DEBUG("Found " << vertexCollection.size() << " seeds");
+
+  // retrieve the seed vertex as the last element in
+  // the seed vertexCollection
+  Vertex<InputTrack_t> seedVertex = vertexCollection.back();
+
+  ACTS_DEBUG("Considering seed at position: ("
+             << seedVertex.fullPosition()[eX] << ", "
+             << seedVertex.fullPosition()[eY] << ", "
+             << seedVertex.fullPosition()[eZ] << ", " << seedVertex.time()
+             << "). Number of input tracks: " << seedTracks.size());
+
+  return seedVertex;
 }
 
 template <typename vfitter_t, typename sfinder_t>

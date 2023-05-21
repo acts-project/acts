@@ -104,7 +104,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Finder::Config finderCfg(vertexFitter, std::move(linearizer),
                            std::move(seeder), ipEst);
   finderCfg.maxVertices = 200;
-  finderCfg.reassignTracksAfterFirstFit = true;
+  finderCfg.reassignTracksAfterFirstFit = false;
   Finder finder(finderCfg, logger().cloneWithSuffix("Finder"));
   Finder::State state(*m_cfg.bField, ctx.magFieldContext);
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);

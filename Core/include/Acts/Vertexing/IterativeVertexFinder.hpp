@@ -179,6 +179,14 @@ class IterativeVertexFinder {
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
 
+  /// @brief Method that calls seed finder to retrieve a vertex seed
+  ///
+  /// @param seedTracks Seeding tracks
+  /// @param vertexingOptions Vertexing options
+  Result<Vertex<InputTrack_t>> getVertexSeed(
+      const std::vector<const InputTrack_t*>& seedTracks,
+      const VertexingOptions<InputTrack_t>& vertexingOptions) const;
+
   /// @brief Removes all tracks in perigeesToFit from seedTracks
   ///
   /// @param perigeesToFit Tracks to be removed from seedTracks
