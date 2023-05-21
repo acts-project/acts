@@ -395,11 +395,6 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillPerigeesToFit(
         error = 1.;
       }
 
-      ACTS_ERROR("*distanceRes / error < m_cfg.significanceCutSeeding "
-                 << (*distanceRes) << " " << error << " "
-                 << (*distanceRes / error) << " "
-                 << m_cfg.significanceCutSeeding);
-
       if (*distanceRes / error < m_cfg.significanceCutSeeding) {
         if (!m_cfg.createSplitVertices ||
             count % m_cfg.splitVerticesTrkInvFraction == 0) {
