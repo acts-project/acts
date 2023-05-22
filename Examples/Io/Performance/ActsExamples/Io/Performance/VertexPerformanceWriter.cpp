@@ -326,11 +326,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
   // Loop over all reco vertices and find associated truth particles
   std::vector<SimParticleContainer> truthParticlesAtVtxContainer;
+
   for (const auto& vtx : vertices) {
     const auto tracks = vtx.tracks();
+
     // Store all associated truth particles to current vtx
     SimParticleContainer particleAtVtx;
-
     std::vector<int> contributingTruthVertices;
 
     for (const auto& trk : tracks) {
@@ -339,10 +340,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       // Find associated truth particle now
       for (std::size_t i = 0; i < trackParameters.size(); ++i) {
         const auto& particle = associatedTruthParticles[i];
-        if (origTrack.parameters() == trackParameters[i].parameters()) {
-          particleAtVtx.insert(particleAtVtx.end(), particle);
+        const auto& trackParameter = trackParameters[i].parameters();
 
+        if (origTrack.parameters() == trackParameter) {
           int priVtxId = particle.particleId().vertexPrimary();
+
+          particleAtVtx.insert(particle);
           contributingTruthVertices.push_back(priVtxId);
         }
       }
@@ -363,6 +366,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       }
     }
 
+    // Count number of reconstructible tracks on truth vertex
     int nTracksOnTruthVertex = 0;
     for (const auto& particle : associatedTruthParticles) {
       int priVtxId = particle.particleId().vertexPrimary();
