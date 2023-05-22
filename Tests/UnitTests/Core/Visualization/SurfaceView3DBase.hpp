@@ -70,7 +70,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   GeometryView3D::drawSurface(helper, *cone, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_ConeSurface") + tag);
   helper.write(cStream);
   helper.clear();
@@ -82,7 +82,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   GeometryView3D::drawSurface(helper, *cone, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_ConeSurfaceSector") + tag);
   helper.write(cStream);
   helper.clear();
@@ -94,7 +94,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   coneSurfaces.push_back(cone);
   GeometryView3D::drawSurface(helper, *cone, gctx, Transform3::Identity(),
                               sConfig);
-  ;
+
   helper.write(std::string("Surfaces_ConeSurfaceSectorShifted") + tag);
   helper.write(cStream);
   helper.clear();

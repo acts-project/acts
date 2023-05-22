@@ -38,4 +38,13 @@ const char* head_xml =
     </define>
 )"""";
 
+const char* segmentation_xml =
+    R""""(<readouts>
+    <readout name="PixelReadout">
+      <segmentation type="CartesianGridXY" grid_size_x="0.05*mm" grid_size_y="0.05*mm"/>
+      <id>system:4,layer:4,stave:8,module:4,sensor:1,x:24:-12,y:-12</id>
+    </readout>
+  </readouts>
+  )"""";
+
 const char* end_xml = "</lccdd>";

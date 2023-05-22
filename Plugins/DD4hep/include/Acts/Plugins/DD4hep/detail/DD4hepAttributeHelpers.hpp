@@ -27,11 +27,11 @@ namespace detail {
 ///
 /// @return either the gathered attribute or the fallback
 template <typename value_type>
-value_type attrValueOr(const dd4hep::xml::Component& node,
-                       const std::string& attrName,
-                       const value_type& fallbackValue) {
+value_type getAttrValueOr(const dd4hep::xml::Component& node,
+                          const std::string& attrName,
+                          const value_type& fallbackValue) {
   if (node.hasAttr(dd4hep::xml::Strng_t(attrName.c_str()))) {
-    return node.attr<double>(attrName.c_str());
+    return node.attr<value_type>(attrName.c_str());
   } else {
     return fallbackValue;
   }

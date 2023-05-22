@@ -90,6 +90,7 @@ ProtoGrid convert(const grid_type& grid,
     // Assign
     edges0 = axes[0]->getBinEdges();
     edges1 = axes[1]->getBinEdges();
+
     if (bValues[0] == binPhi and bValues[1] == binZ) {
       //  swap needed
       std::swap(edges0, edges1);

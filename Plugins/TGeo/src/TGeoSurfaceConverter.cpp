@@ -282,6 +282,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   // Create translation and rotation
   Vector3 t(scalor * translation[0], scalor * translation[1],
             scalor * translation[2]);
+
   Vector3 ax(rotation[0], rotation[3], rotation[6]);
   Vector3 ay(rotation[1], rotation[4], rotation[7]);
   Vector3 az(rotation[2], rotation[5], rotation[8]);

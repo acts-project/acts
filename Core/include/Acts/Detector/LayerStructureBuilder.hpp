@@ -73,7 +73,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   struct Config {
     /// Connection point for a function to provide surfaces
     std::function<std::vector<std::shared_ptr<Surface>>()> surfaces;
-    /// Definition of Supports
+    /// Definition of Supports to be built
     std::vector<Support> supports = {};
     /// Definition of Binnings
     std::vector<Binning> binnings = {};

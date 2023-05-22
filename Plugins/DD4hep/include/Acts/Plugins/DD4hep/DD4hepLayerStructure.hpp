@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <vector>
@@ -38,10 +39,13 @@ class DD4hepLayerStructure {
   ///
   /// @param surfaceFactory the surfac factory which converts dd4hep::DetElement objects
   /// into their Acts coutnerparts
+  /// @param logger is the screen output logger
   ///
   /// @note this needs to be provided
   DD4hepLayerStructure(
-      std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory);
+      std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
+      std::unique_ptr<const Logger> logger = getDefaultLogger(
+          "DD4hepDetectorSurfaceFactory", Acts::Logging::INFO));
 
   DD4hepLayerStructure() = delete;
 
@@ -92,7 +96,14 @@ class DD4hepLayerStructure {
       const dd4hep::DetElement& dd4hepElement, const Options& options) const;
 
  private:
+  /// The workorse: the surface factory
   std::shared_ptr<DD4hepDetectorSurfaceFactory> m_surfaceFactory = nullptr;
+
+  /// Logging instance
+  std::unique_ptr<const Logger> m_logger;
+
+  /// Private access to the logger
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Experimental

@@ -8,37 +8,14 @@
 
 #include "Acts/Plugins/DD4hep/detail/DD4hepAttributeHelpers.hpp"
 
-#include "DD4hep/DetFactoryHelper.h"
-#include "DD4hep/Objects.h"
-#include "XML/Utilities.h"
+#include <DD4hep/DetFactoryHelper.h>
+#include <DD4hep/Objects.h>
+#include <XML/Utilities.h>
+
+#include "DD4hepTestsHelper.hpp"
 
 using namespace std;
 using namespace dd4hep;
-
-Transform3D createTransform(const xml_comp_t &x_det_comp) {
-  // Build the transform - center def
-  double cx = Acts::detail::attrValueOr<double>(x_det_comp, "cx", 0.);
-  double cy = Acts::detail::attrValueOr<double>(x_det_comp, "cy", 0.);
-  double cz = Acts::detail::attrValueOr<double>(x_det_comp, "cz", 0.);
-
-  double xx = Acts::detail::attrValueOr<double>(x_det_comp, "xx", 1.);
-  double xy = Acts::detail::attrValueOr<double>(x_det_comp, "xy", 0.);
-  double xz = Acts::detail::attrValueOr<double>(x_det_comp, "xz", 0.);
-
-  double yx = Acts::detail::attrValueOr<double>(x_det_comp, "yx", 0.);
-  double yy = Acts::detail::attrValueOr<double>(x_det_comp, "yy", 1.);
-  double yz = Acts::detail::attrValueOr<double>(x_det_comp, "yz", 0.);
-
-  Position xAxis(xx, xy, xz);
-  Position yAxis(yx, yy, yz);
-  Position zAxis = xAxis.Cross(yAxis);
-  double zx = zAxis.X();
-  double zy = zAxis.Y();
-  double zz = zAxis.Z();
-
-  // Create the transform
-  return Transform3D(xx, xy, xz, cx, yx, yy, yz, cy, zx, zy, zz, cz);
-}
 
 /// Standard create_cylinder(...) create a simple cylinder
 ///
@@ -60,9 +37,10 @@ static Ref_t create_cylinder(Detector &dd, xml_h xml,
   dd4hep::xml::setDetectorTypeFlag(xml, cylinderElement);
 
   string shapeName = x_det_tubs.nameStr();
-  double phiMin = Acts::detail::attrValueOr<double>(x_det_tubs, "phimin", 0.);
+  double phiMin =
+      Acts::detail::getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
   double phiMax =
-      Acts::detail::attrValueOr<double>(x_det_tubs, "phimax", 2 * M_PI);
+      Acts::detail::getAttrValueOr<double>(x_det_tubs, "phimax", 2 * M_PI);
   Tube tubeShape(shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(),
                  x_det_tubs.dz(), phiMin, phiMax);
   Volume tubeVolume(detName, tubeShape, dd.material(x_det_tubs.materialStr()));
@@ -70,7 +48,8 @@ static Ref_t create_cylinder(Detector &dd, xml_h xml,
 
   // Place it in the mother
   Volume motherVolume = dd.pickMotherVolume(cylinderElement);
-  PlacedVolume placedTube = motherVolume.placeVolume(tubeVolume);
+  PlacedVolume placedTube = motherVolume.placeVolume(
+      tubeVolume, DD4hepTestsHelper::createTransform(x_det_tubs));
   placedTube.addPhysVolID(detName, cylinderElement.id());
   cylinderElement.setPlacement(placedTube);
 
@@ -99,9 +78,10 @@ static Ref_t create_disc(Detector &dd, xml_h xml, SensitiveDetector /*sens*/) {
   dd4hep::xml::setDetectorTypeFlag(xml, discElement);
 
   string shapeName = x_det_tubs.nameStr();
-  double phiMin = Acts::detail::attrValueOr<double>(x_det_tubs, "phimin", 0.);
+  double phiMin =
+      Acts::detail::getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
   double phiMax =
-      Acts::detail::attrValueOr<double>(x_det_tubs, "phimax", 2 * M_PI);
+      Acts::detail::getAttrValueOr<double>(x_det_tubs, "phimax", 2 * M_PI);
 
   Tube discShape = Tube(shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(),
                         x_det_tubs.dz(), phiMin, phiMax);
@@ -111,7 +91,8 @@ static Ref_t create_disc(Detector &dd, xml_h xml, SensitiveDetector /*sens*/) {
 
   // Place it in the mother
   Volume motherVolume = dd.pickMotherVolume(discElement);
-  PlacedVolume placedTube = motherVolume.placeVolume(discVolume);
+  PlacedVolume placedTube = motherVolume.placeVolume(
+      discVolume, DD4hepTestsHelper::createTransform(x_det_tubs));
   placedTube.addPhysVolID(detName, discElement.id());
   discElement.setPlacement(placedTube);
 
@@ -149,8 +130,8 @@ static Ref_t create_rectangle(Detector &dd, xml_h xml,
 
   // Place it in the mother
   Volume motherVolume = dd.pickMotherVolume(rectElement);
-  PlacedVolume placedRect =
-      motherVolume.placeVolume(rectVolume, createTransform(x_det_box));
+  PlacedVolume placedRect = motherVolume.placeVolume(
+      rectVolume, DD4hepTestsHelper::createTransform(x_det_box));
   placedRect.addPhysVolID(detName, rectElement.id());
   rectElement.setPlacement(placedRect);
 
@@ -190,8 +171,8 @@ static Ref_t create_trapezoid(Detector &dd, xml_h xml,
 
   // Place it in the mother
   Volume motherVolume = dd.pickMotherVolume(trapElement);
-  PlacedVolume placedTrap =
-      motherVolume.placeVolume(trapVolume, createTransform(x_det_trap));
+  PlacedVolume placedTrap = motherVolume.placeVolume(
+      trapVolume, DD4hepTestsHelper::createTransform(x_det_trap));
   placedTrap.addPhysVolID(detName, trapElement.id());
   trapElement.setPlacement(placedTrap);
 

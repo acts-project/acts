@@ -11,8 +11,9 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
 Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
-    std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory)
-    : m_surfaceFactory(std::move(surfaceFactory)) {
+    std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
+    std::unique_ptr<const Logger> logger)
+    : m_surfaceFactory(std::move(surfaceFactory)), m_logger(std::move(logger)) {
   if (m_surfaceFactory == nullptr) {
     throw std::invalid_argument(
         "DD4hepLayerStructure: no surface factory provided");
@@ -36,6 +37,20 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   DD4hepDetectorSurfaceFactory::Options fOptions;
   fOptions.unitLength = options.unitLength;
   m_surfaceFactory->construct(fCache, dd4hepElement, fOptions);
+
+  ACTS_DEBUG("Conversion from DD4Hep : " << fCache.sensitiveSurfaces.size()
+                                         << " sensitive surfaces");
+
+  ACTS_DEBUG("Conversion from DD4Hep : " << fCache.passiveSurfaces.size()
+                                         << " passive surfaces");
+
+  // Check if binning was provided
+  bool tryAll = false;
+  if (fCache.binnings.empty() and options.binnings.empty()) {
+    ACTS_VERBOSE(
+        "No surface binning provided, navigation will be 'tryAll' (slow).");
+    tryAll = true;
+  }
 
   // The constructed surfaces and detector elements
   DD4hepLayerStructure::Surfaces cStructure;
@@ -63,12 +78,17 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   lsbConfig.auxilliary += options.name;
   lsbConfig.surfaces = cStructure;
 
-  // Translate the binnings
-  if (!options.binnings.empty()) {
-    lsbConfig.binnings = options.binnings;
-  }
-  lsbConfig.supports = options.supports;
+  // Translate binings and supports - options overwrite gathered
+  lsbConfig.binnings =
+      not options.binnings.empty() ? options.binnings : fCache.binnings;
+  lsbConfig.supports =
+      not options.supports.empty() ? options.supports : fCache.supports;
 
+  ACTS_DEBUG("Configured with " << lsbConfig.binnings.size() << " binnings.");
+  ACTS_DEBUG("Configured to build " << lsbConfig.supports.size()
+                                    << " supports.");
+
+  // Return the structure builder
   return std::make_shared<LayerStructureBuilder>(
       lsbConfig, getDefaultLogger(options.name, options.logLevel));
 }
