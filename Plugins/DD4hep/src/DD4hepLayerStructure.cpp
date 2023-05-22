@@ -45,11 +45,9 @@ Acts::Experimental::DD4hepLayerStructure::builder(
                                          << " passive surfaces");
 
   // Check if binning was provided
-  bool tryAll = false;
   if (fCache.binnings.empty() and options.binnings.empty()) {
     ACTS_VERBOSE(
         "No surface binning provided, navigation will be 'tryAll' (slow).");
-    tryAll = true;
   }
 
   // The constructed surfaces and detector elements

@@ -13,6 +13,7 @@
 
 #include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Objects.h>
+#include <DDRec/DetectorData.h>
 #include <XML/Utilities.h>
 
 namespace Acts {
