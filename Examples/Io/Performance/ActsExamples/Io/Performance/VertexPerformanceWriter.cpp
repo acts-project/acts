@@ -85,9 +85,13 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     throw std::bad_alloc();
   } else {
     // I/O parameters
-    m_outputTree->Branch("diffx", &m_diffx);
-    m_outputTree->Branch("diffy", &m_diffy);
-    m_outputTree->Branch("diffz", &m_diffz);
+    m_outputTree->Branch("resX", &m_resX);
+    m_outputTree->Branch("resY", &m_resY);
+    m_outputTree->Branch("resZ", &m_resZ);
+
+    m_outputTree->Branch("pullX", &m_pullX);
+    m_outputTree->Branch("pullY", &m_pullY);
+    m_outputTree->Branch("pullZ", &m_pullZ);
 
     m_outputTree->Branch("recoX", &m_recoX);
     m_outputTree->Branch("recoY", &m_recoY);
@@ -99,8 +103,11 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
 
     m_outputTree->Branch("covXX", &m_covXX);
     m_outputTree->Branch("covYY", &m_covYY);
+    m_outputTree->Branch("covZZ", &m_covZZ);
     m_outputTree->Branch("covXY", &m_covXY);
-    m_outputTree->Branch("covYX", &m_covYX);
+    m_outputTree->Branch("covXZ", &m_covXZ);
+    m_outputTree->Branch("covYZ", &m_covYZ);
+
     m_outputTree->Branch("trkVtxMatch", &m_trackVtxMatchFraction);
     m_outputTree->Branch("nRecoVtx", &m_nrecoVtx);
     m_outputTree->Branch("nTrueVtx", &m_ntrueVtx);
@@ -359,9 +366,27 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Vertex found, fill varibles
           const auto& truePos = particle.position();
 
-          m_diffx.push_back(vtx.position()[0] - truePos[0]);
-          m_diffy.push_back(vtx.position()[1] - truePos[1]);
-          m_diffz.push_back(vtx.position()[2] - truePos[2]);
+          m_resX.push_back(vtx.position()[0] - truePos[0]);
+          m_resY.push_back(vtx.position()[1] - truePos[1]);
+          m_resZ.push_back(vtx.position()[2] - truePos[2]);
+
+          auto pull = [&](int i) {
+            double var = vtx.covariance()(i, i);
+            if (var < 0) {
+              ACTS_WARNING("var(" << i << ") = " << var << " < 0");
+              return std::numeric_limits<double>::quiet_NaN();
+            }
+            double std = std::sqrt(var);
+            if (std == 0) {
+              ACTS_WARNING("std(" << i << ") = 0");
+              return std::numeric_limits<double>::quiet_NaN();
+            }
+            return (vtx.position()[i] - truePos[i]) / std;
+          };
+
+          m_pullX.push_back(pull(0));
+          m_pullY.push_back(pull(1));
+          m_pullZ.push_back(pull(2));
 
           m_truthX.push_back(truePos[0]);
           m_truthY.push_back(truePos[1]);
@@ -373,8 +398,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
           m_covXX.push_back(vtx.covariance()(0, 0));
           m_covYY.push_back(vtx.covariance()(1, 1));
+          m_covZZ.push_back(vtx.covariance()(2, 2));
           m_covXY.push_back(vtx.covariance()(0, 1));
-          m_covYX.push_back(vtx.covariance()(1, 0));
+          m_covXZ.push_back(vtx.covariance()(0, 2));
+          m_covYZ.push_back(vtx.covariance()(1, 2));
+
           m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
           // Next vertex now
           break;
@@ -394,9 +422,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // fill the variables
   m_outputTree->Fill();
 
-  m_diffx.clear();
-  m_diffy.clear();
-  m_diffz.clear();
+  m_resX.clear();
+  m_resY.clear();
+  m_resZ.clear();
+  m_pullX.clear();
+  m_pullY.clear();
+  m_pullZ.clear();
   m_truthX.clear();
   m_truthY.clear();
   m_truthZ.clear();
@@ -405,8 +436,10 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_recoZ.clear();
   m_covXX.clear();
   m_covYY.clear();
+  m_covZZ.clear();
   m_covXY.clear();
-  m_covYX.clear();
+  m_covXZ.clear();
+  m_covYZ.clear();
   m_trackVtxMatchFraction.clear();
 
   return ProcessCode::SUCCESS;

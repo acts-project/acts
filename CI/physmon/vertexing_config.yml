@@ -1,20 +1,25 @@
 histograms:
-  "diff.*":
+  "res.*":
     nbins: 100
     min: -0.1
     max: 0.1
 
-  diffz:
+  resZ:
     nbins: 50
     min: -0.3
     max: 0.3
 
-  "covXX|covYY":
+  "pull.*":
+    nbins: 50
+    min: -6
+    max: 6
+
+  "covXX|covYY|covZZ":
     nbins: 100
     min: -0.0005
     max: 0.0005
 
-  "covXY|covYX":
+  "covXY|covXZ|covYX":
     nbins: 100
     min: -0.0001
     max: 0.0001
@@ -34,7 +39,6 @@ histograms:
     min: -200
     max: 200
     nbins: 100
-    
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]
@@ -53,3 +57,5 @@ extra_histograms:
     min: 0.0
     max: 1.0
 
+exclude:
+  - timeMS
