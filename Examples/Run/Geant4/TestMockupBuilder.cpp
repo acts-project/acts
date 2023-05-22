@@ -51,16 +51,16 @@ int main() {
   mockup_config.NumberOfSectors = 8;
 
   mockup_chamberConfig_inner.name = "Inner_Detector_Chamber";
-  mockup_chamberConfig_inner.SensitiveNames = {"Inner_Skin"};
-  mockup_chamberConfig_inner.PassiveNames = {"xx"};
+  mockup_chamberConfig_inner.sensitiveNames = {"Inner_Skin"};
+  mockup_chamberConfig_inner.passiveNames = {"xx"};
 
   mockup_chamberConfig_middle.name = "Middle_Detector_Chamber";
-  mockup_chamberConfig_middle.SensitiveNames = {"Middle_Skin"};
-  mockup_chamberConfig_middle.PassiveNames = {"xx"};
+  mockup_chamberConfig_middle.sensitiveNames = {"Middle_Skin"};
+  mockup_chamberConfig_middle.passiveNames = {"xx"};
 
   mockup_chamberConfig_outer.name = "Outer_Detector_Chamber";
-  mockup_chamberConfig_outer.SensitiveNames = {"Outer_Skin"};
-  mockup_chamberConfig_outer.PassiveNames = {"xx"};
+  mockup_chamberConfig_outer.sensitiveNames = {"Outer_Skin"};
+  mockup_chamberConfig_outer.passiveNames = {"xx"};
 
   MockupSectorBuilder mockup_builder(mockup_config);
 
