@@ -76,7 +76,6 @@ struct MultiWireLayerImpl : public INavigationDelegate {
                 nBinsY =
                     static_cast<std::size_t>((rangeY2 - rangeY1) / binWidthY);
 
-
     detail::IndexedSurfacesGenerator<decltype(gridSurfaces)> irSurfaces_grid{
         gridSurfaces, {}, {binZ, binY}, {1u, 0u}};
 
