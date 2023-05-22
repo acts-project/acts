@@ -61,10 +61,10 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   // Get the sensitive and passive surfaces and pass to the g4World Config
   auto g4Sensitive =
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          chamberConfig.SensitiveNames);
+          chamberConfig.sensitiveNames);
   auto g4Passive =
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          chamberConfig.PassiveNames);
+          chamberConfig.passiveNames);
 
   auto g4SurfaceOptions = Acts::Geant4DetectorSurfaceFactory::Options();
   g4SurfaceOptions.sensitiveSurfaceSelector = g4Sensitive;
