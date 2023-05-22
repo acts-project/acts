@@ -59,14 +59,6 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
   BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
 
-  // We do not expect the determinant to be <= 0!
-  // Should we handle this case differently?
-  if (parCovarianceAtPCA.determinant() <= 0) {
-    // Use the original parameters
-    paramsAtPCA = params.parameters();
-    parCovarianceAtPCA = params.covariance().value();
-  }
-
   // Extracting Perigee parameters and compute functions of them for later
   // usage
   double phi = paramsAtPCA(BoundIndices::eBoundPhi);
