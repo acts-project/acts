@@ -11,39 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/Portal.hpp"
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
-#include "Acts/Detector/detail/PortalHelper.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/MultiWireLayerUpdators.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Navigation/NextNavigator.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
-#include "Acts/Visualization/GeometryView3D.hpp"
-#include "Acts/Visualization/IVisualization3D.hpp"
-#include "Acts/Visualization/ObjVisualization3D.hpp"
-#include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 
 #include <array>
 #include <memory>
 #include <vector>
-
-using namespace Acts;
-using namespace ActsExamples;
-using namespace Acts::Experimental;
 
 // A test context
 Acts::GeometryContext tgContext;
@@ -57,30 +35,33 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 BOOST_AUTO_TEST_CASE(MultiWireLayerUpdator) {
   // create the mockup geometry for one sector
 
-  auto mockup_config = MockupSectorBuilder::Config();
+  auto mockup_config = ActsExamples::MockupSectorBuilder::Config();
 
-  auto mockup_chamberConfig_inner = MockupSectorBuilder::ChamberConfig();
-  auto mockup_chamberConfig_middle = MockupSectorBuilder::ChamberConfig();
-  auto mockup_chamberConfig_outer = MockupSectorBuilder::ChamberConfig();
+  auto mockup_chamberConfig_inner =
+      ActsExamples::MockupSectorBuilder::ChamberConfig();
+  auto mockup_chamberConfig_middle =
+      ActsExamples::MockupSectorBuilder::ChamberConfig();
+  auto mockup_chamberConfig_outer =
+      ActsExamples::MockupSectorBuilder::ChamberConfig();
 
   mockup_config.gdmlPath =
-      " ../../../../Examples/Detectors/MuonSpectrometerMockupDetector/"
+      " ../../../../acts/Examples/Detectors/MuonSpectrometerMockupDetector/"
       "MuonChamber.gdml";
   mockup_config.NumberOfSectors = 1;
 
   mockup_chamberConfig_inner.name = "Inner_Detector_Chamber";
-  mockup_chamberConfig_inner.SensitiveNames = {"Inner_Skin"};
-  mockup_chamberConfig_inner.PassiveNames = {"xx"};
+  mockup_chamberConfig_inner.sensitiveNames = {"Inner_Skin"};
+  mockup_chamberConfig_inner.passiveNames = {"xx"};
 
   mockup_chamberConfig_middle.name = "Middle_Detector_Chamber";
-  mockup_chamberConfig_middle.SensitiveNames = {"Middle_Skin"};
-  mockup_chamberConfig_middle.PassiveNames = {"xx"};
+  mockup_chamberConfig_middle.sensitiveNames = {"Middle_Skin"};
+  mockup_chamberConfig_middle.passiveNames = {"xx"};
 
   mockup_chamberConfig_outer.name = "Outer_Detector_Chamber";
-  mockup_chamberConfig_outer.SensitiveNames = {"Outer_Skin"};
-  mockup_chamberConfig_outer.PassiveNames = {"xx"};
+  mockup_chamberConfig_outer.sensitiveNames = {"Outer_Skin"};
+  mockup_chamberConfig_outer.passiveNames = {"xx"};
 
-  MockupSectorBuilder mockup_builder(mockup_config);
+  ActsExamples::MockupSectorBuilder mockup_builder(mockup_config);
 
   auto detectorVolume_inner_chamber =
       mockup_builder.buildChamber(mockup_chamberConfig_inner);
@@ -90,8 +71,6 @@ BOOST_AUTO_TEST_CASE(MultiWireLayerUpdator) {
 
   auto detectorVolume_outer_chamber =
       mockup_builder.buildChamber(mockup_chamberConfig_outer);
-
-  std::cout << "here" << std::endl;
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
       detector_volumes = {};
@@ -109,8 +88,8 @@ BOOST_AUTO_TEST_CASE(MultiWireLayerUpdator) {
   // Test if the surface candidates are as expected
   Acts::Experimental::NavigationState nState;
   nState.currentDetector = detector_sector.get();
-  nState.position = Vector3(0., 0., 0.);
-  nState.direction = Vector3(0., 1., 0.);
+  nState.position = Acts::Vector3(0., 0., 0.);
+  nState.direction = Acts::Vector3(0., 1., 0.);
 
   // assign the detector volume of the multilayer of the first chamber to the
   // navigation state

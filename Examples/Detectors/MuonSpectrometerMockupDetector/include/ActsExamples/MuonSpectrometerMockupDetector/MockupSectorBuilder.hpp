@@ -37,7 +37,7 @@ class MockupSectorBuilder {
  public:
   // Nested configuration struct
   struct Config {
-    friend struct ChamberConfig;
+    // friend struct ChamberConfig;
 
     // The path of the gdml file that holds the mockup geometry
     std::string gdmlPath = "";
@@ -48,32 +48,16 @@ class MockupSectorBuilder {
     float toleranceOverlap = 10.;
   };
 
-  /// Nested configuration struct for chamber
+  // Nested configuration struct for chamber
   struct ChamberConfig {
-    friend class MockupSectorBuilder;
-    friend struct Config;
-
     // The name of the chamber
     std::string name;
 
     // The names of the sensitive surfaces
-    std::vector<std::string> SensitiveNames;
+    std::vector<std::string> sensitiveNames;
 
     // The names of the passive surfaces
-    std::vector<std::string> PassiveNames;
-
-    // The indexed surfaces
-    // SurfaceCandidatesUpdator
-    // getIndexedStraws(std::vector<std::shared_ptr<Acts::Surface>>);
-
-    // Function that returns the straws of the chamber of a specific chamber
-    std::vector<std::shared_ptr<Acts::Surface>> getStraws() {
-      return ChambersStraws;
-    };
-
-   private:
-    // void setStraws
-    std::vector<std::shared_ptr<Acts::Surface>> ChambersStraws;
+    std::vector<std::string> passiveNames;
   };
 
   /// Constructor
