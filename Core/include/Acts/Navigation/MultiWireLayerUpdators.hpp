@@ -71,8 +71,10 @@ struct MultiWireLayerImpl : public INavigationDelegate {
     float rangeY1 = min_max_multilayer[1].first - radius,
           rangeY2 = min_max_multilayer[1].second + radius;
 
-    std::size_t nBinsX = (rangeX2 - rangeX1) / binWidthX,
-                nBinsY = (rangeY2 - rangeY1) / binWidthY;
+    std::size_t nBinsX =
+                    static_cast<std::size_t>((rangeX2 - rangeX1) / binWidthX),
+                nBinsY =
+                    static_cast<std::size_t>((rangeY2 - rangeY1) / binWidthY);
 
     detail::IndexedSurfacesGenerator<decltype(gridSurfaces)> irSurfaces_grid{
         gridSurfaces, {}, {binZ, binY}, {1u, 0u}};
