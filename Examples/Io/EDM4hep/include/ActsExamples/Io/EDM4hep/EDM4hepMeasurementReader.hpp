@@ -9,6 +9,7 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -16,10 +17,7 @@
 #include <memory>
 #include <string>
 
-#include "edm4hep/TrackerHitCollection.h"
-#include "edm4hep/TrackerHitPlaneCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTReader.h"
+#include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
 
@@ -70,11 +68,7 @@ class EDM4hepMeasurementReader final : public IReader {
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  podio::ROOTReader m_reader;
-  podio::EventStore m_store;
-
-  const edm4hep::TrackerHitPlaneCollection* m_trackerHitPlaneCollection;
-  const edm4hep::TrackerHitCollection* m_trackerHitRawCollection;
+  podio::ROOTFrameReader m_reader;
 
   WriteDataHandle<MeasurementContainer> m_outputMeasurements{
       this, "OutputMeasurements"};

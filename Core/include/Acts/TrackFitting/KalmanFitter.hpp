@@ -17,6 +17,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -58,7 +59,7 @@ struct KalmanFitterExtensions {
       const GeometryContext&, MultiTrajectory<traj_t>&, size_t, const Logger&)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        NavigationDirection, const Logger&)>;
+                                        Direction, const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -361,9 +362,7 @@ class KalmanFitter {
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
-      std::string direction =
-          (state.stepping.navDir == NavigationDirection::Forward) ? "forward"
-                                                                  : "backward";
+      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -513,10 +512,7 @@ class KalmanFitter {
       result.reversed = true;
 
       // Reverse navigation direction
-      state.stepping.navDir =
-          (state.stepping.navDir == NavigationDirection::Forward)
-              ? NavigationDirection::Backward
-              : NavigationDirection::Forward;
+      state.stepping.navDir = state.stepping.navDir.invert();
 
       // Reset propagator options
       state.options.maxStepSize =
@@ -978,10 +974,7 @@ class KalmanFitter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir =
-            (state.stepping.navDir == NavigationDirection::Forward)
-                ? NavigationDirection::Backward
-                : NavigationDirection::Forward;
+        state.stepping.navDir = state.stepping.navDir.invert();
       }
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
@@ -1050,7 +1043,8 @@ class KalmanFitter {
     // for (const auto& sl : sourcelinks) {
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), std::move(sl));
+      auto geoId = sl.geometryId();
+      inputMeasurements.emplace(geoId, std::move(sl));
     }
 
     // Create the ActionList and AbortList
@@ -1126,6 +1120,9 @@ class KalmanFitter {
     }
     track.nMeasurements() = kalmanResult.measurementStates;
     track.nHoles() = kalmanResult.measurementHoles;
+
+    calculateTrackQuantities(track);
+
     if (trackContainer.hasColumn(hashString("smoothed"))) {
       track.template component<bool, hashString("smoothed")>() =
           kalmanResult.smoothed;
@@ -1259,6 +1256,9 @@ class KalmanFitter {
     }
     track.nMeasurements() = kalmanResult.measurementStates;
     track.nHoles() = kalmanResult.measurementHoles;
+
+    calculateTrackQuantities(track);
+
     if (trackContainer.hasColumn(hashString("smoothed"))) {
       track.template component<bool, hashString("smoothed")>() =
           kalmanResult.smoothed;

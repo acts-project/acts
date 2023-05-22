@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,29 @@
 
 Acts::Experimental::Portal::Portal(std::shared_ptr<Surface> surface)
     : m_surface(std::move(surface)) {}
+
+std::shared_ptr<Acts::Experimental::Portal>
+Acts::Experimental::Portal::makeShared(std::shared_ptr<Surface> surface) {
+  return std::shared_ptr<Portal>(new Portal(std::move(surface)));
+}
+
+const Acts::Surface& Acts::Experimental::Portal::surface() const {
+  return *m_surface.get();
+}
+
+Acts::Surface& Acts::Experimental::Portal::surface() {
+  return *m_surface.get();
+}
+
+const Acts::Experimental::Portal::DetectorVolumeUpdators&
+Acts::Experimental::Portal::detectorVolumeUpdators() const {
+  return m_volumeUpdators;
+}
+
+Acts::Experimental::Portal::AttachedDetectorVolumes&
+Acts::Experimental::Portal::attachedDetectorVolumes() {
+  return m_attachedVolumes;
+}
 
 std::shared_ptr<Acts::Experimental::Portal>
 Acts::Experimental::Portal::getSharedPtr() {
@@ -29,25 +52,25 @@ void Acts::Experimental::Portal::assignGeometryId(
 }
 
 void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
-  // Determine this directioon
-  NavigationDirection tDir =
-      (not m_volumeUpdators[indexFromDirection(NavigationDirection::Backward)]
-               .connected())
-          ? NavigationDirection::Forward
-          : NavigationDirection::Backward;
+  Direction bDir = Direction::Backward;
 
-  if (not m_volumeUpdators[indexFromDirection(tDir)].connected()) {
+  // Determine this directioon
+  Direction tDir = (not m_volumeUpdators[bDir.index()].connected())
+                       ? Direction::Forward
+                       : Direction::Backward;
+
+  if (not m_volumeUpdators[tDir.index()].connected()) {
     throw std::invalid_argument(
         "Portal: trying to fuse portal (keep) with no links.");
   }
   // And now check other direction
-  NavigationDirection oDir = invertDirection(tDir);
-  if (not other->m_volumeUpdators[indexFromDirection(oDir)].connected()) {
+  Direction oDir = tDir.invert();
+  if (not other->m_volumeUpdators[oDir.index()].connected()) {
     throw std::runtime_error(
         "Portal: trying to fuse portal (waste) with no links.");
   }
 
-  auto odx = indexFromDirection(oDir);
+  auto odx = oDir.index();
   m_volumeUpdators[odx] = std::move(other->m_volumeUpdators[odx]);
   m_attachedVolumes[odx] = other->m_attachedVolumes[odx];
   // And finally overwrite the original portal
@@ -55,9 +78,9 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
 }
 
 void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
-    NavigationDirection nDir, DetectorVolumeUpdator&& dVolumeUpdator,
+    Direction dir, DetectorVolumeUpdator&& dVolumeUpdator,
     const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
-  auto idx = indexFromDirection(nDir);
+  auto idx = dir.index();
   m_volumeUpdators[idx] = std::move(dVolumeUpdator);
   m_attachedVolumes[idx] = attachedVolumes;
 }
@@ -83,8 +106,8 @@ void Acts::Experimental::Portal::updateDetectorVolume(
   const auto& position = nState.position;
   const auto& direction = nState.direction;
   const Vector3 normal = surface().normal(gctx, position);
-  NavigationDirection nDir = directionFromStepSize(normal.dot(direction));
-  const auto& vUpdator = m_volumeUpdators[indexFromDirection(nDir)];
+  Direction dir = Direction::fromScalar(normal.dot(direction));
+  const auto& vUpdator = m_volumeUpdators[dir.index()];
   if (vUpdator.connected()) {
     vUpdator(gctx, nState);
   } else {

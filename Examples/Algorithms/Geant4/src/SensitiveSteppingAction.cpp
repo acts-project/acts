@@ -65,57 +65,63 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   std::string mappingPfx(SensitiveSurfaceMapper::mappingPrefix);
 
-  if (volumeName.find(mappingPfx) != std::string::npos) {
-    ACTS_VERBOSE("Step in senstive volume " << volumeName);
-
-    // Get PreStepPoint and PostStepPoint
-    G4StepPoint* preStepPoint = step->GetPreStepPoint();
-    G4StepPoint* postStepPoint = step->GetPostStepPoint();
-
-    G4ThreeVector preStepPosition = convertLength * preStepPoint->GetPosition();
-    G4double preStepTime = convertTime * preStepPoint->GetGlobalTime();
-    G4ThreeVector postStepPosition =
-        convertLength * postStepPoint->GetPosition();
-    G4double postStepTime = convertTime * postStepPoint->GetGlobalTime();
-
-    G4ThreeVector preStepMomentum = convertEnergy * preStepPoint->GetMomentum();
-    G4double preStepEnergy = convertEnergy * preStepPoint->GetTotalEnergy();
-    G4ThreeVector postStepMomentum =
-        convertEnergy * postStepPoint->GetMomentum();
-    G4double postStepEnergy = convertEnergy * postStepPoint->GetTotalEnergy();
-
-    Acts::ActsScalar hX = 0.5 * (preStepPosition[0] + postStepPosition[0]);
-    Acts::ActsScalar hY = 0.5 * (preStepPosition[1] + postStepPosition[1]);
-    Acts::ActsScalar hZ = 0.5 * (preStepPosition[2] + postStepPosition[2]);
-    Acts::ActsScalar hT = 0.5 * (preStepTime + postStepTime);
-
-    Acts::ActsScalar mXpre = preStepMomentum[0];
-    Acts::ActsScalar mYpre = preStepMomentum[1];
-    Acts::ActsScalar mZpre = preStepMomentum[2];
-    Acts::ActsScalar mEpre = preStepEnergy;
-    Acts::ActsScalar mXpost = postStepMomentum[0];
-    Acts::ActsScalar mYpost = postStepMomentum[1];
-    Acts::ActsScalar mZpost = postStepMomentum[2];
-    Acts::ActsScalar mEpost = postStepEnergy;
-
-    // Cast out the GeometryIdentifier
-    volumeName.erase(0, mappingPfx.size());
-
-    Acts::GeometryIdentifier::Value sGeoVal = std::stoul(volumeName);
-    Acts::GeometryIdentifier geoID(sGeoVal);
-
-    auto particleID = eventData.trackIdMapping[track->GetTrackID()];
-
-    Acts::Vector4 particlePosition(hX, hY, hZ, hT);
-    Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
-    Acts::Vector4 afterMomentum(mXpost, mYpost, mZpost, mEpost);
-
-    // Increase counter (starts at 1 because of ++)
-    ++eventData.particleHitCount[particleID];
-
-    // Fill into the registry (subtract 1 from hit-count to get 0-based index)
-    eventData.hits.emplace_back(geoID, particleID, particlePosition,
-                                beforeMomentum, afterMomentum,
-                                eventData.particleHitCount[particleID] - 1);
+  if (volumeName.find(mappingPfx) == std::string::npos) {
+    return;
   }
+
+  ACTS_VERBOSE("Step in senstive volume " << volumeName);
+
+  // Get PreStepPoint and PostStepPoint
+  G4StepPoint* preStepPoint = step->GetPreStepPoint();
+  G4StepPoint* postStepPoint = step->GetPostStepPoint();
+
+  G4ThreeVector preStepPosition = convertLength * preStepPoint->GetPosition();
+  G4double preStepTime = convertTime * preStepPoint->GetGlobalTime();
+  G4ThreeVector postStepPosition = convertLength * postStepPoint->GetPosition();
+  G4double postStepTime = convertTime * postStepPoint->GetGlobalTime();
+
+  G4ThreeVector preStepMomentum = convertEnergy * preStepPoint->GetMomentum();
+  G4double preStepEnergy = convertEnergy * preStepPoint->GetTotalEnergy();
+  G4ThreeVector postStepMomentum = convertEnergy * postStepPoint->GetMomentum();
+  G4double postStepEnergy = convertEnergy * postStepPoint->GetTotalEnergy();
+
+  Acts::ActsScalar hX = 0.5 * (preStepPosition[0] + postStepPosition[0]);
+  Acts::ActsScalar hY = 0.5 * (preStepPosition[1] + postStepPosition[1]);
+  Acts::ActsScalar hZ = 0.5 * (preStepPosition[2] + postStepPosition[2]);
+  Acts::ActsScalar hT = 0.5 * (preStepTime + postStepTime);
+
+  Acts::ActsScalar mXpre = preStepMomentum[0];
+  Acts::ActsScalar mYpre = preStepMomentum[1];
+  Acts::ActsScalar mZpre = preStepMomentum[2];
+  Acts::ActsScalar mEpre = preStepEnergy;
+  Acts::ActsScalar mXpost = postStepMomentum[0];
+  Acts::ActsScalar mYpost = postStepMomentum[1];
+  Acts::ActsScalar mZpost = postStepMomentum[2];
+  Acts::ActsScalar mEpost = postStepEnergy;
+
+  // Cast out the GeometryIdentifier
+  volumeName.erase(0, mappingPfx.size());
+
+  Acts::GeometryIdentifier::Value sGeoVal = std::stoul(volumeName);
+  Acts::GeometryIdentifier geoID(sGeoVal);
+
+  // This is not the case if we have a particle-ID collision
+  if (eventData.trackIdMapping.find(track->GetTrackID()) ==
+      eventData.trackIdMapping.end()) {
+    return;
+  }
+
+  auto particleID = eventData.trackIdMapping.at(track->GetTrackID());
+
+  Acts::Vector4 particlePosition(hX, hY, hZ, hT);
+  Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
+  Acts::Vector4 afterMomentum(mXpost, mYpost, mZpost, mEpost);
+
+  // Increase counter (starts at 1 because of ++)
+  ++eventData.particleHitCount[particleID];
+
+  // Fill into the registry (subtract 1 from hit-count to get 0-based index)
+  eventData.hits.emplace_back(geoID, particleID, particlePosition,
+                              beforeMomentum, afterMomentum,
+                              eventData.particleHitCount.at(particleID) - 1);
 }

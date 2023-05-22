@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -90,7 +90,7 @@ struct CorrectedFreeToBoundTransformer {
   std::optional<std::tuple<BoundVector, BoundSymMatrix>> operator()(
       const FreeVector& freeParams, const FreeSymMatrix& freeCovariance,
       const Surface& surface, const GeometryContext& geoContext,
-      NavigationDirection navDir = NavigationDirection::Forward,
+      Direction navDir = Direction::Forward,
       const Logger& logger = getDummyLogger()) const;
 
  private:

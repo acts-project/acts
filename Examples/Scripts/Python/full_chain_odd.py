@@ -46,7 +46,7 @@ parser.add_argument(
 
 args = vars(parser.parse_args())
 
-ttbar_pu200 = args["ttbar"]
+ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
 ambiguity_MLSolver = args["MLSolver"]
 u = acts.UnitConstants
@@ -73,7 +73,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         outputDir=str(outputDir),
     )
 
-    if not ttbar_pu200:
+    if not ttbar:
         addParticleGun(
             s,
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
@@ -92,7 +92,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=200,
+            npileup=50,
             vtxGen=acts.examples.GaussianVertexGenerator(
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
@@ -125,6 +125,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
             rnd=rnd,
+            killVolume=acts.Volume.makeCylinderVolume(r=1100, halfZ=3000),
         )
     else:
         addFatras(
@@ -136,7 +137,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             )
-            if ttbar_pu200
+            if ttbar
             else ParticleSelectorConfig(),
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
@@ -158,7 +159,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         trackingGeometry,
         field,
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-        if ttbar_pu200
+        if ttbar
         else TruthSeedRanges(),
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir,
@@ -169,7 +170,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         trackingGeometry,
         field,
         CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
+            ptMin=1.0 * u.GeV if ttbar else 0.0,
             nMeasurementsMin=7,
         ),
         TrackSelectorRanges(
@@ -186,7 +187,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             s,
             AmbiguityResolutionMLConfig(nMeasurementsMin=7),
             CKFPerformanceConfig(
-                ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=7
+                ptMin=1.0 * u.GeV if ttbar else 0.0, nMeasurementsMin=7
             ),
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
@@ -200,7 +201,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
             ),
             CKFPerformanceConfig(
-                ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
+                ptMin=1.0 * u.GeV if ttbar else 0.0,
                 nMeasurementsMin=7,
             ),
             outputDirRoot=outputDir,

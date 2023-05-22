@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Detector/PortalHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -39,7 +38,8 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
       std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3),
       std::vector<std::shared_ptr<Acts::Surface>>(),
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(),
-      Acts::Experimental::allPortalsAndSurfaces());
+      Acts::Experimental::tryAllSubVolumes(),
+      Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), tgContext,
@@ -48,13 +48,11 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
       std::vector<std::shared_ptr<Acts::Surface>>(),
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(
           {innerVolume}),
-      Acts::Experimental::allPortalsAndSurfaces());
+      Acts::Experimental::tryAllSubVolumes(),
+      Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto detector = Acts::Experimental::Detector::makeShared(
-      "Detector",
-      std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(
-          {detectorVolume}),
-      Acts::Experimental::tryAllVolumes());
+      "Detector", {detectorVolume}, Acts::Experimental::tryRootVolumes());
 
   using ActionListType = Acts::ActionList<>;
   using AbortListType = Acts::AbortList<>;

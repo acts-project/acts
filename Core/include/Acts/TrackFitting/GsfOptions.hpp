@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -18,7 +19,15 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
+
 namespace Experimental {
+
+namespace GsfConstants {
+constexpr std::string_view kFinalMultiComponentStateColumn =
+    "gsf-final-multi-component-state";
+using FinalMultiComponentState =
+    std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>;
+}  // namespace GsfConstants
 
 /// The extensions needed for the GSF
 template <typename traj_t>
@@ -30,7 +39,7 @@ struct GsfExtensions {
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        NavigationDirection, const Logger&)>;
+                                        Direction, const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -70,11 +79,18 @@ struct GsfOptions {
 
   double weightCutoff = 1.e-4;
 
-  bool abortOnError = true;
+  bool abortOnError = false;
 
   bool disableAllMaterialHandling = false;
 
+  std::string_view finalMultiComponentStateColumn = "";
+
+  MixtureReductionMethod stateReductionMethod =
+      MixtureReductionMethod::eMaxWeight;
+
+#if __cplusplus < 202002L
   GsfOptions() = delete;
+#endif
 };
 
 }  // namespace Experimental

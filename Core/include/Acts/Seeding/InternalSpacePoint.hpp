@@ -68,7 +68,7 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
       m_x(globalPos.x() - offsetXY.x()),
       m_y(globalPos.y() - offsetXY.y()),
       m_z(globalPos.z()),
-      m_r(std::sqrt(m_x * m_x + m_y * m_y)),
+      m_r(std::hypot(m_x, m_y)),
       m_varianceR(variance.x()),
       m_varianceZ(variance.y()),
       m_sp(sp) {}

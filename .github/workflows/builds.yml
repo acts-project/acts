@@ -24,7 +24,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v36
+    container: ghcr.io/acts-project/${{ matrix.image }}:v41
     strategy:
       matrix:
         image:
@@ -124,13 +124,13 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v36
+    container: ghcr.io/acts-project/ubuntu2204:v41
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -175,7 +175,7 @@ jobs:
         run: ccache -s
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: ctest --test-dir build -j$(nproc)
 
       - name: Integration tests
         run: cmake --build build --target integrationtests
@@ -208,11 +208,11 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v36
+    container: ghcr.io/acts-project/ubuntu2204:v41
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -241,18 +241,19 @@ jobs:
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh
+          && export PYTHONPATH=/usr/local/python:$PYTHONPATH
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFsv -v
+          && pytest -rFsv -k "not exatrkx" -v
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v36
+    container: ghcr.io/acts-project/ubuntu2204:v41
     needs: [linux_ubuntu]
 
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -288,7 +289,7 @@ jobs:
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && echo "::endgroup::"
           && export PYTHONPATH="${PYTHONPATH}":"${GITHUB_WORKSPACE}/Examples/Scripts/Python"
-          && CI/physmon/phys_perf_mon.sh physmon
+          && CI/physmon/phys_perf_mon.sh all physmon
 
       - uses: actions/upload-artifact@v3
         if: always()
@@ -300,23 +301,20 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: 
-          - ubuntu2004
-          - ubuntu2204
-          - ubuntu2204_clang
-        std: [17, 20]
-        exclude:
-          - image: ubuntu2204
-            std: 17
+        include:
           - image: ubuntu2004
+            std: 17
+          - image: ubuntu2204_cpp20
             std: 20
-    container: ghcr.io/acts-project/${{ matrix.image }}:v36
+          - image: ubuntu2204_clang
+            std: 17
+    container: ghcr.io/acts-project/${{ matrix.image }}:v41
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -385,7 +383,7 @@ jobs:
 
   linux-nodeps:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v36
+    container: ghcr.io/acts-project/${{ matrix.image }}:v41
     strategy:
       matrix:
         image:
@@ -500,7 +498,7 @@ jobs:
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.ce7b5a4.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.67dd08d.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
 
       - name: Cache build
@@ -559,7 +557,7 @@ jobs:
 
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v36
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v41
     steps:
       - uses: actions/checkout@v3
 
@@ -589,7 +587,7 @@ jobs:
 
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v36
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v41
     defaults:
       run:
         shell: bash

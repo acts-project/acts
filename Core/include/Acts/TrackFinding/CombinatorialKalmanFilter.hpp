@@ -17,7 +17,8 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -486,7 +487,7 @@ class CombinatorialKalmanFilter {
               // --> Call the smoothing
               // --> Set a stop condition when all track states have been
               // handled
-              auto res = finalize(state, stepper, result);
+              auto res = finalize(state, stepper, navigator, result);
               if (!res.ok()) {
                 ACTS_ERROR("Error in finalize: " << res.error());
                 result.result = res.error();
@@ -523,10 +524,7 @@ class CombinatorialKalmanFilter {
                 result.iSmoothed++;
                 // Reverse navigation direction to start targeting for the rest
                 // tracks
-                state.stepping.navDir =
-                    (state.stepping.navDir == NavigationDirection::Backward)
-                        ? NavigationDirection::Forward
-                        : NavigationDirection::Backward;
+                state.stepping.navDir = state.stepping.navDir.invert();
                 // To avoid meaningless navigation target call
                 state.stepping.stepSize =
                     ConstrainedStep(state.stepping.navDir *
@@ -922,7 +920,7 @@ class CombinatorialKalmanFilter {
         trackState.allocateCalibrated(candidateTrackState.calibratedSize());
         trackState.copyFrom(candidateTrackState, mask, false);
 
-        auto& typeFlags = trackState.typeFlags();
+        auto typeFlags = trackState.typeFlags();
         if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
           typeFlags.set(TrackStateFlag::MaterialFlag);
         }
@@ -952,7 +950,7 @@ class CombinatorialKalmanFilter {
         } else {
           // Kalman update
           auto updateRes = m_extensions.updater(
-              gctx, trackState, NavigationDirection::Forward, getDummyLogger());
+              gctx, trackState, Direction::Forward, getDummyLogger());
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -1015,7 +1013,7 @@ class CombinatorialKalmanFilter {
       // parameter
 
       // Set the track state flags
-      auto& typeFlags = trackStateProxy.typeFlags();
+      auto typeFlags = trackStateProxy.typeFlags();
       if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
         typeFlags.set(TrackStateFlag::MaterialFlag);
       }
@@ -1092,12 +1090,16 @@ class CombinatorialKalmanFilter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
+                          const navigator_t& navigator,
                           result_type& result) const {
       // The measurement tip of the track being smoothed
       const auto& lastMeasurementIndex =
@@ -1202,10 +1204,7 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir =
-            (state.stepping.navDir == NavigationDirection::Forward)
-                ? NavigationDirection::Backward
-                : NavigationDirection::Forward;
+        state.stepping.navDir = state.stepping.navDir.invert();
       }
       // Reinitialize the stepping jacobian
       state.stepping.jacobian = BoundMatrix::Identity();
@@ -1216,6 +1215,11 @@ class CombinatorialKalmanFilter {
           state.stepping.navDir * std::abs(state.options.maxStepSize));
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
+
+      // Reset the navigation state to enable propagation towards the target
+      // surface
+      navigator.targetReached(state.navigation, false);
+      navigator.currentSurface(state.navigation, nullptr);
 
       return Result<void>::success();
     }
@@ -1379,6 +1383,9 @@ class CombinatorialKalmanFilter {
       track.parameters() = parameters.parameters();
       track.covariance() = *parameters.covariance();
       track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+
+      calculateTrackQuantities(track);
+
       tracks.push_back(track);
     }
 

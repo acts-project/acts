@@ -61,7 +61,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       currentVtxInfo.oldPosition = currentVtx->fullPosition();
 
       Vector4 dist = currentVtxInfo.oldPosition - currentVtxInfo.linPoint;
-      double perpDist = std::sqrt(dist[0] * dist[0] + dist[1] * dist[1]);
+      double perpDist = std::hypot(dist[0], dist[1]);
       // Determine if relinearization is needed
       if (perpDist > m_cfg.maxDistToLinPoint) {
         // Relinearization needed, distance too big

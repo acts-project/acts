@@ -39,7 +39,7 @@ struct VolumeMaterialInteraction {
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport;
   /// The navigation direction
-  const NavigationDirection nav;
+  const Direction navDir;
 
   /// Data evaluated within this struct
   MaterialSlab slab;
@@ -68,7 +68,7 @@ struct VolumeMaterialInteraction {
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),
-        nav(state.stepping.navDir) {}
+        navDir(state.stepping.navDir) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
