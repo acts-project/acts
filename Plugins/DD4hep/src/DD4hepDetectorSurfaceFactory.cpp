@@ -123,6 +123,6 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveElement(
 
 Acts::DD4hepDetectorSurfaceFactory::DD4hepPassiveSurface
 Acts::DD4hepDetectorSurfaceFactory::constructPassiveElement(
-    const dd4hep::DetElement& dd4hepElemen, const Options& options) const {
+    const dd4hep::DetElement& /*dd4hepElemen*/, const Options& /*options*/) const {
   return {};
 }
