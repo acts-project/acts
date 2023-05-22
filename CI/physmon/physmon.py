@@ -192,7 +192,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             else SeedingAlgorithm.Default
             if label == "seeded"
             else SeedingAlgorithm.Orthogonal,
-            initialVarInflation=[100, 100, 100, 100, 100, 100],
+            initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
@@ -205,7 +205,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             TrackSelectorConfig(
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
-                nMeasurementsMin=6,
+                nMeasurementsMin=7,
             ),
             outputDirRoot=tp,
         )
@@ -330,7 +330,7 @@ def run_vertexing(fitter, mu, events):
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
-            initialVarInflation=[100, 100, 100, 100, 100, 100],
+            initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
@@ -340,10 +340,9 @@ def run_vertexing(fitter, mu, events):
             trackingGeometry,
             field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
-                absEta=(None, 3.0),
-                nMeasurementsMin=6,
+                pt=(500 * u.MeV, None),
+                nMeasurementsMin=7,
             ),
         )
 

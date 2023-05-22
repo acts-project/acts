@@ -177,7 +177,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         ),
         SeedFinderOptionsArg(bFieldInZ=2 * u.T),
         seedingAlgorithm=SeedingAlgorithm.Default,
-        initialVarInflation=[100, 100, 100, 100, 100, 100],
+        initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir,
     )
