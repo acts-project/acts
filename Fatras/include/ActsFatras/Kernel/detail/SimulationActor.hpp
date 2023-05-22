@@ -197,7 +197,7 @@ struct SimulationActor {
 
     // continue the propagation with the modified parameters
     stepper.update(state.stepping, after.position(), after.unitDirection(),
-                   after.absoluteMomentum(), after.time());
+                   after.charge() / after.absoluteMomentum(), after.time());
   }
 
   /// Construct the current particle state from the stepper state.
