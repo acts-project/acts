@@ -9,7 +9,9 @@
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -65,33 +67,52 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
   return transform(g4Rot, g4Trans);
 }
 
+Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
+    const G4VPhysicalVolume& g4PhysVol) {
+  // Get Rotation and translation
+  auto g4Translation = g4PhysVol.GetTranslation();
+  auto g4Rotation = g4PhysVol.GetRotation();
+
+  G4Transform3D g4Transform =
+      (g4Rotation == nullptr)
+          ? G4Transform3D(CLHEP::HepRotation(), g4Translation)
+          : G4Transform3D(*g4Rotation, g4Translation);
+
+  return transform(g4Transform);
+}
+
 std::tuple<std::shared_ptr<Acts::CylinderBounds>, Acts::ActsScalar>
 Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
-  std::array<Acts::ActsScalar, 6u> tArray = {};
-  tArray[0u] = static_cast<ActsScalar>(g4Tubs.GetInnerRadius() +
-                                       g4Tubs.GetOuterRadius()) *
-               0.5;
-  tArray[1u] = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
-  tArray[2u] = 0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
-  tArray[3u] = static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle());
+  using B = Acts::CylinderBounds;
 
-  ActsScalar thickness = (g4Tubs.GetOuterRadius() - g4Tubs.GetInnerRadius());
+  std::array<Acts::ActsScalar, B::eSize> tArray = {};
+  tArray[B::eR] = static_cast<ActsScalar>(g4Tubs.GetInnerRadius() +
+                                          g4Tubs.GetOuterRadius()) *
+                  0.5;
+  tArray[B::eHalfLengthZ] = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
+  tArray[B::eHalfPhiSector] =
+      0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
+  tArray[B::eAveragePhi] = static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle());
 
+  ActsScalar thickness = g4Tubs.GetOuterRadius() - g4Tubs.GetInnerRadius();
   auto cBounds = std::make_shared<CylinderBounds>(tArray);
-  return std::tie(cBounds, thickness);
+  return std::make_tuple(std::move(cBounds), thickness);
 }
 
 std::tuple<std::shared_ptr<Acts::RadialBounds>, Acts::ActsScalar>
 Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
-  std::array<ActsScalar, 4u> tArray = {};
-  tArray[0u] = static_cast<ActsScalar>(g4Tubs.GetInnerRadius());
-  tArray[1u] = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
-  tArray[2u] = 0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
-  tArray[3u] = static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle());
+  using B = Acts::RadialBounds;
+
+  std::array<ActsScalar, B::eSize> tArray = {};
+  tArray[B::eMinR] = static_cast<ActsScalar>(g4Tubs.GetInnerRadius());
+  tArray[B::eMaxR] = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
+  tArray[B::eHalfPhiSector] =
+      0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
+  tArray[B::eAveragePhi] = static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle());
 
   ActsScalar thickness = g4Tubs.GetZHalfLength() * 2;
   auto rBounds = std::make_shared<RadialBounds>(tArray);
-  return std::tie(rBounds, thickness);
+  return std::make_tuple(std::move(rBounds), thickness);
 }
 
 std::shared_ptr<Acts::LineBounds> Acts::Geant4ShapeConverter::lineBounds(
@@ -131,7 +152,7 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
   }
   auto rBounds = std::make_shared<RectangleBounds>(hG4XYZ[std::abs(rAxes[0u])],
                                                    hG4XYZ[std::abs(rAxes[1u])]);
-  return std::tie(rBounds, rAxes, thickness);
+  return std::make_tuple(std::move(rBounds), rAxes, thickness);
 }
 
 std::tuple<std::shared_ptr<Acts::TrapezoidBounds>, std::array<int, 2u>,
@@ -186,7 +207,7 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
 
   auto tBounds = std::make_shared<TrapezoidBounds>(
       halfLengthXminY, halfLengthXmaxY, halfLengthY);
-  return std::tie(tBounds, rAxes, thickness);
+  return std::make_tuple(std::move(tBounds), rAxes, thickness);
 }
 
 std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>,
@@ -195,19 +216,19 @@ Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
   const G4Box* box = dynamic_cast<const G4Box*>(&g4Solid);
   if (box != nullptr) {
     auto [rBounds, axes, thickness] = rectangleBounds(*box);
-    return std::tie(rBounds, axes, thickness);
+    return std::make_tuple(std::move(rBounds), axes, thickness);
   }
 
   const G4Trd* trd = dynamic_cast<const G4Trd*>(&g4Solid);
   if (trd != nullptr) {
     auto [tBounds, axes, thickness] = trapezoidBounds(*trd);
-    return std::tie(tBounds, axes, thickness);
+    return std::make_tuple(std::move(tBounds), axes, thickness);
   }
 
   std::shared_ptr<Acts::PlanarBounds> pBounds = nullptr;
   std::array<int, 2u> rAxes = {};
   ActsScalar rThickness = 0.;
-  return std::tie(pBounds, rAxes, rThickness);
+  return std::make_tuple(std::move(pBounds), rAxes, rThickness);
 }
 
 namespace {
@@ -246,7 +267,7 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
       }
       auto surfaceMaterial = Geant4MaterialConverter{}.surfaceMaterial(
           *g4Material, moriginal, mcompressed);
-      sf.assignSurfaceMaterial(surfaceMaterial);
+      sf.assignSurfaceMaterial(std::move(surfaceMaterial));
     }
   };
 
@@ -321,12 +342,8 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
   return nullptr;
 }
 
-std::shared_ptr<Acts::HomogeneousSurfaceMaterial>
-Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
-                                               ActsScalar original,
-                                               ActsScalar compressed) {
-  ActsScalar compression = original / compressed;
-
+Acts::Material Acts::Geant4MaterialConverter::material(
+    const G4Material& g4Material, ActsScalar compression) {
   auto X0 = g4Material.GetRadlen();
   auto L0 = g4Material.GetNuclearInterLength();
   auto Rho = g4Material.GetDensity();
@@ -348,9 +365,30 @@ Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
     }
   }
 
-  Material mat = Material::fromMassDensity(X0 / compression, L0 / compression,
-                                           Ar, Z, compression * Rho);
+  return Material::fromMassDensity(X0 / compression, L0 / compression, Ar, Z,
+                                   compression * Rho);
+}
 
+std::shared_ptr<Acts::HomogeneousSurfaceMaterial>
+Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
+                                               ActsScalar original,
+                                               ActsScalar compressed) {
+  ActsScalar compression = original / compressed;
   return std::make_shared<HomogeneousSurfaceMaterial>(
-      MaterialSlab(mat, compressed));
+      MaterialSlab(material(g4Material, compression), compressed));
+}
+
+std::shared_ptr<Acts::CylinderVolumeBounds>
+Acts::Geant4VolumeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
+  using C = Acts::CylinderVolumeBounds;
+
+  std::array<Acts::ActsScalar, C::eSize> tArray = {};
+  tArray[C::eMinR] = static_cast<ActsScalar>(g4Tubs.GetInnerRadius());
+  tArray[C::eMaxR] = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
+  tArray[C::eHalfLengthZ] = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
+  tArray[C::eHalfPhiSector] =
+      0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
+  tArray[C::eAveragePhi] = static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle());
+
+  return std::make_shared<CylinderVolumeBounds>(tArray);
 }

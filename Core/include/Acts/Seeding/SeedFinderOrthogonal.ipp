@@ -158,16 +158,8 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
 
   float deltaR = rH - rL;
 
-  /*
-   * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
-   * which is to say the absolute value must be smaller than the max cot(θ).
-   */
   float deltaZ = (zH - zL);
   float cotTheta = deltaZ / deltaR;
-  if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-    return false;
-  }
-
   /*
    * Cut: Ensure that the origin of the dublet (the intersection of the line
    * between them with the z axis) lies within the collision region.
@@ -175,9 +167,6 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   float zOrigin = zL - rL * cotTheta;
   if (zOrigin < m_config.collisionRegionMin ||
       zOrigin > m_config.collisionRegionMax) {
-    return false;
-  }
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
     return false;
   }
 
@@ -221,6 +210,20 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
         return false;
       }
     }
+  }
+
+  /*
+   * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
+   * which is to say the absolute value must be smaller than the max cot(θ).
+   */
+  if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+    return false;
+  }
+  /*
+   * Cut: Ensure that z-distance between SPs is within max and min values.
+   */
+  if (std::abs(deltaZ) > m_config.deltaZMax) {
+    return false;
   }
 
   return true;

@@ -85,24 +85,24 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
   // [0] Bottom Disc (negative z)
   auto dSurface = Surface::makeShared<DiscSurface>(transMinZ, m_discBounds);
   oSurfaces.push_back(
-      OrientedSurface(std::move(dSurface), NavigationDirection::Forward));
+      OrientedSurface(std::move(dSurface), Direction::Positive));
   // [1] Top Disc (positive z)
   dSurface = Surface::makeShared<DiscSurface>(transMaxZ, m_discBounds);
   oSurfaces.push_back(
-      OrientedSurface(std::move(dSurface), NavigationDirection::Backward));
+      OrientedSurface(std::move(dSurface), Direction::Negative));
 
   // [2] Outer Cylinder
   auto cSurface =
       Surface::makeShared<CylinderSurface>(transform, m_outerCylinderBounds);
   oSurfaces.push_back(
-      OrientedSurface(std::move(cSurface), NavigationDirection::Backward));
+      OrientedSurface(std::move(cSurface), Direction::Negative));
 
   // [3] Inner Cylinder (optional)
   if (m_innerCylinderBounds != nullptr) {
     cSurface =
         Surface::makeShared<CylinderSurface>(transform, m_innerCylinderBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(cSurface), NavigationDirection::Forward));
+        OrientedSurface(std::move(cSurface), Direction::Positive));
   }
 
   // [4] & [5] - Sectoral planes (optional)
@@ -117,7 +117,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     auto pSurface =
         Surface::makeShared<PlaneSurface>(sp1Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(pSurface), NavigationDirection::Forward));
+        OrientedSurface(std::move(pSurface), Direction::Positive));
     // sectorPlane 2 (positive phi)
     const Transform3 sp2Transform =
         Transform3(transform *
@@ -128,7 +128,7 @@ Acts::OrientedSurfaces Acts::CylinderVolumeBounds::orientedSurfaces(
     pSurface =
         Surface::makeShared<PlaneSurface>(sp2Transform, m_sectorPlaneBounds);
     oSurfaces.push_back(
-        OrientedSurface(std::move(pSurface), NavigationDirection::Backward));
+        OrientedSurface(std::move(pSurface), Direction::Negative));
   }
   return oSurfaces;
 }

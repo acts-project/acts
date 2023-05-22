@@ -45,9 +45,6 @@ class NextNavigator {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
-
-    /// The tolerance used to defined "reached"
-    double tolerance = s_onSurfaceTolerance;
   };
 
   /// Nested State struct
@@ -87,7 +84,7 @@ class NextNavigator {
 
   void resetState(State& state, const GeometryContext& /*geoContext*/,
                   const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  NavigationDirection /*navDir*/, const Surface* /*ssurface*/,
+                  Direction /*navDir*/, const Surface* /*ssurface*/,
                   const Surface* /*tsurface*/) const {
     // Reset everything first
     state = State();

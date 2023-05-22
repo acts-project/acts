@@ -65,9 +65,9 @@ build_exatrkx:
     - docker
 
   cache:
-    key: ccache-exatrkx-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
     paths:
-      - ${CCACHE_DIR}
+      - ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
 
   artifacts:
     paths:
@@ -98,10 +98,7 @@ build_exatrkx:
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-
-    - ccache -z
     - cmake --build build --
-    - ccache -s
 
 test_exatrkx:
   stage: test
@@ -122,3 +119,280 @@ test_exatrkx:
     - nvidia-smi
     - pytest -rFsv -k test_exatrkx
 
+build_linux_ubuntu:
+  stage: build
+  image: ghcr.io/acts-project/ubuntu2204:v41
+  tags:
+    - docker
+
+  cache:
+    key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    when: 'always'
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
+  artifacts:
+    paths:
+      - build/
+    exclude:
+      - build/**/*.o
+
+  script:
+    - echo $PATH
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src
+      -GNinja
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=17
+      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
+      -DACTS_BUILD_EVERYTHING=ON
+      -DACTS_BUILD_ODD=ON
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_BUILD_EXAMPLES_BINARIES=ON
+      -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+      -DACTS_FORCE_ASSERTIONS=ON
+      -DACTS_BUILD_ANALYSIS_APPS=ON
+      -DACTS_BUILD_PLUGIN_ONNX=ON
+
+    - ccache -z
+    - cmake --build build --
+    - ccache -s
+
+linux_test_examples:
+  stage: test
+  image: ghcr.io/acts-project/ubuntu2204:v41
+  needs: [build_linux_ubuntu]
+  tags:
+    - docker
+
+  script:
+    - apt-get update && apt-get install -y git-lfs
+
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - cd ..
+
+    - /usr/local/bin/geant4-config --install-datasets
+    - "source /usr/local/bin/thisroot.sh || true"
+    - "source /usr/local/bin/thisdd4hep_only.sh || true"
+    - "source /usr/local/bin/geant4.sh || true"
+    - source build/python/setup.sh
+    - export PYTHONPATH=/usr/local/python:$PYTHONPATH
+    - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+    - cd src
+    - pip3 install -r Examples/Python/tests/requirements.txt
+    - pytest -rFsv -k "not exatrkx" -v -n auto
+
+
+###############################
+### UBUNTU EXTRA JOB MATRIX ###
+###############################
+
+.linux_ubuntu_extra: &linux_ubuntu_extra
+  variables:
+    INSTALL_DIR: ${CI_PROJECT_DIR}/install
+
+  stage: build
+  tags:
+    - docker
+
+  cache:
+    key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    when: 'always'
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
+  script:
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+
+    - cd ..
+    - mkdir build
+    - >
+      cmake -B build -S src
+      -GNinja
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
+      -DACTS_BUILD_EVERYTHING=ON
+      -DACTS_BUILD_ODD=ON
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+      -DACTS_FORCE_ASSERTIONS=ON
+      -DACTS_BUILD_ANALYSIS_APPS=ON
+
+    - ccache -z
+    - cmake --build build --
+    - ccache -s
+
+    - ctest --test-dir build -j$(nproc)
+    - cmake --build build --target integrationtests
+      
+    # Install main project
+    - cmake --install build
+
+    # Downstream configure
+    - > 
+      cmake -B build-downstream -S src/Tests/DownstreamProject
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=${CXXSTD}
+      -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+    # Downstream build
+    - cmake --build build-downstream
+
+    # Downstream run
+    - ./build-downstream/bin/ShowActsVersion
+
+linux_ubuntu_2004_cpp17:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 17
+  image: ghcr.io/acts-project/ubuntu2004:v41
+
+linux_ubuntu_2204_cpp20:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 20
+  image: ghcr.io/acts-project/ubuntu2204_cpp20:v41
+
+linux_ubuntu_2204_clang:
+  <<: *linux_ubuntu_extra
+  variables:
+    CXXSTD: 17
+  image: ghcr.io/acts-project/ubuntu2204_clang:v41
+
+
+######################
+### LCG JOB MATRIX ###
+######################
+
+.lcg: &lcg_base_job
+  image: ghcr.io/acts-project/${OS}-base:sha-ca76a1f2
+  stage: build
+  tags:
+    - docker
+    - cvmfs
+
+  variables:
+    INSTALL_DIR: ${{ github.workspace }}/install
+
+    SETUP: 
+
+  cache:
+    key: ccache-${CI_JOB_NAME_SLUG}-${HEAD_REF}-${CCACHE_KEY_SUFFIX}
+    when: 'always'
+    paths:
+      - ${CI_PROJECT_DIR}/ccache
+
+  before_script:
+    - 'echo "LCG_VERSION: ${LCG_VERSION}"'
+    - 'echo "COMPILER: ${COMPILER}"'
+    - 'if [ "$OS" = "alma9"  ]; then export LCG_PLATFORM="centos9"; else export LCG_PLATFORM="$OS"; fi'
+    - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
+    - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
+      
+    - git clone $CLONE_URL src
+
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - cd ..
+    
+    - ccache --version
+
+  script:
+    - >
+      cmake -B build -S src
+      -GNinja
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-Werror
+      -DCMAKE_CXX_STANDARD=17
+      -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+      -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+      -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_FORCE_ASSERTIONS=ON
+      -DACTS_BUILD_UNITTESTS=ON
+      -DACTS_BUILD_INTEGRATIONTESTS=ON
+      -DACTS_BUILD_BENCHMARKS=ON
+      -DACTS_BUILD_EXAMPLES=ON
+      -DACTS_BUILD_PLUGIN_DD4HEP=OFF
+      -DACTS_BUILD_PLUGIN_TGEO=ON
+      -DACTS_BUILD_PLUGIN_IDENTIFICATION=ON
+      -DACTS_BUILD_PLUGIN_JSON=ON
+      -DACTS_BUILD_FATRAS=ON
+      -DACTS_BUILD_PLUGIN_LEGACY=ON
+      -DACTS_BUILD_PLUGIN_AUTODIFF=ON
+      -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
+      -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
+      -DACTS_BUILD_EXAMPLES_GEANT4=ON
+      -DACTS_BUILD_EXAMPLES_HEPMC3=ON
+      -DACTS_BUILD_EXAMPLES_PYTHIA8=ON
+      -DACTS_BUILD_FATRAS_GEANT4=ON
+      -DACTS_BUILD_FATRAS=ON
+      -DACTS_BUILD_ALIGNMENT=ON
+      -DACTS_BUILD_ANALYSIS_APPS=ON
+
+    - ccache -z
+    - cmake --build build
+    - ccache -s
+
+    - ctest --test-dir build -j$(nproc)
+
+
+lcg_102b:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "102b"
+
+  parallel:
+    matrix:
+      - OS: [centos7]
+        COMPILER: [gcc11]
+
+      - OS: [centos8, alma9]
+        COMPILER: [gcc11]
+
+lcg_103:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "103"
+
+  parallel:
+    matrix:
+      - OS: [centos7]
+        COMPILER: [gcc11, gcc12, clang12, clang15]
+
+      - OS: [alma9]
+        COMPILER: [gcc11, gcc12]
+
+  rules:
+    - if: '$COMPILER == "clang12" || $COMPILER == "gcc12" || $COMPILER == "clang15"'
+      allow_failure: true
+    - when: on_success

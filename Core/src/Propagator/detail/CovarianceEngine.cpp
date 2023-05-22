@@ -36,7 +36,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
+  const double sinTheta = std::hypot(x, y);
   const double invSinTheta = 1. / sinTheta;
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
@@ -52,7 +52,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
   } else {
     // Under grazing incidence to z, the above coordinate system definition
     // becomes numerically unstable, and we need to switch to another one
-    const double c = sqrt(y * y + z * z);
+    const double c = std::hypot(y, z);
     const double invC = 1. / c;
     jacToCurv(0, 1) = -z * invC;
     jacToCurv(0, 2) = y * invC;
@@ -232,7 +232,7 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
+  const double sinTheta = std::hypot(x, y);
   const double invSinTheta = 1. / sinTheta;
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;

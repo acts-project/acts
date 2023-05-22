@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -33,12 +34,16 @@ class TrackFittingAlgorithm final : public IAlgorithm {
     std::string inputProtoTracks;
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
+    /// (optional) Input clusters for each measurement
+    std::string inputClusters;
     /// Output fitted tracks collection.
     std::string outputTracks;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterFunction> fit;
-    /// Tracking geometry for surface lookup
+    /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
+    // Type erased calibrator for the measurements
+    std::shared_ptr<MeasurementCalibrator> calibrator;
   };
 
   /// Constructor of the fitting algorithm
@@ -67,6 +72,8 @@ class TrackFittingAlgorithm final : public IAlgorithm {
                                                          "InputProtoTracks"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
       this, "InputInitialTrackParameters"};
+
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };

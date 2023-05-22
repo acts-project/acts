@@ -42,11 +42,11 @@ MagneticFieldContext magFieldContext = MagneticFieldContext();
 BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   // Define some track parameter properties
   Vector3 pos0{0, 0, 0};
-  Vector3 pos1a{2_mm, 1_mm, -10_mm};
+  Vector3 pos1a{1.86052_mm, -1.24035_mm, -10_mm};
   Vector3 mom1a{400_MeV, 600_MeV, 200_MeV};
-  Vector3 pos1b{1_mm, 2_mm, -3_mm};
+  Vector3 pos1b{-1.24035_mm, 1.86052_mm, -3_mm};
   Vector3 mom1b{600_MeV, 400_MeV, -200_MeV};
-  Vector3 pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3 pos1c{1.69457_mm, -0.50837_mm, -7_mm};
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
@@ -109,11 +109,11 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
 BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // Define some track parameter properties
   Vector3 pos0{0, 0, 0};
-  Vector3 pos1a{2_mm, 1_mm, -10_mm};
+  Vector3 pos1a{1.86052_mm, -1.24035_mm, -10_mm};
   Vector3 mom1a{400_MeV, 600_MeV, 200_MeV};
-  Vector3 pos1b{1_mm, 2_mm, -3_mm};
+  Vector3 pos1b{-1.24035_mm, 1.86052_mm, -3_mm};
   Vector3 mom1b{600_MeV, 400_MeV, -200_MeV};
-  Vector3 pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3 pos1c{1.69457_mm, -0.50837_mm, -7_mm};
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   // From Athena VertexSeedFinderTestAlg
@@ -221,19 +221,27 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
-    double x = xdist(gen);
-    double y = ydist(gen);
-    // Produce most of the tracks at near z1 position,
-    // some near z2. Highest track density then expected at z1
-    double z = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
+    // The position of the particle
+    Vector3 pos(xdist(gen), ydist(gen), 0);
+
+    // Create momentum and charge of track
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
+
+    // project the position on the surface
+    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
+    pos = intersection.intersection.position;
+
+    // Produce most of the tracks at near z1 position,
+    // some near z2. Highest track density then expected at z1
+    pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
+
     trackVec.push_back(BoundTrackParameters::create(
-                           perigeeSurface, geoContext, Vector4(x, y, z, 0),
-                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
-                           covMat)
+                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           direction, pt, charge, covMat)
                            .value());
   }
 
@@ -273,11 +281,11 @@ struct InputTrack {
 BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // Define some track parameter properties
   Vector3 pos0{0, 0, 0};
-  Vector3 pos1a{2_mm, 1_mm, -10_mm};
+  Vector3 pos1a{1.86052_mm, -1.24035_mm, -10_mm};
   Vector3 mom1a{400_MeV, 600_MeV, 200_MeV};
-  Vector3 pos1b{1_mm, 2_mm, -3_mm};
+  Vector3 pos1b{-1.24035_mm, 1.86052_mm, -3_mm};
   Vector3 mom1b{600_MeV, 400_MeV, -200_MeV};
-  Vector3 pos1c{1.2_mm, 1.3_mm, -7_mm};
+  Vector3 pos1c{1.69457_mm, -0.50837_mm, -7_mm};
   Vector3 mom1c{300_MeV, 1000_MeV, 100_MeV};
 
   // From Athena VertexSeedFinderTestAlg

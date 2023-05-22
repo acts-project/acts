@@ -114,6 +114,11 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// Return surface associated with this detector element
   const Surface& surface() const override;
 
+  /// Return surface associated with this detector element
+  ///
+  /// @note this is the non-const access
+  Surface& surface() override;
+
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const DigitizationModule> digitizationModule()
       const final {
@@ -151,6 +156,10 @@ inline const Transform3& TGeoDetectorElement::transform(
 }
 
 inline const Surface& TGeoDetectorElement::surface() const {
+  return (*m_surface);
+}
+
+inline Surface& TGeoDetectorElement::surface() {
   return (*m_surface);
 }
 
