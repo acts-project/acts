@@ -40,9 +40,6 @@
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
-#include "actsvg/display/geometry.hpp"
-#include "actsvg/proto/cluster.hpp"
-#include "actsvg/proto/surface.hpp"
 
 
 #include <array>
@@ -52,14 +49,6 @@
 using namespace Acts;
 using namespace ActsExamples;
 using namespace Acts::Experimental;
-
-struct StrawSelector {
-  /// Call operator
-  /// @param sf The input surface to be checked
-  bool operator()(const Surface& sf) const {
-    return (sf.type() == Surface::Straw);
-  }
-};
 
 // A test context
 Acts::GeometryContext tgContext;
