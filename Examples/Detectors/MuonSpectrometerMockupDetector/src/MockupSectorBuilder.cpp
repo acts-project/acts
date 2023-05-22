@@ -103,7 +103,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   }
 
   // Divide the straw surfaces in the two multilayers
-  float radius = strawSurfaces.front()->bounds().values()[0];
+
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces_multilayer1 = {};
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces_multilayer2 = {};
   strawSurfaces_multilayer1.reserve(strawSurfaces.size() / 2);
@@ -308,11 +308,6 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
         shiftedSurfaces.clear();
 
-        std::cout << "detector volume of multilayer created" << std::endl;
-        std::cout << "bounds of multilayer_" << std::endl;
-        std::cout << detectorVolumeML->volumeBounds().values()[0] << ","
-                  << detectorVolumeML->volumeBounds().values()[1] << ","
-                  << detectorVolumeML->volumeBounds().values()[2] << std::endl;
 
       }  // inner volumes
 
