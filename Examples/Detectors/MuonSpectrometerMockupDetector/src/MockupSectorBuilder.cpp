@@ -308,7 +308,6 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
         shiftedSurfaces.clear();
 
-
       }  // inner volumes
 
       // create the bounds of the volumes of each chamber
