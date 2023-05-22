@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsPluginGeant4 ActsExamplesGeant4  ActsExamplesDetectorGeant4 ActsExamplesMuonSpectrometerMockupDetector ActsPluginActSVG)
+set(unittest_extra_libraries ActsPluginGeant4 ActsExamplesGeant4  ActsExamplesDetectorGeant4 ActsExamplesMuonSpectrometerMockupDetector)
 
 
 add_unittest(DetectorVolumeUpdators DetectorVolumeUpdatorsTests.cpp)
