@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(MultiWireLayerUpdator) {
   auto mockup_chamberConfig_outer = MockupSectorBuilder::ChamberConfig();
 
   mockup_config.gdmlPath =
-      " ../../../../acts/Examples/Detectors/MuonSpectrometerMockupDetector/"
+      " ../../../../Examples/Detectors/MuonSpectrometerMockupDetector/"
       "MuonChamber.gdml";
   mockup_config.NumberOfSectors = 1;
 
