@@ -45,7 +45,7 @@ std::vector<std::unique_ptr<TestSpacePoint> > readSeedFile(
     int layer;
     float x, y, z, varianceR, varianceZ;
     ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-    const float r = std::sqrt(x * x + y * y);
+    const float r = std::hypot(x, y);
     const float f22 = varianceR;
     const float wid = varianceZ;
     float cov = wid * wid * .08333;
