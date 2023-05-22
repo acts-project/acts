@@ -64,22 +64,32 @@ struct WeightedComponentReducerLoop {
   }
 
   template <typename stepper_state_t>
+  static ActsScalar qop(const stepper_state_t& s) {
+    return std::accumulate(
+        s.components.begin(), s.components.end(), ActsScalar{0.},
+        [](const auto& sum, const auto& cmp) -> ActsScalar {
+          return sum + cmp.weight * cmp.state.pars[eFreeQOverP];
+        });
+  }
+
+  template <typename stepper_state_t>
   static ActsScalar momentum(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum +
-                 cmp.weight * (1 / (cmp.state.pars[eFreeQOverP] / cmp.state.q));
+          return sum + cmp.weight * std::abs(cmp.state.absCharge /
+                                             cmp.state.pars[eFreeQOverP]);
         });
   }
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    return std::accumulate(s.components.begin(), s.components.end(),
-                           ActsScalar{0.},
-                           [](const auto& sum, const auto& cmp) -> ActsScalar {
-                             return sum + cmp.weight * cmp.state.q;
-                           });
+    return std::accumulate(
+        s.components.begin(), s.components.end(), ActsScalar{0.},
+        [](const auto& sum, const auto& cmp) -> ActsScalar {
+          return sum + cmp.weight * std::copysign(cmp.state.absCharge,
+                                                  cmp.state.pars[eFreeQOverP]);
+        });
   }
 
   template <typename stepper_state_t>

@@ -353,14 +353,14 @@ class AtlasStepper {
     return Vector3(state.pVector[4], state.pVector[5], state.pVector[6]);
   }
 
+  double qop(const State& state) const { return state.pVector[7]; }
+
   double momentum(const State& state) const {
-    return 1. / std::abs(state.pVector[7]);
+    return 1. / std::abs(qop(state));
   }
 
   /// Charge access
-  double charge(const State& state) const {
-    return state.pVector[7] > 0. ? 1. : -1.;
-  }
+  double charge(const State& state) const { return qop(state) > 0. ? 1. : -1.; }
 
   /// Overstep limit
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }

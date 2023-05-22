@@ -79,7 +79,7 @@ struct GenericDenseEnvironmentExtension {
   int bid(const propagator_state_t& state, const stepper_t& stepper,
           const navigator_t& navigator) const {
     // Check for valid particle properties
-    if (stepper.charge(state.stepping) == 0. || state.options.mass == 0. ||
+    if (stepper.options.absCharge == 0. || state.options.mass == 0. ||
         stepper.momentum(state.stepping) < state.options.momentumCutOff) {
       return 0;
     }
@@ -124,14 +124,13 @@ struct GenericDenseEnvironmentExtension {
       material = (volumeMaterial->material(position.template cast<double>()));
       initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;
-      qop[0] = stepper.charge(state.stepping) / initialMomentum;
+      qop[0] = stepper.qop(state.stepping);
       initializeEnergyLoss(state);
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
       // Evaluate k for the time propagation
-      Lambdappi[0] =
-          -qop[0] * qop[0] * qop[0] * g * energy[0] /
-          (stepper.charge(state.stepping) * stepper.charge(state.stepping));
+      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] /
+                     (state.options.absCharge * state.options.absCharge);
       //~ tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
       tKi[0] = hypot(1, state.options.mass * qop[0]);
       kQoP[0] = Lambdappi[0];
@@ -146,10 +145,9 @@ struct GenericDenseEnvironmentExtension {
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
       auto qopNew = qop[0] + h * Lambdappi[i - 1];
-      Lambdappi[i] =
-          -qopNew * qopNew * qopNew * g * energy[i] /
-          (stepper.charge(state.stepping) * stepper.charge(state.stepping) *
-           UnitConstants::C * UnitConstants::C);
+      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
+                     (state.options.absCharge * state.options.absCharge *
+                      UnitConstants::C * UnitConstants::C);
       tKi[i] = hypot(1, state.options.mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }

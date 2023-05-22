@@ -163,7 +163,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   Vector3 newPos(2., 4., 8.);
   Vector3 newMom(3., 9., 27.);
   double newTime(321.);
-  sls.update(slsState, newPos, newMom.normalized(), newMom.norm(), newTime);
+  sls.update(slsState, newPos, newMom.normalized(), charge / newMom.norm(),
+             newTime);
   CHECK_CLOSE_ABS(sls.position(slsState), newPos, 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsState), newMom.normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsState), newMom.norm(), 1e-6);
