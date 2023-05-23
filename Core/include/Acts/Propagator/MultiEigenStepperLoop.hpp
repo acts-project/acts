@@ -63,6 +63,8 @@ struct WeightedComponentReducerLoop {
     return toVector3(s.components, eFreeDir0).normalized();
   }
 
+  // TODO: Maybe we can cache this value and only update it when the parameters
+  // change
   template <typename stepper_state_t>
   static ActsScalar qop(const stepper_state_t& s) {
     return std::accumulate(
