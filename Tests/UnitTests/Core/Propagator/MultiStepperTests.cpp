@@ -241,7 +241,7 @@ void test_multi_stepper_vs_eigen_stepper() {
 
     for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
       BOOST_CHECK_EQUAL(cmp.pars(), single_state.pars);
-      BOOST_CHECK_EQUAL(cmp.charge(), single_state.q);
+      BOOST_CHECK_EQUAL(cmp.charge(), single_state.absCharge);
       BOOST_CHECK_EQUAL(cmp.cov(), single_state.cov);
       BOOST_CHECK_EQUAL(cmp.jacTransport(), single_state.jacTransport);
       BOOST_CHECK_EQUAL(cmp.jacToGlobal(), single_state.jacToGlobal);

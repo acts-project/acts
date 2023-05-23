@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
                                        cp, navDir, stepSize, tolerance);
     copy.pars = state.pars;
-    copy.q = state.q;
+    copy.absCharge = state.absCharge;
     copy.covTransport = state.covTransport;
     copy.cov = state.cov;
     copy.navDir = state.navDir;
