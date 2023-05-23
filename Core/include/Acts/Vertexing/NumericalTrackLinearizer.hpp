@@ -30,11 +30,12 @@ namespace Acts {
 /// q = A (r - r_0) + B (p - p_0) + c,
 ///
 /// where q are the Perigee parameters wrt linPoint, {r_0} r is the {initial}
-/// 4D PCA position, {p_0} p is the {initial} momentum at the PCA (phi, theta, q/p),
-/// and c is the constant term of the expansion. A and B are matrices of
+/// 4D PCA position, {p_0} p is the {initial} momentum at the PCA (phi, theta,
+/// q/p), and c is the constant term of the expansion. A and B are matrices of
 /// derivatives, denoted hereafter as "positionJacobian" and
-/// "momentumJacobian" respectively. Note that, unlike in Ref. (1), we add the time
-/// to the parametrization, which adds a row and a column to A and a row to B.
+/// "momentumJacobian" respectively. Note that, unlike in Ref. (1), we add the
+/// time to the parametrization, which adds a row and a column to A and a row to
+/// B.
 ///
 /// This class computes A and B by wiggling one of the 7 parameters
 /// at the PCA and computing the new PCA wrt linPoint. The derivatives wrt
@@ -117,20 +118,21 @@ class NumericalTrackLinearizer {
                                          const Acts::GeometryContext& gctx,
                                          const Acts::MagneticFieldContext& mctx,
                                          State& state) const {
-                          // Using "state" to suppress unused-parameter warning
-                          (void)state;
-                          // Call the function without state argument
-                          return linearizeTrack(params, linPoint, gctx, mctx);};
+    // Using "state" to suppress unused-parameter warning
+    (void)state;
+    // Call the function without state argument
+    return linearizeTrack(params, linPoint, gctx, mctx);
+  };
 
-  /// @brief Same function as above but without the @param state argument, which we don't need for numerical track linearization. 
+  /// @brief Same function as above but without the @param state argument, which we don't need for numerical track linearization.
   /// @note We don't discard the @param state argument above since we want the templating to work (it is needed in other linearizer classes)
-  ///  
+  ///
   ///
   /// @return Linearized track
-  Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
-                                         const Vector4& linPoint,
-                                         const Acts::GeometryContext& gctx,
-                                         const Acts::MagneticFieldContext& mctx) const;
+  Result<LinearizedTrack> linearizeTrack(
+      const BoundTrackParameters& params, const Vector4& linPoint,
+      const Acts::GeometryContext& gctx,
+      const Acts::MagneticFieldContext& mctx) const;
 
  private:
   const Config m_cfg;

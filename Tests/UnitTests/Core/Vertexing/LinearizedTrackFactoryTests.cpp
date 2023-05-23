@@ -29,11 +29,15 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-// We will compare analytical and numerical computations in the case of a (non-zero) constant B-field and a zero B-field.
+// We will compare analytical and numerical computations in the case of a
+// (non-zero) constant B-field and a zero B-field.
 using AnalyticalLinearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
-using AnalyticalLinearizerStraightLine = HelicalTrackLinearizer<Propagator<StraightLineStepper>>;
-using NumericalLinearizer = NumericalTrackLinearizer<Propagator<EigenStepper<>>>;
-using NumericalLinearizerStraightLine = NumericalTrackLinearizer<Propagator<StraightLineStepper>>;
+using AnalyticalLinearizerStraightLine =
+    HelicalTrackLinearizer<Propagator<StraightLineStepper>>;
+using NumericalLinearizer =
+    NumericalTrackLinearizer<Propagator<EigenStepper<>>>;
+using NumericalLinearizerStraightLine =
+    NumericalTrackLinearizer<Propagator<StraightLineStepper>>;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -65,8 +69,9 @@ std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 ///
 /// @brief Test HelicalTrackLinearizer by comparing it to NumericalTrackLinearizer.
 ///
-/// @note While HelicalTrackLinearizer computes the Jacobians using analytically derived formulae, 
-/// NumericalTrackLinearizer uses numerical differentiation (i.e., f'(x) ~ (f(x+dx) - f(x)) / dx).
+/// @note While HelicalTrackLinearizer computes the Jacobians using analytically derived formulae,
+/// NumericalTrackLinearizer uses numerical differentiation (i.e., f'(x) ~
+/// (f(x+dx) - f(x)) / dx).
 ///
 BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Number of tracks to linearize
@@ -86,7 +91,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Set up stepper and propagator for 0 B-field
   StraightLineStepper straightStepper;
-  auto straightPropagator = std::make_shared<Propagator<StraightLineStepper>>(straightStepper);
+  auto straightPropagator =
+      std::make_shared<Propagator<StraightLineStepper>>(straightStepper);
 
   // Create perigee surface, initial track parameters will be relative to it
   std::shared_ptr<PerigeeSurface> perigeeSurface{
@@ -100,7 +106,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     double x = vXYDist(gen);
     double y = vXYDist(gen);
     double z = vZDist(gen);
-    vtxPos << x, y, z, 0; //TODO: add time
+    vtxPos << x, y, z, 0;  // TODO: add time
     d0v = std::hypot(x, y);
     z0v = z;
   }
@@ -129,13 +135,10 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     // Fill vector of track objects with simple covariance matrix
     Covariance covMat;
 
-    //TODO: add time
-    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 
-              0., resZ0 * resZ0, 0., 0., 0., 0., 
-              0., 0., resPh * resPh, 0., 0., 0., 
-              0., 0., 0., resTh * resTh, 0., 0., 
-              0., 0., 0., 0., resQp * resQp, 0., 
-              0., 0., 0., 0.,       0.,      1.;
+    // TODO: add time
+    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
+        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
     tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat));
   }
 
@@ -146,73 +149,102 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   NumericalLinearizer::Config numLinConfig(constField, propagator);
   NumericalLinearizer numLinFactory(numLinConfig);
-  NumericalLinearizer::State numLinState(constField->makeCache(magFieldContext));
+  NumericalLinearizer::State numLinState(
+      constField->makeCache(magFieldContext));
 
   // Linearizer for 0 field and corresponding state
-  AnalyticalLinearizerStraightLine::Config straightLinConfig(straightPropagator);
+  AnalyticalLinearizerStraightLine::Config straightLinConfig(
+      straightPropagator);
   AnalyticalLinearizerStraightLine straightLinFactory(straightLinConfig);
-  AnalyticalLinearizerStraightLine::State straightLinState(zeroField->makeCache(magFieldContext));
+  AnalyticalLinearizerStraightLine::State straightLinState(
+      zeroField->makeCache(magFieldContext));
 
-  NumericalLinearizerStraightLine::Config numStraightLinConfig(straightPropagator);
+  NumericalLinearizerStraightLine::Config numStraightLinConfig(
+      straightPropagator);
   NumericalLinearizerStraightLine numStraightLinFactory(numStraightLinConfig);
-  NumericalLinearizerStraightLine::State numStraightLinState(zeroField->makeCache(magFieldContext));
+  NumericalLinearizerStraightLine::State numStraightLinState(
+      zeroField->makeCache(magFieldContext));
 
   // Lambda for comparing outputs of the two linearization methods
   // We compare the linearization result at the PCA to "linPoint"
-  auto checkLinearizers = [] (auto& lin1, auto& linState1, auto& lin2, auto& linState2, 
-                                const BoundTrackParameters& track, const Vector4& linPoint, 
-                                const auto& geometryContext, const auto& fieldContext){
-    // In addition to comparing the output of the linearizers, we check that they return non-zero quantities
-    BoundVector vecBoundZero = BoundVector::Zero();
-    BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-    ActsMatrix<eBoundSize, 4> matBound2SPZero = ActsMatrix<eBoundSize, 4>::Zero();
-    ActsMatrix<eBoundSize, 3> matBound2MomZero = ActsMatrix<eBoundSize, 3>::Zero();
+  auto checkLinearizers =
+      [](auto& lin1, auto& linState1, auto& lin2, auto& linState2,
+         const BoundTrackParameters& track, const Vector4& linPoint,
+         const auto& geometryContext, const auto& fieldContext) {
+        // In addition to comparing the output of the linearizers, we check that
+        // they return non-zero quantities
+        BoundVector vecBoundZero = BoundVector::Zero();
+        BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
+        ActsMatrix<eBoundSize, 4> matBound2SPZero =
+            ActsMatrix<eBoundSize, 4>::Zero();
+        ActsMatrix<eBoundSize, 3> matBound2MomZero =
+            ActsMatrix<eBoundSize, 3>::Zero();
 
-    // We check that the entries of the output quantities either 
-    // -) have a relative difference of less than "relTol" 
-    // or 
-    // -) are both smaller than "small"
-    double relTol = 5e-4;
-    double small = 5e-4;
+        // We check that the entries of the output quantities either
+        // -) have a relative difference of less than "relTol"
+        // or
+        // -) are both smaller than "small"
+        double relTol = 5e-4;
+        double small = 5e-4;
 
-    const LinearizedTrack linTrack1 = lin1.linearizeTrack(track, linPoint, geometryContext, fieldContext, linState1).value();
-    const LinearizedTrack linTrack2 = lin2.linearizeTrack(track, linPoint, geometryContext, fieldContext, linState2).value();
+        const LinearizedTrack linTrack1 =
+            lin1.linearizeTrack(track, linPoint, geometryContext, fieldContext,
+                                linState1)
+                .value();
+        const LinearizedTrack linTrack2 =
+            lin2.linearizeTrack(track, linPoint, geometryContext, fieldContext,
+                                linState2)
+                .value();
 
-    // There should be no problem here because both linearizers compute "parametersAtPCA" the same way
-    CHECK_CLOSE_OR_SMALL(linTrack1.parametersAtPCA, linTrack2.parametersAtPCA, relTol, small);
-    BOOST_CHECK_NE(linTrack1.parametersAtPCA, vecBoundZero);
-    BOOST_CHECK_NE(linTrack2.parametersAtPCA, vecBoundZero);
+        // There should be no problem here because both linearizers compute
+        // "parametersAtPCA" the same way
+        CHECK_CLOSE_OR_SMALL(linTrack1.parametersAtPCA,
+                             linTrack2.parametersAtPCA, relTol, small);
+        BOOST_CHECK_NE(linTrack1.parametersAtPCA, vecBoundZero);
+        BOOST_CHECK_NE(linTrack2.parametersAtPCA, vecBoundZero);
 
-    // TODO: add time comparison (i.e., compare entire "positionJacobian")
-    CHECK_CLOSE_OR_SMALL((linTrack1.positionJacobian.block<5, 4>(0, 0)), (linTrack2.positionJacobian.block<5, 4>(0, 0)), relTol, small);
-    BOOST_CHECK_NE(linTrack1.positionJacobian, matBound2SPZero);
-    BOOST_CHECK_NE(linTrack2.positionJacobian, matBound2SPZero);
+        // TODO: add time comparison (i.e., compare entire "positionJacobian")
+        CHECK_CLOSE_OR_SMALL((linTrack1.positionJacobian.block<5, 4>(0, 0)),
+                             (linTrack2.positionJacobian.block<5, 4>(0, 0)),
+                             relTol, small);
+        BOOST_CHECK_NE(linTrack1.positionJacobian, matBound2SPZero);
+        BOOST_CHECK_NE(linTrack2.positionJacobian, matBound2SPZero);
 
-    // TODO: add time comparison (i.e., compare entire "momentumJacobian")
-    CHECK_CLOSE_OR_SMALL((linTrack1.momentumJacobian.block<5, 3>(0, 0)), (linTrack2.momentumJacobian.block<5, 3>(0, 0)), relTol, small);
-    BOOST_CHECK_NE(linTrack1.momentumJacobian, matBound2MomZero);
-    BOOST_CHECK_NE(linTrack2.momentumJacobian, matBound2MomZero);
+        // TODO: add time comparison (i.e., compare entire "momentumJacobian")
+        CHECK_CLOSE_OR_SMALL((linTrack1.momentumJacobian.block<5, 3>(0, 0)),
+                             (linTrack2.momentumJacobian.block<5, 3>(0, 0)),
+                             relTol, small);
+        BOOST_CHECK_NE(linTrack1.momentumJacobian, matBound2MomZero);
+        BOOST_CHECK_NE(linTrack2.momentumJacobian, matBound2MomZero);
 
-    // Again, both methods compute "covarianceAtPCA" the same way => this check should always work
-    CHECK_CLOSE_OR_SMALL(linTrack1.covarianceAtPCA, linTrack2.covarianceAtPCA, relTol, small);
-    BOOST_CHECK_NE(linTrack1.covarianceAtPCA, matBoundZero);
-    BOOST_CHECK_NE(linTrack2.covarianceAtPCA, matBoundZero);
+        // Again, both methods compute "covarianceAtPCA" the same way => this
+        // check should always work
+        CHECK_CLOSE_OR_SMALL(linTrack1.covarianceAtPCA,
+                             linTrack2.covarianceAtPCA, relTol, small);
+        BOOST_CHECK_NE(linTrack1.covarianceAtPCA, matBoundZero);
+        BOOST_CHECK_NE(linTrack2.covarianceAtPCA, matBoundZero);
 
-    // Check whether "linPoint" is saved correctly in the LinearizerTrack objects
-    BOOST_CHECK_EQUAL(linTrack1.linearizationPoint, linPoint);
-    BOOST_CHECK_EQUAL(linTrack2.linearizationPoint, linPoint);
-    
-    // TODO: add time comparison (i.e., compare entire "constantTerm")
-    CHECK_CLOSE_OR_SMALL(linTrack1.constantTerm.head(5), linTrack2.constantTerm.head(5), relTol, small);
-    BOOST_CHECK_NE(linTrack1.constantTerm, vecBoundZero);
-    BOOST_CHECK_NE(linTrack2.constantTerm, vecBoundZero);
-  };
+        // Check whether "linPoint" is saved correctly in the LinearizerTrack
+        // objects
+        BOOST_CHECK_EQUAL(linTrack1.linearizationPoint, linPoint);
+        BOOST_CHECK_EQUAL(linTrack2.linearizationPoint, linPoint);
+
+        // TODO: add time comparison (i.e., compare entire "constantTerm")
+        CHECK_CLOSE_OR_SMALL(linTrack1.constantTerm.head(5),
+                             linTrack2.constantTerm.head(5), relTol, small);
+        BOOST_CHECK_NE(linTrack1.constantTerm, vecBoundZero);
+        BOOST_CHECK_NE(linTrack2.constantTerm, vecBoundZero);
+      };
 
   // Compare linearizers for all tracks
   for (const BoundTrackParameters& trk : tracks) {
-    checkLinearizers(linFactory, linState, numLinFactory, numLinState, trk, vtxPos, geoContext, magFieldContext);
-    // The check for zero B-field will only work after PR #2116 (before that we approximate straight tracks by helical track with large radii => not exact enough)
-    // checkLinearizers(straightLinFactory, straightLinState, numStraightLinFactory, numStraightLinState, trk, vtxPos, geoContext, magFieldContext);
+    checkLinearizers(linFactory, linState, numLinFactory, numLinState, trk,
+                     vtxPos, geoContext, magFieldContext);
+    // The check for zero B-field will only work after PR #2116 (before that we
+    // approximate straight tracks by helical track with large radii => not
+    // exact enough) checkLinearizers(straightLinFactory, straightLinState,
+    // numStraightLinFactory, numStraightLinState, trk, vtxPos, geoContext,
+    // magFieldContext);
   }
 }
 
