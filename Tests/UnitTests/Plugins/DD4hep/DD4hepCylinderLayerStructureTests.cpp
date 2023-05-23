@@ -32,48 +32,6 @@ Acts::GeometryContext tContext;
 Acts::Test::CylindricalTrackingGeometry cGeometry =
     Acts::Test::CylindricalTrackingGeometry(tContext);
 
-// ******* TO BE REMOVED **********
-
-#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
-#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-
-Acts::Svg::IndexedSurfacesConverter::Options generateDrawOptions() {
-  // The converter options
-  Acts::Svg::IndexedSurfacesConverter::Options isOptions;
-  // Sensitive surface stuyle
-  Acts::Svg::Style sensitiveStyle;
-  sensitiveStyle.fillColor = {51, 153, 255};
-  sensitiveStyle.fillOpacity = 0.9;
-  sensitiveStyle.highlightColor = {255, 153, 51};
-  sensitiveStyle.highlights = {"onmouseover", "onmouseout"};
-  sensitiveStyle.strokeWidth = 0.5;
-  sensitiveStyle.strokeColor = {0, 0, 0};
-  sensitiveStyle.nSegments = 72u;
-  std::pair<Acts::GeometryIdentifier, Acts::Svg::Style> allSensitives = {
-      Acts::GeometryIdentifier(0u), sensitiveStyle};
-
-  // Hierarchy map of styles
-  Acts::GeometryHierarchyMap<Acts::Svg::Style> surfaceStyles({allSensitives});
-  isOptions.surfaceStyles = surfaceStyles;
-
-  // The grid style
-  Acts::Svg::GridConverter::Options gridOptions;
-  Acts::Svg::Style gridStyle;
-  gridStyle.fillOpacity = 0.;
-  gridStyle.strokeColor = {0, 0, 255};
-  gridStyle.strokeWidth = 1.;
-  gridStyle.highlightStrokeWidth = 3;
-  gridStyle.highlightStrokeColor = {255, 0, 0};
-  gridOptions.style = gridStyle;
-
-  isOptions.gridOptions = gridOptions;
-  return isOptions;
-};
-
-auto drawOptions = generateDrawOptions();
-
-// ****************
-
 const char* cylinder_layer_head_xml =
     R""""(
     <detectors>
@@ -91,6 +49,14 @@ const char* indent_12_xml = "            ";
 
 BOOST_AUTO_TEST_SUITE(DD4hepPlugin)
 
+// This test creates DD4hep xml compact files for cylindrical
+// layer structures and then converts them into IndexedSurfacesUpdator
+// and other additional components needed for Internal DetectorVolume
+// structure.
+//
+// It tests also with Bin expansion, i.e. the filling of additional
+// bins with the found surface object.
+//
 BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
   // First create some test surfaces
   Acts::Test::CylindricalTrackingGeometry::DetectorStore dStore;
@@ -178,17 +144,6 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     BOOST_CHECK(surfacesUpdator.connected());
     // The volume updator is connected
     BOOST_CHECK(volumeUpdator.connected());
-
-    // *** TO BE REMOVED ****
-    // Draw the thing
-
-    // The displaying
-    auto pIndexeCylinder = Acts::Svg::IndexedSurfacesConverter::convert(
-        tContext, surfaces, surfacesUpdator, drawOptions);
-    auto pIndexCylinderView = Acts::Svg::View::zphi(pIndexeCylinder, fNameBase);
-
-    Acts::Svg::toFile({pIndexCylinderView}, fNameBase + ".svg");
-    // **********************
 
     // Kill that instance before going into the next test
     lcdd->destroyInstance();

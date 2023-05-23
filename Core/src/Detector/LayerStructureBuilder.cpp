@@ -195,8 +195,9 @@ Acts::Experimental::LayerStructureBuilder::construct(
   }
 
   if (m_cfg.binnings.empty()) {
-    ACTS_DEBUG(
-        "- Nol surface binning detected, navigation will be `tryAll..()`");
+    // This usually results in slow navigaiton, hence report to screen
+    ACTS_INFO(
+        "- No surface binning detected, navigation will be `tryAll..()`");
     internalCandidatesUpdator = tryAllPortalsAndSurfaces();
   } else if (m_cfg.binnings.size() == 1u) {
     ACTS_DEBUG("- 1-dimensional surface binning detected -> indexing 1D grid.");
@@ -239,11 +240,6 @@ Acts::Experimental::LayerStructureBuilder::construct(
               gctx, internalSurfaces, assignToAll, binning0, binning1,
               logger().level());
     }
-  }
-  // Check if everything went ok
-  if (not internalCandidatesUpdator.connected()) {
-    throw std::runtime_error(
-        "LayerStructureBuilder: could not connect surface candidate updator.");
   }
 
   // Return the internal structure
