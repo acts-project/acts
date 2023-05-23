@@ -191,7 +191,8 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const {
-    return std::abs(charge(state) / qop(state));
+    auto q = charge(state);
+    return std::abs((q == 0 ? 1 : q) / qop(state));
   }
 
   /// Charge access
