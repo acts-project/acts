@@ -5,6 +5,7 @@ import sys
 import subprocess
 from pathlib import Path
 import shutil
+import datetime
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -13,7 +14,9 @@ on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
 project = "Acts"
 author = "The Acts authors"
-copyright = "2014–2022 CERN for the benefit of the Acts project"
+copyright = (
+    f"2014–{datetime.date.today().year} CERN for the benefit of the Acts project"
+)
 # version = '@PROJECT_VERSION@'
 # release = '@PROJECT_VERSION@'
 
