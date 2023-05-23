@@ -259,7 +259,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   Vector3 newPos(2., 4., 8.);
   Vector3 newMom(3., 9., 27.);
   double newTime(321.);
-  es.update(esState, newPos, newMom.normalized(), newMom.norm(), newTime);
+  es.update(esState, newPos, newMom.normalized(), charge / newMom.norm(),
+            newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
   BOOST_CHECK_EQUAL(es.direction(esState), newMom.normalized());
   BOOST_CHECK_EQUAL(es.momentum(esState), newMom.norm());
