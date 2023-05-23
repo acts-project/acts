@@ -27,6 +27,9 @@
 
 #include <memory>
 #include <tuple>
+#include <vector>
+#include <pair>
+#include <array>
 
 namespace Acts {
 namespace Experimental {
