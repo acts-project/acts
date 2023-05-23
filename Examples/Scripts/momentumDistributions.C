@@ -18,25 +18,16 @@
 // To plot two momentum distributions of this kind  in one canvas the root
 // script "compareDistributions.C" can be used.
 
-void
-momentumDistributions(std::string inFile,
-                      std::string treeName,
-                      std::string outFile,
-                      int         nBins,
-                      float       r,
-                      float       zMin,
-                      float       zMax,
-                      float       etaMin,
-                      float       etaMax,
-                      float       thetaMin = 0.,
-                      float       thetaMax = M_PI)
-{
+void momentumDistributions(std::string inFile, std::string treeName,
+                           std::string outFile, int nBins, float r, float zMin,
+                           float zMax, float etaMin, float etaMax,
+                           float thetaMin = 0., float thetaMax = M_PI) {
   std::cout << "Opening file: " << inFile << std::endl;
   TFile inputFile(inFile.c_str());
   std::cout << "Reading tree: " << treeName << std::endl;
   TTree* tree = (TTree*)inputFile.Get(treeName.c_str());
 
-  int   nHits;
+  int nHits;
   float eta;
 
   std::vector<float>* x = new std::vector<float>;
@@ -57,16 +48,16 @@ momentumDistributions(std::string inFile,
   TFile outputFile(outFile.c_str(), "recreate");
 
   // distributions of the number of hits versus momentum coordinates
-  TProfile* nHits_eta = new TProfile(
-      "nHits_eta", "Hits in sensitive Material", nBins, etaMin, etaMax);
+  TProfile* nHits_eta = new TProfile("nHits_eta", "Hits in sensitive Material",
+                                     nBins, etaMin, etaMax);
   nHits_eta->GetXaxis()->SetTitle("#eta");
   nHits_eta->GetYaxis()->SetTitle("#hits");
   TProfile* nHits_theta = new TProfile(
       "nHits_theta", "Hits in sensitive Material", nBins, thetaMin, thetaMax);
   nHits_theta->GetXaxis()->SetTitle("#theta [rad]");
   nHits_theta->GetYaxis()->SetTitle("#hits");
-  TProfile* nHits_z = new TProfile(
-      "nHits_z", "Hits in sensitive Material", nBins, zMin, zMax);
+  TProfile* nHits_z =
+      new TProfile("nHits_z", "Hits in sensitive Material", nBins, zMin, zMax);
   nHits_z->GetXaxis()->SetTitle("z coordinate of momentum [mm]");
   nHits_z->GetYaxis()->SetTitle("#hits");
 
@@ -77,33 +68,33 @@ momentumDistributions(std::string inFile,
   // distributions of the momentum coordinates calculated from eta - since in
   // the extrapolation test eta is flat randomly generated and theta and z are
   // calculated from eta.
-  TH1F* Theta
-      = new TH1F("theta", "Distribution of #theta", nBins, thetaMin, thetaMax);
+  TH1F* Theta =
+      new TH1F("theta", "Distribution of #theta", nBins, thetaMin, thetaMax);
   Theta->GetXaxis()->SetTitle("#theta [rad]");
   Theta->GetYaxis()->SetTitle("#events");
-  TH1F* Z = new TH1F(
-      "z", "Distribution of z coordinate of the momentum", nBins, zMin, zMax);
+  TH1F* Z = new TH1F("z", "Distribution of z coordinate of the momentum", nBins,
+                     zMin, zMax);
   Z->GetXaxis()->SetTitle("z coordinate of momentum [mm]");
   Z->GetYaxis()->SetTitle("#events");
 
   // hit distributions
-  TH1F* hitsEta = new TH1F(
-      "hitsEta", "Sensitive Hit Distribution", nBins, etaMin, etaMax);
+  TH1F* hitsEta =
+      new TH1F("hitsEta", "Sensitive Hit Distribution", nBins, etaMin, etaMax);
   hitsEta->GetXaxis()->SetTitle("#eta");
   hitsEta->GetYaxis()->SetTitle("#hits");
-  TH1F* hitsTheta = new TH1F(
-      "hitsTheta", "Sensitive Hit Distribution", nBins, thetaMin, thetaMax);
+  TH1F* hitsTheta = new TH1F("hitsTheta", "Sensitive Hit Distribution", nBins,
+                             thetaMin, thetaMax);
   hitsTheta->GetXaxis()->SetTitle("#theta");
   hitsTheta->GetYaxis()->SetTitle("#hits");
-  TH1F* hitsZ
-      = new TH1F("hitsZ", "Sensitive Hit Distribution", nBins, zMin, zMax);
+  TH1F* hitsZ =
+      new TH1F("hitsZ", "Sensitive Hit Distribution", nBins, zMin, zMax);
   hitsZ->GetXaxis()->SetTitle("z [mm]");
   hitsZ->GetYaxis()->SetTitle("#hits");
 
   for (int i = 0; i < entries; i++) {
     tree->GetEvent(i);
     double theta = 2. * atan(exp(-eta));
-    double zDir  = r / tan(theta);
+    double zDir = r / tan(theta);
 
     nHits_eta->Fill(eta, nHits);
     nHits_theta->Fill(theta, nHits);
@@ -114,8 +105,7 @@ momentumDistributions(std::string inFile,
     Z->Fill(zDir, 1);
 
     for (int j = 0; j < x->size(); j++) {
-      float hitTheta
-          = atan2(sqrt(x->at(j) * x->at(j) + y->at(j) * y->at(j)), z->at(j));
+      float hitTheta = std::atan2(std::hypot(x->at(j), y->at(j)), z->at(j));
       hitsEta->Fill(-log(tan(hitTheta * 0.5)));
       hitsTheta->Fill(hitTheta);
       hitsZ->Fill(z->at(j));

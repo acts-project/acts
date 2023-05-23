@@ -99,7 +99,7 @@ double perp(const Eigen::MatrixBase<Derived>& v) noexcept {
       std::abort();
     }
   }
-  return std::sqrt(v[0] * v[0] + v[1] * v[1]);
+  return std::hypot(v[0], v[1]);
 }
 
 /// Calculate the theta angle (longitudinal w.r.t. z axis) of a vector
@@ -122,7 +122,7 @@ double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
     }
   }
 
-  return std::atan2(std::sqrt(v[0] * v[0] + v[1] * v[1]), v[2]);
+  return std::atan2(perp(v), v[2]);
 }
 
 /// @brief Fast evaluation of trigonomic functions.
@@ -137,7 +137,7 @@ static inline const std::array<ActsScalar, 5> evaluateTrigonomics(
   const ActsScalar z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const ActsScalar cosTheta = z;
-  const ActsScalar sinTheta = std::sqrt(x * x + y * y);
+  const ActsScalar sinTheta = std::hypot(x, y);
   const ActsScalar invSinTheta = 1. / sinTheta;
   const ActsScalar cosPhi = x * invSinTheta;
   const ActsScalar sinPhi = y * invSinTheta;
