@@ -365,7 +365,6 @@ class MultiEigenStepperLoop
     // ComponentProxy and the ConstComponentProxy
     auto status() const { return cmp.status; }
     auto weight() const { return cmp.weight; }
-    auto charge() const { return cmp.state.absCharge; }
     auto pathAccumulated() const { return cmp.state.pathAccumulated; }
     const auto& pars() const { return cmp.state.pars; }
     const auto& derivative() const { return cmp.state.derivative; }
@@ -405,7 +404,6 @@ class MultiEigenStepperLoop
     using Base = ComponentProxyBase<typename State::Component>;
 
     // Import the const accessors from ComponentProxyBase
-    using Base::charge;
     using Base::cmp;
     using Base::cov;
     using Base::derivative;
@@ -429,7 +427,6 @@ class MultiEigenStepperLoop
     // ComponentProxyBase
     auto& status() { return cmp.status; }
     auto& weight() { return cmp.weight; }
-    auto& charge() { return cmp.state.absCharge; }
     auto& pathAccumulated() { return cmp.state.pathAccumulated; }
     auto& pars() { return cmp.state.pars; }
     auto& derivative() { return cmp.state.derivative; }
