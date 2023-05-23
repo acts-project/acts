@@ -705,10 +705,10 @@ class AtlasStepper {
   /// @param state The state object
   /// @param uposition the updated position
   /// @param udirection the updated direction
-  /// @param up the updated momentum value
+  /// @param qop the updated momentum value
   /// @param time the update time
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double up, double time) const {
+              double qop, double time, bool) const {
     // update the vector
     state.pVector[0] = uposition[0];
     state.pVector[1] = uposition[1];
@@ -717,7 +717,7 @@ class AtlasStepper {
     state.pVector[4] = udirection[0];
     state.pVector[5] = udirection[1];
     state.pVector[6] = udirection[2];
-    state.pVector[7] = charge(state) / up;
+    state.pVector[7] = qop;
   }
 
   /// Method for on-demand transport of the covariance
