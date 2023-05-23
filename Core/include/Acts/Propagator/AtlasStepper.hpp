@@ -708,7 +708,7 @@ class AtlasStepper {
   /// @param qop the updated momentum value
   /// @param time the update time
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double qop, double time, bool) const {
+              double qop, double time) const {
     // update the vector
     state.pVector[0] = uposition[0];
     state.pVector[1] = uposition[1];
