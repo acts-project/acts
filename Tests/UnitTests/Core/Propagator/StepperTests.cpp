@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -387,7 +387,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, Direction::Forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -485,8 +485,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
   CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
-  // update does not change the particle hypothesis
-  BOOST_CHECK_EQUAL(es.charge(esState), 1. * charge);
+  BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
