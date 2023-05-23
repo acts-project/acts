@@ -126,7 +126,7 @@ struct GenericDenseEnvironmentExtension {
       material = (volumeMaterial->material(position.template cast<double>()));
       initialMomentum = stepper.momentum(state.stepping);
       currentMomentum = initialMomentum;
-      qop[0] = stepper.qop(state.stepping);
+      qop[0] = q / initialMomentum;
       initializeEnergyLoss(state);
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
@@ -146,7 +146,8 @@ struct GenericDenseEnvironmentExtension {
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
       auto qopNew = qop[0] + h * Lambdappi[i - 1];
-      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (q * q);
+      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
+                     (q * q * UnitConstants::C * UnitConstants::C);
       tKi[i] = hypot(1, state.options.mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }
