@@ -454,7 +454,7 @@ class VectorMultiTrajectory final
   // END INTERFACE
 };
 
-ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend, VectorMultiTrajectory);
+ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend, VectorMultiTrajectory)
 
 class ConstVectorMultiTrajectory;
 template <>
@@ -537,6 +537,6 @@ class ConstVectorMultiTrajectory final
 };
 
 ACTS_STATIC_CHECK_CONCEPT(ConstMultiTrajectoryBackend,
-                          ConstVectorMultiTrajectory);
+                          ConstVectorMultiTrajectory)
 
 }  // namespace Acts

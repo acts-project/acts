@@ -229,7 +229,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   // END INTERFACE
 };
 
-ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, VectorTrackContainer);
+ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, VectorTrackContainer)
 
 class ConstVectorTrackContainer;
 template <>
@@ -272,7 +272,7 @@ class ConstVectorTrackContainer final
 };
 
 ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend,
-                          ConstVectorTrackContainer);
+                          ConstVectorTrackContainer)
 
 inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)

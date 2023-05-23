@@ -14,14 +14,12 @@
 #define ACTS_CONCEPT(x) x
 #define ACTS_STATIC_CHECK_CONCEPT(check_concept, check_type) \
   static_assert(check_concept<check_type>,                   \
-                #check_type " does not fulfill " #check_concept)
+                #check_type " does not fulfill " #check_concept);
 
 #else
 
 #define ACTS_REQUIRES(x)
 #define ACTS_CONCEPT(x) typename
-#define ACTS_STATIC_CHECK_CONCEPT(concept, type) \
-  do {                                           \
-  } while (0)
+#define ACTS_STATIC_CHECK_CONCEPT(concept, type)
 
 #endif
