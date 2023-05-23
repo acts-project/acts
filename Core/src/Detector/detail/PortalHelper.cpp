@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Detector/PortalHelper.hpp"
+#include "Acts/Detector/detail/PortalHelper.hpp"
 
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 
 #include <stdexcept>
 
-void Acts::Experimental::attachDetectorVolumeUpdators(
+void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     std::vector<PortalReplacement>& pReplacements) {
@@ -35,7 +35,8 @@ void Acts::Experimental::attachDetectorVolumeUpdators(
 }
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
-Acts::Experimental::attachedDetectorVolumes(Portal& portal) noexcept(false) {
+Acts::Experimental::detail::PortalHelper::attachedDetectorVolumes(
+    Portal& portal) noexcept(false) {
   auto& attachedVolumes = portal.attachedDetectorVolumes();
   if (not attachedVolumes[0u].empty() and not attachedVolumes[1u].empty()) {
     throw std::invalid_argument(

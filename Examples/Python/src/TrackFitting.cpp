@@ -75,9 +75,9 @@ void addTrackFitting(Context& ctx) {
               return std::make_shared<PassThroughCalibrator>();
             });
 
-    py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
-        .value("mean", Acts::FinalReductionMethod::eMean)
-        .value("maxWeight", Acts::FinalReductionMethod::eMaxWeight);
+    py::enum_<Acts::MixtureReductionMethod>(mex, "FinalReductionMethod")
+        .value("mean", Acts::MixtureReductionMethod::eMean)
+        .value("maxWeight", Acts::MixtureReductionMethod::eMaxWeight);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles",
@@ -92,9 +92,9 @@ void addTrackFitting(Context& ctx) {
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-           double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
-           bool abortOnError, bool disableAllMaterialHandling,
-           Logging::Level level) {
+           double weightCutoff,
+           Acts::MixtureReductionMethod finalReductionMethod, bool abortOnError,
+           bool disableAllMaterialHandling, Logging::Level level) {
           return ActsExamples::makeGsfFitterFunction(
               trackingGeometry, magneticField, betheHeitlerApprox,
               maxComponents, weightCutoff, finalReductionMethod, abortOnError,

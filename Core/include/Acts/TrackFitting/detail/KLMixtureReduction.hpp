@@ -11,9 +11,8 @@
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
-
-#include "GsfUtils.hpp"
+#include "Acts/TrackFitting/detail/GsfUtils.hpp"
+#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 
 namespace Acts {
 
@@ -29,17 +28,15 @@ auto computeSymmetricKlDivergence(const component_t &a, const component_t &b,
   const auto covA = proj(a).boundCov(eBoundQOverP, eBoundQOverP);
   const auto covB = proj(b).boundCov(eBoundQOverP, eBoundQOverP);
 
-  throw_assert(covA != 0.0, "");
-  throw_assert(std::isfinite(covA), "");
-  throw_assert(covB != 0.0, "");
-  throw_assert(std::isfinite(covB), "");
+  assert(covA != 0.0);
+  assert(std::isfinite(covA));
+  assert(covB != 0.0);
+  assert(std::isfinite(covB));
 
   const auto kl = covA * (1 / covB) + covB * (1 / covA) +
                   (parsA - parsB) * (1 / covA + 1 / covB) * (parsA - parsB);
 
-  throw_assert(kl >= 0.0, "kl-distance should be positive, but is: "
-                              << kl << "(qop_a: " << parsA << "+-" << covA
-                              << ", qop_b: " << parsB << "+-" << covB << ")");
+  assert(kl >= 0.0 && "kl-divergence must be non-negative");
 
   return kl;
 }
@@ -49,7 +46,8 @@ template <typename component_t, typename component_projector_t,
 auto mergeComponents(const component_t &a, const component_t &b,
                      const component_projector_t &proj,
                      const angle_desc_t &angle_desc) {
-  throw_assert(proj(a).weight > 0.0 && proj(b).weight > 0.0, "weight error");
+  assert(proj(a).weight >= 0.0 && proj(b).weight >= 0.0 &&
+         "non-positive weight");
 
   std::array range = {std::ref(proj(a)), std::ref(proj(b))};
   const auto refProj = [](auto &c) {
@@ -57,7 +55,7 @@ auto mergeComponents(const component_t &a, const component_t &b,
   };
 
   auto [mergedPars, mergedCov] =
-      combineGaussianMixture(range, refProj, angle_desc);
+      gaussianMixtureMeanCov(range, refProj, angle_desc);
 
   component_t ret = a;
   proj(ret).boundPars = mergedPars;
@@ -214,9 +212,7 @@ void reduceWithKLDistance(std::vector<component_t> &cmpCache,
                      [&](const auto &a) { return proj(a).weight == -1.0; }),
       cmpCache.end());
 
-  throw_assert(cmpCache.size() == maxCmpsAfterMerge,
-               "size mismatch, should be " << maxCmpsAfterMerge << ", but is "
-                                           << cmpCache.size());
+  assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
 }
 
 }  // namespace detail

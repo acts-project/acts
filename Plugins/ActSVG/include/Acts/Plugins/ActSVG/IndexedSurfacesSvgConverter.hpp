@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Detector/GridAxisGenerators.hpp"
-#include "Acts/Detector/IndexedSurfacesGenerator.hpp"
+#include "Acts/Detector/detail/GridAxisGenerators.hpp"
+#include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
@@ -30,7 +30,7 @@ namespace Acts {
 
 namespace Experimental {
 
-using namespace GridAxisGenerators;
+using namespace detail::GridAxisGenerators;
 
 // Generate the possible axes in this case
 static auto s_possibleAxes =

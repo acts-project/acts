@@ -26,8 +26,23 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
-    auto bs = SingleStepper::boundState(state.components[i].state, surface,
-                                        transportCov, freeToBoundCorrection);
+    auto& cmpState = state.components[i].state;
+
+    // Force the component to be on the surface
+    // This needs to be done because of the `averageOnSurface`-option of the
+    // `MultiStepperSurfaceReached`-Aborter, which can be configured to end the
+    // propagation when the mean of all components reached the destination
+    // surface. Thus, it is not garantueed that all states are actually
+    // onSurface.
+    cmpState.pars.template segment<3>(eFreePos0) =
+        surface
+            .intersect(state.geoContext,
+                       cmpState.pars.template segment<3>(eFreePos0),
+                       cmpState.pars.template segment<3>(eFreeDir0), false)
+            .intersection.position;
+
+    auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
+                                        freeToBoundCorrection);
 
     if (bs.ok()) {
       const auto& btp = std::get<BoundTrackParameters>(*bs);
@@ -43,19 +58,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  const auto [mean, cov] =
-      detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-        return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
-      });
-
-  const auto finalPars =
-      (m_finalReductionMethod == FinalReductionMethod::eMaxWeight)
-          ? std::get<BoundVector>(*std::max_element(
-                states.begin(), states.end(),
-                [](const auto& a, const auto& b) {
-                  return std::get<double>(a) < std::get<double>(b);
-                }))
-          : mean;
+  const auto [finalPars, cov] =
+      Acts::reduceGaussianMixture(states, surface, m_finalReductionMethod);
 
   std::optional<BoundSymMatrix> finalCov = std::nullopt;
   if (cov != BoundSymMatrix::Zero()) {
@@ -76,7 +80,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
   if (numberComponents(state) == 1) {
     return SingleStepper::curvilinearState(state.components.front().state,
                                            transportCov);
-  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+  } else if (m_finalReductionMethod == MixtureReductionMethod::eMaxWeight) {
     auto cmpIt = std::max_element(
         state.components.begin(), state.components.end(),
         [](const auto& a, const auto& b) { return a.weight < b.weight; });

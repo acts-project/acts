@@ -274,9 +274,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           t_pT = t_p * perp(particle.unitDirection());
 
           if (pSurface != nullptr) {
+            auto intersection =
+                pSurface->intersect(ctx.geoContext, particle.position(),
+                                    particle.unitDirection(), false);
+            auto position = intersection.intersection.position;
+
             // get the truth perigee parameter
-            auto lpResult = pSurface->globalToLocal(
-                ctx.geoContext, particle.position(), particle.unitDirection());
+            auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,
+                                                    particle.unitDirection());
             if (lpResult.ok()) {
               t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
               t_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
