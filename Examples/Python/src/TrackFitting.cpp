@@ -9,6 +9,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
@@ -74,6 +75,13 @@ void addTrackFitting(Context& ctx) {
             []() -> std::shared_ptr<MeasurementCalibrator> {
               return std::make_shared<PassThroughCalibrator>();
             });
+
+    mex.def(
+        "makeScalingCalibrator",
+        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
+          return std::make_shared<ActsExamples::ScalingCalibrator>(path);
+        },
+        py::arg("path"));
 
     py::enum_<Acts::MixtureReductionMethod>(mex, "FinalReductionMethod")
         .value("mean", Acts::MixtureReductionMethod::eMean)
