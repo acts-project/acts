@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
                                          Intersection3D::Status::reachable),
                           psf9.get());
   PlaneIntersection int9b(
-      Intersection3D(Vector3(9., 1., 0.), std::sqrt(9. * 9. + 1.),
+      Intersection3D(Vector3(9., 1., 0.), std::hypot(9., 1.),
                      Intersection3D::Status::reachable),
       psf9.get());
   PlaneIntersection int10(Intersection3D(Vector3(10., 0., 0.), 10.,

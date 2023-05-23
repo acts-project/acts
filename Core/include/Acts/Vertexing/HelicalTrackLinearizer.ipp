@@ -48,16 +48,6 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
   BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
 
-  if (parCovarianceAtPCA.determinant() <= 0) {
-    // Use the original parameters
-    paramsAtPCA = params.parameters();
-    auto pos = endParams.position(gctx);
-    positionAtPCA[ePos0] = pos[ePos0];
-    positionAtPCA[ePos1] = pos[ePos1];
-    positionAtPCA[ePos2] = pos[ePos2];
-    parCovarianceAtPCA = params.covariance().value();
-  }
-
   // phiV and functions
   double phiV = paramsAtPCA(BoundIndices::eBoundPhi);
   double sinPhiV = std::sin(phiV);
@@ -120,7 +110,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   predParamsAtPCA[2] = phiAtPCA;
   predParamsAtPCA[3] = th;
   predParamsAtPCA[4] = qOvP;
-  predParamsAtPCA[5] = 0.;
+  predParamsAtPCA[5] = positionAtPCA[eTime];
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
   ActsMatrix<eBoundSize, 4> positionJacobian;

@@ -75,8 +75,7 @@ struct GsfActor {
     std::size_t maxComponents = 16;
 
     /// Input measurements
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
     /// instance TODO if we somehow could initialize a reference here...
@@ -107,6 +106,9 @@ struct GsfActor {
     /// checking the navigation direction, because in principle the fitter can
     /// be started backwards in the first pass
     bool inReversePass = false;
+
+    /// How to reduce the states that are stored in the multi trajectory
+    MixtureReductionMethod reductionMethod = MixtureReductionMethod::eMaxWeight;
 
     const Logger* logger{nullptr};
   } m_cfg;
@@ -219,12 +221,12 @@ struct GsfActor {
 
     // Check what we have on this surface
     const auto found_source_link =
-        m_cfg.inputMeasurements.find(surface.geometryId());
+        m_cfg.inputMeasurements->find(surface.geometryId());
     const bool haveMaterial =
         navigator.currentSurface(state.navigation)->surfaceMaterial() &&
         !m_cfg.disableAllMaterialHandling;
     const bool haveMeasurement =
-        found_source_link != m_cfg.inputMeasurements.end();
+        found_source_link != m_cfg.inputMeasurements->end();
 
     ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
                                 << ", haveMeasurement: " << haveMeasurement);
@@ -412,10 +414,7 @@ struct GsfActor {
         }
       }();
 
-      throw_assert(p_prev + delta_p > 0.,
-                   "new momentum after bethe-heitler must be > 0, p_prev= "
-                       << p_prev << ", delta_p=" << delta_p
-                       << ", gaussian mean: " << gaussian.mean);
+      assert(p_prev + delta_p > 0. && "new momentum must be > 0");
       new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
 
       // compute inverse variance of p from mixture and update covariance
@@ -431,10 +430,8 @@ struct GsfActor {
       }();
 
       new_cov(eBoundQOverP, eBoundQOverP) += varInvP;
-      throw_assert(std::isfinite(new_cov(eBoundQOverP, eBoundQOverP)),
-                   "cov not finite, varInvP="
-                       << varInvP << ", p_prev=" << p_prev << ", gaussian.mean="
-                       << gaussian.mean << ", gaussian.var=" << gaussian.var);
+      assert(std::isfinite(new_cov(eBoundQOverP, eBoundQOverP)) &&
+             "new cov not finite");
 
       // Set the remaining things and push to vector
       componentCaches.push_back(
@@ -718,64 +715,75 @@ struct GsfActor {
         // Update the state and stepper with material effects
         interaction.updateState(singleState, singleStepper, addNoise);
 
-        throw_assert(singleState.stepping.cov.array().isFinite().all(),
-                     "covariance not finite after update");
+        assert(singleState.stepping.cov.array().isFinite().all() &&
+               "covariance not finite after multi scattering");
       }
     }
   }
 
   void addCombinedState(result_type& result, const TemporaryStates& tmpStates,
                         const Surface& surface) const {
-    using PredProjector =
+    using PrtProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
-    using FiltProjector =
+    using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
-    // We do not need smoothed and jacobian for now
-    const auto mask = TrackStatePropMask::Calibrated |
-                      TrackStatePropMask::Predicted |
-                      TrackStatePropMask::Filtered;
-
     if (not m_cfg.inReversePass) {
-      // The predicted state is the forward pass
-      const auto [filtMean, filtCov] =
-          angleDescriptionSwitch(surface, [&](const auto& desc) {
-            return combineGaussianMixture(
-                tmpStates.tips,
-                FiltProjector{tmpStates.traj, tmpStates.weights}, desc);
-          });
+      const auto firstCmpProxy =
+          tmpStates.traj.getTrackState(tmpStates.tips.front());
+      const auto isMeasurement =
+          firstCmpProxy.typeFlags().test(MeasurementFlag);
+
+      const auto mask =
+          isMeasurement
+              ? TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted |
+                    TrackStatePropMask::Filtered | TrackStatePropMask::Smoothed
+              : TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted;
 
       result.currentTip =
           result.fittedStates->addTrackState(mask, result.currentTip);
       auto proxy = result.fittedStates->getTrackState(result.currentTip);
-      auto firstCmpProxy = tmpStates.traj.getTrackState(tmpStates.tips.front());
 
       proxy.setReferenceSurface(surface.getSharedPtr());
       proxy.copyFrom(firstCmpProxy, mask);
 
-      // We set predicted & filtered the same so that the fields are not
-      // uninitialized when not finding this state in the reverse pass.
-      proxy.predicted() = filtMean;
-      proxy.predictedCovariance() = filtCov;
-      proxy.filtered() = filtMean;
-      proxy.filteredCovariance() = filtCov;
+      auto [prtMean, prtCov] = reduceGaussianMixture(
+          tmpStates.tips, surface, m_cfg.reductionMethod,
+          PrtProjector{tmpStates.traj, tmpStates.weights});
+      proxy.predicted() = prtMean;
+      proxy.predictedCovariance() = prtCov;
+
+      if (isMeasurement) {
+        auto [fltMean, fltCov] = reduceGaussianMixture(
+            tmpStates.tips, surface, m_cfg.reductionMethod,
+            FltProjector{tmpStates.traj, tmpStates.weights});
+        proxy.filtered() = fltMean;
+        proxy.filteredCovariance() = fltCov;
+        proxy.smoothed() = BoundVector::Constant(-2);
+        proxy.smoothedCovariance() = BoundSymMatrix::Constant(-2);
+      } else {
+        proxy.shareFrom(TrackStatePropMask::Predicted,
+                        TrackStatePropMask::Filtered);
+      }
+
     } else {
       assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
               "tip not valid"));
+
       result.fittedStates->applyBackwards(
           result.currentTip, [&](auto trackState) {
             auto fSurface = &trackState.referenceSurface();
             if (fSurface == &surface) {
-              const auto [filtMean, filtCov] =
-                  angleDescriptionSwitch(surface, [&](const auto& desc) {
-                    return combineGaussianMixture(
-                        tmpStates.tips,
-                        FiltProjector{tmpStates.traj, tmpStates.weights}, desc);
-                  });
-
-              trackState.filtered() = filtMean;
-              trackState.filteredCovariance() = filtCov;
               result.surfacesVisitedBwdAgain.push_back(&surface);
+
+              if (trackState.hasSmoothed()) {
+                const auto [smtMean, smtCov] = reduceGaussianMixture(
+                    tmpStates.tips, surface, m_cfg.reductionMethod,
+                    FltProjector{tmpStates.traj, tmpStates.weights});
+
+                trackState.smoothed() = smtMean;
+                trackState.smoothedCovariance() = smtCov;
+              }
               return false;
             }
             return true;
@@ -791,6 +799,7 @@ struct GsfActor {
     m_cfg.abortOnError = options.abortOnError;
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
+    m_cfg.reductionMethod = options.stateReductionMethod;
   }
 };
 

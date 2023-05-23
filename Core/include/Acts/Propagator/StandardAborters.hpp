@@ -140,7 +140,8 @@ struct SurfaceReached {
     const double tolerance = state.options.targetTolerance;
     const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
-        state.stepping.navDir * stepper.direction(state.stepping), true);
+        state.stepping.navDir * stepper.direction(state.stepping), true,
+        tolerance);
 
     // The target is reached
     bool targetReached = (sIntersection.intersection.status ==
