@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
+#include <cmath>
 #include <functional>
 
 namespace Acts {
@@ -132,7 +133,6 @@ struct GenericDenseEnvironmentExtension {
           -qop[0] * qop[0] * qop[0] * g * energy[0] /
           (stepper.charge(state.stepping) * stepper.charge(state.stepping));
       //~ tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
-      using std::hypot;
       tKi[0] = hypot(1, state.options.mass * qop[0]);
       kQoP[0] = Lambdappi[0];
     } else {
@@ -150,7 +150,6 @@ struct GenericDenseEnvironmentExtension {
           -qopNew * qopNew * qopNew * g * energy[i] /
           (stepper.charge(state.stepping) * stepper.charge(state.stepping) *
            UnitConstants::C * UnitConstants::C);
-      using std::hypot;
       tKi[i] = hypot(1, state.options.mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }
@@ -186,17 +185,13 @@ struct GenericDenseEnvironmentExtension {
     }
 
     // Add derivative dlambda/ds = Lambda''
-    using std::sqrt;
-    state.stepping.derivative(7) =
-        -sqrt(state.options.mass * state.options.mass +
-              newMomentum * newMomentum) *
-        g / (newMomentum * newMomentum * newMomentum);
+    state.stepping.derivative(7) = -hypot(state.options.mass, newMomentum) * g /
+                                   (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
     state.stepping.pars[eFreeQOverP] =
         stepper.charge(state.stepping) / newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
-    using std::hypot;
     state.stepping.derivative(3) = hypot(1, state.options.mass / newMomentum);
     // Update time
     state.stepping.pars[eFreeTime] +=
@@ -394,7 +389,6 @@ struct GenericDenseEnvironmentExtension {
   /// @param [in] state Deliverer of configurations
   template <typename propagator_state_t>
   void initializeEnergyLoss(const propagator_state_t& state) {
-    using std::hypot;
     energy[0] = hypot(initialMomentum, state.options.mass);
     // use unit length as thickness to compute the energy loss per unit length
     Acts::MaterialSlab slab(material, 1);
@@ -451,8 +445,7 @@ struct GenericDenseEnvironmentExtension {
                         const stepper_t& stepper, const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
-    using std::sqrt;
-    energy[i] = sqrt(currentMomentum * currentMomentum + mass * mass);
+    energy[i] = hypot(currentMomentum, mass);
     dPds[i] = g * energy[i] / currentMomentum;
     qop[i] = stepper.charge(state.stepping) / currentMomentum;
     // Calculate term for later error propagation

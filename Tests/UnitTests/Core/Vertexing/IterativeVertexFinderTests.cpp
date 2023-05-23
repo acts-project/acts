@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       std::vector<TrackAtVertex<BoundTrackParameters>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
-      double d0_v = sqrt(x * x + y * y);
+      double d0_v = std::hypot(x, y);
       double z0_v = z;
 
       // Construct random track emerging from vicinity of vertex position
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       std::vector<TrackAtVertex<InputTrack>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
-      double d0_v = sqrt(x * x + y * y);
+      double d0_v = std::hypot(x, y);
       double z0_v = z;
 
       // Construct random track emerging from vicinity of vertex position
