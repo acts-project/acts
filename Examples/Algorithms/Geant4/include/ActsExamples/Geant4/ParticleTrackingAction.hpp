@@ -27,7 +27,9 @@ namespace ActsExamples {
 /// It records the initial and final particle state
 class ParticleTrackingAction : public G4UserTrackingAction {
  public:
-  struct Config {};
+  struct Config {
+    bool keepParticlesWithoutHits = true;
+  };
 
   /// Construct the stepping action
   ///

@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
                                         1 / absMom);
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, navDir,
                                         stepSize, tolerance);
-  BOOST_CHECK_EQUAL(slsState.q, 0.);
+  BOOST_CHECK_EQUAL(slsState.absCharge, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();

@@ -33,7 +33,7 @@ Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, {{ make_url(
 {% for mode in ["seeded", "truth_smeared", "truth_estimated", "orthogonal"] %}
 
 {% call detail_block("IVF "+mode, "ivf_"+mode+"_plots") %}
-    
+
 {% for url in [
     "covXX.pdf",
     "covYY.pdf",
@@ -48,10 +48,12 @@ Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, {{ make_url(
 
 {% endcall %}
 
+{% endfor %}
+
 {% for mode in ["seeded", "truth_smeared", "truth_estimated", "orthogonal"] %}
 
 {% call detail_block("AMVF "+mode, "amvf_"+mode+"_plots") %}
-    
+
 {% for url in [
     "covXX.pdf",
     "covYY.pdf",

@@ -116,6 +116,8 @@ struct GenericDenseEnvironmentExtension {
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
          std::array<Scalar, 4>& kQoP, const int i = 0, const double h = 0.,
          const ThisVector3& kprev = ThisVector3::Zero()) {
+    auto q = stepper.charge(state.stepping);
+
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
@@ -129,8 +131,7 @@ struct GenericDenseEnvironmentExtension {
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
       // Evaluate k for the time propagation
-      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] /
-                     (state.options.absCharge * state.options.absCharge);
+      Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] / (q * q);
       //~ tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
       tKi[0] = hypot(1, state.options.mass * qop[0]);
       kQoP[0] = Lambdappi[0];
@@ -145,9 +146,7 @@ struct GenericDenseEnvironmentExtension {
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
       auto qopNew = qop[0] + h * Lambdappi[i - 1];
-      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
-                     (state.options.absCharge * state.options.absCharge *
-                      UnitConstants::C * UnitConstants::C);
+      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (q * q);
       tKi[i] = hypot(1, state.options.mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }
