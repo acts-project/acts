@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   CHECK_CLOSE_ABS(protoLayer.medium(binZ), 0., 1e-8);
   CHECK_CLOSE_ABS(protoLayer.min(binZ), -6., 1e-8);
   CHECK_CLOSE_ABS(protoLayer.max(binZ), 6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(binR), std::hypot(3, 6), 1e-8);
   CHECK_CLOSE_ABS(protoLayer.min(binR), 3., 1e-8);
 
   // Test 1a
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   CHECK_CLOSE_ABS(protoLayerRot.min(binZ), -6., 1e-8);
   CHECK_CLOSE_ABS(protoLayerRot.max(binZ), 6., 1e-8);
   CHECK_CLOSE_ABS(protoLayerRot.min(binR), 3., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.max(binR), std::hypot(3, 6), 1e-8);
 
   std::stringstream sstream;
   protoLayerRot.toStream(sstream);

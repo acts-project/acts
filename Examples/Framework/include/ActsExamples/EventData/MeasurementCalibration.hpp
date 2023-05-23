@@ -29,7 +29,7 @@ class MeasurementCalibrator {
           trackState) const = 0;
 
   virtual ~MeasurementCalibrator() = default;
-  virtual bool needsClusters() { return false; }
+  virtual bool needsClusters() const { return false; }
 };
 
 // Calibrator to convert an index source link to a measurement as-is
