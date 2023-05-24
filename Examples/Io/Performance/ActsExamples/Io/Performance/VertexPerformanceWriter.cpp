@@ -436,7 +436,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                                                  Acts::FreeIndices::eFreePos1));
           m_covZZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
                                                  Acts::FreeIndices::eFreePos2));
-          m_covZZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreeTime,
+          m_covTT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreeTime,
                                                  Acts::FreeIndices::eFreeTime));
           m_covXY.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
                                                  Acts::FreeIndices::eFreePos1));
