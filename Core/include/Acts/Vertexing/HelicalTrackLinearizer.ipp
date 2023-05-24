@@ -130,7 +130,6 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   positionJacobian(2, 0) = -Y / S2;
   positionJacobian(2, 1) = X / S2;
 
-  // TODO: include timing in track linearization
   // Last row
   positionJacobian(5, 3) = 1;
 
@@ -171,10 +170,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
                           momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  ActsSymMatrix<5> parWeight = (parCovarianceAtPCA.block<5, 5>(0, 0)).inverse();
-
-  BoundSymMatrix weightAtPCA{BoundSymMatrix::Identity()};
-  weightAtPCA.block<5, 5>(0, 0) = parWeight;
+  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, positionAtPCA,
