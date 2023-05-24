@@ -12,4 +12,5 @@ target_sources(
     Portal.cpp
     PortalGenerators.cpp
     ProtoDetector.cpp
+    VolumeStructureBuilder.cpp
 )
