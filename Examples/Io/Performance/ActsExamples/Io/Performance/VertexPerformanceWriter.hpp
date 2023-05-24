@@ -51,8 +51,6 @@ class VertexPerformanceWriter final
     std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
     std::string inputVertices;
-    /// Input reconstruction time.
-    std::string inputTime;
     /// Output filename.
     std::string filePath = "vertexingperformance.root";
     /// Name of the output tree.
@@ -95,39 +93,52 @@ class VertexPerformanceWriter final
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
 
-  /// Difference in x positon between reco and true vtx
-  std::vector<float> m_resX;
-  std::vector<float> m_resY;
-  std::vector<float> m_resZ;
-
-  std::vector<float> m_pullX;
-  std::vector<float> m_pullY;
-  std::vector<float> m_pullZ;
-
   std::vector<float> m_truthX;
   std::vector<float> m_truthY;
   std::vector<float> m_truthZ;
+  std::vector<float> m_truthT;
 
   std::vector<float> m_recoX;
   std::vector<float> m_recoY;
   std::vector<float> m_recoZ;
+  std::vector<float> m_recoT;
+
+  /// Difference in x positon between reco and true vtx
+  std::vector<float> m_resX;
+  std::vector<float> m_resY;
+  std::vector<float> m_resZ;
+  std::vector<float> m_resT;
+
+  std::vector<float> m_pullX;
+  std::vector<float> m_pullY;
+  std::vector<float> m_pullZ;
+  std::vector<float> m_pullT;
 
   std::vector<float> m_covXX;
   std::vector<float> m_covYY;
   std::vector<float> m_covZZ;
+  std::vector<float> m_covTT;
   std::vector<float> m_covXY;
   std::vector<float> m_covXZ;
+  std::vector<float> m_covXT;
   std::vector<float> m_covYZ;
+  std::vector<float> m_covYT;
+  std::vector<float> m_covZT;
+
+  std::vector<int> m_nTracksOnTruthVertex;
+  std::vector<int> m_nTracksOnRecoVertex;
 
   std::vector<float> m_trackVtxMatchFraction;
 
-  int m_nrecoVtx = -1;           ///< Number of reconstructed vertices
-  int m_ntrueVtx = -1;           ///< Number of true vertices
-  int m_nVtxDetAcceptance = -1;  ///< Number of vertices in detector acceptance
-  int m_nVtxReconstructable =
-      -1;  ///< Max. number of reconstructable vertices (detector acceptance +
-           ///< tracking efficiency)
-  int m_timeMS = -1;  ///< Reconstruction time in ms
+  /// Number of reconstructed vertices
+  int m_nRecoVtx = -1;
+  /// Number of true vertices
+  int m_nTrueVtx = -1;
+  /// Number of vertices in detector acceptance
+  int m_nVtxDetAcceptance = -1;
+  /// Max. number of reconstructable vertices (detector acceptance + tracking
+  /// efficiency)
+  int m_nVtxReconstructable = -1;
 
   int getNumberOfReconstructableVertices(
       const SimParticleContainer& collection) const;
@@ -151,8 +162,6 @@ class VertexPerformanceWriter final
 
   ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
       this, "InputMeasurementParticlesMap"};
-
-  ReadDataHandle<int> m_inputTime{this, "InputTime"};
 };
 
 }  // namespace ActsExamples

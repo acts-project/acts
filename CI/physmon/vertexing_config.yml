@@ -14,12 +14,12 @@ histograms:
     min: -6
     max: 6
 
-  "covXX|covYY|covZZ":
+  "covXX|covYY|covZZ|covTT":
     nbins: 100
     min: -0.0005
     max: 0.0005
 
-  "covXY|covXZ|covYX":
+  "covXY|covXZ|covXT|covYX|covYZ|covZT":
     nbins: 100
     min: -0.0001
     max: 0.0001
@@ -35,7 +35,7 @@ histograms:
     max: 0.06
     nbins: 100
 
-  "truthZ|recoZ":
+  "truthZ|truthT|recoZ|recoT":
     min: -200
     max: 200
     nbins: 100
@@ -56,6 +56,3 @@ extra_histograms:
     nbins: 50
     min: 0.0
     max: 1.0
-
-exclude:
-  - timeMS
