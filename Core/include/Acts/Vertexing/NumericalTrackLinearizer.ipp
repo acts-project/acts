@@ -80,8 +80,8 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   double delta{1e-8};
 
   // Complete Jacobian (consists of positionJacobian and momentumJacobian)
-  ActsMatrix<eBoundSize, nCurvilinearParams> Jacobian;
-  Jacobian.setZero();
+  ActsMatrix<eBoundSize, nCurvilinearParams> completeJacobian;
+  completeJacobian.setZero();
 
   // Curvilinear parameters at the PCA to linPoint after wiggling
   Vector4 newPos;
@@ -123,14 +123,14 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     newPerigeeParams = newEndParams.parameters();
 
     // Computing the numerical derivatives and filling the Jacobian
-    Jacobian.array().col(i) = (newPerigeeParams - perigeeParams) / delta;
+    completeJacobian.array().col(i) = (newPerigeeParams - perigeeParams) / delta;
   }
 
   // Extracting positionJacobian and momentumJacobian from the complete Jacobian
   ActsMatrix<eBoundSize, 4> positionJacobian{
-      Jacobian.block<eBoundSize, 4>(0, 0)};
+      completeJacobian.block<eBoundSize, 4>(0, 0)};
   ActsMatrix<eBoundSize, 3> momentumJacobian{
-      Jacobian.block<eBoundSize, 3>(0, 4)};
+      completeJacobian.block<eBoundSize, 3>(0, 4)};
 
   // Constant term of Taylor expansion (Eq. 5.38 in Ref. (1))
   BoundVector constTerm{perigeeParams - positionJacobian * pca -

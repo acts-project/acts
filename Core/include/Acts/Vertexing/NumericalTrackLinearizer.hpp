@@ -124,8 +124,8 @@ class NumericalTrackLinearizer {
     return linearizeTrack(params, linPoint, gctx, mctx);
   };
 
-  /// @brief Same function as above but without the @param state argument, which we don't need for numerical track linearization.
-  /// @note We don't discard the @param state argument above since we want the templating to work (it is needed in other linearizer classes)
+  /// @brief Same function as above but without the "state" argument, which we don't need for numerical track linearization.
+  /// @note We don't discard the "state" argument above since we want the templating to work (it is needed in other linearizer classes)
   ///
   /// @param params Parameters to linearize
   /// @param linPoint Point which defines the Perigee.
