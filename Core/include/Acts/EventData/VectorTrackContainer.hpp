@@ -10,7 +10,9 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <unordered_map>
 
@@ -227,6 +229,8 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   // END INTERFACE
 };
 
+ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, VectorTrackContainer);
+
 class ConstVectorTrackContainer;
 template <>
 struct IsReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
@@ -266,6 +270,9 @@ class ConstVectorTrackContainer final
 
   // END INTERFACE
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend,
+                          ConstVectorTrackContainer);
 
 inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)
