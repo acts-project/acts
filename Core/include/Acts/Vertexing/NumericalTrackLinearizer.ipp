@@ -123,7 +123,8 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     newPerigeeParams = newEndParams.parameters();
 
     // Computing the numerical derivatives and filling the Jacobian
-    completeJacobian.array().col(i) = (newPerigeeParams - perigeeParams) / delta;
+    completeJacobian.array().col(i) =
+        (newPerigeeParams - perigeeParams) / delta;
   }
 
   // Extracting positionJacobian and momentumJacobian from the complete Jacobian
