@@ -40,7 +40,7 @@ class VolumeStructureBuilder : public IExternalStructureBuilder {
 
   /// Constructor
   ///
-  /// @param extent is the volume extent
+  /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
   VolumeStructureBuilder(const Config& cfg,
                          std::unique_ptr<const Logger> logger =
