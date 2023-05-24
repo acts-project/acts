@@ -16,20 +16,17 @@ Result<void> GainMatrixSmoother::calculate(
     const GetParameters& predicted, const GetCovariance& predictedCovariance,
     const GetCovariance& smoothedCovariance, const GetCovariance& jacobian,
     const Logger& logger) const {
-  static constexpr double epsilon = 1e-13;
-  auto regularization = BoundMatrix::Identity() * epsilon;
-
   ACTS_VERBOSE("Prev. predicted covariance\n"
                << predictedCovariance(prev_ts) << "\n, inverse: \n"
                << predictedCovariance(prev_ts).inverse()
                << "\n, regularized inverse: \n"
-               << (predictedCovariance(prev_ts) + regularization).inverse());
+               << predictedCovariance(prev_ts).inverse());
 
   // Gain smoothing matrix
   // NB: The jacobian stored in a state is the jacobian from previous
   // state to this state in forward propagation
   BoundMatrix G = filteredCovariance(ts) * jacobian(prev_ts).transpose() *
-                  (predictedCovariance(prev_ts) + regularization).inverse();
+                  predictedCovariance(prev_ts).inverse();
 
   if (G.hasNaN()) {
     // error = KalmanFitterError::SmoothFailed;  // set to error

@@ -366,8 +366,9 @@ def run_vertexing(fitter, mu, events):
         )
 
 
-with acts.FpeMonitor():
+import contextlib
 
+with contextlib.nullcontext():
     ### Truth tracking with Kalman Filter
     if args.mode == "all" or args.mode == "kalman":
         truth_tracking_kalman()
