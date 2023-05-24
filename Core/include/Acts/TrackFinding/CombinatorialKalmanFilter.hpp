@@ -747,8 +747,6 @@ class CombinatorialKalmanFilter {
             return res.error();
           }
           const auto boundState = *res;
-          ACTS_VERBOSE("pre addNonSourcelinkState state "
-                       << std::get<parameters_t>(boundState));
           // Add a hole or material track state to the multitrajectory
           currentTip = addNonSourcelinkState(stateMask, boundState, result,
                                              isSensitive, prevTip);

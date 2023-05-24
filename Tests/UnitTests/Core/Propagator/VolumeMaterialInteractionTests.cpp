@@ -60,7 +60,7 @@ struct Stepper {
 
   double momentum(const StepperState& state) const { return state.p; }
 
-  double charge(const StepperState& state) const { return state.p; };
+  double charge(const StepperState& state) const { return state.q; };
 };
 
 /// @brief Simplified navigator
