@@ -27,8 +27,14 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderMisconfigured) {
   VolumeStructureBuilder::Config misConfig;
 
   BOOST_CHECK_THROW(
-      VolumeStructureBuilder builder(
-          misConfig, getDefaultLogger("Builder", Logging::VERBOSE)),
+      VolumeStructureBuilder builder1(
+          misConfig, getDefaultLogger("Builder1", Logging::VERBOSE)),
+      std::invalid_argument);
+
+  misConfig.boundValues = {0., 1., 2., 3.};
+  BOOST_CHECK_THROW(
+      VolumeStructureBuilder builder2(
+          misConfig, getDefaultLogger("Builder2", Logging::VERBOSE)),
       std::invalid_argument);
 }
 
