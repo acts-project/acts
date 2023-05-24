@@ -17,4 +17,3 @@ jobs:
           stale-issue-message: >
             This issue/PR has been automatically marked as stale because it has not had
             recent activity. The stale label will be removed if any interaction occurs.
-          debug-only: true
