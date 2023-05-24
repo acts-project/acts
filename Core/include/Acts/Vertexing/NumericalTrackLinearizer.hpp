@@ -127,6 +127,12 @@ class NumericalTrackLinearizer {
   /// @brief Same function as above but without the @param state argument, which we don't need for numerical track linearization.
   /// @note We don't discard the @param state argument above since we want the templating to work (it is needed in other linearizer classes)
   ///
+  /// @param params Parameters to linearize
+  /// @param linPoint Point which defines the Perigee.
+  /// @note Transverse plane of the Perigee corresponding to @p linPoint is
+  /// parallel to the global x-y plane
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(
