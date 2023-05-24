@@ -12,6 +12,7 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
@@ -19,8 +20,8 @@
 
 namespace Acts {
 
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
+template <ACTS_CONCEPT(Acts::TrackContainerBackend) track_container_t,
+          typename traj_t, template <typename> class holder_t>
 class TrackContainer;
 
 namespace detail_tc {
