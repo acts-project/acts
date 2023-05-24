@@ -69,6 +69,12 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   auto [inputTrackParameters, inputTrackPointers] =
       makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
 
+  if (inputTrackParameters.size() != inputTrackPointers.size()) {
+    ACTS_ERROR("Input track containers do not align: "
+               << inputTrackParameters.size()
+               << " != " << inputTrackPointers.size());
+  }
+
   for (const auto& trk : inputTrackParameters) {
     if (trk.covariance() && trk.covariance()->determinant() <= 0) {
       // actually we should consider this as an error but I do not want the CI
@@ -84,26 +90,24 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(
       stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
-  VertexFitter::Config vertexFitterCfg;
-  VertexFitter vertexFitter(vertexFitterCfg);
+  Fitter::Config vertexFitterCfg;
+  Fitter vertexFitter(vertexFitterCfg);
   // Setup the track linearizer
   Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
   Linearizer linearizer(linearizerCfg, logger().cloneWithSuffix("HelLin"));
   // Setup the seed finder
-  ImpactPointEstimator::Config ipEstCfg(m_cfg.bField, propagator);
-  ImpactPointEstimator ipEst(ipEstCfg);
-  VertexSeeder::Config seederCfg(ipEst);
-  VertexSeeder seeder(seederCfg);
+  IPEstimator::Config ipEstCfg(m_cfg.bField, propagator);
+  IPEstimator ipEst(ipEstCfg);
+  Seeder seeder;
   // Set up the actual vertex finder
-  VertexFinder::Config finderCfg(vertexFitter, std::move(linearizer),
-                                 std::move(seeder), ipEst);
+  Finder::Config finderCfg(vertexFitter, std::move(linearizer),
+                           std::move(seeder), ipEst);
   finderCfg.maxVertices = 200;
-  finderCfg.reassignTracksAfterFirstFit = true;
-  VertexFinder finder(finderCfg);
-  VertexFinder::State state(*m_cfg.bField, ctx.magFieldContext);
-  VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
+  finderCfg.reassignTracksAfterFirstFit = false;
+  Finder finder(finderCfg, logger().cloneWithSuffix("Finder"));
+  Finder::State state(*m_cfg.bField, ctx.magFieldContext);
+  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();

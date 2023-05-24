@@ -93,7 +93,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
 
   // Set up the vertex seed finder
-  SeedFinder seedFinder;
+  Seeder seedFinder;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               std::move(linearizer), m_cfg.bField);
@@ -109,6 +109,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   auto [inputTrackParameters, inputTrackPointers] =
       makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
+
+  if (inputTrackParameters.size() != inputTrackPointers.size()) {
+    ACTS_ERROR("Input track containers do not align: "
+               << inputTrackParameters.size()
+               << " != " << inputTrackPointers.size());
+  }
 
   for (const auto& trk : inputTrackParameters) {
     if (trk.covariance() && trk.covariance()->determinant() <= 0) {
@@ -127,8 +133,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   Finder::State state;
 
   // Default vertexing options, this is where e.g. a constraint could be set
-  using VertexingOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
-  VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
+  Options finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   VertexCollection vertices;
 
