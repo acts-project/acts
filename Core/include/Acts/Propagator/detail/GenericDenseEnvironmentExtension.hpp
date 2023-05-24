@@ -79,7 +79,7 @@ struct GenericDenseEnvironmentExtension {
   int bid(const propagator_state_t& state, const stepper_t& stepper,
           const navigator_t& navigator) const {
     // Check for valid particle properties
-    if (stepper.options.absCharge == 0. || state.options.mass == 0. ||
+    if (stepper.charge(state.stepping) == 0. || state.options.mass == 0. ||
         stepper.momentum(state.stepping) < state.options.momentumCutOff) {
       return 0;
     }
