@@ -46,7 +46,7 @@ Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
   // Sanity cross-checks
   if (m_cfg.boundValues.empty() and not m_cfg.extent.has_value()) {
     throw std::invalid_argument(
-        "VolumeStructureBuilder: no extent nor boundary values givgn");
+        "VolumeStructureBuilder: no extent nor boundary values given");
   }
   // Check for the bounds type
   if (m_cfg.boundsType > VolumeBounds::BoundsType::eTrapezoid) {
