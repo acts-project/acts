@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderMisconfigured) {
 
 // Test the creation of the Ring
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCone) {
-  // Cuboid volume from parameters
+  // Conical volume from parameters
   VolumeStructureBuilder::Config coneValsConfig;
   coneValsConfig.boundValues = {0.2, -200., 0.3, -300., 100.};
   coneValsConfig.boundsType = VolumeBounds::BoundsType::eCone;
