@@ -14,42 +14,156 @@
 
 namespace utf = boost::unit_test;
 
+namespace {
+
+void divbyzero() {
+  volatile float j = 0.0;
+  volatile float r = 123 / j;
+  (void)r;
+}
+
+void overflow() {
+  std::cout << "PRE OVERFLOW" << std::endl;
+  volatile float j = std::numeric_limits<float>::max();
+  volatile float r = j * j;
+  (void)r;
+  std::cout << "POST OVERFLOW" << std::endl;
+}
+
+void invalid() {
+  volatile float j = -1;
+  volatile float r = std::sqrt(j);
+  (void)r;
+}
+
+}  // namespace
+
 namespace Acts::Test {
 
 BOOST_AUTO_TEST_SUITE(FpeMonitorTest)
 
-#if defined(_FE_INVALID)
 BOOST_AUTO_TEST_CASE(Invalid) {
   {
     FpeMonitor mon;
-    volatile const double x = -1;
-    printf("y = %f\n", sqrt(x));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    invalid();
+
+    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
   }
 }
-#endif
 
-#if defined(_FE_DIVBYZERO)
 BOOST_AUTO_TEST_CASE(DivByZero) {
   {
     FpeMonitor mon;
-    volatile double z = 0;
-    volatile double x = 1 / z;
-    std::cout << "x: " << x << std::endl;
+    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    divbyzero();
+
+    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(mon.encountered(FpeType::FLTDIV));
   }
 }
-#endif
 
-#if defined(_FE_OVERFLOW)
 BOOST_AUTO_TEST_CASE(Overflow) {
   {
     FpeMonitor mon;
-    volatile float v = 0;
-    volatile double w = std::numeric_limits<double>::max();
-    v = 2 * w;
-    std::cout << v << std::endl;
+    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    overflow();
+    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
   }
 }
-#endif
+
+BOOST_AUTO_TEST_CASE(Combinations) {
+  {
+    FpeMonitor mon;
+    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    invalid();
+    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    overflow();
+    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    divbyzero();
+
+    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(mon.encountered(FpeType::FLTDIV));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ClearOnEnter) {
+  invalid();
+  divbyzero();
+  overflow();
+
+  {
+    FpeMonitor mon;
+    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(Scoping) {
+  {
+    FpeMonitor mon;
+    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    invalid();
+
+    {
+      FpeMonitor mon2;
+      BOOST_CHECK(!mon2.encountered(FpeType::FLTINV));
+      BOOST_CHECK(!mon2.encountered(FpeType::FLTOVF));
+      BOOST_CHECK(!mon2.encountered(FpeType::FLTDIV));
+
+      overflow();
+
+      {
+        FpeMonitor mon3;
+        BOOST_CHECK(!mon3.encountered(FpeType::FLTINV));
+        BOOST_CHECK(!mon3.encountered(FpeType::FLTOVF));
+        BOOST_CHECK(!mon3.encountered(FpeType::FLTDIV));
+
+        divbyzero();
+
+        BOOST_CHECK(!mon3.encountered(FpeType::FLTINV));
+        BOOST_CHECK(!mon3.encountered(FpeType::FLTOVF));
+        BOOST_CHECK(mon3.encountered(FpeType::FLTDIV));
+      }
+
+      BOOST_CHECK(!mon2.encountered(FpeType::FLTINV));
+      BOOST_CHECK(mon2.encountered(FpeType::FLTOVF));
+      BOOST_CHECK(!mon2.encountered(FpeType::FLTDIV));
+    }
+
+    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+  }
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

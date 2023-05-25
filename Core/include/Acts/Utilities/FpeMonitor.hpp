@@ -10,7 +10,23 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <atomic>
+#include <csignal>
+#include <mutex>
+#include <stack>
+
 namespace Acts {
+
+enum class FpeType : uint32_t {
+  INTDIV = FPE_INTDIV,
+  INTOVF = FPE_INTOVF,
+  FLTDIV = FPE_FLTDIV,
+  FLTOVF = FPE_FLTOVF,
+  FLTUND = FPE_FLTUND,
+  FLTRES = FPE_FLTRES,
+  FLTINV = FPE_FLTINV,
+  FLTSUB = FPE_FLTSUB,
+};
 
 class FpeMonitor {
  public:
@@ -18,11 +34,26 @@ class FpeMonitor {
   explicit FpeMonitor(int excepts);
   ~FpeMonitor();
 
-  static void enable(int excepts);
-  static void disable(int excepts);
+  bool encountered(FpeType type) const;
 
  private:
+  void enable();
+  void disable();
+
+  static void ensureSignalHandlerInstalled();
+  static void signalHandler(int signal, siginfo_t *si, void *ctx);
+
+  struct GlobalState {
+    std::atomic_bool isSignalHandlerInstalled{false};
+    std::mutex mutex{};
+  };
+
+  static std::stack<FpeMonitor *> &stack();
+  static GlobalState &globalState();
+
   int m_excepts;
+
+  uint32_t m_encountered = 0;
 };
 
 }  // namespace Acts
