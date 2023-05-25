@@ -16,13 +16,13 @@ namespace utf = boost::unit_test;
 
 namespace {
 
-void divbyzero() {
+__attribute__((noinline)) void divbyzero() {
   volatile float j = 0.0;
   volatile float r = 123 / j;
   (void)r;
 }
 
-void overflow() {
+__attribute__((noinline)) void overflow() {
   std::cout << "PRE OVERFLOW" << std::endl;
   volatile float j = std::numeric_limits<float>::max();
   volatile float r = j * j;
@@ -30,7 +30,7 @@ void overflow() {
   std::cout << "POST OVERFLOW" << std::endl;
 }
 
-void invalid() {
+__attribute__((noinline)) void invalid() {
   volatile float j = -1;
   volatile float r = std::sqrt(j);
   (void)r;
@@ -54,6 +54,8 @@ BOOST_AUTO_TEST_CASE(Invalid) {
     BOOST_CHECK(mon.encountered(FpeType::FLTINV));
     BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    mon.printStacktraces(std::cout);
   }
 }
 
@@ -69,6 +71,8 @@ BOOST_AUTO_TEST_CASE(DivByZero) {
     BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
     BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
     BOOST_CHECK(mon.encountered(FpeType::FLTDIV));
+
+    mon.printStacktraces(std::cout);
   }
 }
 
@@ -83,6 +87,8 @@ BOOST_AUTO_TEST_CASE(Overflow) {
     BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
     BOOST_CHECK(mon.encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+
+    mon.printStacktraces(std::cout);
   }
 }
 

@@ -15,6 +15,7 @@
 #include <csignal>
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <mutex>
 #include <stdexcept>
 #include <string_view>
@@ -30,11 +31,23 @@
 
 namespace Acts {
 
+struct FpeMonitor::Impl {
+  uint32_t m_encountered = 0;
+  struct FpeInfo {
+    FpeType type;
+    boost::stacktrace::stacktrace stacktrace;
+  };
+
+  std::vector<FpeInfo> m_stracktraces;
+};
+
 FpeMonitor::FpeMonitor()
     : FpeMonitor{FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW} {}
 
 FpeMonitor::FpeMonitor(int excepts) : m_excepts(excepts) {
   enable();
+
+  m_impl = std::make_unique<Impl>();
 }
 
 FpeMonitor::~FpeMonitor() {
@@ -74,7 +87,9 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   std::cout << std::endl;
 
   FpeMonitor &fpe = *stack().top();
-  fpe.m_encountered |= 1 << si->si_code;
+  fpe.m_impl->m_encountered |= 1 << si->si_code;
+  fpe.m_impl->m_stracktraces.push_back(Impl::FpeInfo{
+      static_cast<FpeType>(si->si_code), boost::stacktrace::stacktrace()});
 
   __uint16_t *cw = &((ucontext_t *)ctx)->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
@@ -126,7 +141,6 @@ void FpeMonitor::disable() {
   stack().pop();
 #endif
 
-  std::cout << std::bitset<32>(m_encountered) << std::endl;
 }
 
 std::stack<FpeMonitor *> &FpeMonitor::stack() {
@@ -145,6 +159,35 @@ bool FpeMonitor::encountered(FpeType type) const {
   // << std::endl;
   // std::cout << "store 0x" << std::bitset<32>(m_encountered) << std::endl;
   uint32_t mask = 1 << static_cast<uint32_t>(type);
-  return ACTS_CHECK_BIT(m_encountered, mask);
+  return ACTS_CHECK_BIT(m_impl->m_encountered, mask);
 }
+
+void FpeMonitor::printStacktraces(std::ostream &os) const {
+  for (const auto &info : m_impl->m_stracktraces) {
+    os << info.type << std::endl;
+    os << info.stacktrace << std::endl;
+  }
+}
+
+std::ostream &operator<<(std::ostream &os, FpeType type) {
+#define CASE(x)    \
+  case FpeType::x: \
+    os << #x;      \
+    break;
+
+  switch (type) {
+    CASE(INTDIV)
+    CASE(INTOVF)
+    CASE(FLTDIV)
+    CASE(FLTOVF)
+    CASE(FLTUND)
+    CASE(FLTRES)
+    CASE(FLTINV)
+    CASE(FLTSUB)
+  }
+#undef CASE
+
+  return os;
+}
+
 }  // namespace Acts

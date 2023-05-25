@@ -28,6 +28,8 @@ enum class FpeType : uint32_t {
   FLTSUB = FPE_FLTSUB,
 };
 
+std::ostream &operator<<(std::ostream &os, FpeType type);
+
 class FpeMonitor {
  public:
   FpeMonitor();
@@ -35,6 +37,8 @@ class FpeMonitor {
   ~FpeMonitor();
 
   bool encountered(FpeType type) const;
+
+  void printStacktraces(std::ostream &os) const;
 
  private:
   void enable();
@@ -53,7 +57,8 @@ class FpeMonitor {
 
   int m_excepts;
 
-  uint32_t m_encountered = 0;
+  struct Impl;
+  std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace Acts
