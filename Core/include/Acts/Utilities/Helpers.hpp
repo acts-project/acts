@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <array>
@@ -372,6 +373,24 @@ std::vector<const T*> unpack_shared_const_vector(
     rawPtrs.push_back(item.get());
   }
   return rawPtrs;
+}
+
+/// This can be abandoned with C++20 to use the std::to_array method
+///
+/// @note only the first kDIM elments will obviously be filled, if the
+/// vector tends to be longer, it is truncated
+///
+/// @param vecvals the vector of bound values to be converted
+/// @return an array with the filled values
+template <std::size_t kDIM, typename value_type>
+std::array<value_type, kDIM> to_array(const std::vector<value_type>& vecvals) {
+  std::array<value_type, kDIM> rarray = {};
+  for (const auto [iv, v] : enumerate(vecvals)) {
+    if (iv < kDIM) {
+      rarray[iv] = v;
+    }
+  }
+  return rarray;
 }
 
 /// @brief Dispatch a call based on a runtime value on a function taking the
