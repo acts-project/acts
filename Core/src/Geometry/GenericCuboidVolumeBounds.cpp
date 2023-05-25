@@ -31,7 +31,7 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
 }
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
-    const std::array<double, GenericCuboidVolumeBounds::eSize>&
+    const std::array<double, GenericCuboidVolumeBounds::BoundValues::eSize>&
         values) noexcept(false)
     : m_vertices() {
   for (size_t iv = 0; iv < 8; ++iv) {
@@ -181,7 +181,7 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
 
 std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
   std::vector<double> rvalues;
-  rvalues.reserve(eSize);
+  rvalues.reserve(BoundValues::eSize);
   for (size_t iv = 0; iv < 8; ++iv) {
     for (size_t ic = 0; ic < 3; ++ic) {
       rvalues.push_back(m_vertices[iv][ic]);
