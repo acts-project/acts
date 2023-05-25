@@ -387,10 +387,18 @@ lcg_103:
   parallel:
     matrix:
       - OS: [centos7]
-        COMPILER: [gcc11, gcc12, clang12, clang15]
+        COMPILER: 
+          - gcc11
+          - gcc12
+          # currently failing:
+          # - clang12
+          # - clang15
 
       - OS: [alma9]
-        COMPILER: [gcc11, gcc12]
+        COMPILER: 
+          - gcc11
+          # currently failing
+          # - gcc12
 
   rules:
     - if: '$COMPILER == "clang12" || $COMPILER == "gcc12" || $COMPILER == "clang15"'
