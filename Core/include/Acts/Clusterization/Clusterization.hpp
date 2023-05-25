@@ -11,8 +11,7 @@
 #include <memory>
 #include <vector>
 
-namespace Acts {
-namespace Ccl {
+namespace Acts::Ccl {
 
 using Label = int;
 constexpr Label NO_LABEL = 0;
@@ -21,7 +20,7 @@ constexpr Label NO_LABEL = 0;
 // code always loops backward, starting from the reference cell. Since
 // the cells are globally sorted column-wise, the connection function
 // can therefore tell when the search should be stopped.
-enum ConnectResult {
+enum class ConnectResult {
   eNoConn,      // No connections, keep looking
   eNoConnStop,  // No connections, stop looking
   eConn         // Found connection
@@ -32,14 +31,14 @@ template <typename Cell>
 struct Connect2D {
   bool conn8;
   Connect2D() : conn8{true} {}
-  Connect2D(bool commonCorner) : conn8{commonCorner} {}
-  ConnectResult operator()(const Cell& ref, const Cell& iter);
+  explicit Connect2D(bool commonCorner) : conn8{commonCorner} {}
+  ConnectResult operator()(const Cell& ref, const Cell& iter) const;
 };
 
 // Default connection type for 1-D grids: 2-cell connectivity
 template <typename Cell>
 struct Connect1D {
-  ConnectResult operator()(const Cell& ref, const Cell& iter);
+  ConnectResult operator()(const Cell& ref, const Cell& iter) const;
 };
 
 // Default connection type based on GridDim
@@ -51,7 +50,7 @@ struct DefaultConnect {
 
 template <typename Cell>
 struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
-  DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
+  explicit DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
   DefaultConnect() : DefaultConnect(true) {}
 };
 
@@ -82,12 +81,7 @@ void labelClusters(CellCollection& cells, Connect connect = Connect());
 ///
 /// @return nothing
 template <typename CellCollection, typename ClusterCollection, size_t GridDim>
-typename std::enable_if<GridDim != 1 and GridDim != 2, ClusterCollection>::type
-mergeClusters(CellCollection& /*cells*/) {
-  static_assert(GridDim == 1 and GridDim == 2,
-                "mergeClusters is only defined for grid dimensions of 1 or 2. "
-                "These variants are defined in Clusterization.ipp");
-}
+ClusterCollection mergeClusters(CellCollection& /*cells*/);
 
 /// @brief createClusters
 /// Conveniance function which runs both labelClusters and createClusters.
@@ -98,7 +92,6 @@ template <typename CellCollection, typename ClusterCollection,
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect connect = Connect());
 
-}  // namespace Ccl
-}  // namespace Acts
+}  // namespace Acts::Ccl
 
 #include "Acts/Clusterization/Clusterization.ipp"
