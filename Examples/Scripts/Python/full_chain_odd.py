@@ -15,8 +15,7 @@ from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
     addCKFTracks,
-    CKFPerformanceConfig,
-    TrackSelectorRanges,
+    TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
     addAmbiguityResolutionML,
@@ -169,14 +168,11 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         s,
         trackingGeometry,
         field,
-        CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar else 0.0,
-            nMeasurementsMin=7,
-        ),
-        TrackSelectorRanges(
-            pt=(1.0 * u.GeV, None),
+        TrackSelectorConfig(
+            pt=(1.0 * u.GeV if ttbar else 0.0, None),
             absEta=(None, 3.0),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
+            nMeasurementsMin=7,
         ),
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
@@ -186,9 +182,6 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         addAmbiguityResolutionML(
             s,
             AmbiguityResolutionMLConfig(nMeasurementsMin=7),
-            CKFPerformanceConfig(
-                ptMin=1.0 * u.GeV if ttbar else 0.0, nMeasurementsMin=7
-            ),
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
             onnxModelFile=os.path.dirname(__file__)
@@ -199,10 +192,6 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             s,
             AmbiguityResolutionConfig(
                 maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
-            ),
-            CKFPerformanceConfig(
-                ptMin=1.0 * u.GeV if ttbar else 0.0,
-                nMeasurementsMin=7,
             ),
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
