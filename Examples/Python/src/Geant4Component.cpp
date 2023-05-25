@@ -155,64 +155,64 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           const std::vector<std::string>& materialMappings,
           std::shared_ptr<const Acts::Volume> killVolume, double killAfterTime,
           bool recordHitsOfSecondaries, bool keepParticlesWithoutHits) {
-        auto logger = Acts::getDefaultLogger("Geant4", level);
+    auto logger = Acts::getDefaultLogger("Geant4", level);
 
-        auto physicsList = new FTFP_BERT();
-        auto g4Cfg =
-            makeGeant4Config(*logger, std::move(randomNumbers), detector,
-                             physicsList, SimParticleTranslation::Config{});
-        g4Cfg.inputParticles = inputParticles;
+    auto physicsList = new FTFP_BERT();
+    auto g4Cfg =
+        makeGeant4Config(*logger, std::move(randomNumbers), detector,
+                         physicsList, SimParticleTranslation::Config{});
+    g4Cfg.inputParticles = inputParticles;
 
-        // Particle action
-        ParticleTrackingAction::Config trackingCfg;
-        trackingCfg.keepParticlesWithoutHits = keepParticlesWithoutHits;
-        g4Cfg.trackingAction = new ParticleTrackingAction(
-            trackingCfg, logger->cloneWithSuffix("ParticleTracking"));
+    // Particle action
+    ParticleTrackingAction::Config trackingCfg;
+    trackingCfg.keepParticlesWithoutHits = keepParticlesWithoutHits;
+    g4Cfg.trackingAction = new ParticleTrackingAction(
+        trackingCfg, logger->cloneWithSuffix("ParticleTracking"));
 
-        // Stepping actions
-        ActsSteppingActionList::Config steppingCfg;
+    // Stepping actions
+    ActsSteppingActionList::Config steppingCfg;
 
-        SensitiveSteppingAction::Config g4StepCfg;
-        g4StepCfg.charged = true;
-        g4StepCfg.neutral = false;
-        g4StepCfg.primary = true;
-        g4StepCfg.secondary = recordHitsOfSecondaries;
-        steppingCfg.actions.push_back(new SensitiveSteppingAction(
-            g4StepCfg, logger->cloneWithSuffix("SensitiveStepping")));
+    SensitiveSteppingAction::Config g4StepCfg;
+    g4StepCfg.charged = true;
+    g4StepCfg.neutral = false;
+    g4StepCfg.primary = true;
+    g4StepCfg.secondary = recordHitsOfSecondaries;
+    steppingCfg.actions.push_back(new SensitiveSteppingAction(
+        g4StepCfg, logger->cloneWithSuffix("SensitiveStepping")));
 
-        steppingCfg.actions.push_back(new ParticleKillAction(
-            ParticleKillAction::Config{killVolume, killAfterTime},
-            logger->cloneWithSuffix("Killer")));
+    steppingCfg.actions.push_back(new ParticleKillAction(
+        ParticleKillAction::Config{killVolume, killAfterTime},
+        logger->cloneWithSuffix("Killer")));
 
-        g4Cfg.steppingAction = new ActsSteppingActionList(steppingCfg);
+    g4Cfg.steppingAction = new ActsSteppingActionList(steppingCfg);
 
-        // An ACTS Magnetic field is provided
-        if (magneticField) {
-          MagneticFieldWrapper::Config g4FieldCfg;
-          g4FieldCfg.magneticField = magneticField;
-          g4Cfg.magneticField = new MagneticFieldWrapper(g4FieldCfg);
-        }
+    // An ACTS Magnetic field is provided
+    if (magneticField) {
+      MagneticFieldWrapper::Config g4FieldCfg;
+      g4FieldCfg.magneticField = magneticField;
+      g4Cfg.magneticField = new MagneticFieldWrapper(g4FieldCfg);
+    }
 
-        // An ACTS TrackingGeometry is provided, so simulation for sensitive
-        // detectors is turned on - they need to get matched first
-        if (trackingGeometry) {
-          SensitiveSurfaceMapper::Config ssmCfg;
-          ssmCfg.trackingGeometry = trackingGeometry;
+    // An ACTS TrackingGeometry is provided, so simulation for sensitive
+    // detectors is turned on - they need to get matched first
+    if (trackingGeometry) {
+      SensitiveSurfaceMapper::Config ssmCfg;
+      ssmCfg.trackingGeometry = trackingGeometry;
 
-          // Take the default args if nothing provided
-          if (not volumeMappings.empty()) {
-            ssmCfg.volumeMappings = volumeMappings;
-          }
-          if (not materialMappings.empty()) {
-            ssmCfg.materialMappings = materialMappings;
-          }
+      // Take the default args if nothing provided
+      if (not volumeMappings.empty()) {
+        ssmCfg.volumeMappings = volumeMappings;
+      }
+      if (not materialMappings.empty()) {
+        ssmCfg.materialMappings = materialMappings;
+      }
 
-          g4Cfg.sensitiveSurfaceMapper =
-              std::make_shared<const SensitiveSurfaceMapper>(
-                  ssmCfg, logger->cloneWithSuffix("SensitiveSurfaceMapper"));
-        }
+      g4Cfg.sensitiveSurfaceMapper =
+          std::make_shared<const SensitiveSurfaceMapper>(
+              ssmCfg, logger->cloneWithSuffix("SensitiveSurfaceMapper"));
+    }
 
-        return g4Cfg;
+    return g4Cfg;
       },
       "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
