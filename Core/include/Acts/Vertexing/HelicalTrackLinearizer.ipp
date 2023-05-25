@@ -191,7 +191,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  BoundSymMatrix parWeight = parCovarianceAtPCA.inverse();
+  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,
