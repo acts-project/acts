@@ -20,6 +20,10 @@
 namespace {
 
 /// This can be abandoned with C++20 to use the std::to_array method
+///
+/// @note only the first kDIM elments will obviously be filled, if the
+/// vector tends to be longer, it is truncated
+///
 /// @param vecvals the vector of bound values to be converted
 /// @return an array with the filled values
 template <std::size_t kDIM>
