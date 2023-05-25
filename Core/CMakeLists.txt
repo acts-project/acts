@@ -34,23 +34,80 @@ find_program(addr2line_EXECUTABLE addr2line)
 if(APPLE)
   list(APPEND _fpe_options -D_GNU_SOURCE)
 else()
+
   if(dl_LIBRARY)
     target_link_libraries(ActsCore PUBLIC ${dl_LIBRARY})
-    if(addr2line_EXECUTABLE)
-      list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_ADDR2LINE)
-      list(APPEND _fpe_options -DBOOST_STACKTRACE_ADDR2LINE_LOCATION=${addr2line_EXECUTABLE})
-    elseif(Backtrace_FOUND)
-      list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_BACKTRACE)
-      target_link_libraries(ActsCore PUBLIC ${Backtrace_LIBRARY})
-    else()
+    
+    set(_backtrace_setup_complete FALSE)
+
+    if(Backtrace_FOUND)
+
+      # check if we need to link against bracktrace or not
+
+      file(WRITE
+        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+        "#include <boost/stacktrace.hpp>\n"
+        "#include <iostream>\n"
+        "int main() { std::cout << boost::stacktrace::stacktrace(); }\n" )
+
+      message(CHECK_START "Does backtrace work without linker flag")
+      try_compile(_backtrace_nolink "${CMAKE_BINARY_DIR}"
+          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+          LINK_LIBRARIES ${dl_LIBRARY}
+          COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
+          OUTPUT_VARIABLE __OUTPUT)
+
+      if(_backtrace_nolink)
+        message(CHECK_PASS "yes")
+        set(_backtrace_setup_complete TRUE)
+      else()
+        message(CHECK_FAIL "no")
+
+        file(WRITE
+          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+          "#include <boost/stacktrace.hpp>\n"
+          "#include <iostream>\n"
+          "int main() { std::cout << boost::stacktrace::stacktrace(); }\n" )
+
+        message(CHECK_START "Does backtrace work with linker flag")
+        try_compile(_backtrace_link "${CMAKE_BINARY_DIR}"
+            "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+            LINK_LIBRARIES backtrace ${dl_LIBRARY}
+            COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
+            OUTPUT_VARIABLE __OUTPUT)
+
+        if(_backtrace_link)
+          message(CHECK_PASS "yes")
+          list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_BACKTRACE)
+          target_link_libraries(ActsCore PUBLIC backtrace)
+
+          set(_backtrace_setup_complete TRUE)
+        else()
+          message(CHECK_FAIL "no")
+        endif()
+
+      endif()
+    endif()
+
+    if(NOT _backtrace_setup_complete)
+      message(CHECK_START "Is addr2line available")
+      if(addr2line_EXECUTABLE)
+        list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_ADDR2LINE)
+        list(APPEND _fpe_options -DBOOST_STACKTRACE_ADDR2LINE_LOCATION=${addr2line_EXECUTABLE})
+        message(CHECK_PASS "yes")
+
+        set(_backtrace_setup_complete TRUE)
+      else()
+        message(CHECK_FAIL "no")
+      endif()
+    endif()
+
+    if(NOT _backtrace_setup_complete)
+      message(STATUS "Unable to set up stacktrace setup: use noop")
       list(APPEND _fpe_options -BOOST_STACKTRACE_USE_NOOP)
     endif()
-  else()
-      list(APPEND _fpe_options -BOOST_STACKTRACE_USE_NOOP)
   endif()
 endif()
-
-message(STATUS ${_fpe_options})
 
 set_source_files_properties(src/Utilities/FpeMonitor.cpp PROPERTIES COMPILE_OPTIONS "${_fpe_options}")
 
