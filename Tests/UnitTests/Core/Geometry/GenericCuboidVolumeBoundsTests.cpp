@@ -14,7 +14,7 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <chrono>
@@ -184,12 +184,10 @@ BOOST_AUTO_TEST_CASE(bounding_box_creation) {
   const auto boundValues = gcvb.values();
   BOOST_CHECK(boundValues.size() == 24u);
 
-  std::array<ActsScalar, GenericCuboidVolumeBounds::BoundValues::eSize>
-      bValueArrray;
-  for (auto [iv, v] : enumerate(boundValues)) {
-    bValueArrray[iv] = v;
-  }
-  GenericCuboidVolumeBounds gcvbCopy(vertices);
+  auto bValueArrray =
+      to_array<GenericCuboidVolumeBounds::BoundValues::eSize, ActsScalar>(
+          boundValues);
+  GenericCuboidVolumeBounds gcvbCopy(bValueArrray);
   BOOST_CHECK(gcvbCopy.values().size() == 24u);
 
   // Redo the check from above
