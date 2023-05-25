@@ -632,7 +632,7 @@ std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
 /// Calculate the inverse of an Eigen matrix after checking if it can be
 /// numerically inverted. This allows to catch potential FPEs before they occur.
 ///
-/// Our main motivation for this is that Athena has a very strict FPE policy
+/// Our main motivation for this is that users might have a strict FPE policy
 /// which would flag every single occurrence as a failure and then sombody has
 /// to investigate. Since we are processing a high number of events and floating
 /// point numbers sometimes work in mysterious ways the caller of this function
