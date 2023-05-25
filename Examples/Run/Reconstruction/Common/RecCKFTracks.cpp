@@ -320,9 +320,6 @@ int runRecCKFTracks(
   perfWriterCfg.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   perfWriterCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  // The bottom seed could be the first, second or third hits on the truth track
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
-  perfWriterCfg.ptMin = 0.4_GeV;
   perfWriterCfg.filePath = outputDir + "/performance_ckf.root";
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options
