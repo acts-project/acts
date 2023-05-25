@@ -25,7 +25,7 @@ ActsExamples::ParticleKillAction::ParticleKillAction(
 
 void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
+  constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
 
   G4Track* track = step->GetTrack();
 
