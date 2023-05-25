@@ -203,6 +203,8 @@ void addDetector(Context& ctx) {
     ACTS_PYTHON_MEMBER(beamPipeRadius);
     ACTS_PYTHON_MEMBER(beamPipeHalflengthZ);
     ACTS_PYTHON_MEMBER(beamPipeLayerThickness);
+    ACTS_PYTHON_MEMBER(beamPipeEnvelopeR);
+    ACTS_PYTHON_MEMBER(layerEnvelopeR);
     ACTS_PYTHON_MEMBER(unitScalor);
     ACTS_PYTHON_MEMBER(volumes);
     ACTS_PYTHON_STRUCT_END();
