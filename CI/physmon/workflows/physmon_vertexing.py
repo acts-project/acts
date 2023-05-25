@@ -24,12 +24,11 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
-    CKFPerformanceConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
-    TrackSelectorRanges,
+    TrackSelectorConfig,
 )
 
 from physmon_common import makeSetup
@@ -105,18 +104,17 @@ def run_vertexing(fitter, mu, events):
             s,
             setup.trackingGeometry,
             setup.field,
-            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-            TrackSelectorRanges(
+            TrackSelectorConfig(
                 pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 absEta=(None, 3.0),
+                nMeasurementsMin=6,
             ),
         )
 
         addAmbiguityResolution(
             s,
             AmbiguityResolutionConfig(maximumSharedHits=3),
-            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
         )
 
         addVertexFitting(
