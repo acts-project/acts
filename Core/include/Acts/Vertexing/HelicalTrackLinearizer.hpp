@@ -22,19 +22,20 @@
 namespace Acts {
 
 /// @class HelicalTrackLinearizer
-/// Linearizes the measurement equation (dependance of track
-/// parameters on the vertex position and track momentum at vertex)
-/// at the vicinity of the user-provided linearization point.
+/// Linearizes the track parameters at the PCA to a user-provided
+/// point (linPoint). The track parameters are written as a function
+/// of the global PCA position and the momentum of the particle at
+/// the PCA. The linearization then reads (see Eq. 5.7 in Ref(1)):
 ///
-/// The measurement equation is linearized in the following way:
+/// q = A (r - r_0) + B (p - p_0) + c,
 ///
-/// q_k= A_k (x_k - x_0k) + B_k (p_k - p_0k) + c_k
-///
-/// where q_k are the parameters at perigee nearest to the lin point,
-/// x_k is the position of the vertex, p_k the track momentum at the vertex,
-/// and c_k is the constant term of expansion. A_k and B_k are matrices
-/// of derivatives, denoted hereafter as "positionJacobian" and
+/// where q are the Perigee parameters wrt linPoint, {r_0} r is the {initial}
+/// 4D PCA position, {p_0} p is the {initial} momentum (phi, theta, q/p) at the
+/// PCA, and c is the constant term of the expansion. A and B are matrices of
+/// derivatives, denoted hereafter as "positionJacobian" and
 /// "momentumJacobian" respectively.
+///
+/// This class computes A and B using the analytic formulae of Ref. (1).
 ///
 /// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
@@ -94,13 +95,15 @@ class HelicalTrackLinearizer {
       : m_cfg(config), m_logger{std::move(_logger)} {}
 
   /// @brief Function that linearizes BoundTrackParameters at
-  /// given linearization point
+  /// the PCA to a given Perigee surface
   ///
   /// @param params Parameters to linearize
-  /// @param linPoint Linearization point
-  /// @param gctx The geometry context
-  /// @param mctx The magnetic field context
-  /// @param state The state object
+  /// @param linPoint Point which defines the Perigee.
+  /// @note Transverse plane of the Perigee corresponding to @p linPoint is
+  /// parallel to the global x-y plane
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
+  /// @param state Linearizer state object
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
