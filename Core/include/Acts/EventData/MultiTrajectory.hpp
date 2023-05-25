@@ -13,6 +13,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -210,9 +211,6 @@ struct TrackStateTraits {
   using MeasurementCovariance =
       typename detail_lt::Types<M, ReadOnly>::CovarianceMap;
 
-  using IndexType = std::uint32_t;
-  static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
-
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector =
       Eigen::Matrix<typename Covariance::Scalar, M, eBoundSize, ProjectorFlags>;
@@ -244,8 +242,8 @@ class TrackStateProxy {
   using ConstMeasurementCovariance =
       typename TrackStateTraits<N, true>::MeasurementCovariance;
 
-  using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
-  static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
+  using IndexType = TrackIndexType;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -470,8 +468,9 @@ class TrackStateProxy {
     pathLength() = other.pathLength();
     typeFlags() = other.typeFlags();
 
-    // can be nullptr, but we just take that
-    setReferenceSurface(other.referenceSurfacePointer());
+    if (other.hasReferenceSurface()) {
+      setReferenceSurface(other.referenceSurface().getSharedPtr());
+    }
   }
 
   /// Unset an optional track state component
@@ -484,9 +483,15 @@ class TrackStateProxy {
   /// Reference surface.
   /// @return the reference surface
   const Surface& referenceSurface() const {
-    assert(has<hashString("referenceSurface")>());
-    return *component<std::shared_ptr<const Surface>,
-                      hashString("referenceSurface")>();
+    assert(hasReferenceSurface() &&
+           "TrackState does not have reference surface");
+    return *m_traj->referenceSurface(m_istate);
+  }
+
+  /// Returns if the track state has a non nullptr surface associated
+  /// @return whether a surface exists or not
+  bool hasReferenceSurface() const {
+    return m_traj->referenceSurface(m_istate) != nullptr;
   }
 
   // NOLINTBEGIN(performance-unnecessary-value-param)
@@ -497,8 +502,7 @@ class TrackStateProxy {
   /// @note This overload is only present in case @c ReadOnly is false.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setReferenceSurface(std::shared_ptr<const Surface> srf) {
-    component<std::shared_ptr<const Surface>,
-              hashString("referenceSurface")>() = std::move(srf);
+    m_traj->setReferenceSurface(m_istate, std::move(srf));
   }
   // NOLINTEND(performance-unnecessary-value-param)
 
@@ -718,8 +722,7 @@ class TrackStateProxy {
   /// @note Const version
   ConstCovariance jacobian() const {
     assert(has<hashString("jacobian")>());
-    return m_traj->self().jacobian(
-        component<IndexType, hashString("jacobian")>());
+    return m_traj->self().jacobian(m_istate);
   }
 
   /// Returns the jacobian from the previous trackstate to this one
@@ -728,8 +731,7 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   Covariance jacobian() {
     assert(has<hashString("jacobian")>());
-    return m_traj->self().jacobian(
-        component<IndexType, hashString("jacobian")>());
+    return m_traj->self().jacobian(m_istate);
   }
 
   /// Returns whether a jacobian is set for this trackstate
@@ -841,8 +843,7 @@ class TrackStateProxy {
   template <size_t measdim>
   ConstMeasurement<measdim> calibrated() const {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().template measurement<measdim>(
-        component<IndexType, hashString("calibrated")>());
+    return m_traj->self().template measurement<measdim>(m_istate);
   }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
@@ -853,8 +854,7 @@ class TrackStateProxy {
             typename = std::enable_if_t<!RO>>
   Measurement<measdim> calibrated() {
     assert(has<hashString("calibrated")>());
-    return m_traj->self().template measurement<measdim>(
-        component<IndexType, hashString("calibrated")>());
+    return m_traj->self().template measurement<measdim>(m_istate);
   }
 
   /// Full calibrated measurement covariance matrix. The effective covariance
@@ -864,8 +864,7 @@ class TrackStateProxy {
   template <size_t measdim>
   ConstMeasurementCovariance<measdim> calibratedCovariance() const {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template measurementCovariance<measdim>(
-        component<IndexType, hashString("calibratedCov")>());
+    return m_traj->self().template measurementCovariance<measdim>(m_istate);
   }
 
   /// Full calibrated measurement covariance matrix. The effective covariance
@@ -876,8 +875,7 @@ class TrackStateProxy {
             typename = std::enable_if_t<!RO>>
   MeasurementCovariance<measdim> calibratedCovariance() {
     assert(has<hashString("calibratedCov")>());
-    return m_traj->self().template measurementCovariance<measdim>(
-        component<IndexType, hashString("calibratedCov")>());
+    return m_traj->self().template measurementCovariance<measdim>(m_istate);
   }
 
   /// Dynamic measurement vector with only the valid dimensions.
@@ -1046,11 +1044,6 @@ class TrackStateProxy {
   TrackStateProxy(ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
                   IndexType istate);
 
-  const std::shared_ptr<const Surface>& referenceSurfacePointer() const {
-    return component<std::shared_ptr<const Surface>,
-                     hashString("referenceSurface")>();
-  }
-
   TransitiveConstPointer<ConstIf<MultiTrajectory<Trajectory>, ReadOnly>> m_traj;
   IndexType m_istate;
 
@@ -1131,9 +1124,8 @@ constexpr bool VisitorConcept = Concepts ::require<
 /// from @c TrackStateTraits using the default maximum measurement dimension.
 namespace MultiTrajectoryTraits {
 constexpr unsigned int MeasurementSizeMax = eBoundSize;
-using IndexType = TrackStateTraits<MeasurementSizeMax, true>::IndexType;
-constexpr IndexType kInvalid =
-    TrackStateTraits<MeasurementSizeMax, true>::kInvalid;
+using IndexType = TrackIndexType;
+constexpr IndexType kInvalid = kTrackIndexInvalid;
 }  // namespace MultiTrajectoryTraits
 
 template <typename T>
@@ -1537,6 +1529,16 @@ class MultiTrajectory {
 
   SourceLink getUncalibratedSourceLink(IndexType istate) const {
     return self().getUncalibratedSourceLink_impl(istate);
+  }
+
+  const Surface* referenceSurface(IndexType istate) const {
+    return self().referenceSurface_impl(istate);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setReferenceSurface(IndexType istate,
+                           std::shared_ptr<const Surface> surface) {
+    self().setReferenceSurface_impl(istate, std::move(surface));
   }
 
  private:

@@ -150,9 +150,6 @@ class Navigator {
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
 
-    /// The tolerance used to defined "reached"
-    double tolerance = s_onSurfaceTolerance;
-
     /// Wether to perform boundary checks for layer resolving (improves
     /// navigation for bended tracks)
     BoundaryCheck boundaryCheckLayerResolving = true;
@@ -1118,7 +1115,8 @@ class Navigator {
       // target volume and layer search through global search
       auto targetIntersection = state.navigation.targetSurface->intersect(
           state.geoContext, stepper.position(state.stepping),
-          state.stepping.navDir * stepper.direction(state.stepping), false);
+          state.stepping.navDir * stepper.direction(state.stepping), false,
+          state.options.targetTolerance);
       if (targetIntersection) {
         ACTS_VERBOSE(volInfo(state)
                      << "Target estimate position ("
