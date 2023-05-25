@@ -19,7 +19,7 @@
 
 namespace {
 
-/// This can be abandoned with C++20 to use the std::to_array metho
+/// This can be abandoned with C++20 to use the std::to_array method
 /// @param vecvals the vector of bound values to be converted
 /// @return an array with the filled values
 template <std::size_t kDIM>
