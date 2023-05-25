@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;

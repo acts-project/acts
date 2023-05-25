@@ -13,7 +13,6 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 
 #include <array>

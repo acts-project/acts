@@ -9,7 +9,6 @@
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 

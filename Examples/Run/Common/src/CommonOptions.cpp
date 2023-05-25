@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Options/CommonOptions.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <exception>

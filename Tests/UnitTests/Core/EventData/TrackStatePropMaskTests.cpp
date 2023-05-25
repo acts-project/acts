@@ -11,7 +11,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/TrackStatePropMask.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 using namespace Acts;
 

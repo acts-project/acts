@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <ios>
 #include <stdexcept>

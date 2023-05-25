@@ -14,7 +14,6 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 Acts::Experimental::Detector::Detector(
     const std::string& name,
