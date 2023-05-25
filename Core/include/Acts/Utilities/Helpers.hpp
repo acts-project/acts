@@ -655,7 +655,7 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
     return result;
   }
 
-  return {};
+  return std::nullopt;
 }
 
 }  // namespace Acts
