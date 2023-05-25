@@ -476,7 +476,6 @@ def addSimWriters(
     particlesInitial="particles_initial",
     particlesFinal="particles_final",
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if outputDirCsv is not None:
@@ -577,7 +576,7 @@ def addGeant4(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
-    killAfterTime: Optional[float] = None,
+    killAfterTime: float = float("inf"),
 ) -> None:
     """This function steers the detector simulation using Geant4
 
