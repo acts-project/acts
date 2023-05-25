@@ -110,6 +110,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   auto [inputTrackParameters, inputTrackPointers] =
       makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
 
+  if (inputTrackParameters.size() != inputTrackPointers.size()) {
+    ACTS_ERROR("Input track containers do not align: "
+               << inputTrackParameters.size()
+               << " != " << inputTrackPointers.size());
+  }
+
   for (const auto& trk : inputTrackParameters) {
     if (trk.covariance() && trk.covariance()->determinant() <= 0) {
       // actually we should consider this as an error but I do not want the CI

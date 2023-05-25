@@ -23,12 +23,11 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
-    CKFPerformanceConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
-    TrackSelectorRanges,
+    TrackSelectorConfig,
 )
 
 from physmon_common import makeSetup
@@ -116,10 +115,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             s,
             setup.trackingGeometry,
             setup.field,
-            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-            TrackSelectorRanges(
-                loc0=(-4.0 * u.mm, 4.0 * u.mm),
+            TrackSelectorConfig(
                 pt=(500 * u.MeV, None),
+                loc0=(-4.0 * u.mm, 4.0 * u.mm),
+                nMeasurementsMin=6,
             ),
             outputDirRoot=tp,
         )
@@ -128,7 +127,6 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             addAmbiguityResolution(
                 s,
                 AmbiguityResolutionConfig(maximumSharedHits=3),
-                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
                 outputDirRoot=tp,
             )
 

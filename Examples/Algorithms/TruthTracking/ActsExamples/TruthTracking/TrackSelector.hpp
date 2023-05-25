@@ -44,6 +44,8 @@ class TrackSelector final : public IAlgorithm {
     // Momentum cuts.
     double ptMin = 0.0;
     double ptMax = std::numeric_limits<double>::infinity();
+
+    std::size_t minMeasurements = 0;
   };
 
   TrackSelector(const Config& config, Acts::Logging::Level level);
