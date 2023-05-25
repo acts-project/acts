@@ -220,7 +220,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("materialMappings") = std::vector<std::string>{},
       py::arg("killVolume") = nullptr,
       py::arg("killAfterTime") = std::numeric_limits<double>::infinity(),
-      py::arg("recordHitsOfSecondaries") = true),
+      py::arg("recordHitsOfSecondaries") = true,
       py::arg("keepParticlesWithoutHits") = true);
 
   {
