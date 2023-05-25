@@ -16,28 +16,7 @@
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-
-namespace {
-
-/// This can be abandoned with C++20 to use the std::to_array method
-///
-/// @note only the first kDIM elments will obviously be filled, if the
-/// vector tends to be longer, it is truncated
-///
-/// @param vecvals the vector of bound values to be converted
-/// @return an array with the filled values
-template <std::size_t kDIM>
-std::array<Acts::ActsScalar, kDIM> to_array(
-    const std::vector<Acts::ActsScalar>& vecvals) {
-  std::array<Acts::ActsScalar, kDIM> rarray = {};
-  for (const auto [iv, v] : Acts::enumerate(vecvals)) {
-    if (iv < kDIM) {
-      rarray[iv] = v;
-    }
-  }
-  return rarray;
-}
-}  // namespace
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
     const Acts::Experimental::VolumeStructureBuilder::Config& cfg,
@@ -49,9 +28,9 @@ Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
         "VolumeStructureBuilder: no extent nor boundary values given");
   }
   // Check for the bounds type
-  if (m_cfg.boundsType > VolumeBounds::BoundsType::eTrapezoid) {
+  if (m_cfg.boundsType == VolumeBounds::BoundsType::eOther) {
     throw std::invalid_argument(
-        "VolumeStructureBuilder: no bounds type provided.");
+        "VolumeStructureBuilder: no known volume bounds type provided.");
   }
 }
 
@@ -74,9 +53,11 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         throw std::runtime_error(
             "VolumeStructureBuilder: parameters for cone volume bounds need to "
             "be fully provided, they can not be estimated from an Extent "
-            "object.");
+            "object. It needs at least 5 parameters, while " +
+            std::to_string(boundValues.size()) + " where given");
       }
-      auto bArray = to_array<ConeVolumeBounds::BoundValues::eSize>(boundValues);
+      auto bArray = to_array<ConeVolumeBounds::BoundValues::eSize, ActsScalar>(
+          boundValues);
       volumeBounds = std::make_unique<ConeVolumeBounds>(bArray);
     } break;
     case VolumeBounds::BoundsType::eCuboid: {
@@ -101,9 +82,9 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         }
       } else if (boundValues.size() < 3u) {
         throw std::runtime_error(
-            "VolumeStructureBuilder: parameters for cone volume bounds need to "
-            "be fully provided, they can not be estimated from an Extent "
-            "object.");
+            "VolumeStructureBuilder: parameters for cuboid volume bounds need "
+            "to be fully provided, it needs exaclty 3 parameters, while " +
+            std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
           to_array<CuboidVolumeBounds::BoundValues::eSize>(boundValues);
@@ -116,7 +97,8 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         throw std::runtime_error(
             "VolumeStructureBuilder: parameters for cutout cylinder volume "
             "bounds need to be fully provided, they can not be estimated from "
-            "an Extent object.");
+            "an Extent object. It needs exaclty 3 parameters, while " +
+            std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
           to_array<CutoutCylinderVolumeBounds::BoundValues::eSize>(boundValues);
@@ -139,12 +121,14 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         } else {
           throw std::runtime_error(
               "VolumeStructureBuilder: translation to cuboid does not work as "
-              "the extent does not constrain all necessary value.");
+              "the extent does not constrain all necessary values.");
         }
       } else if (boundValues.size() < 3u) {
         throw std::runtime_error(
             "VolumeStructureBuilder: parameters for cylinder volume "
-            "bounds need to be fully provided.");
+            "bounds need to be fully provided, it needs at least 3 parameters, "
+            "while " +
+            std::to_string(boundValues.size()) + " where given");
       }
       // Check if phi has been constraint, otherwise fill it with full coverage
       if (boundValues.size() == 3u) {
@@ -162,7 +146,8 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         throw std::runtime_error(
             "VolumeStructureBuilder: parameters for generic cuboid volume "
             "bounds need to be provided, they can not be estimated from an "
-            "Extent object.");
+            "Extent object. It needs exactly 24 parameters, while " +
+            std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
           to_array<GenericCuboidVolumeBounds::BoundValues::eSize>(boundValues);
@@ -175,7 +160,8 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         throw std::runtime_error(
             "VolumeStructureBuilder: parameters for trapezoid volume bounds "
             "need to be provided, they can not be estimated from an Extent "
-            "object.");
+            "object. It needs at least 4 parameters, while " +
+            std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
           to_array<TrapezoidVolumeBounds::BoundValues::eSize>(boundValues);
