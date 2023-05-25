@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
-
 ActsExamples::TrackSummaryPlotTool::TrackSummaryPlotTool(
     const ActsExamples::TrackSummaryPlotTool::Config& cfg,
     Acts::Logging::Level lvl)

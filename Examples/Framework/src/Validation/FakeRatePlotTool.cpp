@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 
-
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
