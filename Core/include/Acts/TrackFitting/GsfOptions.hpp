@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -38,7 +39,7 @@ struct GsfExtensions {
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        NavigationDirection, const Logger&)>;
+                                        Direction, const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -83,6 +84,9 @@ struct GsfOptions {
   bool disableAllMaterialHandling = false;
 
   std::string_view finalMultiComponentStateColumn = "";
+
+  MixtureReductionMethod stateReductionMethod =
+      MixtureReductionMethod::eMaxWeight;
 
 #if __cplusplus < 202002L
   GsfOptions() = delete;

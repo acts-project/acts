@@ -100,13 +100,6 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   for (unsigned int i = 0; i < nTracks; i++) {
     // The position of the particle
     Vector3 pos(xdist(gen), ydist(gen), 0);
-    // Produce most of the tracks at near z1 position,
-    // some near z2. Highest track density then expected at z1
-    if ((i % 4) == 0) {
-      pos[eZ] = z2dist(gen);
-    } else {
-      pos[eZ] = z1dist(gen);
-    }
 
     // Create momentum and charge of track
     double pt = pTDist(gen);
@@ -114,10 +107,18 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
+    // project the position on the surface
+    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
+    pos = intersection.intersection.position;
+
+    // Produce most of the tracks at near z1 position,
+    // some near z2. Highest track density then expected at z1
+    pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
+
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
-                           covMat)
+                           direction, pt, charge, covMat)
                            .value());
   }
 
@@ -210,19 +211,27 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
-    double x = xdist(gen);
-    double y = ydist(gen);
-    // Produce most of the tracks at near z1 position,
-    // some near z2. Highest track density then expected at z1
-    double z = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
+    // The position of the particle
+    Vector3 pos(xdist(gen), ydist(gen), 0);
+
+    // Create momentum and charge of track
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
+
+    // project the position on the surface
+    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
+    pos = intersection.intersection.position;
+
+    // Produce most of the tracks at near z1 position,
+    // some near z2. Highest track density then expected at z1
+    pos[eZ] = ((i % 4) == 0) ? z2dist(gen) : z1dist(gen);
+
     trackVec.push_back(BoundTrackParameters::create(
-                           perigeeSurface, geoContext, Vector4(x, y, z, 0),
-                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
-                           covMat)
+                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           direction, pt, charge, covMat)
                            .value());
   }
 
@@ -366,17 +375,25 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   // Create nTracks tracks for test case
   for (unsigned int i = 0; i < nTracks; i++) {
-    double x = xdist(gen);
-    double y = ydist(gen);
-    double z = z1dist(gen);
+    // The position of the particle
+    Vector3 pos(xdist(gen), ydist(gen), 0);
+
+    // Create momentum and charge of track
     double pt = pTDist(gen);
     double phi = phiDist(gen);
     double eta = etaDist(gen);
     double charge = etaDist(gen) > 0 ? 1 : -1;
+
+    // project the position on the surface
+    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
+    pos = intersection.intersection.position;
+
+    pos[eZ] = z1dist(gen);
+
     trackVec.push_back(BoundTrackParameters::create(
-                           perigeeSurface, geoContext, Vector4(x, y, z, 0),
-                           makeDirectionUnitFromPhiEta(phi, eta), pt, charge,
-                           covMat)
+                           perigeeSurface, geoContext, makeVector4(pos, 0),
+                           direction, pt, charge, covMat)
                            .value());
   }
 

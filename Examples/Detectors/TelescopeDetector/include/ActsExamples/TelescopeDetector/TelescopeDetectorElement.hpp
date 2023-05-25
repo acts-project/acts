@@ -63,6 +63,9 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   /// Return surface associated with this detector element
   const Acts::Surface& surface() const final;
 
+  /// Non-const access to the surface associated with this detector element
+  Acts::Surface& surface() final;
+
   /// The maximal thickness of the detector element wrt normal axis
   double thickness() const final;
 
@@ -97,7 +100,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   // the aligned transforms
   std::vector<std::unique_ptr<Acts::Transform3>> m_alignedTransforms = {};
   /// the surface represented by it
-  std::shared_ptr<const Acts::Surface> m_elementSurface = nullptr;
+  std::shared_ptr<Acts::Surface> m_elementSurface = nullptr;
   /// the element thickness
   double m_elementThickness = 0.;
   /// the planar bounds
@@ -107,6 +110,10 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
 };
 
 inline const Acts::Surface& TelescopeDetectorElement::surface() const {
+  return *m_elementSurface;
+}
+
+inline Acts::Surface& TelescopeDetectorElement::surface() {
   return *m_elementSurface;
 }
 

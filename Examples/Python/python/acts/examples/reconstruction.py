@@ -55,8 +55,9 @@ SeedFinderConfigArg = namedtuple(
         "collisionRegion",  # (min,max)
         "r",  # (min,max)
         "z",  # (min,max)
+        "zOutermostLayers",  # (min,max)
     ],
-    defaults=[None] * 20 + [(None, None)] * 7,
+    defaults=[None] * 20 + [(None, None)] * 8,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -211,8 +212,8 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z)
-        SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
+        SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
@@ -530,6 +531,14 @@ def addStandardSeeding(
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
+            zOutermostLayers=(
+                seedFinderConfigArg.zOutermostLayers[0]
+                if seedFinderConfigArg.zOutermostLayers[0] is not None
+                else seedFinderConfigArg.z[0],
+                seedFinderConfigArg.zOutermostLayers[1]
+                if seedFinderConfigArg.zOutermostLayers[1] is not None
+                else seedFinderConfigArg.z[1],
+            ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
@@ -675,6 +684,14 @@ def addOrthogonalSeeding(
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
+            zOutermostLayers=(
+                seedFinderConfigArg.zOutermostLayers[0]
+                if seedFinderConfigArg.zOutermostLayers[0] is not None
+                else seedFinderConfigArg.z[0],
+                seedFinderConfigArg.zOutermostLayers[1]
+                if seedFinderConfigArg.zOutermostLayers[1] is not None
+                else seedFinderConfigArg.z[1],
+            ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
@@ -802,6 +819,8 @@ def addKalmanTracks(
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
+    calibrationConfigFile: str = None,
+    clusters: str = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -825,19 +844,27 @@ def addKalmanTracks(
         "level": customLogLevel(),
     }
 
+    if calibrationConfigFile is None:
+        calibrator = acts.examples.makePassThroughCalibrator()
+    else:
+        calibrator = acts.examples.makeScalingCalibrator(calibrationConfigFile)
+
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=customLogLevel(),
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
+        inputClusters=clusters if clusters is not None else "",
         outputTracks="kfTracks",
         pickTrack=-1,
         fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
+        calibrator=calibrator,
     )
     s.addAlgorithm(fitAlg)
+    s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
 
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
@@ -845,7 +872,6 @@ def addKalmanTracks(
         outputTrajectories="kfTrajectories",
     )
     s.addAlgorithm(trackConverter)
-
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     return s
@@ -879,6 +905,7 @@ def addTruthTrackingGsf(
         outputTracks="gsf_tracks",
         pickTrack=-1,
         fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
+        calibrator=acts.examples.makePassThroughCalibrator(),
     )
     s.addAlgorithm(gsfAlg)
 
@@ -944,10 +971,11 @@ def addCKFTracks(
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="ckfTracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
-            trackingGeometry, field
+            trackingGeometry, field, customLogLevel()
         ),
     )
     s.addAlgorithm(trackFinder)
+    s.addWhiteboardAlias("tracks", trackFinder.config.outputTracks)
 
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
@@ -965,6 +993,7 @@ def addCKFTracks(
             outputTracks="selectedTracks",
             logLevel=customLogLevel(),
         )
+        s.addWhiteboardAlias("tracks", trackSelector.config.outputTracks)
 
         selectedTrackConverter = acts.examples.TracksToTrajectories(
             level=customLogLevel(),
@@ -1256,7 +1285,7 @@ def addAmbiguityResolution(
 
     alg = AmbiguityResolutionAlgorithm(
         level=customLogLevel(),
-        inputTracks="selectedTracks",
+        inputTracks="tracks",
         outputTracks="filteredTrajectories",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
@@ -1312,7 +1341,7 @@ def addAmbiguityResolutionML(
 
     alg = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
-        inputTracks="selectedTracks",
+        inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
         outputTracks="filteredTrajectoriesML",
         **acts.examples.defaultKWArgs(
@@ -1367,7 +1396,7 @@ def addAmbiguityResolutionMLDBScan(
 
     alg = AmbiguityResolutionMLDBScanAlgorithm(
         level=customLogLevel(),
-        inputTracks="selectedTracks",
+        inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
         outputTracks="filteredTrajectoriesMLDBScan",
         **acts.examples.defaultKWArgs(
@@ -1410,12 +1439,15 @@ def addAmbiguityResolutionMLDBScan(
 def addVertexFitting(
     s,
     field,
-    outputDirRoot: Optional[Union[Path, str]] = None,
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
+    outputProtoVertices: str = "protovertices",
+    outputVertices: str = "fittedVertices",
+    outputTime: str = "outputTime",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -1466,14 +1498,14 @@ def addVertexFitting(
 
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
-    outputVertices = "fittedVertices"
+    if vertexFinder != VertexFinder.AMVF:
+        outputTime = ""
 
-    outputTime = ""
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
             level=customLogLevel(),
             inputParticles=selectedParticles,
-            outputProtoVertices="protovertices",
+            outputProtoVertices=outputProtoVertices,
             excludeSecondaries=True,
         )
         s.addAlgorithm(findVertices)
@@ -1492,18 +1524,17 @@ def addVertexFitting(
             bField=field,
             inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
-            outputProtoVertices="protovertices",
+            outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
         )
         s.addAlgorithm(findVertices)
     elif vertexFinder == VertexFinder.AMVF:
-        outputTime = "outputTime"
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
             inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
-            outputProtoVertices="protovertices",
+            outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
             outputTime=outputTime,
         )
@@ -1530,8 +1561,8 @@ def addVertexFitting(
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
-                minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 inputTime=outputTime,
+                minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )

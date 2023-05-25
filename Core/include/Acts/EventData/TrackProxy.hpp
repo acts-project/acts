@@ -12,6 +12,7 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
@@ -19,8 +20,8 @@
 
 namespace Acts {
 
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
+template <ACTS_CONCEPT(Acts::TrackContainerBackend) track_container_t,
+          typename traj_t, template <typename> class holder_t>
 class TrackContainer;
 
 namespace detail_tc {
@@ -269,8 +270,7 @@ class TrackProxy {
   /// Get the reference surface of the track (e.g. the perigee)
   /// @return the reference surface
   const Surface& referenceSurface() const {
-    return *component<std::shared_ptr<const Surface>,
-                      hashString("referenceSurface")>();
+    return *m_container->container().referenceSurface_impl(m_index);
   }
 
   // NOLINTBEGIN(performance-unnecessary-value-param)
@@ -279,16 +279,15 @@ class TrackProxy {
   /// @param srf The surface to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setReferenceSurface(std::shared_ptr<const Surface> srf) {
-    component<std::shared_ptr<const Surface>,
-              hashString("referenceSurface")>() = std::move(srf);
+    m_container->container().setReferenceSurface_impl(m_index, std::move(srf));
   }
   // NOLINTEND(performance-unnecessary-value-param)
 
   /// Return whether a reference surface is associated to this track
   /// @return whether a surface exists or not
   bool hasReferenceSurface() const {
-    return !!component<std::shared_ptr<const Surface>,
-                       hashString("referenceSurface")>();
+    // @TODO: This could be more efficient
+    return m_container->container().referenceSurface_impl(m_index) != nullptr;
   }
 
   /// Get the parameters of the track at the reference surface (e.g. perigee).
@@ -329,27 +328,39 @@ class TrackProxy {
 
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
-  ActsScalar theta() const { return parameters()[eBoundTheta]; }
+  ActsScalar theta() const {
+    return parameters()[eBoundTheta];
+  }
 
   /// Access the phi parameter of the track at the reference surface
   /// @return The phi parameter
-  ActsScalar phi() const { return parameters()[eBoundPhi]; }
+  ActsScalar phi() const {
+    return parameters()[eBoundPhi];
+  }
 
   /// Access the loc0 parameter of the track at the reference surface
   /// @return The loc0 parameter
-  ActsScalar loc0() const { return parameters()[eBoundLoc0]; }
+  ActsScalar loc0() const {
+    return parameters()[eBoundLoc0];
+  }
 
   /// Access the loc1 parameter of the track at the reference surface
   /// @return The loc1 parameter
-  ActsScalar loc1() const { return parameters()[eBoundLoc1]; }
+  ActsScalar loc1() const {
+    return parameters()[eBoundLoc1];
+  }
 
   /// Access the time parameter of the track at the reference surface
   /// @return The time parameter
-  ActsScalar time() const { return parameters()[eBoundTime]; }
+  ActsScalar time() const {
+    return parameters()[eBoundTime];
+  }
 
   /// Access the q/p (curvature) parameter of the track at the reference surface
   /// @return The q/p parameter
-  ActsScalar qOverP() const { return parameters()[eBoundQOverP]; }
+  ActsScalar qOverP() const {
+    return parameters()[eBoundQOverP];
+  }
 
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
@@ -371,12 +382,16 @@ class TrackProxy {
 
   /// Get the global momentum vector
   /// @return the global momentum vector
-  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
+  Vector3 momentum() const {
+    return absoluteMomentum() * unitDirection();
+  }
 
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Const version
   /// @return Track state range to iterate over
-  auto trackStates() const { return m_container->trackStateRange(m_index); }
+  auto trackStates() const {
+    return m_container->trackStateRange(m_index);
+  }
 
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Mutable version
@@ -481,7 +496,9 @@ class TrackProxy {
 
   /// Return the chi squared for the track. Const version
   /// @return The chi squared
-  float chi2() const { return component<float>(hashString("chi2")); }
+  float chi2() const {
+    return component<float>(hashString("chi2"));
+  }
 
   /// Return a mutable reference to the number of degrees of freedom for the
   /// track. Mutable version
@@ -500,7 +517,9 @@ class TrackProxy {
   /// Return the index of this track in the track container
   /// @note This is separate from the tip index
   /// @return the track index
-  IndexType index() const { return m_index; }
+  IndexType index() const {
+    return m_index;
+  }
 
   /// Return a reference to the track container backend, mutable version.
   /// @return reference to the track container backend
@@ -534,7 +553,9 @@ class TrackProxy {
 
   /// Return a reference to the track container backend, const version.
   /// @return reference to the track container backend
-  const auto& container() const { return *m_container; }
+  const auto& container() const {
+    return *m_container;
+  }
 
   /// Equality operator with another track proxy
   /// Checks the container identity and the track index
