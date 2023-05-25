@@ -40,7 +40,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
   // The volume bounds to be constructed
   std::unique_ptr<VolumeBounds> volumeBounds = nullptr;
 
-  // A transform
+  // The transform of the volume, default: identity
   auto transform = Transform3::Identity();
   std::vector<ActsScalar> boundValues = m_cfg.boundValues;
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,7 +22,7 @@ GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
-// Test the creation of the Ring
+// Test misconfiguration exception
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderMisconfigured) {
   VolumeStructureBuilder::Config misConfig;
 
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderMisconfigured) {
       std::invalid_argument);
 }
 
-// Test the creation of the Ring
+// Test the creation of conical bounds
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCone) {
   // Conical volume from parameters
   VolumeStructureBuilder::Config coneValsConfig;
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCone) {
   BOOST_CHECK_THROW(coneBuilderMis2.construct(tContext), std::runtime_error);
 }
 
-// Test the creation of the Ring
+// Test the creation of a cubic bounds
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCuboid) {
   // Cuboid volume from parameters
   VolumeStructureBuilder::Config cuboidValsConfig;
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCuboid) {
   BOOST_CHECK_THROW(cuboidBuilderMis2.construct(tContext), std::runtime_error);
 }
 
-// Test the creation of the Ring
+// Test the creation of cutout cylinder bounds
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCutoutCylinder) {
   // Cutout Cylinder volume from parameters
   VolumeStructureBuilder::Config ccylValsConfig;
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCutoutCylinder) {
   BOOST_CHECK_THROW(ccylBuilderMis2.construct(tContext), std::runtime_error);
 }
 
-// Test the creation of the Ring
+// Test the creation of cylindrical bounds
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCylinder) {
   // Cylinder volume from parameters
   VolumeStructureBuilder::Config cylValsConfig;
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderCylinder) {
   BOOST_CHECK_THROW(cylBuilderMis2.construct(tContext), std::runtime_error);
 }
 
-// Test the creation of the Ring
+// Test the creation of generic cuboid bounds
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderGenericCuboid) {
   // Cuboid volume from parameters
   VolumeStructureBuilder::Config gcubValsConfig;
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(VolumeStructureBuilderGenericCuboid) {
       getDefaultLogger("GenericCuboidStructureBuilderMis2", Logging::VERBOSE));
 }
 
-// Test the creation of the Ring
+// Test the creation of the trapezoidal bounds
 BOOST_AUTO_TEST_CASE(VolumeStructureBuilderTrapezoid) {
   // Cuboid volume from parameters
   VolumeStructureBuilder::Config trapValsConfig;
