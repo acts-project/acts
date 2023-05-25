@@ -11,6 +11,7 @@
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
 namespace bdata = boost::unit_test::data;

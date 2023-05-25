@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
 #include <memory>
