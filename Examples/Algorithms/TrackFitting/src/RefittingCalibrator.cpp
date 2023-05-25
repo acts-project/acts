@@ -12,7 +12,7 @@ namespace ActsExamples {
 
 void RefittingCalibrator::calibrate(const Acts::GeometryContext& /*gctx*/,
                                     Proxy trackState) const {
-  const auto& sl =
+  const auto sl =
       trackState.getUncalibratedSourceLink().get<RefittingSourceLink>();
 
   // Here we construct a measurement by extracting the information available

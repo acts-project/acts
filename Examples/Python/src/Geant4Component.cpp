@@ -154,7 +154,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           const std::vector<std::string>& volumeMappings,
           const std::vector<std::string>& materialMappings,
           std::shared_ptr<const Acts::Volume> killVolume,
-          bool recordHitsOfSecondaries) {
+          bool recordHitsOfSecondaries, bool keepParticlesWithoutHits) {
         auto logger = Acts::getDefaultLogger("Geant4", level);
 
         auto physicsList = new FTFP_BERT();
@@ -164,9 +164,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         g4Cfg.inputParticles = inputParticles;
 
         // Particle action
+        ParticleTrackingAction::Config trackingCfg;
+        trackingCfg.keepParticlesWithoutHits = keepParticlesWithoutHits;
         g4Cfg.trackingAction = new ParticleTrackingAction(
-            ParticleTrackingAction::Config{},
-            logger->cloneWithSuffix("ParticleTracking"));
+            trackingCfg, logger->cloneWithSuffix("ParticleTracking"));
 
         // Stepping actions
         ActsSteppingActionList::Config steppingCfg;
@@ -218,7 +219,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{},
       py::arg("killVolume") = nullptr,
-      py::arg("recordHitsOfSecondaries") = true);
+      py::arg("recordHitsOfSecondaries") = true,
+      py::arg("keepParticlesWithoutHits") = true);
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;

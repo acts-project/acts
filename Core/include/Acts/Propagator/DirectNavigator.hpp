@@ -40,9 +40,6 @@ class DirectNavigator {
                       getDefaultLogger("DirectNavigator", Logging::INFO))
       : m_logger{std::move(_logger)} {}
 
-  /// The tolerance used to define "surface reached"
-  double tolerance = s_onSurfaceTolerance;
-
   /// Nested Actor struct, called Initializer
   ///
   /// This is needed for the initialization of the

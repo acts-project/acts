@@ -156,6 +156,7 @@ class PlaneSurface : public Surface {
   /// @param direction The direction of the interesection attempt,
   /// (@note expected to be normalized)
   /// @param bcheck The boundary check directive
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
   ///
@@ -177,8 +178,8 @@ class PlaneSurface : public Surface {
   /// @return the SurfaceIntersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
   ///

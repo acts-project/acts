@@ -13,7 +13,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -34,7 +36,8 @@ struct IsReadOnlyTrackContainer;
 /// @tparam track_container_t the track container backend
 /// @tparam traj_t the track state container backend
 /// @tparam holder_t ownership management class for the backend
-template <typename track_container_t, typename traj_t,
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t,
           template <typename> class holder_t = detail::RefHolder>
 class TrackContainer {
  public:
@@ -47,8 +50,8 @@ class TrackContainer {
                 "Either both track container and track state container need to "
                 "be readonly or both have to be readwrite");
 
-  using IndexType = MultiTrajectoryTraits::IndexType;
-  static constexpr IndexType kInvalid = MultiTrajectoryTraits::kInvalid;
+  using IndexType = TrackIndexType;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   using TrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, false>;
@@ -296,15 +299,18 @@ class TrackContainer {
   detail_tc::ConstIf<holder_t<traj_t>, ReadOnly> m_traj;
 };
 
-template <typename track_container_t, typename traj_t>
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
-template <typename track_container_t, typename traj_t>
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
 TrackContainer(const track_container_t& container, const traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ConstRefHolder>;
 
-template <typename track_container_t, typename traj_t>
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 

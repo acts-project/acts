@@ -739,7 +739,7 @@ class AtlasStepper {
     P[45] *= p;
     P[46] *= p;
 
-    double An = sqrt(P[4] * P[4] + P[5] * P[5]);
+    double An = std::hypot(P[4], P[5]);
     double Ax[3];
     if (An != 0.) {
       Ax[0] = -P[5] / An;

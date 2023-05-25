@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_) {
     sp->x = xVec.at(i);
     sp->y = yVec.at(i);
     sp->z = zVec.at(i);
-    sp->r = std::sqrt(sp->x * sp->x + sp->y * sp->y);
+    sp->r = std::hypot(sp->x, sp->y);
     if (sp->r < 200.) {
       sp->setClusterList(1, 0);
     }

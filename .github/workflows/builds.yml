@@ -130,7 +130,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -175,7 +175,7 @@ jobs:
         run: ccache -s
 
       - name: Unit tests
-        run: cmake --build build --target test
+        run: ctest --test-dir build -j$(nproc)
 
       - name: Integration tests
         run: cmake --build build --target integrationtests
@@ -212,7 +212,7 @@ jobs:
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -253,7 +253,7 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -289,7 +289,7 @@ jobs:
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && echo "::endgroup::"
           && export PYTHONPATH="${PYTHONPATH}":"${GITHUB_WORKSPACE}/Examples/Scripts/Python"
-          && CI/physmon/phys_perf_mon.sh physmon
+          && CI/physmon/phys_perf_mon.sh all physmon
 
       - uses: actions/upload-artifact@v3
         if: always()
@@ -314,7 +314,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get update && apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:

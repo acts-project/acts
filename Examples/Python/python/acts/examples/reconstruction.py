@@ -819,6 +819,8 @@ def addKalmanTracks(
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
+    calibrationConfigFile: str = None,
+    clusters: str = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -842,18 +844,24 @@ def addKalmanTracks(
         "level": customLogLevel(),
     }
 
+    if calibrationConfigFile is None:
+        calibrator = acts.examples.makePassThroughCalibrator()
+    else:
+        calibrator = acts.examples.makeScalingCalibrator(calibrationConfigFile)
+
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=customLogLevel(),
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
+        inputClusters=clusters if clusters is not None else "",
         outputTracks="kfTracks",
         pickTrack=-1,
         fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
-        calibrator=acts.examples.makePassThroughCalibrator(),
+        calibrator=calibrator,
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)
@@ -963,7 +971,7 @@ def addCKFTracks(
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="ckfTracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
-            trackingGeometry, field
+            trackingGeometry, field, customLogLevel()
         ),
     )
     s.addAlgorithm(trackFinder)
@@ -1431,12 +1439,15 @@ def addAmbiguityResolutionMLDBScan(
 def addVertexFitting(
     s,
     field,
-    outputDirRoot: Optional[Union[Path, str]] = None,
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
+    outputProtoVertices: str = "protovertices",
+    outputVertices: str = "fittedVertices",
+    outputTime: str = "outputTime",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -1487,14 +1498,14 @@ def addVertexFitting(
 
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
-    outputVertices = "fittedVertices"
+    if vertexFinder != VertexFinder.AMVF:
+        outputTime = ""
 
-    outputTime = ""
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
             level=customLogLevel(),
             inputParticles=selectedParticles,
-            outputProtoVertices="protovertices",
+            outputProtoVertices=outputProtoVertices,
             excludeSecondaries=True,
         )
         s.addAlgorithm(findVertices)
@@ -1513,18 +1524,17 @@ def addVertexFitting(
             bField=field,
             inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
-            outputProtoVertices="protovertices",
+            outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
         )
         s.addAlgorithm(findVertices)
     elif vertexFinder == VertexFinder.AMVF:
-        outputTime = "outputTime"
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
             inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
-            outputProtoVertices="protovertices",
+            outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
             outputTime=outputTime,
         )
@@ -1551,8 +1561,8 @@ def addVertexFitting(
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
-                minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 inputTime=outputTime,
+                minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )
