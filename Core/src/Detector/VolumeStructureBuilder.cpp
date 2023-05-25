@@ -135,9 +135,6 @@ Acts::Experimental::VolumeStructureBuilder::construct(
           if (vExtent.constrains(binPhi)) {
             boundValues.push_back(0.5 * vExtent.interval(binPhi));
             boundValues.push_back(vExtent.medium(binPhi));
-          } else {
-            boundValues.push_back(M_PI);
-            boundValues.push_back(0.);
           }
         } else {
           throw std::runtime_error(
@@ -148,6 +145,11 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         throw std::runtime_error(
             "VolumeStructureBuilder: parameters for cylinder volume "
             "bounds need to be fully provided.");
+      }
+      // Check if phi has been constraint, otherwise fill it with full coverage
+      if (boundValues.size() == 3u) {
+        boundValues.push_back(M_PI);
+        boundValues.push_back(0.);
       }
       auto bArray =
           to_array<CylinderVolumeBounds::BoundValues::eSize>(boundValues);
