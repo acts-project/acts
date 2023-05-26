@@ -37,7 +37,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
   struct Config {
     /// The tracking volume helper for detector construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
-    /// The layer crator - for sensitives
+    /// The layer creator - for sensitives
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// The created surfaces
     std::vector<std::shared_ptr<Surface>> surfaces = {};
