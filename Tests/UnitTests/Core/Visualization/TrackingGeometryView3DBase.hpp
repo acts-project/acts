@@ -33,7 +33,7 @@ auto tGeometry = cGeometry();
 /// @param triangulate The directive whether to create triangular meshes
 /// @param tag The test tag (mode) identification
 ///
-/// @return a string containing all written caracters
+/// @return a string containing all written characters
 
 static inline std::string run(IVisualization3D& helper, bool triangulate,
                               const std::string& tag) {
