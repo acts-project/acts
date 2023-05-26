@@ -122,8 +122,8 @@ class RootMaterialTrackReader : public IReader {
       new std::vector<float>;  ///< step material rho
 
   std::vector<std::uint64_t>* m_sur_id =
-      new std::vector<std::uint64_t>;  ///< ID of the surface associated with the
-                                       ///< step
+      new std::vector<std::uint64_t>;  ///< ID of the surface associated with
+                                       ///< the step
   std::vector<float>* m_sur_x =
       new std::vector<float>;  ///< x position of the center of the surface
                                ///< associated with the step
