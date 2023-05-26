@@ -153,7 +153,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
               magneticField,
           const std::vector<std::string>& volumeMappings,
           const std::vector<std::string>& materialMappings,
-          std::shared_ptr<const Acts::Volume> killVolume,
+          std::shared_ptr<const Acts::Volume> killVolume, double killAfterTime,
           bool recordHitsOfSecondaries, bool keepParticlesWithoutHits) {
         auto logger = Acts::getDefaultLogger("Geant4", level);
 
@@ -180,9 +180,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         steppingCfg.actions.push_back(new SensitiveSteppingAction(
             g4StepCfg, logger->cloneWithSuffix("SensitiveStepping")));
 
-        steppingCfg.actions.push_back(
-            new ParticleKillAction(ParticleKillAction::Config{killVolume},
-                                   logger->cloneWithSuffix("Killer")));
+        steppingCfg.actions.push_back(new ParticleKillAction(
+            ParticleKillAction::Config{killVolume, killAfterTime},
+            logger->cloneWithSuffix("Killer")));
 
         g4Cfg.steppingAction = new ActsSteppingActionList(steppingCfg);
 
@@ -219,6 +219,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{},
       py::arg("killVolume") = nullptr,
+      py::arg("killAfterTime") = std::numeric_limits<double>::infinity(),
       py::arg("recordHitsOfSecondaries") = true,
       py::arg("keepParticlesWithoutHits") = true);
 
