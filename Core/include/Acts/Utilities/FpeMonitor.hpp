@@ -31,14 +31,34 @@ enum class FpeType : uint32_t {
 std::ostream &operator<<(std::ostream &os, FpeType type);
 
 class FpeMonitor {
+  struct Impl;
+
  public:
+  struct Result {
+    Result merge(const Result &with) const;
+    bool encountered(FpeType type) const;
+    unsigned int count(FpeType type) const;
+
+    ~Result();
+    Result(Result &&) = default;
+    Result &operator=(Result &&);
+
+   private:
+    Result();
+    std::unique_ptr<Impl> m_impl;
+
+    friend FpeMonitor;
+  };
+
   FpeMonitor();
   explicit FpeMonitor(int excepts);
   ~FpeMonitor();
 
-  bool encountered(FpeType type) const;
-
   void printStacktraces(std::ostream &os) const;
+
+  const Result &result() const;
+
+  void rearm() const;
 
  private:
   void enable();
@@ -57,8 +77,7 @@ class FpeMonitor {
 
   int m_excepts;
 
-  struct Impl;
-  std::unique_ptr<Impl> m_impl;
+  Result m_result;
 };
 
 }  // namespace Acts

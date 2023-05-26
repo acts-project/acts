@@ -13,6 +13,7 @@
 #include <bitset>
 #include <cfenv>
 #include <csignal>
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
 #include <memory>
@@ -20,7 +21,8 @@
 #include <stdexcept>
 #include <string_view>
 
-#include <boost/stacktrace.hpp>
+#include <boost/stacktrace/detail/frame_unwind.ipp>  // needed to avoid linker error
+#include <boost/stacktrace/stacktrace.hpp>
 #include <fenv.h>
 #include <signal.h>
 
@@ -32,7 +34,8 @@
 namespace Acts {
 
 struct FpeMonitor::Impl {
-  uint32_t m_encountered = 0;
+  std::array<unsigned int, 32> m_counts;
+
   struct FpeInfo {
     FpeType type;
     boost::stacktrace::stacktrace stacktrace;
@@ -41,13 +44,28 @@ struct FpeMonitor::Impl {
   std::vector<FpeInfo> m_stracktraces;
 };
 
+FpeMonitor::Result::Result() : m_impl{std::make_unique<Impl>()} {}
+FpeMonitor::Result::~Result() = default;
+FpeMonitor::Result &FpeMonitor::Result::operator=(Result &&) = default;
+
+FpeMonitor::Result FpeMonitor::Result::merge(const Result &with) const {
+  Result result;
+  for (unsigned int i = 0; i < m_impl->m_counts.size(); i++) {
+    result.m_impl->m_counts[i] = m_impl->m_counts[i] + with.m_impl->m_counts[i];
+  }
+  // @TODO: Merge stack traces
+  return result;
+}
+
+const FpeMonitor::Result &FpeMonitor::result() const {
+  return m_result;
+}
+
 FpeMonitor::FpeMonitor()
     : FpeMonitor{FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW} {}
 
 FpeMonitor::FpeMonitor(int excepts) : m_excepts(excepts) {
   enable();
-
-  m_impl = std::make_unique<Impl>();
 }
 
 FpeMonitor::~FpeMonitor() {
@@ -87,10 +105,15 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   std::cout << std::endl;
 
   FpeMonitor &fpe = *stack().top();
-  fpe.m_impl->m_encountered |= 1 << si->si_code;
-  fpe.m_impl->m_stracktraces.push_back(Impl::FpeInfo{
-      static_cast<FpeType>(si->si_code), boost::stacktrace::stacktrace()});
+  fpe.m_result.m_impl->m_counts.at(si->si_code)++;
 
+  // collect stack trace skipping 2 frames, which should be the signal handler
+  // and the calling facility. This might be platform specific, not sure
+  fpe.m_result.m_impl->m_stracktraces.push_back(Impl::FpeInfo{
+      static_cast<FpeType>(si->si_code),
+      boost::stacktrace::stacktrace(2, static_cast<std::size_t>(-1))});
+
+  // @TODO: Disable this on non-x86_64
   __uint16_t *cw = &((ucontext_t *)ctx)->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
 
@@ -98,12 +121,13 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   *sw &= ~FPU_STATUS_FLAGS;
 
   __uint32_t *mxcsr = &((ucontext_t *)ctx)->uc_mcontext.fpregs->mxcsr;
-  // *mxcsr |= SSE_EXCEPTION_MASK; [> disable all SSE exceptions <]
+  // *mxcsr |= SSE_EXCEPTION_MASK;  // disable all SSE exceptions
   *mxcsr |= ((*mxcsr & SSE_STATUS_FLAGS) << 7);
-  *mxcsr &= ~SSE_STATUS_FLAGS; /* clear all pending SSE exceptions */
+  *mxcsr &= ~SSE_STATUS_FLAGS;  // clear all pending SSE exceptions
 }
 
 void FpeMonitor::enable() {
+  // @TODO: Disable this on non-x86_64
 #if defined(__APPLE__)
   std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
 #else
@@ -114,6 +138,10 @@ void FpeMonitor::enable() {
 
   stack().push(this);
 #endif
+}
+
+void FpeMonitor::rearm() const {
+  feenableexcept(m_excepts);
 }
 
 void FpeMonitor::ensureSignalHandlerInstalled() {
@@ -133,6 +161,7 @@ void FpeMonitor::ensureSignalHandlerInstalled() {
 }
 
 void FpeMonitor::disable() {
+  // @TODO: Disable this on non-x86_64
 #if defined(__APPLE__)
   std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
 #else
@@ -141,6 +170,7 @@ void FpeMonitor::disable() {
   stack().pop();
 #endif
 
+  // std::cout << std::bitset<32>(m_impl->m_encountered) << std::endl;
 }
 
 std::stack<FpeMonitor *> &FpeMonitor::stack() {
@@ -153,17 +183,16 @@ FpeMonitor::GlobalState &FpeMonitor::globalState() {
   return state;
 }
 
-bool FpeMonitor::encountered(FpeType type) const {
-  // std::cout << "check 0x" << std::bitset<32>(1 <<
-  // static_cast<uint32_t>(type))
-  // << std::endl;
-  // std::cout << "store 0x" << std::bitset<32>(m_encountered) << std::endl;
-  uint32_t mask = 1 << static_cast<uint32_t>(type);
-  return ACTS_CHECK_BIT(m_impl->m_encountered, mask);
+unsigned int FpeMonitor::Result::count(FpeType type) const {
+  return m_impl->m_counts.at(static_cast<uint32_t>(type));
+}
+
+bool FpeMonitor::Result::encountered(FpeType type) const {
+  return count(type) > 0;
 }
 
 void FpeMonitor::printStacktraces(std::ostream &os) const {
-  for (const auto &info : m_impl->m_stracktraces) {
+  for (const auto &info : m_result.m_impl->m_stracktraces) {
     os << info.type << std::endl;
     os << info.stacktrace << std::endl;
   }

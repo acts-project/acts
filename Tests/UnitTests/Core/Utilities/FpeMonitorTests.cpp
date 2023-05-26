@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/FpeMonitor.hpp"
@@ -45,15 +46,15 @@ BOOST_AUTO_TEST_SUITE(FpeMonitorTest)
 BOOST_AUTO_TEST_CASE(Invalid) {
   {
     FpeMonitor mon;
-    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     invalid();
 
-    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     mon.printStacktraces(std::cout);
   }
@@ -62,15 +63,15 @@ BOOST_AUTO_TEST_CASE(Invalid) {
 BOOST_AUTO_TEST_CASE(DivByZero) {
   {
     FpeMonitor mon;
-    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     divbyzero();
 
-    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
 
     mon.printStacktraces(std::cout);
   }
@@ -79,14 +80,14 @@ BOOST_AUTO_TEST_CASE(DivByZero) {
 BOOST_AUTO_TEST_CASE(Overflow) {
   {
     FpeMonitor mon;
-    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     overflow();
-    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     mon.printStacktraces(std::cout);
   }
@@ -95,25 +96,25 @@ BOOST_AUTO_TEST_CASE(Overflow) {
 BOOST_AUTO_TEST_CASE(Combinations) {
   {
     FpeMonitor mon;
-    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     invalid();
-    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     overflow();
-    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     divbyzero();
 
-    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
   }
 }
 
@@ -124,50 +125,74 @@ BOOST_AUTO_TEST_CASE(ClearOnEnter) {
 
   {
     FpeMonitor mon;
-    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
   }
+}
+
+BOOST_AUTO_TEST_CASE(CheckRearmCount) {
+  FpeMonitor mon;
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 0);
+  invalid();
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
+  invalid();
+  // We can't observe this again because it's masked!
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
+  mon.rearm();
+  invalid();
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 2);
 }
 
 BOOST_AUTO_TEST_CASE(Scoping) {
   {
     FpeMonitor mon;
-    BOOST_CHECK(!mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
     invalid();
 
     {
       FpeMonitor mon2;
-      BOOST_CHECK(!mon2.encountered(FpeType::FLTINV));
-      BOOST_CHECK(!mon2.encountered(FpeType::FLTOVF));
-      BOOST_CHECK(!mon2.encountered(FpeType::FLTDIV));
+      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));
+      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTOVF));
+      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTDIV));
 
       overflow();
 
       {
         FpeMonitor mon3;
-        BOOST_CHECK(!mon3.encountered(FpeType::FLTINV));
-        BOOST_CHECK(!mon3.encountered(FpeType::FLTOVF));
-        BOOST_CHECK(!mon3.encountered(FpeType::FLTDIV));
+        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTINV));
+        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTOVF));
+        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTDIV));
 
         divbyzero();
 
-        BOOST_CHECK(!mon3.encountered(FpeType::FLTINV));
-        BOOST_CHECK(!mon3.encountered(FpeType::FLTOVF));
-        BOOST_CHECK(mon3.encountered(FpeType::FLTDIV));
+        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTINV));
+        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTOVF));
+        BOOST_CHECK(mon3.result().encountered(FpeType::FLTDIV));
+
+        // Test merging here
+        auto merged = mon.result().merge(mon2.result());
+        BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
+        BOOST_CHECK_EQUAL(mon2.result().count(FpeType::FLTOVF), 1);
+        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
+        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
+        merged = merged.merge(mon3.result());
+        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
+        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
+        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTDIV), 1);
       }
 
-      BOOST_CHECK(!mon2.encountered(FpeType::FLTINV));
-      BOOST_CHECK(mon2.encountered(FpeType::FLTOVF));
-      BOOST_CHECK(!mon2.encountered(FpeType::FLTDIV));
+      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));
+      BOOST_CHECK(mon2.result().encountered(FpeType::FLTOVF));
+      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTDIV));
     }
 
-    BOOST_CHECK(mon.encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.encountered(FpeType::FLTDIV));
+    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
   }
 }
 
