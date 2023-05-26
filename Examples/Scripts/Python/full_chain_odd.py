@@ -124,7 +124,8 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             outputDirRoot=outputDir,
             # outputDirCsv=outputDir,
             rnd=rnd,
-            killVolume=acts.Volume.makeCylinderVolume(r=1100, halfZ=3000),
+            killVolume=acts.Volume.makeCylinderVolume(r=1.1 * u.m, halfZ=3.0 * u.m),
+            killAfterTime=25 * u.ns,
         )
     else:
         addFatras(

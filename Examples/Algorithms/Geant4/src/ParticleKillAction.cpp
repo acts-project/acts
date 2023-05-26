@@ -25,14 +25,22 @@ ActsExamples::ParticleKillAction::ParticleKillAction(
 
 void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
+  constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
+
   G4Track* track = step->GetTrack();
 
   const auto pos = convertLength * track->GetPosition();
+  const auto time = convertTime * track->GetGlobalTime();
 
-  if (m_cfg.volume and
-      not m_cfg.volume->inside(Acts::Vector3{pos.x(), pos.y(), pos.z()})) {
-    ACTS_DEBUG("Kill track with internal track ID " << track->GetTrackID()
-                                                    << " at " << pos);
+  const bool outOfVolume =
+      m_cfg.volume and
+      not m_cfg.volume->inside(Acts::Vector3{pos.x(), pos.y(), pos.z()});
+  const bool outOfTime = time > m_cfg.maxTime;
+
+  if (outOfVolume or outOfTime) {
+    ACTS_DEBUG("Kill track with internal track ID "
+               << track->GetTrackID() << " at " << pos << " and global time "
+               << time / Acts::UnitConstants::ns << "ns");
     track->SetTrackStatus(G4TrackStatus::fStopAndKill);
   }
 }
