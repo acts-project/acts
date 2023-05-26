@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <array>
@@ -23,6 +24,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -374,6 +376,24 @@ std::vector<const T*> unpack_shared_const_vector(
   return rawPtrs;
 }
 
+/// This can be abandoned with C++20 to use the std::to_array method
+///
+/// @note only the first kDIM elments will obviously be filled, if the
+/// vector tends to be longer, it is truncated
+///
+/// @param vecvals the vector of bound values to be converted
+/// @return an array with the filled values
+template <std::size_t kDIM, typename value_type>
+std::array<value_type, kDIM> to_array(const std::vector<value_type>& vecvals) {
+  std::array<value_type, kDIM> rarray = {};
+  for (const auto [iv, v] : enumerate(vecvals)) {
+    if (iv < kDIM) {
+      rarray[iv] = v;
+    }
+  }
+  return rarray;
+}
+
 /// @brief Dispatch a call based on a runtime value on a function taking the
 /// value at compile time.
 ///
@@ -626,6 +646,35 @@ std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
   typename T::value_type range = (max - min);
   ActsScalar medium = static_cast<ActsScalar>((max + min) * 0.5);
   return std::tie(range, medium);
+}
+
+/// Calculate the inverse of an Eigen matrix after checking if it can be
+/// numerically inverted. This allows to catch potential FPEs before they occur.
+///
+/// Our main motivation for this is that users might have a strict FPE policy
+/// which would flag every single occurrence as a failure and then sombody has
+/// to investigate. Since we are processing a high number of events and floating
+/// point numbers sometimes work in mysterious ways the caller of this function
+/// might want to hide FPEs and handle them in a more controlled way.
+///
+/// @tparam Derived Eigen derived concrete type
+/// @tparam Result Eigen result type defaulted to input type
+///
+/// @param m Eigen matrix to invert
+///
+/// @return The theta value
+template <typename MatrixType, typename ResultType = MatrixType>
+std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
+  ResultType result;
+  bool invertible = false;
+
+  m.computeInverseWithCheck(result, invertible);
+
+  if (invertible) {
+    return result;
+  }
+
+  return std::nullopt;
 }
 
 }  // namespace Acts
