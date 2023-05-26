@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
   double halfZ = 10_m;
 
   auto testCylinderIntersection = [&](const Transform3& transform) -> void {
-    // A cylinder created alinged with a provided transform
+    // A cylinder created aligned with a provided transform
     auto aCylinder =
         Surface::makeShared<CylinderSurface>(transform, radius, halfZ);
 
