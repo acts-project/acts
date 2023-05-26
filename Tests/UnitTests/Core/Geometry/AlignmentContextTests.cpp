@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   // Local position
   Vector2 localPosition(3., 3.);
 
-  // A position place holder and dymmy momentum
+  // A position placeholder and dummy momentum
   Vector3 globalPosition(100_cm, 100_cm, 100_cm);
   Vector3 dummyMomentum(4., 4., 4.);
 
