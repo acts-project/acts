@@ -14,11 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
-      - name: Install git lfs, llvm-dev
-        run: apt-get update && apt-get install -y git-lfs libclang-dev
-
-      - run: find / -name LLVMConfig.cmake
-      - run: ls -la /usr/lib/llvm-14
+      - name: Install git lfs and llvm dev
+        run: apt-get update && apt-get install -y git-lfs llvm-dev libclang-dev clang
 
       - uses: actions/checkout@v3
         with:
