@@ -1,6 +1,14 @@
 name: Builds
 
-on: 
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+      - 'release/**'
+      - 'develop/**'
+    paths-ignore:
+      - "docs/**"
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
