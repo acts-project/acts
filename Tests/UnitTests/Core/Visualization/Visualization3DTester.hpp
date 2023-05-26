@@ -188,7 +188,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
             ++currentElement.properties;
           }
         } else {
-          errorStrings.push_back(w + line + " ] Unkown command.");
+          errorStrings.push_back(w + line + " ] Unknown command.");
         }
       }
     } else {
