@@ -104,11 +104,6 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("pullZ", &m_pullZ);
     m_outputTree->Branch("pullT", &m_pullT);
 
-    m_outputTree->Branch("truthX", &m_truthX);
-    m_outputTree->Branch("truthY", &m_truthY);
-    m_outputTree->Branch("truthZ", &m_truthZ);
-    m_outputTree->Branch("truthT", &m_truthT);
-
     m_outputTree->Branch("covXX", &m_covXX);
     m_outputTree->Branch("covYY", &m_covYY);
     m_outputTree->Branch("covZZ", &m_covZZ);
@@ -338,6 +333,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       Acts::BoundTrackParameters origTrack = *(trk.originalParams);
 
       // Find associated truth particle now
+      // We expect that the vectors `trackParameters` and `associatedTruthParticles` align
       for (std::size_t i = 0; i < trackParameters.size(); ++i) {
         const auto& particle = associatedTruthParticles[i];
         const auto& trackParameter = trackParameters[i].parameters();
