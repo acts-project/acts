@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Invalid) {
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    mon.printStacktraces(std::cout);
+    mon.result().printStacktraces(std::cout);
   }
 }
 
@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(DivByZero) {
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
 
-    mon.printStacktraces(std::cout);
+    mon.result().printStacktraces(std::cout);
   }
 }
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(Overflow) {
     BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    mon.printStacktraces(std::cout);
+    mon.result().printStacktraces(std::cout);
   }
 }
 
@@ -179,10 +179,12 @@ BOOST_AUTO_TEST_CASE(Scoping) {
         BOOST_CHECK_EQUAL(mon2.result().count(FpeType::FLTOVF), 1);
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
+        BOOST_CHECK_EQUAL(merged.numStackTraces(), 2);
         merged = merged.merge(mon3.result());
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTDIV), 1);
+        BOOST_CHECK_EQUAL(merged.numStackTraces(), 3);
       }
 
       BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));

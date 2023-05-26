@@ -10,12 +10,14 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
 #include <bitset>
 #include <cfenv>
 #include <csignal>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <iterator>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -53,12 +55,38 @@ FpeMonitor::Result FpeMonitor::Result::merge(const Result &with) const {
   for (unsigned int i = 0; i < m_impl->m_counts.size(); i++) {
     result.m_impl->m_counts[i] = m_impl->m_counts[i] + with.m_impl->m_counts[i];
   }
+
+  std::copy(m_impl->m_stracktraces.begin(), m_impl->m_stracktraces.end(),
+            std::back_inserter(result.m_impl->m_stracktraces));
+  std::copy(with.m_impl->m_stracktraces.begin(),
+            with.m_impl->m_stracktraces.end(),
+            std::back_inserter(result.m_impl->m_stracktraces));
+
   // @TODO: Merge stack traces
   return result;
 }
 
 const FpeMonitor::Result &FpeMonitor::result() const {
   return m_result;
+}
+
+unsigned int FpeMonitor::Result::count(FpeType type) const {
+  return m_impl->m_counts.at(static_cast<uint32_t>(type));
+}
+
+unsigned int FpeMonitor::Result::numStackTraces() const {
+  return m_impl->m_stracktraces.size();
+}
+
+bool FpeMonitor::Result::encountered(FpeType type) const {
+  return count(type) > 0;
+}
+
+void FpeMonitor::Result::printStacktraces(std::ostream &os) const {
+  for (const auto &info : m_impl->m_stracktraces) {
+    os << info.type << std::endl;
+    os << info.stacktrace << std::endl;
+  }
 }
 
 FpeMonitor::FpeMonitor()
@@ -181,21 +209,6 @@ std::stack<FpeMonitor *> &FpeMonitor::stack() {
 FpeMonitor::GlobalState &FpeMonitor::globalState() {
   static GlobalState state{};
   return state;
-}
-
-unsigned int FpeMonitor::Result::count(FpeType type) const {
-  return m_impl->m_counts.at(static_cast<uint32_t>(type));
-}
-
-bool FpeMonitor::Result::encountered(FpeType type) const {
-  return count(type) > 0;
-}
-
-void FpeMonitor::printStacktraces(std::ostream &os) const {
-  for (const auto &info : m_result.m_impl->m_stracktraces) {
-    os << info.type << std::endl;
-    os << info.stacktrace << std::endl;
-  }
 }
 
 std::ostream &operator<<(std::ostream &os, FpeType type) {

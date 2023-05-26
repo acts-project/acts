@@ -38,6 +38,8 @@ class FpeMonitor {
     Result merge(const Result &with) const;
     bool encountered(FpeType type) const;
     unsigned int count(FpeType type) const;
+    unsigned int numStackTraces() const;
+    void printStacktraces(std::ostream &os) const;
 
     ~Result();
     Result(Result &&) = default;
@@ -53,8 +55,6 @@ class FpeMonitor {
   FpeMonitor();
   explicit FpeMonitor(int excepts);
   ~FpeMonitor();
-
-  void printStacktraces(std::ostream &os) const;
 
   const Result &result() const;
 
