@@ -24,6 +24,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -645,6 +646,35 @@ std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries) {
   typename T::value_type range = (max - min);
   ActsScalar medium = static_cast<ActsScalar>((max + min) * 0.5);
   return std::tie(range, medium);
+}
+
+/// Calculate the inverse of an Eigen matrix after checking if it can be
+/// numerically inverted. This allows to catch potential FPEs before they occur.
+///
+/// Our main motivation for this is that users might have a strict FPE policy
+/// which would flag every single occurrence as a failure and then sombody has
+/// to investigate. Since we are processing a high number of events and floating
+/// point numbers sometimes work in mysterious ways the caller of this function
+/// might want to hide FPEs and handle them in a more controlled way.
+///
+/// @tparam Derived Eigen derived concrete type
+/// @tparam Result Eigen result type defaulted to input type
+///
+/// @param m Eigen matrix to invert
+///
+/// @return The theta value
+template <typename MatrixType, typename ResultType = MatrixType>
+std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
+  ResultType result;
+  bool invertible = false;
+
+  m.computeInverseWithCheck(result, invertible);
+
+  if (invertible) {
+    return result;
+  }
+
+  return std::nullopt;
 }
 
 }  // namespace Acts
