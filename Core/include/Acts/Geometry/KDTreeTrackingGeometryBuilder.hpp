@@ -43,7 +43,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
     std::vector<std::shared_ptr<Surface>> surfaces = {};
     /// The proto tracking geometry description
     ProtoDetector protoDetector;
-    /// Optional geometry identfier hook to be used during closure
+    /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<GeometryIdentifierHook>();
     /// For screen output

@@ -210,7 +210,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
   for (auto& eLayers : detectorStore) {
     imodule += eLayers.size();
   }
-  ACTS_VERBOSE("Starting with identfier " << imodule);
+  ACTS_VERBOSE("Starting with identifier " << imodule);
 
   // ----------------------- central layers -------------------------
   // the central layers
@@ -407,7 +407,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
   for (auto& eLayers : detectorStore) {
     imodule += eLayers.size();
   }
-  ACTS_VERBOSE("Starting with identfier " << imodule);
+  ACTS_VERBOSE("Starting with identifier " << imodule);
   // the return layers
   std::vector<ProtoLayerSurfaces> epLayers;
   // create the detector store entry
