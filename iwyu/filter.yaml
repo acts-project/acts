@@ -21,6 +21,8 @@ replace_lines:
   - "#include <math\\.h>": "#include <cmath>"
   - "#include <limits\\.h>": "#include <climits>"
   - "#include <unistd\\.h>": "#include <cunistd>"
+  - "#include <stdint\\.h>": "#include <cstdint>"
 
 ignore_files:
-  - ".*FpeMonitor\\.hpp"
+  - ".*FpeMonitor\\.[hc]pp"
+  - ".*thirdparty/"

@@ -36,15 +36,15 @@ def parse_config(config: Config):
 
 
 def filter(line: str, config: Config, state: State):
-    if line.endswith("---\n"):
-        state.skip_file = False
-
     if state.skip_file:
+        if line.endswith("---\n"):
+            state.skip_file = False
         return None
 
     if line.endswith(" should add these lines:\n"):
         for s in config.ignore_files:
             if s.search(line):
+                state.skip_file = True
                 return None
 
     for s in config.remove_lines:
