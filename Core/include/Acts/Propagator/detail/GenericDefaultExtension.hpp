@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
 #include <array>
 
 namespace Acts {
