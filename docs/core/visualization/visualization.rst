@@ -23,7 +23,7 @@ that build up the object to display.
 Convenience helper functions
 ----------------------------
 
-The visualziation package also contains `static` helper functions for displaying complicated objects; these helper functions are provided by the `GeometryView3D` and `EventDataView3D` structs, that receive:
+The visualization package also contains `static` helper functions for displaying complicated objects; these helper functions are provided by the `GeometryView3D` and `EventDataView3D` structs, that receive:
  * A visualization visotor
  * The object to be written
  * A geometry context where needed

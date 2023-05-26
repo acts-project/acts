@@ -60,7 +60,7 @@ std::default_random_engine generator(42);
 
 /// Helper method to visualiza all types of surfaces
 ///
-/// @param helper The visualziation helper
+/// @param helper The visualization helper
 ///
 /// @return an overall string including all written output
 static inline std::string testBoundTrackParameters(IVisualization3D& helper) {

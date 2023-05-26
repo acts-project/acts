@@ -29,7 +29,7 @@ auto tGeometry = cGeometry();
 
 /// Helper method to visualiza all types of surfaces
 ///
-/// @param helper The visualziation helper
+/// @param helper The visualization helper
 /// @param triangulate The directive whether to create triangular meshes
 /// @param tag The test tag (mode) identification
 ///

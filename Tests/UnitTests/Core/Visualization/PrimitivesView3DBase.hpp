@@ -36,7 +36,7 @@ GeometryContext gctx = GeometryContext();
 
 /// Helper method to visualiza all types of surfaces
 ///
-/// @param helper The visualziation helper
+/// @param helper The visualization helper
 ///
 /// @return an overall string including all written output
 static inline std::string run(IVisualization3D& helper) {
