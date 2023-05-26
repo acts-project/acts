@@ -17,7 +17,8 @@ jobs:
       - name: Install git lfs and llvm dev
         run: apt-get update && apt-get install -y git-lfs llvm-dev libclang-dev clang
 
-      - uses: actions/checkout@v3
+      - name: Get IWYU source
+        uses: actions/checkout@v3
         with:
           repository: include-what-you-use/include-what-you-use
           ref: clang_14
@@ -29,9 +30,10 @@ jobs:
           cmake -B iwyu-build -S iwyu
           -DCMAKE_PREFIX_PATH=/usr/lib/llvm-14
           -DCMAKE_INSTALL_PREFIX=iwyu-install &&
-          cmake -B iwyu-build --target install
+          cmake --build iwyu-build --target install
 
-      - uses: actions/checkout@v3
+      - name: Get Acts source
+        uses: actions/checkout@v3
         with:
           path: acts
           submodules: true
@@ -63,7 +65,8 @@ jobs:
       - name: Apply IWYU
         run: python3 iwyu-install/bin/fix_includes.py < iwyu-filtered.txt
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload IWYU output
+        uses: actions/upload-artifact@v3
         with:
           name: iwyu
           path: |
