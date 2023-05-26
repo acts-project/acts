@@ -333,7 +333,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       Acts::BoundTrackParameters origTrack = *(trk.originalParams);
 
       // Find associated truth particle now
-      // We expect that the vectors `trackParameters` and `associatedTruthParticles` align
+      // We expect that the vectors `trackParameters` and
+      // `associatedTruthParticles` align
       for (std::size_t i = 0; i < trackParameters.size(); ++i) {
         const auto& particle = associatedTruthParticles[i];
         const auto& trackParameter = trackParameters[i].parameters();
