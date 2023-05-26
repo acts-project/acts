@@ -109,7 +109,7 @@ else()
   endif()
 endif()
 
-set_source_files_properties(src/Utilities/FpeMonitor.cpp PROPERTIES COMPILE_OPTIONS "${_fpe_options}")
+set_source_files_properties(src/Utilities/StackTrace.cpp PROPERTIES COMPILE_OPTIONS "${_fpe_options}")
 
 if(ACTS_PARAMETER_DEFINITIONS_HEADER)
   target_compile_definitions(

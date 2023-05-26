@@ -22,7 +22,7 @@ struct StackTrace::Impl {
 
 StackTrace::StackTrace(std::size_t skip, std::size_t maxDepth) {
   m_impl =
-      std::make_unique<Impl>(boost::stacktrace::stacktrace{skip, maxDepth});
+      std::make_unique<Impl>(boost::stacktrace::stacktrace{skip + 1, maxDepth});
 }
 
 StackTrace::StackTrace(StackTrace &&other) = default;
@@ -42,6 +42,19 @@ StackTrace::~StackTrace() = default;
 std::ostream &operator<<(std::ostream &os, const StackTrace &st) {
   os << st.m_impl->m_st;
   return os;
+}
+
+std::pair<std::string, std::size_t> StackTrace::topSourceLocation() const {
+  const auto &frame = m_impl->m_st.as_vector().at(0);
+  return {frame.source_file(), frame.source_line()};
+}
+
+bool operator==(const StackTrace &lhs, const StackTrace &rhs) {
+  const auto &fl = *lhs.m_impl->m_st.begin();
+  const auto &fr = *rhs.m_impl->m_st.begin();
+
+  return fl.source_file() == fr.source_file() &&
+         fl.source_line() == fr.source_line();
 }
 
 }  // namespace Acts

@@ -42,6 +42,8 @@ class FpeMonitor {
     const std::vector<std::pair<FpeType, StackTrace>> &stackTraces() const;
     unsigned int numStackTraces() const;
 
+    void deduplicate();
+
     Result();
 
    private:
@@ -56,8 +58,12 @@ class FpeMonitor {
   ~FpeMonitor();
 
   const Result &result() const;
+  Result &result();
 
   void rearm() const;
+
+  std::size_t stackLimit() const { return m_stackLimit; }
+  void setStackLimit(std::size_t limit) { m_stackLimit = limit; }
 
  private:
   void enable();
@@ -75,6 +81,7 @@ class FpeMonitor {
   static GlobalState &globalState();
 
   int m_excepts;
+  std::size_t m_stackLimit = 1000;
 
   Result m_result;
 };

@@ -10,6 +10,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 
 namespace Acts {
 struct StackTrace {
@@ -19,9 +20,13 @@ struct StackTrace {
   StackTrace &operator=(StackTrace &&other);
   StackTrace &operator=(const StackTrace &other);
 
+  std::pair<std::string, std::size_t> topSourceLocation() const;
+
   ~StackTrace();
 
   friend std::ostream &operator<<(std::ostream &os, const StackTrace &st);
+
+  friend bool operator==(const StackTrace &lhs, const StackTrace &rhs);
 
  private:
   struct Impl;

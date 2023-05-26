@@ -46,11 +46,18 @@ FpeMonitor::Result FpeMonitor::Result::merge(const Result &with) const {
   std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
             std::back_inserter(result.m_stracktraces));
 
+  // @TODO: Optimize this by not merging first and then deduplicating
+  result.deduplicate();
+
   // @TODO: Merge stack traces
   return result;
 }
 
 const FpeMonitor::Result &FpeMonitor::result() const {
+  return m_result;
+}
+
+FpeMonitor::Result &FpeMonitor::result() {
   return m_result;
 }
 
@@ -69,6 +76,23 @@ const std::vector<std::pair<FpeType, StackTrace>>
 
 bool FpeMonitor::Result::encountered(FpeType type) const {
   return count(type) > 0;
+}
+
+void FpeMonitor::Result::deduplicate() {
+  std::vector<std::pair<FpeType, StackTrace>> copy = std::move(m_stracktraces);
+  m_stracktraces.clear();
+
+  for (auto it : copy) {
+    auto type = it.first;
+    auto &st = it.second;
+    if (std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
+                     [&st, &type](const auto &el) {
+                       return el.first == type && el.second == st;
+                     }) != m_stracktraces.end()) {
+      continue;
+    }
+    m_stracktraces.push_back({type, std::move(st)});
+  }
 }
 
 FpeMonitor::FpeMonitor()
@@ -119,9 +143,11 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
 
   // collect stack trace skipping 2 frames, which should be the signal handler
   // and the calling facility. This might be platform specific, not sure
-  fpe.m_result.m_stracktraces.push_back(
-      {static_cast<FpeType>(si->si_code),
-       StackTrace(2, static_cast<std::size_t>(-1))});
+  if (fpe.m_result.m_stracktraces.size() < fpe.stackLimit()) {
+    fpe.m_result.m_stracktraces.push_back(
+        {static_cast<FpeType>(si->si_code),
+         StackTrace(2, static_cast<std::size_t>(-1))});
+  }
 
   // @TODO: Disable this on non-x86_64
   __uint16_t *cw = &((ucontext_t *)ctx)->uc_mcontext.fpregs->cwd;

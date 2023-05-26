@@ -37,6 +37,12 @@ __attribute__((noinline)) void invalid() {
   (void)r;
 }
 
+__attribute__((noinline)) void invalid2() {
+  volatile float k = 0;
+  volatile float p = k / 0.0;
+  (void)p;
+}
+
 }  // namespace
 
 namespace Acts::Test {
@@ -143,14 +149,31 @@ BOOST_AUTO_TEST_CASE(ClearOnEnter) {
 BOOST_AUTO_TEST_CASE(CheckRearmCount) {
   FpeMonitor mon;
   BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 0);
+  BOOST_CHECK(mon.result().stackTraces().empty());
+
   invalid();
   BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
+  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(), 1);
+
   invalid();
   // We can't observe this again because it's masked!
   BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
+  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(), 1);
+
   mon.rearm();
   invalid();
   BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 2);
+  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(), 2);
+  mon.result().deduplicate();
+  // now 1 because we deduplicated!
+  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(), 1);
+
+  mon.rearm();
+  invalid2();
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 3);
+  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(), 2);
+  mon.result().deduplicate();  // doesn't do anything here actually
+  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(Scoping) {
@@ -204,6 +227,21 @@ BOOST_AUTO_TEST_CASE(Scoping) {
     BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MergeDeduplication) {
+  {
+    FpeMonitor mon;
+    invalid();
+    {
+      FpeMonitor mon2;
+      invalid();
+
+      auto merged = mon.result().merge(mon2.result());
+      BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 2);
+      BOOST_CHECK_EQUAL(merged.stackTraces().size(), 1);
+    }
   }
 }
 
