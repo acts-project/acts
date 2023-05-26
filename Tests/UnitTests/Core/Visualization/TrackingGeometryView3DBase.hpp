@@ -27,7 +27,7 @@ GeometryContext tgContext = GeometryContext();
 Test::CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
-/// Helper method to visualiza all types of surfaces
+/// Helper method to visualize all types of surfaces
 ///
 /// @param helper The visualization helper
 /// @param triangulate The directive whether to create triangular meshes

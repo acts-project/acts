@@ -34,7 +34,7 @@ auto plane = Surface::makeShared<PlaneSurface>(identity, rectangle);
 // Test context
 GeometryContext gctx = GeometryContext();
 
-/// Helper method to visualiza all types of surfaces
+/// Helper method to visualize all types of surfaces
 ///
 /// @param helper The visualization helper
 ///

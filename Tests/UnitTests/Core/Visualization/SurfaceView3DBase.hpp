@@ -36,7 +36,7 @@ namespace Acts {
 
 namespace SurfaceView3DTest {
 
-/// Helper method to visualiza all types of surfaces
+/// Helper method to visualize all types of surfaces
 ///
 /// @param helper The visualization helper
 /// @param triangulate The directive whether to create triangular meshes
