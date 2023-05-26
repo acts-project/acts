@@ -18,7 +18,7 @@
 
 namespace {
 
-/// Helper method to check if an interseciton is good.
+/// Helper method to check if an intersection is good.
 ///
 /// Good in this context is defined as: along direction,
 /// closer than the segment length & reachable
