@@ -15,7 +15,7 @@ jobs:
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
       - name: Install git lfs, llvm-dev
-        run: apt-get update && apt-get install -y git-lfs, libclang-dev
+        run: apt-get update && apt-get install -y git-lfs libclang-dev
 
       - uses: actions/checkout@v3
         with:
