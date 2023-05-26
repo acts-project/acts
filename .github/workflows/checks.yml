@@ -1,12 +1,6 @@
 name: Checks
 
 on:
-  push:
-  pull_request:
-    branches:
-      - main
-      - 'release/**'
-      - 'develop/**'
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
