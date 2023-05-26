@@ -292,7 +292,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   GeometryView3D::drawSurface(helper, *disc, gctx, Transform3::Identity(),
                               sConfig);
 
-  helper.write(std::string("Surfaces_DiscAnulusBounds") + tag);
+  helper.write(std::string("Surfaces_DiscAnnulusBounds") + tag);
   helper.write(cStream);
   helper.clear();
 

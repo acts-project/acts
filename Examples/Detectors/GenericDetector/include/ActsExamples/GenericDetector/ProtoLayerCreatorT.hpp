@@ -420,7 +420,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                << numpnLayers << " passive positive/negative side layers.");
     epLayers.reserve(numpnLayers);
 
-    /// this is the loop over th elayer positions
+    /// this is the loop over the layer positions
     for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
       // some screen output
       ACTS_VERBOSE("- building layer "
