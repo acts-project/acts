@@ -22,12 +22,7 @@
 #include <memory>
 #include <vector>
 
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/detail/descr.h>
-#include <pybind11/detail/type_caster_base.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;

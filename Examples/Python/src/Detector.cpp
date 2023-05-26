@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -25,15 +27,7 @@
 #include <utility>
 #include <vector>
 
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/detail/descr.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-
-namespace Acts {
-class IMaterialDecorator;
-}  // namespace Acts
 
 namespace py = pybind11;
 using namespace ActsExamples;

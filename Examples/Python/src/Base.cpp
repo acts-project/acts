@@ -18,13 +18,8 @@
 #include <string>
 #include <unordered_map>
 
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/detail/descr.h>
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
-#include <pyerrors.h>
 
 namespace py = pybind11;
 using namespace pybind11::literals;

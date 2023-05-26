@@ -8,19 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
-#include "ActsFatras/Selectors/detail/combine_selectors.hpp"
 
 #include <string>
 
 #include "Dataset.hpp"
-
-namespace ActsFatras {
-namespace Casts {
-struct AbsEta;
-struct Eta;
-}  // namespace Casts
-}  // namespace ActsFatras
 
 namespace {
 const auto& backward = Dataset::backwardPion;

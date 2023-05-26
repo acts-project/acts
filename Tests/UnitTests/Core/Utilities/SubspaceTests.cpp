@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <algorithm>
 #include <array>
@@ -18,13 +19,6 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
-namespace Acts {
-namespace detail {
-template <size_t kFullSize, size_t kSize>
-class FixedSizeSubspace;
-}  // namespace detail
-}  // namespace Acts
 
 namespace {
 

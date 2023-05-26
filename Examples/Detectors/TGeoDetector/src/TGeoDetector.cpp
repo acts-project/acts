@@ -24,6 +24,7 @@
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -39,6 +40,8 @@
 
 #include <boost/program_options.hpp>
 #include <nlohmann/json.hpp>
+
+#include "TGeoManager.h"
 
 namespace ActsExamples {
 using namespace Options;

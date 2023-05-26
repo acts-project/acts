@@ -27,6 +27,7 @@
 
 #include <cmath>
 #include <cstddef>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>

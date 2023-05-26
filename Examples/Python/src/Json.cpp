@@ -10,6 +10,7 @@
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
+#include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -24,12 +25,7 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/detail/descr.h>
-#include <pybind11/detail/type_caster_base.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
 
 namespace Acts {
 class IMaterialDecorator;

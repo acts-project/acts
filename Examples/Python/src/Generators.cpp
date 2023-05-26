@@ -27,11 +27,7 @@
 #include <utility>
 #include <vector>
 
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/detail/descr.h>
 #include <pybind11/pybind11.h>
-#include <pybind11/pytypes.h>
 
 namespace ActsExamples {
 class IReader;

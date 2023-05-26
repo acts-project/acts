@@ -9,6 +9,24 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/Volume.hpp"
+#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/detail/SteppingLogger.hpp"
+#include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Ray.hpp"
+
 namespace Acts {
 namespace Test {
 
