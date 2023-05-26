@@ -14,7 +14,7 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
 ```cpp
 class GeometryObject {
  public:
-  /// Defaulted construrctor
+  /// Defaulted constructor
   GeometryObject() = default;
 
   /// Defaulted copy constructor
