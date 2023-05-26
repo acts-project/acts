@@ -14,7 +14,7 @@ remove_lines:
   - "^(- )?#include \"TGeo"
   - "^(- )?#include \"TView"
   - "^(- )?#include [<\"]G4"
-  # include touch ipp
+  # don't touch ipp
   - "^(- )?#include [<\"].*\\.ipp"
 
 replace_lines:
