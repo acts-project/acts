@@ -2,6 +2,7 @@ name: IWYU
 
 on:
   push: # TODO remove
+  pull_request: # TODO remove
   workflow_dispatch:
 
 concurrency:
@@ -9,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  linux_ubuntu:
+  iwyu_ubuntu_2204:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
