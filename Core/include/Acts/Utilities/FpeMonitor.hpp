@@ -9,9 +9,11 @@
 #pragma once
 
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/StackTrace.hpp"
 
 #include <atomic>
 #include <csignal>
+#include <memory>
 #include <mutex>
 #include <stack>
 
@@ -31,23 +33,20 @@ enum class FpeType : uint32_t {
 std::ostream &operator<<(std::ostream &os, FpeType type);
 
 class FpeMonitor {
-  struct Impl;
-
  public:
   struct Result {
     Result merge(const Result &with) const;
     bool encountered(FpeType type) const;
     unsigned int count(FpeType type) const;
-    unsigned int numStackTraces() const;
-    void printStacktraces(std::ostream &os) const;
 
-    ~Result();
-    Result(Result &&) = default;
-    Result &operator=(Result &&);
+    const std::vector<std::pair<FpeType, StackTrace>> &stackTraces() const;
+    unsigned int numStackTraces() const;
+
+    Result();
 
    private:
-    Result();
-    std::unique_ptr<Impl> m_impl;
+    std::vector<std::pair<FpeType, StackTrace>> m_stracktraces;
+    std::array<unsigned int, 32> m_counts{};
 
     friend FpeMonitor;
   };

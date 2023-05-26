@@ -56,7 +56,10 @@ BOOST_AUTO_TEST_CASE(Invalid) {
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    mon.result().printStacktraces(std::cout);
+    for (const auto& [type, st] : mon.result().stackTraces()) {
+      std::cout << type << std::endl;
+      std::cout << st << std::endl;
+    }
   }
 }
 
@@ -73,7 +76,10 @@ BOOST_AUTO_TEST_CASE(DivByZero) {
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
 
-    mon.result().printStacktraces(std::cout);
+    for (const auto& [type, st] : mon.result().stackTraces()) {
+      std::cout << type << std::endl;
+      std::cout << st << std::endl;
+    }
   }
 }
 
@@ -89,7 +95,10 @@ BOOST_AUTO_TEST_CASE(Overflow) {
     BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    mon.result().printStacktraces(std::cout);
+    for (const auto& [type, st] : mon.result().stackTraces()) {
+      std::cout << type << std::endl;
+      std::cout << st << std::endl;
+    }
   }
 }
 

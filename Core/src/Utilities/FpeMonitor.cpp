@@ -23,8 +23,6 @@
 #include <stdexcept>
 #include <string_view>
 
-#include <boost/stacktrace/detail/frame_unwind.ipp>  // needed to avoid linker error
-#include <boost/stacktrace/stacktrace.hpp>
 #include <fenv.h>
 #include <signal.h>
 
@@ -35,32 +33,18 @@
 
 namespace Acts {
 
-struct FpeMonitor::Impl {
-  std::array<unsigned int, 32> m_counts;
-
-  struct FpeInfo {
-    FpeType type;
-    boost::stacktrace::stacktrace stacktrace;
-  };
-
-  std::vector<FpeInfo> m_stracktraces;
-};
-
-FpeMonitor::Result::Result() : m_impl{std::make_unique<Impl>()} {}
-FpeMonitor::Result::~Result() = default;
-FpeMonitor::Result &FpeMonitor::Result::operator=(Result &&) = default;
+FpeMonitor::Result::Result() = default;
 
 FpeMonitor::Result FpeMonitor::Result::merge(const Result &with) const {
   Result result;
-  for (unsigned int i = 0; i < m_impl->m_counts.size(); i++) {
-    result.m_impl->m_counts[i] = m_impl->m_counts[i] + with.m_impl->m_counts[i];
+  for (unsigned int i = 0; i < m_counts.size(); i++) {
+    result.m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(m_impl->m_stracktraces.begin(), m_impl->m_stracktraces.end(),
-            std::back_inserter(result.m_impl->m_stracktraces));
-  std::copy(with.m_impl->m_stracktraces.begin(),
-            with.m_impl->m_stracktraces.end(),
-            std::back_inserter(result.m_impl->m_stracktraces));
+  std::copy(m_stracktraces.begin(), m_stracktraces.end(),
+            std::back_inserter(result.m_stracktraces));
+  std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
+            std::back_inserter(result.m_stracktraces));
 
   // @TODO: Merge stack traces
   return result;
@@ -71,22 +55,20 @@ const FpeMonitor::Result &FpeMonitor::result() const {
 }
 
 unsigned int FpeMonitor::Result::count(FpeType type) const {
-  return m_impl->m_counts.at(static_cast<uint32_t>(type));
+  return m_counts.at(static_cast<uint32_t>(type));
 }
 
 unsigned int FpeMonitor::Result::numStackTraces() const {
-  return m_impl->m_stracktraces.size();
+  return m_stracktraces.size();
+}
+
+const std::vector<std::pair<FpeType, StackTrace>>
+    &FpeMonitor::Result::stackTraces() const {
+  return m_stracktraces;
 }
 
 bool FpeMonitor::Result::encountered(FpeType type) const {
   return count(type) > 0;
-}
-
-void FpeMonitor::Result::printStacktraces(std::ostream &os) const {
-  for (const auto &info : m_impl->m_stracktraces) {
-    os << info.type << std::endl;
-    os << info.stacktrace << std::endl;
-  }
 }
 
 FpeMonitor::FpeMonitor()
@@ -133,13 +115,13 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   std::cout << std::endl;
 
   FpeMonitor &fpe = *stack().top();
-  fpe.m_result.m_impl->m_counts.at(si->si_code)++;
+  fpe.m_result.m_counts.at(si->si_code)++;
 
   // collect stack trace skipping 2 frames, which should be the signal handler
   // and the calling facility. This might be platform specific, not sure
-  fpe.m_result.m_impl->m_stracktraces.push_back(Impl::FpeInfo{
-      static_cast<FpeType>(si->si_code),
-      boost::stacktrace::stacktrace(2, static_cast<std::size_t>(-1))});
+  fpe.m_result.m_stracktraces.push_back(
+      {static_cast<FpeType>(si->si_code),
+       StackTrace(2, static_cast<std::size_t>(-1))});
 
   // @TODO: Disable this on non-x86_64
   __uint16_t *cw = &((ucontext_t *)ctx)->uc_mcontext.fpregs->cwd;

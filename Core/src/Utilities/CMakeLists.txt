@@ -6,4 +6,5 @@ target_sources(
     Logger.cpp
     SpacePointUtility.cpp
     FpeMonitor.cpp
+    StackTrace.cpp
 )
