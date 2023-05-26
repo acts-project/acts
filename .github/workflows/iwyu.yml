@@ -43,7 +43,7 @@ jobs:
         run: >
           mkdir acts-build acts-install &&
           cmake -B acts-build -S acts
-          -GNinja
+          -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
@@ -58,7 +58,7 @@ jobs:
           -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
 
-      - name: IWYU
+      - name: Run IWYU
         run: python3 iwyu-install/bin/iwyu_tool.py -p acts-build/ -j2 | tee iwyu-output.txt
       - name: Filter IWYU output
         run: python3 acts/iwyu/filter.py acts/iwyu/filter.yaml iwyu-output.txt iwyu-filtered.txt
