@@ -22,6 +22,7 @@
 #include <random>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// The random number generator used in the framework.
 using RandomEngine = std::mt19937;  ///< Mersenne Twister

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Units.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
@@ -17,10 +19,21 @@
 
 #include <functional>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
 #include <TGeoNode.h>
+
+class TGeoNode;
+namespace Acts {
+class IMaterialDecorator;
+class TrackingGeometry;
+}  // namespace Acts
+namespace dd4hep {
+class Detector;
+}  // namespace dd4hep
 
 namespace ActsExamples {
 namespace DD4hep {

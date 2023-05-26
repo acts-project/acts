@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <functional>
 
 namespace ActsFatras {

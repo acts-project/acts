@@ -10,6 +10,8 @@
 
 #include "Acts/Material/Material.hpp"
 
+#include <cmath>
+
 Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
                                               const MaterialSlab& slab2) {
   const auto& mat1 = slab1.material();

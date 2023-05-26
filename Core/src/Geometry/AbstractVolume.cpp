@@ -8,9 +8,9 @@
 
 #include "Acts/Geometry/AbstractVolume.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 
 #include <utility>
 

@@ -9,10 +9,13 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 
-#include <optional>
+#include <algorithm>
+#include <cstddef>
+#include <utility>
 
 #include <Eigen/src/Core/MatrixBase.h>
 

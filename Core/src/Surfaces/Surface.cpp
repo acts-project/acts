@@ -8,12 +8,15 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
 #include <iomanip>
-#include <iostream>
-#include <sstream>
 #include <utility>
 
 std::array<std::string, Acts::Surface::SurfaceType::Other>

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <XML/XMLElements.h>
+#include <memory>
+#include <string>
+
 // DD4hep
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
@@ -11,6 +15,11 @@
 #include "DDSegmentation/CartesianGridXY.h"
 #include "DDSegmentation/CartesianGridXYZ.h"
 #include "DDSegmentation/PolarGridRPhi.h"
+#include "XML/XMLDetector.h"
+
+namespace Acts {
+class DigitizationModule;
+}  // namespace Acts
 
 /** Given a xml element with several daughters with the same name, e.g.
  <detector> <layer name="1" /> <layer name="2"> </detector>

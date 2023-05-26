@@ -13,6 +13,7 @@
 
 class G4LogicalVolume;
 class G4VPhysicalVolume;
+class G4RunManager;
 
 namespace ActsFatras {
 

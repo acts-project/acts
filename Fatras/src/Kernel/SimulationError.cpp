@@ -8,6 +8,8 @@
 
 #include "ActsFatras/Kernel/detail/SimulationError.hpp"
 
+#include <string>
+
 namespace ActsFatras {
 namespace detail {
 namespace {

@@ -11,18 +11,28 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Surfaces/InfiniteBounds.hpp"   //to get s_noBounds
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
-#include <limits>
+#include <memory>
 
 #include "SurfaceStub.hpp"
+
+namespace Acts {
+class PlanarBounds;
+}  // namespace Acts
+namespace boost {
+namespace test_tools {
+class output_test_stream;
+}  // namespace test_tools
+}  // namespace boost
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;

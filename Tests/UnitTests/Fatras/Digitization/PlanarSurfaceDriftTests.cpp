@@ -10,11 +10,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
+
+#include <array>
+#include <memory>
 
 namespace bdata = boost::unit_test::data;
 

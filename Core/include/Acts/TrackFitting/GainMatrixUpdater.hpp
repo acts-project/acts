@@ -17,6 +17,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
+#include <system_error>
+#include <tuple>
+
 namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.

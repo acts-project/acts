@@ -8,13 +8,16 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <cstddef>
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>

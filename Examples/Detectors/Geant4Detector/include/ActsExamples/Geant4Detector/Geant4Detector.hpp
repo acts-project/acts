@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -21,6 +22,9 @@ class G4VPhysicalVolume;
 
 namespace Acts {
 class TrackingGeometry;
+class Geant4DetectorElement;
+class Surface;
+
 namespace Experimental {
 class Detector;
 }

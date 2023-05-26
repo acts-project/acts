@@ -11,7 +11,15 @@
 
 #include "Acts/Clusterization/Clusterization.hpp"
 
+#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <random>
+#include <utility>
+#include <vector>
+
 #include <boost/functional/hash.hpp>
+#include <stdlib.h>
 
 namespace Acts {
 namespace Test {

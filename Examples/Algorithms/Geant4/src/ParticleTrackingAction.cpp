@@ -9,14 +9,23 @@
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <cassert>
+#include <cstddef>
+#include <ostream>
+#include <unordered_map>
+#include <utility>
 
 #include <G4ParticleDefinition.hh>
 #include <G4RunManager.hh>
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
-#include <globals.hh>
 
 ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)

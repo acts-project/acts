@@ -12,13 +12,17 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <limits>
+#include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Select particles by applying some selection cuts.
 class ParticleSelector final : public IAlgorithm {

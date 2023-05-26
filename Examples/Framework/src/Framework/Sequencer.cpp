@@ -8,9 +8,13 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -18,12 +22,14 @@
 
 #include <algorithm>
 #include <atomic>
-#include <cfenv>
+#include <cctype>
 #include <chrono>
-#include <exception>
-#include <limits>
+#include <cstdint>
 #include <numeric>
+#include <ostream>
+#include <ratio>
 #include <stdexcept>
+#include <string_view>
 #include <typeinfo>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
@@ -34,6 +40,9 @@
 #include <boost/core/demangle.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
+#include <oneapi/tbb/blocked_range.h>
+#include <oneapi/tbb/task_arena.h>
+#include <stdlib.h>
 
 namespace ActsExamples {
 

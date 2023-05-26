@@ -8,15 +8,24 @@
 
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <functional>
 #include <iterator>
-#include <numeric>
+#include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>

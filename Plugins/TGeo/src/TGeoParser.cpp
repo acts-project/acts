@@ -8,10 +8,14 @@
 
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <iostream>
+#include <RtypesCore.h>
+#include <TCollection.h>
+#include <TObjArray.h>
+#include <TObject.h>
 
 #include "TGeoBBox.h"
 #include "TGeoNode.h"

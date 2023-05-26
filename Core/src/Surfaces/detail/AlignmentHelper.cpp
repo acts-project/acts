@@ -8,6 +8,10 @@
 
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <utility>
+
 Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
     const RotationMatrix3& rotation) {
   // Get Euler angles for rotation representated by rotZ * rotY * rotX, i.e.

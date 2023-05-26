@@ -8,8 +8,16 @@
 
 #pragma once
 
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+namespace Acts {
+class ConstVectorMultiTrajectory;
+class VectorMultiTrajectory;
+}  // namespace Acts
 
 namespace ActsExamples {
 

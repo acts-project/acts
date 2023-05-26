@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 
+#include <utility>
+
 #include <G4ParticleTypes.hh>
 #include <G4ProcessManager.hh>
 #include <G4ProcessVector.hh>

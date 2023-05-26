@@ -14,6 +14,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iosfwd>
 #include <limits>

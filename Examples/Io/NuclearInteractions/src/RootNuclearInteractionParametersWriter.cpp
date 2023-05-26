@@ -8,11 +8,28 @@
 
 #include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <cstdint>
+#include <iterator>
+#include <memory>
 #include <stdexcept>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
 
+#include <TAxis.h>
+#include <TDirectory.h>
 #include <TFile.h>
+#include <TH1.h>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 namespace {
 

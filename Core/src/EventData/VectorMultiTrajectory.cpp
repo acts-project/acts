@@ -8,12 +8,12 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <cstdint>
+#include <iomanip>
+#include <ostream>
 #include <type_traits>
 
 #include <boost/histogram.hpp>

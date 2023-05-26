@@ -11,16 +11,29 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/GenericApproachDescriptor.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include "LayerStub.hpp"
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace boost {
+namespace test_tools {
+class output_test_stream;
+}  // namespace test_tools
+}  // namespace boost
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;

@@ -9,14 +9,17 @@
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/ContextualDetector/AlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/ExternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
+#include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 using namespace Acts::UnitLiterals;
 namespace ActsExamples::Contextual {

@@ -9,9 +9,10 @@
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <algorithm>
-#include <istream>
 #include <ostream>
 #include <stdexcept>
+#include <string>
+#include <utility>
 
 namespace {
 constexpr char s_separator = ':';

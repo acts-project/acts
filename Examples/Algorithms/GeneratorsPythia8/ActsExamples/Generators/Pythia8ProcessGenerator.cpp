@@ -8,11 +8,20 @@
 
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 
-#include <algorithm>
-#include <iterator>
-#include <random>
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <iterator>
+#include <ostream>
+#include <random>
+#include <utility>
+
+#include <Pythia8/Basics.h>
+#include <Pythia8/Event.h>
 #include <Pythia8/Pythia.h>
+#include <Pythia8/Settings.h>
 
 namespace {
 struct FrameworkRndmEngine : public Pythia8::RndmEngine {

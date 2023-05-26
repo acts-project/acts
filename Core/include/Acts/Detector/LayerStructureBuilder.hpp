@@ -9,12 +9,21 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cstddef>
 #include <functional>
+#include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace Acts {
 namespace Experimental {

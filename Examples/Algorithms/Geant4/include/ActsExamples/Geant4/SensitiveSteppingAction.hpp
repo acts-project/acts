@@ -15,6 +15,8 @@
 
 #include <G4UserSteppingAction.hh>
 
+class G4Step;
+
 namespace ActsExamples {
 
 /// The G4SteppingAction that is called for every step in

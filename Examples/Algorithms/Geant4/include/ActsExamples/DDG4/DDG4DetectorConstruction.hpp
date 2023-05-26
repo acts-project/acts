@@ -10,6 +10,8 @@
 
 #include <G4VUserDetectorConstruction.hh>
 
+class G4VPhysicalVolume;
+
 namespace dd4hep {
 class Detector;
 }

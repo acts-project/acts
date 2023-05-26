@@ -8,10 +8,12 @@
 
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
 
 Acts::Result<Acts::BoundVector> Acts::detail::transformFreeToBoundParameters(
     const FreeVector& freeParams, const Surface& surface,

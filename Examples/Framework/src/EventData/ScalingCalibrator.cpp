@@ -6,12 +6,43 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include <Acts/Definitions/TrackParametrization.hpp>
 #include <ActsExamples/EventData/ScalingCalibrator.hpp>
 
+#include <algorithm>
+#include <array>
+#include <bitset>
+#include <cassert>
+#include <cstring>
+#include <filesystem>
+#include <map>
 #include <regex>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <variant>
+#include <vector>
 
+#include <TCollection.h>
+#include <TFile.h>
+#include <TH2.h>
 #include <TKey.h>
+#include <TList.h>
+#include <TString.h>
+
+namespace Acts {
+class VectorMultiTrajectory;
+}  // namespace Acts
 
 namespace detail {
 

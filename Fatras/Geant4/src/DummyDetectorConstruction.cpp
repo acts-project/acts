@@ -15,6 +15,8 @@
 #include "G4ThreeVector.hh"
 #include "QGSP_BERT.hh"
 
+class G4VUserPhysicsList;
+
 G4RunManager* ActsFatras::ensureGeant4RunManager() {
   // Test if there's already a G4RunManager
   if (G4RunManager::GetRunManager() == nullptr) {

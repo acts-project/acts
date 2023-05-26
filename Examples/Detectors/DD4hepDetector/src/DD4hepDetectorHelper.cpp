@@ -10,8 +10,13 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+
+#include <cstddef>
+
+#include <DD4hep/Segmentations.h>
 
 #include "DD4hep/CartesianGridXY.h"
 

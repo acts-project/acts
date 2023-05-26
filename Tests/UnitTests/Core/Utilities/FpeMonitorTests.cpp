@@ -10,7 +10,11 @@
 
 #include "Acts/Utilities/FpeMonitor.hpp"
 
-#include <optional>
+#include <cmath>
+#include <iostream>
+#include <limits>
+
+#include <stdio.h>
 
 namespace utf = boost::unit_test;
 

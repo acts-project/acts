@@ -10,8 +10,11 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cmath>
 #include <limits>
 
 using Acts::PdgParticle;
