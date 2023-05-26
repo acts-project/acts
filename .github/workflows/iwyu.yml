@@ -1,6 +1,8 @@
 name: IWYU
 
-on: workflow_dispatch
+on:
+  push: # TODO remove
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
