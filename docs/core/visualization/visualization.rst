@@ -29,7 +29,7 @@ The visualization package also contains `static` helper functions for displaying
  * A geometry context where needed
  * Some view configuration, which is simply handled by the `ViewConfig` struct.
 
- The `ViewConfig` struct contains a number of parameters, such as the `visiblity` flag, the RGB color definition of the object (or its contained objects),
+ The `ViewConfig` struct contains a number of parameters, such as the `visibility` flag, the RGB color definition of the object (or its contained objects),
  and some other view parameters that can be changed.
 
  The `Tests/UnitsTests/Core/Visualization` package contains a certain number of tests that produce output files to be visualized with any standard 3D viewer.
