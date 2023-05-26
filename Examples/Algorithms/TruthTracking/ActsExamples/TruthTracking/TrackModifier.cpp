@@ -37,7 +37,7 @@ ActsExamples::TrackModifier::TrackModifier(const Config& config,
   }
 
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
   m_outputTrackParameters.maybeInitialize(m_cfg.outputTrackParameters);
   m_outputTrajectories.maybeInitialize(m_cfg.outputTrajectories);
 }
