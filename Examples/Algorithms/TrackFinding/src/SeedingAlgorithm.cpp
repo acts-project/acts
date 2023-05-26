@@ -25,12 +25,12 @@
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
-
-  // Seed Finder config requires Seed Filter object before convertion to internal units
+  // Seed Finder config requires Seed Filter object before convertion to
+  // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-    std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
-  
+      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
+
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
   m_cfg.seedFinderOptions =
