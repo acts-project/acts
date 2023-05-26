@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -420,6 +421,8 @@ int Sequencer::run() {
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
 
+          auto& fpeResult = m_fpeResults.local();
+
           for (size_t event = r.begin(); event != r.end(); ++event) {
             ACTS_DEBUG("start processing event " << event);
             m_cfg.iterationCallback();
@@ -445,6 +448,7 @@ int Sequencer::run() {
             ACTS_VERBOSE("Execute sequence elements");
 
             for (auto& alg : m_sequenceElements) {
+              Acts::FpeMonitor mon;
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
                                       << alg->name());
@@ -453,6 +457,7 @@ int Sequencer::run() {
                                                 << ": " << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
+              fpeResult = fpeResult.merge(mon.result());
             }
 
             nProcessedEvents++;
@@ -475,6 +480,13 @@ int Sequencer::run() {
           }
         });
   });
+
+  Acts::FpeMonitor::Result fpeResult;
+  for (const auto& threadResult : m_fpeResults) {
+    fpeResult = fpeResult.merge(threadResult);
+  }
+
+  fpeResult.summary(std::cout);
 
   ACTS_VERBOSE("Finalize sequence elements");
   for (auto& alg : m_sequenceElements) {

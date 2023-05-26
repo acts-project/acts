@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -25,6 +26,8 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#include <tbb/enumerable_thread_specific.h>
 
 namespace ActsExamples {
 
@@ -143,6 +146,8 @@ class Sequencer {
   std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
 
   std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
+
+  tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> m_fpeResults;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };

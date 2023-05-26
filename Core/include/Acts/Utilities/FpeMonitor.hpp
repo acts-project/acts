@@ -35,11 +35,17 @@ std::ostream &operator<<(std::ostream &os, FpeType type);
 class FpeMonitor {
  public:
   struct Result {
+    struct FpeInfo {
+      std::size_t count;
+      FpeType type;
+      StackTrace st;
+    };
+
     Result merge(const Result &with) const;
     bool encountered(FpeType type) const;
     unsigned int count(FpeType type) const;
 
-    const std::vector<std::pair<FpeType, StackTrace>> &stackTraces() const;
+    const std::vector<FpeInfo> &stackTraces() const;
     unsigned int numStackTraces() const;
 
     void deduplicate();
@@ -49,7 +55,7 @@ class FpeMonitor {
     Result();
 
    private:
-    std::vector<std::pair<FpeType, StackTrace>> m_stracktraces;
+    std::vector<FpeInfo> m_stracktraces;
     std::array<unsigned int, 32> m_counts{};
 
     friend FpeMonitor;

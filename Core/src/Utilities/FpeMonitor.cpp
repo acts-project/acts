@@ -70,7 +70,7 @@ unsigned int FpeMonitor::Result::numStackTraces() const {
   return m_stracktraces.size();
 }
 
-const std::vector<std::pair<FpeType, StackTrace>>
+const std::vector<FpeMonitor::Result::FpeInfo>
     &FpeMonitor::Result::stackTraces() const {
   return m_stracktraces;
 }
@@ -90,25 +90,27 @@ void FpeMonitor::Result::summary(std::ostream &os) const {
   }
 
   os << "\nStack traces:\n";
-  for (auto &[type, st] : stackTraces()) {
-    os << "- " << type << ":\n" << st;
+  for (const auto &[count, type, st] : stackTraces()) {
+    os << "- " << type << ": (" << count << " times)\n" << st;
   }
 }
 
 void FpeMonitor::Result::deduplicate() {
-  std::vector<std::pair<FpeType, StackTrace>> copy = std::move(m_stracktraces);
+  std::vector<FpeInfo> copy = std::move(m_stracktraces);
   m_stracktraces.clear();
 
-  for (auto it : copy) {
-    auto type = it.first;
-    auto &st = it.second;
-    if (std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
-                     [&st, &type](const auto &el) {
-                       return el.first == type && el.second == st;
-                     }) != m_stracktraces.end()) {
+  for (auto &info : copy) {
+    // auto type = it.first;
+    // auto &st = it.second;
+    auto it = std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
+                           [&info](const FpeInfo &el) {
+                             return el.type == info.type && el.st == info.st;
+                           });
+    if (it != m_stracktraces.end()) {
+      it->count += info.count;
       continue;
     }
-    m_stracktraces.push_back({type, std::move(st)});
+    m_stracktraces.push_back({info.count, info.type, std::move(info.st)});
   }
 }
 
@@ -158,12 +160,14 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   FpeMonitor &fpe = *stack().top();
   fpe.m_result.m_counts.at(si->si_code)++;
 
+  std::size_t maxDepth = static_cast<std::size_t>(-1);
+  maxDepth = 16;
+
   // collect stack trace skipping 2 frames, which should be the signal handler
   // and the calling facility. This might be platform specific, not sure
   if (fpe.m_result.m_stracktraces.size() < fpe.stackLimit()) {
     fpe.m_result.m_stracktraces.push_back(
-        {static_cast<FpeType>(si->si_code),
-         StackTrace(2, static_cast<std::size_t>(-1))});
+        {1, static_cast<FpeType>(si->si_code), StackTrace(2, maxDepth)});
   }
 
   // @TODO: Disable this on non-x86_64
