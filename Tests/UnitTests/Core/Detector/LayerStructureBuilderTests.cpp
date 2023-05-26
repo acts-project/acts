@@ -49,7 +49,7 @@ struct SurfaceProvider {
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
-// Test the creation of the Ring
+// Test the creation of a ring like structure
 BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   // Detector store
   CylindricalTrackingGeometry::DetectorStore dStore;
@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   BOOST_CHECK(volumeUpdator2.connected());
 }
 
-// Test the creation of the Cylinder
+// Test the creation of a cylindrical structure
 BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto cSurfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145, 72,
