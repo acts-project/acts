@@ -1,0 +1,68 @@
+name: IWYU
+
+on: workflow_dispatch
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  linux_ubuntu:
+    runs-on: ubuntu-latest
+    container: ghcr.io/acts-project/ubuntu2204:v41
+    steps:
+      - name: Install git lfs, llvm-dev
+        run: apt-get update && apt-get install -y git-lfs, libclang-dev
+
+      - uses: actions/checkout@v3
+        with:
+          repository: https://github.com/include-what-you-use/include-what-you-use.git
+          ref: clang_14
+          path: iwyu
+
+      - name: Build IWYU
+        run: >
+          mkdir iwyu-build iwyu-install &&
+          cmake -B iwyu-build -S iwyu
+          -DCMAKE_PREFIX_PATH=/usr/lib/llvm-14
+          -DCMAKE_INSTALL_PREFIX="iwyu-install" &&
+          cmake -B iwyu-build --target install
+
+      - uses: actions/checkout@v3
+        with:
+          path: acts
+          submodules: true
+          lfs: true
+
+      - name: Configure Acts
+        run: >
+          mkdir acts-build acts-install &&
+          cmake -B acts-build -S acts
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_INSTALL_PREFIX="acts-install"
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_BINARIES=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+          -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_BUILD_ANALYSIS_APPS=ON
+          -DACTS_BUILD_PLUGIN_ONNX=ON
+
+      - name: IWYU
+        run: python iwyu-install/bin/iwyu_tool.py -p acts-build/ -j2 | tee iwyu-output.txt
+      - name: Filter IWYU output
+        run: python acts/iwyu/filter.py acts/iwyu/filter.yaml iwyu-output.txt iwyu-filtered.txt
+      - name: Apply IWYU
+        run: python3 iwyu-install/bin/fix_includes.py < iwyu-filtered.txt
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: iwyu
+          path: |
+            iwyu-output.txt
+            iwyu-filtered.txt
