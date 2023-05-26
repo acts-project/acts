@@ -17,6 +17,9 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <limits>
+
+#include <pybind11/detail/common.h>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
@@ -228,18 +231,56 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def_readwrite("outputDir", &Config::outputDir)
       .def_readwrite("outputTimingFile", &Config::outputTimingFile);
 
+  auto fpe = py::class_<Acts::FpeMonitor>(m, "_FpeMonitor");
+
+  fpe.def_property_readonly(
+      "result", py::overload_cast<>(&Acts::FpeMonitor::result, py::const_),
+      py::return_value_policy::reference_internal);
+
+  py::class_<Acts::FpeMonitor::Result>(fpe, "Result")
+      .def("merge", &Acts::FpeMonitor::Result::merge)
+      .def("__str__", [](const Acts::FpeMonitor::Result& result) {
+        std::stringstream os;
+        result.summary(os);
+        return os.str();
+      });
+
   struct PyFpeMonitor {
     std::optional<Acts::FpeMonitor> mon;
   };
 
   py::class_<PyFpeMonitor>(m, "FpeMonitor")
       .def(py::init([]() { return std::make_unique<PyFpeMonitor>(); }))
-      .def("__enter__", [](PyFpeMonitor& fm) { fm.mon.emplace(); })
+      .def(
+          "__enter__",
+          [](PyFpeMonitor& fm) -> Acts::FpeMonitor& {
+            fm.mon.emplace();
+            return fm.mon.value();
+          },
+          py::return_value_policy::reference_internal)
       .def("__exit__", [](PyFpeMonitor& fm, py::object /*exc_type*/,
                           py::object /*exc_value*/,
                           py::object /*traceback*/) { fm.mon.reset(); })
-      .def_static("enable", &Acts::FpeMonitor::enable)
-      .def_static("disable", &Acts::FpeMonitor::disable);
+
+      .def_static("_trigger_divbyzero",
+                  []() {
+                    volatile float j = 0.0;
+                    volatile float r = 123 / j;
+                    (void)r;
+                  })
+
+      .def_static("_trigger_overflow",
+                  []() {
+                    volatile float j = std::numeric_limits<float>::max();
+                    volatile float r = j * j;
+                    (void)r;
+                  })
+
+      .def_static("_trigger_invalid", []() {
+        volatile float j = -1;
+        volatile float r = std::sqrt(j);
+        (void)r;
+      });
 
   using ActsExamples::RandomNumbers;
   auto randomNumbers =

@@ -22,6 +22,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <string_view>
+#include <vector>
 
 #include <fenv.h>
 #include <signal.h>
@@ -76,6 +77,22 @@ const std::vector<std::pair<FpeType, StackTrace>>
 
 bool FpeMonitor::Result::encountered(FpeType type) const {
   return count(type) > 0;
+}
+
+void FpeMonitor::Result::summary(std::ostream &os) const {
+  os << "FPE result summary:\n";
+  static const std::vector<FpeType> types = {
+      FpeType::INTDIV, FpeType::INTOVF, FpeType::FLTDIV, FpeType::FLTOVF,
+      FpeType::FLTUND, FpeType::FLTRES, FpeType::FLTINV, FpeType::FLTSUB};
+
+  for (auto type : types) {
+    os << "- " << type << ": " << count(type) << "\n";
+  }
+
+  os << "\nStack traces:\n";
+  for (auto &[type, st] : stackTraces()) {
+    os << "- " << type << ":\n" << st;
+  }
 }
 
 void FpeMonitor::Result::deduplicate() {
@@ -202,7 +219,7 @@ void FpeMonitor::disable() {
   std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
 #else
   std::feclearexcept(m_excepts);
-  fedisableexcept(m_excepts);
+  // fedisableexcept(m_excepts);
   stack().pop();
 #endif
 

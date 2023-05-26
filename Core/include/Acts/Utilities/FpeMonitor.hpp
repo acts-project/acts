@@ -44,6 +44,8 @@ class FpeMonitor {
 
     void deduplicate();
 
+    void summary(std::ostream &os) const;
+
     Result();
 
    private:
