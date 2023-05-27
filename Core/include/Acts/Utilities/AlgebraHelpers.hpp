@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 
 #include <bitset>
+#include <optional>
 
 #include "Eigen/Dense"
 
