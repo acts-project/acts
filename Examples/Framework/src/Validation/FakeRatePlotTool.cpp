@@ -9,7 +9,7 @@
 #include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <TEfficiency.h>

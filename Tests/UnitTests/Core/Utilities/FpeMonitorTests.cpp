@@ -11,10 +11,9 @@
 #include "Acts/Utilities/FpeMonitor.hpp"
 
 #include <cmath>
+#include <cstdio>
 #include <iostream>
 #include <limits>
-
-#include <stdio.h>
 
 namespace utf = boost::unit_test;
 
@@ -27,7 +26,7 @@ BOOST_AUTO_TEST_CASE(Invalid) {
   {
     FpeMonitor mon;
     volatile const double x = -1;
-    printf("y = %f\n", sqrt(x));
+    printf("y = %f\n", std::sqrt(x));
   }
 }
 #endif

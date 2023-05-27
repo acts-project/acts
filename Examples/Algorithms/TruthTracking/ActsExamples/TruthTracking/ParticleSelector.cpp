@@ -9,7 +9,7 @@
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/Particle.hpp"

@@ -13,7 +13,6 @@
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/Result.hpp"

@@ -14,7 +14,6 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
 #include <cstddef>

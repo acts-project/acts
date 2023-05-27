@@ -8,7 +8,7 @@
 
 #include "Acts/Geometry/Extent.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>

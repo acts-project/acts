@@ -9,7 +9,7 @@
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <TProfile.h>
 

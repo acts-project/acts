@@ -16,7 +16,7 @@
 #include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <ostream>

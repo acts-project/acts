@@ -16,7 +16,6 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <any>
 #include <cassert>
