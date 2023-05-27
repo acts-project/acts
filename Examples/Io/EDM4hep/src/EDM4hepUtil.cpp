@@ -14,7 +14,6 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"

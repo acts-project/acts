@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <fstream>
 #include <ios>
