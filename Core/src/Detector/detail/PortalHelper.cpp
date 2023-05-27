@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <stdexcept>
 

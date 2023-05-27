@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Utilities/Helpers.hpp"
-
 namespace Acts {
 
 class FpeMonitor {

@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <iomanip>
 #include <iostream>
