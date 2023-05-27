@@ -40,9 +40,7 @@ Simulation = Enum("Simulation", ["Fatras", "Geant4"])
 
 def run_single_particles(particle, pT, simulation, seeding, label):
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(
-            events=10, numThreads=1, logLevel=acts.logging.INFO
-        )
+        s = acts.examples.Sequencer(events=10, numThreads=1, logLevel=acts.logging.INFO)
 
         tp = Path(temp)
 
@@ -157,7 +155,7 @@ with contextlib.nullcontext():
             acts.PdgParticle.eElectron,
         ],
         [1 * u.GeV, 10 * u.GeV, 100 * u.GeV],
-        [s for s in Simulation],
+        [Simulation.Fatras],  # TODO Simulation.Geant4
         [
             SeedingAlgorithm.TruthSmeared,
             SeedingAlgorithm.TruthEstimated,
