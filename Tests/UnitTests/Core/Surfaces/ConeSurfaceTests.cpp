@@ -28,15 +28,6 @@
 #include <memory>
 #include <string>
 
-namespace Acts {
-class AssertionFailureException;
-}  // namespace Acts
-namespace boost {
-namespace test_tools {
-class output_test_stream;
-}  // namespace test_tools
-}  // namespace boost
-
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;

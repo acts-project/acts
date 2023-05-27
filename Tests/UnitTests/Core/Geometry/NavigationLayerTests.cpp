@@ -21,13 +21,7 @@
 #include <memory>
 #include <utility>
 
-#include "/home/andreas/cern/source/acts/acts/git1/Tests/UnitTests/Core/Surfaces/SurfaceStub.hpp"
-
-namespace boost {
-namespace test_tools {
-class output_test_stream;
-}  // namespace test_tools
-}  // namespace boost
+#include "../Surfaces/SurfaceStub.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;

@@ -28,12 +28,6 @@
 #include <utility>
 #include <vector>
 
-namespace boost {
-namespace test_tools {
-class output_test_stream;
-}  // namespace test_tools
-}  // namespace boost
-
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
 

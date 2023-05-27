@@ -25,14 +25,8 @@
 #include <utility>
 #include <vector>
 
-#include "/home/andreas/cern/source/acts/acts/git1/Tests/UnitTests/Core/Surfaces/SurfaceStub.hpp"
+#include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
-
-namespace boost {
-namespace test_tools {
-class output_test_stream;
-}  // namespace test_tools
-}  // namespace boost
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
