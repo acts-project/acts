@@ -36,7 +36,6 @@
 #include <string>
 #include <vector>
 
-#include <oneapi/tbb/combinable.h>
 #include <tbb/combinable.h>
 
 namespace Acts {
