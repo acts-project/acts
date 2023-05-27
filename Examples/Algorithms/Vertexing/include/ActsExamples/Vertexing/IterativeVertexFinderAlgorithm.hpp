@@ -24,7 +24,7 @@
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-#include "Acts/Vertexing/ZScanVertexFinder.hpp"
+#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -52,16 +52,15 @@ struct AlgorithmContext;
 class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using ImpactPointEstimator =
+  using IPEstimator =
       Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  using VertexSeeder = Acts::ZScanVertexFinder<VertexFitter>;
-  using VertexFinder = Acts::IterativeVertexFinder<VertexFitter, VertexSeeder>;
-  using VertexFinderOptions =
-      Acts::VertexingOptions<Acts::BoundTrackParameters>;
+  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+  using Fitter =
+      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+  using Seeder = Acts::TrackDensityVertexFinder<
+      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+  using Finder = Acts::IterativeVertexFinder<Fitter, Seeder>;
+  using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   using VertexCollection =
       std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
