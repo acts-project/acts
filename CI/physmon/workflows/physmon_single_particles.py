@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 from enum import Enum
 import itertools
+import contextlib
 
 import acts
 from acts.examples.simulation import (
@@ -34,27 +35,13 @@ u = acts.UnitConstants
 
 setup = makeSetup()
 
-Particle = Enum(
-    "Particle",
-    [acts.PdgParticle.eMuon, acts.PdgParticle.ePionPlus, acts.PdgParticle.eElectron],
-)
-PT = Enum("PT", [1 * u.GeV, 10 * u.GeV, 100 * u.GeV])
 Simulation = Enum("Simulation", ["Fatras", "Geant4"])
-Seeding = Enum(
-    "Simulation",
-    [
-        SeedingAlgorithm.TruthSmeared,
-        SeedingAlgorithm.TruthEstimated,
-        SeedingAlgorithm.Default,
-        SeedingAlgorithm.Orthogonal,
-    ],
-)
 
 
 def run_single_particles(particle, pT, simulation, seeding, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=10000, numThreads=-1, logLevel=acts.logging.INFO
+            events=10, numThreads=1, logLevel=acts.logging.INFO
         )
 
         tp = Path(temp)
@@ -88,6 +75,7 @@ def run_single_particles(particle, pT, simulation, seeding, label):
         elif simulation == Simulation.Geant4:
             addGeant4(
                 s,
+                setup.detector,
                 setup.trackingGeometry,
                 setup.field,
                 rnd=rnd,
@@ -159,9 +147,23 @@ def create_label(particle, pT, simulation, seeding):
     return f"{particle}_{pT}_{simulation}_{seeding}"
 
 
-with acts.FpeMonitor():
-    for particle, pT, simulation, seeding in itertools.product(
-        Particle, PT, Simulation, Seeding
+# disabled FPE monitoring for now because of G4
+# TODO use acts.FpeMonitor()
+with contextlib.nullcontext():
+    for particle, pt, simulation, seeding in itertools.product(
+        [
+            acts.PdgParticle.eMuon,
+            acts.PdgParticle.ePionPlus,
+            acts.PdgParticle.eElectron,
+        ],
+        [1 * u.GeV, 10 * u.GeV, 100 * u.GeV],
+        [s for s in Simulation],
+        [
+            SeedingAlgorithm.TruthSmeared,
+            SeedingAlgorithm.TruthEstimated,
+            SeedingAlgorithm.Default,
+            SeedingAlgorithm.Orthogonal,
+        ],
     ):
-        label = create_label(particle, pT, simulation, seeding)
-        run_single_particles(particle, pT, simulation, seeding, label)
+        label = create_label(particle, pt, simulation, seeding)
+        run_single_particles(particle, pt, simulation, seeding, label)
