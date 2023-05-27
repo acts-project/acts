@@ -24,6 +24,7 @@ CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run
 CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
 CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
 CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
+CI/physmon/workflows/physmon_single_particles.py $outdir 2>&1 > $outdir/run_single_particles.log
 echo "::endgroup::"
 
 set +e
