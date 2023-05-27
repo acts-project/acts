@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
+
 #include <fstream>
 #include <iomanip>
 #include <ios>
