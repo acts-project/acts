@@ -11,6 +11,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <memory>
 
@@ -227,6 +228,9 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("eProton", Acts::PdgParticle::eProton)
       .value("eAntiProton", Acts::PdgParticle::eAntiProton)
       .value("eLead", Acts::PdgParticle::eLead);
+
+  m.def("pdgToShortAbsString",
+        [](PdgParticle pdg) { return toStringShortAbs(pdg); });
 }
 
 void addAlgebra(Acts::Python::Context& ctx) {

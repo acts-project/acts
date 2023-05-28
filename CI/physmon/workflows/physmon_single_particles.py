@@ -20,12 +20,9 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
-    ParticleSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
 )
 
@@ -38,9 +35,9 @@ setup = makeSetup()
 Simulation = Enum("Simulation", ["Fatras", "Geant4"])
 
 
-def run_single_particles(particle, pT, simulation, seeding, label):
+def run_single_particles(particle, pT, simulation, label):
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=10, numThreads=1, logLevel=acts.logging.INFO)
+        s = acts.examples.Sequencer(events=10, numThreads=1)
 
         tp = Path(temp)
 
@@ -79,7 +76,7 @@ def run_single_particles(particle, pT, simulation, seeding, label):
                 rnd=rnd,
             )
         else:
-            raise ValueError(f"unhandled simulation {simulation}")
+            raise ValueError(f"unhandled simulation: {simulation}")
 
         addDigitization(
             s,
@@ -93,12 +90,8 @@ def run_single_particles(particle, pT, simulation, seeding, label):
             s,
             setup.trackingGeometry,
             setup.field,
-            TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-            ParticleSmearingSigmas(
-                pRel=0.01
-            ),  # only used by SeedingAlgorithm.TruthSmeared
             SeedFinderConfigArg(
-                r=(None, 200 * u.mm),  # rMin=default, 33mm
+                r=(33 * u.mm, 200 * u.mm),
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
@@ -108,11 +101,9 @@ def run_single_particles(particle, pT, simulation, seeding, label):
                 minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
-            TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
-            seedingAlgorithm=seeding,
+            SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
+            seedingAlgorithm=SeedingAlgorithm.Default,
             geoSelectionConfigFile=setup.geoSel,
-            rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
         )
 
@@ -141,14 +132,16 @@ def run_single_particles(particle, pT, simulation, seeding, label):
             shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
 
 
-def create_label(particle, pT, simulation, seeding):
-    return f"{particle}_{pT}_{simulation}_{seeding}"
+def create_label(particle, pT, simulation):
+    return (
+        f"{acts.pdgToShortAbsString(particle)}_{int(pT)}GeV_{simulation.name.lower()}"
+    )
 
 
 # disabled FPE monitoring for now because of G4
 # TODO use acts.FpeMonitor()
 with contextlib.nullcontext():
-    for particle, pt, simulation, seeding in itertools.product(
+    for particle, pt, simulation in itertools.product(
         [
             acts.PdgParticle.eMuon,
             acts.PdgParticle.ePionPlus,
@@ -156,12 +149,6 @@ with contextlib.nullcontext():
         ],
         [1 * u.GeV, 10 * u.GeV, 100 * u.GeV],
         [Simulation.Fatras],  # TODO Simulation.Geant4
-        [
-            SeedingAlgorithm.TruthSmeared,
-            SeedingAlgorithm.TruthEstimated,
-            SeedingAlgorithm.Default,
-            SeedingAlgorithm.Orthogonal,
-        ],
     ):
-        label = create_label(particle, pt, simulation, seeding)
-        run_single_particles(particle, pt, simulation, seeding, label)
+        label = create_label(particle, pt, simulation)
+        run_single_particles(particle, pt, simulation, label)
