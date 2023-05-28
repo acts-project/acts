@@ -9,7 +9,6 @@
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 ActsExamples::ResPlotTool::ResPlotTool(
     const ActsExamples::ResPlotTool::Config& cfg, Acts::Logging::Level lvl)

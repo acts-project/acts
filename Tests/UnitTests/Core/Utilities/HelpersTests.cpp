@@ -10,7 +10,10 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <bitset>
 #include <limits>
@@ -210,6 +213,19 @@ BOOST_AUTO_TEST_CASE(range_medium) {
   CHECK_CLOSE_ABS(medium1, 0., std::numeric_limits<ActsScalar>::epsilon());
 }
 
+BOOST_AUTO_TEST_CASE(safeInverse) {
+  {
+    auto m = Eigen::Matrix3d::Zero().eval();
+    BOOST_CHECK(!Acts::safeInverse(m));
+  }
+
+  {
+    auto m = Eigen::Matrix3d::Identity().eval();
+    BOOST_CHECK(Acts::safeInverse(m));
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
 }  // namespace Test
 }  // namespace Acts
