@@ -15,7 +15,6 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"

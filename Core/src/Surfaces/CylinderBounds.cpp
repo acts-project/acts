@@ -8,7 +8,7 @@
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <cmath>
 #include <iomanip>

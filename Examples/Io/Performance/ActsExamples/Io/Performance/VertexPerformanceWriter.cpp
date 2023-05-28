@@ -13,7 +13,6 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"

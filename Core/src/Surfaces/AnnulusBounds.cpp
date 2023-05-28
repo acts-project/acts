@@ -9,7 +9,7 @@
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
