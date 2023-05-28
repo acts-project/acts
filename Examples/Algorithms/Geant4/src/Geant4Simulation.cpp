@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
