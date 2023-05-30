@@ -14,7 +14,7 @@ All geometry objects in Acts inherit from a virtual `GeometryObject` base class
 ```cpp
 class GeometryObject {
  public:
-  /// Defaulted construrctor
+  /// Defaulted constructor
   GeometryObject() = default;
 
   /// Defaulted copy constructor
@@ -277,7 +277,7 @@ to specify parsing restrictions for sub detectors.
 
 ### Layer building
 
-`Surface` object that are to be grouped on a layer should be put into a
+`Surface` objects that are to be grouped on a layer should be put into a
 `SurfaceArray` and provided to the layer. Certain helper tools exist to ease the
 translation and create appropriate binning structure: The`SurfaceArrayCreator`
 can create cylindrical, disc-like & planar layers, where the dimensions of the

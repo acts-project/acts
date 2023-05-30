@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <optional>
 

@@ -9,7 +9,7 @@
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <algorithm>

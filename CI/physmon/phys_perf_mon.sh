@@ -3,22 +3,27 @@
 set -e
 
 
-mode=$1
+mode=${1:all}
 if ! [[ $mode = @(all|kalman|gsf|fullchains|vertexing) ]]; then
     echo "Usage: $0 <all|kalman|gsf|fullchains|vertexing> (outdir)"
     exit 1
 fi
 
-outdir=$2
+outdir=${2:physmon}
 [ -z "$outdir" ] && outdir=physmon
 mkdir -p $outdir
 
 refdir=CI/physmon/reference
 refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
+source $SCRIPT_DIR/setup.sh
 echo "::group::Generate validation dataset"
-CI/physmon/physmon.py $mode $outdir 2>&1 > $outdir/run.log
+CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
+CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
+CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
+CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
 echo "::endgroup::"
 
 set +e

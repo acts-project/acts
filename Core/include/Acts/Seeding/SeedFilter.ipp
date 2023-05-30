@@ -73,14 +73,16 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
               });
   }
 
+  // vector containing the radius of all compatible seeds
+  std::vector<float> compatibleSeedR;
+  compatibleSeedR.reserve(m_cfg.compatSeedLimit);
+
   size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
   for (const std::size_t topSPIndex : topSPIndexVec) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
-    // -> weaker requirement for a good seed
-    std::vector<float> compatibleSeedR;
-    compatibleSeedR.reserve(m_cfg.compatSeedLimit);
+    compatibleSeedR.clear();
 
     float invHelixDiameter = invHelixDiameterVec[topSPIndex];
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
@@ -94,6 +96,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
     float weight = -(impact * m_cfg.impactWeightFactor);
 
+    // loop over compatible top SP candidates
     for (size_t variableCompTopIndex = beginCompTopIndex;
          variableCompTopIndex < topSPIndexVec.size(); variableCompTopIndex++) {
       size_t compatibleTopSPIndex = topSPIndexVec[variableCompTopIndex];
@@ -122,7 +125,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         continue;
       }
       bool newCompSeed = true;
-      for (float previousDiameter : compatibleSeedR) {
+      for (const float& previousDiameter : compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all

@@ -15,7 +15,6 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
 #include <cmath>
