@@ -180,7 +180,7 @@ endif()
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_actsvg_version 0.4.33)
 set(_acts_autodiff_version 0.6)
-set(_acts_boost_version 1.78.0)
+set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
 set(_acts_edm4hep_version 0.7)
 set(_acts_podio_version 0.6)
@@ -192,6 +192,8 @@ set(_acts_onnxruntime_version 1.12.0)
 set(_acts_mlpack_version 3.1.1)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
+
+set(_acts_boost_recommended_version 1.78.0)
 
 # required packages
 if (ACTS_SETUP_BOOST)
@@ -206,6 +208,8 @@ if (ACTS_SETUP_BOOST)
     else()
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
     endif()
+
+    message(DEBUG "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}")
   else()
     add_subdirectory(thirdparty/boost)
   endif()
