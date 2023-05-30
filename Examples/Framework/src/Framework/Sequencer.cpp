@@ -40,8 +40,6 @@
 #include <boost/core/demangle.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
-#include <oneapi/tbb/blocked_range.h>
-#include <oneapi/tbb/task_arena.h>
 #include <stdlib.h>
 
 namespace ActsExamples {
