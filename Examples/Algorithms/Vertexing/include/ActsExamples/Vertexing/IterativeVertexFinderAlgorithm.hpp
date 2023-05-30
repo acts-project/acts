@@ -74,8 +74,6 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
-    /// Output reconstruction time in ms
-    std::string outputTime = "time";
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
@@ -105,7 +103,6 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
       this, "OutputProtoVertices"};
 
   WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
-  WriteDataHandle<int> m_outputTime{this, "OutputTime"};
 };
 
 }  // namespace ActsExamples
