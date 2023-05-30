@@ -48,7 +48,7 @@ def run_single_particles(particle, pT, simulation, label):
             s,
             MomentumConfig(pT, pT, transverse=True),
             EtaConfig(-3.0, 3.0),
-            ParticleConfig(1, particle, True),
+            ParticleConfig(1, particle, randomizeCharge=True),
             PhiConfig(0.0 * u.degree, 360.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
@@ -93,6 +93,7 @@ def run_single_particles(particle, pT, simulation, label):
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
             seedingAlgorithm=SeedingAlgorithm.Default,
+            initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=setup.geoSel,
             outputDirRoot=tp,
         )
