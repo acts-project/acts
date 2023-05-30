@@ -193,6 +193,8 @@ set(_acts_mlpack_version 3.1.1)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
+# recommended dependency version. if there is an opportunity to reach
+# this version we will try so.
 set(_acts_boost_recommended_version 1.78.0)
 
 # required packages
