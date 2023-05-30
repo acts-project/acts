@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -88,4 +88,32 @@ inline bool hasParam(const std::string& key, dd4hep::DetElement& elt) {
 inline bool hasParams(dd4hep::DetElement& elt) {
   return elt.extension<dd4hep::rec::VariantParameters>(false) != nullptr;
 }
+
+/// @brief A simple helper function to extract a series
+///
+/// @tparam value_type the primitive type allowed by variant parameters
+///
+/// @param dd4hepElement the detector element w
+/// @param bname The base name attribute of the variant parameter pack
+/// @param unitConversion is a conversion factor DD4hep -> ACTS
+///
+/// @return the extracted series as a vector
+template <typename value_type>
+std::vector<value_type> extractSeries(const dd4hep::DetElement& dd4hepElement,
+                                      const std::string& bname,
+                                      const value_type& unitConversion = 1) {
+  std::vector<value_type> series = {};
+
+  int fallBack = 0;
+  int nVals = getParamOr<int>(bname + "_n", dd4hepElement, fallBack);
+  series.reserve(nVals);
+  for (auto ib = 0; ib < nVals; ++ib) {
+    auto val = unitConversion *
+               getParamOr<value_type>(bname + "_" + std::to_string(ib),
+                                      dd4hepElement, 0.);
+    series.push_back(val);
+  }
+  return series;
+}
+
 }  // namespace Acts
