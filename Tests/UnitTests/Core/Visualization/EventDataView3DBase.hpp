@@ -35,7 +35,6 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/EventDataView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 

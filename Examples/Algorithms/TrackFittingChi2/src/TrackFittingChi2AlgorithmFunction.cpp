@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"

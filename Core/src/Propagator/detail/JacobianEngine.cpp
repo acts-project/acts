@@ -9,9 +9,9 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 namespace Acts {
 

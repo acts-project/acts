@@ -23,7 +23,6 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 

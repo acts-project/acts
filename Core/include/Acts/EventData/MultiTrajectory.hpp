@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
