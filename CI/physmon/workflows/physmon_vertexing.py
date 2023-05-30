@@ -55,10 +55,13 @@ def run_vertexing(fitter, mu, events):
             s,
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
             EtaConfig(-3.0, 3.0),
+            PhiConfig(0.0, 360.0 * u.degree),
             ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
-                stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
                 mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
             ),
             multiplicity=mu,
             rnd=rnd,
@@ -68,6 +71,7 @@ def run_vertexing(fitter, mu, events):
             s,
             setup.trackingGeometry,
             setup.field,
+            enableInteractions=True,
             rnd=rnd,
         )
 
@@ -84,7 +88,7 @@ def run_vertexing(fitter, mu, events):
             setup.trackingGeometry,
             setup.field,
             SeedFinderConfigArg(
-                r=(None, 200 * u.mm),  # rMin=default, 33mm
+                r=(33 * u.mm, 200 * u.mm),
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
@@ -94,10 +98,10 @@ def run_vertexing(fitter, mu, events):
                 minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
+            SeedFinderOptionsArg(bFieldInZ=2 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
+            initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=setup.geoSel,
-            rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
         addCKFTracks(
@@ -105,10 +109,9 @@ def run_vertexing(fitter, mu, events):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
-                absEta=(None, 3.0),
-                nMeasurementsMin=6,
+                pt=(500 * u.MeV, None),
+                nMeasurementsMin=7,
             ),
         )
 
