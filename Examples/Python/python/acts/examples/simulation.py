@@ -2,6 +2,7 @@ from typing import Optional, Union, Any, List
 from pathlib import Path
 from collections import namedtuple
 from collections.abc import Iterable
+from enum import Enum
 
 import acts
 from acts.examples import (
@@ -12,6 +13,8 @@ from acts.examples import (
     ParticlesPrinter,
     RootParticleWriter,
 )
+
+SimulationAlgorithm = Enum("Simulation", ["Fatras", "Geant4"])
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
@@ -357,6 +360,67 @@ def addParticleSelection(
             outputParticles=outputParticles,
         )
     )
+
+
+def addSimulation(
+    s: acts.examples.Sequencer,
+    algorithm: SimulationAlgorithm,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    rnd: acts.examples.RandomNumbers,
+    detector: Optional[Any] = None,
+    g4detectorConstruction: Optional[Any] = None,
+    volumeMappings: List[str] = [],
+    materialMappings: List[str] = [],
+    inputParticles: str = "particles_input",
+    preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
+    postSelectParticles: Optional[ParticleSelectorConfig] = None,
+    enableInteractions=False,
+    recordHitsOfSecondaries=True,
+    keepParticlesWithoutHits=True,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+    killVolume: Optional[acts.Volume] = None,
+    killAfterTime: float = float("inf"),
+) -> None:
+    if algorithm == SimulationAlgorithm.Fatras:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            rnd,
+            preSelectParticles=preSelectParticles,
+            postSelectParticles=postSelectParticles,
+            enableInteractions=enableInteractions,
+            inputParticles=inputParticles,
+            outputDirCsv=outputDirCsv,
+            outputDirRoot=outputDirRoot,
+            logLevel=logLevel,
+        )
+    elif algorithm == SimulationAlgorithm.Geant4:
+        addGeant4(
+            s,
+            detector,
+            trackingGeometry,
+            field,
+            rnd,
+            g4detectorConstruction=g4detectorConstruction,
+            volumeMappings=volumeMappings,
+            materialMappings=materialMappings,
+            inputParticles=inputParticles,
+            preSelectParticles=preSelectParticles,
+            postSelectParticles=postSelectParticles,
+            recordHitsOfSecondaries=recordHitsOfSecondaries,
+            keepParticlesWithoutHits=keepParticlesWithoutHits,
+            outputDirCsv=outputDirCsv,
+            outputDirRoot=outputDirRoot,
+            logLevel=logLevel,
+            killVolume=killVolume,
+            killAfterTime=killAfterTime,
+        )
+    else:
+        raise ValueError(f"unknown simulation algortihm: {algorithm}")
 
 
 def addFatras(

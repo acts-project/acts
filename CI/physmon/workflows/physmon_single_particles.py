@@ -3,7 +3,6 @@
 import tempfile
 from pathlib import Path
 import shutil
-from enum import Enum
 import itertools
 import contextlib
 
@@ -14,8 +13,8 @@ from acts.examples.simulation import (
     EtaConfig,
     PhiConfig,
     ParticleConfig,
-    addFatras,
-    addGeant4,
+    addSimulation,
+    SimulationAlgorithm,
     addDigitization,
 )
 from acts.examples.reconstruction import (
@@ -31,8 +30,6 @@ from physmon_common import makeSetup
 u = acts.UnitConstants
 
 setup = makeSetup()
-
-Simulation = Enum("Simulation", ["Fatras", "Geant4"])
 
 
 def run_single_particles(particle, pT, simulation, label):
@@ -60,23 +57,14 @@ def run_single_particles(particle, pT, simulation, label):
             rnd=rnd,
         )
 
-        if simulation == Simulation.Fatras:
-            addFatras(
-                s,
-                setup.trackingGeometry,
-                setup.field,
-                rnd=rnd,
-            )
-        elif simulation == Simulation.Geant4:
-            addGeant4(
-                s,
-                setup.detector,
-                setup.trackingGeometry,
-                setup.field,
-                rnd=rnd,
-            )
-        else:
-            raise ValueError(f"unhandled simulation: {simulation}")
+        addSimulation(
+            s,
+            simulation,
+            setup.trackingGeometry,
+            setup.field,
+            rnd,
+            detector=setup.detector,
+        )
 
         addDigitization(
             s,
@@ -148,7 +136,7 @@ with contextlib.nullcontext():
             acts.PdgParticle.eElectron,
         ],
         [1 * u.GeV, 10 * u.GeV, 100 * u.GeV],
-        [Simulation.Fatras],  # TODO Simulation.Geant4
+        [SimulationAlgorithm.Fatras],  # TODO SimulationAlgorithm.Geant4
     ):
         label = create_label(particle, pt, simulation)
         run_single_particles(particle, pt, simulation, label)
