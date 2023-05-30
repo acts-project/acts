@@ -94,7 +94,7 @@ class IterativeVertexFinder {
     /// ImpactPointEstimator
     IPEstimator ipEst;
 
-    /// Vertex finder configuration variables
+    // Vertex finder configuration variables
     bool useBeamConstraint = false;
     double significanceCutSeeding = 10;
     double maximumChi2cutForSeeding = 36.;
@@ -105,6 +105,9 @@ class IterativeVertexFinder {
     bool doMaxTracksCut = false;
     int maxTracks = 5000;
     double cutOffTrackWeight = 0.01;
+    /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
+    /// decide if a track should be checked for reassignment to other vertices
+    double cutOffTrackWeightReassign = 1;
   };
 
   /// State struct

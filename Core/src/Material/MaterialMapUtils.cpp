@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <algorithm>

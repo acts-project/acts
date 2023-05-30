@@ -24,6 +24,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
