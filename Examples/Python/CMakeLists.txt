@@ -52,6 +52,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesPrinters
   ActsExamplesDetectorTelescope
   ActsExamplesUtilities
+  ActsExamplesAmbiguityResolution
 )
 
 set(py_files 
