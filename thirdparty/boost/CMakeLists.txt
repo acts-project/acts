@@ -70,6 +70,7 @@ ExternalProject_Add(
 )
 
 add_library(boost_program_options SHARED IMPORTED GLOBAL)
+target_link_libraries(boost_program_options INTERFACE Boost::boost)
 set_target_properties(boost_program_options PROPERTIES IMPORTED_LOCATION ${Boost_LIBRARY_DIR}/libboost_program_options.so.${_acts_boost_version})
 add_dependencies(boost_program_options boost_build_program_options)
 add_library(Boost::program_options ALIAS boost_program_options)
@@ -92,8 +93,8 @@ ExternalProject_Add(
 )
 
 add_library(boost_unit_test_framework SHARED IMPORTED GLOBAL)
+target_link_libraries(boost_unit_test_framework INTERFACE Boost::boost)
 set_target_properties(boost_unit_test_framework PROPERTIES IMPORTED_LOCATION ${Boost_LIBRARY_DIR}/libboost_unit_test_framework.so.${_acts_boost_version})
 add_dependencies(boost_unit_test_framework boost_build_unit_test_framework)
 add_library(Boost::unit_test_framework ALIAS boost_unit_test_framework)
 install(FILES ${Boost_LIBRARY_DIR}/libboost_unit_test_framework.so.${_acts_boost_version} DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
-
