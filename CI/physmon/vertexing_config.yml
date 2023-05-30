@@ -4,25 +4,15 @@ histograms:
     min: -0.1
     max: 0.1
 
-  resZ:
-    nbins: 50
-    min: -0.3
-    max: 0.3
-
   "pull.*":
     nbins: 50
     min: -6
     max: 6
 
-  "covXX|covYY|covZZ":
+  "cov.*":
     nbins: 100
     min: -0.0005
     max: 0.0005
-
-  "covXY|covXZ|covYX":
-    nbins: 100
-    min: -0.0001
-    max: 0.0001
 
   # fixed mu=50
   "^n.*$":
@@ -31,14 +21,19 @@ histograms:
     max: 51
 
   "truthX|truthY|recoX|recoY":
+    nbins: 100
     min: -0.06
     max: 0.06
-    nbins: 100
 
   "truthZ|recoZ":
+    nbins: 100
     min: -200
     max: 200
+
+  "truthT|recoT":
     nbins: 100
+    min: -2000
+    max: 2000
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]
@@ -56,6 +51,3 @@ extra_histograms:
     nbins: 50
     min: 0.0
     max: 1.0
-
-exclude:
-  - timeMS
