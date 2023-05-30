@@ -18,6 +18,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
       m_max_localBins(m_group->m_grid->numLocalBins()),
       m_skipZMiddleBin(skipZMiddleBin) {
   m_max_localBins[INDEX::PHI] += 1;
+  m_current_localBins[INDEX::Z] = m_skipZMiddleBin;
   if (index == m_group->m_grid->size()) {
     m_current_localBins = m_max_localBins;
   } else {
@@ -33,7 +34,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
   // if we were on the edge, go up one phi bin and reset z bin
   if (++m_current_localBins[INDEX::Z] == m_max_localBins[INDEX::Z]) {
     ++m_current_localBins[INDEX::PHI];
-    m_current_localBins[INDEX::Z] = 0;
+    m_current_localBins[INDEX::Z] = m_skipZMiddleBin;
   }
 
   // Get the next not-empty bin in the grid
@@ -92,12 +93,11 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
       continue;
     }
 
-    for (std::size_t zBin(m_current_localBins[INDEX::Z] + m_skipZMiddleBin);
+    for (std::size_t zBin(m_current_localBins[INDEX::Z]);
          zBin < m_max_localBins[INDEX::Z]; ++zBin) {
       std::size_t zBinIndex = m_group->m_bins[zBin];
       std::size_t index =
           m_group->m_grid->globalBinFromLocalBins({phiBin, zBinIndex});
-
       // Check if there are entries in this bin
       if (m_group->m_grid->at(index).empty()) {
         continue;
@@ -109,7 +109,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
       return;
     }
     // Reset z-index
-    m_current_localBins[INDEX::Z] = 0;
+    m_current_localBins[INDEX::Z] = m_skipZMiddleBin;
   }
 
   // Could find nothing ... setting this to end()
@@ -247,5 +247,5 @@ Acts::BinnedSPGroup<external_spacepoint_t>::begin() {
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::end() {
-  return {*this, m_grid->size(), m_skipZMiddleBin};
+  return {*this, m_grid->size(), 0};
 }

@@ -85,6 +85,12 @@ struct SeedFinderOrthogonalConfig {
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
 
+  // cut on bottom SPs in a certain (r, eta) region of the detector for fast
+  // seeding
+  bool fastTrackingCut = false;
+  float fastTrackingRMin = 50. * Acts::UnitConstants::mm;
+  float fastTrackingCotThetaMax = 2.13;
+
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 

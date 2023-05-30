@@ -57,12 +57,22 @@ struct SeedFinderConfig {
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
+  // z of last layers to avoid iterations
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
+
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
 
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
+
+  // cut on bottom SPs in a certain (r, eta) region of the detector for fast
+  // seeding
+  bool fastTrackingCut = false;
+  float fastTrackingRMin = 50. * Acts::UnitConstants::mm;
+  float fastTrackingCotThetaMax = 2.13;
 
   // use arithmetic average in the calculation of the squared error on the
   // difference in tan(theta)
@@ -118,10 +128,6 @@ struct SeedFinderConfig {
   // WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
-
-  // z of last layers to avoid iterations
-  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
-                                           2700 * Acts::UnitConstants::mm};
 
   // Order of z bins to loop over when searching for SPs
   std::vector<size_t> zBinsCustomLooping = {};

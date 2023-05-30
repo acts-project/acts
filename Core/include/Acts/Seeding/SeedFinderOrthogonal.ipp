@@ -150,11 +150,11 @@ template <typename external_spacepoint_t>
 bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     const SeedFinderOptions &options, const internal_sp_t &low,
     const internal_sp_t &high, bool isMiddleInverted) const {
-  float rL = low.radius();
-  float rH = high.radius();
+  const float &rL = low.radius();
+  const float &rH = high.radius();
 
-  float zL = low.z();
-  float zH = high.z();
+  const float &zL = low.z();
+  const float &zH = high.z();
 
   float deltaR = rH - rL;
 
@@ -224,6 +224,18 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    */
   if (std::abs(deltaZ) > m_config.deltaZMax) {
     return false;
+  }
+
+  /*
+   * Cut: Ensure that inner SPs is in a certain (r, eta) region of the detector
+   * for fast seeding.
+   */
+  if (m_config.fastTrackingCut) {
+    const float rInner = (isMiddleInverted) ? rH : rL;
+    if (rInner < m_config.fastTrackingRMin and
+        std::fabs(cotTheta) > m_config.fastTrackingCotThetaMax) {
+      return false;
+    }
   }
 
   return true;
