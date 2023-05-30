@@ -30,7 +30,6 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <chrono>
 #include <memory>
 
 #include "VertexingHelpers.hpp"
@@ -50,16 +49,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   if (m_cfg.outputVertices.empty()) {
     throw std::invalid_argument("Missing output vertices collection");
   }
-  if (m_cfg.outputTime.empty()) {
-    throw std::invalid_argument("Missing output reconstruction time");
-  }
 
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
   m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
 
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
   m_outputVertices.initialize(m_cfg.outputVertices);
-  m_outputTime.initialize(m_cfg.outputTime);
 }
 
 ActsExamples::ProcessCode
@@ -136,14 +131,12 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   VertexCollection vertices;
 
-  auto t1 = std::chrono::high_resolution_clock::now();
-
   if (inputTrackParameters.empty()) {
     ACTS_DEBUG("Empty track parameter collection found, skipping vertexing");
   } else {
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
-    // find vertices and measure elapsed time
+    // find vertices
     auto result = finder.find(inputTrackPointers, finderOpts, state);
 
     if (result.ok()) {
@@ -152,8 +145,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
       ACTS_ERROR("Error in vertex finder: " << result.error().message());
     }
   }
-
-  auto t2 = std::chrono::high_resolution_clock::now();
 
   // show some debug output
   ACTS_INFO("Found " << vertices.size() << " vertices in event");
@@ -167,13 +158,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
 
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));
-
-  // time in milliseconds
-  int timeMS =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  // store reconstruction time
-  m_outputTime(ctx,
-               std::move(timeMS));  // NOLINT(performance-move-const-arg)
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

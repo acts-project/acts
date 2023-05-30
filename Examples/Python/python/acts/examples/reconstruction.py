@@ -1402,7 +1402,6 @@ def addVertexFitting(
     associatedParticles: Optional[str] = None,
     outputProtoVertices: str = "protovertices",
     outputVertices: str = "fittedVertices",
-    outputTime: str = "outputTime",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -1456,8 +1455,6 @@ def addVertexFitting(
 
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
-    if vertexFinder != VertexFinder.AMVF:
-        outputTime = ""
 
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
@@ -1494,7 +1491,6 @@ def addVertexFitting(
             inputTrackParameters=trackParameters,
             outputProtoVertices=outputProtoVertices,
             outputVertices=outputVertices,
-            outputTime=outputTime,
         )
         s.addAlgorithm(findVertices)
     else:
@@ -1519,7 +1515,6 @@ def addVertexFitting(
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
-                inputTime=outputTime,
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
