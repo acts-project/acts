@@ -111,7 +111,9 @@ class BinnedSPGroup {
   BinnedSPGroupIterator<external_spacepoint_t> begin();
   BinnedSPGroupIterator<external_spacepoint_t> end();
 
-  Acts::SpacePointGrid<external_spacepoint_t>& grid() { return *m_grid.get(); }
+  Acts::SpacePointGrid<external_spacepoint_t>& grid() {
+    return *m_grid.get();
+  }
 
  private:
   // grid with ownership of all InternalSpacePoint
