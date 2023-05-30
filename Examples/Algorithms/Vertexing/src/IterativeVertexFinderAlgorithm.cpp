@@ -49,16 +49,12 @@ ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
   if (m_cfg.outputVertices.empty()) {
     throw std::invalid_argument("Missing output vertices collection");
   }
-  if (m_cfg.outputTime.empty()) {
-    throw std::invalid_argument("Missing output reconstruction time");
-  }
 
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
   m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
 
   m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
   m_outputVertices.initialize(m_cfg.outputVertices);
-  m_outputTime.initialize(m_cfg.outputTime);
 }
 
 ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
@@ -108,10 +104,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   Finder::State state(*m_cfg.bField, ctx.magFieldContext);
   Options finderOpts(ctx.geoContext, ctx.magFieldContext);
 
-  // find vertices and measure elapsed time
-  auto t1 = std::chrono::high_resolution_clock::now();
+  // find vertices
   auto result = finder.find(inputTrackPointers, finderOpts, state);
-  auto t2 = std::chrono::high_resolution_clock::now();
 
   VertexCollection vertices;
   if (result.ok()) {
@@ -132,13 +126,6 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
 
   // store found vertices
   m_outputVertices(ctx, std::move(vertices));
-
-  // time in milliseconds
-  int timeMS =
-      std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
-  // store reconstruction time
-  m_outputTime(ctx,
-               std::move(timeMS));  // NOLINT(performance-move-const-arg)
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
