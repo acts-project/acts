@@ -11,9 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <dfe/dfe_io_dsv.hpp>
 

@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
 
