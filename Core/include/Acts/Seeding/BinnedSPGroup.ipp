@@ -12,8 +12,11 @@
 
 template <typename external_spacepoint_t>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
-    Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index)
-    : m_group(group), m_max_localBins(m_group->m_grid->numLocalBins()) {
+    Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index,
+    std::size_t skipZMiddleBin)
+    : m_group(group),
+      m_max_localBins(m_group->m_grid->numLocalBins()),
+      m_skipZMiddleBin(skipZMiddleBin) {
   m_max_localBins[INDEX::PHI] += 1;
   if (index == m_group->m_grid->size()) {
     m_current_localBins = m_max_localBins;
@@ -89,7 +92,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
       continue;
     }
 
-    for (std::size_t zBin(m_current_localBins[INDEX::Z]);
+    for (std::size_t zBin(m_current_localBins[INDEX::Z] + m_skipZMiddleBin);
          zBin < m_max_localBins[INDEX::Z]; ++zBin) {
       std::size_t zBinIndex = m_group->m_bins[zBin];
       std::size_t index =
@@ -219,6 +222,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
 
+  m_skipZMiddleBin = config.skipZMiddleBinSearch;
   m_bins = config.zBinsCustomLooping;
   if (m_bins.empty()) {
     std::size_t nZbins = m_grid->numLocalBins()[1];
@@ -237,11 +241,11 @@ inline size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::begin() {
-  return {*this, 0};
+  return {*this, 0, m_skipZMiddleBin};
 }
 
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::end() {
-  return {*this, m_grid->size()};
+  return {*this, m_grid->size(), m_skipZMiddleBin};
 }

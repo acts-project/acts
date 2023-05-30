@@ -123,7 +123,10 @@ struct SeedFinderConfig {
   std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
                                            2700 * Acts::UnitConstants::mm};
 
+  // Order of z bins to loop over when searching for SPs
   std::vector<size_t> zBinsCustomLooping = {};
+  // Number of Z bins to skip the search for middle SPs
+  std::size_t skipZMiddleBinSearch = 0;
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.

@@ -298,7 +298,7 @@ def buildITkGeometry(
     )
 
 
-def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
+def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=False):
     assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
     # variables that do not change for pixel and strip SPs:
@@ -440,6 +440,15 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
+
+        if fastSeeding == True:
+            rMaxGridConfig = 250 * u.mm
+            rMaxSeedFinderConfig = rMaxGridConfig
+            deltaRMax = 200 * u.mm
+            deltaRMaxTopSP = 200 * u.mm
+            zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
+            skipZMiddleBinSearch = 2
+
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
         outputSeeds = "StripSeeds"
         allowSeparateRMax = True
@@ -493,6 +502,36 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
 
+    if fastSeeding == True:
+        zBinEdges = [
+            -3000.0,
+            -2500.0,
+            -1400.0,
+            -925.0,
+            -450.0,
+            -250.0,
+            250.0,
+            450.0,
+            925.0,
+            1400.0,
+            2500.0,
+            3000.0,
+        ]
+        rRangeMiddleSP = [
+            [40.0, 80.0],
+            [40.0, 200.0],
+            [70.0, 200.0],
+            [70.0, 200.0],
+            [70.0, 250.0],
+            [70.0, 250.0],
+            [70.0, 250.0],
+            [70.0, 200.0],
+            [70.0, 200.0],
+            [40.0, 200.0],
+            [40.0, 80.0],
+        ]
+        useVariableMiddleSPRange = False
+
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
         maxSeedsPerSpM=maxSeedsPerSpM,
@@ -509,6 +548,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         zBinEdges=zBinEdges,
         skipPreviousTopSP=skipPreviousTopSP,
         zBinsCustomLooping=zBinsCustomLooping,
+        skipZMiddleBinSearch=skipZMiddleBinSearch,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,
