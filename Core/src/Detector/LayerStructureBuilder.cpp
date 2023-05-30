@@ -16,6 +16,7 @@
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <stdexcept>
 
@@ -29,6 +30,7 @@ namespace {
 /// @param lSurfaces the surfaces of the layer
 /// @param assignToAll the indices assigned to all
 /// @param binning the binning struct
+/// @param logLevel the logging output level (propagated downstream)
 ///
 /// @return a configured surface candidate updators
 template <Acts::detail::AxisBoundaryType aType>
@@ -36,13 +38,16 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
     const std::vector<size_t>& assignToAll,
-    const Acts::Experimental::LayerStructureBuilder::Binning& binning) {
+    const Acts::Experimental::LayerStructureBuilder::Binning& binning,
+    Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   // The surface candidate updator & a generator for polyhedrons
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<decltype(lSurfaces)> isg{
       lSurfaces, assignToAll, {binning.data.binvalue}, {binning.expansion}};
+  // Downstream logger
+  isg.oLogger = Acts::getDefaultLogger("IndexedSurfacesGenerator", logLevel);
   if (binning.data.type == Acts::equidistant) {
     // Equidistant
     Acts::Experimental::detail::GridAxisGenerators::Eq<aType> aGenerator{
@@ -69,6 +74,7 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
 /// @param assignToAll the indices assigned to all
 /// @param aBinning the binning struct of axis a
 /// @param bBinning the binning struct of axis b
+/// @param logLevel the logging output level (propagated downstream)
 ///
 /// @return a configured surface candidate updators
 template <Acts::detail::AxisBoundaryType aType,
@@ -78,7 +84,8 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
     const std::vector<size_t>& assignToAll,
     const Acts::Experimental::LayerStructureBuilder::Binning& aBinning,
-    const Acts::Experimental::LayerStructureBuilder::Binning& bBinning) {
+    const Acts::Experimental::LayerStructureBuilder::Binning& bBinning,
+    Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   // The surface candidate updator & a generator for polyhedrons
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
@@ -88,6 +95,8 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
       assignToAll,
       {aBinning.data.binvalue, bBinning.data.binvalue},
       {aBinning.expansion, bBinning.expansion}};
+  // Downstream logger
+  isg.oLogger = Acts::getDefaultLogger("IndexedSurfacesGenerator", logLevel);
   // Run through the cases
   if (aBinning.data.type == Acts::equidistant and
       bBinning.data.type == Acts::equidistant) {
@@ -100,8 +109,8 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else if (bBinning.data.type == Acts::equidistant) {
     // Variable-Equidistant
-    std::vector<Acts::ActsScalar> edges0 = {bBinning.data.boundaries().begin(),
-                                            bBinning.data.boundaries().end()};
+    std::vector<Acts::ActsScalar> edges0 = {aBinning.data.boundaries().begin(),
+                                            aBinning.data.boundaries().end()};
     Acts::Experimental::detail::GridAxisGenerators::VarEq<aType, bType>
         aGenerator{edges0,
                    {bBinning.data.min, bBinning.data.max},
@@ -185,47 +194,52 @@ Acts::Experimental::LayerStructureBuilder::construct(
     }
   }
 
-  // Create the indexed surface grids
-  if (m_cfg.binnings.size() == 1u) {
-    ACTS_DEBUG("- 1-dimensional surface binning detected.");
+  // Surfaces are provided, but no binning detected
+  if (m_cfg.binnings.empty() and not internalSurfaces.empty()) {
+    // This usually results in slow navigaiton, hence report to screen
+    ACTS_INFO("- No surface binning detected, navigation will be `tryAll..()`");
+    internalCandidatesUpdator = tryAllPortalsAndSurfaces();
+  } else if (m_cfg.binnings.size() == 1u) {
+    ACTS_DEBUG("- 1-dimensional surface binning detected -> indexing 1D grid.");
     // Capture the binning
     auto binning = m_cfg.binnings[0u];
     if (binning.data.option == closed) {
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Closed>(
-              gctx, internalSurfaces, assignToAll, binning);
+              gctx, internalSurfaces, assignToAll, binning, logger().level());
     } else {
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound>(
-              gctx, internalSurfaces, assignToAll, binning);
+              gctx, internalSurfaces, assignToAll, binning, logger().level());
     }
   } else if (m_cfg.binnings.size() == 2u) {
-    ACTS_DEBUG("- 2-dimensional surface binning detected.");
+    ACTS_DEBUG("- 2-dimensional surface binning detected -> indexing 2D grid.");
     // Capture the binnings
     const auto& binning0 = m_cfg.binnings[0u];
     const auto& binning1 = m_cfg.binnings[1u];
 
     if (binning0.data.option == closed) {
+      ACTS_VERBOSE("- first axis has a closed signature.")
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Closed,
                         Acts::detail::AxisBoundaryType::Bound>(
-              gctx, internalSurfaces, assignToAll, binning0, binning1);
+              gctx, internalSurfaces, assignToAll, binning0, binning1,
+              logger().level());
     } else if (binning1.data.option == closed) {
+      ACTS_VERBOSE("- second axis has a closed signature.")
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound,
                         Acts::detail::AxisBoundaryType::Closed>(
-              gctx, internalSurfaces, assignToAll, binning0, binning1);
+              gctx, internalSurfaces, assignToAll, binning0, binning1,
+              logger().level());
     } else {
+      ACTS_VERBOSE("- both axes have open signatures.")
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound,
                         Acts::detail::AxisBoundaryType::Bound>(
-              gctx, internalSurfaces, assignToAll, binning0, binning1);
+              gctx, internalSurfaces, assignToAll, binning0, binning1,
+              logger().level());
     }
-  }
-  // Check if everything went ok
-  if (not internalCandidatesUpdator.connected()) {
-    throw std::runtime_error(
-        "LayerStructureBuilder: could not connect surface candidate updator.");
   }
 
   // Return the internal structure

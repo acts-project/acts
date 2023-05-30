@@ -99,21 +99,24 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   // Deal with passive surface if detected
   bool pSurface = getParamOr<bool>("passive_surface", dd4hepElement, false);
   if (pSurface) {
-    ACTS_INFO("Passive surface detected.");
     cache.passiveSurfaces.push_back(constructPassiveElement(dd4hepElement));
   }
 
   const dd4hep::DetElement::Children& children = dd4hepElement.children();
   if (!children.empty()) {
-    ACTS_VERBOSE(children.size() << " children detected.");
+    ACTS_VERBOSE(children.size() << " child(ren) detected.");
     for (auto& child : children) {
       dd4hep::DetElement childDetElement = child.second;
+      ACTS_VERBOSE("Processing child " << childDetElement.name());
       if (childDetElement.volume().isSensitive()) {
+        ACTS_VERBOSE("Sensitive surface detected.");
         cache.sensitiveSurfaces.push_back(
             constructSensitiveElement(childDetElement));
       }
       recursiveConstruct(cache, childDetElement, level + 1);
     }
+  } else {
+    ACTS_VERBOSE("No children detected.");
   }
 }
 

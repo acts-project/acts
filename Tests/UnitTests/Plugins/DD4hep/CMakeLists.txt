@@ -10,13 +10,10 @@ target_include_directories(
 target_link_libraries(
     ActsTestsDD4hepFactories PUBLIC ActsPluginDD4hep DD4hep::DDCore)
 
-# set test en    
+# set test library dependencies
 set(unittest_extra_libraries ActsTestsDD4hepFactories ActsPluginDD4hep)
+add_unittest(DD4hepContainerStructure DD4hepContainerStructureTests.cpp)
 add_unittest(DD4hepDetectorElement DD4hepDetectorElementTests.cpp)
 add_unittest(DD4hepCylinderLayerStructure DD4hepCylinderLayerStructureTests.cpp)
 add_unittest(DD4hepDiscLayerStructure DD4hepDiscLayerStructureTests.cpp)
 add_unittest(DD4hepVolumeStructure DD4hepVolumeStructureTests.cpp)
-
-#set_property(TEST DD4hepDetectorElement PROPERTY ENVIRONMENT "PATH=path_list_append:/path/to/dlls")
-#set_property(TEST DD4hepCylinderLayerStructure PROPERTY ENVIRONMENT "PATH=path_list_append:/path/to/dlls")
-#set_property(TEST DD4hepDiscLayerStructure PROPERTY ENVIRONMENT "PATH=path_list_append:/path/to/dlls")

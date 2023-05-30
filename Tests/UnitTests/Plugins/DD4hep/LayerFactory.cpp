@@ -10,6 +10,7 @@
 #include "Acts/Plugins/DD4hep/detail/DD4hepAttributeHelpers.hpp"
 #include "Acts/Plugins/DD4hep/detail/DD4hepBinningHelper.hpp"
 #include "Acts/Plugins/DD4hep/detail/DD4hepConversionHelpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Objects.h>
@@ -21,49 +22,32 @@
 using namespace std;
 using namespace dd4hep;
 
-/// Standard create_cylinder(...) create a simple cylinder layer
+/// @brief  Helper method to add a layer to the detector
 ///
-/// @param dd the detector to which this is addedded
-/// @param xml the input xml element
-/// @param sens is ignored
-///
-/// @return a reference counted DetElement
-static Ref_t create_cylinder_layer(Detector &dd, xml_h xml,
-                                   SensitiveDetector sens) {
-  xml_det_t x_det = xml;
-  string detName = x_det.nameStr();
-
-  // Make Volume
-  xml_comp_t x_det_env = x_det.child(_Unicode(envelope));
-
-  // Make DetElement
-  DetElement cylinderLayerElement(detName, x_det.id());
-  dd4hep::xml::setDetectorTypeFlag(xml, cylinderLayerElement);
-
+/// @param dd the detector to which this is added
+/// @param dAssembly the detector assembly
+/// @param x_layer the xml element describing the layer
+/// @param sens the sensitive detector to be used
+/// @param layerID the layer identification number
+DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
+                            xml_comp_t x_layer, SensitiveDetector sens,
+                            int layerID = 0) {
+  // Make the cylinder detector element
+  auto layerName = x_layer.nameStr();
+  DetElement layerElement(layerName, layerID);
   // Layer parameters
   auto &layerParams =
       DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
-          cylinderLayerElement);
+          layerElement);
 
-  // Check if the cylinder has a surface binning instruction
-  if (x_det.hasChild(_Unicode(surface_binning))) {
-    xml_comp_t sfBinning = x_det.child(_Unicode(surface_binning));
-    Acts::detail::decodeBinning(layerParams, sfBinning, "surface_binning",
-                                {"z", "phi"});
-  }
+  // The layer Assembly
+  Assembly layerAssembly(layerName + std::to_string(layerID));
+  layerAssembly.setVisAttributes(dd, x_layer.visStr());
 
-  // Create the envelope
-  DetElement envelopeElement(detName + "_envelope", x_det.id());
-  Tube envelopeShape(detName + "_shape", x_det_env.rmin(), x_det_env.rmax(),
-                     x_det_env.dz());
-  Volume envelopeVolume(detName, envelopeShape,
-                        dd.material(x_det_env.materialStr()));
-  envelopeVolume.setVisAttributes(dd, x_det.visStr());
-
-  // Proto volume ...
-  if (x_det.hasChild(_Unicode(proto_volume))) {
+  // Proto volume description
+  if (x_layer.hasChild(_Unicode(proto_volume))) {
     // The proto volume description
-    xml_comp_t x_proto_vol = x_det.child(_Unicode(proto_volume));
+    xml_comp_t x_proto_vol = x_layer.child(_Unicode(proto_volume));
     // Encode the proto volume parameters
     layerParams.set<bool>("proto_volume", true);
     layerParams.set<int>("proto_volume_type",
@@ -75,12 +59,17 @@ static Ref_t create_cylinder_layer(Detector &dd, xml_h xml,
     layerParams.set<double>("proto_volume_bvalues_2", 0.5 * x_proto_cyl.dz());
   }
 
-  // Active layer ...
-  //
-  // Count and fill the sensors
-  if (x_det.hasChild(_Unicode(modules))) {
+  // Active layer surfaces - Count and fill the sensors
+  if (x_layer.hasChild(_Unicode(modules))) {
+    // Check if the cylinder has a surface binning instruction
+    if (x_layer.hasChild(_Unicode(surface_binning))) {
+      xml_comp_t sfBinning = x_layer.child(_Unicode(surface_binning));
+      Acts::detail::decodeBinning(layerParams, sfBinning, "surface_binning",
+                                  {"z", "phi"});
+    }
+    // Go through the sensors
     unsigned int sensorID = 1u;
-    xml_comp_t x_det_modules = x_det.child(_Unicode(modules));
+    xml_comp_t x_det_modules = x_layer.child(_Unicode(modules));
     for (xml_coll_t bmodule(x_det_modules, _U(box)); bmodule; ++bmodule) {
       xml_comp_t x_det_box = bmodule;
 
@@ -89,59 +78,103 @@ static Ref_t create_cylinder_layer(Detector &dd, xml_h xml,
                    0.5 * x_det_box.dz());
 
       // Set an orientation
-      DetElement boxElement(detName + "_module" + std::to_string(sensorID),
+      DetElement boxElement(layerName + "_module" + std::to_string(sensorID),
                             sensorID);
 
-      Volume boxVolume(detName, boxShape, dd.material(x_det_box.materialStr()));
-      boxVolume.setVisAttributes(dd, x_det.visStr());
+      Volume boxVolume(layerName, boxShape,
+                       dd.material(x_det_box.materialStr()));
+      boxVolume.setVisAttributes(dd, x_det_box.visStr());
       boxVolume.setSensitiveDetector(sens);
 
-      PlacedVolume placedBox = envelopeVolume.placeVolume(
+      PlacedVolume placedBox = layerAssembly.placeVolume(
           boxVolume, DD4hepTestsHelper::createTransform(x_det_box));
 
       placedBox.addPhysVolID("sensor", sensorID++);
       boxElement.setPlacement(placedBox);
       // Add the module elements
-      cylinderLayerElement.add(boxElement);
+      layerElement.add(boxElement);
     }
   }
-
-  // Passive layer - place it inside the envelope
-  if (x_det.hasChild(_Unicode(passive_surface))) {
-    xml_comp_t x_passive_xml = x_det.child(_Unicode(passive_surface));
+  // Passive layer surface - place it inside the envelope
+  if (x_layer.hasChild(_Unicode(passive_surface))) {
+    xml_comp_t x_passive_xml = x_layer.child(_Unicode(passive_surface));
     xml_comp_t x_tubs_t = x_passive_xml.child(_Unicode(tubs));
     // Crete the corresponding detector element
-    DetElement passiveElement(detName + "_passive", x_det.id());
-    Tube passiveShape(detName + "_shape", x_tubs_t.rmin(), x_tubs_t.rmax(),
+    DetElement passiveElement(layerName + "_passiveEl", x_layer.id());
+    Tube passiveShape(layerName + "_shape", x_tubs_t.rmin(), x_tubs_t.rmax(),
                       x_tubs_t.dz());
-    Volume passiveVolume(detName, passiveShape,
+    Volume passiveVolume(layerName + "_volume", passiveShape,
                          dd.material(x_tubs_t.materialStr()));
-    passiveVolume.setVisAttributes(dd, x_det.visStr());
+    passiveVolume.setVisAttributes(dd, x_layer.visStr());
     // The places layer after all
-    PlacedVolume placedLayer = envelopeVolume.placeVolume(
+    PlacedVolume placedPassive = layerAssembly.placeVolume(
         passiveVolume, DD4hepTestsHelper::createTransform(x_passive_xml));
+    placedPassive.addPhysVolID("passive", 1);
     // Transport the passive surface knowledge
     auto &params =
         DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
             passiveElement);
     params.set<bool>("passive_surface", true);
     // Set the place ment and add
-    passiveElement.setPlacement(placedLayer);
+    passiveElement.setPlacement(placedPassive);
     // Add the module elements
-    cylinderLayerElement.add(passiveElement);
+    layerElement.add(passiveElement);
   }
 
-  // Place the envelope into mother
-  Volume motherVolume = dd.pickMotherVolume(cylinderLayerElement);
-  PlacedVolume placedEnvelope = motherVolume.placeVolume(
-      envelopeVolume, DD4hepTestsHelper::createTransform(x_det_env));
-  placedEnvelope.addPhysVolID("system", cylinderLayerElement.id());
-  cylinderLayerElement.setPlacement(placedEnvelope);
-
-  return cylinderLayerElement;
+  auto placedLayer = dAssembly.placeVolume(layerAssembly);
+  placedLayer.addPhysVolID("layer", layerID);
+  layerElement.setPlacement(placedLayer);
+  // Return the layer element
+  return layerElement;
 }
 
-DECLARE_DETELEMENT(CylinderLayer, create_cylinder_layer)
+/// Standard create_barrel_detector(...) create a barrel
+/// like detector
+///
+/// @param dd the detector to which this is addedded
+/// @param xml the input xml element
+/// @param sens is ignored
+///
+/// @return a reference counted DetElement
+static Ref_t create_barrel_detector(Detector &dd, xml_h xml,
+                                    SensitiveDetector sens) {
+  xml_det_t x_det = xml;
+  string detName = x_det.nameStr();
+
+  // create the master detector element
+  DetElement detectorElement(detName, x_det.id());
+  dd4hep::xml::setDetectorTypeFlag(xml, detectorElement);
+
+  // The Shape and Volume
+  Assembly detectorAssembly(detName);
+  detectorAssembly.setVisAttributes(dd, x_det.visStr());
+
+  // Add layers if they exist as such
+  if (x_det.hasChild(_Unicode(layers))) {
+    xml_comp_t x_det_layers = x_det.child(_Unicode(layers));
+    int layerID = 0;
+    for (xml_coll_t layer(x_det_layers, _Unicode(layer)); layer; ++layer) {
+      xml_comp_t x_det_layer = layer;
+      auto layerElement =
+          addCylinderLayer(dd, detectorAssembly, x_det_layer, sens, layerID++);
+      // Add is to the detector element
+      detectorElement.add(layerElement);
+    }
+  }
+  // Place it into the mother volume
+  Volume motherVolume = dd.pickMotherVolume(detectorElement);
+  Position translation(0., 0., 0.);
+  PlacedVolume placedDetector =
+      motherVolume.placeVolume(detectorAssembly, translation);
+  // "system" is hard coded in the DD4Hep::VolumeManager
+  placedDetector.addPhysVolID("system", x_det.id());
+  detectorElement.setPlacement(placedDetector);
+
+  // return this element
+  return detectorElement;
+}
+
+DECLARE_DETELEMENT(BarrelDetector, create_barrel_detector)
 
 /// Standard create_cylinder(...) create a simple disc layer
 ///

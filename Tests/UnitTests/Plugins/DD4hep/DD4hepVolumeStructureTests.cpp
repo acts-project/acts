@@ -63,9 +63,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeVolumeStructure) {
   // External description
   cxml << indent_12_xml << "<proto_volume>" << '\n';
   cxml << indent_12_xml
-       << "    <tubs rmin=\"0*mm\" rmax=\"30.0*mm\" dz=\"2000*mm\" "
-          "material=\"Air\"/>"
-       << '\n';
+       << "    <tubs rmin=\"0*mm\" rmax=\"30.0*mm\" dz=\"2000*mm\" />" << '\n';
   cxml << indent_12_xml << "</proto_volume>" << '\n';
 
   // Internal description

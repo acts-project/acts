@@ -35,19 +35,25 @@ Acts::Test::CylindricalTrackingGeometry cGeometry =
 const char* beampipe_head_xml =
     R""""(
     <detectors>
-        <detector id="0" name="CylinderLayer" type="CylinderLayer">
+        <detector id="0" name="BeamPipe" type="BarrelDetector">
             <type_flags type="DetType_TRACKER + DetType_BEAMPIPE"/>
+            <layers>
+                <layer name="BP" id="0">            
 )"""";
 
 const char* cylinder_layer_head_xml =
     R""""(
     <detectors>
-        <detector id="1" name="CylinderLayer" type="CylinderLayer" readout="PixelReadout">
+        <detector id="1" name="BarrelLayer" type="BarrelDetector" readout="PixelReadout">
             <type_flags type="DetType_TRACKER + DetType_BARREL"/>
+            <layers>
+                <layer name="B0" id="0">
 )"""";
 
 const char* tail_xml =
     R""""(
+                </layer>
+            </layers>
         </detector>
     </detectors>
 )"""";
@@ -66,11 +72,6 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginBeampipeStructure) {
   cxml.open(fNameBase + ".xml");
   cxml << head_xml;
   cxml << beampipe_head_xml;
-  cxml << indent_12_xml
-       << "<envelope rmin=\"0*mm\" rmax=\"30*mm\" dz=\"2000*mm\" "
-          "cz=\"0*mm\" "
-          "material=\"Air\"/>"
-       << '\n';
   cxml << indent_12_xml << "  <passive_surface>" << '\n';
   cxml << indent_12_xml
        << "    <tubs rmin=\"25*mm\" rmax=\"25.8*mm\" dz=\"1800*mm\" "
@@ -145,12 +146,6 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     cxml << head_xml;
     cxml << segmentation_xml;
     cxml << cylinder_layer_head_xml;
-
-    cxml << indent_12_xml
-         << "<envelope rmin=\"180*mm\" rmax=\"240*mm\" dz=\"800*cm\" "
-            "cz=\"0*mm\" "
-            "material=\"Air\"/>"
-         << '\n';
 
     cxml << indent_12_xml << "<surface_binning";
     cxml << " ztype=\"equidistant\"";
