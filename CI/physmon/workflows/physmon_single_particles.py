@@ -23,6 +23,7 @@ from acts.examples.reconstruction import (
     SeedFinderOptionsArg,
     SeedingAlgorithm,
     addCKFTracks,
+    TrackSelectorConfig,
 )
 
 from physmon_common import makeSetup
@@ -34,7 +35,7 @@ setup = makeSetup()
 
 def run_single_particles(particle, pT, simulation, label):
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=10, numThreads=1)
+        s = acts.examples.Sequencer(events=10000, numThreads=1)
 
         tp = Path(temp)
 
@@ -64,6 +65,7 @@ def run_single_particles(particle, pT, simulation, label):
             setup.field,
             rnd,
             detector=setup.detector,
+            enableInteractions=True,
         )
 
         addDigitization(
@@ -99,22 +101,18 @@ def run_single_particles(particle, pT, simulation, label):
             s,
             setup.trackingGeometry,
             setup.field,
+            TrackSelectorConfig(
+                pt=(500 * u.MeV, None),
+                loc0=(-4.0 * u.mm, 4.0 * u.mm),
+                nMeasurementsMin=6,
+            ),
             outputDirRoot=tp,
         )
 
         s.run()
         del s
 
-        for stem in [
-            "performance_ckf",
-            "tracksummary_ckf",
-        ] + (
-            ["performance_seeding", "performance_ambi"]
-            if label in ["seeded", "orthogonal"]
-            else ["performance_seeding"]
-            if label == "truth_estimated"
-            else []
-        ):
+        for stem in ["performance_ckf", "tracksummary_ckf"]:
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
