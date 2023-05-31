@@ -45,7 +45,7 @@ void GreedyAmbiguityResolution::computeInitialState(
         });
 
     state.trackTips.push_back(track.index());
-    state.trackChi2.push_back(track.chi2());
+    state.trackChi2.push_back(track.chi2() / track.nDoF());
     state.measurementsPerTrack.push_back(std::move(measurements));
     state.selectedTracks.insert(state.numberOfTracks);
 
