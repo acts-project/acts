@@ -1,0 +1,30 @@
+remove_lines:
+  # ignore unexiting std
+  - "^#include <new>"
+  - "^#include <bits/"
+  - "^#include <ext/alloc_traits\\.h>"
+  # ignore Eigen
+  - "^(- )?#include [<\"](src|Eigen)/"
+  - "namespace Eigen {"
+  # ignore boost
+  - "^(- )?#include <boost/"
+  # ignore HEP
+  - "^#include <CLHEP/"
+  - "^#include <TGeo"
+  - "^(- )?#include \"TGeo"
+  - "^(- )?#include \"TView"
+  - "^(- )?#include [<\"]G4"
+  # don't touch ipp
+  - "^(- )?#include [<\"].*\\.ipp"
+
+replace_lines:
+  - "#include <assert\\.h>": "#include <cassert>"
+  - "#include <stddef\\.h>": "#include <cstddef>"
+  - "#include <math\\.h>": "#include <cmath>"
+  - "#include <limits\\.h>": "#include <climits>"
+  - "#include <unistd\\.h>": "#include <cunistd>"
+  - "#include <stdint\\.h>": "#include <cstdint>"
+
+ignore_files:
+  - ".*FpeMonitor\\.[hc]pp"
+  - ".*thirdparty/"
