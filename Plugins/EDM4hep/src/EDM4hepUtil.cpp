@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include "edm4hep/TrackState.h"
 
@@ -85,7 +84,7 @@ ActsSymMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
   J(3, 3) = -1 / (tanLambda * tanLambda + 1);
   J(4, 3) = -1 * omega * tanLambda /
             (Bz * std::pow(tanLambda * tanLambda + 1, 3. / 2.));
-  J(4, 4) = 1 / (Bz * std::sqrt(tanLambda * tanLambda + 1));
+  J(4, 4) = 1 / (Bz * std::hypot(tanLambda, 1));
 
   return J;
 }

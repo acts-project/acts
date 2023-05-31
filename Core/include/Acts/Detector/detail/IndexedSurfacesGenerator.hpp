@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
@@ -18,12 +19,17 @@
 
 namespace Acts {
 namespace Experimental {
+namespace detail {
 
 /// @brief  A templated indexed grid generator.
 ///
 /// This Generator creates a SurfaceCandidatesUpdator delegate
 /// which can then be used in the DetectorVolume class for updating
-/// given surface candidates.
+/// given surface candidates based on an index grid.
+///
+/// It allows for:
+/// - certain indices being forcly assigned to all bins
+/// - a chosen expansion to fill indices in neighborhood bins
 ///
 /// @tparam objects_container the objects container
 template <typename surface_container>
@@ -33,7 +39,7 @@ struct IndexedSurfacesGenerator {
   surface_container surfaces = {};
   // Indices of surfaces that are to be assigned to all bins
   std::vector<std::size_t> assignToAll = {};
-  /// The binning
+  /// The binning for the indexing
   std::vector<BinningValue> bValues = {};
   // Bin expansion
   std::vector<std::size_t> binExpansion = {};
@@ -99,5 +105,6 @@ struct IndexedSurfacesGenerator {
   const Logger& logger() const { return *oLogger; }
 };
 
+}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts

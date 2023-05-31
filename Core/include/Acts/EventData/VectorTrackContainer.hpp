@@ -10,7 +10,9 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <unordered_map>
 
@@ -61,8 +63,6 @@ class VectorTrackContainerBase {
         return &instance.m_params[itrack];
       case "cov"_hash:
         return &instance.m_cov[itrack];
-      case "referenceSurface"_hash:
-        return &instance.m_referenceSurfaces[itrack];
       case "nMeasurements"_hash:
         return &instance.m_nMeasurements[itrack];
       case "nHoles"_hash:
@@ -129,6 +129,10 @@ class VectorTrackContainerBase {
       default:
         return m_dynamic.find(key) != m_dynamic.end();
     }
+  }
+
+  const Surface* referenceSurface_impl(IndexType itrack) const {
+    return m_referenceSurfaces[itrack].get();
   }
 
   std::size_t size_impl() const {
@@ -217,8 +221,15 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   void reserve(IndexType size);
 
+  void setReferenceSurface_impl(IndexType itrack,
+                                std::shared_ptr<const Surface> surface) {
+    m_referenceSurfaces[itrack] = std::move(surface);
+  }
+
   // END INTERFACE
 };
+
+ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, VectorTrackContainer);
 
 class ConstVectorTrackContainer;
 template <>
@@ -259,6 +270,9 @@ class ConstVectorTrackContainer final
 
   // END INTERFACE
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend,
+                          ConstVectorTrackContainer);
 
 inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)

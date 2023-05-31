@@ -86,7 +86,6 @@ class ZScanVertexFinder {
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters([](T params) { return params; }),
-
         m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined InputTrack_t type =!

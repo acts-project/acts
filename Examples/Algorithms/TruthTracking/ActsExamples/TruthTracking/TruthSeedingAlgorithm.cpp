@@ -55,6 +55,7 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
   m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 }
 
@@ -184,6 +185,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   ACTS_VERBOSE("Found " << seeds.size() << " seeds");
 
   m_outputParticles(ctx, std::move(seededParticles));
+  m_outputProtoTracks(ctx, std::move(tracks));
   m_outputSeeds(ctx, std::move(seeds));
 
   return ActsExamples::ProcessCode::SUCCESS;
