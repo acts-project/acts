@@ -63,7 +63,7 @@ struct PropagatorPlainOptions {
   /// pion default
   int absPdgCode = PdgParticle::ePionPlus;
 
-  /// The mass for the particle for (eventual) material integration -
+  /// The mass of the particle for (eventual) material integration -
   /// pion default
   double mass = 139.57018 * UnitConstants::MeV;
 
