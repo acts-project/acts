@@ -27,9 +27,7 @@ void GreedyAmbiguityResolution::computeInitialState(
                                                  sourceLinkEquality);
 
   for (const auto& track : tracks) {
-    auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-        tracks.trackStateContainer(), track.tipIndex());
-    if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
+    if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
       continue;
     }
     std::vector<std::size_t> measurements;
@@ -47,7 +45,7 @@ void GreedyAmbiguityResolution::computeInitialState(
         });
 
     state.trackTips.push_back(track.index());
-    state.trackChi2.push_back(trajState.chi2Sum / trajState.NDF);
+    state.trackChi2.push_back(track.chi2());
     state.measurementsPerTrack.push_back(std::move(measurements));
     state.selectedTracks.insert(state.numberOfTracks);
 
