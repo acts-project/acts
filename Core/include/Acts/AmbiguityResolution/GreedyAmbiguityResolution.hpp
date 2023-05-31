@@ -50,11 +50,13 @@ class GreedyAmbiguityResolution {
     std::vector<float> trackChi2;
     std::vector<std::vector<std::size_t>> measurementsPerTrack;
 
+    // TODO consider boost 1.81 unordered_flat_map
     boost::container::flat_map<std::size_t,
                                boost::container::flat_set<std::size_t>>
         tracksPerMeasurement;
     std::vector<std::size_t> sharedMeasurementsPerTrack;
 
+    // TODO consider boost 1.81 unordered_flat_map
     boost::container::flat_set<std::size_t> selectedTracks;
   };
 
