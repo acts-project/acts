@@ -127,11 +127,20 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
+    const float uIP = -1. / rM;
+    const float cosPhiM = -xM * uIP;
+    const float sinPhiM = -yM * uIP;
+    float vIPAbs = 0;
+    if (m_config.interactionPointCut) {
+      // equivalent to m_config.impactMax / (rM * rM);
+      vIPAbs = impactMax * uIP * uIP;
+    }
+
     // Iterate over middle-top dublets
     getCompatibleDoublets<Acts::SpacePointCandidateType::TOP>(
         state.spacePointData, options, grid, state.topNeighbours, *spM.get(),
         state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
-        m_config.deltaRMaxTopSP);
+        m_config.deltaRMaxTopSP, uIP, cosPhiM, sinPhiM, vIPAbs);
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -164,7 +173,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     getCompatibleDoublets<Acts::SpacePointCandidateType::BOTTOM>(
         state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
-        m_config.deltaRMaxBottomSP);
+        m_config.deltaRMaxBottomSP, uIP, cosPhiM, sinPhiM, vIPAbs);
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -193,7 +202,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-    const float& deltaRMinSP, const float& deltaRMaxSP) const {
+    const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
+    const float& cosPhiM, const float& sinPhiM, float& vIPAbs) const {
   float impactMax = m_config.impactMax;
   if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
     impactMax = -impactMax;
@@ -217,15 +227,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float& zM = mediumSP.z();
   const float& varianceRM = mediumSP.varianceR();
   const float& varianceZM = mediumSP.varianceZ();
-
-  const float uIP = -1. / rM;
-  const float cosPhiM = -xM * uIP;
-  const float sinPhiM = -yM * uIP;
-  float vIPAbs = 0;
-  if (m_config.interactionPointCut) {
-    // equivalent to m_config.impactMax / (rM * rM);
-    vIPAbs = impactMax * uIP * uIP;
-  }
 
   float deltaR = 0.;
   float deltaZ = 0.;

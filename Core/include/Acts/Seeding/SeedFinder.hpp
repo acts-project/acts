@@ -100,8 +100,9 @@ class SeedFinder {
       const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
-      const sp_range_t& topSPs,
-      const Acts::Range1D<float>& rMiddleSPRange) const;
+      const sp_range_t& topSPs, const Acts::Range1D<float>& rMiddleSPRange,
+      const float& uIP, const float& cosPhiM, const float& sinPhiM,
+      float& vIPAbs) const;
 
   /// @brief Compatibility method for the new-style seed finding API.
   ///
