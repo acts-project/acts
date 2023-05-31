@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <optional>
 
@@ -52,6 +51,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
                         .inverse())
                        .eval();
 
+    ACTS_VERBOSE("Gain Matrix K:\n" << K);
+
     if (K.hasNaN()) {
       error = (direction == Direction::Forward)
                   ? KalmanFitterError::ForwardUpdateFailed
@@ -80,7 +81,10 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     CovarianceMatrix m =
         ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance).eval();
 
-    chi2 = (residual.transpose() * m.inverse() * residual).value();
+    static constexpr double epsilon = 1e-13;
+    m.diagonal().array() += epsilon;
+
+    chi2 = (residual.transpose() * (m.inverse()) * residual).value();
 
     ACTS_VERBOSE("Chi2: " << chi2);
     return true;  // continue execution
