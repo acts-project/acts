@@ -193,6 +193,10 @@ set(_acts_mlpack_version 3.1.1)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
+# recommended dependency version. if there is an opportunity to reach
+# this version we will try so.
+set(_acts_boost_recommended_version 1.78.0)
+
 # required packages
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
@@ -205,6 +209,10 @@ if (ACTS_SETUP_BOOST)
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
     else()
       find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+    endif()
+
+    if(Boost_VERSION VERSION_LESS _acts_boost_recommended_version)
+      message(WARNING "Found Boost ${Boost_VERSION} - recommended is at least ${_acts_boost_recommended_version}")
     endif()
   else()
     add_subdirectory(thirdparty/boost)
