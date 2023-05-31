@@ -128,8 +128,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     const float uIP = -1. / rM;
-    const float cosPhiM = -xM * uIP;
-    const float sinPhiM = -yM * uIP;
+    const float cosPhiM = -mediumSP.x() * uIP;
+    const float sinPhiM = -mediumSP.y() * uIP;
     float vIPAbs = 0;
     if (m_config.interactionPointCut) {
       // equivalent to m_config.impactMax / (rM * rM);
