@@ -41,11 +41,6 @@ class GreedyAmbiguityResolution {
 
     /// Minumum number of measurement to form a track.
     size_t nMeasurementsMin = 7;
-
-    /// SourceLink hash.
-    Delegate<std::size_t(const SourceLink&)> sourceLinkHash;
-    /// SourceLink equality delegate.
-    Delegate<bool(const SourceLink&, const SourceLink&)> sourceLinkEquality;
   };
 
   struct State {
@@ -70,10 +65,12 @@ class GreedyAmbiguityResolution {
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
   template <typename track_container_t, typename traj_t,
-            template <typename> class holder_t>
+            template <typename> class holder_t, typename source_link_hash_t,
+            typename source_link_equality_t>
   void computeInitialState(
       const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-      State& state) const;
+      State& state, source_link_hash_t&& sourceLinkHash,
+      source_link_equality_t&& sourceLinkEquality) const;
 
   void resolve(State& state) const;
 

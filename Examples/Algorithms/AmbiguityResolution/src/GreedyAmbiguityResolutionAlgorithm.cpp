@@ -16,6 +16,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <cstddef>
 #include <iterator>
 #include <numeric>
 #include <stdexcept>
@@ -31,16 +32,17 @@ Acts::GreedyAmbiguityResolution::Config transformConfig(
   result.maximumSharedHits = cfg.maximumSharedHits;
   result.maximumIterations = cfg.maximumIterations;
   result.nMeasurementsMin = cfg.nMeasurementsMin;
-  result.sourceLinkHash.connect([](const void*, const Acts::SourceLink& a) {
-    return static_cast<std::size_t>(
-        a.get<ActsExamples::IndexSourceLink>().index());
-  });
-  result.sourceLinkEquality.connect(
-      [](const void*, const Acts::SourceLink& a, const Acts::SourceLink& b) {
-        return a.get<ActsExamples::IndexSourceLink>().index() ==
-               b.get<ActsExamples::IndexSourceLink>().index();
-      });
   return result;
+}
+
+std::size_t sourceLinkHash(const Acts::SourceLink& a) {
+  return static_cast<std::size_t>(
+      a.get<ActsExamples::IndexSourceLink>().index());
+}
+
+bool sourceLinkEquality(const Acts::SourceLink& a, const Acts::SourceLink& b) {
+  return a.get<ActsExamples::IndexSourceLink>().index() ==
+         b.get<ActsExamples::IndexSourceLink>().index();
 }
 
 }  // namespace
@@ -70,7 +72,8 @@ ActsExamples::GreedyAmbiguityResolutionAlgorithm::execute(
   ACTS_VERBOSE("Number of input tracks: " << tracks.size());
 
   Acts::GreedyAmbiguityResolution::State state;
-  m_core.computeInitialState(tracks, state);
+  m_core.computeInitialState(tracks, state, &sourceLinkHash,
+                             &sourceLinkEquality);
 
   ACTS_VERBOSE("State initialized");
 

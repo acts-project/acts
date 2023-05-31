@@ -15,13 +15,16 @@
 namespace Acts {
 
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
+          template <typename> class holder_t, typename source_link_hash_t,
+          typename source_link_equality_t>
 void GreedyAmbiguityResolution::computeInitialState(
     const TrackContainer<track_container_t, traj_t, holder_t>& tracks,
-    State& state) const {
-  std::unordered_map<SourceLink, std::size_t, decltype(m_cfg.sourceLinkHash),
-                     decltype(m_cfg.sourceLinkEquality)>
-      measurementIndexMap(0, m_cfg.sourceLinkHash, m_cfg.sourceLinkEquality);
+    State& state, source_link_hash_t&& sourceLinkHash,
+    source_link_equality_t&& sourceLinkEquality) const {
+  auto measurementIndexMap =
+      std::unordered_map<SourceLink, std::size_t, source_link_hash_t,
+                         source_link_equality_t>(0, sourceLinkHash,
+                                                 sourceLinkEquality);
 
   for (const auto& track : tracks) {
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
