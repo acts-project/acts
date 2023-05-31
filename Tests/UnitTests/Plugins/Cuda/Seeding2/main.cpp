@@ -178,7 +178,8 @@ int main(int argc, char* argv[]) {
   if (!cmdl.onlyGPU) {
     decltype(seedFinder_host)::SeedingState state;
     for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-      auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+      auto spGroup_itr = Acts::BinnedSPGroupIterator(
+          spGroup, i, sfConfig.skipZMiddleBinSearch);
       if (spGroup_itr == spGroup.end()) {
         break;
       }
@@ -214,7 +215,8 @@ int main(int argc, char* argv[]) {
 
   // Perform the seed finding.
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
-    auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+    auto spGroup_itr =
+        Acts::BinnedSPGroupIterator(spGroup, i, sfConfig.skipZMiddleBinSearch);
     if (spGroup_itr == spGroup_end) {
       break;
     }
