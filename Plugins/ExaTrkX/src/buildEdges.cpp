@@ -298,8 +298,12 @@ torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
                                int64_t numSpacepoints, int dim, float rVal,
                                int kVal, bool flipDirections) {
 #ifndef ACTS_EXATRKX_CPUONLY
-  return buildEdgesFRNN(embedFeatures, numSpacepoints, dim, rVal, kVal,
-                        flipDirections);
+  if (torch::cuda::is_available()) {
+    return buildEdgesFRNN(embedFeatures, numSpacepoints, dim, rVal, kVal,
+                          flipDirections);
+  } else {
+    return buildEdgesBruteForce(embedFeatures, numSpacepoints, dim, rVal, kVal);
+  }
 #else
   return buildEdgesBruteForce(embedFeatures, numSpacepoints, dim, rVal, kVal);
 #endif
