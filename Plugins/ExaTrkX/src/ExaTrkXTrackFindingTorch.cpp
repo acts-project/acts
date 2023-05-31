@@ -292,9 +292,6 @@ std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
 
   timeInfo.labeling = timer.stopAndGetElapsedTime();
   timeInfo.total = totalTimer.stopAndGetElapsedTime();
-#ifndef ACTS_EXATRKX_CPUONLY
-  c10::cuda::CUDACachingAllocator::emptyCache();
-#endif
 
   if (recordTiming) {
     return timeInfo;
