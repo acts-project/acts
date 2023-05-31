@@ -51,6 +51,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
                         .inverse())
                        .eval();
 
+    ACTS_VERBOSE("Gain Matrix K:\n" << K);
+
     if (K.hasNaN()) {
       error = (direction == Direction::Forward)
                   ? KalmanFitterError::ForwardUpdateFailed
