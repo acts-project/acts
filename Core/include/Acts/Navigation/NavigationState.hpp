@@ -60,8 +60,8 @@ struct NavigationState {
   /// The current absolute momentum
   ActsScalar absMomentum = 0.;
 
-  /// The current charge
-  ActsScalar charge = 0.;
+  /// The current absolute charge
+  ActsScalar absCharge = 0.;
 
   /// The current magnetic field
   Vector3 magneticField = Vector3(0., 0., 0.);
