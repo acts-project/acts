@@ -447,6 +447,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
             deltaRMax = 200 * u.mm
             deltaRMaxTopSP = 200 * u.mm
             zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
+            # variables that are only used for fast tracking:
             skipZMiddleBinSearch = 4
             fastTrackingCut = True
             fastTrackingRMin = 50 * u.mm
@@ -534,6 +535,11 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
             [40.0, 80.0],
         ]
         useVariableMiddleSPRange = False
+    else:
+        skipZMiddleBinSearch = 0
+        fastTrackingCut = False
+        fastTrackingRMin = 0 * u.mm
+        fastTrackingCotThetaMax = 0
 
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
