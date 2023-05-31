@@ -57,7 +57,7 @@ jobs:
       - name: Run IWYU
         run: python3 iwyu-install/bin/iwyu_tool.py -p acts-build/ -j2 | tee iwyu-output.txt
       - name: Filter IWYU output
-        run: python3 acts/iwyu/filter.py acts/iwyu/filter.yaml iwyu-output.txt iwyu-filtered.txt
+        run: python3 acts/CI/iwyu/filter.py acts/CI/iwyu/filter.yaml iwyu-output.txt iwyu-filtered.txt
       - name: Apply IWYU
         run: python3 iwyu-install/bin/fix_includes.py < iwyu-filtered.txt
 
