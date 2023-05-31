@@ -448,7 +448,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
             deltaRMaxTopSP = 200 * u.mm
             zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
             # variables that are only used for fast tracking:
-            skipZMiddleBinSearch = 4
+            skipZMiddleBinSearch = 2
             fastTrackingCut = True
             fastTrackingRMin = 50 * u.mm
             fastTrackingCotThetaMax = 2.1293  # 1.5 eta
