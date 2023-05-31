@@ -57,9 +57,9 @@ using MeasurementType = Measurement<BoundIndices, params...>;
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
 
-/// Helper method to visualiza all types of surfaces
+/// Helper method to visualize all types of surfaces
 ///
-/// @param helper The visualziation helper
+/// @param helper The visualization helper
 ///
 /// @return an overall string including all written output
 static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
