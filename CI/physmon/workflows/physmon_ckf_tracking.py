@@ -150,7 +150,6 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             else "particles_input",
             outputProtoVertices="amvf_protovertices",
             outputVertices="amvf_fittedVertices",
-            outputTime="amvf_outputTime",
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=tp / "amvf",
         )
