@@ -70,7 +70,7 @@ endif()
 if(PluginTGeo IN_LIST Acts_COMPONENTS)
   find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
 endif()
-if(ActsPluginActSVG IN_LIST Acts_COMPONENTS)
+if(PluginActSVG IN_LIST Acts_COMPONENTS)
   find_dependency(actsvg @actsvg_VERSION@ CONFIG EXACT)
 endif()
 
