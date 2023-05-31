@@ -80,7 +80,7 @@ In addition to this, the mapping type can be changed for surface mapping by chan
 - ``PostMapping``: Only map material from after the surface.
 - ``Sensor``: Only map the last material hits before the surface. Used to map only the sensor material onto the sensors.
 
-In case two different sufaces would receive a material hit (Default followed by Default or PreMapping for example), the material hit is associated with the closest surface.
+In case two different surfaces would receive a material hit (Default followed by Default or PreMapping for example), the material hit is associated with the closest surface.
 
 .. warning::
   Due to the implementation, all the material hits need to be associated with a surface. If a PostMapping surface follows a PreMapping or a Sensor surface, all the material between the two surface will be mapped onto the PostMapping surface and a warning will be issued. The same goes if the first surface encountered is a PostMapping surface.

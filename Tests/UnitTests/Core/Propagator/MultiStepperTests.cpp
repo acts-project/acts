@@ -126,19 +126,6 @@ void test_multi_stepper_state() {
     }
   }
 
-  const auto expected_charge = []() {
-    if constexpr (std::is_same_v<charge_t, Neutral>) {
-      return 0.0;
-    } else {
-      return 1.0;
-    }
-  }();
-
-  BOOST_CHECK_EQUAL(ms.charge(state), expected_charge);
-  for (const auto cmp : const_iterable) {
-    BOOST_CHECK_EQUAL(cmp.charge(), expected_charge);
-  }
-
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
   for (const auto cmp : const_iterable) {
     BOOST_CHECK_EQUAL(cmp.pathAccumulated(), 0.);
@@ -241,7 +228,6 @@ void test_multi_stepper_vs_eigen_stepper() {
 
     for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
       BOOST_CHECK_EQUAL(cmp.pars(), single_state.pars);
-      BOOST_CHECK_EQUAL(cmp.charge(), single_state.q);
       BOOST_CHECK_EQUAL(cmp.cov(), single_state.cov);
       BOOST_CHECK_EQUAL(cmp.jacTransport(), single_state.jacTransport);
       BOOST_CHECK_EQUAL(cmp.jacToGlobal(), single_state.jacToGlobal);
@@ -326,7 +312,6 @@ void test_components_modifying_accessors() {
   const auto projectors = std::make_tuple(
       [](auto &cmp) -> decltype(auto) { return cmp.status(); },
       [](auto &cmp) -> decltype(auto) { return cmp.pathAccumulated(); },
-      [](auto &cmp) -> decltype(auto) { return cmp.charge(); },
       [](auto &cmp) -> decltype(auto) { return cmp.weight(); },
       [](auto &cmp) -> decltype(auto) { return cmp.pars(); },
       [](auto &cmp) -> decltype(auto) { return cmp.cov(); },
