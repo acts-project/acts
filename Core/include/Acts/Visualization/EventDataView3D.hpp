@@ -190,8 +190,8 @@ struct EventDataView3D {
   /// parameters
   template <typename D>
   static void drawMultiTrajectory(
-      IVisualization3D& helper, const Acts::MultiTrajectory<D>& multiTraj,
-      const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
+      IVisualization3D& helper, const D& multiTraj, const size_t& entryIndex,
+      const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
       const ViewConfig& surfaceConfig = s_viewSensitive,
