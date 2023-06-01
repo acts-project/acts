@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   auto newUnitDir = (unitDir + Vector3(1, -1, -1)).normalized();
   auto newAbsMom = 0.9 * absMom;
 
-  stepper.update(state, newPos, newUnitDir, newAbsMom, newTime);
+  stepper.update(state, newPos, newUnitDir, charge / newAbsMom, newTime);
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);

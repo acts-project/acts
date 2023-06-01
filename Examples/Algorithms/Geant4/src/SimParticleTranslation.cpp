@@ -9,7 +9,6 @@
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"

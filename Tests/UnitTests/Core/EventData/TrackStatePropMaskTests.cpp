@@ -13,6 +13,8 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <bitset>
+
 using namespace Acts;
 
 BOOST_AUTO_TEST_SUITE(TrackStatePropMaskTest)

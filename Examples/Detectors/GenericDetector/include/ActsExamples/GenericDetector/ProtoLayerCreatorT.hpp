@@ -23,7 +23,6 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
@@ -210,7 +209,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
   for (auto& eLayers : detectorStore) {
     imodule += eLayers.size();
   }
-  ACTS_VERBOSE("Starting with identfier " << imodule);
+  ACTS_VERBOSE("Starting with identifier " << imodule);
 
   // ----------------------- central layers -------------------------
   // the central layers
@@ -407,7 +406,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
   for (auto& eLayers : detectorStore) {
     imodule += eLayers.size();
   }
-  ACTS_VERBOSE("Starting with identfier " << imodule);
+  ACTS_VERBOSE("Starting with identifier " << imodule);
   // the return layers
   std::vector<ProtoLayerSurfaces> epLayers;
   // create the detector store entry
@@ -420,7 +419,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                << numpnLayers << " passive positive/negative side layers.");
     epLayers.reserve(numpnLayers);
 
-    /// this is the loop over th elayer positions
+    /// this is the loop over the layer positions
     for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
       // some screen output
       ACTS_VERBOSE("- building layer "

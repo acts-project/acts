@@ -9,7 +9,6 @@
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 

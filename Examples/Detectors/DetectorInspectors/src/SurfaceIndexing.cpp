@@ -66,7 +66,7 @@ Acts::Svg::IndexedSurfacesConverter::Options generateDrawOptions() {
 
   isOptions.gridOptions = gridOptions;
   return isOptions;
-};
+}
 
 }  // namespace
 
