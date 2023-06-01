@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include "edm4hep/TrackState.h"
 

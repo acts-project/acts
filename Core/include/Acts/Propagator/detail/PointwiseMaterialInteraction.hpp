@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -18,7 +20,7 @@ namespace detail {
 /// @brief Struct to handle pointwise material interaction
 struct PointwiseMaterialInteraction {
   /// Data from the propagation state
-  const Surface* surface;
+  const Surface* surface = nullptr;
 
   /// The particle position at the interaction.
   const Vector3 pos = Vector3(0., 0., 0);
@@ -26,18 +28,18 @@ struct PointwiseMaterialInteraction {
   const double time = 0.0;
   /// The particle direction at the interaction.
   const Vector3 dir = Vector3(0., 0., 0);
-  /// The particle momentum at the interaction
-  const double momentum;
-  /// The particle charge
-  const double q;
   /// The particle q/p at the interaction
-  const double qOverP;
+  const double qOverP = 0.0;
+  /// The absolute particle charge
+  const double absQ = 0.0;
+  /// The particle momentum at the interaction
+  const double momentum = 0.0;
   /// The particle mass
-  const double mass;
+  const double mass = 0.0;
   /// The particle pdg
-  const int pdg;
+  const int pdg = 0.0;
   /// The covariance transport decision at the interaction
-  const bool performCovarianceTransport;
+  const bool performCovarianceTransport = false;
   /// The navigation direction
   const Direction navDir;
 
@@ -72,9 +74,9 @@ struct PointwiseMaterialInteraction {
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
+        qOverP(stepper.qop(state.stepping)),
+        absQ(std::abs(stepper.charge(state.stepping))),
         momentum(stepper.momentum(state.stepping)),
-        q(stepper.charge(state.stepping)),
-        qOverP(q / momentum),
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),
@@ -141,10 +143,12 @@ struct PointwiseMaterialInteraction {
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // minimum momentum below which we will not push particles via material
     // update
+    // TODO 10 MeV might be quite low and we should make this configurable
     static constexpr double minP = 10 * Acts::UnitConstants::MeV;
     nextP = std::max(minP, nextP);
     // update track parameters and covariance
-    stepper.update(state.stepping, pos, dir, nextP, time);
+    stepper.update(state.stepping, pos, dir,
+                   std::copysign(absQ / nextP, qOverP), time);
     state.stepping.cov(eBoundPhi, eBoundPhi) = updateVariance(
         state.stepping.cov(eBoundPhi, eBoundPhi), variancePhi, updateMode);
     state.stepping.cov(eBoundTheta, eBoundTheta) =

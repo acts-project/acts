@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -19,25 +20,25 @@ namespace detail {
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
   /// Data from the propagation state
-  const TrackingVolume* volume;
+  const TrackingVolume* volume = nullptr;
   /// The particle current position
-  const Vector3 pos;
+  const Vector3 pos = Vector3::Zero();
   /// The particle current time
-  const double time;
+  const double time = 0;
   /// The particle current direction
-  const Vector3 dir;
-  /// The particle current momentum
-  const double momentum;
-  /// The particle current charge
-  const double q;
-  /// The particle current q/p
-  const double qOverP;
+  const Vector3 dir = Vector3::Zero();
+  /// The particle q/p at the interaction
+  const double qOverP = 0;
+  /// The absolute particle charge
+  const double absQ = 0;
+  /// The particle momentum at the interaction
+  const double momentum = 0;
   /// The particle mass
-  const double mass;
+  const double mass = 0;
   /// The particle pdg
-  const int pdg;
+  const int pdg = 0;
   /// The covariance transport decision at the interaction
-  const bool performCovarianceTransport;
+  const bool performCovarianceTransport = false;
   /// The navigation direction
   const Direction navDir;
 
@@ -62,9 +63,9 @@ struct VolumeMaterialInteraction {
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
+        qOverP(stepper.qop(state.stepping)),
+        absQ(std::abs(stepper.charge(state.stepping))),
         momentum(stepper.momentum(state.stepping)),
-        q(stepper.charge(state.stepping)),
-        qOverP(q / momentum),
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),

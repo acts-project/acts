@@ -17,6 +17,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 
 #include <iomanip>
 #include <iterator>

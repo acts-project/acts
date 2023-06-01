@@ -12,7 +12,6 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
