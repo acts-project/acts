@@ -1,6 +1,8 @@
 name: IWYU
 
 on:
+  push: # TODO remove
+  pull_request: # TODO remove
   workflow_dispatch:
   schedule:
     - cron: "0 12 * * 0"
