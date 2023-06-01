@@ -11,6 +11,7 @@
 #include "Acts/Utilities/KDTree.hpp"
 
 //load space point needs this: 
+#include "Acts/Seeding/GNN_DataStorage.h"
 
 
 #include <array>
@@ -38,6 +39,18 @@ class SeedFinderFTF {
   //since update 
   static constexpr std::size_t NDims = 3;
 
+  // TrigFTF_GNN_Geometry<SpacePoint> mGNNgeo ; 
+  //mstorage 
+  // Acts::SeedFilter<SpacePoint> mstorage;   
+  //think the functions wont work if a mmeber about doesnt wokr 
+  //so think need uuse constructor as brackets, 2 inputs 
+  // TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>&, const FASTRACK_CONNECTOR*);
+//   const std::vector<TrigInDetSiLayer>& rosievector ; 
+//   const FASTRACK_CONNECTOR* rosiefast ; //this might need a constructor 
+//   TrigFTF_GNN_Geometry<external_spacepoint_t>& rosietest(rosievector, rosiefast); 
+
+//   TrigFTF_GNN_Geometry<SpacePoint>& rosietest; 
+
   using seed_t = Seed<external_spacepoint_t>; 
   using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
   using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
@@ -58,7 +71,7 @@ class SeedFinderFTF {
  //definition of function not the calling of it, define what input type it needs 
  //know eventually will have vector of simspacepoints, here need generic space point type 
 
- void loadSpacePoints(const std::vector<external_spacepoint_t>&); 
+  void loadSpacePoints(const std::vector<external_spacepoint_t>&); 
 
  //create seeeds function 
 

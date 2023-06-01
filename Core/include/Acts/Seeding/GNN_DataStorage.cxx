@@ -67,7 +67,7 @@ void TrigFTF_GNN_EtaBin<space_point_t>::generatePhiIndexing(float dphi) {
 }
 
 template <typename space_point_t>  
-TrigFTF_GNN_DataStorage<space_point_t>::TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry& g) : m_geo(g) {
+TrigFTF_GNN_DataStorage<space_point_t>::TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& g) : m_geo(g) {
 
 
   // for(int k=0;k<g.num_bins();k++) {

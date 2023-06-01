@@ -7,6 +7,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
+// #include "Acts/Seeding/GNN_DataStorage.h"
+
 #include <memory> 
 
 //core algorithm so in acts namespace 
@@ -84,10 +86,11 @@ struct SeedFinderFTFConfig {
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
 ///////////some declared not filled in by reco: //////
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter; 
+  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
+
 //   //detector ROI 
-//   float phiMin = -M_PI;
-//   float phiMax = M_PI;
+  float phiMin = -M_PI;
+  float phiMax = M_PI;
 //    // radial range for middle SP
 //   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
 //   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
@@ -100,6 +103,13 @@ struct SeedFinderFTFConfig {
   float highland = 0; 
   float maxScatteringAngle2 = 0;
 //   bool isInInternalUnits = false;
+
+
+  ///for load space points 
+
+  float m_phiSliceWidth ; 
+  float m_nMaxPhiSlice ; 
+  bool m_useTrigSeedML = false ; 
 
 
 ////

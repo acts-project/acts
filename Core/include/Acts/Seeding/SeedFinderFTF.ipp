@@ -11,10 +11,11 @@
 #include "Acts/Utilities/BinningType.hpp"
 
 //for load space points 
-// #include "Acts/Seeding/FastTrackConnector.h"
-#include "Acts/Seeding/GNN_DataStorage.h"
-// #include "Acts/Seeding/SeedFinderFTF.hpp"
 
+
+
+#include<fstream>
+#include<vector>
 
 #include <cmath>
 #include <functional>
@@ -35,7 +36,6 @@ template <typename external_spacepoint_t>
 SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
     const SeedFinderFTFConfig<external_spacepoint_t> &config)
     : m_config(config) {
-  m_storage = new TrigFTF_GNN_DataStorage<external_spacepoint_t>(m_config.mGNNgeo); //when define find relevant input 
   
   //schecks if internal units funciton used 
   // if (not config.isInInternalUnits) {
@@ -51,26 +51,33 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
 template <typename external_spacepoint_t>
 void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<external_spacepoint_t>& SP){ 
 
+  const std::vector<TrigInDetSiLayer>& rosievector ; 
+  std::ifstream& rosiestream ; 
+  const FASTRACK_CONNECTOR* rosiefast(rosiestream) ; //this might need a constructor 
+  TrigFTF_GNN_Geometry<external_spacepoint_t>& mGNNgeo(rosievector, rosiefast); 
+  TrigFTF_GNN_DataStorage<external_spacepoint_t> m_storage(mGNNgeo) ; 
+
   for(auto sp : SP) {
     //could check if pixel as pixels only have 1 source link (strip have 2)
     bool isPixel = sp.isPixel(); 
 
+
     if(!isPixel) continue;
     // //think not using trigseedML for now 
     // //when called input should be simspace point 
-    
+
     m_storage->addSpacePoint((sp), (m_config.m_useTrigSeedML > 0));
+
 
     std::cout<<("in seed finder load space point function") ; 
   }
 
-  //cant find M_PI set to number for now 
-  int M_PI = 1 ; 
-  m_phiSliceWidth = 2*M_PI/m_config.m_nMaxPhiSlice;
 
+
+  m_config.m_phiSliceWidth = 2*m_config.phiMax/m_config.m_nMaxPhiSlice;
 
   m_storage->sortByPhi();
-  m_storage->generatePhiIndexing(1.5*m_phiSliceWidth);
+  m_storage->generatePhiIndexing(1.5*m_config.m_phiSliceWidth);
 
 }
 //filter canditates function 

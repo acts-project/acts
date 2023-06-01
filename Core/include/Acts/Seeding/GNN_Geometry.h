@@ -5,10 +5,10 @@
 #include<map>
 #include<algorithm>
 
-#include "FastTrackConnector.h" 
+#include "FasTrackConnector.h" 
 
 class TrigInDetSiLayer {
-public:
+ public:
   int m_subdet;//1 : Pixel, 2 : SCT
   int m_type;//0: barrel, +/-n : endcap
   float m_refCoord;
@@ -17,7 +17,7 @@ public:
 
 template <typename space_point_t>  
 class TrigFTF_GNN_Layer {
-public:
+ public:
   TrigFTF_GNN_Layer(const TrigInDetSiLayer&, float, int);
   ~TrigFTF_GNN_Layer();
 
@@ -39,7 +39,7 @@ public:
 
   float m_minEta, m_maxEta;
 
-protected:
+ protected:
 
   float m_etaBinWidth, m_phiBinWidth;
 
@@ -52,7 +52,7 @@ protected:
 
 template <typename space_point_t>  
 class TrigFTF_GNN_Geometry {
-public:
+ public:
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>&, const FASTRACK_CONNECTOR*);
   ~TrigFTF_GNN_Geometry();
   
@@ -61,7 +61,7 @@ public:
 
   int num_bins() const {return m_nEtaBins;}
 
-protected:
+ protected:
 
   const TrigFTF_GNN_Layer<space_point_t>* addNewLayer(const TrigInDetSiLayer&, int);
 

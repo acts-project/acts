@@ -13,7 +13,7 @@
 
 template <typename space_point_t>  
 class TrigFTF_GNN_Node {
-public:
+ public:
 
   struct CompareByPhi {
 
@@ -27,26 +27,26 @@ public:
   ~TrigFTF_GNN_Node();
   
 
- inline void addIn(int i) {
-//     if(m_in.size()<MAX_SEG_PER_NODE) {
-//       m_in.push_back(i);
-//     }
+  inline void addIn(int i) {
+  //     if(m_in.size()<MAX_SEG_PER_NODE) {
+ //       m_in.push_back(i);
+ //     }
   }
 
   inline void addOut(int i) {
-//     if(m_out.size()<MAX_SEG_PER_NODE) {
-//       m_out.push_back(i);
-//     }
+  //     if(m_out.size()<MAX_SEG_PER_NODE) {
+  //       m_out.push_back(i);
+  //     }
   }
   
   inline bool isConnector() const {
-//     if(m_in.empty() || m_out.empty()) return false;
-//     return true;
+  //     if(m_in.empty() || m_out.empty()) return false;
+  //     return true;
   }
 
   inline bool isFull() const {
-//     if(m_in.size()==MAX_SEG_PER_NODE && m_out.size()==MAX_SEG_PER_NODE) return true;
-//     else return false;
+  //     if(m_in.size()==MAX_SEG_PER_NODE && m_out.size()==MAX_SEG_PER_NODE) return true;
+  //     else return false;
   }
 
   const std::vector<space_point_t>& m_sp;
@@ -59,7 +59,7 @@ public:
 
 template <typename space_point_t>  
 class TrigFTF_GNN_EtaBin {
-public:
+ public:
   TrigFTF_GNN_EtaBin();
   ~TrigFTF_GNN_EtaBin();
 
@@ -79,7 +79,7 @@ public:
 
 template <typename space_point_t>  
 class TrigFTF_GNN_DataStorage {
-public:
+  public:
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& );
   ~TrigFTF_GNN_DataStorage();
  
@@ -96,7 +96,7 @@ public:
   //   return m_etaBins.at(idx);
   }
 
-protected:
+ protected:
 
   const TrigFTF_GNN_Geometry<space_point_t>&  m_geo;
 
@@ -106,7 +106,7 @@ protected:
 
 template <typename space_point_t>  
 class TrigFTF_GNN_Edge {
-public:
+ public:
 
   struct CompareLevel {
   // public:
