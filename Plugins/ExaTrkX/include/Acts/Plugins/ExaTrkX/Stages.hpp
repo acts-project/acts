@@ -52,8 +52,10 @@ class TrackBuildingBase {
   /// @param nodes Node tensor with shape (n_nodes, n_node_features)
   /// @param edges Edge-index tensor with shape (2, n_edges)
   /// @param edgeWeights Edge-weights of the previous edge classification phase
+  /// @param spacepointIDs IDs of the nodes (must have size=n_nodes)
+  /// @param logger Logger instance
   ///
-  /// @return tracks (as vectors of node-ids)
+  /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edgeWeights,
       std::vector<int> &spacepointIDs, const Logger &logger) = 0;
