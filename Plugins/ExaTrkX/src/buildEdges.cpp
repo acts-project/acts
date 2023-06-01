@@ -12,6 +12,10 @@
 #include <mutex>
 #include <vector>
 
+#include <torch/script.h>
+#include <torch/torch.h>
+
+#ifndef ACTS_EXATRKX_CPUONLY
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <grid/counting_sort.h>
@@ -19,12 +23,13 @@
 #include <grid/grid.h>
 #include <grid/insert_points.h>
 #include <grid/prefix_sum.h>
-#include <torch/script.h>
-#include <torch/torch.h>
+#endif
 
-torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
-                               int64_t numSpacepoints, int dim, float rVal,
-                               int kVal, bool flipDirections) {
+namespace {
+#ifndef ACTS_EXATRKX_CPUONLY
+torch::Tensor buildEdgesFRNN(at::Tensor &embedFeatures, int64_t numSpacepoints,
+                             int dim, float rVal, int kVal,
+                             bool flipDirections) {
   using namespace torch::indexing;
 
   torch::Device device(torch::kCUDA);
@@ -155,6 +160,7 @@ torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
 
   return stackedEdges;
 }
+#endif
 
 torch::Tensor buildEdgesBruteForce(at::Tensor &embedFeatures,
                                    int64_t numSpacepoints, int dim, float rVal,
@@ -285,4 +291,20 @@ torch::Tensor buildEdgesBruteForce(at::Tensor &embedFeatures,
   }
 
   return edge_index;
+}
+}  // namespace
+
+torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
+                               int64_t numSpacepoints, int dim, float rVal,
+                               int kVal, bool flipDirections) {
+#ifndef ACTS_EXATRKX_CPUONLY
+  if (torch::cuda::is_available()) {
+    return buildEdgesFRNN(embedFeatures, numSpacepoints, dim, rVal, kVal,
+                          flipDirections);
+  } else {
+    return buildEdgesBruteForce(embedFeatures, numSpacepoints, dim, rVal, kVal);
+  }
+#else
+  return buildEdgesBruteForce(embedFeatures, numSpacepoints, dim, rVal, kVal);
+#endif
 }
