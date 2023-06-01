@@ -82,7 +82,7 @@ auto AlignedDetectorWithOptions::finalize(
   cfg.flushSize = vm["align-flushsize"].template as<size_t>();
   cfg.doGarbageCollection = !vm["align-no-gc"].as<bool>();
 
-  // The misalingments
+  // The misalignments
   cfg.sigmaInPlane = vm["align-sigma-iplane"].template as<double>() * 1_um;
   cfg.sigmaOutPlane = vm["align-sigma-oplane"].template as<double>() * 1_um;
   cfg.sigmaInRot = vm["align-sigma-irot"].template as<double>() * 0.001;

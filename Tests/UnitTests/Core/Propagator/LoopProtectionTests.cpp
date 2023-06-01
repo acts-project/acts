@@ -44,7 +44,7 @@ struct SteppingState {
   Vector3 dir = Vector3(0., 0., 1);
   double p = 100_MeV;
 
-  NavigationDirection navDir = NavigationDirection::Forward;
+  Direction navDir = Direction::Forward;
 };
 
 /// @brief mockup of stepping state
@@ -58,8 +58,8 @@ struct Stepper {
   ///                 the magnetic field cell is used (and potentially
   ///                 updated)
   /// @param [in] pos is the field position
-  Result<Vector3> getField(SteppingState& /*unused*/,
-                           const Vector3& /*unused*/) const {
+  Result<Vector3> getField(SteppingState& /*state*/,
+                           const Vector3& /*pos*/) const {
     // get the field from the cell
     return Result<Vector3>::success(field);
   }

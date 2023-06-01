@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
@@ -56,19 +56,21 @@ struct SpacePointParameters {
 ///
 class SpacePointUtility {
  public:
-  using Measurement = Acts::BoundVariantMeasurement;
-
   /// Constructor
   SpacePointUtility(SpacePointBuilderConfig cfg) : m_config(std::move(cfg)) {}
 
-  /// @brief Getter method for the global coordinates of a measurement
+  /// @brief Getter method for the global coordinates of a SourceLink
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param meas measurement that holds the necessary
+  /// @param slink SourceLink that holds the necessary
   /// information
-  /// @return vectors of the global coordinates and covariance of the measurement
+  /// @param par local position
+  /// @param cov local covariance
+  /// @return vectors of the global coordinates and covariance of the SourceLink
   std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
-                                           const Measurement& meas) const;
+                                           const SourceLink& slink,
+                                           const BoundVector& par,
+                                           const BoundSymMatrix& cov) const;
 
   /// @brief Get rho and z covariance from the local position and covariance
   /// @param gctx The current geometry context object, e.g. alignment
@@ -77,23 +79,25 @@ class SpacePointUtility {
   /// @param localCov The local covariance matrix
   /// @return (rho, z) components of the global covariance
 
-  Acts::Vector2 rhoZCovariance(const Acts::GeometryContext& gctx,
-                               const Acts::GeometryIdentifier& geoId,
-                               const Acts::Vector3& globalPos,
-                               const Acts::SymMatrix2& localCov) const;
+  Vector2 rhoZCovariance(const GeometryContext& gctx,
+                         const GeometryIdentifier& geoId,
+                         const Vector3& globalPos,
+                         const SymMatrix2& localCov) const;
 
-  /// @brief Calculate the rho and z covariance from the front and back measurement in the strip SP formation
+  /// @brief Calculate the rho and z covariance from the front and back SourceLink in the strip SP formation
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param measFront The measurement on the front layer
-  /// @param measBack The measurement on the back layer
+  /// @param slinkFront The SourceLink on the front layer
+  /// @param slinkBack The SourceLink on the back layer
+  /// @param paramCovAccessor function to extract local position and covariance from SourceLink
   /// @param globalPos global position
   /// @param theta The angle between the two strips
   /// @return (rho, z) components of the global covariance
-  Acts::Vector2 calcRhoZVars(const Acts::GeometryContext& gctx,
-                             const Measurement& measFront,
-                             const Measurement& measBack,
-                             const Vector3& globalPos,
-                             const double theta) const;
+  Vector2 calcRhoZVars(
+      const GeometryContext& gctx, const SourceLink& slinkFront,
+      const SourceLink& slinkBack,
+      const std::function<std::pair<const BoundVector, const BoundSymMatrix>(
+          SourceLink)>& paramCovAccessor,
+      const Vector3& globalPos, const double theta) const;
 
   /// @brief This function performs a straight forward calculation of a space
   /// point and returns whether it was succesful or not.
@@ -124,15 +128,15 @@ class SpacePointUtility {
   Result<void> recoverSpacePoint(SpacePointParameters& spParams,
                                  double stripLengthGapTolerance) const;
 
-  /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two measurements
+  /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two SourceLinks
   ///
-  /// @param [in] pos1 position of the first measurement
-  /// @param [in] pos2 position the second measurement
+  /// @param [in] pos1 position of the first SourceLink
+  /// @param [in] pos2 position the second SourceLink
   /// @param [in] posVertex Position of the vertex
-  /// @param [in] maxDistance Maximum distance between two measurements
+  /// @param [in] maxDistance Maximum distance between two SourceLinks
   /// @param [in] maxAngleTheta2 Maximum squared theta angle between two
-  /// measurements
-  /// @param [in] maxAnglePhi2 Maximum squared phi angle between two measurements
+  /// SourceLinks
+  /// @param [in] maxAnglePhi2 Maximum squared phi angle between two SourceLinks
   ///
   /// @return Result with the squared sum within configuration parameters.
   Result<double> differenceOfMeasurementsChecked(
@@ -157,11 +161,6 @@ class SpacePointUtility {
  private:
   SpacePointBuilderConfig m_config;
   std::error_code m_error;
-
-  /// @brief Get the first component of the local covariance.
-  /// @param meas The measurement
-  /// @return the (0, 0) component of the local covariance
-  double getLoc0Var(const Measurement& meas) const;
 };
 
 }  // namespace Acts

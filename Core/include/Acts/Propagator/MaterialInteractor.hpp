@@ -43,23 +43,27 @@ struct MaterialInteractor {
   ///
   /// @tparam propagator_state_t is the type of Propagagor state
   /// @tparam stepper_t Type of the stepper of the propagation
+  /// @tparam navigator_t Type of the navigator of the propagation
   ///
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
+  /// @param navigator The navigator in use
   /// @param result is the mutable result state object
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& logger) const {
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& logger) const {
     // In case of Volume material update the result of the previous step
     if (recordInteractions && !result.materialInteractions.empty() &&
         result.materialInteractions.back().volume != nullptr &&
         result.materialInteractions.back().updatedVolumeStep == false) {
-      UpdateResult(state, stepper, result);
+      updateResult(state, stepper, result);
     }
 
     // If we are on target, everything should have been done
-    if (state.navigation.targetReached) {
+    if (navigator.targetReached(state.navigation)) {
       return;
     }
     // Do nothing if nothing is what is requested.
@@ -67,8 +71,8 @@ struct MaterialInteractor {
       return;
     }
     // We only have material interactions if there is potential material
-    const Surface* surface = state.navigation.currentSurface;
-    const TrackingVolume* volume = state.navigation.currentVolume;
+    const Surface* surface = navigator.currentSurface(state.navigation);
+    const TrackingVolume* volume = navigator.currentVolume(state.navigation);
 
     if (not(surface and surface->surfaceMaterial()) and
         not(volume and volume->volumeMaterial())) {
@@ -81,7 +85,7 @@ struct MaterialInteractor {
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (not d.evaluateMaterialSlab(state)) {
+      if (not d.evaluateMaterialSlab(state, navigator)) {
         return;
       }
 
@@ -102,9 +106,9 @@ struct MaterialInteractor {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       }
       // Change the noise updater depending on the navigation direction
-      NoiseUpdateMode mode =
-          (state.stepping.navDir == NavigationDirection::Forward) ? addNoise
-                                                                  : removeNoise;
+      NoiseUpdateMode mode = (state.stepping.navDir == Direction::Forward)
+                                 ? addNoise
+                                 : removeNoise;
       // Apply the material interactions
       d.updateState(state, stepper, mode);
       // Record the result
@@ -114,17 +118,13 @@ struct MaterialInteractor {
       detail::VolumeMaterialInteraction d(volume, state, stepper);
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (not d.evaluateMaterialSlab(state)) {
+      if (not d.evaluateMaterialSlab(state, navigator)) {
         return;
       }
       // Record the result
       recordResult(d, result);
     }
   }
-
-  /// Material interaction has no pure observer.
-  template <typename propagator_state_t>
-  void operator()(propagator_state_t& /* unused */) const {}
 
  private:
   /// @brief This function records the material effect
@@ -177,7 +177,7 @@ struct MaterialInteractor {
   /// @param [in] stepper The stepper instance
   /// @param [in, out] result Result storage
   template <typename propagator_state_t, typename stepper_t>
-  void UpdateResult(propagator_state_t& state, const stepper_t& stepper,
+  void updateResult(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
     // Update the previous interaction
     Vector3 shift = stepper.position(state.stepping) -
@@ -193,6 +193,6 @@ struct MaterialInteractor {
     result.materialInL0 +=
         result.materialInteractions.back().materialSlab.thicknessInL0();
   }
-};  // namespace Acts
+};
 
 }  // namespace Acts

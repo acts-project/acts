@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -47,7 +47,10 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointData& spacePointData,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // Get SeedFinderConfig values
@@ -83,17 +86,26 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   int nSpB(0);
   int nSpT(0);
 
-  for (auto sp : middleSPs) {
-    nSpM++;
-    middleSPvec.push_back(sp);
+  {
+    auto& sp_collection = grid.at(middleSPs);
+    for (auto& sp : sp_collection) {
+      nSpM++;
+      middleSPvec.push_back(sp.get());
+    }
   }
-  for (auto sp : bottomSPs) {
-    nSpB++;
-    bottomSPvec.push_back(sp);
+  for (auto idx : bottomSPs) {
+    auto& sp_collection = grid.at(idx);
+    for (auto& sp : sp_collection) {
+      nSpB++;
+      bottomSPvec.push_back(sp.get());
+    }
   }
-  for (auto sp : topSPs) {
-    nSpT++;
-    topSPvec.push_back(sp);
+  for (std::size_t idx : topSPs) {
+    auto& sp_collection = grid.at(idx);
+    for (auto& sp : sp_collection) {
+      nSpT++;
+      topSPvec.push_back(sp.get());
+    }
   }
 
   CudaScalar<int> nSpM_cuda(&nSpM);
@@ -119,15 +131,15 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   };
 
   int mIdx(0);
-  for (auto sp : middleSPs) {
+  for (auto sp : middleSPvec) {
     fillMatrix(spMmat_cpu, mIdx, sp);
   }
   int bIdx(0);
-  for (auto sp : bottomSPs) {
+  for (auto sp : bottomSPvec) {
     fillMatrix(spBmat_cpu, bIdx, sp);
   }
   int tIdx(0);
-  for (auto sp : topSPs) {
+  for (auto sp : topSPvec) {
     fillMatrix(spTmat_cpu, tIdx, sp);
   }
 
@@ -263,7 +275,7 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
     if (i_m > 0) {
       const auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();
       std::vector<typename CandidatesForMiddleSp<
-          InternalSpacePoint<external_spacepoint_t>>::value_type>
+          const InternalSpacePoint<external_spacepoint_t>>::value_type>
           candidates;
 
       for (int i = 0; i < *nTrplPerSpM_cpu.get(i_m - 1); i++) {
@@ -293,12 +305,12 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
                                 false);
       }
 
-      std::sort(
-          candidates.begin(), candidates.end(),
-          CandidatesForMiddleSp<
-              InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
+      std::sort(candidates.begin(), candidates.end(),
+                CandidatesForMiddleSp<const InternalSpacePoint<
+                    external_spacepoint_t>>::descendingByQuality);
       std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
-      m_config.seedFilter->filterSeeds_1SpFixed(candidates, numQualitySeeds,
+      m_config.seedFilter->filterSeeds_1SpFixed(spacePointData, candidates,
+                                                numQualitySeeds,
                                                 std::back_inserter(outputVec));
     }
   }

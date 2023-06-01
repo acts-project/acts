@@ -34,7 +34,6 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -274,7 +273,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
   auto options = f.makeCkfOptions();
   // this is the default option. set anyways for consistency
-  options.propagatorPlainOptions.direction = Acts::NavigationDirection::Forward;
+  options.propagatorPlainOptions.direction = Acts::Direction::Forward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
@@ -315,8 +314,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     size_t nummismatchedHits = 0u;
     for (const auto trackState : track.trackStates()) {
       numHits += 1u;
-      const auto& sl =
-          trackState.uncalibratedSourceLink().template get<TestSourceLink>();
+      auto sl =
+          trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
       if (trackId != sl.sourceId) {
         nummismatchedHits++;
       }
@@ -331,8 +330,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
-  options.propagatorPlainOptions.direction =
-      Acts::NavigationDirection::Backward;
+  options.propagatorPlainOptions.direction = Acts::Direction::Backward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
@@ -372,8 +370,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     size_t nummismatchedHits = 0u;
     for (const auto trackState : track.trackStates()) {
       numHits += 1u;
-      const auto& sl =
-          trackState.uncalibratedSourceLink().template get<TestSourceLink>();
+      auto sl =
+          trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
       if (trackId != sl.sourceId) {
         nummismatchedHits++;
       }

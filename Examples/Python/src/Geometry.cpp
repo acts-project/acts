@@ -7,9 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -42,9 +45,11 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         .def("geometryId",
              [](Acts::Surface& self) { return self.geometryId(); })
-        .def("center", [](Acts::Surface& self) {
-          return self.center(Acts::GeometryContext{});
-        });
+        .def("center",
+             [](Acts::Surface& self) {
+               return self.center(Acts::GeometryContext{});
+             })
+        .def("type", [](Acts::Surface& self) { return self.type(); });
   }
 
   {
@@ -53,8 +58,9 @@ void addGeometry(Context& ctx) {
         .value("Cylinder", Acts::Surface::SurfaceType::Cylinder)
         .value("Disc", Acts::Surface::SurfaceType::Disc)
         .value("Perigee", Acts::Surface::SurfaceType::Perigee)
-        .value("Plane", Acts::Surface::SurfaceType::Straw)
-        .value("Straw", Acts::Surface::SurfaceType::Curvilinear)
+        .value("Plane", Acts::Surface::SurfaceType::Plane)
+        .value("Straw", Acts::Surface::SurfaceType::Straw)
+        .value("Curvilinear", Acts::Surface::SurfaceType::Curvilinear)
         .value("Other", Acts::Surface::SurfaceType::Other);
   }
 
@@ -65,6 +71,19 @@ void addGeometry(Context& ctx) {
              [](Acts::TrackingGeometry& self, py::function& func) {
                self.visitSurfaces(func);
              });
+  }
+
+  {
+    py::class_<Acts::Volume, std::shared_ptr<Acts::Volume>>(m, "Volume")
+        .def_static(
+            "makeCylinderVolume",
+            [](double r, double halfZ) {
+              auto bounds =
+                  std::make_shared<Acts::CylinderVolumeBounds>(0, r, halfZ);
+              return std::make_shared<Acts::Volume>(Transform3::Identity(),
+                                                    bounds);
+            },
+            "r"_a, "halfZ"_a);
   }
 
   {
@@ -81,6 +100,12 @@ void addGeometry(Context& ctx) {
   {
     py::class_<Acts::Experimental::Detector,
                std::shared_ptr<Acts::Experimental::Detector>>(m, "Detector");
+  }
+
+  {
+    py::class_<Acts::Experimental::DetectorVolume,
+               std::shared_ptr<Acts::Experimental::DetectorVolume>>(
+        m, "DetectorVolume");
   }
 }
 

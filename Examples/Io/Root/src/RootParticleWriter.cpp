@@ -9,7 +9,7 @@
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <ios>
 #include <stdexcept>
@@ -71,7 +71,7 @@ ActsExamples::RootParticleWriter::~RootParticleWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

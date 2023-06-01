@@ -9,6 +9,7 @@
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 
 #include <torch/script.h>
+#include <torch/torch.h>
 
 using namespace torch::indexing;
 
@@ -16,10 +17,11 @@ namespace Acts {
 
 TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg) : m_cfg(cfg) {
   c10::InferenceMode guard(true);
+  m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath.c_str());
+    *m_model = torch::jit::load(m_cfg.modelPath.c_str(), m_deviceType);
     m_model->eval();
   } catch (const c10::Error& e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
@@ -30,10 +32,11 @@ TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     std::any inputNodes, std::any inputEdges, const Logger& logger) {
+  const torch::Device device(m_deviceType);
+
   const auto eLibInputTensor = std::any_cast<torch::Tensor>(inputNodes);
   const auto edgeList = std::any_cast<torch::Tensor>(inputEdges);
 
-  torch::Device device(torch::kCUDA);
   c10::InferenceMode guard(true);
   // timer.start();
 

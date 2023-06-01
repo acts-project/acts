@@ -68,6 +68,7 @@ def runTruthTrackingKalman(
         trackingGeometry,
         field,
         rnd=rnd,
+        enableInteractions=True,
     )
 
     addDigitization(
@@ -124,7 +125,9 @@ def runTruthTrackingKalman(
     s.addWriter(
         acts.examples.TrackFinderPerformanceWriter(
             level=acts.logging.INFO,
-            inputProtoTracks="sortedprototracks" if directNavigation else "prototracks",
+            inputProtoTracks="sorted_truth_particle_tracks"
+            if directNavigation
+            else "truth_particle_tracks",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "performance_track_finder.root"),

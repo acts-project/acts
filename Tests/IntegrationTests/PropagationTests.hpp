@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -250,8 +251,7 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
 
   // setup propagation options
   options_t<Actions, Aborts> options(geoCtx, magCtx);
-  options.direction = (0 <= pathLength) ? Acts::NavigationDirection::Forward
-                                        : Acts::NavigationDirection::Backward;
+  options.direction = Acts::Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
   options.maxStepSize = 1_cm;
 
@@ -278,7 +278,7 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
 
   // setup propagation options
   options_t<Actions, Aborts> options(geoCtx, magCtx);
-  options.direction = Acts::NavigationDirection::Forward;
+  options.direction = Acts::Direction::Forward;
   options.pathLimit = pathLimit;
   options.maxStepSize = 1_cm;
 
@@ -302,7 +302,7 @@ inline void runForwardBackwardTest(
     const Acts::MagneticFieldContext& magCtx,
     const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
     double pathLength, double epsPos, double epsDir, double epsMom) {
-  // propagate parameters NavigationDirection::Forward
+  // propagate parameters Acts::Direction::Forward
   auto [fwdParams, fwdPathLength] =
       transportFreely<propagator_t, charge_t, options_t>(
           propagator, geoCtx, magCtx, initialParams, pathLength);

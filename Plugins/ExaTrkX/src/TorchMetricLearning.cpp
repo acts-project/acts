@@ -8,18 +8,20 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 
-#include <torch/script.h>
+#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
 
-#include "buildEdges.hpp"
+#include <torch/script.h>
+#include <torch/torch.h>
 
 namespace Acts {
 
 TorchMetricLearning::TorchMetricLearning(const Config &cfg) : m_cfg(cfg) {
   c10::InferenceMode guard(true);
+  m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath);
+    *m_model = torch::jit::load(m_cfg.modelPath, m_deviceType);
     m_model->eval();
   } catch (const c10::Error &e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
@@ -31,7 +33,7 @@ TorchMetricLearning::~TorchMetricLearning() {}
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues, const Logger &logger) {
   c10::InferenceMode guard(true);
-  torch::Device device(torch::kCUDA);
+  const torch::Device device(m_deviceType);
 
   // Clone models (solve memory leak? members can be const...)
   auto e_model = m_model->clone();

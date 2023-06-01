@@ -14,6 +14,7 @@
 #include <Acts/Geometry/TrackingVolume.hpp>
 #include <Acts/Propagator/ConstrainedStep.hpp>
 #include <Acts/Surfaces/Surface.hpp>
+#include <Acts/Utilities/Helpers.hpp>
 
 #include <ios>
 #include <stdexcept>
@@ -77,7 +78,7 @@ ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();

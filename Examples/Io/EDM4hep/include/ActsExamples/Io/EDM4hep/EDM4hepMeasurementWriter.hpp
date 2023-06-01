@@ -8,15 +8,16 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
 
-#include "edm4hep/TrackerHitCollection.h"
-#include "edm4hep/TrackerHitPlaneCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTWriter.h"
+#include <edm4hep/TrackerHitCollection.h>
+#include <edm4hep/TrackerHitPlaneCollection.h>
+#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -37,10 +38,6 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string inputMeasurements;
     /// Which cluster collection to write (optional)
     std::string inputClusters;
-    /// Which simulated (truth) hits collection to use.
-    std::string inputSimHits;
-    /// Input collection to map measured hits to simulated hits.
-    std::string inputMeasurementSimHitsMap;
     /// Where to the write the file to.
     std::string outputPath;
   };
@@ -50,7 +47,7 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param level logging level
   EDM4hepMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode endRun() final;
+  ProcessCode finalize() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -67,11 +64,9 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
  private:
   Config m_cfg;
 
-  podio::ROOTWriter m_writer;
-  podio::EventStore m_store;
+  podio::ROOTFrameWriter m_writer;
 
-  edm4hep::TrackerHitPlaneCollection* m_trackerHitPlaneCollection;
-  edm4hep::TrackerHitCollection* m_trackerHitRawCollection;
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples

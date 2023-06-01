@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include <Acts/Propagator/MaterialInteractor.hpp>
@@ -71,7 +70,7 @@ class RootMaterialTrackWriter
   ~RootMaterialTrackWriter() override;
 
   /// Framework intialize method
-  ActsExamples::ProcessCode endRun() override;
+  ActsExamples::ProcessCode finalize() override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -131,22 +130,22 @@ class RootMaterialTrackWriter
   std::vector<float> m_step_rho;     ///< step material rho
 
   std::vector<std::uint64_t>
-      m_sur_id;  ///< ID of the suface associated with the step
+      m_sur_id;  ///< ID of the surface associated with the step
   std::vector<int32_t>
-      m_sur_type;              ///< Type of the suface associated with the step
-  std::vector<float> m_sur_x;  ///< x position of the center of the suface
+      m_sur_type;              ///< Type of the surface associated with the step
+  std::vector<float> m_sur_x;  ///< x position of the center of the surface
                                ///< associated with the step
-  std::vector<float> m_sur_y;  ///< y position of the center of the suface
+  std::vector<float> m_sur_y;  ///< y position of the center of the surface
                                ///< associated with the step
-  std::vector<float> m_sur_z;  ///< z position of the center of the suface
+  std::vector<float> m_sur_z;  ///< z position of the center of the surface
                                ///< associated with the step
   std::vector<float>
       m_sur_pathCorrection;  ///< path correction when associating
                              ///< material to the given surface
   std::vector<float>
-      m_sur_range_min;  ///< Min range of the suface associated with the step
+      m_sur_range_min;  ///< Min range of the surface associated with the step
   std::vector<float>
-      m_sur_range_max;  ///< Max range of the suface associated with the step
+      m_sur_range_max;  ///< Max range of the surface associated with the step
 
   std::vector<std::uint64_t>
       m_vol_id;  ///< ID of the volume associated with the step

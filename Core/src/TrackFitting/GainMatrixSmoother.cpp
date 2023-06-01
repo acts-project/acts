@@ -54,8 +54,8 @@ Result<void> GainMatrixSmoother::calculate(
 
   // And the smoothed covariance
   smoothedCovariance(ts) =
-      filteredCovariance(ts) -
-      G * (predictedCovariance(prev_ts) - smoothedCovariance(prev_ts)) *
+      filteredCovariance(ts) +
+      G * (smoothedCovariance(prev_ts) - predictedCovariance(prev_ts)) *
           G.transpose();
 
   // Check if the covariance matrix is semi-positive definite.

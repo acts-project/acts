@@ -10,15 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
-#include <algorithm>
 #include <array>
-#include <iostream>
-#include <limits>
-#include <ostream>
+#include <memory>
 #include <tuple>
 #include <vector>
 

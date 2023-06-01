@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, pathlib, contextlib, acts, acts.examples
+import os, argparse, pathlib, contextlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -15,10 +15,11 @@ from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
     addCKFTracks,
-    CKFPerformanceConfig,
-    TrackSelectorRanges,
+    TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
+    addAmbiguityResolutionML,
+    AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
 )
@@ -36,10 +37,17 @@ parser.add_argument(
     help="Use Pythia8 (ttbar, pile-up 200) instead of particle gun",
     action="store_true",
 )
+parser.add_argument(
+    "--MLSolver",
+    help="Use the Ml Ambiguity Solver instead of the classical one",
+    action="store_true",
+)
+
 args = vars(parser.parse_args())
 
-ttbar_pu200 = args["ttbar"]
+ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
+ambiguity_MLSolver = args["MLSolver"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
@@ -64,7 +72,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         outputDir=str(outputDir),
     )
 
-    if not ttbar_pu200:
+    if not ttbar:
         addParticleGun(
             s,
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
@@ -83,7 +91,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=200,
+            npileup=50,
             vtxGen=acts.examples.GaussianVertexGenerator(
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
@@ -92,6 +100,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             ),
             rnd=rnd,
             outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
         )
     if g4_simulation:
         if s.config.numThreads != 1:
@@ -112,8 +121,11 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             ),
-            outputDirCsv=outputDir,
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
             rnd=rnd,
+            killVolume=acts.Volume.makeCylinderVolume(r=1.1 * u.m, halfZ=3.0 * u.m),
+            killAfterTime=25 * u.ns,
         )
     else:
         addFatras(
@@ -125,9 +137,10 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             )
-            if ttbar_pu200
+            if ttbar
             else ParticleSelectorConfig(),
             outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
             rnd=rnd,
         )
 
@@ -137,6 +150,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         field,
         digiConfigFile=oddDigiConfig,
         outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
         rnd=rnd,
     )
 
@@ -145,7 +159,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         trackingGeometry,
         field,
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
-        if ttbar_pu200
+        if ttbar
         else TruthSeedRanges(),
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir,
@@ -155,27 +169,34 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         s,
         trackingGeometry,
         field,
-        CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
-            nMeasurementsMin=6,
-        ),
-        TrackSelectorRanges(
-            pt=(1.0 * u.GeV, None),
+        TrackSelectorConfig(
+            pt=(1.0 * u.GeV if ttbar else 0.0, None),
             absEta=(None, 3.0),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
+            nMeasurementsMin=7,
         ),
         outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
     )
 
-    addAmbiguityResolution(
-        s,
-        AmbiguityResolutionConfig(maximumSharedHits=3),
-        CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
-            nMeasurementsMin=6,
-        ),
-        outputDirRoot=outputDir,
-    )
+    if ambiguity_MLSolver:
+        addAmbiguityResolutionML(
+            s,
+            AmbiguityResolutionMLConfig(nMeasurementsMin=7),
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+            onnxModelFile=os.path.dirname(__file__)
+            + "/MLAmbiguityResolution/duplicateClassifier.onnx",
+        )
+    else:
+        addAmbiguityResolution(
+            s,
+            AmbiguityResolutionConfig(
+                maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
+            ),
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+        )
 
     addVertexFitting(
         s,

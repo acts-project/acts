@@ -7,9 +7,9 @@ import acts.examples
 s = acts.examples.Sequencer(events=1000, numThreads=10, logLevel=acts.logging.VERBOSE)
 
 
-class PyAlg(acts.examples.BareAlgorithm):
+class PyAlg(acts.examples.IAlgorithm):
     def __init__(self, name, level):
-        acts.examples.BareAlgorithm.__init__(self, name, level)
+        acts.examples.IAlgorithm.__init__(self, name, level)
 
     # def name(self):
     #     return "PyAlg"

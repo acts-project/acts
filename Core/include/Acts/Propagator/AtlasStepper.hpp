@@ -58,7 +58,7 @@ class AtlasStepper {
     template <typename Parameters>
     State(const GeometryContext& gctx,
           MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
-          NavigationDirection ndir = NavigationDirection::Forward,
+          Direction ndir = Direction::Forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
@@ -233,7 +233,7 @@ class AtlasStepper {
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
-    NavigationDirection navDir = NavigationDirection::Forward;
+    Direction navDir = Direction::Forward;
     bool useJacobian = false;
     double step = 0;
     double maxPathLength = 0;
@@ -298,10 +298,11 @@ class AtlasStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = NavigationDirection::Forward,
+                  Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
+    return State{gctx,      m_bField->makeCache(mctx), par, navDir, ssize,
+                 stolerance};
   }
 
   /// @brief Resets the state
@@ -314,8 +315,7 @@ class AtlasStepper {
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface,
-      const NavigationDirection navDir = NavigationDirection::Forward,
+      const Surface& surface, const Direction navDir = Direction::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
     update(state,
@@ -353,14 +353,14 @@ class AtlasStepper {
     return Vector3(state.pVector[4], state.pVector[5], state.pVector[6]);
   }
 
+  double qop(const State& state) const { return state.pVector[7]; }
+
   double momentum(const State& state) const {
-    return 1. / std::abs(state.pVector[7]);
+    return 1. / std::abs(qop(state));
   }
 
   /// Charge access
-  double charge(const State& state) const {
-    return state.pVector[7] > 0. ? 1. : -1.;
-  }
+  double charge(const State& state) const { return qop(state) > 0. ? 1. : -1.; }
 
   /// Overstep limit
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
@@ -705,10 +705,10 @@ class AtlasStepper {
   /// @param state The state object
   /// @param uposition the updated position
   /// @param udirection the updated direction
-  /// @param up the updated momentum value
+  /// @param qop the updated momentum value
   /// @param time the update time
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double up, double time) const {
+              double qop, double time) const {
     // update the vector
     state.pVector[0] = uposition[0];
     state.pVector[1] = uposition[1];
@@ -717,7 +717,7 @@ class AtlasStepper {
     state.pVector[4] = udirection[0];
     state.pVector[5] = udirection[1];
     state.pVector[6] = udirection[2];
-    state.pVector[7] = charge(state) / up;
+    state.pVector[7] = qop;
   }
 
   /// Method for on-demand transport of the covariance
@@ -739,7 +739,7 @@ class AtlasStepper {
     P[45] *= p;
     P[46] *= p;
 
-    double An = sqrt(P[4] * P[4] + P[5] * P[5]);
+    double An = std::hypot(P[4], P[5]);
     double Ax[3];
     if (An != 0.) {
       Ax[0] = -P[5] / An;
@@ -1101,8 +1101,9 @@ class AtlasStepper {
   /// Perform the actual step on the state
   ///
   /// @param state is the provided stepper state (caller keeps thread locality)
-  template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const {
+  template <typename propagator_state_t, typename navigator_t>
+  Result<double> step(propagator_state_t& state,
+                      const navigator_t& /*navigator*/) const {
     // we use h for keeping the nominclature with the original atlas code
     auto h = state.stepping.stepSize.value();
     bool Jac = state.stepping.useJacobian;

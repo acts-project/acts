@@ -13,15 +13,13 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include "DD4hep/DetElement.h"
+
 class TrackingVolume;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 
 class TGeoMatrix;
-
-namespace dd4hep {
-class DetElement;
-}
 
 namespace Acts {
 

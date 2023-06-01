@@ -17,7 +17,8 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -34,7 +35,6 @@
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -290,7 +290,9 @@ class CombinatorialKalmanFilter {
                                 getDefaultLogger("CKF", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger(std::move(_logger)),
-        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")},
+        m_updaterLogger{m_logger->cloneWithSuffix("Updater")},
+        m_smootherLogger{m_logger->cloneWithSuffix("Smoother")} {}
 
  private:
   using KalmanNavigator = typename propagator_t::Navigator;
@@ -300,6 +302,8 @@ class CombinatorialKalmanFilter {
 
   std::unique_ptr<const Logger> m_logger;
   std::shared_ptr<const Logger> m_actorLogger;
+  std::shared_ptr<const Logger> m_updaterLogger;
+  std::shared_ptr<const Logger> m_smootherLogger;
 
   const Logger& logger() const { return *m_logger; }
 
@@ -340,10 +344,13 @@ class CombinatorialKalmanFilter {
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper is the stepper in use
+    /// @param navigator is the navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result, const Logger& /*logger*/) const {
+                    const navigator_t& navigator, result_type& result,
+                    const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -354,7 +361,7 @@ class CombinatorialKalmanFilter {
 
       // Update:
       // - Waiting for a current surface
-      auto surface = state.navigation.currentSurface;
+      auto surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr and not result.filtered) {
         // There are three scenarios:
         // 1) The surface is in the measurement map
@@ -371,7 +378,7 @@ class CombinatorialKalmanFilter {
         // 3) The surface is neither in the measurement map nor with material
         // -> Do nothing
         ACTS_VERBOSE("Perform filter step");
-        auto res = filter(surface, state, stepper, result);
+        auto res = filter(surface, state, stepper, navigator, result);
         if (!res.ok()) {
           ACTS_ERROR("Error in filter: " << res.error());
           result.result = res.error();
@@ -381,7 +388,7 @@ class CombinatorialKalmanFilter {
       // Reset propagation state:
       // - When navigation breaks and there is stil active tip present after
       // recording&removing track tips on current surface
-      if (state.navigation.navigationBreak and not result.filtered) {
+      if (navigator.navigationBreak(state.navigation) and not result.filtered) {
         // Record the tips on current surface as trajectory entry indices
         // (taking advantage of fact that those tips are consecutive in list of
         // active tips) and remove those tips from active tips
@@ -438,12 +445,12 @@ class CombinatorialKalmanFilter {
         } else {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeTips.back().first);
-          reset(state, stepper, result);
+          reset(state, stepper, navigator, result);
         }
       }
 
-      if (result.abortList(result, state, stepper, logger())) {
-        state.navigation.targetReached = false;
+      if (result.abortList(state, stepper, navigator, result, logger())) {
+        navigator.targetReached(state.navigation, false);
         if (result.activeTips.empty()) {
           // we are already done
         } else if (result.activeTips.size() == 1) {
@@ -454,7 +461,7 @@ class CombinatorialKalmanFilter {
         } else {
           // remove the active tip and continue with the next
           result.activeTips.erase(result.activeTips.end() - 1);
-          reset(state, stepper, result);
+          reset(state, stepper, navigator, result);
         }
       }
 
@@ -483,7 +490,7 @@ class CombinatorialKalmanFilter {
               // --> Call the smoothing
               // --> Set a stop condition when all track states have been
               // handled
-              auto res = finalize(state, stepper, result);
+              auto res = finalize(state, stepper, navigator, result);
               if (!res.ok()) {
                 ACTS_ERROR("Error in finalize: " << res.error());
                 result.result = res.error();
@@ -492,8 +499,8 @@ class CombinatorialKalmanFilter {
             }
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
-            if (result.smoothed and
-                targetReached(state, stepper, *targetSurface, logger())) {
+            if (result.smoothed and targetReached(state, stepper, navigator,
+                                                  *targetSurface, logger())) {
               ACTS_VERBOSE(
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
@@ -515,15 +522,12 @@ class CombinatorialKalmanFilter {
               // -> set the smoothed status to false
               // -> update the index of track to be smoothed
               if (result.iSmoothed < result.lastMeasurementIndices.size() - 1) {
-                state.navigation.targetReached = false;
+                navigator.targetReached(state.navigation, false);
                 result.smoothed = false;
                 result.iSmoothed++;
                 // Reverse navigation direction to start targeting for the rest
                 // tracks
-                state.stepping.navDir =
-                    (state.stepping.navDir == NavigationDirection::Backward)
-                        ? NavigationDirection::Forward
-                        : NavigationDirection::Backward;
+                state.stepping.navDir = state.stepping.navDir.invert();
                 // To avoid meaningless navigation target call
                 state.stepping.stepSize =
                     ConstrainedStep(state.stepping.navDir *
@@ -543,13 +547,16 @@ class CombinatorialKalmanFilter {
     ///
     /// @tparam propagator_state_t Type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper is the stepper in use
+    /// @param navigator is the navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
-    void reset(propagator_state_t& state, stepper_t& stepper,
-               result_type& result) const {
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    void reset(propagator_state_t& state, const stepper_t& stepper,
+               const navigator_t& navigator, result_type& result) const {
       auto currentState =
           result.fittedStates->getTrackState(result.activeTips.back().first);
 
@@ -562,15 +569,15 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed
       // after smoothing
-      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
-                             stepper.direction(state.stepping),
-                             state.stepping.navDir,
-                             &currentState.referenceSurface(), nullptr);
+      navigator.resetState(
+          state.navigation, state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), state.stepping.navDir,
+          &currentState.referenceSurface(), nullptr);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
-      materialInteractor(state.navigation.currentSurface, state, stepper,
-                         MaterialUpdateStage::FullUpdate);
+      materialInteractor(navigator.currentSurface(state.navigation), state,
+                         stepper, navigator, MaterialUpdateStage::FullUpdate);
 
       detail::setupLoopProtection(
           state, stepper, result.abortList.template get<PathLimitReached>(),
@@ -584,14 +591,18 @@ class CombinatorialKalmanFilter {
     ///
     /// @tparam propagator_state_t Type of the Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the update happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result The mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> filter(const Surface* surface, propagator_state_t& state,
-                        const stepper_t& stepper, result_type& result) const {
+                        const stepper_t& stepper, const navigator_t& navigator,
+                        result_type& result) const {
       // Initialize the number of branches on current surface
       size_t nBranchesOnSurface = 0;
 
@@ -606,7 +617,7 @@ class CombinatorialKalmanFilter {
         stepper.transportCovarianceToBound(state.stepping, *surface);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper,
+        materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
         // Bind the transported state to the current surface
@@ -678,7 +689,7 @@ class CombinatorialKalmanFilter {
                              << result.activeTips.back().first);
         }
         // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper,
+        materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PostUpdate);
       } else if (surface->associatedDetectorElement() != nullptr ||
                  surface->surfaceMaterial() != nullptr) {
@@ -754,7 +765,7 @@ class CombinatorialKalmanFilter {
         }
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper,
+          materialInteractor(surface, state, stepper, navigator,
                              MaterialUpdateStage::FullUpdate);
         }
       } else {
@@ -770,7 +781,7 @@ class CombinatorialKalmanFilter {
         if (not result.activeTips.empty()) {
           ACTS_VERBOSE("Propagation jumps to branch with tip = "
                        << result.activeTips.back().first);
-          reset(state, stepper, result);
+          reset(state, stepper, navigator, result);
         } else {
           ACTS_VERBOSE("Stop Kalman filtering with "
                        << result.lastMeasurementIndices.size()
@@ -912,7 +923,7 @@ class CombinatorialKalmanFilter {
         trackState.allocateCalibrated(candidateTrackState.calibratedSize());
         trackState.copyFrom(candidateTrackState, mask, false);
 
-        auto& typeFlags = trackState.typeFlags();
+        auto typeFlags = trackState.typeFlags();
         if (trackState.referenceSurface().surfaceMaterial() != nullptr) {
           typeFlags.set(TrackStateFlag::MaterialFlag);
         }
@@ -942,7 +953,7 @@ class CombinatorialKalmanFilter {
         } else {
           // Kalman update
           auto updateRes = m_extensions.updater(
-              gctx, trackState, NavigationDirection::Forward, getDummyLogger());
+              gctx, trackState, Direction::Forward, *updaterLogger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -1005,7 +1016,7 @@ class CombinatorialKalmanFilter {
       // parameter
 
       // Set the track state flags
-      auto& typeFlags = trackStateProxy.typeFlags();
+      auto typeFlags = trackStateProxy.typeFlags();
       if (trackStateProxy.referenceSurface().surfaceMaterial() != nullptr) {
         typeFlags.set(TrackStateFlag::MaterialFlag);
       }
@@ -1024,15 +1035,19 @@ class CombinatorialKalmanFilter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the material interaction happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param updateStage The materal update stage
     ///
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            stepper_t& stepper,
+                            const stepper_t& stepper,
+                            const navigator_t& navigator,
                             const MaterialUpdateStage& updateStage) const {
       // Indicator if having material
       bool hasMaterial = false;
@@ -1042,7 +1057,7 @@ class CombinatorialKalmanFilter {
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
         // Evaluate the material properties
-        if (interaction.evaluateMaterialSlab(state, updateStage)) {
+        if (interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
           // Surface has material at this stage
           hasMaterial = true;
 
@@ -1078,12 +1093,16 @@ class CombinatorialKalmanFilter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
+                          const navigator_t& navigator,
                           result_type& result) const {
       // The measurement tip of the track being smoothed
       const auto& lastMeasurementIndex =
@@ -1115,7 +1134,7 @@ class CombinatorialKalmanFilter {
       // Smooth the track states
       auto smoothRes =
           m_extensions.smoother(state.geoContext, *result.fittedStates,
-                                lastMeasurementIndex, getDummyLogger());
+                                lastMeasurementIndex, *smootherLogger);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -1188,10 +1207,7 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir =
-            (state.stepping.navDir == NavigationDirection::Forward)
-                ? NavigationDirection::Backward
-                : NavigationDirection::Forward;
+        state.stepping.navDir = state.stepping.navDir.invert();
       }
       // Reinitialize the stepping jacobian
       state.stepping.jacobian = BoundMatrix::Identity();
@@ -1202,6 +1218,11 @@ class CombinatorialKalmanFilter {
           state.stepping.navDir * std::abs(state.options.maxStepSize));
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
+
+      // Reset the navigation state to enable propagation towards the target
+      // surface
+      navigator.targetReached(state.navigation, false);
+      navigator.currentSurface(state.navigation, nullptr);
 
       return Result<void>::success();
     }
@@ -1214,8 +1235,12 @@ class CombinatorialKalmanFilter {
     /// The Surface being targeted
     SurfaceReached targetReached;
 
-    /// Logger instance
+    /// Actor logger instance
     const Logger* actorLogger{nullptr};
+    /// Updater logger instance
+    const Logger* updaterLogger{nullptr};
+    /// Smoother logger instance
+    const Logger* smootherLogger{nullptr};
 
     const Logger& logger() const { return *actorLogger; }
   };
@@ -1227,9 +1252,10 @@ class CombinatorialKalmanFilter {
     using action_type = Actor<source_link_accessor_t, parameters_t>;
 
     template <typename propagator_state_t, typename stepper_t,
-              typename result_t>
+              typename navigator_t, typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const result_t& result, const Logger& /*logger*/) const {
+                    const navigator_t& /*navigator*/, const result_t& result,
+                    const Logger& /*logger*/) const {
       if (!result.result.ok() or result.finished) {
         return true;
       }
@@ -1297,6 +1323,8 @@ class CombinatorialKalmanFilter {
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.smoothing = tfOptions.smoothing;
     combKalmanActor.actorLogger = m_actorLogger.get();
+    combKalmanActor.updaterLogger = m_updaterLogger.get();
+    combKalmanActor.smootherLogger = m_smootherLogger.get();
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
@@ -1364,6 +1392,9 @@ class CombinatorialKalmanFilter {
       track.parameters() = parameters.parameters();
       track.covariance() = *parameters.covariance();
       track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+
+      calculateTrackQuantities(track);
+
       tracks.push_back(track);
     }
 

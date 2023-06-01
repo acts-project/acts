@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -25,8 +26,7 @@ class Surface;
 class VolumeBounds;
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
-using OrientedSurface =
-    std::pair<std::shared_ptr<Surface>, NavigationDirection>;
+using OrientedSurface = std::pair<std::shared_ptr<Surface>, Direction>;
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces

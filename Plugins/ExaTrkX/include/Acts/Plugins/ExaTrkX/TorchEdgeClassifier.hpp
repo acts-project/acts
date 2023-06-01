@@ -17,6 +17,10 @@ namespace torch::jit {
 class Module;
 }
 
+namespace c10 {
+enum class DeviceType : int8_t;
+}
+
 namespace Acts {
 
 class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
@@ -37,6 +41,7 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
 
  private:
   Config m_cfg;
+  c10::DeviceType m_deviceType;
   std::unique_ptr<torch::jit::Module> m_model;
 };
 

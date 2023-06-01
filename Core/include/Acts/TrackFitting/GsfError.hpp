@@ -14,16 +14,11 @@ namespace Acts {
 namespace Experimental {
 
 enum class GsfError {
-  // ensure all values are non-zero
-  NavigationFailed = 1,
-  ComponentNumberMismatch,
-  AllComponentsSteppingError,
-  NoComponentCreated,
-  NoStatesCreated,
-  StartParametersNotOnStartSurface,
-  PropagationEndedOnWrongSurface,
-  LastStepParamsContainNan,
-  SmoothingFailed
+  StartParametersNotOnStartSurface = 1,
+  StartParametersHaveNoCovariance,
+  NoMeasurementStatesCreatedForward,
+  NoMeasurementStatesCreatedBackward,
+  NoMeasurementStatesCreatedFinal,
 };
 
 std::error_code make_error_code(GsfError e);

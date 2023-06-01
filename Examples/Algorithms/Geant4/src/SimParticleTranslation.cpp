@@ -9,7 +9,6 @@
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -28,11 +27,9 @@
 
 ActsExamples::SimParticleTranslation::SimParticleTranslation(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : G4VUserPrimaryGeneratorAction(), m_cfg(cfg), m_logger(std::move(logger)) {
-  if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing input particle collection");
-  }
-}
+    : G4VUserPrimaryGeneratorAction(),
+      m_cfg(cfg),
+      m_logger(std::move(logger)) {}
 
 ActsExamples::SimParticleTranslation::~SimParticleTranslation() = default;
 
@@ -49,13 +46,13 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     return;
   }
 
-  // Get the number of input particles
-  const auto inputParticles =
-      eventStore->get<ActsExamples::SimParticleContainer>(m_cfg.inputParticles);
+  if (eventData.inputParticles == nullptr) {
+    ACTS_WARNING("No input particle handle found");
+    return;
+  }
 
-  // Reserve appropriate resources for initial/final particles
-  eventData.particlesInitial.reserve(inputParticles.size());
-  eventData.particlesFinal.reserve(inputParticles.size());
+  // Get the number of input particles
+  const auto inputParticles = (*eventData.inputParticles)(*eventStore);
 
   // Reserve hopefully enough hit space
   eventData.hits.reserve(inputParticles.size() * m_cfg.reserveHitsPerParticle);
@@ -118,7 +115,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
     // Skip if tranlation failed
     if (particleDefinition == nullptr) {
-      ACTS_VERBOSE(
+      ACTS_DEBUG(
           "Could not translate particle with PDG code : " << particlePdgCode);
       continue;
     }

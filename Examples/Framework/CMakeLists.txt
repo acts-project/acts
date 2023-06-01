@@ -2,11 +2,14 @@ include(ActsTargetLinkLibrariesSystem)
 
 add_library(
   ActsExamplesFramework SHARED
-  src/Framework/BareAlgorithm.cpp
+  src/EventData/MeasurementCalibration.cpp
+  src/EventData/ScalingCalibrator.cpp
+  src/Framework/IAlgorithm.cpp
+  src/Framework/SequenceElement.cpp
   src/Framework/WhiteBoard.cpp
-  src/Framework/BareService.cpp
   src/Framework/RandomNumbers.cpp
   src/Framework/Sequencer.cpp
+  src/Utilities/EventDataTransforms.cpp
   src/Utilities/Paths.cpp
   src/Utilities/Options.cpp
   src/Utilities/Helpers.cpp
@@ -30,10 +33,6 @@ acts_target_link_libraries_system(
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
-# set per-target c++17 requirement that will be propagated to linked targets
-target_compile_features(
-  ActsExamplesFramework
-  PUBLIC cxx_std_17)
 
 if(ACTS_USE_EXAMPLES_TBB)
   # newer DD4hep version require TBB and search interally for TBB in

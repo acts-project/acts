@@ -11,7 +11,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <ios>
 #include <iostream>
@@ -103,7 +102,7 @@ ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::finalize() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
 

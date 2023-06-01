@@ -22,7 +22,7 @@
 
 ActsExamples::TrackSelector::TrackSelector(const Config& config,
                                            Acts::Logging::Level level)
-    : BareAlgorithm("TrackSelector", level), m_cfg(config) {
+    : IAlgorithm("TrackSelector", level), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Input track collection is empty");
   }
@@ -30,11 +30,15 @@ ActsExamples::TrackSelector::TrackSelector(const Config& config,
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Output track collection is empty");
   }
+
+  m_inputTrackContainer.initialize(m_cfg.inputTracks);
+  m_outputTrackContainer.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // helper functions to select tracks
+  auto checkMin = [](auto x, auto min) { return min <= x; };
   auto within = [](double x, double min, double max) {
     return (min <= x) and (x < max);
   };
@@ -47,48 +51,37 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
            within(trk.phi(), m_cfg.phiMin, m_cfg.phiMax) and
            within(trk.loc0(), m_cfg.loc0Min, m_cfg.loc0Max) and
            within(trk.loc1(), m_cfg.loc1Min, m_cfg.loc1Max) and
-           within(trk.time(), m_cfg.timeMin, m_cfg.timeMax);
+           within(trk.time(), m_cfg.timeMin, m_cfg.timeMax) and
+           checkMin(trk.nMeasurements(), m_cfg.minMeasurements);
   };
 
   ACTS_VERBOSE("Reading tracks from: " << m_cfg.inputTracks);
 
-  const auto& inputTracks =
-      ctx.eventStore.get<ConstTrackContainer>(m_cfg.inputTracks);
+  const auto& inputTracks = m_inputTrackContainer(ctx);
 
   std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer =
       inputTracks.trackStateContainerHolder();
 
-  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>(
-      inputTracks.container());  // mutable copy of the immutable
-                                 // source track container
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+
+  // temporary empty track state container: we don't change the original one,
+  // but we need one for filtering
   auto tempTrackStateContainer =
       std::make_shared<Acts::VectorMultiTrajectory>();
 
   TrackContainer filteredTracks{trackContainer, tempTrackStateContainer};
+  filteredTracks.ensureDynamicColumns(inputTracks);
 
-  ACTS_VERBOSE(
-      "Track container size before filtering: " << filteredTracks.size());
+  trackContainer->reserve(inputTracks.size());
 
-  size_t nRemoved = 0;
+  ACTS_VERBOSE("Track container size before filtering: " << inputTracks.size());
 
-  for (Acts::MultiTrajectoryTraits::IndexType itrack = 0;
-       itrack < filteredTracks.size();) {
-    auto track = filteredTracks.getTrack(itrack);
-    if (isValidTrack(track)) {
-      // Track is valid, go to next index
-      ACTS_VERBOSE(" - Keeping track #" << itrack);
-      itrack++;
+  for (auto track : inputTracks) {
+    if (!isValidTrack(track)) {
       continue;
     }
-    ACTS_VERBOSE(" - Removing track #" << itrack);
-    filteredTracks.removeTrack(itrack);
-    nRemoved++;
-    // Do not increment track index
-  }
-
-  if (nRemoved != inputTracks.size() - filteredTracks.size()) {
-    ACTS_ERROR("Inconsistent track container size after removing "
-               << nRemoved << " tracks");
+    auto destProxy = filteredTracks.getTrack(filteredTracks.addTrack());
+    destProxy.copyFrom(track);
   }
 
   ACTS_VERBOSE(
@@ -99,7 +92,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
           std::move(*trackContainer)),
       trackStateContainer};
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(outputTracks));
+  m_outputTrackContainer(ctx, std::move(outputTracks));
 
   return ProcessCode::SUCCESS;
 }

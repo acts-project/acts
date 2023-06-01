@@ -83,7 +83,8 @@ class SurfaceStub : public Surface {
   SurfaceIntersection intersect(const GeometryContext& /*gctx*/,
                                 const Vector3& /*position*/,
                                 const Vector3& /*direction*/,
-                                const BoundaryCheck& /*bcheck*/) const final {
+                                const BoundaryCheck& /*bcheck*/,
+                                const ActsScalar /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     Intersection3D::Status::reachable);
     return SurfaceIntersection(stubIntersection, this);
@@ -107,8 +108,8 @@ class SurfaceStub : public Surface {
 
   // Cartesian 3D to local bound derivative
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& /*unused*/,
-      const Vector3& /*unused*/) const final {
+      const GeometryContext& /*gctx*/,
+      const Vector3& /*position*/) const final {
     return ActsMatrix<2, 3>::Identity();
   };
 

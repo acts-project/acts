@@ -19,20 +19,14 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cmath>
-#include <functional>
 #include <optional>
-#include <type_traits>
-
-#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 
@@ -63,12 +57,14 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 ///
 struct PropagatorPlainOptions {
   /// Propagation direction
-  NavigationDirection direction = NavigationDirection::Forward;
+  Direction direction = Direction::Forward;
 
-  /// The |pdg| code for (eventual) material integration - pion default
-  int absPdgCode = 211;
+  /// The |pdg| code for (eventual) material integration -
+  /// pion default
+  int absPdgCode = PdgParticle::ePionPlus;
 
-  /// The mass for the particle for (eventual) material integration
+  /// The mass of the particle for (eventual) material integration -
+  /// pion default
   double mass = 139.57018 * UnitConstants::MeV;
 
   /// Maximum number of steps for one propagate call
@@ -261,21 +257,17 @@ class Propagator final {
   struct State {
     /// Create the propagator state from the options
     ///
-    /// @tparam parameters_t the type of the start parameters
     /// @tparam propagator_options_t the type of the propagator options
     ///
-    /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param steppingIn Stepper state instance to begin with
-    template <typename parameters_t>
-    State(const parameters_t& start, const propagator_options_t& topts,
-          StepperState steppingIn)
+    /// @param navigationIn Navigator state instance to begin with
+    State(const propagator_options_t& topts, StepperState steppingIn,
+          NavigatorState navigationIn)
         : options(topts),
           stepping{std::move(steppingIn)},
-          geoContext(topts.geoContext) {
-      // Setting the start surface
-      navigation.startSurface = &start.referenceSurface();
-    }
+          navigation{std::move(navigationIn)},
+          geoContext(topts.geoContext) {}
 
     /// These are the options - provided for each propagation step
     propagator_options_t options;

@@ -11,8 +11,11 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <map>
 #include <memory>
@@ -22,8 +25,10 @@ namespace ActsExamples {
 
 using TrackHitList = std::map<const double, const Index>;
 
-class SurfaceSortingAlgorithm final : public BareAlgorithm {
+class SurfaceSortingAlgorithm final : public IAlgorithm {
  public:
+  using HitSimHitsMap = IndexMultimap<Index>;
+
   struct Config {
     /// Input proto track collection
     std::string inputProtoTracks;
@@ -44,6 +49,14 @@ class SurfaceSortingAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

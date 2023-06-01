@@ -17,6 +17,10 @@ namespace torch::jit {
 class Module;
 }
 
+namespace c10 {
+enum class DeviceType : int8_t;
+}
+
 namespace Acts {
 
 class TorchMetricLearning final : public Acts::GraphConstructionBase {
@@ -39,6 +43,7 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
 
  private:
   Config m_cfg;
+  c10::DeviceType m_deviceType;
   std::unique_ptr<torch::jit::Module> m_model;
 };
 
