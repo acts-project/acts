@@ -13,9 +13,6 @@
 
 namespace py = pybind11;
 
-using namespace ActsExamples;
-using namespace Acts;
-
 namespace Acts::Python {
 
 void addOnnxNeuralCalibrator(Context& /*ctx*/) {}
