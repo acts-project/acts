@@ -62,7 +62,7 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
   // As sheet
   auto svgSheet = Acts::Svg::Sheet::xy(svgTemplate, identification + "_sheet");
   Acts::Svg::toFile({svgSheet}, svgSheet._id + ".svg");
-};
+}
 
 }  // namespace
 
