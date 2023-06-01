@@ -26,7 +26,11 @@ void GreedyAmbiguityResolution::computeInitialState(
                          source_link_equality_t>(0, sourceLinkHash,
                                                  sourceLinkEquality);
 
+  // Iterate through all input tracks, collect their properties like measurement
+  // count and chi2 and fill the measurement map in order to relate tracks to
+  // each other if they have shared hits.
   for (const auto& track : tracks) {
+    // Kick out tracks that do not fullfil our initial requirements
     if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
       continue;
     }
@@ -49,14 +53,16 @@ void GreedyAmbiguityResolution::computeInitialState(
     ++state.numberOfTracks;
   }
 
+  // Now we relate measurements to tracks
   for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
     for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
       state.tracksPerMeasurement[iMeasurement].insert(iTrack);
     }
   }
+
+  // Finally, we can accumulate the number of shared measurements per track
   state.sharedMeasurementsPerTrack =
       std::vector<std::size_t>(state.trackTips.size(), 0);
-
   for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
     for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
       if (state.tracksPerMeasurement[iMeasurement].size() > 1) {

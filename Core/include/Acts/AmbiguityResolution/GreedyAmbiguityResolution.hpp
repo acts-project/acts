@@ -21,7 +21,10 @@
 
 namespace Acts {
 
-/// Evicts tracks that seem to be duplicated.
+/// Evicts tracks that seem to be duplicates or fakes. This algorithm takes a
+/// greedy approach in the sense that it will remove the track which looks "most
+/// duplicate/fake" first and continues the same process with the rest. That
+/// process continues until the final state conditions are met.
 ///
 /// The implementation works as follows:
 ///  1) Calculate shared hits per track.
@@ -66,6 +69,14 @@ class GreedyAmbiguityResolution {
                                                  Logging::INFO))
       : m_cfg{cfg}, m_logger{std::move(logger)} {}
 
+  /// Computes the initial state for the input data. This function accumulates
+  /// information that will later be used to accelerate the ambiguity
+  /// resolution.
+  ///
+  /// @param tracks The input track container.
+  /// @param state An empty state object which is expected to be default constructed.
+  /// @param sourceLinkHash A functor to aquire a hash from a given source link.
+  /// @param sourceLinkEquality A functor to check equality of two source links.
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t, typename source_link_hash_t,
             typename source_link_equality_t>
@@ -74,6 +85,10 @@ class GreedyAmbiguityResolution {
       State& state, source_link_hash_t&& sourceLinkHash,
       source_link_equality_t&& sourceLinkEquality) const;
 
+  /// Updates the state iteratively by evicting one track after the other until
+  /// the final state conditions are met.
+  ///
+  /// @param state A state object that was previously filled by the initialization.
   void resolve(State& state) const;
 
  private:
