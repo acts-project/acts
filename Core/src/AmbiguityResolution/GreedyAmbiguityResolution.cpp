@@ -65,7 +65,11 @@ void GreedyAmbiguityResolution::resolve(State& state) const {
     auto badTrack =
         *std::max_element(state.selectedTracks.begin(),
                           state.selectedTracks.end(), badTrackComperator);
-    ACTS_VERBOSE("remove track " << badTrack);
+    ACTS_VERBOSE("remove track "
+                 << badTrack << " nMeas "
+                 << state.measurementsPerTrack[badTrack].size() << " nShared "
+                 << state.sharedMeasurementsPerTrack[badTrack] << " chi2 "
+                 << state.trackChi2[badTrack]);
     removeTrack(state, badTrack);
   }
 }
