@@ -45,9 +45,10 @@ std::array<float, 7 * 7> chargeMatrix(const ActsExamples::Cluster& cl) {
 }  // namespace detail
 
 ActsExamples::NeuralCalibrator::NeuralCalibrator(
-    const std::filesystem::path& modelPath)
+    const std::filesystem::path& modelPath, size_t nComp)
     : m_env(ORT_LOGGING_LEVEL_WARNING, "NeuralCalibrator"),
-      m_model(m_env, modelPath.c_str()) {}
+      m_model(m_env, modelPath.c_str()),
+      m_nComp{nComp} {}
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
@@ -59,6 +60,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
   assert((sourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
+  // TODO: Matrix size should be configurable perhaps?
   std::array<float, 7 * 7> matrix =
       ::detail::chargeMatrix((*clusters)[sourceLink.index()]);
   std::vector<float> input;
@@ -70,7 +72,6 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
   std::visit(
       [&](const auto& meas) {
-        // Evaluate the MDN
         auto E = meas.expander();
         auto P = meas.projector();
         Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
@@ -88,17 +89,31 @@ void ActsExamples::NeuralCalibrator::calibrate(
         }
 
         std::vector<float> output = m_model.runONNXInference(input);
-        if (output.size() != 5) {
-          throw std::runtime_error("Expected output size of 5, got: " +
-                                   std::to_string(output.size()));
+        // Assuming 2-D measurements, the expected params structure is:
+        // [      0,    nComp[ --> priors
+        // [  nComp,  3*nComp[ --> means
+        // [3*nComp,  5*nComp[ --> variances
+        size_t nParams = 5 * m_nComp;
+        if (output.size() != nParams) {
+          throw std::runtime_error(
+              "Got output vector of size " + std::to_string(output.size()) +
+              ", expected size " + std::to_string(nParams));
         }
 
-        // Save the calibrated positions
+        // Most probable value computation of mixture density
+        size_t iMax = 0;
+        if (m_nComp > 1) {
+          iMax = std::distance(
+              output.begin(),
+              std::max_element(output.begin(), output.begin() + m_nComp));
+        }
+        size_t iMpvLoc0 = m_nComp + iMax * 2;
+        size_t iMpvVar0 = 3 * m_nComp + iMax * 2;
 
-        fpar[Acts::eBoundLoc0] = output[1];
-        fpar[Acts::eBoundLoc1] = output[2];
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = output[3];
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = output[4];
+        fpar[Acts::eBoundLoc0] = output[iMpvLoc0];
+        fpar[Acts::eBoundLoc1] = output[iMpvLoc0 + 1];
+        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = output[iMpvVar0];
+        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = output[iMpvVar0 + 1];
 
         constexpr size_t kSize =
             std::remove_reference_t<decltype(meas)>::size();

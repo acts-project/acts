@@ -24,9 +24,10 @@ void addOnnxNeuralCalibrator(Context &ctx) {
 
   onnx.def(
       "makeNeuralCalibrator",
-      [](const char *modelPath) -> std::shared_ptr<MeasurementCalibrator> {
-        return std::make_shared<NeuralCalibrator>(modelPath);
+      [](const char *modelPath,
+         size_t nComp) -> std::shared_ptr<MeasurementCalibrator> {
+        return std::make_shared<NeuralCalibrator>(modelPath, nComp);
       },
-      py::arg("modelPath"));
+      py::arg("modelPath"), py::arg("nComp") = 1);
 }
 }  // namespace Acts::Python
