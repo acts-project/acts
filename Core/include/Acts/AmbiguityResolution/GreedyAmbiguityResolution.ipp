@@ -31,18 +31,15 @@ void GreedyAmbiguityResolution::computeInitialState(
       continue;
     }
     std::vector<std::size_t> measurements;
-    tracks.trackStateContainer().visitBackwards(
-        track.tipIndex(), [&](const auto& hit) {
-          if (hit.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-            SourceLink sourceLink = hit.getUncalibratedSourceLink();
-            // assign a new measurement index if the source link was not seen
-            // yet
-            auto emplace = measurementIndexMap.try_emplace(
-                sourceLink, measurementIndexMap.size());
-            measurements.push_back(emplace.first->second);
-          }
-          return true;
-        });
+    for (auto ts : track.trackStates()) {
+      if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        SourceLink sourceLink = ts.getUncalibratedSourceLink();
+        // assign a new measurement index if the source link was not seen yet
+        auto emplace = measurementIndexMap.try_emplace(
+            sourceLink, measurementIndexMap.size());
+        measurements.push_back(emplace.first->second);
+      }
+    }
 
     state.trackTips.push_back(track.index());
     state.trackChi2.push_back(track.chi2() / track.nDoF());

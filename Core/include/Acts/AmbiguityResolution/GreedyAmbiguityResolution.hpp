@@ -84,12 +84,6 @@ class GreedyAmbiguityResolution {
 
   /// Private access to logging instance
   const Logger& logger() const { return *m_logger; }
-
-  struct MapableSourceLink final {
-    SourceLink sourceLink;
-
-    MapableSourceLink(SourceLink link) : sourceLink{std::move(link)} {}
-  };
 };
 
 }  // namespace Acts
