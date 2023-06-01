@@ -9,7 +9,7 @@ remove_lines:
   # ignore boost
   - "^(- )?#include <boost/"
   # don remove ipp
-  - "^- #include [<\"].*\\.ipp": ""
+  - "^- #include [<\"].*\\.ipp"
 
 replace_lines:
   - "^#include <assert\\.h>": "#include <cassert>"
