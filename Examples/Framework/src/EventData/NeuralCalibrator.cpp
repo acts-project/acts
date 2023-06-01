@@ -45,34 +45,9 @@ std::array<float, 7 * 7> chargeMatrix(const ActsExamples::Cluster& cl) {
 }  // namespace detail
 
 ActsExamples::NeuralCalibrator::NeuralCalibrator(
-    const std::filesystem::path& modelPath,
-    const std::filesystem::path& normalizationPath)
+    const std::filesystem::path& modelPath)
     : m_env(ORT_LOGGING_LEVEL_WARNING, "NeuralCalibrator"),
-      m_model(m_env, modelPath.c_str()) {
-  readNormalization(normalizationPath);
-}
-
-void ActsExamples::NeuralCalibrator::readNormalization(
-    const std::filesystem::path& normalizationPath) {
-  TFile ifile(normalizationPath.c_str(), "READ");
-  if (ifile.IsZombie()) {
-    throw std::runtime_error("Unable to read input normalization from " +
-                             normalizationPath.string());
-  }
-
-  std::vector<float>* offsets = ifile.Get<std::vector<float>>("offsets");
-  if (offsets == nullptr || offsets->size() != n_inputs) {
-    throw std::runtime_error("Unable to normalization constants (offsets)");
-  }
-
-  std::vector<float>* scales = ifile.Get<std::vector<float>>("scales");
-  if (scales == nullptr || scales->size() != n_inputs) {
-    throw std::runtime_error("Unable to normalization constants (scales)");
-  }
-
-  m_offsets = *offsets;
-  m_scales = *scales;
-}
+      m_model(m_env, modelPath.c_str()) {}
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
@@ -99,15 +74,17 @@ void ActsExamples::NeuralCalibrator::calibrate(
         auto E = meas.expander();
         auto P = meas.projector();
         Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
+        Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
+            E * meas.covariance() * E.transpose();
 
         input.push_back(fpar[Acts::eBoundLoc0]);
         input.push_back(fpar[Acts::eBoundLoc1]);
-        assert(input.size() == n_inputs && "Missing some inputs!");
-
-        // normalize
-        for (size_t i = 0; i < n_inputs; i++) {
-          input[i] += m_offsets[i];
-          input[i] *= m_scales[i];
+        input.push_back(fcov(Acts::eBoundLoc0, Acts::eBoundLoc0));
+        input.push_back(fcov(Acts::eBoundLoc1, Acts::eBoundLoc1));
+        if (input.size() != n_inputs) {
+          throw std::runtime_error("Expected input size of " +
+                                   std::to_string(n_inputs) +
+                                   ", got: " + std::to_string(input.size()));
         }
 
         std::vector<float> output = m_model.runONNXInference(input);
@@ -118,13 +95,10 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
         // Save the calibrated positions
 
-        Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
-            E * meas.covariance() * E.transpose();
-
-        fpar[Acts::eBoundLoc0] = output[0];
-        fpar[Acts::eBoundLoc1] = output[1];
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = 1.0 / output[2];
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = 1.0 / output[3];
+        fpar[Acts::eBoundLoc0] = output[1];
+        fpar[Acts::eBoundLoc1] = output[2];
+        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = output[3];
+        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = output[4];
 
         constexpr size_t kSize =
             std::remove_reference_t<decltype(meas)>::size();

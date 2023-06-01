@@ -17,10 +17,9 @@ namespace ActsExamples {
 
 class NeuralCalibrator : public MeasurementCalibrator {
  public:
-  size_t n_inputs = 55;  // TODO: set this dynamically
+  size_t n_inputs = 57;  // TODO: set this dynamically
 
-  NeuralCalibrator(const std::filesystem::path& modelPath,
-                   const std::filesystem::path& normalizationPath);
+  NeuralCalibrator(const std::filesystem::path& modelPath);
 
   void calibrate(
       const MeasurementContainer& measurements,
@@ -33,11 +32,6 @@ class NeuralCalibrator : public MeasurementCalibrator {
  private:
   Ort::Env m_env;
   Acts::OnnxRuntimeBase m_model;
-  // NN input normalization constants
-  std::vector<float> m_offsets;
-  std::vector<float> m_scales;
-
-  void readNormalization(const std::filesystem::path& modelPath);
 };
 
 }  // namespace ActsExamples
