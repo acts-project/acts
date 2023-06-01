@@ -45,20 +45,33 @@ std::array<float, 7 * 7> chargeMatrix(const ActsExamples::Cluster& cl) {
 }  // namespace detail
 
 ActsExamples::NeuralCalibrator::NeuralCalibrator(
-    const std::filesystem::path& modelPath, size_t nComp)
+  const std::filesystem::path& modelPath, size_t nComp, std::vector<size_t> volumeIds)
     : m_env(ORT_LOGGING_LEVEL_WARNING, "NeuralCalibrator"),
       m_model(m_env, modelPath.c_str()),
-      m_nComp{nComp} {}
+      m_nComp{nComp},
+      m_volumeIds{std::move(volumeIds)} {}
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
-    const Acts::GeometryContext& /*gctx*/,
+    const Acts::GeometryContext& gctx,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
   Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
   const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
   assert((sourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
+
+  if (std::find(m_volumeIds.begin(),
+		m_volumeIds.end(),
+		sourceLink.geometryId().volume()) == m_volumeIds.end()) {
+    m_fallback.calibrate(measurements,
+			 clusters,
+			 gctx,
+			 trackState);
+    return;
+  }
+
+
 
   // TODO: Matrix size should be configurable perhaps?
   std::array<float, 7 * 7> matrix =

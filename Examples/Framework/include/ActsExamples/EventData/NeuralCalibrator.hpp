@@ -15,11 +15,6 @@
 
 namespace ActsExamples {
 
-// FIXME: Some concept of geometry (i.e. this is only for pixel!)
-// Temp fix: pass a list of blessed volumes, defaulting to 7/8/9
-// In subsequent MR,
-// should move to GeometryHierarchyMap<MeasurementCalibrator> interface
-
 class NeuralCalibrator : public MeasurementCalibrator {
  public:
   /// Measurement position calibration based on mixture density network
@@ -47,7 +42,10 @@ class NeuralCalibrator : public MeasurementCalibrator {
   ///
   /// @param [in] modelPath The path to the .onnx model file
   /// @param [in] nComp The number of components in the gaussian mixture
-  NeuralCalibrator(const std::filesystem::path& modelPath, size_t nComp = 1);
+  /// @param [in] volumes The volume ids for which to apply the calibration
+  NeuralCalibrator(const std::filesystem::path& modelPath,
+		   size_t nComp = 1,
+		   std::vector<size_t> volumeIds = {7,8,9});
 
   /// The MeasurementCalibrator interface methods
   void calibrate(
@@ -64,6 +62,11 @@ class NeuralCalibrator : public MeasurementCalibrator {
   size_t m_nComp;
   size_t n_inputs =
       57;  // TODO make this configurable? e.g. for changing matrix size?
+
+  // TODO: this should probably be handled outside of the calibrator,
+  // by setting up a GeometryHierarchyMap<MeasurementCalibrator>
+  std::vector<size_t> m_volumeIds;
+  PassThroughCalibrator m_fallback;
 };
 
 }  // namespace ActsExamples
