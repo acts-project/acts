@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <optional>
 
@@ -19,7 +18,7 @@
 namespace Acts {
 
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
-    InternalTrackState trackState, NavigationDirection direction,
+    InternalTrackState trackState, Direction direction,
     const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
   std::error_code error;
@@ -55,7 +54,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
     if (K.hasNaN()) {
-      error = (direction == NavigationDirection::Forward)
+      error = (direction == Direction::Forward)
                   ? KalmanFitterError::ForwardUpdateFailed
                   : KalmanFitterError::BackwardUpdateFailed;  // set to error
       return false;                                           // abort execution

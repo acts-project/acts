@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,7 +22,6 @@
 #include <vector>
 
 namespace Acts {
-
 namespace Experimental {
 
 class Detector : public std::enable_shared_from_this<Detector> {
@@ -30,26 +29,22 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// Create a detector from volumes
   ///
   /// @param name the detecor name
-  /// @param volumes the objets contained by this detector
-  /// @param volumeFinder is a Delegate to find the assocaited volume
+  /// @param rootVolumes the volumes contained by this detector
+  /// @param detectorVolumeUpdator is a Delegate to find the assocaited volume
   ///
   /// @note will throw an exception if volumes vector is empty
   /// @note will throw an exception if duplicate volume names exist
   /// @note will throw an exception if the delegate is not connected
   Detector(const std::string& name,
-           const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-           DetectorVolumeUpdator&& volumeFinder) noexcept(false);
+           std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
+           DetectorVolumeUpdator&& detectorVolumeUpdator) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of Detector.
-  /// Will forward all parameters and will attempt to find a suitable
-  /// constructor.
-  ///
-  /// @tparam Args the arguments that will be forwarded
-  template <typename... Args>
-  static std::shared_ptr<Detector> makeShared(Args&&... args) {
-    return std::shared_ptr<Detector>(new Detector(std::forward<Args>(args)...));
-  }
+  static std::shared_ptr<Detector> makeShared(
+      const std::string& name,
+      std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
+      DetectorVolumeUpdator&& detectorVolumeUpdator);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
@@ -73,7 +68,17 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @return The shared pointer
   std::shared_ptr<const Detector> getSharedPtr() const;
 
-  /// Non-const access to the volumes
+  /// Non-const access to the root volumes
+  ///
+  /// @return the root volume shared pointer
+  std::vector<std::shared_ptr<DetectorVolume>>& rootVolumePtrs();
+
+  /// Const access to the root volumes
+  ///
+  /// @return a vector to const DetectorVolume raw pointers
+  const std::vector<const DetectorVolume*>& rootVolumes() const;
+
+  /// Non-const access to the root volume
   ///
   /// @return the volumes shared pointer store
   std::vector<std::shared_ptr<DetectorVolume>>& volumePtrs();
@@ -111,8 +116,9 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
   /// Update the volume finder
   ///
-  /// @param mVolumeFinder the new volume finder
-  void updateDetectorVolumeFinder(DetectorVolumeUpdator&& mVolumeFinder);
+  /// @param detectorVolumeUpdator the new volume finder
+  void updateDetectorVolumeFinder(
+      DetectorVolumeUpdator&& detectorVolumeUpdator);
 
   /// Const access to the volume finder
   const DetectorVolumeUpdator& detectorVolumeFinder() const;
@@ -124,37 +130,18 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// Name of the detector
   std::string m_name = "Unnamed";
 
+  /// Root volumes
+  DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_rootVolumes;
+
   /// Volume store (internal/external)
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// A volume finder delegate
-  DetectorVolumeUpdator m_volumeFinder;
+  DetectorVolumeUpdator m_detectorVolumeUpdator;
 
   /// Name/index map to find volumes by name and detect duplicates
   std::unordered_map<std::string, size_t> m_volumeNameIndex;
 };
 
-inline std::vector<std::shared_ptr<DetectorVolume>>& Detector::volumePtrs() {
-  return m_volumes.internal;
-}
-
-inline const std::vector<const DetectorVolume*>& Detector::volumes() const {
-  return m_volumes.external;
-}
-
-inline void Detector::updateDetectorVolumeFinder(
-    DetectorVolumeUpdator&& mVolumeFinder) {
-  m_volumeFinder = std::move(mVolumeFinder);
-}
-
-inline const DetectorVolumeUpdator& Detector::detectorVolumeFinder() const {
-  return m_volumeFinder;
-}
-
-inline const std::string& Detector::name() const {
-  return m_name;
-}
-
 }  // namespace Experimental
-
 }  // namespace Acts

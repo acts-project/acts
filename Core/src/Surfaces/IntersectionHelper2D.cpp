@@ -8,7 +8,8 @@
 
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 #include <cmath>

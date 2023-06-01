@@ -10,9 +10,9 @@
 
 #include <filesystem>
 
-#include <core/session/onnxruntime_cxx_api.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
+#include <onnxruntime_cxx_api.h>
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -83,9 +83,9 @@ void Acts::ExaTrkXTrackFindingOnnx::runSessionWithIoBinding(
 void Acts::ExaTrkXTrackFindingOnnx::buildEdges(
     std::vector<float>& embedFeatures, std::vector<int64_t>& edgeList,
     int64_t numSpacepoints) const {
-  torch::Device device(torch::kCUDA);
-  auto options =
-      torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
+  torch::Device device =
+      torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+  auto options = torch::TensorOptions().dtype(torch::kFloat32).device(device);
 
   torch::Tensor embedTensor =
       torch::tensor(embedFeatures, options)

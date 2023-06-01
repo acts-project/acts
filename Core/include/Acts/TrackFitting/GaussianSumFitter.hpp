@@ -118,7 +118,8 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector,
+                                DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       std::vector<const Surface*> backwardSequence(
@@ -169,7 +170,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts) {
-      using Actors = ActionList<GsfActor>;
+      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
@@ -213,7 +214,7 @@ struct GaussianSumFitter {
     // Define directions based on input propagation direction. This way we can
     // refer to 'forward' and 'backward' regardless of the actual direction.
     const auto gsfForward = options.propagatorPlainOptions.direction;
-    const auto gsfBackward = static_cast<NavigationDirection>(-1 * gsfForward);
+    const auto gsfBackward = gsfForward.invert();
 
     // Check if the start parameters are on the start surface
     auto intersectionStatusStartSurface =
@@ -233,17 +234,19 @@ struct GaussianSumFitter {
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(begin, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (auto it = begin; it != end; ++it) {
-      const SourceLink& sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), sl);
+      SourceLink sl = *it;
+      auto geoId = sl.geometryId();
+      inputMeasurements.emplace(geoId, std::move(sl));
     }
 
     ACTS_VERBOSE(
         "Gsf: Final measuerement map size: " << inputMeasurements.size());
-    throw_assert(sParameters.covariance() != std::nullopt,
-                 "we need a covariance here...");
+
+    if (sParameters.covariance() == std::nullopt) {
+      return GsfError::StartParametersHaveNoCovariance;
+    }
 
     /////////////////
     // Forward pass
@@ -258,7 +261,7 @@ struct GaussianSumFitter {
       // Catch the actor and set the measurements
       auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
       actor.setOptions(options);
-      actor.m_cfg.inputMeasurements = inputMeasurements;
+      actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
       actor.m_cfg.inReversePass = false;
       actor.m_cfg.logger = m_actorLogger.get();
@@ -325,7 +328,7 @@ struct GaussianSumFitter {
 
       auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
       actor.setOptions(options);
-      actor.m_cfg.inputMeasurements = inputMeasurements;
+      actor.m_cfg.inputMeasurements = &inputMeasurements;
       actor.m_cfg.inReversePass = true;
       actor.m_cfg.logger = m_actorLogger.get();
       actor.setOptions(options);
@@ -363,8 +366,8 @@ struct GaussianSumFitter {
 
       auto proxy =
           r.fittedStates->getTrackState(fwdGsfResult.lastMeasurementTip);
-      proxy.filtered() = proxy.predicted();
-      proxy.filteredCovariance() = proxy.predictedCovariance();
+      proxy.shareFrom(TrackStatePropMask::Filtered,
+                      TrackStatePropMask::Smoothed);
 
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());
@@ -423,6 +426,7 @@ struct GaussianSumFitter {
       if (not found && state.typeFlags().test(MeasurementFlag)) {
         state.typeFlags().set(OutlierFlag);
         state.typeFlags().reset(MeasurementFlag);
+        state.unset(TrackStatePropMask::Smoothed);
       }
 
       measurementStatesFinal +=
@@ -441,6 +445,15 @@ struct GaussianSumFitter {
       track.parameters() = params.parameters();
       track.covariance() = params.covariance().value();
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+
+      if (trackContainer.hasColumn(
+              hashString(GsfConstants::kFinalMultiComponentStateColumn))) {
+        ACTS_DEBUG("Add final multi-component state to track")
+        const auto& fsr = bwdResult->template get<
+            Acts::detail::FinalStateCollector::result_type>();
+        track.template component<GsfConstants::FinalMultiComponentState>(
+            GsfConstants::kFinalMultiComponentStateColumn) = fsr.pars;
+      }
     }
 
     calculateTrackQuantities(track);

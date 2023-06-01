@@ -22,7 +22,11 @@ class IVisualization3D;
 
 class GenericCuboidVolumeBounds : public VolumeBounds {
  public:
-  static constexpr size_t eSize = 24;
+  /// @brief  This struct helps to symmetrize with the
+  /// the other volume bounds classes
+  struct BoundValues {
+    static constexpr size_t eSize = 24;
+  };
 
   GenericCuboidVolumeBounds() = delete;
 
@@ -40,8 +44,8 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   /// Constructor from a fixed size array
   ///
   /// @param values The input values
-  GenericCuboidVolumeBounds(const std::array<double, eSize>& values) noexcept(
-      false);
+  GenericCuboidVolumeBounds(
+      const std::array<double, BoundValues::eSize>& values) noexcept(false);
 
   ~GenericCuboidVolumeBounds() override = default;
 

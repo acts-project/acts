@@ -69,6 +69,9 @@ class Surface : public virtual GeometryObject,
     Other = 7
   };
 
+  /// Helper strings for screen output
+  static std::array<std::string, SurfaceType::Other> s_surfaceTypeNames;
+
  protected:
   /// Constructor with Transform3 as a shared object
   ///
@@ -395,12 +398,13 @@ class Surface : public virtual GeometryObject,
   /// @param position The position to start from
   /// @param direction The direction at start
   /// @param bcheck the Boundary Check
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  virtual SurfaceIntersection intersect(const GeometryContext& gctx,
-                                        const Vector3& position,
-                                        const Vector3& direction,
-                                        const BoundaryCheck& bcheck) const = 0;
+  virtual SurfaceIntersection intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///

@@ -14,9 +14,9 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
-#include "ActsExamples/Io/Root/RootVertexPerformanceWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/ParticleSelectorOptions.hpp"
@@ -97,12 +97,11 @@ int main(int argc, char* argv[]) {
   findVertices.inputTrackParameters = trackSelectorConfig.outputTrackParameters;
   findVertices.outputProtoVertices = "fittedProtoVertices";
   findVertices.outputVertices = "fittedVertices";
-  findVertices.outputTime = "recoTimeMS";
   sequencer.addAlgorithm(std::make_shared<AdaptiveMultiVertexFinderAlgorithm>(
       findVertices, logLevel));
 
   // write track parameters from fitting
-  RootVertexPerformanceWriter::Config vertexWriterConfig;
+  VertexPerformanceWriter::Config vertexWriterConfig;
   vertexWriterConfig.inputAllTruthParticles =
       particleReaderConfig.particleCollection;
   vertexWriterConfig.inputSelectedTruthParticles = select.outputParticles;
@@ -110,11 +109,10 @@ int main(int argc, char* argv[]) {
       trackSummaryReader.outputParticles;
   vertexWriterConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
-  vertexWriterConfig.inputTime = findVertices.outputTime;
   vertexWriterConfig.filePath = outputDir + "/vertexperformance_AMVF.root";
   vertexWriterConfig.treeName = "amvf";
-  sequencer.addWriter(std::make_shared<RootVertexPerformanceWriter>(
-      vertexWriterConfig, logLevel));
+  sequencer.addWriter(
+      std::make_shared<VertexPerformanceWriter>(vertexWriterConfig, logLevel));
 
   return sequencer.run();
 }

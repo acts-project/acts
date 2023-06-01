@@ -82,8 +82,8 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
-  WriteDataHandle<ProtoTrackContainer> m_outputFullProtoTracks{
-      this, "OutputFullProtoTracks"};
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 };
 

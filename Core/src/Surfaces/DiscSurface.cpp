@@ -191,9 +191,8 @@ Acts::Vector2 Acts::DiscSurface::localPolarToCartesian(
 
 Acts::Vector2 Acts::DiscSurface::localCartesianToPolar(
     const Vector2& lcart) const {
-  return Vector2(sqrt(lcart[eBoundLoc0] * lcart[eBoundLoc0] +
-                      lcart[eBoundLoc1] * lcart[eBoundLoc1]),
-                 atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
+  return Vector2(std::hypot(lcart[eBoundLoc0], lcart[eBoundLoc1]),
+                 std::atan2(lcart[eBoundLoc1], lcart[eBoundLoc0]));
 }
 
 Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
@@ -251,7 +250,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
+  const double sinTheta = std::hypot(x, y);
   const double invSinTheta = 1. / sinTheta;
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
@@ -287,12 +286,13 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
 
 Acts::SurfaceIntersection Acts::DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // Get the contextual transform
   auto gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction);
+      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status != Intersection3D::Status::unreachable and bcheck and
       m_bounds != nullptr) {
@@ -302,9 +302,9 @@ Acts::SurfaceIntersection Acts::DiscSurface::intersect(
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
     if (bcheck.type() == BoundaryCheck::Type::eAbsolute and
         m_bounds->coversFullAzimuth()) {
-      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc0];
+      double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc0];
       if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
-                                           tolerance)) {
+                                           modifiedTolerance)) {
         intersection.status = Intersection3D::Status::missed;
       }
     } else if (not insideBounds(localCartesianToPolar(lcartesian), bcheck)) {

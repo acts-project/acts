@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <autodiff/forward/dual.hpp>
 #include <autodiff/forward/dual/eigen.hpp>
@@ -95,6 +94,7 @@ struct AutodiffExtensionWrapper {
   // A fake stepper
   struct FakeStepper {
     auto charge(const FakeStepperState& s) const { return s.q; }
+    auto qop(const FakeStepperState& s) const { return s.pars(eFreeQOverP); }
     auto momentum(const FakeStepperState& s) const {
       return s.q / s.pars(eFreeQOverP);
     }

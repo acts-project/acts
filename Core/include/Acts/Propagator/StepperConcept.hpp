@@ -73,7 +73,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
     constexpr bool StepperStateConcept
       = require<has_member<S, cov_transport_t, bool>,
                 has_member<S, cov_t, BoundSymMatrix>,
-                has_member<S, nav_dir_t, NavigationDirection>,
+                has_member<S, nav_dir_t, Direction>,
                 has_member<S, path_accumulated_t, double>//,
 //                 has_member<S, step_size_t, ConstrainedStep>
                >;
@@ -83,7 +83,7 @@ using step_size_t = decltype(std::declval<T>().stepSize);
 template <typename S>
 constexpr bool MultiStepperStateConcept= require<
   has_member<S, cov_transport_t, bool>,
-  has_member<S, nav_dir_t, NavigationDirection>,
+  has_member<S, nav_dir_t, Direction>,
   has_member<S, path_accumulated_t, double>
 >;
 // clang-format on
@@ -101,7 +101,7 @@ constexpr bool MultiStepperStateConcept= require<
         static_assert(bound_state_exists, "BoundState type not found");
         constexpr static bool curvilinear_state_exists = exists<curvilinear_state_t, S>;
         static_assert(curvilinear_state_exists, "CurvilinearState type not found");
-        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const NavigationDirection, const double>;
+        constexpr static bool reset_state_exists = has_method<const S, void, reset_state_t, state&, const BoundVector&, const BoundSymMatrix&, const Surface&, const Direction, const double>;
         static_assert(reset_state_exists, "resetState method not found");
         constexpr static bool position_exists = has_method<const S, Vector3, position_t, const state&>;
         static_assert(position_exists, "position method not found");

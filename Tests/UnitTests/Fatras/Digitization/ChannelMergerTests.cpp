@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/Digitization/ChannelMerger.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 

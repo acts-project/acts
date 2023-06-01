@@ -19,20 +19,14 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cmath>
-#include <functional>
 #include <optional>
-#include <type_traits>
-
-#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 
@@ -63,12 +57,14 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 ///
 struct PropagatorPlainOptions {
   /// Propagation direction
-  NavigationDirection direction = NavigationDirection::Forward;
+  Direction direction = Direction::Forward;
 
-  /// The |pdg| code for (eventual) material integration - pion default
-  int absPdgCode = 211;
+  /// The |pdg| code for (eventual) material integration -
+  /// pion default
+  int absPdgCode = PdgParticle::ePionPlus;
 
-  /// The mass for the particle for (eventual) material integration
+  /// The mass of the particle for (eventual) material integration -
+  /// pion default
   double mass = 139.57018 * UnitConstants::MeV;
 
   /// Maximum number of steps for one propagate call

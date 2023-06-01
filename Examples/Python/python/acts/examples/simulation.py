@@ -476,7 +476,6 @@ def addSimWriters(
     particlesInitial="particles_initial",
     particlesFinal="particles_final",
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if outputDirCsv is not None:
@@ -571,9 +570,13 @@ def addGeant4(
     inputParticles: str = "particles_input",
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
+    recordHitsOfSecondaries=True,
+    keepParticlesWithoutHits=True,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    killVolume: Optional[acts.Volume] = None,
+    killAfterTime: float = float("inf"),
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -595,6 +598,10 @@ def addGeant4(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
+    killVolume: acts.Volume, None
+        if given, particles are killed when going outside of this volume.
+    killAfterTime: float, None
+        if given, particle are killed after the global time since event creation exceeds the given value
     """
 
     from acts.examples.geant4 import Geant4Simulation, makeGeant4SimulationConfig
@@ -627,6 +634,10 @@ def addGeant4(
         magneticField=field,
         volumeMappings=volumeMappings,
         materialMappings=materialMappings,
+        killVolume=killVolume,
+        killAfterTime=killAfterTime,
+        recordHitsOfSecondaries=recordHitsOfSecondaries,
+        keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"

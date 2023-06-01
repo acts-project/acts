@@ -26,7 +26,6 @@
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/TestSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
 #include <limits>
@@ -205,7 +204,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   TestSpacePointContainer spacePoints;
   TestSpacePointContainer spacePoints_extra;
 
-  auto accessor = [](SourceLink slink) {
+  auto accessor = [](const SourceLink& slink) {
     auto testslink = slink.get<TestSourceLink>();
     BoundVector param;
     param.setZero();

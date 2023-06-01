@@ -30,7 +30,6 @@
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
-
 namespace Experimental {
 
 class NextNavigator {
@@ -46,9 +45,6 @@ class NextNavigator {
     bool resolveMaterial = true;
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
-
-    /// The tolerance used to defined "reached"
-    double tolerance = s_onSurfaceTolerance;
   };
 
   /// Nested State struct
@@ -88,7 +84,7 @@ class NextNavigator {
 
   void resetState(State& state, const GeometryContext& /*geoContext*/,
                   const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  NavigationDirection /*navDir*/, const Surface* /*ssurface*/,
+                  Direction /*navDir*/, const Surface* /*ssurface*/,
                   const Surface* /*tsurface*/) const {
     // Reset everything first
     state = State();
@@ -102,6 +98,10 @@ class NextNavigator {
 
   const TrackingVolume* currentVolume(const State& /*state*/) const {
     return nullptr;  // TODO we do not have a tracking volume
+  }
+
+  const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
+    return state.currentVolume->volumeMaterial();
   }
 
   const Surface* startSurface(const State& state) const {
@@ -414,7 +414,6 @@ class NextNavigator {
     nState.position = stepper.position(state.stepping);
     nState.direction = stepper.direction(state.stepping);
     nState.absMomentum = stepper.momentum(state.stepping);
-    nState.charge = stepper.charge(state.stepping);
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {
       ACTS_ERROR(volInfo(state) << posInfo(state, stepper)
@@ -425,5 +424,4 @@ class NextNavigator {
 };
 
 }  // namespace Experimental
-
 }  // namespace Acts
