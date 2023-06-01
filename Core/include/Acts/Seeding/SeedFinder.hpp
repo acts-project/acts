@@ -100,9 +100,8 @@ class SeedFinder {
       const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
-      const sp_range_t& topSPs, const Acts::Range1D<float>& rMiddleSPRange,
-      const float& uIP, const float& uIP2, const float& cosPhiM,
-      const float& sinPhiM) const;
+      const sp_range_t& topSPs,
+      const Acts::Range1D<float>& rMiddleSPRange) const;
 
   /// @brief Compatibility method for the new-style seed finding API.
   ///
@@ -151,7 +150,8 @@ class SeedFinder {
           otherSPsNeighbours,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-      const float& deltaRMinSP, const float& deltaRMaxSP) const;
+      const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
+      const float& uIP2, const float& cosPhiM, const float& sinPhiM) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
