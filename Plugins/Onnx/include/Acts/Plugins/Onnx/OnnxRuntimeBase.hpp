@@ -49,6 +49,12 @@ class OnnxRuntimeBase {
   std::vector<std::vector<float>> runONNXInference(
       NetworkBatchInput& inputTensorValues) const;
 
+  std::vector<std::vector<std::vector<float>>> runONNXInferenceMultiOutput(
+      NetworkBatchInput& inputTensorValues) const;
+
+  std::vector<std::vector<float>> runONNXInferenceMultiOutput(
+      std::vector<float>& inputTensorValues) const;
+
  private:
   /// ONNX runtime session / model properties
   std::unique_ptr<Ort::Session> m_session;
@@ -57,7 +63,7 @@ class OnnxRuntimeBase {
   std::vector<int64_t> m_inputNodeDims;
   std::vector<Ort::AllocatedStringPtr> m_outputNodeNamesAllocated;
   std::vector<const char*> m_outputNodeNames;
-  std::vector<int64_t> m_outputNodeDims;
+  std::vector<std::vector<int64_t>> m_outputNodeDims;
 };
 
 }  // namespace Acts
