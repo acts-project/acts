@@ -22,18 +22,38 @@ namespace Acts {
 
 class GraphConstructionBase {
  public:
+  /// Perform the graph construction
+  ///
+  /// @param inputValues Flattened input data
+  /// @param logger Logger instance
+  ///
+  /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
       std::vector<float> &inputValues, const Logger &logger) = 0;
 };
 
 class EdgeClassificationBase {
  public:
+  /// Perform edge classification
+  ///
+  /// @param nodes Node tensor with shape (n_nodes, n_node_features)
+  /// @param edges Edge-index tensor with shape (2, n_edges)
+  /// @param logger Logger instance
+  ///
+  /// @return (node_tensor, edge_tensor, score_tensor)
   virtual std::tuple<std::any, std::any, std::any> operator()(
       std::any nodes, std::any edges, const Logger &logger) = 0;
 };
 
 class TrackBuildingBase {
  public:
+  /// Perform track building
+  ///
+  /// @param nodes Node tensor with shape (n_nodes, n_node_features)
+  /// @param edges Edge-index tensor with shape (2, n_edges)
+  /// @param edgeWeights Edge-weights of the previous edge classification phase
+  ///
+  /// @return tracks (as vectors of node-ids)
   virtual std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edgeWeights,
       std::vector<int> &spacepointIDs, const Logger &logger) = 0;
