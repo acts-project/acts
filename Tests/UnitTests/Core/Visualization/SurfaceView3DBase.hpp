@@ -36,9 +36,9 @@ namespace Acts {
 
 namespace SurfaceView3DTest {
 
-/// Helper method to visualiza all types of surfaces
+/// Helper method to visualize all types of surfaces
 ///
-/// @param helper The visualziation helper
+/// @param helper The visualization helper
 /// @param triangulate The directive whether to create triangular meshes
 /// @param tag The test tag (mode) identification
 ///
@@ -292,7 +292,7 @@ static inline std::string run(IVisualization3D& helper, bool triangulate,
   GeometryView3D::drawSurface(helper, *disc, gctx, Transform3::Identity(),
                               sConfig);
 
-  helper.write(std::string("Surfaces_DiscAnulusBounds") + tag);
+  helper.write(std::string("Surfaces_DiscAnnulusBounds") + tag);
   helper.write(cStream);
   helper.clear();
 

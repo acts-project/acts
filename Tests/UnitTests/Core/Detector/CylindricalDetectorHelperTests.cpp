@@ -287,9 +287,9 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
       Acts::Transform3::Identity() * Acts::Translation3(0., 0., 100.),
       std::move(cBounds01), tryAllPortals());
 
-  std::vector<std::shared_ptr<DetectorVolume>> volumesNonalingedBounds = {
+  std::vector<std::shared_ptr<DetectorVolume>> volumesNonalignedBounds = {
       volume00, volume01};
-  BOOST_CHECK_THROW(connectInZ(tContext, volumesNonalingedBounds, {}, logLevel),
+  BOOST_CHECK_THROW(connectInZ(tContext, volumesNonalignedBounds, {}, logLevel),
                     std::runtime_error);
 
   // Volumes are not attached

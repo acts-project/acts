@@ -18,12 +18,12 @@
 
 namespace {
 
-/// Helper method to check if an interseciton is good.
+/// Helper method to check if an intersection is good.
 ///
 /// Good in this context is defined as: along direction,
 /// closer than the segment length & reachable
 ///
-/// @param intersections The confimed intersections for the segment
+/// @param intersections The confirmed intersections for the segment
 /// @param candidate The candidate intersection
 /// @param sLength The segment length, maximal allowed length
 void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
@@ -36,13 +36,13 @@ void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
 
 /// Helper method to apply the mask and return.
 ///
-/// If two (or more) intersections would be good, appply the first two
+/// If two (or more) intersections would be good, apply the first two
 /// If only one is available, the boolean tells you which one it is.
 /// If no intersection is valid, return an error code for masking.
 ///
 /// @param intersections All confirmed intersections
 /// @param segment The original segment before masking
-/// @param firstInside Indicator if the first is inisde or not
+/// @param firstInside Indicator if the first is inside or not
 ///
 /// @return a new Segment (clipped) wrapped in a result or error_code
 Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D> maskAndReturn(

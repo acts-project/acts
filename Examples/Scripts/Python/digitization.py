@@ -9,10 +9,11 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def configureDigitization(
+def runDigitization(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     outputDir: Path,
+    digiConfigFile: Path,
     particlesInput: Optional[Path] = None,
     outputRoot: bool = True,
     outputCsv: bool = True,
@@ -65,8 +66,7 @@ def configureDigitization(
         s,
         trackingGeometry,
         field,
-        digiConfigFile=Path(__file__).resolve().parent.parent.parent.parent
-        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        digiConfigFile=digiConfigFile,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
         outputDirRoot=outputDir if outputRoot else None,
         rnd=rnd,
@@ -79,6 +79,12 @@ def configureDigitization(
 if "__main__" == __name__:
     detector, trackingGeometry, _ = acts.examples.GenericDetector.create()
 
+    digiConfigFile = (
+        Path(__file__).resolve().parent.parent.parent.parent
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+    )
+    assert digiConfigFile.exists()
+
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    configureDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()
+    runDigitization(trackingGeometry, field, outputDir=Path.cwd()).run()

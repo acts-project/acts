@@ -66,7 +66,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
     /// Time resolution.
     double sigmaT0 = 10 * Acts::UnitConstants::ns;
-    /// Inflate tracks
+    /// Inflate inital covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
   };
 

@@ -25,7 +25,7 @@ namespace Acts {
 ///
 class GeometryObject {
  public:
-  /// Defaulted construrctor
+  /// Defaulted constructor
   GeometryObject() = default;
 
   /// Defaulted copy constructor
