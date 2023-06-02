@@ -41,9 +41,10 @@ class NeuralCalibrator : public MeasurementCalibrator {
   /// inference engine itself.
   ///
   /// @param [in] modelPath The path to the .onnx model file
-  /// @param [in] nComp The number of components in the gaussian mixture
+  /// @param [in] nComponent The number of components in the gaussian mixture
   /// @param [in] volumes The volume ids for which to apply the calibration
-  NeuralCalibrator(const std::filesystem::path& modelPath, size_t nComp = 1,
+  NeuralCalibrator(const std::filesystem::path& modelPath,
+                   size_t nComponents = 1,
                    std::vector<size_t> volumeIds = {7, 8, 9});
 
   /// The MeasurementCalibrator interface methods
@@ -58,8 +59,8 @@ class NeuralCalibrator : public MeasurementCalibrator {
  private:
   Ort::Env m_env;
   Acts::OnnxRuntimeBase m_model;
-  size_t m_nComp;
-  size_t n_inputs =
+  size_t m_nComponents;
+  size_t m_nInputs =
       57;  // TODO make this configurable? e.g. for changing matrix size?
 
   // TODO: this should probably be handled outside of the calibrator,
