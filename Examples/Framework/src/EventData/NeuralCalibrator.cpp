@@ -32,6 +32,8 @@ size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cl,
   int diff0 = icntr0 - size0 / 2;
   int diff1 = icntr1 - size1 / 2;
 
+  // Zero the charge matrix first, to guard against leftovers
+  arr = Eigen::ArrayXXf::Zero(1, size0 * size1);
   // Fill the matrix
   for (const ActsExamples::Cluster::Cell& cell : cl.channels) {
     int im = cell.bin[0] - diff0;
