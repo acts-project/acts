@@ -11,7 +11,8 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
@@ -20,7 +21,9 @@
 
 namespace ActsExamples {
 
-class MeasurementMapSelectorAlgorithm final : public BareAlgorithm {
+class MeasurementMapSelectorAlgorithm final : public IAlgorithm {
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
  public:
   struct Config {
     /// Input spacepoints collection.
@@ -41,7 +44,11 @@ class MeasurementMapSelectorAlgorithm final : public BareAlgorithm {
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
   MeasurementMapSelectorAlgorithm(Config cfg, Acts::Logging::Level lvl)
-      : BareAlgorithm("SourceLinkSelection", lvl), m_cfg(cfg) {}
+      : IAlgorithm("SourceLinkSelection", lvl), m_cfg(cfg) {
+    m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+    m_inputMap.initialize(m_cfg.inputMeasurementParticleMap);
+    m_outputMap.initialize(m_cfg.outputMeasurementParticleMap);
+  }
 
   virtual ~MeasurementMapSelectorAlgorithm() {}
 
@@ -51,11 +58,8 @@ class MeasurementMapSelectorAlgorithm final : public BareAlgorithm {
   /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final {
-    using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-    const auto& inputSourceLinks =
-        ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-    const auto& inputMap =
-        ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticleMap);
+    const auto& inputSourceLinks = m_inputSourceLinks(ctx);
+    const auto& inputMap = m_inputMap(ctx);
 
     HitParticlesMap outputMap;
 
@@ -72,8 +76,7 @@ class MeasurementMapSelectorAlgorithm final : public BareAlgorithm {
       }
     }
 
-    ctx.eventStore.add(m_cfg.outputMeasurementParticleMap,
-                       std::move(outputMap));
+    m_outputMap(ctx, std::move(outputMap));
 
     return ProcessCode::SUCCESS;
   }
@@ -83,6 +86,13 @@ class MeasurementMapSelectorAlgorithm final : public BareAlgorithm {
  private:
   // configuration
   Config m_cfg;
+
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+  ReadDataHandle<HitParticlesMap> m_inputMap{this,
+                                             "InputMeasurementParticleMap"};
+  WriteDataHandle<HitParticlesMap> m_outputMap{this,
+                                               "OutputMeasurementParticleMap"};
 };
 
 }  // namespace ActsExamples

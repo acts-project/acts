@@ -23,15 +23,38 @@ ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
 
 ActsExamples::SimSeed ActsExamples::ProtoTrackToSeed::operator()(
     const ActsExamples::ProtoTrack& track) const {
+  // Match a spacepoint to the source-link index if one of the at most two
+  // source-links in the spacepoint has a matching index
+  auto findSpacePoint = [&](ActsExamples::Index index) {
+    auto match = [&](const SimSpacePoint& sp) {
+      const auto& sls = sp.sourceLinks();
+      return std::any_of(sls.begin(), sls.end(), [&](const auto& sl) {
+        return sl.template get<IndexSourceLink>().index() == index;
+      });
+    };
+
+    auto found =
+        std::find_if(m_spacePoints.begin(), m_spacePoints.end(), match);
+
+    if (found == m_spacePoints.end()) {
+      throw std::runtime_error("No spacepoint found for source-link index " +
+                               std::to_string(index));
+    }
+
+    return *found;
+  };
+
   const auto s = track.size();
   if (s < 3) {
     throw std::runtime_error(
         "Cannot convert track with less then 3 spacepoints to seed");
   }
 
-  std::array<SimSpacePoint, 3> ps{{m_spacePoints.at(track[0]),
-                                   m_spacePoints.at(track[s / 2]),
-                                   m_spacePoints.at(track[s - 1])}};
+  std::vector<SimSpacePoint> ps;
+  ps.reserve(track.size());
+
+  std::transform(track.begin(), track.end(), std::back_inserter(ps),
+                 findSpacePoint);
   std::sort(ps.begin(), ps.end(),
             [](const auto& a, const auto& b) { return a.r() < b.r(); });
 
@@ -42,5 +65,5 @@ ActsExamples::SimSeed ActsExamples::ProtoTrackToSeed::operator()(
   const auto t = ps.front().r() - m * ps.front().z();
   const auto z_vertex = -t / m;
 
-  return SimSeed(ps[0], ps[1], ps[2], z_vertex);
+  return SimSeed(ps[0], ps[s / 2], ps[s - 1], z_vertex);
 }

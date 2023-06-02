@@ -24,7 +24,7 @@
 ////////////////////////////
 // For GNN+CKF Experiment //
 ////////////////////////////
-// #include "ActsExamples/TrackFindingX/MeasurementMapSelectorAlgorithm.hpp"
+#include "ActsExamples/TrackFindingX/MeasurementMapSelectorAlgorithm.hpp"
 // #include "ActsExamples/TrackFindingX/ParameterFromTrajectoryAlgorithm.hpp"
 // #include "ActsExamples/TrackFindingX/SourceLinkSelectorAlgorithm.hpp"
 #include "ActsExamples/TrackFindingX/TrackFindingFromPrototrackAlgorithm.hpp"
@@ -362,10 +362,10 @@ void addTrackFinding(Context& ctx) {
         outputTracks, measurementSelectorCfg, trackingGeometry, magneticField,
         findTracks);
 
-    // ACTS_PYTHON_DECLARE_ALGORITHM(
-    //     ActsExamples::MeasurementMapSelectorAlgorithm, mex,
-    //     "MeasurementMapSelectorAlgorithm", inputMeasurementParticleMap,
-    //     inputSourceLinks, outputMeasurementParticleMap, geometrySelection);
+    ACTS_PYTHON_DECLARE_ALGORITHM(
+        ActsExamples::MeasurementMapSelectorAlgorithm, mex,
+        "MeasurementMapSelectorAlgorithm", inputMeasurementParticleMap,
+        inputSourceLinks, outputMeasurementParticleMap, geometrySelection);
   }
 }
 
