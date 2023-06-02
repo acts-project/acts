@@ -21,14 +21,26 @@ ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
   return track;
 }
 
-ActsExamples::ProtoTrackContainer ActsExamples::seedsToPrototracks(
-    const ActsExamples::SimSeedContainer& seeds) {
-  ProtoTrackContainer tracks;
-  tracks.reserve(seeds.size());
-
-  for (const auto& seed : seeds) {
-    tracks.push_back(seedToPrototrack(seed));
+ActsExamples::SimSeed ActsExamples::ProtoTrackToSeed::operator()(
+    const ActsExamples::ProtoTrack& track) const {
+  const auto s = track.size();
+  if (s < 3) {
+    throw std::runtime_error(
+        "Cannot convert track with less then 3 spacepoints to seed");
   }
 
-  return tracks;
+  std::array<SimSpacePoint, 3> ps{{m_spacePoints.at(track[0]),
+                                   m_spacePoints.at(track[s / 2]),
+                                   m_spacePoints.at(track[s - 1])}};
+  std::sort(ps.begin(), ps.end(),
+            [](const auto& a, const auto& b) { return a.r() < b.r(); });
+
+  // Simply use r = m*z + t and solve for r=0 to find z vertex position...
+  // Probably not the textbook way to do
+  const auto m =
+      (ps.back().r() - ps.front().r()) / (ps.back().z() - ps.front().z());
+  const auto t = ps.front().r() - m * ps.front().z();
+  const auto z_vertex = -t / m;
+
+  return SimSeed(ps[0], ps[1], ps[2], z_vertex);
 }
