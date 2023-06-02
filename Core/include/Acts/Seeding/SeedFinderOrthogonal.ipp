@@ -633,29 +633,29 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                });
   }
 
-  // TODO: add seed confirmation
-  SeedFilterState seedFilterState;
+  if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or
+      (!bottom_hl_v.empty() && !top_hl_v.empty())) {
+    std::vector<internal_sp_t *> bottom_v, top_v;
 
-  /*
-   * If we have candidates for increasing z tracks, we try to combine them.
-   */
-  if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
-                     candidates_collector, spacePointData);
+    // reserve memory
+    bottom_v.reserve(bottom_lh_v.size() + bottom_hl_v.size());
+    top_v.reserve(top_lh_v.size() + top_hl_v.size());
+
+    // concatenate the vectors
+    bottom_v.insert(bottom_v.end(), bottom_lh_v.begin(), bottom_lh_v.end());
+    bottom_v.insert(bottom_v.end(), bottom_hl_v.begin(), bottom_hl_v.end());
+    top_v.insert(top_v.end(), top_lh_v.begin(), top_lh_v.end());
+    top_v.insert(top_v.end(), top_hl_v.begin(), top_hl_v.end());
+
+    /*
+     * Run a seed filter, just like in other seeding algorithms.
+     */
+    filterCandidates(options, middle, bottom_v, top_v, seedFilterState,
+                     candidates_collector);
+    m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
+                                              seedFilterState.numQualitySeeds,
+                                              std::back_inserter(out_cont));
   }
-  /*
-   * Try to combine candidates for decreasing z tracks.
-   */
-  if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
-                     candidates_collector, spacePointData);
-  }
-  /*
-   * Run a seed filter, just like in other seeding algorithms.
-   */
-  m_config.seedFilter->filterSeeds_1SpFixed(
-      spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
-      std::back_inserter(out_cont));
 }
 
 template <typename external_spacepoint_t>
