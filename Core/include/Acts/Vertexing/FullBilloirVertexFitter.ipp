@@ -305,6 +305,12 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       for (std::size_t iTrack = 0; iTrack < billoirTracks.size(); ++iTrack) {
         const auto& bTrack = billoirTracks[iTrack];
 
+        // TODO we have to revisit this.
+        // TODO this section does not look correct. here we attach the track
+        // parameters to the vertex for the edm. but d0=z0=t=vertex does not
+        // look good. I am also not sure what kind of covariance is used here
+        // for the refitted params.
+
         // new refitted trackparameters
         BoundVector paramVec = BoundVector::Zero();
         paramVec[eBoundPhi] = trackMomenta[iTrack](0);
