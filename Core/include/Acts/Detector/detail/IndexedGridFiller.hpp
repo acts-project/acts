@@ -40,9 +40,9 @@ namespace detail {
 /// @note for closed binning a span over half the bins flips direction
 ///
 /// @return a vector of bins to be filled
-std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
-                                     std::size_t expand, std::size_t nBins,
-                                     Acts::detail::AxisBoundaryType type) {
+inline static std::vector<std::size_t> binSequence(
+    std::array<std::size_t, 2u> minMaxBins, std::size_t expand,
+    std::size_t nBins, Acts::detail::AxisBoundaryType type) {
   // Return vector for iterations
   std::vector<std::size_t> rBins;
   /// Helper method to fill a range
@@ -181,6 +181,32 @@ std::set<typename grid_type::index_t> localIndices(
         b[0u] = l0;
         b[1u] = l1;
         lIndices.insert(b);
+      }
+    }
+  }
+  // Fill the bins - 3D case
+  if constexpr (grid_type::DIM == 3u) {
+    // Take the expansion if available & generate the local bin sequence
+    std::size_t expand = expansion.empty() ? 0u : expansion[0u];
+    auto localBins0 =
+        binSequence(binRanges[0u], expand, axisBins[0u], axisTypes[0u]);
+    expand = expansion.empty() ? 0u : expansion[1u];
+    auto localBins1 =
+        binSequence(binRanges[1u], expand, axisBins[1u], axisTypes[1u]);
+
+    expand = expansion.empty() ? 0u : expansion[2u];
+    auto localBins2 =
+        binSequence(binRanges[2u], expand, axisBins[2u], axisTypes[2u]);
+
+    for (auto l0 : localBins0) {
+      for (auto l1 : localBins1) {
+        for (auto l2 : localBins2) {
+          typename grid_type::index_t b;
+          b[0u] = l0;
+          b[1u] = l1;
+          b[2u] = l2;
+          lIndices.insert(b);
+        }
       }
     }
   }

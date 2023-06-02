@@ -356,6 +356,52 @@ void checkBounds(
 
 }  // namespace
 
+void Acts::Experimental::detail::CylindricalDetectorHelper::fuseInR(
+    DetectorVolume& keepCoverVolume, DetectorVolume& wasteCoverVolume) {
+  // When fusing volumes at a cylinder boundary, we *keep* one
+  // portal and tranfer the portal link information from the other
+  //
+  // In this case the outer cylinder portal of the inner volume is kept,
+  // the inner cylinder of the outer portal goes to waste
+
+  // Fuse and swap
+  auto& keepCover = keepCoverVolume.portalPtrs()[2u];
+  auto& wasteCover = wasteCoverVolume.portalPtrs()[3u];
+  keepCover->fuse(wasteCover);
+  // Update the portal
+  wasteCoverVolume.updatePortal(keepCover, 3u);
+}
+
+void Acts::Experimental::detail::CylindricalDetectorHelper::fuseInZ(
+    DetectorVolume& keepEndplateVolume, DetectorVolume& wasteEndplateVolume) {
+  // When fusing volumes at a cylinder boundary, we *keep* one
+  // portal and tranfer the portal link information from the other
+  //
+  // In this case the positive sided endplate is kept from the first
+  // volume, while the negative sided endplate is binned from the second
+
+  // Fuse and swap
+  auto& keepEndplate = keepEndplateVolume.portalPtrs()[1u];
+  auto& wasteEndplate = wasteEndplateVolume.portalPtrs()[0u];
+  keepEndplate->fuse(wasteEndplate);
+  // Update the portal
+  wasteEndplateVolume.updatePortal(keepEndplate, 0u);
+}
+
+void Acts::Experimental::detail::CylindricalDetectorHelper::fuseInPhi(
+    DetectorVolume& keepSectorVolume, DetectorVolume& wasteSectorVolume) {
+  size_t nPortals = keepSectorVolume.portals().size();
+  bool innerPresent = (nPortals != 3u and nPortals != 5u);
+  unsigned int iSecOffset = innerPresent ? 4u : 3u;
+
+  // Fuse and swap
+  auto& keepSector = keepSectorVolume.portalPtrs()[iSecOffset + 1u];
+  auto& wasteSector = wasteSectorVolume.portalPtrs()[iSecOffset];
+  keepSector->fuse(wasteSector);
+  // Update the portal
+  wasteSectorVolume.updatePortal(keepSector, iSecOffset);
+}
+
 Acts::Experimental::DetectorComponent::PortalContainer
 Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     const GeometryContext& gctx,
@@ -411,16 +457,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     if (connectR) {
       ACTS_VERBOSE("Connect volume '" << volumes[iv - 1]->name() << "' to "
                                       << volumes[iv]->name() << "'.");
-
-      // When fusing volumes at a cylinder boundary, we *keep* one
-      // portal and tranfer the portal link information from the other
-      //
-      // In this case the outer cylinder portal of the inner volume is kept,
-      // the inner cylinder of the outer portal goes to waste
-      auto& keepCylinder = volumes[iv - 1]->portalPtrs()[2u];
-      auto& wasteCylinder = volumes[iv]->portalPtrs()[3u];
-      keepCylinder->fuse(wasteCylinder);
-      volumes[iv]->updatePortal(keepCylinder, 3u);
+      // Fuse the volumes
+      fuseInR(*volumes[iv - 1], *volumes[iv]);
     }
   }
 
@@ -572,30 +610,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
     if (connectZ) {
       ACTS_VERBOSE("Connect volume '" << volumes[iv - 1]->name() << "' to "
                                       << volumes[iv]->name() << "'.");
-      // When fusing, one portal survives (keep) and gets the
-      // portal linking from the waste tranfered
-      //
-      // In this case we keep the disc at positive z of the volume
-      // at lower relative z, and trash the disc at negative z of the
-      // following volume
-      auto& keepDisc = volumes[iv - 1]->portalPtrs()[1u];
-      auto& wasteDisc = volumes[iv]->portalPtrs()[0u];
-      // Throw an exception if the discs are not at the same position
-      Vector3 keepPosition = keepDisc->surface().center(gctx);
-      Vector3 wastePosition = wasteDisc->surface().center(gctx);
-      if (not keepPosition.isApprox(wastePosition)) {
-        std::string message = "CylindricalDetectorHelper: '";
-        message += volumes[iv - 1]->name();
-        message += "' does not attach to '";
-        message += volumes[iv]->name();
-        message += "\n";
-        message += " - along z with values ";
-        message += Acts::toString(keepPosition);
-        message += " / " + Acts::toString(wastePosition);
-        throw std::runtime_error(message.c_str());
-      }
-      keepDisc->fuse(wasteDisc);
-      volumes[iv]->updatePortal(keepDisc, 0u);
+
+      fuseInZ(*volumes[iv - 1], *volumes[iv]);
     }
   }
 
@@ -731,14 +747,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   // Return proto container
   DetectorComponent::PortalContainer dShell;
 
-  // Check if inner cylinder and sectors are present by the number of portals
-  size_t nPortals = volumes[volumes.size() - 1u]->portals().size();
-  bool innerPresent = (nPortals != 3u and nPortals != 5u);
-
   Transform3 refTransform = volumes[0u]->transform(gctx);
 
   // Sector offset
-  unsigned int iSecOffset = innerPresent ? 4u : 3u;
   std::vector<ActsScalar> phiBoundaries = {};
   auto refValues = volumes[0u]->volumeBounds().values();
   phiBoundaries.push_back(
@@ -751,12 +762,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   for (unsigned int iv = 1; iv < volumes.size(); ++iv) {
     ACTS_VERBOSE("Connect volume '" << volumes[iv - 1]->name() << "' to "
                                     << volumes[iv]->name() << "'.");
-
-    // Fuse and swap
-    auto& keepSector = volumes[iv - 1]->portalPtrs()[iSecOffset + 1u];
-    auto& wasteSector = volumes[iv]->portalPtrs()[iSecOffset];
-    keepSector->fuse(wasteSector);
-    volumes[iv]->updatePortal(keepSector, iSecOffset);
+    fuseInPhi(*volumes[iv - 1], *volumes[iv]);
     // The current values
     auto curValues = volumes[iv]->volumeBounds().values();
     // Bail out if they do not match

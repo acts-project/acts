@@ -120,5 +120,22 @@ using IndexedDetectorVolumeImpl =
     IndexedUpdatorImpl<grid_type, IndexedDetectorVolumeExtractor,
                        DetectorVolumeFiller>;
 
+/// Generate a delegate to try the root volumes from a grid
+template <typename grid_type, typename casts_type>
+inline DetectorVolumeUpdator rootVolumesFromGrid(
+    grid_type&& grid, const casts_type& casts,
+    const Transform3& transform = Transform3::Identity()) {
+  // The chained delegate: indexed surfaces and all portals
+  using DelegateType = IndexedDetectorVolumeImpl<grid_type>;
+  auto indexedGridVolumes =
+      std::make_unique<const DelegateType>(std::move(grid), casts, transform);
+
+  // Create the delegate and connect it
+  DetectorVolumeUpdator vFinder;
+  vFinder.connect<&DelegateType::update>(std::move(indexedGridVolumes));
+
+  return vFinder;
+}
+
 }  // namespace Experimental
 }  // namespace Acts

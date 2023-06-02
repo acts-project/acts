@@ -29,6 +29,25 @@ class Portal;
 namespace detail {
 namespace CylindricalDetectorHelper {
 
+/// @brief Loweset level connection in R
+///
+/// @param keepCoverVolume the volume where the cover is kept
+/// @param wasteCoverVolume the volume where the cover is binned
+void fuseInR(DetectorVolume& keepCoverVolume, DetectorVolume& wasteCoverVolume);
+
+/// @brief Lowest level connection in Z
+///
+/// @param keepEndplateVolume the volume where the cover is kept
+/// @param wasteEndplateVolume the volume where the cover is binned
+void fuseInZ(DetectorVolume& keepCoverVolume, DetectorVolume& wasteCoverVolume);
+
+/// @brief Lowest level connection in Phi
+///
+/// @param keepSectorVolume the volume where the sector is kept
+/// @param wasteSectorVolume the volume where the sector is binned
+void fuseInPhi(DetectorVolume& keepSectorVolume,
+               DetectorVolume& wasteSectorVolume);
+
 /// @brief Connect detector volumes in R
 ///
 /// @param gctx The geometry context

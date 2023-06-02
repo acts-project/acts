@@ -112,7 +112,7 @@ struct EqEq {
 
   /// Call operator that generates the Axis
   return_type operator()() const {
-    // Create the two axis
+    // Create the two axes
     Acts::detail::Axis<Acts::detail::AxisType::Equidistant, aType> aEq(
         range0[0u], range0[1u], nBins0);
     Acts::detail::Axis<Acts::detail::AxisType::Equidistant, bType> bEq(
@@ -294,6 +294,147 @@ using VarClosedVarOpen = VarVar<Acts::detail::AxisBoundaryType::Closed,
                                 Acts::detail::AxisBoundaryType::Open>;
 using VarClosedVarClosed = VarVar<Acts::detail::AxisBoundaryType::Closed,
                                   Acts::detail::AxisBoundaryType::Closed>;
+
+// Limited 3D grid options
+
+/// @brief  Templated base generator for a three variable axes tuple - 3D
+///
+/// @tparam aType the type of the first axis (Bound, Closed, Open)
+/// @tparam bType the type of the second axis (Bound, Closed, Open)
+/// @tparam cType the type of the second axis (Bound, Closed, Open)
+///
+template <Acts::detail::AxisBoundaryType aType,
+          Acts::detail::AxisBoundaryType bType,
+          Acts::detail::AxisBoundaryType cType>
+struct EqEqEq {
+  /// Broadcast the return_type
+  using return_type = std::tuple<
+      Acts::detail::Axis<Acts::detail::AxisType::Equidistant, aType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Equidistant, bType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Equidistant, cType>>;
+
+  /// Broadcast the grid type
+  template <typename T>
+  using grid_type = Acts::detail::Grid<
+      T, Acts::detail::Axis<Acts::detail::AxisType::Equidistant, aType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Equidistant, bType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Equidistant, cType>>;
+
+  std::array<ActsScalar, 2u> range0 = {};
+  std::size_t nBins0 = 0u;
+  std::array<ActsScalar, 2u> range1 = {};
+  std::size_t nBins1 = 1u;
+  std::array<ActsScalar, 2u> range2 = {};
+  std::size_t nBins2 = 2u;
+
+  /// Call operator that generates the Axis
+  return_type operator()() const {
+    // Create the two axes
+    Acts::detail::Axis<Acts::detail::AxisType::Equidistant, aType> aEq(
+        range0[0u], range0[1u], nBins0);
+    Acts::detail::Axis<Acts::detail::AxisType::Equidistant, bType> bEq(
+        range1[0u], range1[1u], nBins1);
+    Acts::detail::Axis<Acts::detail::AxisType::Equidistant, cType> cEq(
+        range2[0u], range2[1u], nBins2);
+    return std::tie(aEq, bEq, cEq);
+  }
+};
+
+// Limited 3D EqEqEq options
+using EqBoundEqBoundEqBound = EqEqEq<Acts::detail::AxisBoundaryType::Bound,
+                                     Acts::detail::AxisBoundaryType::Bound,
+                                     Acts::detail::AxisBoundaryType::Bound>;
+
+using EqBoundEqBoundEqClosed = EqEqEq<Acts::detail::AxisBoundaryType::Bound,
+                                      Acts::detail::AxisBoundaryType::Bound,
+                                      Acts::detail::AxisBoundaryType::Closed>;
+
+/// @brief  Templated base generator for a three variable axes tuple - 3D
+///
+/// @tparam aType the type of the first axis (Bound, Closed, Open)
+/// @tparam bType the type of the second axis (Bound, Closed, Open)
+/// @tparam cType the type of the second axis (Bound, Closed, Open)
+///
+template <Acts::detail::AxisBoundaryType aType,
+          Acts::detail::AxisBoundaryType bType,
+          Acts::detail::AxisBoundaryType cType>
+struct VarVarEq {
+  /// Broadcast the return_type
+  using return_type = std::tuple<
+      Acts::detail::Axis<Acts::detail::AxisType::Variable, aType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Variable, bType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Equidistant, cType>>;
+
+  /// Broadcast the grid type
+  template <typename T>
+  using grid_type = Acts::detail::Grid<
+      T, Acts::detail::Axis<Acts::detail::AxisType::Variable, aType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Variable, bType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Equidistant, cType>>;
+
+  std::vector<ActsScalar> edges0 = {};
+  std::vector<ActsScalar> edges1 = {};
+  std::array<ActsScalar, 2u> range2 = {};
+  std::size_t nBins2 = 2u;
+
+  /// Call operator that generates the Axis
+  return_type operator()() const {
+    // Create the three axes
+    Acts::detail::Axis<Acts::detail::AxisType::Variable, aType> aEq(edges0);
+    Acts::detail::Axis<Acts::detail::AxisType::Variable, bType> bEq(edges1);
+    Acts::detail::Axis<Acts::detail::AxisType::Equidistant, cType> cEq(
+        range2[0u], range2[1u], nBins2);
+    return std::tie(aEq, bEq, cEq);
+  }
+};
+
+using VarBoundVarBoundEqClosed =
+    VarVarEq<Acts::detail::AxisBoundaryType::Bound,
+             Acts::detail::AxisBoundaryType::Bound,
+             Acts::detail::AxisBoundaryType::Closed>;
+
+/// @brief  Templated base generator for a three variable axes tuple - 3D
+///
+/// @tparam aType the type of the first axis (Bound, Closed, Open)
+/// @tparam bType the type of the second axis (Bound, Closed, Open)
+/// @tparam cType the type of the second axis (Bound, Closed, Open)
+///
+template <Acts::detail::AxisBoundaryType aType,
+          Acts::detail::AxisBoundaryType bType,
+          Acts::detail::AxisBoundaryType cType>
+struct VarVarVar {
+  /// Broadcast the return_type
+  using return_type =
+      std::tuple<Acts::detail::Axis<Acts::detail::AxisType::Variable, aType>,
+                 Acts::detail::Axis<Acts::detail::AxisType::Variable, bType>,
+                 Acts::detail::Axis<Acts::detail::AxisType::Variable, cType>>;
+
+  /// Broadcast the grid type
+  template <typename T>
+  using grid_type = Acts::detail::Grid<
+      T, Acts::detail::Axis<Acts::detail::AxisType::Variable, aType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Variable, bType>,
+      Acts::detail::Axis<Acts::detail::AxisType::Variable, cType>>;
+
+  std::vector<ActsScalar> edges0 = {};
+  std::vector<ActsScalar> edges1 = {};
+  std::vector<ActsScalar> edges2 = {};
+
+  /// Call operator that generates the Axis
+  return_type operator()() const {
+    // Create the three axes
+    Acts::detail::Axis<Acts::detail::AxisType::Variable, aType> aEq(edges0);
+    Acts::detail::Axis<Acts::detail::AxisType::Variable, bType> bEq(edges1);
+    Acts::detail::Axis<Acts::detail::AxisType::Variable, cType> cEq(edges2);
+    return std::tie(aEq, bEq, cEq);
+  }
+};
+
+// Limited 3D EqEqEq options
+using VarBoundVarBoundVarBound =
+    VarVarVar<Acts::detail::AxisBoundaryType::Bound,
+              Acts::detail::AxisBoundaryType::Bound,
+              Acts::detail::AxisBoundaryType::Bound>;
 
 }  // namespace GridAxisGenerators
 }  // namespace detail

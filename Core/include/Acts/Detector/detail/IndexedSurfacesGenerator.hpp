@@ -89,13 +89,13 @@ struct IndexedSurfacesGenerator {
 
     // The chained delegate: indexed surfaces and all portals
     using DelegateType = IndexedSurfacesAllPortalsImpl<decltype(grid)>;
-    auto indesSurfacesAllPortals = std::make_unique<const DelegateType>(
+    auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
         std::tie(indexedSurfaces, allPortals));
 
     // Create the delegate and connect it
     SurfaceCandidatesUpdator nStateUpdator;
     nStateUpdator.connect<&DelegateType::update>(
-        std::move(indesSurfacesAllPortals));
+        std::move(indexedSurfacesAllPortals));
     return nStateUpdator;
   }
 
