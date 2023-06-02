@@ -78,7 +78,7 @@ class EigenStepper {
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : q(par.charge()),
+        : absCharge(std::abs(par.charge())),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
@@ -103,8 +103,8 @@ class EigenStepper {
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// The charge as the free vector can be 1/p or q/p
-    double q = 1.;
+    /// The absolute charge as the free vector can be 1/p or q/p
+    double absCharge = UnitConstants::e;
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
@@ -213,17 +213,25 @@ class EigenStepper {
     return state.pars.template segment<3>(eFreeDir0);
   }
 
+  /// QoP direction accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double qop(const State& state) const { return state.pars[eFreeQOverP]; }
+
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double momentum(const State& state) const {
-    return std::abs((state.q == 0. ? 1. : state.q) / state.pars[eFreeQOverP]);
+    auto q = charge(state);
+    return std::abs((q == 0 ? 1 : q) / qop(state));
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const { return state.q; }
+  double charge(const State& state) const {
+    return std::copysign(state.absCharge, qop(state));
+  }
 
   /// Time access
   ///
@@ -350,15 +358,15 @@ class EigenStepper {
               const BoundVector& boundParams, const Covariance& covariance,
               const Surface& surface) const;
 
-  /// Method to update momentum, direction and p
+  /// Method to update the stepper state
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
-  /// @param [in] up the updated momentum value
+  /// @param [in] qop the updated qop value
   /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double up, double time) const;
+              double qop, double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
