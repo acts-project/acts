@@ -9,15 +9,15 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
-  
+
 class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
@@ -35,8 +35,8 @@ class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  SourceLinkSelectorAlgorithm(Config cfg, Acts::Logging::Level lvl) :
-    BareAlgorithm("SourceLinkSelection", lvl), m_cfg(cfg) {}
+  SourceLinkSelectorAlgorithm(Config cfg, Acts::Logging::Level lvl)
+      : BareAlgorithm("SourceLinkSelection", lvl), m_cfg(cfg) {}
 
   virtual ~SourceLinkSelectorAlgorithm() {}
 
@@ -48,9 +48,9 @@ class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
       const ActsExamples::AlgorithmContext& ctx) const final {
     const auto& inputSourceLinks =
         ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-        
+
     IndexSourceLinkContainer outputSourceLinks;
-    
+
     for (const auto geoId : m_cfg.geometrySelection) {
       auto range = selectLowestNonZeroGeometryObject(inputSourceLinks, geoId);
       auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
@@ -60,10 +60,11 @@ class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
           outputSourceLinks.insert(sourceLink);
         }
       }
-    }    
-    
-    ctx.eventStore.add<IndexSourceLinkContainer>(m_cfg.outputSourceLinks, std::move(outputSourceLinks));
-    
+    }
+
+    ctx.eventStore.add<IndexSourceLinkContainer>(m_cfg.outputSourceLinks,
+                                                 std::move(outputSourceLinks));
+
     return ProcessCode::SUCCESS;
   }
 
@@ -75,4 +76,3 @@ class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
 };
 
 }  // namespace ActsExamples
- 

@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFindingX/TrackFindingFromPrototrackAlgorithm.hpp"
 
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 
 namespace {
 
@@ -70,14 +71,16 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   Acts::PropagatorPlainOptions pOptions;
   pOptions.maxSteps = 10000;
 
-  MeasurementCalibrator calibrator{measurements};
+  PassThroughCalibrator pcalibrator;
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
       extensions;
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
+      &calibrator);
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);

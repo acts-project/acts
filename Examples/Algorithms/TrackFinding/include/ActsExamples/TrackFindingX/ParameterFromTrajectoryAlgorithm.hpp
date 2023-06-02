@@ -9,15 +9,15 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
-  
+
 class ParameterFromTrajectoryAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
@@ -32,8 +32,8 @@ class ParameterFromTrajectoryAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  ParameterFromTrajectoryAlgorithm(Config cfg, Acts::Logging::Level lvl) :
-    BareAlgorithm("ParsFromTraj", lvl), m_cfg(cfg) {}
+  ParameterFromTrajectoryAlgorithm(Config cfg, Acts::Logging::Level lvl)
+      : BareAlgorithm("ParsFromTraj", lvl), m_cfg(cfg) {}
 
   virtual ~ParameterFromTrajectoryAlgorithm() {}
 
@@ -45,20 +45,21 @@ class ParameterFromTrajectoryAlgorithm final : public BareAlgorithm {
       const ActsExamples::AlgorithmContext& ctx) const final {
     const auto& trajs =
         ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
-        
+
     TrackParametersContainer trackParameters;
-    
-    for (const auto &traj : trajs) {
-        const auto i = traj.tips().front();
-        const auto state = traj.multiTrajectory().getTrackState(i);
-        
-        
-      trackParameters.emplace_back(state.referenceSurface().getSharedPtr(), state.smoothed(),
+
+    for (const auto& traj : trajs) {
+      const auto i = traj.tips().front();
+      const auto state = traj.multiTrajectory().getTrackState(i);
+
+      trackParameters.emplace_back(state.referenceSurface().getSharedPtr(),
+                                   state.smoothed(),
                                    state.smoothedCovariance());
-    }    
-    
-    ctx.eventStore.add<TrackParametersContainer>(m_cfg.outputParamters, std::move(trackParameters));
-    
+    }
+
+    ctx.eventStore.add<TrackParametersContainer>(m_cfg.outputParamters,
+                                                 std::move(trackParameters));
+
     return ProcessCode::SUCCESS;
   }
 
@@ -70,5 +71,3 @@ class ParameterFromTrajectoryAlgorithm final : public BareAlgorithm {
 };
 
 }  // namespace ActsExamples
- 
- 

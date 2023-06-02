@@ -31,8 +31,7 @@
 
 namespace ActsExamples {
 
-class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm
-{
+class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input prototracks collection.
@@ -52,7 +51,7 @@ class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm
 
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
-    
+
     /// CKF function
     std::shared_ptr<TrackFindingAlgorithm::TrackFinderFunction> findTracks;
 
@@ -82,11 +81,11 @@ class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm
 
  private:
   Config m_cfg;
-  
+
   ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
-                                                           "InputProtoTracks"};
-  ReadDataHandle<MeasurementContainer> m_inputMeasurements{
-      this, "InputMeasurements"};
+                                                         "InputProtoTracks"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
   ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
       this, "InputSourceLinks"};
   ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
