@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <core/session/onnxruntime_cxx_api.h>
+#include <onnxruntime_cxx_api.h>
 
 inline void runSessionWithIoBinding(Ort::Session& sess,
                                     std::vector<const char*>& inputNames,
