@@ -12,8 +12,9 @@
 
 namespace detail {
 
-// TODO make size configurable
-std::array<float, 7 * 7> chargeMatrix(const ActsExamples::Cluster& cl) {
+template <typename Array>
+size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cl,
+                        size_t size0 = 7u, size_t size1 = 7u) {
   // Compute the centroid index
   double acc0 = 0;
   double acc1 = 0;
@@ -23,23 +24,26 @@ std::array<float, 7 * 7> chargeMatrix(const ActsExamples::Cluster& cl) {
     acc1 += cell.bin[1] * cell.activation;
     tot += cell.activation;
   }
-  int icntr0 = static_cast<int>(acc0 / tot);
-  int icntr1 = static_cast<int>(acc1 / tot);
+  int icntr0 = (int)(acc0 / tot);
+  int icntr1 = (int)(acc1 / tot);
 
-  // By convention, put centroid in (3, 3) cell
-  int diff0 = icntr0 - 3;
-  int diff1 = icntr1 - 3;
+  // By convention, put centroid in center of matrix
+  // e.g. 3,3 for default matrix size of 7x7
+  int diff0 = icntr0 - size0 / 2;
+  int diff1 = icntr1 - size1 / 2;
 
   // Fill the matrix
-  std::array<float, 7 * 7> mat{};
   for (const ActsExamples::Cluster::Cell& cell : cl.channels) {
     int im = cell.bin[0] - diff0;
     int jm = cell.bin[1] - diff1;
-    if (im >= 0 && im < 7 && jm >= 0 && jm < 7)
-      mat.at(im * 7 + jm) = cell.activation;
+    if (im >= 0 && im < (int)size0 && jm >= 0 && jm < (int)size1) {
+      typename Array::Index idx = im * size0 + jm;
+      if (idx < arr.size()) {
+        arr(idx) = cell.activation;
+      }
+    }
   }
-
-  return mat;
+  return size0 * size1;
 }
 
 }  // namespace detail
@@ -68,15 +72,19 @@ void ActsExamples::NeuralCalibrator::calibrate(
     return;
   }
 
+  Acts::NetworkBatchInput inputBatch(1, n_inputs);
+  auto input = inputBatch(0, Eigen::all);
+
   // TODO: Matrix size should be configurable perhaps?
-  std::array<float, 7 * 7> matrix =
-      ::detail::chargeMatrix((*clusters)[sourceLink.index()]);
-  std::vector<float> input;
-  input.assign(matrix.begin(), matrix.end());
-  input.push_back(sourceLink.geometryId().volume());
-  input.push_back(sourceLink.geometryId().layer());
-  input.push_back(trackState.parameters()[Acts::eBoundPhi]);
-  input.push_back(trackState.parameters()[Acts::eBoundTheta]);
+  size_t matSize0 = 7u;
+  size_t matSize1 = 7u;
+  size_t i_input = ::detail::fillChargeMatrix(
+      input, (*clusters)[sourceLink.index()], matSize0, matSize1);
+
+  input[i_input++] = sourceLink.geometryId().volume();
+  input[i_input++] = sourceLink.geometryId().layer();
+  input[i_input++] = trackState.parameters()[Acts::eBoundPhi];
+  input[i_input++] = trackState.parameters()[Acts::eBoundTheta];
 
   std::visit(
       [&](const auto& meas) {
@@ -86,17 +94,19 @@ void ActsExamples::NeuralCalibrator::calibrate(
         Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
             E * meas.covariance() * E.transpose();
 
-        input.push_back(fpar[Acts::eBoundLoc0]);
-        input.push_back(fpar[Acts::eBoundLoc1]);
-        input.push_back(fcov(Acts::eBoundLoc0, Acts::eBoundLoc0));
-        input.push_back(fcov(Acts::eBoundLoc1, Acts::eBoundLoc1));
-        if (input.size() != n_inputs) {
+        input[i_input++] = fpar[Acts::eBoundLoc0];
+        input[i_input++] = fpar[Acts::eBoundLoc1];
+        input[i_input++] = fcov(Acts::eBoundLoc0, Acts::eBoundLoc0);
+        input[i_input++] = fcov(Acts::eBoundLoc1, Acts::eBoundLoc1);
+        if (i_input != n_inputs) {
           throw std::runtime_error("Expected input size of " +
                                    std::to_string(n_inputs) +
-                                   ", got: " + std::to_string(input.size()));
+                                   ", got: " + std::to_string(i_input));
         }
 
-        std::vector<float> output = m_model.runONNXInference(input);
+        // Input is a single row, hence .front()
+        std::vector<float> output =
+            m_model.runONNXInference(inputBatch).front();
         // Assuming 2-D measurements, the expected params structure is:
         // [      0,    nComp[ --> priors
         // [  nComp,  3*nComp[ --> means
