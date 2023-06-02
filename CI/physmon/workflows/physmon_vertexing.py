@@ -98,7 +98,7 @@ def run_vertexing(fitter, mu, events):
                 minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=2 * u.T),
+            SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
             seedingAlgorithm=SeedingAlgorithm.Default,
             initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=setup.geoSel,
@@ -111,7 +111,7 @@ def run_vertexing(fitter, mu, events):
             TrackSelectorConfig(
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
-                nMeasurementsMin=7,
+                nMeasurementsMin=6,
             ),
         )
 

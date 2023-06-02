@@ -176,7 +176,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             minPt=1.0 * u.GeV,
             impactMax=3 * u.mm,
         ),
-        SeedFinderOptionsArg(bFieldInZ=2 * u.T),
+        SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
         seedingAlgorithm=SeedingAlgorithm.Default,
         initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
         geoSelectionConfigFile=oddSeedingSel,

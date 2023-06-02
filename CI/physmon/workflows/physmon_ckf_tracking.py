@@ -55,7 +55,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
             EtaConfig(-3.0, 3.0),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
                 stddev=acts.Vector4(
@@ -101,8 +101,8 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 minPt=400 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=2 * u.T),
-            TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(1 * u.mm, 60 * u.mm)),
+            SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
+            TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.TruthSmeared
             if truthSmearedSeeded
             else SeedingAlgorithm.TruthEstimated
@@ -123,7 +123,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             TrackSelectorConfig(
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
-                nMeasurementsMin=7,
+                nMeasurementsMin=6,
             ),
             outputDirRoot=tp,
         )
