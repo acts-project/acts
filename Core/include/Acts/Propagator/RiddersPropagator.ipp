@@ -25,10 +25,12 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Extract results from the nominal propagation
   auto nominalResult = std::move(nominalRet).value();
-  const BoundVector& nominalParameters =
-      nominalResult.endParameters->parameters();
+  assert(nominalResult.endParameters);
+  auto nominalFinalParameters = *nominalResult.endParameters;
+  const BoundVector& nominalFinalParameterValues =
+      nominalFinalParameters.parameters();
   // Use the curvilinear surface of the propagated parameters as target
-  const Surface& surface = nominalResult.endParameters->referenceSurface();
+  const Surface& surface = nominalFinalParameters.referenceSurface();
 
   // Steps for estimating derivatives
   std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
@@ -42,17 +44,21 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Wiggle each dimension individually
   for (unsigned int i = 0; i < eBoundSize; i++) {
-    derivatives[i] =
-        wiggleDimension(opts, start, i, surface, nominalParameters, deviations);
+    derivatives[i] = wiggleParameter(opts, start, i, surface,
+                                     nominalFinalParameterValues, deviations);
   }
+
+  auto jacobian = calculateJacobian(deviations, derivatives);
+  nominalResult.transportJacobian = jacobian;
+
   if (start.covariance()) {
-    auto cov =
-        calculateCovariance(derivatives, *start.covariance(), deviations);
+    auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
     // replace the covariance of the nominal result w/ the ridders covariance
-    auto& nom = *nominalResult.endParameters;
-    nom = CurvilinearTrackParameters(
-        nom.fourPosition(options.geoContext), nom.unitDirection(),
-        nom.absoluteMomentum(), nom.charge(), std::move(cov));
+    nominalResult.endParameters = CurvilinearTrackParameters(
+        nominalFinalParameters.fourPosition(options.geoContext),
+        nominalFinalParameters.unitDirection(),
+        nominalFinalParameters.absoluteMomentum(),
+        nominalFinalParameters.charge(), std::move(cov));
   }
 
   return ThisResult::success(std::move(nominalResult));
@@ -77,8 +83,12 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Extract results from the nominal propagation
   auto nominalResult = std::move(nominalRet).value();
-  const BoundVector& nominalParameters =
-      nominalResult.endParameters->parameters();
+  assert(nominalResult.endParameters);
+  auto nominalFinalParameters = *nominalResult.endParameters;
+  const BoundVector& nominalFinalParameterValues =
+      nominalFinalParameters.parameters();
+  // Use the curvilinear surface of the propagated parameters as target
+  const Surface& surface = nominalFinalParameters.referenceSurface();
 
   // Steps for estimating derivatives
   std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
@@ -104,9 +114,13 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Wiggle each dimension individually
   for (unsigned int i = 0; i < eBoundSize; i++) {
-    derivatives[i] =
-        wiggleDimension(opts, start, i, target, nominalParameters, deviations);
+    derivatives[i] = wiggleParameter(opts, start, i, surface,
+                                     nominalFinalParameterValues, deviations);
   }
+
+  auto jacobian = calculateJacobian(deviations, derivatives);
+  nominalResult.transportJacobian = jacobian;
+
   if (start.covariance()) {
     // Test if target is disc - this may lead to inconsistent results
     if (target.type() == Surface::Disc) {
@@ -120,18 +134,21 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       }
     }
     // use nominal parameters and Ridders covariance
-    auto cov =
-        calculateCovariance(derivatives, *start.covariance(), deviations);
-    auto& nom = *nominalResult.endParameters;
-    nom = BoundTrackParameters(nom.referenceSurface().getSharedPtr(),
-                               nom.parameters(), nom.charge(), std::move(cov));
+    auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
+    // replace the covariance of the nominal result w/ the ridders covariance
+    nominalResult.endParameters = CurvilinearTrackParameters(
+        nominalFinalParameters.fourPosition(options.geoContext),
+        nominalFinalParameters.unitDirection(),
+        nominalFinalParameters.absoluteMomentum(),
+        nominalFinalParameters.charge(), std::move(cov));
   }
+
   return ThisResult::success(std::move(nominalResult));
 }
 
 template <typename propagator_t>
 bool Acts::RiddersPropagator<propagator_t>::inconsistentDerivativesOnDisc(
-    const std::vector<Acts::BoundVector>& derivatives) const {
+    const std::vector<Acts::BoundVector>& derivatives) {
   // Test each component with each other
   for (unsigned int i = 0; i < derivatives.size(); i++) {
     bool jumpedAngle = true;
@@ -155,8 +172,8 @@ bool Acts::RiddersPropagator<propagator_t>::inconsistentDerivativesOnDisc(
 template <typename propagator_t>
 template <typename options_t, typename parameters_t>
 std::vector<Acts::BoundVector>
-Acts::RiddersPropagator<propagator_t>::wiggleDimension(
-    const options_t& options, const parameters_t& startPars,
+Acts::RiddersPropagator<propagator_t>::wiggleParameter(
+    const options_t& options, const parameters_t& start,
     const unsigned int param, const Surface& target,
     const Acts::BoundVector& nominal,
     const std::vector<double>& deviations) const {
@@ -166,7 +183,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
   for (double h : deviations) {
     // Treatment for theta
     if (param == eBoundTheta) {
-      const double current_theta = startPars.template get<eBoundTheta>();
+      const double current_theta = start.template get<eBoundTheta>();
       if (current_theta + h > M_PI) {
         h = M_PI - current_theta;
       }
@@ -176,12 +193,12 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
     }
 
     // Modify start parameter
-    BoundVector values = startPars.parameters();
+    BoundVector values = start.parameters();
     values[param] += h;
 
     // Propagate with updated start parameters
-    BoundTrackParameters tp(startPars.referenceSurface().getSharedPtr(), values,
-                            startPars.covariance());
+    BoundTrackParameters tp(start.referenceSurface().getSharedPtr(), values,
+                            start.covariance());
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);
@@ -197,42 +214,40 @@ Acts::RiddersPropagator<propagator_t>::wiggleDimension(
       }
     }
   }
+
   return derivatives;
 }
 
 template <typename propagator_t>
-auto Acts::RiddersPropagator<propagator_t>::calculateCovariance(
+typename Acts::RiddersPropagator<propagator_t>::Jacobian
+Acts::RiddersPropagator<propagator_t>::calculateJacobian(
+    const std::vector<double>& deviations,
     const std::array<std::vector<Acts::BoundVector>, Acts::eBoundSize>&
-        derivatives,
-    const Acts::BoundSymMatrix& startCov,
-    const std::vector<double>& deviations) const -> Covariance {
-  Jacobian jacobian;
-  jacobian.setIdentity();
-  jacobian.col(eBoundLoc0) = fitLinear(derivatives[eBoundLoc0], deviations);
-  jacobian.col(eBoundLoc1) = fitLinear(derivatives[eBoundLoc1], deviations);
-  jacobian.col(eBoundPhi) = fitLinear(derivatives[eBoundPhi], deviations);
-  jacobian.col(eBoundTheta) = fitLinear(derivatives[eBoundTheta], deviations);
-  jacobian.col(eBoundQOverP) = fitLinear(derivatives[eBoundQOverP], deviations);
-  jacobian.col(eBoundTime) = fitLinear(derivatives[eBoundTime], deviations);
-  return jacobian * startCov * jacobian.transpose();
+        derivatives) {
+  Jacobian jacobian = Jacobian::Identity();
+  jacobian.col(eBoundLoc0) = fitLinear(deviations, derivatives[eBoundLoc0]);
+  jacobian.col(eBoundLoc1) = fitLinear(deviations, derivatives[eBoundLoc1]);
+  jacobian.col(eBoundPhi) = fitLinear(deviations, derivatives[eBoundPhi]);
+  jacobian.col(eBoundTheta) = fitLinear(deviations, derivatives[eBoundTheta]);
+  jacobian.col(eBoundQOverP) = fitLinear(deviations, derivatives[eBoundQOverP]);
+  jacobian.col(eBoundTime) = fitLinear(deviations, derivatives[eBoundTime]);
+  return jacobian;
 }
 
 template <typename propagator_t>
 Acts::BoundVector Acts::RiddersPropagator<propagator_t>::fitLinear(
-    const std::vector<Acts::BoundVector>& values,
-    const std::vector<double>& deviations) const {
-  BoundVector A;
-  BoundVector C;
-  A.setZero();
-  C.setZero();
+    const std::vector<double>& deviations,
+    const std::vector<Acts::BoundVector>& derivatives) {
+  BoundVector A = BoundVector::Zero();
+  BoundVector C = BoundVector::Zero();
   double B = 0;
   double D = 0;
   const unsigned int N = deviations.size();
 
   for (unsigned int i = 0; i < N; ++i) {
-    A += deviations.at(i) * values.at(i);
+    A += deviations.at(i) * derivatives.at(i);
     B += deviations.at(i);
-    C += values.at(i);
+    C += derivatives.at(i);
     D += deviations.at(i) * deviations.at(i);
   }
 

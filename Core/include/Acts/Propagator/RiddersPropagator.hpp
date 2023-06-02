@@ -135,18 +135,18 @@ class RiddersPropagator {
   /// @param [in] derivatives Derivatives of a single parameter
   ///
   /// @return Boolean result whether a phi jump occured
-  bool inconsistentDerivativesOnDisc(
-      const std::vector<BoundVector>& derivatives) const;
+  static bool inconsistentDerivativesOnDisc(
+      const std::vector<BoundVector>& derivatives);
 
   /// @brief This function wiggles one dimension of the starting parameters,
   /// performs the propagation to a surface and collects for each change of the
   /// start parameters the slope
   ///
   /// @tparam options_t PropagatorOptions object
-  /// @tparam parameters+t Type of the parameters to start the propagation with
+  /// @tparam parameters_t Type of the parameters to start the propagation with
   ///
   /// @param [in] options Options do define how to wiggle
-  /// @param [in] startPars Start parameters that are modified
+  /// @param [in] start Start parameters which will be modified
   /// @param [in] param Index to get the parameter that will be modified
   /// @param [in] target Target surface
   /// @param [in] nominal Nominal end parameters
@@ -154,31 +154,30 @@ class RiddersPropagator {
   ///
   /// @return Vector containing each slope
   template <typename options_t, typename parameters_t>
-  std::vector<BoundVector> wiggleDimension(
-      const options_t& options, const parameters_t& startPars,
-      const unsigned int param, const Surface& target,
-      const BoundVector& nominal, const std::vector<double>& deviations) const;
+  std::vector<BoundVector> wiggleParameter(
+      const options_t& options, const parameters_t& start, unsigned int param,
+      const Surface& target, const BoundVector& nominal,
+      const std::vector<double>& deviations) const;
 
-  /// @brief This function propagates the covariance matrix
+  /// @brief This function fits the jacobian with the deviations and derivatives as input.
   ///
-  /// @param [in] derivatives Slopes of each modification of the parameters
-  /// @param [in] startCov Starting covariance
   /// @param [in] deviations Vector of deviations
+  /// @param [in] derivatives Slopes of each modification of the parameters
   ///
   /// @return Propagated covariance matrix
-  Covariance calculateCovariance(
-      const std::array<std::vector<BoundVector>, eBoundSize>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations) const;
+  static Jacobian calculateJacobian(
+      const std::vector<double>& deviations,
+      const std::array<std::vector<BoundVector>, eBoundSize>& derivatives);
 
   /// @brief This function fits a linear function through the final state
   /// parametrisations
   ///
-  /// @param [in] values Vector containing the final state parametrisations
   /// @param [in] deviations Vector of deviations
+  /// @param [in] derivatives Vector of resulting derivatives
   ///
   /// @return Vector containing the linear fit
-  BoundVector fitLinear(const std::vector<BoundVector>& values,
-                        const std::vector<double>& deviations) const;
+  static BoundVector fitLinear(const std::vector<double>& deviations,
+                               const std::vector<BoundVector>& derivatives);
 
   /// Propagator
   propagator_t m_propagator;
