@@ -97,15 +97,15 @@ Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
     inputNodeDims[0] = batchSize;
   }
 
-  bool ondMatch = true;
-  for (std::vector<int64_t>& ond : outputNodeDims) {
-    if (ond[0] == -1) {
-      ond[0] = batchSize;
+  bool outputDimsMatch = true;
+  for (std::vector<int64_t>& nodeDim : outputNodeDims) {
+    if (nodeDim[0] == -1) {
+      nodeDim[0] = batchSize;
     }
-    ondMatch &= batchSize == 1 || ond[0] == batchSize;
+    outputDimsMatch &= batchSize == 1 || nodeDim[0] == batchSize;
   }
 
-  if (batchSize != 1 && (inputNodeDims[0] != batchSize || !ondMatch)) {
+  if (batchSize != 1 && (inputNodeDims[0] != batchSize || !outputDimsMatch)) {
     throw std::runtime_error(
         "runONNXInference: batch size doesn't match the input or output node "
         "size");
