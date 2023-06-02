@@ -49,11 +49,13 @@ class OnnxRuntimeBase {
   std::vector<std::vector<float>> runONNXInference(
       NetworkBatchInput& inputTensorValues) const;
 
+  /// @brief Run the multi-output ONNX inference function for a batch of input
+  ///
+  /// @param inputTensorValues Vector of the input feature values of all the inputs used for prediction
+  ///
+  /// @return The vector of output (predicted) values, one for each output
   std::vector<std::vector<std::vector<float>>> runONNXInferenceMultiOutput(
       NetworkBatchInput& inputTensorValues) const;
-
-  std::vector<std::vector<float>> runONNXInferenceMultiOutput(
-      std::vector<float>& inputTensorValues) const;
 
  private:
   /// ONNX runtime session / model properties

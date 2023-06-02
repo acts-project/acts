@@ -71,19 +71,7 @@ std::vector<std::vector<float>> Acts::OnnxRuntimeBase::runONNXInference(
   return runONNXInferenceMultiOutput(inputTensorValues).front();
 }
 
-// Inference functions for single-input, multi-output models
-
-std::vector<std::vector<float>>
-Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
-    std::vector<float>& inputTensorValues) const {
-  Acts::NetworkBatchInput vectorInput(1, inputTensorValues.size());
-  for (size_t i = 0; i < inputTensorValues.size(); i++) {
-    vectorInput(0, i) = inputTensorValues[i];
-  }
-  auto vectorOutput = runONNXInferenceMultiOutput(vectorInput);
-  return vectorOutput[0];
-}
-
+// Inference function for single-input, multi-output models
 std::vector<std::vector<std::vector<float>>>
 Acts::OnnxRuntimeBase::runONNXInferenceMultiOutput(
     NetworkBatchInput& inputTensorValues) const {
