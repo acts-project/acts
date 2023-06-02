@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 
-#include <core/session/onnxruntime_cxx_api.h>
+#include <onnxruntime_cxx_api.h>
 #include <torch/script.h>
 
 #include "runSessionWithIoBinding.hpp"

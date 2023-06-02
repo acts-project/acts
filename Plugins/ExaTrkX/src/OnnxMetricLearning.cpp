@@ -8,10 +8,11 @@
 
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 
-#include <core/session/onnxruntime_cxx_api.h>
+#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
+
+#include <onnxruntime_cxx_api.h>
 #include <torch/script.h>
 
-#include "buildEdges.hpp"
 #include "runSessionWithIoBinding.hpp"
 
 namespace Acts {
