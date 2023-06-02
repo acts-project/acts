@@ -18,50 +18,9 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
                              typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
-  auto nominalRet = m_propagator.propagate(start, options);
-  if (not nominalRet.ok()) {
-    return ThisResult::failure(nominalRet.error());
-  }
+  auto result = m_propagator.propagate(start, options);
 
-  // Extract results from the nominal propagation
-  auto nominalResult = std::move(nominalRet).value();
-  assert(nominalResult.endParameters);
-  auto nominalFinalParameters = *nominalResult.endParameters;
-  const BoundVector& nominalFinalParameterValues =
-      nominalFinalParameters.parameters();
-  // Use the curvilinear surface of the propagated parameters as target
-  const Surface& surface = nominalFinalParameters.referenceSurface();
-
-  // Steps for estimating derivatives
-  std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
-
-  // Allow larger distances for the oscillation
-  propagator_options_t opts = options;
-  opts.pathLimit *= 2.;
-
-  // Derivations of each parameter around the nominal parameters
-  std::array<std::vector<BoundVector>, eBoundSize> derivatives;
-
-  // Wiggle each dimension individually
-  for (unsigned int i = 0; i < eBoundSize; i++) {
-    derivatives[i] = wiggleParameter(opts, start, i, surface,
-                                     nominalFinalParameterValues, deviations);
-  }
-
-  auto jacobian = calculateJacobian(deviations, derivatives);
-  nominalResult.transportJacobian = jacobian;
-
-  if (start.covariance()) {
-    auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
-    // replace the covariance of the nominal result w/ the ridders covariance
-    nominalResult.endParameters = CurvilinearTrackParameters(
-        nominalFinalParameters.fourPosition(options.geoContext),
-        nominalFinalParameters.unitDirection(),
-        nominalFinalParameters.absoluteMomentum(),
-        nominalFinalParameters.charge(), std::move(cov));
-  }
-
-  return ThisResult::success(std::move(nominalResult));
+  return propagateImpl(options, start, result);
 }
 
 template <typename propagator_t>
@@ -76,20 +35,31 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       BoundTrackParameters, typename propagator_options_t::action_list_type>>;
 
   // Propagate the nominal parameters
-  auto nominalRet = m_propagator.propagate(start, target, options);
-  if (not nominalRet.ok()) {
-    return ThisResult::failure(nominalRet.error());
+  auto result = m_propagator.propagate(start, target, options);
+
+  return propagateImpl(options, start, result);
+}
+
+template <typename propagator_t>
+template <typename propagator_options_t, typename parameters_t,
+          typename result_t>
+auto Acts::RiddersPropagator<propagator_t>::propagateImpl(
+    const propagator_options_t& options, const parameters_t& start,
+    result_t& result) const -> result_t {
+  if (not result.ok()) {
+    return result_t::failure(result.error());
   }
 
   // Extract results from the nominal propagation
-  auto nominalResult = std::move(nominalRet).value();
+  auto nominalResult = result.value();
   assert(nominalResult.endParameters);
   auto nominalFinalParameters = *nominalResult.endParameters;
   const BoundVector& nominalFinalParameterValues =
       nominalFinalParameters.parameters();
   // Use the curvilinear surface of the propagated parameters as target
-  const Surface& surface = nominalFinalParameters.referenceSurface();
+  const Surface& target = nominalFinalParameters.referenceSurface();
 
+  // TODO add to propagator options
   // Steps for estimating derivatives
   std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
   if (target.type() == Surface::Disc) {
@@ -114,25 +84,21 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Wiggle each dimension individually
   for (unsigned int i = 0; i < eBoundSize; i++) {
-    derivatives[i] = wiggleParameter(opts, start, i, surface,
+    derivatives[i] = wiggleParameter(opts, start, i, target,
                                      nominalFinalParameterValues, deviations);
+  }
+
+  // Test if target is disc - this may lead to inconsistent results
+  if (target.type() == Surface::Disc) {
+    for (const auto& d : derivatives) {
+      assert(!inconsistentDerivativesOnDisc(d));
+    }
   }
 
   auto jacobian = calculateJacobian(deviations, derivatives);
   nominalResult.transportJacobian = jacobian;
 
   if (start.covariance()) {
-    // Test if target is disc - this may lead to inconsistent results
-    if (target.type() == Surface::Disc) {
-      for (const std::vector<BoundVector>& deriv : derivatives) {
-        if (inconsistentDerivativesOnDisc(deriv)) {
-          // Set covariance to zero and return
-          // TODO: This should be changed to indicate that something went
-          // wrong
-          return ThisResult::success(std::move(nominalResult));
-        }
-      }
-    }
     // use nominal parameters and Ridders covariance
     auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
     // replace the covariance of the nominal result w/ the ridders covariance
@@ -143,7 +109,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
         nominalFinalParameters.charge(), std::move(cov));
   }
 
-  return ThisResult::success(std::move(nominalResult));
+  return result_t::success(std::move(nominalResult));
 }
 
 template <typename propagator_t>
@@ -170,10 +136,10 @@ bool Acts::RiddersPropagator<propagator_t>::inconsistentDerivativesOnDisc(
 }
 
 template <typename propagator_t>
-template <typename options_t, typename parameters_t>
+template <typename propagator_options_t, typename parameters_t>
 std::vector<Acts::BoundVector>
 Acts::RiddersPropagator<propagator_t>::wiggleParameter(
-    const options_t& options, const parameters_t& start,
+    const propagator_options_t& options, const parameters_t& start,
     const unsigned int param, const Surface& target,
     const Acts::BoundVector& nominal,
     const std::vector<double>& deviations) const {

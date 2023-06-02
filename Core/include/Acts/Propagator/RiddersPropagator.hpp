@@ -35,7 +35,6 @@ class RiddersPropagator {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
 
- private:
   ///
   /// @note The result_type_helper struct and the action_list_t_result_t are
   /// here to allow a look'n'feel of this class like the Propagator itself
@@ -126,6 +125,18 @@ class RiddersPropagator {
             const propagator_options_t& options) const;
 
  private:
+  /// Does the actual ridders propagation by wiggling the parameters and
+  /// propagating again. This is here in order to deduplicate code from the
+  /// specific propagation methods.
+  ///
+  /// @param [in] options Options of the propagations
+  /// @param [in] start Start parameters
+  /// @param [in] result The result of the nominal propagation
+  template <typename propagator_options_t, typename parameters_t,
+            typename result_t>
+  result_t propagateImpl(const propagator_options_t& options,
+                         const parameters_t& start, result_t& result) const;
+
   /// @brief This function tests whether the variations on a disc as target
   /// surface lead to results on different sides wrt the center of the disc.
   /// This would lead to a flip of the phi value on the surface and therewith to
@@ -153,10 +164,10 @@ class RiddersPropagator {
   /// @param [in] deviations Vector of deviations
   ///
   /// @return Vector containing each slope
-  template <typename options_t, typename parameters_t>
+  template <typename propagator_options_t, typename parameters_t>
   std::vector<BoundVector> wiggleParameter(
-      const options_t& options, const parameters_t& start, unsigned int param,
-      const Surface& target, const BoundVector& nominal,
+      const propagator_options_t& options, const parameters_t& start,
+      unsigned int param, const Surface& target, const BoundVector& nominal,
       const std::vector<double>& deviations) const;
 
   /// @brief This function fits the jacobian with the deviations and derivatives as input.
