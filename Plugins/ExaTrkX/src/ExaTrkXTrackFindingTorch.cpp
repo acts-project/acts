@@ -10,14 +10,12 @@
 
 #include <filesystem>
 
+#ifndef ACTS_EXATRKX_CPUONLY
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
-#include <grid/counting_sort.h>
-#include <grid/find_nbrs.h>
-#include <grid/grid.h>
-#include <grid/insert_points.h>
-#include <grid/prefix_sum.h>
+#endif
+
 #include <torch/script.h>
 #include <torch/torch.h>
 
@@ -28,6 +26,7 @@ using namespace torch::indexing;
 
 namespace {
 void print_current_cuda_meminfo(const Acts::Logger& logger) {
+#ifndef ACTS_EXATRKX_CPUONLY
   constexpr int kb = 1024;
   constexpr int mb = kb * kb;
 
@@ -39,6 +38,9 @@ void print_current_cuda_meminfo(const Acts::Logger& logger) {
   ACTS_VERBOSE("Current CUDA device: " << device);
   ACTS_VERBOSE("Memory (used / total) [in MB]: " << (total - free) / mb << " / "
                                                  << total / mb);
+#else
+  ACTS_VERBOSE("No memory info, CUDA disabled");
+#endif
 }
 }  // namespace
 
@@ -54,17 +56,20 @@ ExaTrkXTrackFindingTorch::ExaTrkXTrackFindingTorch(
   const Path gnnModelPath = Path(m_cfg.modelDir) / "gnn.pt";
   c10::InferenceMode guard(true);
 
+  torch::Device device =
+      torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+
   try {
     m_embeddingModel = std::make_unique<torch::jit::Module>();
-    *m_embeddingModel = torch::jit::load(embedModelPath.c_str());
+    *m_embeddingModel = torch::jit::load(embedModelPath.c_str(), device);
     m_embeddingModel->eval();
 
     m_filterModel = std::make_unique<torch::jit::Module>();
-    *m_filterModel = torch::jit::load(filterModelPath.c_str());
+    *m_filterModel = torch::jit::load(filterModelPath.c_str(), device);
     m_filterModel->eval();
 
     m_gnnModel = std::make_unique<torch::jit::Module>();
-    *m_gnnModel = torch::jit::load(gnnModelPath.c_str());
+    *m_gnnModel = torch::jit::load(gnnModelPath.c_str(), device);
     m_gnnModel->eval();
   } catch (const c10::Error& e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
@@ -83,7 +88,8 @@ std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
   totalTimer.start();
 
   c10::InferenceMode guard(true);
-  torch::Device device(torch::kCUDA);
+  torch::Device device =
+      torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
 
   // Clone models (solve memory leak? members can be const...)
   auto e_model = m_embeddingModel->clone();
@@ -286,7 +292,6 @@ std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
 
   timeInfo.labeling = timer.stopAndGetElapsedTime();
   timeInfo.total = totalTimer.stopAndGetElapsedTime();
-  c10::cuda::CUDACachingAllocator::emptyCache();
 
   if (recordTiming) {
     return timeInfo;

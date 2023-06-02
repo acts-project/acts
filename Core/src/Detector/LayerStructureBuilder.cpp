@@ -16,7 +16,6 @@
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <stdexcept>
 

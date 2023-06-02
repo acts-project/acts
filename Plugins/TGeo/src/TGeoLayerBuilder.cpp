@@ -13,6 +13,7 @@
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <stdio.h>
 

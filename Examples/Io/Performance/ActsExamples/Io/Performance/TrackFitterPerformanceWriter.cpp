@@ -9,7 +9,6 @@
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"

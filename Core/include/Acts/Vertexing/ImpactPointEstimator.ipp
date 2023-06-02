@@ -9,7 +9,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename input_track_t, typename propagator_t,
