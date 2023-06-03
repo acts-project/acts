@@ -14,8 +14,6 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <random>
-
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
@@ -40,13 +38,22 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   }
 
   // Sanitizer run with dummy input to detect configuration issues
-  // Eigen::VectorXf dummyInput = Eigen::VectorXf::Random(3 * 15);
-  // std::vector<float> dummyInputVec(dummyInput.data(),
-  //                                  dummyInput.data() + dummyInput.size());
-  // std::vector<int> spacepointIDs;
-  // std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
-  //
-  // runPipeline(dummyInputVec, spacepointIDs);
+  // TODO This would be quite helpful I think, but currently it does not work in
+  // general because the stages do not expose the number of node features.
+  // However, this must be addressed anyways when we also want to allow to
+  // configure this more flexible with e.g. cluster information as input. So for
+  // now, we disable this.
+#if 0
+  if( m_cfg.sanitize ) {
+  Eigen::VectorXf dummyInput = Eigen::VectorXf::Random(3 * 15);
+  std::vector<float> dummyInputVec(dummyInput.data(),
+                                   dummyInput.data() + dummyInput.size());
+  std::vector<int> spacepointIDs;
+  std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
+  
+  runPipeline(dummyInputVec, spacepointIDs);
+  }
+#endif
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
