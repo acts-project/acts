@@ -9,8 +9,8 @@
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/HashedString.hpp"
@@ -65,7 +65,8 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
       parameters.emplace(
           std::pair{track.tipIndex(),
                     TrackParameters{track.referenceSurface().getSharedPtr(),
-                                    track.parameters(), track.covariance()}});
+                                    track.parameters(), track.covariance(),
+                                    track.particleHypothesis()}});
     }
 
     if (tips.empty()) {
@@ -89,7 +90,8 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
       parameters.emplace(
           std::pair{track.tipIndex(),
                     TrackParameters{track.referenceSurface().getSharedPtr(),
-                                    track.parameters(), track.covariance()}});
+                                    track.parameters(), track.covariance(),
+                                    track.particleHypothesis()}});
 
       trajectories.emplace_back(tracks.trackStateContainer(), std::move(tips),
                                 std::move(parameters));

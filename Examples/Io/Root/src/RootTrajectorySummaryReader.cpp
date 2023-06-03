@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -204,8 +205,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
 
+      // TODO we do not have a hypothesis at hand here. defaulting to pion
       trackParameterCollection.push_back(Acts::BoundTrackParameters(
-          perigeeSurface, paramVec, std::move(covMat)));
+          perigeeSurface, paramVec, std::move(covMat),
+          Acts::ParticleHypothesis::pion()));
     }
 
     unsigned int nTruthParticles = m_t_vx->size();

@@ -16,7 +16,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -39,6 +39,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <system_error>
 #include <tuple>
@@ -90,6 +91,9 @@ struct PropagatorState {
 
       /// Charge
       double q = 0;
+
+      /// Particle hypothesis
+      ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
       /// the navigation direction
       Direction navDir = Direction::Forward;
@@ -175,9 +179,9 @@ struct PropagatorState {
         State& state, const Surface& surface, bool /*transportCov*/,
         const FreeToBoundCorrection& /*freeToBoundCorrection*/
     ) const {
-      auto bound =
-          BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
-                                       state.pos4, state.dir, state.p, state.q);
+      auto bound = BoundTrackParameters::create(
+          surface.getSharedPtr(), tgContext, state.pos4, state.dir,
+          state.q / state.p, std::nullopt, state.particleHypothesis);
       if (!bound.ok()) {
         return bound.error();
       }
@@ -188,8 +192,9 @@ struct PropagatorState {
 
     CurvilinearState curvilinearState(State& state, bool /*transportCov*/
     ) const {
-      CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
-                                            state.q);
+      CurvilinearTrackParameters parameters(state.pos4, state.dir,
+                                            state.q / state.p, std::nullopt,
+                                            state.particleHypothesis);
       // Create the bound state
       CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                  state.pathAccumulated};

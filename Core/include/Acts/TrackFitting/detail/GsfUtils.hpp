@@ -123,7 +123,7 @@ class ScopedGsfInfoPrinterAndChecker {
       : m_state(state),
         m_stepper(stepper),
         m_navigator(navigator),
-        m_p_initial(stepper.momentum(state.stepping)),
+        m_p_initial(stepper.absoluteMomentum(state.stepping)),
         m_logger{logger} {
     // Some initial printing
     checks(true);
@@ -140,7 +140,7 @@ class ScopedGsfInfoPrinterAndChecker {
 
   ~ScopedGsfInfoPrinterAndChecker() {
     if (m_navigator.currentSurface(m_state.navigation)) {
-      const auto p_final = m_stepper.momentum(m_state.stepping);
+      const auto p_final = m_stepper.absoluteMomentum(m_state.stepping);
       ACTS_VERBOSE("Component status at end of step:");
       print_component_stats();
       ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)

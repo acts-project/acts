@@ -9,6 +9,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
@@ -97,26 +98,27 @@ readTracksAndVertexCSV(const std::string& toolString,
 
     BoundVector params;
     params << std::stod(row[0]), std::stod(row[1]), std::stod(row[2]),
-        std::stod(row[3]), std::stod(row[4]) * 1. / (1_MeV), std::stod(row[5]);
+        std::stod(row[3]), std::stod(row[4]) * 1_e / 1_MeV, std::stod(row[5]);
     Covariance covMat;
     covMat << std::stod(row[6]), std::stod(row[7]), std::stod(row[8]),
-        std::stod(row[9]), std::stod(row[10]) * 1. / (1_MeV),
-        std::stod(row[11]), std::stod(row[7]), std::stod(row[12]),
-        std::stod(row[13]), std::stod(row[14]),
-        std::stod(row[15]) * 1. / (1_MeV), std::stod(row[16]),
-        std::stod(row[8]), std::stod(row[13]), std::stod(row[17]),
-        std::stod(row[18]), std::stod(row[19]) * 1. / (1_MeV),
-        std::stod(row[20]), std::stod(row[9]), std::stod(row[14]),
-        std::stod(row[18]), std::stod(row[21]),
-        std::stod(row[22]) * 1. / (1_MeV), std::stod(row[23]),
-        std::stod(row[10]) * 1. / (1_MeV), std::stod(row[15]) * 1. / (1_MeV),
-        std::stod(row[19]) * 1. / (1_MeV), std::stod(row[22]) * 1. / (1_MeV),
-        std::stod(row[24]) * 1. / (1_MeV * 1_MeV),
-        std::stod(row[25]) * 1. / (1_MeV), std::stod(row[11]),
+        std::stod(row[9]), std::stod(row[10]) * 1_e / 1_MeV, std::stod(row[11]),
+        std::stod(row[7]), std::stod(row[12]), std::stod(row[13]),
+        std::stod(row[14]), std::stod(row[15]) * 1_e / 1_MeV,
+        std::stod(row[16]), std::stod(row[8]), std::stod(row[13]),
+        std::stod(row[17]), std::stod(row[18]),
+        std::stod(row[19]) * 1_e / 1_MeV, std::stod(row[20]), std::stod(row[9]),
+        std::stod(row[14]), std::stod(row[18]), std::stod(row[21]),
+        std::stod(row[22]) * 1_e / 1_MeV, std::stod(row[23]),
+        std::stod(row[10]) * 1_e / 1_MeV, std::stod(row[15]) * 1_e / 1_MeV,
+        std::stod(row[19]) * 1_e / 1_MeV, std::stod(row[22]) * 1_e / 1_MeV,
+        std::stod(row[24]) * 1_e / (1_MeV * 1_MeV),
+        std::stod(row[25]) * 1_e / 1_MeV, std::stod(row[11]),
         std::stod(row[16]), std::stod(row[20]), std::stod(row[23]),
-        std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
+        std::stod(row[25]) * 1_e / 1_MeV, std::stod(row[26]);
 
-    tracks.emplace_back(perigeeSurface, params, std::move(covMat));
+    // TODO we do not have a hypothesis at hand here. defaulting to pion
+    tracks.emplace_back(perigeeSurface, params, std::move(covMat),
+                        ParticleHypothesis::pion());
   }
 
   // Read in reference vertex data

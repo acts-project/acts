@@ -16,7 +16,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -237,7 +237,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto params =
-            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat));
+            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+                                 ParticleHypothesis::pion());
 
         tracks.push_back(std::make_unique<BoundTrackParameters>(params));
 
@@ -454,7 +455,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto paramsUT = InputTrack(
-            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+                                 ParticleHypothesis::pion()));
 
         tracks.push_back(std::make_unique<InputTrack>(paramsUT));
 

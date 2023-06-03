@@ -13,7 +13,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -56,6 +55,8 @@ using KalmanSmoother = Acts::GainMatrixSmoother;
 using KalmanFitter =
     Acts::KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
 
+static constexpr auto pion = Acts::ParticleHypothesis::pion();
+
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
 
@@ -72,8 +73,8 @@ Acts::CurvilinearTrackParameters makeParameters() {
   Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
-                                          1_e, cov);
+  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree,
+                                          1_e / 1_GeV, cov, pion);
 }
 
 // Instantiate the tester

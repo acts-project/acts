@@ -9,9 +9,9 @@
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -126,7 +126,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
 
     ACTS_VERBOSE("ev=" << ctx.eventNumber << " | initial parameters: "
                        << initialParams.fourPosition(ctx.geoContext).transpose()
-                       << " -> " << initialParams.unitDirection().transpose());
+                       << " -> " << initialParams.direction().transpose());
 
     // Clear & reserve the right size
     trackSourceLinks.clear();

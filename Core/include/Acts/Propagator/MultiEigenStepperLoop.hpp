@@ -66,31 +66,11 @@ struct WeightedComponentReducerLoop {
   // TODO: Maybe we can cache this value and only update it when the parameters
   // change
   template <typename stepper_state_t>
-  static ActsScalar qop(const stepper_state_t& s) {
+  static ActsScalar qOverP(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
           return sum + cmp.weight * cmp.state.pars[eFreeQOverP];
-        });
-  }
-
-  template <typename stepper_state_t>
-  static ActsScalar momentum(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * std::abs(cmp.state.absCharge /
-                                             cmp.state.pars[eFreeQOverP]);
-        });
-  }
-
-  template <typename stepper_state_t>
-  static ActsScalar charge(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * std::copysign(cmp.state.absCharge,
-                                                  cmp.state.pars[eFreeQOverP]);
         });
   }
 
@@ -242,6 +222,9 @@ class MultiEigenStepperLoop
       Intersection3D::Status status;
     };
 
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
+
     /// The components of which the state consists
     SmallVector<Component> components;
 
@@ -276,15 +259,17 @@ class MultiEigenStepperLoop
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
-    explicit State(
-        const GeometryContext& gctx, const MagneticFieldContext& mctx,
-        const std::shared_ptr<const MagneticFieldProvider>& bfield,
-        const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        Direction ndir = Direction::Forward,
-        double ssize = std::numeric_limits<double>::max(),
-        double stolerance = s_onSurfaceTolerance)
-        : navDir(ndir), geoContext(gctx), magContext(mctx) {
+    explicit State(const GeometryContext& gctx,
+                   const MagneticFieldContext& mctx,
+                   const std::shared_ptr<const MagneticFieldProvider>& bfield,
+                   const MultiComponentBoundTrackParameters& multipars,
+                   Direction ndir = Direction::Forward,
+                   double ssize = std::numeric_limits<double>::max(),
+                   double stolerance = s_onSurfaceTolerance)
+        : particleHypothesis(multipars.particleHypothesis()),
+          navDir(ndir),
+          geoContext(gctx),
+          magContext(mctx) {
       if (multipars.components().empty()) {
         throw std::invalid_argument(
             "Cannot construct MultiEigenStepperLoop::State with empty "
@@ -294,11 +279,10 @@ class MultiEigenStepperLoop
       const auto surface = multipars.referenceSurface().getSharedPtr();
 
       for (auto i = 0ul; i < multipars.components().size(); ++i) {
-        const auto [weight, singlePars] = multipars[i];
-        components.push_back(
-            {SingleState(gctx, bfield->makeCache(mctx), std::move(singlePars),
-                         ndir, ssize, stolerance),
-             weight, Intersection3D::Status::onSurface});
+        const auto& [weight, singlePars] = multipars[i];
+        components.push_back({SingleState(gctx, bfield->makeCache(mctx),
+                                          singlePars, ndir, ssize, stolerance),
+                              weight, Intersection3D::Status::onSurface});
       }
 
       if (std::get<2>(multipars.components().front())) {
@@ -308,10 +292,9 @@ class MultiEigenStepperLoop
   };
 
   /// Construct and initialize a state
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const MultiComponentBoundTrackParameters<charge_t>& par,
+                  const MultiComponentBoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
@@ -453,8 +436,9 @@ class MultiEigenStepperLoop
         const FreeToBoundCorrection& freeToBoundCorrection) {
       return detail::boundState(
           all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
-          jacToGlobal(), pars(), all_state.covTransport && transportCov,
-          cmp.state.pathAccumulated, surface, freeToBoundCorrection);
+          jacToGlobal(), pars(), all_state.particleHypothesis,
+          all_state.covTransport && transportCov, cmp.state.pathAccumulated,
+          surface, freeToBoundCorrection);
     }
 
     void update(const FreeVector& freeParams, const BoundVector& boundParams,
@@ -588,10 +572,9 @@ class MultiEigenStepperLoop
   /// valid in the end.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
-  template <typename charge_t>
-  Result<ComponentProxy> addComponent(
-      State& state, const SingleBoundTrackParameters<charge_t>& pars,
-      double weight) const {
+  Result<ComponentProxy> addComponent(State& state,
+                                      const BoundTrackParameters& pars,
+                                      double weight) const {
     state.components.push_back(
         {SingleState(state.geoContext,
                      SingleStepper::m_bField->makeCache(state.magContext), pars,
@@ -627,15 +610,38 @@ class MultiEigenStepperLoop
     return Reducer::direction(state);
   }
 
+  /// qOverP access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double qOverP(const State& state) const { return Reducer::qOverP(state); }
+
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return Reducer::momentum(state); }
+  double absoluteMomentum(const State& state) const {
+    return particleHypothesis(state).pFromQOP(qOverP(state));
+  }
+
+  /// Momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  Vector3 momentum(const State& state) const {
+    return absoluteMomentum(state) * direction(state);
+  }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const { return Reducer::charge(state); }
+  double charge(const State& state) const {
+    return particleHypothesis(state).qFromQOP(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  ParticleHypothesis particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
+  }
 
   /// Time access
   ///

@@ -14,7 +14,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -73,7 +73,8 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle start from the origin
   Vector4 mPos4(-3_m, 0., 0., 0.);
-  return CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);
+  return CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
+                                    ParticleHypothesis::pionLike(q));
 }
 
 std::pair<Vector3, Vector3> stripEnds(

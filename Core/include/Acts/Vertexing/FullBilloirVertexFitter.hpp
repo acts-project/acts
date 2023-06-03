@@ -15,6 +15,7 @@
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+
 namespace Acts {
 
 /// @class FullBilloirVertexFitter
@@ -94,8 +95,8 @@ class FullBilloirVertexFitter {
   Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// input_track_t objects are BoundTrackParameters by default, function to be
-  /// overwritten to return BoundTrackParameters for other input_track_t
+  /// input_track_t objects are BoundTrackParameters by default, function to
+  /// be overwritten to return BoundTrackParameters for other input_track_t
   /// objects.
   std::function<BoundTrackParameters(input_track_t)> extractParameters;
 };

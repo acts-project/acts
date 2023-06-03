@@ -12,9 +12,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
@@ -55,6 +53,7 @@ struct PropState {
   /// Propagator options which only carry the particle's mass
   struct {
     double mass = 42.;
+    double absCharge = 1;
   } options;
 };
 
@@ -80,7 +79,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   double charge = -1.;
 
   // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, absMom, charge);
+  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
+                                std::nullopt, ParticleHypothesis::pion());
   StraightLineStepper::State slsState(tgContext, mfContext, cp, navDir,
                                       stepSize, tolerance);
 
@@ -94,8 +94,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.cov, Covariance::Zero());
   CHECK_CLOSE_OR_SMALL(sls.position(slsState), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(sls.direction(slsState), dir.normalized(), eps, eps);
-  CHECK_CLOSE_REL(sls.momentum(slsState), absMom, eps);
-  BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
+  CHECK_CLOSE_REL(sls.qOverP(slsState), charge / absMom, eps);
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), time, eps, eps);
   BOOST_CHECK_EQUAL(slsState.navDir, navDir);
   BOOST_CHECK_EQUAL(slsState.pathAccumulated, 0.);
@@ -103,17 +102,10 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(slsState.tolerance, tolerance);
 
-  // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
-                                        1 / absMom);
-  slsState = StraightLineStepper::State(tgContext, mfContext, ncp, navDir,
-                                        stepSize, tolerance);
-  BOOST_CHECK_EQUAL(slsState.absCharge, 0.);
-
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
-                                          1 / absMom, cov);
+  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom, cov,
+                                 ParticleHypothesis::pion0());
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, navDir,
                                         stepSize, tolerance);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -139,7 +131,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                cov);
+                                cov, ParticleHypothesis::pion());
 
   // Build the state and the stepper
   StraightLineStepper::State slsState(tgContext, mfContext, cp, navDir,
@@ -149,8 +141,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Test the getters
   CHECK_CLOSE_ABS(sls.position(slsState), pos, 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsState), dir, 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsState), absMom, 1e-6);
-  BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
+  CHECK_CLOSE_ABS(sls.qOverP(slsState), charge / absMom, 1e-6);
   BOOST_CHECK_EQUAL(sls.time(slsState), time);
 
   //~ BOOST_CHECK_EQUAL(sls.overstepLimit(slsState), tolerance);
@@ -170,8 +161,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   auto curvState = sls.curvilinearState(slsState);
   auto curvPars = std::get<0>(curvState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), 1e-6);
-  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 1e-6);
-  CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.qOverP(), cp.qOverP(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
   BOOST_CHECK(curvPars.covariance().has_value());
   BOOST_CHECK_NE(*curvPars.covariance(), cov);
@@ -187,8 +177,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
              newTime);
   CHECK_CLOSE_ABS(sls.position(slsState), newPos, 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsState), newMom.normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsState), newMom.norm(), 1e-6);
-  BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
+  CHECK_CLOSE_ABS(sls.qOverP(slsState), charge / newMom.norm(), 1e-6);
   BOOST_CHECK_EQUAL(sls.time(slsState), newTime);
 
   // The covariance transport
@@ -210,8 +199,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(ps.stepping), newMom.normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(ps.stepping), newMom.norm(), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(ps.stepping), charge, 1e-6);
+  CHECK_CLOSE_ABS(sls.qOverP(ps.stepping), charge / newMom.norm(), 1e-6);
   BOOST_CHECK_LT(sls.time(ps.stepping), newTime);
   BOOST_CHECK_EQUAL(ps.stepping.derivative, FreeVector::Zero());
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
@@ -223,8 +211,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(ps.stepping), newMom.normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(ps.stepping), newMom.norm(), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(ps.stepping), charge, 1e-6);
+  CHECK_CLOSE_ABS(sls.qOverP(ps.stepping), charge / newMom.norm(), 1e-6);
   BOOST_CHECK_LT(sls.time(ps.stepping), newTime);
   BOOST_CHECK_NE(ps.stepping.derivative, FreeVector::Zero());
   BOOST_CHECK_NE(ps.stepping.jacTransport, FreeMatrix::Identity());
@@ -237,8 +224,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
-                                 charge2, cov2);
+  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
+                                 charge2 / absMom2, cov2,
+                                 ParticleHypothesis::pion());
   BOOST_CHECK(cp2.covariance().has_value());
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
@@ -260,9 +248,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreePos0), 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsStateCopy),
                   freeParams.template segment<3>(eFreeDir0).normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
-                  std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.qOverP(slsStateCopy), freeParams[eFreeQOverP], 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
@@ -286,9 +272,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreePos0), 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsStateCopy),
                   freeParams.template segment<3>(eFreeDir0), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
-                  std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.qOverP(slsStateCopy), freeParams[eFreeQOverP], 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
@@ -313,9 +297,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreePos0), 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsStateCopy),
                   freeParams.template segment<3>(eFreeDir0).normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
-                  std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.qOverP(slsStateCopy), freeParams[eFreeQOverP], 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, Direction::Forward);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
@@ -327,10 +309,10 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir);
-  auto bp =
-      BoundTrackParameters::create(plane, tgContext, makeVector4(pos, time),
-                                   dir, charge / absMom, cov)
-          .value();
+  auto bp = BoundTrackParameters::create(
+                plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
+                cov, ParticleHypothesis::pion())
+                .value();
   slsState = StraightLineStepper::State(tgContext, mfContext, cp, navDir,
                                         stepSize, tolerance);
 
@@ -362,8 +344,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
       sls.boundState(slsState, *plane, true, freeToBoundCorrection).value();
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), 1e-6);
-  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-6);
-  CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), 1e-6);
+  CHECK_CLOSE_ABS(boundPars.qOverP(), bp.qOverP(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), 1e-6);
   BOOST_CHECK(boundPars.covariance().has_value());
   BOOST_CHECK_NE(*boundPars.covariance(), cov);
@@ -388,7 +369,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   sls.update(slsState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
              *plane);
   CHECK_CLOSE_OR_SMALL(sls.position(slsState), 2. * pos, eps, eps);
-  BOOST_CHECK_EQUAL(sls.charge(slsState), 1. * charge);
+  CHECK_CLOSE_ABS(sls.qOverP(slsState), freeParams[eFreeQOverP], 1e-6);
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 }

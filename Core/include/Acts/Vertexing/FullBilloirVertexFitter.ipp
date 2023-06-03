@@ -317,8 +317,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec[eBoundTheta] = trackMomenta[iTrack](1);
         paramVec[eBoundQOverP] = trackMomenta[iTrack](2);
         paramVec[eBoundTime] = linPoint[FreeIndices::eFreeTime];
-        BoundTrackParameters refittedParams(perigee, paramVec,
-                                            covDeltaPmat[iTrack]);
+        BoundTrackParameters refittedParams(
+            perigee, paramVec, covDeltaPmat[iTrack],
+            extractParameters(*bTrack.originalTrack).particleHypothesis());
         TrackAtVertex<input_track_t> trackVx(bTrack.chi2, refittedParams,
                                              bTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackVx));

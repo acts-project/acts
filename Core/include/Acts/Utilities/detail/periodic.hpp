@@ -34,7 +34,7 @@ inline T wrap_periodic(T value, T start, T range) {
 ///
 /// @note The sign of the returned value can be different from `lhs - rhs`
 template <typename T>
-inline T difference_periodic(T lhs, T rhs, T range) {
+constexpr inline T difference_periodic(T lhs, T rhs, T range) {
   using std::fmod;
   T delta = fmod(lhs - rhs, range);
   // check if |delta| is larger than half the range. if that is the case, we
@@ -49,13 +49,13 @@ inline T difference_periodic(T lhs, T rhs, T range) {
 
 /// Calculate the equivalent angle in the [0, 2*pi) range.
 template <typename T>
-inline T radian_pos(T x) {
+constexpr inline T radian_pos(T x) {
   return wrap_periodic<T>(x, T(0), T(2 * M_PI));
 }
 
 /// Calculate the equivalent angle in the [-pi, pi) range.
 template <typename T>
-inline T radian_sym(T x) {
+constexpr inline T radian_sym(T x) {
   return wrap_periodic<T>(x, T(-M_PI), T(2 * M_PI));
 }
 
@@ -76,7 +76,7 @@ inline T radian_sym(T x) {
 /// the poles, phi needs to be flipped by 180degree to allow theta to remain
 /// within its nominal range.
 template <typename T>
-inline std::pair<T, T> normalizePhiTheta(T phi, T theta) {
+constexpr inline std::pair<T, T> normalizePhiTheta(T phi, T theta) {
   // wrap to [0,2pi). while the nominal range of theta is [0,pi], it is
   // periodic, i.e. describes identical positions, in the full [0,2pi) range.
   // moving it first to the periodic range simplifies further steps as the

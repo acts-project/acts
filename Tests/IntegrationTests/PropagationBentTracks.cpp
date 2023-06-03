@@ -47,7 +47,8 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
   // Start a bit in the volume 2, so we do not have any boundary checking for
   // the volume transition in the log
   Acts::CurvilinearTrackParameters start(
-      Acts::Vector4(0.01, 0, 0, 0), dir.normalized(), 1_GeV, 1_e, std::nullopt);
+      Acts::Vector4(0.01, 0, 0, 0), dir.normalized(), 1 / 1_GeV, std::nullopt,
+      Acts::ParticleHypothesis::pion());
 
   Acts::PropagatorOptions<Acts::ActionList<Acts::detail::SteppingLogger>,
                           Acts::AbortList<Acts::EndOfWorldReached>>

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -41,7 +42,10 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
     /// Where to place output file
     std::string outputPath;
     /// B field in the longitudinal direction
-    double Bz;
+    double Bz{};
+    /// Particle hypothesis
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::pion();
   };
 
   /// constructor

@@ -63,11 +63,12 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
     for (const auto& particle : vtxParticles) {
       const auto time = particle.time();
-      const auto phi = Acts::VectorHelpers::phi(particle.unitDirection());
-      const auto theta = Acts::VectorHelpers::theta(particle.unitDirection());
+      const auto phi = Acts::VectorHelpers::phi(particle.direction());
+      const auto theta = Acts::VectorHelpers::theta(particle.direction());
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
       const auto q = particle.charge();
+      const auto particleHypothesis = particle.hypothesis();
 
       // compute momentum-dependent resolutions
       const double sigmaD0 =
@@ -96,7 +97,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       params[Acts::eBoundTheta] = newTheta;
       // compute smeared absolute momentum vector
       const double newP = std::max(0.0, p + sigmaP * stdNormal(rng));
-      params[Acts::eBoundQOverP] = (q != 0) ? (q / newP) : (1 / newP);
+      params[Acts::eBoundQOverP] = particleHypothesis.qopFromPQ(newP, q);
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
@@ -107,7 +108,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                                         ctx.geoContext,
                                         Acts::Vector2{params[Acts::eBoundLoc0],
                                                       params[Acts::eBoundLoc1]},
-                                        particle.unitDirection() * p)
+                                        particle.direction() * p)
                                     .transpose()
                              << ", " << params[Acts::eBoundTime] << ", "
                              << params[Acts::eBoundPhi] << ", "
@@ -131,7 +132,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
           m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
           sigmaQOverP;
 
-      parameters.emplace_back(perigee, params, q, cov);
+      parameters.emplace_back(perigee, params, cov, particleHypothesis);
     }
   }
 

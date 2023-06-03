@@ -46,16 +46,17 @@ BOOST_AUTO_TEST_SUITE(interactions)
 BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
                      i, m, q, p) {
   const auto slab = Acts::MaterialSlab(material, x);
+  const auto absQ = std::abs(q);
   const auto qOverP = q / p;
 
-  auto dEBethe = computeEnergyLossBethe(slab, i, m, qOverP, q);
-  auto dELandau = computeEnergyLossLandau(slab, i, m, qOverP, q);
-  auto dELandauSigma = computeEnergyLossLandauSigma(slab, i, m, qOverP, q);
+  auto dEBethe = computeEnergyLossBethe(slab, i, m, qOverP, absQ);
+  auto dELandau = computeEnergyLossLandau(slab, i, m, qOverP, absQ);
+  auto dELandauSigma = computeEnergyLossLandauSigma(slab, i, m, qOverP, absQ);
   auto dELandauSigmaQOverP =
-      computeEnergyLossLandauSigmaQOverP(slab, i, m, qOverP, q);
-  auto dERad = computeEnergyLossRadiative(slab, i, m, qOverP, q);
-  auto dEMean = computeEnergyLossMean(slab, i, m, qOverP, q);
-  auto dEMode = computeEnergyLossMode(slab, i, m, qOverP, q);
+      computeEnergyLossLandauSigmaQOverP(slab, i, m, qOverP, absQ);
+  auto dERad = computeEnergyLossRadiative(slab, i, m, qOverP, absQ);
+  auto dEMean = computeEnergyLossMean(slab, i, m, qOverP, absQ);
+  auto dEMode = computeEnergyLossMode(slab, i, m, qOverP, absQ);
 
   BOOST_CHECK_LT(0, dEBethe);
   BOOST_CHECK_LT(0, dELandau);
@@ -76,21 +77,22 @@ BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
                      thickness* particle* momentum, x, i, m, q, p) {
   const auto slab = Acts::MaterialSlab(material, x);
   const auto slabDoubled = Acts::MaterialSlab(material, 2 * x);
+  const auto absQ = std::abs(q);
   const auto qOverP = q / p;
   const auto qOver2P = q / (2 * p);
 
-  auto t0 = computeMultipleScatteringTheta0(slab, i, m, qOverP, q);
+  auto t0 = computeMultipleScatteringTheta0(slab, i, m, qOverP, absQ);
   BOOST_CHECK_LT(0, t0);
   // use the anti-particle -> same scattering
-  auto tanti = computeMultipleScatteringTheta0(slab, -i, m, -qOverP, -q);
+  auto tanti = computeMultipleScatteringTheta0(slab, i, m, -qOverP, absQ);
   BOOST_CHECK_LT(0, tanti);
   BOOST_CHECK_EQUAL(t0, tanti);
   // double the material -> more scattering
-  auto t2x = computeMultipleScatteringTheta0(slabDoubled, i, m, qOverP, q);
+  auto t2x = computeMultipleScatteringTheta0(slabDoubled, i, m, qOverP, absQ);
   BOOST_CHECK_LT(0, t2x);
   BOOST_CHECK_LT(t0, t2x);
   // double the momentum -> less scattering
-  auto t2p = computeMultipleScatteringTheta0(slab, i, m, qOver2P, q);
+  auto t2p = computeMultipleScatteringTheta0(slab, i, m, qOver2P, absQ);
   BOOST_CHECK_LT(0, t2p);
   BOOST_CHECK_LT(t2p, t0);
 }
@@ -98,17 +100,19 @@ BOOST_DATA_TEST_CASE(multiple_scattering_consistency,
 // no material -> no interactions
 BOOST_DATA_TEST_CASE(vacuum, thickness* particle* momentum, x, i, m, q, p) {
   const auto vacuum = Acts::MaterialSlab(Acts::Material(), x);
+  const auto absQ = std::abs(q);
   const auto qOverP = q / p;
 
-  BOOST_CHECK_EQUAL(computeEnergyLossBethe(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeEnergyLossLandau(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeEnergyLossLandauSigma(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeEnergyLossLandauSigmaQOverP(vacuum, i, m, qOverP, q),
+  BOOST_CHECK_EQUAL(computeEnergyLossBethe(vacuum, i, m, qOverP, absQ), 0);
+  BOOST_CHECK_EQUAL(computeEnergyLossLandau(vacuum, i, m, qOverP, absQ), 0);
+  BOOST_CHECK_EQUAL(computeEnergyLossLandauSigma(vacuum, i, m, qOverP, absQ),
                     0);
-  BOOST_CHECK_EQUAL(computeEnergyLossRadiative(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeEnergyLossMean(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeEnergyLossMode(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeMultipleScatteringTheta0(vacuum, i, m, qOverP, q),
+  BOOST_CHECK_EQUAL(
+      computeEnergyLossLandauSigmaQOverP(vacuum, i, m, qOverP, absQ), 0);
+  BOOST_CHECK_EQUAL(computeEnergyLossRadiative(vacuum, i, m, qOverP, absQ), 0);
+  BOOST_CHECK_EQUAL(computeEnergyLossMean(vacuum, i, m, qOverP, absQ), 0);
+  BOOST_CHECK_EQUAL(computeEnergyLossMode(vacuum, i, m, qOverP, absQ), 0);
+  BOOST_CHECK_EQUAL(computeMultipleScatteringTheta0(vacuum, i, m, qOverP, absQ),
                     0);
 }
 
@@ -125,16 +129,16 @@ BOOST_DATA_TEST_CASE(silicon_energy_loss,
 
   const auto slab = Acts::MaterialSlab(silicon, thickness);
 
-  const int pdg = Acts::eMuon;
+  const int absPdg = Acts::eMuon;
 
   const auto m = 105.7_MeV;
 
   const auto qOverP = -1. / p;
 
-  const auto charge = -1_e;
+  const auto absQ = 1_e;
 
   // Difference is within 5% from PDG value
-  BOOST_CHECK_CLOSE(computeEnergyLossBethe(slab, pdg, m, qOverP, charge) /
+  BOOST_CHECK_CLOSE(computeEnergyLossBethe(slab, absPdg, m, qOverP, absQ) /
                         thickness / slab.material().massDensity() /
                         (1_MeV * 1_cm2 / 1_g),
                     loss, 5.);
@@ -154,15 +158,15 @@ BOOST_AUTO_TEST_CASE(silicon_landau) {
 
   const float qOverP = -1. / 10_GeV;
 
-  const float charge = -1_e;
+  const float absQ = 1_e;
 
   // Difference is within 5% from PDG value
-  const auto dE = computeEnergyLossLandau(slab, pdg, m, qOverP, charge) / 1_MeV;
+  const auto dE = computeEnergyLossLandau(slab, pdg, m, qOverP, absQ) / 1_MeV;
   BOOST_CHECK_CLOSE(dE, 0.525, 5.);
 
   // Difference is within 10% from PDG value
   const auto fwhm =
-      Acts::computeEnergyLossLandauFwhm(slab, {m, qOverP, charge}) / 1_MeV;
+      Acts::computeEnergyLossLandauFwhm(slab, {m, qOverP, absQ}) / 1_MeV;
   BOOST_CHECK_CLOSE(fwhm, 0.13, 10.);
 }
 

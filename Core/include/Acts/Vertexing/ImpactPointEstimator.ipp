@@ -425,10 +425,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const auto& propRes = *result;
   const auto& params = propRes.endParameters;
   const Vector3 trkpos = params->position(gctx);
-  const Vector3 trkmom = params->momentum();
+  const Vector3 trkdir = params->direction();
 
   double sign =
-      (direction.cross(trkmom)).dot(trkmom.cross(vtx.position() - trkpos));
+      (direction.cross(trkdir)).dot(trkdir.cross(vtx.position() - trkpos));
 
   return sign >= 0. ? 1. : -1.;
 }

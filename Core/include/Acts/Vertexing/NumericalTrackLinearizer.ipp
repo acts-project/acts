@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
@@ -35,7 +36,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
   auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.unitDirection(), false);
+                                                params.direction(), false);
 
   // Setting the propagation direction using the intersection length from
   // above.
@@ -112,7 +113,8 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
                                                        paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
-        paramVecCopy.head(eLinPosSize), wiggledDir, paramVecCopy(eLinQOverP));
+        paramVecCopy.head(eLinPosSize), wiggledDir, paramVecCopy(eLinQOverP),
+        std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
     intersection = perigeeSurface->intersect(

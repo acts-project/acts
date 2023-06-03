@@ -9,6 +9,7 @@
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
@@ -83,7 +84,7 @@ void ActsExamples::DuplicationPlotTool::write(
 void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const Acts::BoundTrackParameters& fittedParameters, bool status) const {
-  const auto& momentum = fittedParameters.momentum();
+  const auto momentum = fittedParameters.momentum();
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
@@ -99,8 +100,8 @@ void ActsExamples::DuplicationPlotTool::fill(
 void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const ActsFatras::Particle& truthParticle, size_t nDuplicatedTracks) const {
-  const auto t_phi = phi(truthParticle.unitDirection());
-  const auto t_eta = eta(truthParticle.unitDirection());
+  const auto t_phi = phi(truthParticle.direction());
+  const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
   PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_pT, t_pT,

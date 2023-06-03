@@ -9,7 +9,9 @@
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -119,9 +121,10 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       continue;
     } else {
       const auto& params = optParams.value();
-      double charge = std::copysign(1, params[Acts::eBoundQOverP]);
-      trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
-                                   m_covariance);
+      // pion hypothesis right there
+      trackParameters.emplace_back(surface->getSharedPtr(), params,
+                                   m_covariance,
+                                   Acts::ParticleHypothesis::pion());
     }
   }
 

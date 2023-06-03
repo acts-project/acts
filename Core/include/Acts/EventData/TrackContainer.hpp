@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -256,6 +255,18 @@ class TrackContainer {
   template <typename T>
   constexpr const T& component(HashedString key, IndexType itrack) const {
     return *std::any_cast<const T*>(container().component_impl(key, itrack));
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  constexpr ParticleHypothesis& particleHypothesis(IndexType itrack) {
+    return component<ParticleHypothesis, hashString("particleHypothesis")>(
+        itrack);
+  }
+
+  constexpr const ParticleHypothesis& particleHypothesis(
+      IndexType itrack) const {
+    return component<ParticleHypothesis, hashString("particleHypothesis")>(
+        itrack);
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>

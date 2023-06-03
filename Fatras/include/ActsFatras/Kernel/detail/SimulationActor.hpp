@@ -159,7 +159,7 @@ struct SimulationActor {
       //   it should in principle never happen, so probably it would be best
       //   to change to a model using transform() directly
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
-                                            before.unitDirection());
+                                            before.direction());
       if (lpResult.ok()) {
         Acts::Vector2 local = lpResult.value();
         Acts::MaterialSlab slab =
@@ -170,8 +170,7 @@ struct SimulationActor {
           auto normal = surface.normal(state.geoContext, local);
           // dot-product(unit normal, direction) = cos(incidence angle)
           // particle direction is normalized, not sure about surface normal
-          auto cosIncidenceInv =
-              normal.norm() / normal.dot(before.unitDirection());
+          auto cosIncidenceInv = normal.norm() / normal.dot(before.direction());
           // apply abs in case `normal` and `before` produce an angle > 90°
           slab.scaleThickness(std::abs(cosIncidenceInv));
           // run the interaction simulation
@@ -196,8 +195,8 @@ struct SimulationActor {
     }
 
     // continue the propagation with the modified parameters
-    stepper.update(state.stepping, after.position(), after.unitDirection(),
-                   after.qop(), after.time());
+    stepper.update(state.stepping, after.position(), after.direction(),
+                   after.qOverP(), after.time());
   }
 
   /// Construct the current particle state from the stepper state.
@@ -213,13 +212,14 @@ struct SimulationActor {
     //       beta² = p²/E²
     //       gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m
     //     1/gamma = m / sqrt(m² + p²) = m / E
+    const auto momentum = std::abs(previous.charge() / stepper.qOverP(state));
     const auto gammaInv = previous.mass() / previous.energy();
     const auto properTime = previous.properTime() + gammaInv * deltaLabTime;
     // copy all properties and update kinematic state from stepper
     return Particle(previous)
         .setPosition4(stepper.position(state), stepper.time(state))
         .setDirection(stepper.direction(state))
-        .setAbsoluteMomentum(stepper.momentum(state))
+        .setAbsoluteMomentum(momentum)
         .setProperTime(properTime);
   }
 

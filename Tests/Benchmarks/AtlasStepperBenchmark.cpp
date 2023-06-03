@@ -96,7 +96,8 @@ int main(int argc, char* argv[]) {
     optCov = cov;
   }
   CurvilinearTrackParameters pars(Vector4::Zero(), 0_degree, 90_degree,
-                                  ptInGeV * UnitConstants::GeV, 1_e, optCov);
+                                  1_e / ptInGeV * UnitConstants::GeV, optCov,
+                                  ParticleHypothesis::pion());
 
   double totalPathLength = 0;
   size_t num_iters = 0;

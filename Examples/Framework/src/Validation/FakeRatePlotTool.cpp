@@ -97,7 +97,7 @@ void ActsExamples::FakeRatePlotTool::write(
 void ActsExamples::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const Acts::BoundTrackParameters& fittedParameters, bool status) const {
-  const auto& momentum = fittedParameters.momentum();
+  const auto momentum = fittedParameters.momentum();
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
@@ -111,7 +111,7 @@ void ActsExamples::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const ActsFatras::Particle& truthParticle, size_t nTruthMatchedTracks,
     size_t nFakeTracks) const {
-  const auto t_eta = eta(truthParticle.unitDirection());
+  const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
   PlotHelpers::fillHisto(fakeRatePlotCache.nReco_vs_pT, t_pT,

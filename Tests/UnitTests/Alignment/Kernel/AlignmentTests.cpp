@@ -225,7 +225,8 @@ CurvilinearTrackParameters makeParameters() {
   // define a track in the transverse plane along x
   Vector4 mPos4(-1_m, loc0, loc1, t);
 
-  return CurvilinearTrackParameters(mPos4, phi, theta, 1_e / qOverP, 1_e, cov);
+  return CurvilinearTrackParameters(mPos4, phi, theta, qOverP, cov,
+                                    ParticleHypothesis::pion());
 }
 
 // detector resolutions

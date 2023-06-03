@@ -61,7 +61,8 @@ class AtlasStepper {
           Direction ndir = Direction::Forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
-        : navDir(ndir),
+        : particleHypothesis(pars.particleHypothesis()),
+          navDir(ndir),
           field(0., 0., 0.),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
@@ -101,7 +102,7 @@ class AtlasStepper {
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
-            geoContext, pos, pars.unitDirection());
+            geoContext, pos, pars.direction());
 
         pVector[8] = transform(0, eBoundLoc0);
         pVector[16] = transform(0, eBoundLoc1);
@@ -230,6 +231,8 @@ class AtlasStepper {
       state_ready = true;
     }
 
+    ParticleHypothesis particleHypothesis;
+
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
@@ -294,15 +297,14 @@ class AtlasStepper {
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_bField(std::move(bField)){};
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx,      m_bField->makeCache(mctx), par, navDir, ssize,
-                 stolerance};
+    return State(gctx, m_bField->makeCache(mctx), par, navDir, ssize,
+                 stolerance);
   }
 
   /// @brief Resets the state
@@ -353,14 +355,28 @@ class AtlasStepper {
     return Vector3(state.pVector[4], state.pVector[5], state.pVector[6]);
   }
 
-  double qop(const State& state) const { return state.pVector[7]; }
+  double qOverP(const State& state) const { return state.pVector[7]; }
 
-  double momentum(const State& state) const {
-    return 1. / std::abs(qop(state));
+  /// Absolute momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double absoluteMomentum(const State& state) const {
+    return particleHypothesis(state).pFromQOP(qOverP(state));
   }
 
   /// Charge access
-  double charge(const State& state) const { return qop(state) > 0. ? 1. : -1.; }
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double charge(const State& state) const {
+    return particleHypothesis(state).qFromQOP(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  ParticleHypothesis particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
+  }
 
   /// Overstep limit
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
@@ -475,9 +491,9 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    auto parameters =
-        BoundTrackParameters::create(surface.getSharedPtr(), state.geoContext,
-                                     pos4, dir, qOverP, std::move(covOpt));
+    auto parameters = BoundTrackParameters::create(
+        surface.getSharedPtr(), state.geoContext, pos4, dir, qOverP,
+        std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();
     }
@@ -522,7 +538,8 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
+    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt),
+                                          state.particleHypothesis);
 
     Jacobian jacobian(state.jacobian);
 
@@ -1246,18 +1263,17 @@ class AtlasStepper {
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
+      double mass = particleHypothesis(state.stepping).mass();
+
       // Evaluate the time propagation
-      double dtds =
-          std::hypot(1, state.options.mass / momentum(state.stepping));
+      double dtds = std::hypot(1, mass / absoluteMomentum(state.stepping));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
-        double dtdl = h * state.options.mass * state.options.mass *
-                      charge(state.stepping) /
-                      (momentum(state.stepping) * dtds);
+        double dtdl = h * mass * mass * qOverP(state.stepping) / dtds;
         state.stepping.pVector[43] += dtdl;
 
         // Jacobian calculation

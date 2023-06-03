@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -28,6 +27,7 @@
 #include <cassert>
 #include <iterator>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace ActsFatras {
@@ -82,8 +82,6 @@ struct SingleParticleSimulation {
 
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx);
-    options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
-    options.mass = particle.mass();
     // setup the interactor as part of the propagator options
     auto &actor = options.actionList.template get<Actor>();
     actor.generator = &generator;
@@ -91,10 +89,10 @@ struct SingleParticleSimulation {
     actor.interactions = interactions;
     actor.selectHitSurface = selectHitSurface;
     actor.initialParticle = particle;
-    // use AnyCharge to be able to handle neutral and charged parameters
-    Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
-        particle.fourPosition(), particle.unitDirection(),
-        particle.absoluteMomentum(), particle.charge());
+    // use AnyOrNoCharge to be able to handle neutral and charged parameters
+    Acts::CurvilinearTrackParameters start(
+        particle.fourPosition(), particle.direction(), particle.qOverP(),
+        std::nullopt, particle.hypothesis());
     auto result = propagator.propagate(start, options);
     if (not result.ok()) {
       return result.error();

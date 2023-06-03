@@ -164,10 +164,9 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_x.push_back(step.position.x());
       m_y.push_back(step.position.y());
       m_z.push_back(step.position.z());
-      auto direction = step.momentum.normalized();
-      m_dx.push_back(direction.x());
-      m_dy.push_back(direction.y());
-      m_dz.push_back(direction.z());
+      m_dx.push_back(step.direction.x());
+      m_dy.push_back(step.direction.y());
+      m_dz.push_back(step.direction.z());
 
       double accuracy = step.stepSize.value(Acts::ConstrainedStep::accuracy);
       double actor = step.stepSize.value(Acts::ConstrainedStep::actor);

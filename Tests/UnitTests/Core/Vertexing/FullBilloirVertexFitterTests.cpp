@@ -14,7 +14,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -220,8 +220,9 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
-      tracks.push_back(
-          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+      tracks.push_back(BoundTrackParameters(perigeeSurface, paramVec,
+                                            std::move(covMat),
+                                            ParticleHypothesis::pion()));
     }
 
     std::vector<const BoundTrackParameters*> tracksPtr;
@@ -357,7 +358,8 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
       tracks.push_back(InputTrack(
-          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat))));
+          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+                               ParticleHypothesis::pion())));
     }
 
     std::vector<const InputTrack*> tracksPtr;

@@ -15,6 +15,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -154,7 +155,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat));
+      tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+                          ParticleHypothesis::pion());
     }
 
     std::vector<const BoundTrackParameters*> tracksPtr;
@@ -276,8 +278,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.emplace_back(
-          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+      tracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec,
+                                               std::move(covMat),
+                                               ParticleHypothesis::pion()));
     }
 
     std::vector<const InputTrack*> tracksPtr;

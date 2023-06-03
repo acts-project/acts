@@ -13,7 +13,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -31,6 +33,7 @@
 #include <algorithm>
 #include <array>
 #include <memory>
+#include <optional>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -38,6 +41,8 @@
 namespace Acts {
 class Surface;
 }  // namespace Acts
+
+using namespace Acts::UnitLiterals;
 
 Acts::GeometryContext tgContext;
 Acts::MagneticFieldContext mfContext;
@@ -90,7 +95,9 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
   // define start parameters
   Acts::Vector4 pos(0, 0, -5, 0);
   Acts::Vector3 mom(0, 0, 10);
-  Acts::CurvilinearTrackParameters start(pos, mom, mom.norm(), +1);
+  Acts::CurvilinearTrackParameters start(pos, mom, +1_e / mom.norm(),
+                                         std::nullopt,
+                                         Acts::ParticleHypothesis::pion());
   // propagate to the cylinder surface
   propagator.propagate(start, options);
 }

@@ -13,7 +13,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -59,7 +59,7 @@ struct SteppingState {
   /// Parameters
   Vector3 pos = Vector3(0., 0., 0.);
   Vector3 dir = Vector3(0., 0., 1);
-  double p = 100_MeV;
+  double qOverP = 1_e / 100_MeV;
 
   Direction navDir = Direction::Forward;
 };
@@ -87,8 +87,21 @@ struct Stepper {
   /// Access method - direction
   Vector3 direction(const SteppingState& state) const { return state.dir; }
 
-  /// Access method - momentum
-  double momentum(const SteppingState& state) const { return state.p; }
+  /// Access method - qOverP
+  double qOverP(const SteppingState& state) const { return state.qOverP; }
+
+  /// Access method - qop
+  auto particleHypothesis(const SteppingState&) const {
+    return Acts::ParticleHypothesis::pion();
+  }
+
+  /// Access method - absolute momentum
+  double absoluteMomentum(const SteppingState& state) const {
+    return particleHypothesis(state).pFromQOP(qOverP(state));
+  }
+
+  /// Access method - charge
+  double charge(const SteppingState&) const { return 1; }
 };
 
 /// @brief mockup of navigation state
@@ -141,7 +154,7 @@ BOOST_DATA_TEST_CASE(
 
   PropagatorState pState;
   pState.stepping.dir = Vector3(cos(phi), sin(phi), 0.);
-  pState.stepping.p = 100_MeV;
+  pState.stepping.qOverP = 1_e / 100_MeV;
 
   Stepper pStepper;
 
@@ -198,7 +211,9 @@ BOOST_DATA_TEST_CASE(
   EigenPropagator epropagator(std::move(estepper));
 
   // define start parameters
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, p, q);
+  Acts::CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta,
+                                         q / p, std::nullopt,
+                                         Acts::ParticleHypothesis::pion());
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
   PropagatorOptions options(tgContext, mfContext);
@@ -206,9 +221,10 @@ BOOST_DATA_TEST_CASE(
   const auto& result = epropagator.propagate(start, options).value();
 
   // this test assumes state.options.loopFraction = 0.5
-  CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);
-  CHECK_CLOSE_REL(py, -result.endParameters->momentum().y(), 1e-2);
-  CHECK_CLOSE_REL(pz, result.endParameters->momentum().z(), 1e-2);
+  auto endMomentum = result.endParameters->momentum();
+  CHECK_CLOSE_REL(px, -endMomentum.x(), 1e-2);
+  CHECK_CLOSE_REL(py, -endMomentum.y(), 1e-2);
+  CHECK_CLOSE_REL(pz, endMomentum.z(), 1e-2);
 }
 
 }  // namespace Test

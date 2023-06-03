@@ -13,6 +13,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -106,7 +107,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Define start parameters from ranom input
   double p = pT / sin(theta);
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta,
-                                   dcharge / p);
+                                   dcharge / p, std::nullopt,
+                                   ParticleHypothesis::pion());
 
   using EndOfWorld = EndOfWorldReached;
 

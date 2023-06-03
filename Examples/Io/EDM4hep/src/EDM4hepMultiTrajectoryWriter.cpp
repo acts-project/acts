@@ -56,7 +56,8 @@ ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
     for (const auto& trackTip : from.tips()) {
       auto to = trackCollection.create();
       EDM4hepUtil::writeTrajectory(context.geoContext, m_cfg.Bz, from, to,
-                                   trackTip, hitParticlesMap);
+                                   trackTip, m_cfg.particleHypothesis,
+                                   hitParticlesMap);
     }
   }
 

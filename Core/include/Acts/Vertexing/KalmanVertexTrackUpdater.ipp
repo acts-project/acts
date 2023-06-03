@@ -99,8 +99,9 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
-  BoundTrackParameters refittedPerigee = BoundTrackParameters(
-      perigeeSurface, newTrkParams, std::move(fullPerTrackCov));
+  auto refittedPerigee = BoundTrackParameters(
+      perigeeSurface, newTrkParams, std::move(fullPerTrackCov),
+      track.fittedParams.particleHypothesis());
 
   // Set new properties
   track.fittedParams = refittedPerigee;

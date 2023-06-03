@@ -751,9 +751,9 @@ class Chi2Fitter {
 
       if (i == chi2FitterOptions.nUpdates) {
         // don't update parameters in last iteration
-        c2r.fittedParameters =
-            BoundTrackParameters(vParams.referenceSurface().getSharedPtr(),
-                                 vParams.parameters(), vParams.covariance());
+        c2r.fittedParameters = BoundTrackParameters(
+            vParams.referenceSurface().getSharedPtr(), vParams.parameters(),
+            vParams.covariance(), vParams.particleHypothesis());
         break;
 
         // TODO: verify if another step would be useful, e.g. by comparing the
@@ -768,9 +768,9 @@ class Chi2Fitter {
       BoundVector newParamsVec = vParams.parameters() - delta_start_parameters;
       ACTS_VERBOSE(
           "it=" << i << " | updated parameters = " << newParamsVec.transpose());
-      c2r.fittedParameters =
-          BoundTrackParameters(vParams.referenceSurface().getSharedPtr(),
-                               newParamsVec, vParams.covariance());
+      c2r.fittedParameters = BoundTrackParameters(
+          vParams.referenceSurface().getSharedPtr(), newParamsVec,
+          vParams.covariance(), vParams.particleHypothesis());
 
       vParams = c2r.fittedParameters.value();  // passed to next iteration
       updatedStartParameters = c2r.fittedParameters.value();

@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -272,23 +272,23 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           t_vx = particle.position().x();
           t_vy = particle.position().y();
           t_vz = particle.position().z();
-          t_px = t_p * particle.unitDirection().x();
-          t_py = t_p * particle.unitDirection().y();
-          t_pz = t_p * particle.unitDirection().z();
-          t_theta = theta(particle.unitDirection());
-          t_phi = phi(particle.unitDirection());
-          t_eta = eta(particle.unitDirection());
-          t_pT = t_p * perp(particle.unitDirection());
+          t_px = t_p * particle.direction().x();
+          t_py = t_p * particle.direction().y();
+          t_pz = t_p * particle.direction().z();
+          t_theta = theta(particle.direction());
+          t_phi = phi(particle.direction());
+          t_eta = eta(particle.direction());
+          t_pT = t_p * perp(particle.direction());
 
           if (pSurface != nullptr) {
             auto intersection =
                 pSurface->intersect(ctx.geoContext, particle.position(),
-                                    particle.unitDirection(), false);
+                                    particle.direction(), false);
             auto position = intersection.intersection.position;
 
             // get the truth perigee parameter
             auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,
-                                                    particle.unitDirection());
+                                                    particle.direction());
             if (lpResult.ok()) {
               t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
               t_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];

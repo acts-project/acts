@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -66,9 +67,9 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     finalCov = cov;
   }
 
-  return BoundState{
-      BoundTrackParameters(surface.getSharedPtr(), finalPars, finalCov),
-      Jacobian::Zero(), accumulatedPathLength};
+  return BoundState{BoundTrackParameters(surface.getSharedPtr(), finalPars,
+                                         finalCov, particleHypothesis(state)),
+                    Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R, typename A>
@@ -99,8 +100,8 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
           state.components[i].state, transportCov);
 
       pos4 += state.components[i].weight * cp.fourPosition(state.geoContext);
-      dir += state.components[i].weight * cp.unitDirection();
-      qop += state.components[i].weight * (cp.charge() / cp.absoluteMomentum());
+      dir += state.components[i].weight * cp.direction();
+      qop += state.components[i].weight * cp.template get<eBoundQOverP>();
       if (cp.covariance()) {
         cov += state.components[i].weight * *cp.covariance();
       }
@@ -120,8 +121,9 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     }
 
     return CurvilinearState{
-        CurvilinearTrackParameters(pos4, dir, qop, finalCov), Jacobian::Zero(),
-        pathLenth};
+        CurvilinearTrackParameters(pos4, dir, qop, finalCov,
+                                   particleHypothesis(state)),
+        Jacobian::Zero(), pathLenth};
   }
 }
 

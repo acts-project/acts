@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -107,11 +108,11 @@ void unpackCovariance(const float* from, ActsSymMatrix<6>& to) {
   }
 }
 
-Parameters convertTrackParametersToEdm4hep(
-    const Acts::GeometryContext& gctx, double Bz,
-    const SingleBoundTrackParameters<SinglyCharged>& params) {
+Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
+                                           double Bz,
+                                           const BoundTrackParameters& params) {
   Acts::Vector3 global = params.referenceSurface().localToGlobal(
-      gctx, params.parameters().template head<2>(), params.momentum());
+      gctx, params.parameters().template head<2>(), params.direction());
 
   std::shared_ptr<const Acts::Surface> refSurface =
       params.referenceSurface().getSharedPtr();
@@ -169,13 +170,16 @@ Parameters convertTrackParametersToEdm4hep(
   result.values[1] = targetPars[Acts::eBoundLoc1];
   result.values[2] = targetPars[Acts::eBoundPhi];
   result.values[3] = std::tan(M_PI_2 - targetPars[Acts::eBoundTheta]);
-  result.values[4] = params.charge() * Bz / params.transverseMomentum();
+  result.values[4] = targetPars[Acts::eBoundQOverP] /
+                     std::sin(targetPars[Acts::eBoundTheta]) * Bz;
   result.values[5] = targetPars[Acts::eBoundTime];
+
+  result.particleHypothesis = params.particleHypothesis();
 
   return result;
 }
 
-SingleBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
+BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params) {
   BoundVector targetPars;
 
@@ -195,7 +199,7 @@ SingleBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
       params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
   targetPars[eBoundTime] = params.values[5];
 
-  return {params.surface, targetPars, cov};
+  return {params.surface, targetPars, cov, params.particleHypothesis};
 }
 
 }  // namespace detail

@@ -15,6 +15,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -60,7 +61,7 @@ class StraightLineStepper {
 
     /// Constructor from the initial bound track parameters
     ///
-    /// @tparam charge_t Type of the bound parameter charge
+    /// @tparam particle_hypothesis_t Type of the bound parameter particle hypothesis
     ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
@@ -70,21 +71,20 @@ class StraightLineStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
-                   const SingleBoundTrackParameters<charge_t>& par,
+                   const BoundTrackParameters& par,
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : absCharge(std::abs(par.charge())),
+        : particleHypothesis(par.particleHypothesis()),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           geoContext(gctx) {
       (void)mctx;
       pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.unitDirection();
+      pars.template segment<3>(eFreeDir0) = par.direction();
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
       if (par.covariance()) {
@@ -112,8 +112,8 @@ class StraightLineStepper {
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// The absolute charge as the free vector can be 1/p or q/p
-    double absCharge = UnitConstants::e;
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
     /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
@@ -144,10 +144,9 @@ class StraightLineStepper {
 
   StraightLineStepper() = default;
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
@@ -193,24 +192,37 @@ class StraightLineStepper {
     return state.pars.template segment<3>(eFreeDir0);
   }
 
-  /// QoP direction accessor
+  /// QoP accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double qop(const State& state) const { return state.pars[eFreeQOverP]; }
+  double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
-    auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qop(state));
+  double absoluteMomentum(const State& state) const {
+    return particleHypothesis(state).pFromQOP(qOverP(state));
+  }
+
+  /// Momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  Vector3 momentum(const State& state) const {
+    return absoluteMomentum(state) * direction(state);
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return std::copysign(state.absCharge, qop(state));
+    return particleHypothesis(state).qFromQOP(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  ParticleHypothesis particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
   }
 
   /// Time access
@@ -387,9 +399,10 @@ class StraightLineStepper {
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize.value();
-    const double p = momentum(state.stepping);
+    const auto m = state.stepping.particleHypothesis.mass();
+    const auto p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = std::hypot(1., state.options.mass / p);
+    const auto dtds = std::hypot(1., m / p);
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state.stepping);
     state.stepping.pars.template segment<3>(eFreePos0) += h * dir;
@@ -401,8 +414,7 @@ class StraightLineStepper {
       D.block<3, 3>(0, 4) = ActsSymMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
-      D(3, 7) = h * state.options.mass * state.options.mass *
-                state.stepping.pars[eFreeQOverP] / dtds;
+      D(3, 7) = h * m * m * state.stepping.pars[eFreeQOverP] / dtds;
       // Set the derivative factor the time
       state.stepping.derivative(3) = dtds;
       // Update jacobian and derivative
