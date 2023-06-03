@@ -134,8 +134,9 @@ class RiddersPropagator {
   /// @param [in] result The result of the nominal propagation
   template <typename propagator_options_t, typename parameters_t,
             typename result_t>
-  result_t propagateImpl(const propagator_options_t& options,
-                         const parameters_t& start, result_t& result) const;
+  Jacobian wiggleAndCalculateJacobian(const propagator_options_t& options,
+                                      const parameters_t& start,
+                                      result_t& nominalResult) const;
 
   /// @brief This function tests whether the variations on a disc as target
   /// surface lead to results on different sides wrt the center of the disc.

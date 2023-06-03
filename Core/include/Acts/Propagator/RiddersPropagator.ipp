@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,8 +19,29 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Propagate the nominal parameters
   auto result = m_propagator.propagate(start, options);
+  if (not result.ok()) {
+    return ThisResult::failure(result.error());
+  }
+  // Extract results from the nominal propagation
+  auto nominalResult = result.value();
+  assert(nominalResult.endParameters);
+  const auto& nominalFinalParameters = *nominalResult.endParameters;
 
-  return propagateImpl(options, start, result);
+  auto jacobian = wiggleAndCalculateJacobian(options, start, nominalResult);
+  nominalResult.transportJacobian = jacobian;
+
+  if (start.covariance()) {
+    // use nominal parameters and Ridders covariance
+    auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
+    // replace the covariance of the nominal result w/ the ridders covariance
+    nominalResult.endParameters = CurvilinearTrackParameters(
+        nominalFinalParameters.fourPosition(options.geoContext),
+        nominalFinalParameters.unitDirection(),
+        nominalFinalParameters.absoluteMomentum(),
+        nominalFinalParameters.charge(), std::move(cov));
+  }
+
+  return ThisResult::success(std::move(nominalResult));
 }
 
 template <typename propagator_t>
@@ -36,26 +57,37 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
 
   // Propagate the nominal parameters
   auto result = m_propagator.propagate(start, target, options);
+  if (not result.ok()) {
+    return ThisResult::failure(result.error());
+  }
+  // Extract results from the nominal propagation
+  auto nominalResult = result.value();
+  assert(nominalResult.endParameters);
+  const auto& nominalFinalParameters = *nominalResult.endParameters;
 
-  return propagateImpl(options, start, result);
+  auto jacobian = wiggleAndCalculateJacobian(options, start, nominalResult);
+  nominalResult.transportJacobian = jacobian;
+
+  if (start.covariance()) {
+    // use nominal parameters and Ridders covariance
+    auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
+    // replace the covariance of the nominal result w/ the ridders covariance
+    nominalResult.endParameters = BoundTrackParameters(
+        nominalFinalParameters.referenceSurface().getSharedPtr(),
+        nominalFinalParameters.parameters(), nominalFinalParameters.charge(),
+        std::move(cov));
+  }
+
+  return ThisResult::success(std::move(nominalResult));
 }
 
 template <typename propagator_t>
 template <typename propagator_options_t, typename parameters_t,
           typename result_t>
-auto Acts::RiddersPropagator<propagator_t>::propagateImpl(
+auto Acts::RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
     const propagator_options_t& options, const parameters_t& start,
-    result_t& result) const -> result_t {
-  if (not result.ok()) {
-    return result_t::failure(result.error());
-  }
-
-  // Extract results from the nominal propagation
-  auto nominalResult = result.value();
-  assert(nominalResult.endParameters);
+    result_t& nominalResult) const -> Jacobian {
   auto nominalFinalParameters = *nominalResult.endParameters;
-  const BoundVector& nominalFinalParameterValues =
-      nominalFinalParameters.parameters();
   // Use the curvilinear surface of the propagated parameters as target
   const Surface& target = nominalFinalParameters.referenceSurface();
 
@@ -84,8 +116,9 @@ auto Acts::RiddersPropagator<propagator_t>::propagateImpl(
 
   // Wiggle each dimension individually
   for (unsigned int i = 0; i < eBoundSize; i++) {
-    derivatives[i] = wiggleParameter(opts, start, i, target,
-                                     nominalFinalParameterValues, deviations);
+    derivatives[i] =
+        wiggleParameter(opts, start, i, target,
+                        nominalFinalParameters.parameters(), deviations);
   }
 
   // Test if target is disc - this may lead to inconsistent results
@@ -95,21 +128,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagateImpl(
     }
   }
 
-  auto jacobian = calculateJacobian(deviations, derivatives);
-  nominalResult.transportJacobian = jacobian;
-
-  if (start.covariance()) {
-    // use nominal parameters and Ridders covariance
-    auto cov = jacobian * (*start.covariance()) * jacobian.transpose();
-    // replace the covariance of the nominal result w/ the ridders covariance
-    nominalResult.endParameters = CurvilinearTrackParameters(
-        nominalFinalParameters.fourPosition(options.geoContext),
-        nominalFinalParameters.unitDirection(),
-        nominalFinalParameters.absoluteMomentum(),
-        nominalFinalParameters.charge(), std::move(cov));
-  }
-
-  return result_t::success(std::move(nominalResult));
+  return calculateJacobian(deviations, derivatives);
 }
 
 template <typename propagator_t>
@@ -185,12 +204,11 @@ Acts::RiddersPropagator<propagator_t>::wiggleParameter(
 }
 
 template <typename propagator_t>
-typename Acts::RiddersPropagator<propagator_t>::Jacobian
-Acts::RiddersPropagator<propagator_t>::calculateJacobian(
+auto Acts::RiddersPropagator<propagator_t>::calculateJacobian(
     const std::vector<double>& deviations,
     const std::array<std::vector<Acts::BoundVector>, Acts::eBoundSize>&
-        derivatives) {
-  Jacobian jacobian = Jacobian::Identity();
+        derivatives) -> Jacobian {
+  Jacobian jacobian;
   jacobian.col(eBoundLoc0) = fitLinear(deviations, derivatives[eBoundLoc0]);
   jacobian.col(eBoundLoc1) = fitLinear(deviations, derivatives[eBoundLoc1]);
   jacobian.col(eBoundPhi) = fitLinear(deviations, derivatives[eBoundPhi]);
