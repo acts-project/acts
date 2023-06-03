@@ -17,8 +17,11 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       action_list_t_result_t<CurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>;
 
+  auto startWithoutCov = start;
+  startWithoutCov.covariance() = std::nullopt;
+
   // Propagate the nominal parameters
-  auto result = m_propagator.propagate(start, options);
+  auto result = m_propagator.propagate(startWithoutCov, options);
   if (not result.ok()) {
     return ThisResult::failure(result.error());
   }
@@ -55,8 +58,11 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   using ThisResult = Result<action_list_t_result_t<
       BoundTrackParameters, typename propagator_options_t::action_list_type>>;
 
+  auto startWithoutCov = start;
+  startWithoutCov.covariance() = std::nullopt;
+
   // Propagate the nominal parameters
-  auto result = m_propagator.propagate(start, target, options);
+  auto result = m_propagator.propagate(startWithoutCov, target, options);
   if (not result.ok()) {
     return ThisResult::failure(result.error());
   }
@@ -93,9 +99,9 @@ auto Acts::RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
 
   // TODO add to propagator options
   // Steps for estimating derivatives
-  std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
+  auto deviations = m_config.deviations;
   if (target.type() == Surface::Disc) {
-    deviations = {{-3e-5, -1e-5, 1e-5, 3e-5}};
+    deviations = m_config.deviationsDisc;
   }
 
   // - for planar surfaces the dest surface is a perfect destination

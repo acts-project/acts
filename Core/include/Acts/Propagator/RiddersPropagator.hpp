@@ -74,10 +74,16 @@ class RiddersPropagator {
       typename result_type_helper<parameters_t, action_list_t>::type;
 
  public:
+  struct Config {
+    std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
+    std::vector<double> deviationsDisc = {{-3e-5, -1e-5, 1e-5, 3e-5}};
+  };
+
   /// @brief Constructor using a propagator
   ///
   /// @param [in] propagator Underlying propagator that will be used
-  RiddersPropagator(propagator_t& propagator) : m_propagator(propagator) {}
+  RiddersPropagator(propagator_t& propagator, Config config = {})
+      : m_propagator(propagator), m_config(std::move(config)) {}
 
   /// @brief Constructor building a propagator
   ///
@@ -87,8 +93,10 @@ class RiddersPropagator {
   /// @param [in] stepper Stepper that will be used
   /// @param [in] navigator Navigator that will be used
   template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
-  RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t())
-      : m_propagator(Propagator(stepper, navigator)) {}
+  RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t(),
+                    Config config = {})
+      : m_propagator(Propagator(stepper, navigator)),
+        m_config(std::move(config)) {}
 
   /// @brief Propagation method targeting curvilinear parameters
   ///
@@ -126,12 +134,12 @@ class RiddersPropagator {
 
  private:
   /// Does the actual ridders propagation by wiggling the parameters and
-  /// propagating again. This is here in order to deduplicate code from the
-  /// specific propagation methods.
+  /// propagating again. This function is called from the different propagation
+  /// overloads in order to deduplicate code.
   ///
   /// @param [in] options Options of the propagations
   /// @param [in] start Start parameters
-  /// @param [in] result The result of the nominal propagation
+  /// @param [in] nominalResult The result of the nominal propagation
   template <typename propagator_options_t, typename parameters_t,
             typename result_t>
   Jacobian wiggleAndCalculateJacobian(const propagator_options_t& options,
@@ -191,8 +199,9 @@ class RiddersPropagator {
   static BoundVector fitLinear(const std::vector<double>& deviations,
                                const std::vector<BoundVector>& derivatives);
 
-  /// Propagator
+  /// Underlying propagator
   propagator_t m_propagator;
+  Config m_config;
 };
 }  // namespace Acts
 
