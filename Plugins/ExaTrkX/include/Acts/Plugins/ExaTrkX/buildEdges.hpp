@@ -19,7 +19,7 @@ namespace Acts {
 /// Edge building using FRNN and CUDA. If CUDA is not available,
 /// a brute-force CPU method is used
 /// TODO implement better CPU method (K-D-Tree, ...)
-/// TODO make parameters concise (the tensor should hav the numSpacepoints, dim
+/// TODO make parameters concise (the tensor should have the numSpacepoints, dim
 /// info)
 ///
 /// @param embedFeatures Tensor of shape (n_nodes, embedding_dim)

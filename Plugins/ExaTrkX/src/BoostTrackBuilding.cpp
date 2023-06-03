@@ -76,14 +76,8 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
     return sorted.size();
   }());
-  // print_current_cuda_meminfo(logger);
 
   if (trackLabels.size() == 0) {
-    // if (recordTiming) {
-    //   return timeInfo;
-    // } else {
-    //   return std::nullopt;
-    // }
     return {};
   }
 
@@ -110,15 +104,6 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
       existTrkIdx++;
     }
   }
-
-  // timeInfo.labeling = timer.stopAndGetElapsedTime();
-  // timeInfo.total = totalTimer.stopAndGetElapsedTime();
-
-  // if (recordTiming) {
-  //   return timeInfo;
-  // } else {
-  //   return std::nullopt;
-  // }
 
   return trackCandidates;
 }

@@ -11,6 +11,8 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
+#include "printCudaMemInfo.hpp"
+
 using namespace torch::indexing;
 
 namespace Acts {
@@ -38,7 +40,6 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   const auto edgeList = std::any_cast<torch::Tensor>(inputEdges);
 
   c10::InferenceMode guard(true);
-  // timer.start();
 
   const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.nChunks);
   std::vector<at::Tensor> results;
@@ -59,17 +60,15 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   ACTS_VERBOSE("Size after filtering network: " << fOutput.size(0));
   ACTS_VERBOSE("Slice of filtered output:\n"
                << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
-  // print_current_cuda_meminfo(logger);
+  printCudaMemInfo(logger);
 
   torch::Tensor filterMask = fOutput > m_cfg.cut;
   torch::Tensor edgesAfterF = edgeList.index({Slice(), filterMask});
   edgesAfterF = edgesAfterF.to(torch::kInt64);
   const int64_t numEdgesAfterF = edgesAfterF.size(1);
 
-  ACTS_VERBOSE("Size after filter cut: " << numEdgesAfterF)
-  // print_current_cuda_meminfo(logger);
-
-  // timeInfo.filtering = timer.stopAndGetElapsedTime();
+  ACTS_VERBOSE("Size after filter cut: " << numEdgesAfterF);
+  printCudaMemInfo(logger);
 
   return {eLibInputTensor, edgesAfterF, fOutput};
 }

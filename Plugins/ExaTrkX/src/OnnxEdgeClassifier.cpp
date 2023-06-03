@@ -23,8 +23,6 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg) : m_cfg(cfg) {
 
   Ort::SessionOptions session_options;
   session_options.SetIntraOpNumThreads(1);
-  // OrtStatus* status =
-  // OrtSessionOptionsAppendExecutionProvider_CUDA(session_options, 0);
   session_options.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
@@ -78,26 +76,13 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
   runSessionWithIoBinding(*m_model, fInputNames, fInputTensor, fOutputNames,
                           fOutputTensor);
 
-  ACTS_INFO("Get scores for " << numEdges << " edges.");
-  // However, I have to convert those numbers to a score by applying sigmoid!
-  // Use torch::tensor
+  ACTS_DEBUG("Get scores for " << numEdges << " edges.");
   torch::Tensor edgeListCTen = torch::tensor(edgeList, {torch::kInt64});
   edgeListCTen = edgeListCTen.reshape({2, numEdges});
 
   torch::Tensor fOutputCTen = torch::tensor(fOutputData, {torch::kFloat32});
   fOutputCTen = fOutputCTen.sigmoid();
 
-  // if (debug) {
-  //   std::fstream out(filtering_outname, out.out);
-  //   if (!out.is_open()) {
-  //     ACTS_ERROR("failed to open " << filtering_outname);
-  //   } else {
-  //     std::copy(fOutputCTen.data_ptr<float>(),
-  //               fOutputCTen.data_ptr<float>() + fOutputCTen.numel(),
-  //               std::ostream_iterator<float>(out, " "));
-  //   }
-  // }
-  // std::cout << fOutputCTen.slice(0, 0, 3) << std::endl;
   torch::Tensor filterMask = fOutputCTen > m_cfg.cut;
   torch::Tensor edgesAfterFCTen = edgeListCTen.index({Slice(), filterMask});
 
@@ -107,8 +92,8 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
             std::back_inserter(edgesAfterFiltering));
 
   int64_t numEdgesAfterF = edgesAfterFiltering.size() / 2;
-  ACTS_INFO("Finished edge classification, after cut: " << numEdgesAfterF
-                                                        << " edges.");
+  ACTS_DEBUG("Finished edge classification, after cut: " << numEdgesAfterF
+                                                         << " edges.");
 
   return {std::make_shared<Ort::Value>(std::move(fInputTensor[0])),
           edgesAfterFiltering, fOutputCTen};

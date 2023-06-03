@@ -39,11 +39,11 @@ std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
             gOutputCTen.data_ptr<float>() + numEdgesAfterF,
             std::back_insert_iterator(edgeWeights));
 
-  ACTS_INFO("run weaklyConnectedComponents");
-  weaklyConnectedComponents<int32_t, int32_t, float>(rowIndices, colIndices,
-                                                     edgeWeights, trackLabels);
+  ACTS_VERBOSE("run weaklyConnectedComponents");
+  weaklyConnectedComponents<int32_t, int32_t, float>(
+      rowIndices, colIndices, edgeWeights, trackLabels, logger);
 
-  ACTS_INFO("size of components: " << trackLabels.size());
+  ACTS_DEBUG("size of components: " << trackLabels.size());
   if (trackLabels.size() == 0) {
     return {};
   }
