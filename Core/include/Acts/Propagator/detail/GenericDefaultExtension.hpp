@@ -136,11 +136,11 @@ struct GenericDefaultExtension {
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
     using std::hypot;
-    auto derivative =
-        hypot(1, state.options.mass / stepper.momentum(state.stepping));
-    state.stepping.pars[eFreeTime] += h * derivative;
+    const double p = state.options.absCharge / stepper.qop(state.stepping);
+    auto dtds = hypot(1, state.options.mass / p);
+    state.stepping.pars[eFreeTime] += h * dtds;
     if (state.stepping.covTransport) {
-      state.stepping.derivative(3) = derivative;
+      state.stepping.derivative(3) = dtds;
     }
   }
 
@@ -183,6 +183,7 @@ struct GenericDefaultExtension {
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
     auto qop = stepper.qop(state.stepping);
+    auto p = state.options.absCharge / qop;
 
     D = FreeMatrix::Identity();
 
@@ -241,10 +242,9 @@ struct GenericDefaultExtension {
 
     dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
-    D(3, 7) =
-        h * state.options.mass * state.options.mass *
-        stepper.qop(state.stepping) /
-        std::hypot(1., state.options.mass / stepper.momentum(state.stepping));
+    D(3, 7) = h * state.options.mass * state.options.mass *
+              stepper.qop(state.stepping) /
+              std::hypot(1., state.options.mass / p);
     return true;
   }
 };

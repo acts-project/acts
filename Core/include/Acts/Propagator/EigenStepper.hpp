@@ -71,21 +71,19 @@ class EigenStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    MagneticFieldProvider::Cache fieldCacheIn,
-                   const SingleBoundTrackParameters<charge_t>& par,
+                   const BoundTrackParameters& par,
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : absCharge(std::abs(par.charge())),
-          navDir(ndir),
+        : navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.unitDirection();
+      pars.template segment<3>(eFreeDir0) = par.direction();
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
 
@@ -102,9 +100,6 @@ class EigenStepper {
 
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
-
-    /// The absolute charge as the free vector can be 1/p or q/p
-    double absCharge = UnitConstants::e;
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
@@ -167,10 +162,9 @@ class EigenStepper {
   EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
                double overstepLimit = 100 * UnitConstants::um);
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const;
@@ -213,25 +207,10 @@ class EigenStepper {
     return state.pars.template segment<3>(eFreeDir0);
   }
 
-  /// QoP direction accessor
+  /// QoP accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double qop(const State& state) const { return state.pars[eFreeQOverP]; }
-
-  /// Absolute momentum accessor
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
-    auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qop(state));
-  }
-
-  /// Charge access
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const {
-    return std::copysign(state.absCharge, qop(state));
-  }
 
   /// Time access
   ///

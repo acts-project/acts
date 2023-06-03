@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -41,8 +42,11 @@ ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
   auto isValidTrack = [&](const auto& trk) {
     const auto theta = trk.template get<Acts::eBoundTheta>();
     const auto eta = -std::log(std::tan(theta / 2));
+    // hypothesises charge=1
+    const auto pT =
+        std::sin(theta) * std::abs(1 / trk.template get<Acts::eBoundQOverP>());
     // define charge selection
-    return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
+    return within(pT, m_cfg.ptMin, m_cfg.ptMax) and
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
            within(trk.template get<Acts::eBoundPhi>(), m_cfg.phiMin,

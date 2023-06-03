@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
@@ -94,7 +95,10 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       }
 
       // Requirement on the pT of the track
-      const auto& momentum = traj.trackParameters(trackTip).momentum();
+      const auto& params = traj.trackParameters(trackTip);
+      // hypothesises charge=1
+      const auto& momentum =
+          params.direction() * 1 / std::abs(params.get<Acts::eBoundQOverP>());
       const auto pT = Acts::VectorHelpers::perp(momentum);
       if (pT < m_cfg.ptMin) {
         continue;
@@ -186,6 +190,11 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       trajState.trackType = "duplicate";
     }
 
+    const auto& params = *trajState.fittedParameters;
+    // hypothesises charge=1
+    const auto& momentum =
+        params.direction() * 1 / std::abs(params.get<Acts::eBoundQOverP>());
+
     // write the track info
     mos << trajState.trackId << ",";
     mos << trajState.particleId << ",";
@@ -198,12 +207,9 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     mos << trajState.chi2Sum << ",";
     mos << trajState.NDF << ",";
     mos << trajState.chi2Sum * 1.0 / trajState.NDF << ",";
-    mos << Acts::VectorHelpers::perp(trajState.fittedParameters->momentum())
-        << ",";
-    mos << Acts::VectorHelpers::eta(trajState.fittedParameters->momentum())
-        << ",";
-    mos << Acts::VectorHelpers::phi(trajState.fittedParameters->momentum())
-        << ",";
+    mos << Acts::VectorHelpers::perp(momentum) << ",";
+    mos << Acts::VectorHelpers::eta(momentum) << ",";
+    mos << Acts::VectorHelpers::phi(momentum) << ",";
     mos << trajState.truthMatchProb << ",";
     mos << trajState.trackType << ",";
     mos << "\"[";

@@ -29,7 +29,7 @@ namespace detail {
 struct Step {
   ConstrainedStep stepSize;
   Vector3 position = Vector3(0., 0., 0.);
-  Vector3 momentum = Vector3(0., 0., 0.);
+  Vector3 direction = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
   const TrackingVolume* volume = nullptr;
 };
@@ -71,8 +71,7 @@ struct SteppingLogger {
     Step step;
     step.stepSize = state.stepping.stepSize;
     step.position = stepper.position(state.stepping);
-    step.momentum =
-        stepper.momentum(state.stepping) * stepper.direction(state.stepping);
+    step.direction = stepper.direction(state.stepping);
 
     if (navigator.currentSurface(state.navigation) != nullptr) {
       // hang on to surface

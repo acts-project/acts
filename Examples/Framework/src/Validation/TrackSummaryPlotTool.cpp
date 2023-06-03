@@ -89,7 +89,9 @@ void ActsExamples::TrackSummaryPlotTool::fill(
     size_t nSharedHits) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
-  const auto& momentum = fittedParameters.momentum();
+  // hypothesises charge=1
+  const auto momentum = fittedParameters.direction() * 1 /
+                        std::abs(fittedParameters.get<Acts::eBoundQOverP>());
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 

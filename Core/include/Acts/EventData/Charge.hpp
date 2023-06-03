@@ -125,28 +125,26 @@ class AnyCharge {
   /// Delete default constructor to ensure charge is always explicitely given.
   AnyCharge() = delete;
   /// Construct with the magnitude of the input charge.
-  template <typename T>
-  constexpr AnyCharge(T absQ) noexcept : m_magnitude(std::abs(absQ)) {
+  constexpr AnyCharge(float absQ) noexcept : m_absQ(std::abs(absQ)) {
     assert((0 <= absQ) and "Input charge magnitude must be zero or positive");
   }
 
   template <typename T>
   constexpr T extractCharge(T qOverP) const noexcept {
-    return std::copysign(static_cast<T>(m_magnitude), qOverP);
+    return std::copysign(static_cast<T>(m_absQ), qOverP);
   }
   template <typename T>
   constexpr T extractMomentum(T qOverP) const noexcept {
-    return (m_magnitude != 0.0f)
-               ? std::abs(static_cast<T>(m_magnitude) / qOverP)
-               : std::abs(1 / qOverP);
+    return (m_absQ != 0.0f) ? std::abs(static_cast<T>(m_absQ) / qOverP)
+                            : std::abs(1 / qOverP);
   }
 
  private:
-  float m_magnitude;
+  float m_absQ;
 
   /// Compare for equality.
   friend constexpr bool operator==(AnyCharge lhs, AnyCharge rhs) noexcept {
-    return lhs.m_magnitude == rhs.m_magnitude;
+    return lhs.m_absQ == rhs.m_absQ;
   }
 };
 

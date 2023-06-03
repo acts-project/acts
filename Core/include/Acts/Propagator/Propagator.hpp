@@ -67,6 +67,9 @@ struct PropagatorPlainOptions {
   /// pion default
   double mass = 139.57018 * UnitConstants::MeV;
 
+  /// The absolute charge as the free vector can be 1/p or q/p
+  double absCharge = UnitConstants::e;
+
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 

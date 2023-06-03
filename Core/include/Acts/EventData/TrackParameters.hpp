@@ -8,20 +8,34 @@
 
 #pragma once
 
-#include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
-#include "Acts/EventData/SingleFreeTrackParameters.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
+#include "Acts/EventData/CurvilinearTrackParameters.hpp"
+#include "Acts/EventData/FreeTrackParameters.hpp"
+
+#include <cmath>
 
 namespace Acts {
 
-extern template class SingleBoundTrackParameters<SinglyCharged>;
-extern template class SingleCurvilinearTrackParameters<SinglyCharged>;
-extern template class SingleFreeTrackParameters<SinglyCharged>;
+template <typename parameters_t>
+inline auto charge(const parameters_t &parameters, double absQ) {
+  return std::copysign(parameters.template get<eBoundQOverP>(), absQ);
+}
 
-using BoundTrackParameters = SingleBoundTrackParameters<SinglyCharged>;
-using CurvilinearTrackParameters =
-    SingleCurvilinearTrackParameters<SinglyCharged>;
-using FreeTrackParameters = SingleFreeTrackParameters<SinglyCharged>;
+template <typename parameters_t>
+inline auto absoluteMomentum(const parameters_t &parameters, double absQ) {
+  return absQ / std::abs(parameters.template get<eBoundQOverP>());
+}
+
+template <typename parameters_t>
+inline auto transverseMomentum(const parameters_t &parameters, double absQ) {
+  return std::sin(parameters.template get<eBoundTheta>()) *
+         absoluteMomentum(parameters, absQ);
+}
+
+template <typename parameters_t>
+inline auto momentum(const parameters_t &parameters, double absQ) {
+  return parameters.direction() * absoluteMomentum(parameters, absQ);
+}
 
 }  // namespace Acts

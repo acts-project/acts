@@ -413,7 +413,8 @@ class NextNavigator {
                            NavigationState& nState) const {
     nState.position = stepper.position(state.stepping);
     nState.direction = stepper.direction(state.stepping);
-    nState.absMomentum = stepper.momentum(state.stepping);
+    nState.absMomentum =
+        state.options.absCharge / std::abs(stepper.qop(state.stepping));
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {
       ACTS_ERROR(volInfo(state) << posInfo(state, stepper)

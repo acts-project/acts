@@ -15,12 +15,11 @@ Acts::EigenStepper<E, A>::EigenStepper(
     : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
 
 template <typename E, typename A>
-template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const SingleBoundTrackParameters<charge_t>& par, Direction navDir,
-    double ssize, double stolerance) const -> State {
+    const BoundTrackParameters& par, Direction navDir, double ssize,
+    double stolerance) const -> State {
   return State{gctx, m_bField->makeCache(mctx), par, navDir, ssize, stolerance};
 }
 

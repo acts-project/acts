@@ -113,24 +113,24 @@ class ScopedGsfInfoPrinterAndChecker {
       : m_state(state),
         m_stepper(stepper),
         m_navigator(navigator),
-        m_p_initial(stepper.momentum(state.stepping)),
+        m_p_initial(state.options.absCharge /
+                    std::abs(stepper.qop(state.stepping))),
         m_logger{logger} {
     // Some initial printing
     checks(true);
-    ACTS_VERBOSE("Gsf step "
-                 << state.stepping.steps << " at mean position "
-                 << stepper.position(state.stepping).transpose()
-                 << " with direction "
-                 << stepper.direction(state.stepping).transpose()
-                 << " and momentum " << stepper.momentum(state.stepping)
-                 << " and charge " << stepper.charge(state.stepping));
+    ACTS_VERBOSE("Gsf step " << state.stepping.steps << " at mean position "
+                             << stepper.position(state.stepping).transpose()
+                             << " with direction "
+                             << stepper.direction(state.stepping).transpose()
+                             << " and qop " << stepper.qop(state.stepping));
     ACTS_VERBOSE("Propagation is in " << state.stepping.navDir << " mode");
     print_component_stats();
   }
 
   ~ScopedGsfInfoPrinterAndChecker() {
     if (m_navigator.currentSurface(m_state.navigation)) {
-      const auto p_final = m_stepper.momentum(m_state.stepping);
+      const auto p_final =
+          m_state.options.absCharge / std::abs(m_stepper.qop(m_state.stepping));
       ACTS_VERBOSE("Component status at end of step:");
       print_component_stats();
       ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -45,8 +46,7 @@ struct GsfResult {
 
   /// The last multi-component measurement state. Used to initialize the
   /// backward pass.
-  std::optional<MultiComponentBoundTrackParameters<SinglyCharged>>
-      lastMeasurementState;
+  std::optional<MultiComponentBoundTrackParameters> lastMeasurementState;
 
   /// Some counting
   std::size_t measurementStates = 0;
@@ -362,17 +362,15 @@ struct GsfActor {
                          const double old_weight, const MetaCache& metaCache,
                          std::vector<ComponentCache>& componentCaches) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
-    const auto p_prev = old_bound.absoluteMomentum();
 
     // Evaluate material slab
     auto slab = surface.surfaceMaterial()->materialSlab(
         old_bound.position(state.stepping.geoContext), state.stepping.navDir,
         MaterialUpdateStage::FullUpdate);
 
-    auto pathCorrection =
-        surface.pathCorrection(state.stepping.geoContext,
-                               old_bound.position(state.stepping.geoContext),
-                               old_bound.unitDirection());
+    auto pathCorrection = surface.pathCorrection(
+        state.stepping.geoContext,
+        old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
     // Emit a warning if the approximation is not valid for this x/x0
@@ -403,29 +401,34 @@ struct GsfActor {
         continue;
       }
 
+      // TODO can we use qop here?
+      const auto old_p =
+          state.options.absCharge / std::abs(old_bound.get<eBoundQOverP>());
       // compute delta p from mixture and update parameters
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
         if (state.stepping.navDir == Direction::Forward) {
-          return p_prev * (gaussian.mean - 1.);
+          return old_p * (gaussian.mean - 1.);
         } else {
-          return p_prev * (1. / gaussian.mean - 1.);
+          return old_p * (1. / gaussian.mean - 1.);
         }
       }();
 
-      assert(p_prev + delta_p > 0. && "new momentum must be > 0");
-      new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
+      assert(old_p + delta_p > 0. && "new momentum must be > 0");
+      new_pars[eBoundQOverP] =
+          std::copysign(old_bound.get<eBoundQOverP>(),
+                        state.options.absCharge / (old_p + delta_p));
 
       // compute inverse variance of p from mixture and update covariance
       auto new_cov = old_bound.covariance().value();
 
       const auto varInvP = [&]() {
         if (state.stepping.navDir == Direction::Forward) {
-          const auto f = 1. / (p_prev * gaussian.mean);
+          const auto f = 1. / (old_p * gaussian.mean);
           return f * f * gaussian.var;
         } else {
-          return gaussian.var / (p_prev * p_prev);
+          return gaussian.var / (old_p * old_p);
         }
       }();
 
@@ -621,9 +624,8 @@ struct GsfActor {
 
     normalizeWeights(v, [](auto& c) -> double& { return std::get<double>(c); });
 
-    result.lastMeasurementState =
-        MultiComponentBoundTrackParameters<SinglyCharged>(
-            surface.getSharedPtr(), std::move(v));
+    result.lastMeasurementState = MultiComponentBoundTrackParameters(
+        surface.getSharedPtr(), std::move(v));
 
     // Return sucess
     return Acts::Result<void>::success();

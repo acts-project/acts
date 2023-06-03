@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -76,7 +78,9 @@ void ActsExamples::DuplicationPlotTool::write(
 void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const Acts::BoundTrackParameters& fittedParameters, bool status) const {
-  const auto& momentum = fittedParameters.momentum();
+  // hypothesises charge=1
+  const auto momentum = fittedParameters.direction() * 1 /
+                        std::abs(fittedParameters.get<Acts::eBoundQOverP>());
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);

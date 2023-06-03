@@ -101,7 +101,7 @@ class AtlasStepper {
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
-            geoContext, pos, pars.unitDirection());
+            geoContext, pos, pars.direction());
 
         pVector[8] = transform(0, eBoundLoc0);
         pVector[16] = transform(0, eBoundLoc1);
@@ -294,15 +294,14 @@ class AtlasStepper {
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_bField(std::move(bField)){};
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx,      m_bField->makeCache(mctx), par, navDir, ssize,
-                 stolerance};
+    return State(gctx, m_bField->makeCache(mctx), par, navDir, ssize,
+                 stolerance);
   }
 
   /// @brief Resets the state
@@ -354,13 +353,6 @@ class AtlasStepper {
   }
 
   double qop(const State& state) const { return state.pVector[7]; }
-
-  double momentum(const State& state) const {
-    return 1. / std::abs(qop(state));
-  }
-
-  /// Charge access
-  double charge(const State& state) const { return qop(state) > 0. ? 1. : -1.; }
 
   /// Overstep limit
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
@@ -1247,8 +1239,9 @@ class AtlasStepper {
       sA[2] = C6 * Sl;
 
       // Evaluate the time propagation
-      double dtds =
-          std::hypot(1, state.options.mass / momentum(state.stepping));
+      double dtds = std::hypot(
+          1, state.options.mass /
+                 (state.options.absCharge / std::abs(qop(state.stepping))));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
@@ -1256,8 +1249,7 @@ class AtlasStepper {
 
       if (Jac) {
         double dtdl = h * state.options.mass * state.options.mass *
-                      charge(state.stepping) /
-                      (momentum(state.stepping) * dtds);
+                      qop(state.stepping) / dtds;
         state.stepping.pVector[43] += dtdl;
 
         // Jacobian calculation

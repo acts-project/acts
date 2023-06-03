@@ -75,26 +75,6 @@ struct WeightedComponentReducerLoop {
   }
 
   template <typename stepper_state_t>
-  static ActsScalar momentum(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * std::abs(cmp.state.absCharge /
-                                             cmp.state.pars[eFreeQOverP]);
-        });
-  }
-
-  template <typename stepper_state_t>
-  static ActsScalar charge(const stepper_state_t& s) {
-    return std::accumulate(
-        s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * std::copysign(cmp.state.absCharge,
-                                                  cmp.state.pars[eFreeQOverP]);
-        });
-  }
-
-  template <typename stepper_state_t>
   static ActsScalar time(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
@@ -276,14 +256,13 @@ class MultiEigenStepperLoop
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
-    explicit State(
-        const GeometryContext& gctx, const MagneticFieldContext& mctx,
-        const std::shared_ptr<const MagneticFieldProvider>& bfield,
-        const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        Direction ndir = Direction::Forward,
-        double ssize = std::numeric_limits<double>::max(),
-        double stolerance = s_onSurfaceTolerance)
+    explicit State(const GeometryContext& gctx,
+                   const MagneticFieldContext& mctx,
+                   const std::shared_ptr<const MagneticFieldProvider>& bfield,
+                   const MultiComponentBoundTrackParameters& multipars,
+                   Direction ndir = Direction::Forward,
+                   double ssize = std::numeric_limits<double>::max(),
+                   double stolerance = s_onSurfaceTolerance)
         : navDir(ndir), geoContext(gctx), magContext(mctx) {
       if (multipars.components().empty()) {
         throw std::invalid_argument(
@@ -308,10 +287,9 @@ class MultiEigenStepperLoop
   };
 
   /// Construct and initialize a state
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const MultiComponentBoundTrackParameters<charge_t>& par,
+                  const MultiComponentBoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
@@ -588,10 +566,9 @@ class MultiEigenStepperLoop
   /// valid in the end.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
-  template <typename charge_t>
-  Result<ComponentProxy> addComponent(
-      State& state, const SingleBoundTrackParameters<charge_t>& pars,
-      double weight) const {
+  Result<ComponentProxy> addComponent(State& state,
+                                      const BoundTrackParameters& pars,
+                                      double weight) const {
     state.components.push_back(
         {SingleState(state.geoContext,
                      SingleStepper::m_bField->makeCache(state.magContext), pars,
@@ -627,15 +604,10 @@ class MultiEigenStepperLoop
     return Reducer::direction(state);
   }
 
-  /// Absolute momentum accessor
+  /// QoP access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return Reducer::momentum(state); }
-
-  /// Charge access
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const { return Reducer::charge(state); }
+  double qop(const State& state) const { return Reducer::qop(state); }
 
   /// Time access
   ///

@@ -166,8 +166,6 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     params[Acts::BoundIndices::eBoundQOverP] = m_branches.track_qOverP[i];
     params[Acts::BoundIndices::eBoundTime] = m_branches.track_t[i];
 
-    const double q = 1;
-
     // Construct and fill covariance matrix
     Acts::BoundSymMatrix cov;
 
@@ -225,7 +223,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundTheta) =
         m_branches.track_cov_tehtaqOverP[i];
 
-    Acts::BoundTrackParameters tc(surface, params, q, cov);
+    Acts::BoundTrackParameters tc(surface, params, cov);
     trackContainer.push_back(tc);
   }
 

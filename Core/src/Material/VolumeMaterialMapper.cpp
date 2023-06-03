@@ -8,7 +8,6 @@
 
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
@@ -357,9 +356,9 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using VectorHelpers::makeVector4;
 
   // Neutral curvilinear parameters
-  NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
-                                          mTrack.first.second,
-                                          1 / mTrack.first.second.norm());
+  CurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
+                                   mTrack.first.second,
+                                   1 / mTrack.first.second.norm());
 
   // Prepare Action list and abort list
   using BoundSurfaceCollector = SurfaceCollector<BoundSurfaceSelector>;

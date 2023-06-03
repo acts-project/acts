@@ -59,21 +59,19 @@ class StraightLineStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
-                   const SingleBoundTrackParameters<charge_t>& par,
+                   const BoundTrackParameters& par,
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : absCharge(std::abs(par.charge())),
-          navDir(ndir),
+        : navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           geoContext(gctx) {
       (void)mctx;
       pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.unitDirection();
+      pars.template segment<3>(eFreeDir0) = par.direction();
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
       if (par.covariance()) {
@@ -100,9 +98,6 @@ class StraightLineStepper {
 
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
-
-    /// The absolute charge as the free vector can be 1/p or q/p
-    double absCharge = UnitConstants::e;
 
     /// Boolean to indiciate if you need covariance transport
     bool covTransport = false;
@@ -133,10 +128,9 @@ class StraightLineStepper {
 
   StraightLineStepper() = default;
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
@@ -182,25 +176,10 @@ class StraightLineStepper {
     return state.pars.template segment<3>(eFreeDir0);
   }
 
-  /// QoP direction accessor
+  /// QoP accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double qop(const State& state) const { return state.pars[eFreeQOverP]; }
-
-  /// Absolute momentum accessor
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
-    auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qop(state));
-  }
-
-  /// Charge access
-  ///
-  /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const {
-    return std::copysign(state.absCharge, qop(state));
-  }
 
   /// Time access
   ///
@@ -376,7 +355,7 @@ class StraightLineStepper {
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize.value();
-    const double p = momentum(state.stepping);
+    const double p = state.options.absCharge / qop(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
     // Update the track parameters according to the equations of motion

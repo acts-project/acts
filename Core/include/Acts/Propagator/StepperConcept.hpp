@@ -107,10 +107,6 @@ constexpr bool MultiStepperStateConcept= require<
         static_assert(position_exists, "position method not found");
         constexpr static bool direction_exists = has_method<const S, Vector3, direction_t, const state&>;
         static_assert(direction_exists, "direction method not found");
-        constexpr static bool momentum_exists = has_method<const S, double, momentum_t, const state&>;
-        static_assert(momentum_exists, "momentum method not found");
-        constexpr static bool charge_exists = has_method<const S, double, charge_t, const state&>;
-        static_assert(charge_exists, "charge method not found");
         constexpr static bool time_exists = has_method<const S, double, time_t, const state&>;
         static_assert(time_exists, "time method not found");
         constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
@@ -140,8 +136,6 @@ constexpr bool MultiStepperStateConcept= require<
                                               curvilinear_state_exists,
                                               position_exists,
                                               direction_exists,
-                                              momentum_exists,
-                                              charge_exists,
                                               time_exists,
                                               bound_state_method_exists,
                                               curvilinear_state_method_exists,

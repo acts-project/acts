@@ -345,7 +345,7 @@ class KalmanFitter {
       ACTS_VERBOSE("KalmanFitter step at pos: "
                    << stepper.position(state.stepping).transpose()
                    << " dir: " << stepper.direction(state.stepping).transpose()
-                   << " momentum: " << stepper.momentum(state.stepping));
+                   << " qop: " << stepper.qop(state.stepping));
 
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
