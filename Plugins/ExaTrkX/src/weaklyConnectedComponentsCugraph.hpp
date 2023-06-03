@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <Acts/utilities/Logger.hpp>
+#include <Acts/Utilities/Logger.hpp>
 
 #include <cerrno>
 #include <cstring>
@@ -47,11 +47,11 @@ __global__ void weaklyConnectedComponents(std::vector<vertex_t>& rowIndices,
                                           std::vector<vertex_t>& colIndices,
                                           std::vector<weight_t>& edgeWeights,
                                           std::vector<vertex_t>& trackLabels,
-                                          Acts::Logger& logger) {
+                                          const Acts::Logger& logger) {
   cudaStream_t stream;
   CUDA_RT_CALL(cudaStreamCreate(&stream));
 
-  ACTS_VERBOSE("Weakly components Start") << std::endl(;
+  ACTS_VERBOSE("Weakly components Start");
   ACTS_VERBOSE("edge size: " << rowIndices.size() << " " << colIndices.size());
   raft::handle_t handle{stream};
 

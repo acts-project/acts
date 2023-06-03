@@ -17,7 +17,7 @@
 namespace Acts {
 
 std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
-    std::any nodes, std::any edges, std::any edge_weights,
+    std::any, std::any edges, std::any edge_weights,
     std::vector<int> &spacepointIDs, const Logger &logger) {
   auto numSpacepoints = spacepointIDs.size();
   auto edgesAfterFiltering = std::any_cast<std::vector<int64_t>>(edges);
@@ -55,7 +55,7 @@ std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
   // map labeling from MCC to customized track id.
   std::map<int, int> trackLableToIds;
 
-  for (int idx = 0; idx < numSpacepoints; ++idx) {
+  for (auto idx = 0ul; idx < numSpacepoints; ++idx) {
     int trackLabel = trackLabels[idx];
     int spacepointID = spacepointIDs[idx];
 
