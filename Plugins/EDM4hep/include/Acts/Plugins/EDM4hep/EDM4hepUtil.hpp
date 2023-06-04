@@ -9,9 +9,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
@@ -51,11 +51,11 @@ ActsSymMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega, double Bz);
 void unpackCovariance(const float* from, ActsSymMatrix<6>& to);
 void packCovariance(const ActsSymMatrix<6>& from, float* to);
 
-Parameters convertTrackParametersToEdm4hep(
-    const Acts::GeometryContext& gctx, double Bz,
-    const SingleBoundTrackParameters<SinglyCharged>& params);
+Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
+                                           double Bz,
+                                           const BoundTrackParameters& params);
 
-SingleBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
+BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
@@ -102,9 +102,8 @@ void writeTrack(
     trackState.location = edm4hep::TrackState::AtOther;
 
     // This makes the hard assumption that |q| = 1
-    SingleBoundTrackParameters<SinglyCharged> params{
-        state.referenceSurface().getSharedPtr(), state.parameters(),
-        state.covariance()};
+    BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
+                                state.parameters(), state.covariance()};
 
     // Convert to LCIO track parametrization expected by EDM4hep
     detail::Parameters converted =
@@ -133,9 +132,8 @@ void writeTrack(
   auto& ipState = outTrackStates.emplace_back();
 
   // Convert the track parameters at the IP
-  SingleBoundTrackParameters<SinglyCharged> trackParams{
-      track.referenceSurface().getSharedPtr(), track.parameters(),
-      track.covariance()};
+  BoundTrackParameters trackParams{track.referenceSurface().getSharedPtr(),
+                                   track.parameters(), track.covariance()};
 
   // Convert to LCIO track parametrization expected by EDM4hep
   auto converted =

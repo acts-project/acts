@@ -107,9 +107,9 @@ void unpackCovariance(const float* from, ActsSymMatrix<6>& to) {
   }
 }
 
-Parameters convertTrackParametersToEdm4hep(
-    const Acts::GeometryContext& gctx, double Bz,
-    const SingleBoundTrackParameters<SinglyCharged>& params) {
+Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
+                                           double Bz,
+                                           const BoundTrackParameters& params) {
   Acts::Vector3 global = params.referenceSurface().localToGlobal(
       gctx, params.parameters().template head<2>(), params.momentum());
 
@@ -175,7 +175,7 @@ Parameters convertTrackParametersToEdm4hep(
   return result;
 }
 
-SingleBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
+BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params) {
   BoundVector targetPars;
 
