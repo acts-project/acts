@@ -40,6 +40,7 @@ struct Options {
   double stepSizeCutOff = 0.0;
   std::size_t maxRungeKuttaStepTrials = 10;
   double mass = 1.0;
+  double absCharge = 1.0;
   const Acts::Logger &logger = Acts::getDummyLogger();
 };
 
@@ -69,7 +70,6 @@ using components_t = typename T::components;
 // Makes random bound parameters and covariance and a plane surface at {0,0,0}
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
 // supplied
-template <typename charge_t = SinglyCharged>
 auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
                           std::optional<BoundVector> ext_pars = std::nullopt) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
@@ -90,23 +90,19 @@ auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3{1., 0., 0.});
 
-  return MultiComponentBoundTrackParameters<charge_t>(surface, cmps);
+  return MultiComponentBoundTrackParameters(surface, cmps);
 }
 
 //////////////////////////////////////////////////////
 /// Test the construction of the MultiStepper::State
 //////////////////////////////////////////////////////
-template <typename multi_stepper_t, typename charge_t, bool Cov>
+template <typename multi_stepper_t, bool Cov>
 void test_multi_stepper_state() {
-  static_assert(std::is_same_v<charge_t, SinglyCharged> ||
-                std::is_same_v<charge_t, Neutral>);
-
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
   constexpr std::size_t N = 4;
-  const auto multi_pars =
-      makeDefaultBoundPars<charge_t>(Cov, N, BoundVector::Ones());
+  const auto multi_pars = makeDefaultBoundPars(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
                    defaultStepSize, defaultTolerance);
@@ -147,16 +143,12 @@ void test_multi_stepper_state() {
   }
 }
 
-BOOST_AUTO_TEST_CASE(multi_stepper_state_charged_no_cov) {
-  test_multi_stepper_state<MultiStepperLoop, SinglyCharged, false>();
+BOOST_AUTO_TEST_CASE(multi_stepper_state_no_cov) {
+  test_multi_stepper_state<MultiStepperLoop, false>();
 }
 
-BOOST_AUTO_TEST_CASE(multi_stepper_state_neutral_no_cov) {
-  test_multi_stepper_state<MultiStepperLoop, Neutral, false>();
-}
-
-BOOST_AUTO_TEST_CASE(multi_stepper_state_charged_cov) {
-  test_multi_stepper_state<MultiStepperLoop, SinglyCharged, true>();
+BOOST_AUTO_TEST_CASE(multi_stepper_state_cov) {
+  test_multi_stepper_state<MultiStepperLoop, true>();
 }
 
 template <typename multi_stepper_t>
@@ -192,8 +184,8 @@ void test_multi_stepper_vs_eigen_stepper() {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3::Ones().normalized());
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-  SingleBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
+  MultiComponentBoundTrackParameters multi_pars(surface, cmps);
+  BoundTrackParameters single_pars(surface, pars, cov);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
                          defaultStepSize, defaultTolerance);
@@ -354,14 +346,13 @@ void test_multi_stepper_surface_status_update() {
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(start_surface,
-                                                               cmps);
+  MultiComponentBoundTrackParameters multi_pars(start_surface, cmps);
 
   BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
   BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
@@ -454,14 +445,13 @@ void test_component_bound_state() {
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(start_surface,
-                                                               cmps);
+  MultiComponentBoundTrackParameters multi_pars(start_surface, cmps);
 
   BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
   BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
@@ -529,7 +519,7 @@ void test_combined_bound_state_function() {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, pars, cov});
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  MultiComponentBoundTrackParameters multi_pars(surface, cmps);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
                          defaultStepSize, defaultTolerance);
   MultiStepper multi_stepper(defaultBField);
@@ -572,9 +562,9 @@ void test_combined_curvilinear_state_function() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, pars, cov});
-  SingleBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
+  BoundTrackParameters check_pars(surface, pars, cov);
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  MultiComponentBoundTrackParameters multi_pars(surface, cmps);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
                          defaultStepSize, defaultTolerance);
   MultiStepper multi_stepper(defaultBField);
@@ -585,11 +575,8 @@ void test_combined_curvilinear_state_function() {
   BOOST_CHECK(
       curv_pars.fourPosition(multi_state.geoContext)
           .isApprox(check_pars.fourPosition(multi_state.geoContext), 1.e-8));
-  BOOST_CHECK(
-      curv_pars.unitDirection().isApprox(check_pars.unitDirection(), 1.e-8));
-  BOOST_CHECK_CLOSE(curv_pars.absoluteMomentum(), check_pars.absoluteMomentum(),
-                    1.e-8);
-  BOOST_CHECK_CLOSE(curv_pars.charge(), check_pars.charge(), 1.e-8);
+  BOOST_CHECK(curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
+  BOOST_CHECK_CLOSE(curv_pars.qop(), check_pars.qop(), 1.e-8);
 }
 
 BOOST_AUTO_TEST_CASE(test_curvilinear_state) {
@@ -614,7 +601,7 @@ void test_single_component_interface_function() {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3::Ones().normalized());
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  MultiComponentBoundTrackParameters multi_pars(surface, cmps);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
                          defaultStepSize, defaultTolerance);
@@ -633,8 +620,7 @@ void test_single_component_interface_function() {
     BOOST_CHECK(sstepper.direction(sstepping) ==
                 cmp.pars().template segment<3>(eFreeDir0));
     BOOST_CHECK(sstepper.time(sstepping) == cmp.pars()[eFreeTime]);
-    BOOST_CHECK_CLOSE(sstepper.charge(sstepping) / sstepper.momentum(sstepping),
-                      cmp.pars()[eFreeQOverP], 1.e-8);
+    BOOST_CHECK_CLOSE(sstepper.qop(sstepping), cmp.pars()[eFreeQOverP], 1.e-8);
   };
 
   for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
@@ -702,7 +688,7 @@ void propagator_instatiation_test_function() {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, BoundVector::Ones().eval(),
                BoundSymMatrix::Identity().eval()});
-  MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
+  MultiComponentBoundTrackParameters pars(surface, cmps);
 
   // This only checks that this compiles, not that it runs without errors
   // @TODO: Add test that checks the target aborter works corretly

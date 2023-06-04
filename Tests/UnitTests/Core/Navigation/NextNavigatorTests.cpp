@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
   // define start parameters
   Acts::Vector4 pos(0, 0, -5, 0);
   Acts::Vector3 mom(0, 0, 10);
-  Acts::CurvilinearTrackParameters start(pos, mom, mom.norm(), +1);
+  Acts::CurvilinearTrackParameters start(pos, mom, +1 / mom.norm());
   // propagate to the cylinder surface
   propagator.propagate(start, options);
 }

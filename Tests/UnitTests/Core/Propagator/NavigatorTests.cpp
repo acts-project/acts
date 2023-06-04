@@ -153,9 +153,9 @@ struct PropagatorState {
         State& state, const Surface& surface, bool /*transportCov*/,
         const FreeToBoundCorrection& /*freeToBoundCorrection*/
     ) const {
-      auto bound =
-          BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
-                                       state.pos4, state.dir, state.p, state.q);
+      auto bound = BoundTrackParameters::create(surface.getSharedPtr(),
+                                                tgContext, state.pos4,
+                                                state.dir, state.q / state.p);
       if (!bound.ok()) {
         return bound.error();
       }
@@ -166,8 +166,8 @@ struct PropagatorState {
 
     CurvilinearState curvilinearState(State& state, bool /*transportCov*/
     ) const {
-      CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
-                                            state.q);
+      CurvilinearTrackParameters parameters(state.pos4, state.dir,
+                                            state.q / state.p);
       // Create the bound state
       CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                  state.pathAccumulated};

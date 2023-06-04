@@ -24,5 +24,11 @@ inline auto absoluteMomentum(const propagator_state_t &state,
   return state.options.absCharge / std::abs(stepper.qop(state.stepping));
 }
 
+template <typename propagator_state_t, typename stepper_t>
+inline auto momentum(const propagator_state_t &state,
+                     const stepper_t &stepper) {
+  return absoluteMomentum(state, stepper) * stepper.direction(state);
+}
+
 }  // namespace PropagatorHelpers
 }  // namespace Acts

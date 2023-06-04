@@ -22,6 +22,7 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -42,7 +43,7 @@ struct SteppingState {
   /// Parameters
   Vector3 pos = Vector3(0., 0., 0.);
   Vector3 dir = Vector3(0., 0., 1);
-  double p = 100_MeV;
+  double qop = 1 / 100_MeV;
 
   Direction navDir = Direction::Forward;
 };
@@ -70,8 +71,8 @@ struct Stepper {
   /// Access method - direction
   Vector3 direction(const SteppingState& state) const { return state.dir; }
 
-  /// Access method - momentum
-  double momentum(const SteppingState& state) const { return state.p; }
+  /// Access method - qop
+  double qop(const SteppingState& state) const { return state.qop; }
 };
 
 /// @brief mockup of navigation state
@@ -81,6 +82,8 @@ struct NavigationState {
 
 /// @brief mockup of the Propagator Options
 struct Options {
+  double absCharge = 1;
+
   /// Absolute maximum path length
   double pathLimit = std::numeric_limits<double>::max();
   bool loopProtection = true;
@@ -124,7 +127,7 @@ BOOST_DATA_TEST_CASE(
 
   PropagatorState pState;
   pState.stepping.dir = Vector3(cos(phi), sin(phi), 0.);
-  pState.stepping.p = 100_MeV;
+  pState.stepping.qop = 1 / 100_MeV;
 
   Stepper pStepper;
 
@@ -181,7 +184,7 @@ BOOST_DATA_TEST_CASE(
   EigenPropagator epropagator(std::move(estepper));
 
   // define start parameters
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, p, q);
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, q / p);
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
   PropagatorOptions options(tgContext, mfContext);
@@ -189,9 +192,11 @@ BOOST_DATA_TEST_CASE(
   const auto& result = epropagator.propagate(start, options).value();
 
   // this test assumes state.options.loopFraction = 0.5
-  CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);
-  CHECK_CLOSE_REL(py, -result.endParameters->momentum().y(), 1e-2);
-  CHECK_CLOSE_REL(pz, result.endParameters->momentum().z(), 1e-2);
+  auto endMomentum =
+      TrackParameterHelpers::momentum(*result.endParameters, std::abs(q));
+  CHECK_CLOSE_REL(px, endMomentum.x(), 1e-2);
+  CHECK_CLOSE_REL(py, endMomentum.y(), 1e-2);
+  CHECK_CLOSE_REL(pz, endMomentum.z(), 1e-2);
 }
 
 }  // namespace Test

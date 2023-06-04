@@ -26,6 +26,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -102,7 +103,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
                                    cov);
 
   PropagatorOptions<> options(tgContext, mfContext);
@@ -145,7 +146,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
                                    cov);
 
   // A PlaneSelector for the SurfaceCollector
@@ -211,7 +212,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
                                    cov);
 
   PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
@@ -222,8 +223,9 @@ BOOST_DATA_TEST_CASE(
   const auto& result = epropagator.propagate(start, options).value();
   if (result.endParameters) {
     // test that you actually lost some energy
-    BOOST_CHECK_LT(result.endParameters->absoluteMomentum(),
-                   start.absoluteMomentum());
+    BOOST_CHECK_LT(TrackParameterHelpers::absoluteMomentum(
+                       *result.endParameters, std::abs(q)),
+                   TrackParameterHelpers::absoluteMomentum(start, std::abs(q)));
   }
 }
 
@@ -259,7 +261,7 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
                                    cov);
 
   // Action list and abort list

@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
@@ -253,7 +252,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   // Set some start parameters
   Vector4 pos4(0., 0., 0., 42_ns);
   Vector3 dir(1., 0., 0.);
-  NeutralCurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
+  CurvilinearTrackParameters sctp(pos4, dir, 1 / 1_GeV);
 
   MagneticFieldContext mc;
   // Launch propagation and gather result

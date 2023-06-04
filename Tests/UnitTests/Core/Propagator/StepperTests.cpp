@@ -9,7 +9,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -32,6 +31,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 
 #include <fstream>
 
@@ -60,6 +60,7 @@ struct PropState {
   /// Propagator options which only carry the relevant components
   struct {
     double mass = 42.;
+    double absCharge = 1.;
     double tolerance = 1e-4;
     double stepSizeCutOff = 0.;
     unsigned int maxRungeKuttaStepTrials = 10000;
@@ -139,8 +140,7 @@ struct StepCollector {
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
-    result.momentum.push_back(stepper.momentum(state.stepping) *
-                              stepper.direction(state.stepping));
+    result.momentum.push_back(PropagatorHelpers::momentum(state, stepper));
   }
 };
 
@@ -177,17 +177,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
-  // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
-                                        1 / absMom);
-  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
-                                  navDir, stepSize, tolerance);
-  BOOST_CHECK_EQUAL(es.charge(esState), 0.);
-
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
-                                          1 / absMom, cov);
+  CurvilinearTrackParameters ncp =
+      CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov);
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
                                   navDir, stepSize, tolerance);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -223,8 +216,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
   CHECK_CLOSE_ABS(es.direction(esState), dir, eps);
-  CHECK_CLOSE_ABS(es.momentum(esState), absMom, eps);
-  CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
+  CHECK_CLOSE_ABS(es.qop(esState), charge / absMom, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
   BOOST_CHECK_EQUAL(es.getField(esState, pos).value(),
@@ -245,8 +237,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto curvState = es.curvilinearState(esState);
   auto curvPars = std::get<0>(curvState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), eps);
-  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 10e-6);
-  CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), eps);
+  CHECK_CLOSE_ABS(curvPars.qop(), cp.qop(), 10e-6);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), eps);
   BOOST_CHECK(curvPars.covariance().has_value());
   BOOST_CHECK_NE(*curvPars.covariance(), cov);
@@ -262,8 +253,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
             newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
   BOOST_CHECK_EQUAL(es.direction(esState), newMom.normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esState), newMom.norm());
-  BOOST_CHECK_EQUAL(es.charge(esState), charge);
+  CHECK_CLOSE_ABS(es.qop(esState), charge / newMom.norm(), 1e-6);
   BOOST_CHECK_EQUAL(es.time(esState), newTime);
 
   // The covariance transport
@@ -283,7 +273,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
-  BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
+  CHECK_CLOSE_ABS(es.qop(ps.stepping), charge / newMom.norm(), 1e-6);
   BOOST_CHECK_LT(es.time(ps.stepping), newTime);
   BOOST_CHECK_EQUAL(ps.stepping.derivative, FreeVector::Zero());
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
@@ -293,7 +283,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
-  BOOST_CHECK_EQUAL(es.charge(ps.stepping), charge);
+  CHECK_CLOSE_ABS(es.qop(ps.stepping), charge / newMom.norm(), 1e-6);
   BOOST_CHECK_LT(es.time(ps.stepping), newTime);
   BOOST_CHECK_NE(ps.stepping.derivative, FreeVector::Zero());
   BOOST_CHECK_NE(ps.stepping.jacTransport, FreeMatrix::Identity());
@@ -306,8 +296,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
-                                 charge2, cov2);
+  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
+                                 charge2 / absMom2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward;
@@ -318,7 +308,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
                                        cp, navDir, stepSize, tolerance);
     copy.pars = state.pars;
-    copy.absCharge = state.absCharge;
     copy.covTransport = state.covTransport;
     copy.cov = state.cov;
     copy.navDir = state.navDir;
@@ -359,9 +348,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
+  CHECK_CLOSE_ABS(es.qop(esStateCopy), freeParams[eFreeQOverP], 1e-6);
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -384,9 +371,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
+  CHECK_CLOSE_ABS(es.qop(esStateCopy), freeParams[eFreeQOverP], 1e-6);
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -410,9 +395,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
-                    std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
+  CHECK_CLOSE_ABS(es.qop(esStateCopy), freeParams[eFreeQOverP], 1e-6);
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, Direction::Forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -456,8 +439,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto boundState = es.boundState(esState, *plane).value();
   auto boundPars = std::get<0>(boundState);
   CHECK_CLOSE_ABS(boundPars.position(tgContext), bp.position(tgContext), eps);
-  CHECK_CLOSE_ABS(boundPars.momentum(), bp.momentum(), 1e-7);
-  CHECK_CLOSE_ABS(boundPars.charge(), bp.charge(), eps);
+  CHECK_CLOSE_ABS(boundPars.qop(), bp.qop(), 1e-6);
   CHECK_CLOSE_ABS(boundPars.time(), bp.time(), eps);
   BOOST_CHECK(boundPars.covariance().has_value());
   BOOST_CHECK_NE(*boundPars.covariance(), cov);
@@ -483,8 +465,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
             *plane);
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
-  CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
-  BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
+  CHECK_CLOSE_REL(es.qop(esState), freeParams[eFreeQOverP], eps);
   CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 
@@ -554,7 +535,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   Covariance cov = Covariance::Identity();
   const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 1_GeV * startDir;
-  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_GeV, 1_e,
+  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 1_GeV,
                                         cov);
 
   // Create action list for surface collection
@@ -661,7 +642,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   Covariance cov = Covariance::Identity();
   const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 5_GeV * startDir;
-  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 5_GeV, 1_e,
+  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 5_GeV,
                                         cov);
 
   // Create action list for surface collection
@@ -822,8 +803,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   Navigator naviDet({det, true, true, true});
 
   // Set initial parameters for the particle track
-  CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree, 5_GeV,
-                                  1_e, Covariance::Identity());
+  CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,
+                                  1_e / 5_GeV, Covariance::Identity());
 
   // Create action list for surface collection
   AbortList<EndOfWorld> abortList;
