@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -109,7 +110,7 @@ void unpackCovariance(const float* from, ActsSymMatrix<6>& to) {
 }
 
 Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
-                                           double absCharge, double Bz,
+                                           double Bz,
                                            const BoundTrackParameters& params) {
   Acts::Vector3 global = params.referenceSurface().localToGlobal(
       gctx, params.parameters().template head<2>(), params.direction());
@@ -170,9 +171,8 @@ Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
   result.values[1] = targetPars[Acts::eBoundLoc1];
   result.values[2] = targetPars[Acts::eBoundPhi];
   result.values[3] = std::tan(M_PI_2 - targetPars[Acts::eBoundTheta]);
-  result.values[4] =
-      TrackParameterHelpers::charge(params, absCharge) * Bz /
-      TrackParameterHelpers::transverseMomentum(params, absCharge);
+  result.values[4] = targetPars[Acts::eBoundQOverP] /
+                     std::sin(targetPars[Acts::eBoundTheta]) * Bz;
   result.values[5] = targetPars[Acts::eBoundTime];
 
   return result;

@@ -52,7 +52,7 @@ void unpackCovariance(const float* from, ActsSymMatrix<6>& to);
 void packCovariance(const ActsSymMatrix<6>& from, float* to);
 
 Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
-                                           double absCharge, double Bz,
+                                           double Bz,
                                            const BoundTrackParameters& params);
 
 BoundTrackParameters convertTrackParametersFromEdm4hep(
@@ -105,9 +105,8 @@ void writeTrack(
                                 state.parameters(), state.covariance()};
 
     // Convert to LCIO track parametrization expected by EDM4hep
-    // This makes the hard assumption that |q| = 1
     detail::Parameters converted =
-        detail::convertTrackParametersToEdm4hep(gctx, 1, Bz, params);
+        detail::convertTrackParametersToEdm4hep(gctx, Bz, params);
 
     // Write the converted parameters to the EDM4hep track state
     setParameters(trackState, converted);
@@ -136,9 +135,8 @@ void writeTrack(
                                    track.parameters(), track.covariance()};
 
   // Convert to LCIO track parametrization expected by EDM4hep
-  // This makes the hard assumption that |q| = 1
   auto converted =
-      detail::convertTrackParametersToEdm4hep(gctx, 1, Bz, trackParams);
+      detail::convertTrackParametersToEdm4hep(gctx, Bz, trackParams);
   setParameters(ipState, converted);
   ipState.location = edm4hep::TrackState::AtIP;
   ACTS_VERBOSE("Writing track level quantities as IP track state");

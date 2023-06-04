@@ -12,9 +12,9 @@
 #include <boost/test/unit_test_suite.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -48,14 +48,16 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   cov.setIdentity();
   cov(5, 5) = 25_ns;
 
-  SingleBoundTrackParameters<SinglyCharged> boundPar{refSurface, par, cov};
+  BoundTrackParameters boundPar{refSurface, par, cov};
 
+  double absCharge = 1_e;
   double Bz = 2_T;
 
   Acts::GeometryContext gctx;
 
   EDM4hepUtil::detail::Parameters converted =
-      EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
+      EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, absCharge, Bz,
+                                                           boundPar);
 
   BOOST_CHECK(converted.covariance.has_value());
   BOOST_CHECK(converted.surface);
@@ -71,7 +73,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 
   // convert back for roundtrip test
 
-  SingleBoundTrackParameters<SinglyCharged> roundtripPar =
+  BoundTrackParameters roundtripPar =
       EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
   BOOST_CHECK(roundtripPar.parameters().isApprox(boundPar.parameters()));
@@ -90,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   cov.setIdentity();
   cov(5, 5) = 25_ns;
 
-  SingleBoundTrackParameters<SinglyCharged> boundPar{refSurface, par, cov};
+  BoundTrackParameters boundPar{refSurface, par, cov};
 
   double Bz = 2_T;
 
@@ -112,7 +114,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
 
   // convert back for roundtrip test
-  SingleBoundTrackParameters<SinglyCharged> roundtripPar =
+  BoundTrackParameters roundtripPar =
       EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
   BOOST_CHECK_EQUAL(roundtripPar.parameters().template head<2>(),
@@ -129,8 +131,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
   par << 1_mm, 5_mm, 0, M_PI_2, -1 / 1_GeV,
       5_ns;  // -> perpendicular to perigee and pointing right, should be PCA
 
-  SingleBoundTrackParameters<SinglyCharged> boundPar{refSurface, par,
-                                                     std::nullopt};
+  BoundTrackParameters boundPar{refSurface, par, std::nullopt};
 
   double Bz = 2_T;
 
@@ -148,7 +149,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
 
   // convert back for roundtrip test
 
-  SingleBoundTrackParameters<SinglyCharged> roundtripPar =
+  BoundTrackParameters roundtripPar =
       EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
   BOOST_CHECK(roundtripPar.parameters().isApprox(boundPar.parameters()));
@@ -162,8 +163,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
   BoundVector par;
   par << 1_mm, 5_mm, M_PI / 4., M_PI_2, -1 / 1_GeV, 5_ns;
 
-  SingleBoundTrackParameters<SinglyCharged> boundPar{refSurface, par,
-                                                     std::nullopt};
+  BoundTrackParameters boundPar{refSurface, par, std::nullopt};
 
   double Bz = 2_T;
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
   CHECK_CLOSE_ABS(converted.values[2], par[2], 1e-6);
 
   // convert back for roundtrip test
-  SingleBoundTrackParameters<SinglyCharged> roundtripPar =
+  BoundTrackParameters roundtripPar =
       EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
   BOOST_CHECK_EQUAL(roundtripPar.parameters().template head<2>(),

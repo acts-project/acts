@@ -21,7 +21,7 @@ namespace Acts {
 /// This class is only a light wrapper arround a surface and a vector of
 /// parameters. Its main purpose is to provide many constructors for the
 /// underlying vector. Most accessors are generated from the
-/// SingleBoundTrackParameters equivalent and thus may be expensive
+/// BoundTrackParameters equivalent and thus may be expensive
 /// @note This class holds shared ownership on its reference surface.
 /// @note The accessors for parameters, covariance, position, etc.
 /// are the weighted means of the components.
