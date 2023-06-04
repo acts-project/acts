@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 
 using namespace Acts;

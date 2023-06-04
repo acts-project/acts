@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
@@ -141,8 +142,9 @@ struct EventDataView3D {
 
     // Draw the parameter shaft and cone
     auto position = parameters.position(gctx);
-    auto direction = parameters.unitDirection();
-    double p = parameters.absoluteMomentum();
+    auto direction = parameters.direction();
+    // hypothesises abs charge = 1
+    double p = TrackParameterHelpers::absoluteMomentum(parameters, 1);
 
     ViewConfig lparConfig = parConfig;
     lparConfig.lineThickness = 0.05;

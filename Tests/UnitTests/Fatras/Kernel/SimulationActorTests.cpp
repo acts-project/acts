@@ -87,7 +87,7 @@ struct MockStepperState {
   Vector3 pos = Vector3::Zero();
   Scalar time = 0;
   Vector3 dir = Vector3::Zero();
-  Scalar p = 0;
+  Scalar qop = 0;
 };
 
 struct MockStepper {
@@ -98,13 +98,13 @@ struct MockStepper {
   auto position(const State &state) const { return state.pos; }
   auto time(const State &state) const { return state.time; }
   auto direction(const State &state) const { return state.dir; }
-  auto momentum(const State &state) const { return state.p; }
+  auto qop(const State &state) const { return state.qop; }
   void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar qop,
               Scalar time) {
     state.pos = pos;
     state.time = time;
     state.dir = dir;
-    state.p = 1 / qop;
+    state.qop = qop;
   }
   void setStepSize(State & /*state*/, double /*stepSize*/,
                    Acts::ConstrainedStep::Type /*stype*/) const {}
@@ -167,7 +167,7 @@ struct Fixture {
     state.stepping.pos = particle.position();
     state.stepping.time = particle.time();
     state.stepping.dir = particle.unitDirection();
-    state.stepping.p = particle.absoluteMomentum();
+    state.stepping.qop = q / particle.absoluteMomentum();
   }
 };
 
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  BOOST_CHECK_EQUAL(f.state.stepping.qop, f.result.particle.qop());
 
   // call.actor again: one more hit, still no secondary
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
@@ -248,7 +248,7 @@ BOOST_AUTO_TEST_CASE(HitsOnEmptySurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  BOOST_CHECK_EQUAL(f.state.stepping.qop, f.result.particle.qop());
 
   // particle identity should be the same as the initial input
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
@@ -291,8 +291,7 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  CHECK_CLOSE_REL(f.state.stepping.p, f.result.particle.absoluteMomentum(),
-                  tol);
+  CHECK_CLOSE_REL(f.state.stepping.qop, f.result.particle.qop(), tol);
 
   // call.actor again: one more hit, one more secondary
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
@@ -317,7 +316,7 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  BOOST_CHECK_EQUAL(f.state.stepping.qop, f.result.particle.qop());
 
   // particle identity should be the same as the initial input
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
@@ -359,7 +358,7 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  BOOST_CHECK_EQUAL(f.state.stepping.qop, f.result.particle.qop());
 
   // call.actor again: no hit, still no secondary
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
@@ -382,7 +381,7 @@ BOOST_AUTO_TEST_CASE(NoHitsEmptySurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  BOOST_CHECK_EQUAL(f.state.stepping.qop, f.result.particle.qop());
 
   // particle identity should be the same as the initial input
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);
@@ -416,8 +415,7 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  CHECK_CLOSE_REL(f.state.stepping.p, f.result.particle.absoluteMomentum(),
-                  tol);
+  CHECK_CLOSE_REL(f.state.stepping.qop, f.result.particle.qop(), tol);
 
   // call.actor again: still no hit, one more secondary
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
@@ -440,7 +438,7 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  BOOST_CHECK_EQUAL(f.state.stepping.qop, f.result.particle.qop());
 
   // particle identity should be the same as the initial input
   BOOST_CHECK_EQUAL(f.result.particle.particleId(), f.pid);

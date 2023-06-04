@@ -69,7 +69,7 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
-  return CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);
+  return CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov);
 }
 
 std::default_random_engine rng(42);

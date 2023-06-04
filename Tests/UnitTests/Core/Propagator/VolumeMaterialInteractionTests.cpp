@@ -39,6 +39,7 @@ struct NaivgatorState {
 struct State {
   struct {
     double mass = 0;
+    double absCharge = 1;
     int absPdgCode = 0;
   } options;
 

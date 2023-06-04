@@ -64,15 +64,15 @@ BOOST_AUTO_TEST_CASE(track_density_finder_test) {
   // Test finder for some fixed track parameter values
   auto params1a = BoundTrackParameters::create(perigeeSurface, geoContext,
                                                makeVector4(pos1a, 0), mom1a,
-                                               mom1a.norm(), 1, covMat)
+                                               1 / mom1a.norm(), covMat)
                       .value();
   auto params1b = BoundTrackParameters::create(perigeeSurface, geoContext,
                                                makeVector4(pos1b, 0), mom1b,
-                                               mom1b.norm(), -1, covMat)
+                                               -1 / mom1b.norm(), covMat)
                       .value();
   auto params1c = BoundTrackParameters::create(perigeeSurface, geoContext,
                                                makeVector4(pos1c, 0), mom1c,
-                                               mom1c.norm(), -1, covMat)
+                                               -1 / mom1c.norm(), covMat)
                       .value();
 
   // Vectors of track parameters in different orders
@@ -144,15 +144,15 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // Test finder for some fixed track parameter values
   auto params1a = BoundTrackParameters::create(perigeeSurface, geoContext,
                                                makeVector4(pos1a, 0), mom1a,
-                                               mom1a.norm(), 1, covMat)
+                                               1 / mom1a.norm(), covMat)
                       .value();
   auto params1b = BoundTrackParameters::create(perigeeSurface, geoContext,
                                                makeVector4(pos1b, 0), mom1b,
-                                               mom1b.norm(), -1, covMat)
+                                               -1 / mom1b.norm(), covMat)
                       .value();
   auto params1c = BoundTrackParameters::create(perigeeSurface, geoContext,
                                                makeVector4(pos1c, 0), mom1c,
-                                               mom1c.norm(), -1, covMat)
+                                               -1 / mom1c.norm(), covMat)
                       .value();
 
   // Vector of track parameters
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat)
                            .value());
   }
 
@@ -319,15 +319,15 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // Test finder for some fixed track parameter values
   InputTrack params1a(BoundTrackParameters::create(perigeeSurface, geoContext,
                                                    makeVector4(pos1a, 0), mom1a,
-                                                   mom1a.norm(), 1, covMat)
+                                                   1 / mom1a.norm(), covMat)
                           .value());
   InputTrack params1b(BoundTrackParameters::create(perigeeSurface, geoContext,
                                                    makeVector4(pos1b, 0), mom1b,
-                                                   mom1b.norm(), -1, covMat)
+                                                   -1 / mom1b.norm(), covMat)
                           .value());
   InputTrack params1c(BoundTrackParameters::create(perigeeSurface, geoContext,
                                                    makeVector4(pos1c, 0), mom1c,
-                                                   mom1c.norm(), -1, covMat)
+                                                   -1 / mom1c.norm(), covMat)
                           .value());
 
   // Vector of track parameters
