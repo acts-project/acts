@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(

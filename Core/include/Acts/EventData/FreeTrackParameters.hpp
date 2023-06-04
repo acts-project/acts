@@ -13,6 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -102,9 +103,11 @@ class FreeTrackParameters {
   Scalar time() const { return m_params[eFreeTime]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
-  Vector3 direction() const {
-    return m_params.segment<3>(eFreeDir0).normalized();
-  }
+  Vector3 direction() const { return m_params.segment<3>(eFreeDir0); }
+
+  Scalar phi() const { return VectorHelpers::phi(direction()); }
+  Scalar theta() const { return VectorHelpers::theta(direction()); }
+  Scalar qop() const { return get<eFreeQOverP>(); }
 
  private:
   FreeVector m_params;

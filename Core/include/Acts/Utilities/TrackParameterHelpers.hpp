@@ -17,18 +17,19 @@ namespace TrackParameterHelpers {
 
 template <typename parameters_t>
 inline auto charge(const parameters_t &parameters, double absQ) {
-  return std::copysign(parameters.template get<eBoundQOverP>(), absQ);
+  assert(absQ >= 0);
+  return std::copysign(parameters.qop(), absQ);
 }
 
 template <typename parameters_t>
 inline auto absoluteMomentum(const parameters_t &parameters, double absQ) {
-  return absQ / std::abs(parameters.template get<eBoundQOverP>());
+  assert(absQ >= 0);
+  return absQ / std::abs(parameters.qop());
 }
 
 template <typename parameters_t>
 inline auto transverseMomentum(const parameters_t &parameters, double absQ) {
-  return std::sin(parameters.template get<eBoundTheta>()) *
-         absoluteMomentum(parameters, absQ);
+  return std::sin(parameters.theta()) * absoluteMomentum(parameters, absQ);
 }
 
 template <typename parameters_t>

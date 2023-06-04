@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -138,6 +139,10 @@ class BoundTrackParameters {
     return makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
                                          m_params[eBoundTheta]);
   }
+
+  Scalar phi() const { return get<eBoundPhi>(); }
+  Scalar theta() const { return get<eBoundTheta>(); }
+  Scalar qop() const { return get<eBoundQOverP>(); }
 
   /// Reference surface onto which the parameters are bound.
   const Surface& referenceSurface() const { return *m_surface; }

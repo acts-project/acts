@@ -78,7 +78,7 @@ BOOST_DATA_TEST_CASE(
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  NeutralFreeTrackParameters params(pos4, phi, theta, 1 / p);
+  FreeTrackParameters params(pos4, phi, theta, 1 / p);
   checkParameters(params, pos4, dir, p, 0_e);
   BOOST_CHECK(not params.covariance());
 
@@ -112,7 +112,7 @@ BOOST_DATA_TEST_CASE(
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  AnyFreeTrackParameters params(pos4, phi, theta, p, q);
+  FreeTrackParameters params(pos4, phi, theta, p, q);
   checkParameters(params, pos4, dir, p, q);
   BOOST_CHECK(not params.covariance());
 

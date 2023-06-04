@@ -21,6 +21,7 @@
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
@@ -355,7 +356,7 @@ class StraightLineStepper {
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize.value();
-    const double p = state.options.absCharge / qop(state.stepping);
+    const double p = PropagatorHelpers::absoluteMomentum(state, *this);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
     // Update the track parameters according to the equations of motion

@@ -23,6 +23,7 @@
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
 #include <ios>
@@ -402,8 +403,8 @@ struct GsfActor {
       }
 
       // TODO can we use qop here?
-      const auto old_p =
-          state.options.absCharge / std::abs(old_bound.get<eBoundQOverP>());
+      const auto old_p = TrackParameterHelpers::absoluteMomentum(
+          old_bound, state.options.absCharge);
       // compute delta p from mixture and update parameters
       auto new_pars = old_bound.parameters();
 
@@ -416,9 +417,8 @@ struct GsfActor {
       }();
 
       assert(old_p + delta_p > 0. && "new momentum must be > 0");
-      new_pars[eBoundQOverP] =
-          std::copysign(old_bound.get<eBoundQOverP>(),
-                        state.options.absCharge / (old_p + delta_p));
+      new_pars[eBoundQOverP] = std::copysign(
+          old_bound.qop(), state.options.absCharge / (old_p + delta_p));
 
       // compute inverse variance of p from mixture and update covariance
       auto new_cov = old_bound.covariance().value();

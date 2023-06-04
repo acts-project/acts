@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
+
 ActsExamples::TrackSummaryPlotTool::TrackSummaryPlotTool(
     const ActsExamples::TrackSummaryPlotTool::Config& cfg,
     Acts::Logging::Level lvl)
@@ -89,9 +91,9 @@ void ActsExamples::TrackSummaryPlotTool::fill(
     size_t nSharedHits) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
-  // hypothesises charge=1
-  const auto momentum = fittedParameters.direction() * 1 /
-                        std::abs(fittedParameters.get<Acts::eBoundQOverP>());
+  // hypothesises abs charge = 1
+  const auto momentum =
+      Acts::TrackParameterHelpers::momentum(fittedParameters, 1);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 

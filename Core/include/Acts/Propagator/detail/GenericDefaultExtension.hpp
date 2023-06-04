@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
@@ -136,7 +137,7 @@ struct GenericDefaultExtension {
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
     using std::hypot;
-    const double p = state.options.absCharge / stepper.qop(state.stepping);
+    const double p = PropagatorHelpers::absoluteMomentum(state, stepper);
     auto dtds = hypot(1, state.options.mass / p);
     state.stepping.pars[eFreeTime] += h * dtds;
     if (state.stepping.covTransport) {
@@ -183,7 +184,7 @@ struct GenericDefaultExtension {
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
     auto qop = stepper.qop(state.stepping);
-    auto p = state.options.absCharge / qop;
+    auto p = PropagatorHelpers::absoluteMomentum(state, stepper);
 
     D = FreeMatrix::Identity();
 

@@ -12,6 +12,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 
 #include <map>
 #include <numeric>
@@ -113,8 +114,7 @@ class ScopedGsfInfoPrinterAndChecker {
       : m_state(state),
         m_stepper(stepper),
         m_navigator(navigator),
-        m_p_initial(state.options.absCharge /
-                    std::abs(stepper.qop(state.stepping))),
+        m_p_initial(PropagatorHelpers::absoluteMomentum(state, stepper)),
         m_logger{logger} {
     // Some initial printing
     checks(true);
@@ -130,7 +130,7 @@ class ScopedGsfInfoPrinterAndChecker {
   ~ScopedGsfInfoPrinterAndChecker() {
     if (m_navigator.currentSurface(m_state.navigation)) {
       const auto p_final =
-          m_state.options.absCharge / std::abs(m_stepper.qop(m_state.stepping));
+          PropagatorHelpers::absoluteMomentum(m_state, m_stepper);
       ACTS_VERBOSE("Component status at end of step:");
       print_component_stats();
       ACTS_VERBOSE("Delta Momentum = " << std::setprecision(5)

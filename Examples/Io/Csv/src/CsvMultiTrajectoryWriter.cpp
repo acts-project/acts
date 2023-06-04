@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
@@ -96,9 +97,8 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
 
       // Requirement on the pT of the track
       const auto& params = traj.trackParameters(trackTip);
-      // hypothesises charge=1
-      const auto& momentum =
-          params.direction() * 1 / std::abs(params.get<Acts::eBoundQOverP>());
+      // hypothesises abs charge = 1
+      const auto momentum = Acts::TrackParameterHelpers::momentum(params, 1);
       const auto pT = Acts::VectorHelpers::perp(momentum);
       if (pT < m_cfg.ptMin) {
         continue;
@@ -191,9 +191,8 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     }
 
     const auto& params = *trajState.fittedParameters;
-    // hypothesises charge=1
-    const auto& momentum =
-        params.direction() * 1 / std::abs(params.get<Acts::eBoundQOverP>());
+    // hypothesises abs charge = 1
+    const auto momentum = Acts::TrackParameterHelpers::momentum(params, 1);
 
     // write the track info
     mos << trajState.trackId << ",";

@@ -169,6 +169,10 @@ class MultiComponentBoundTrackParameters {
     return reduce([](const Parameters& p) { return p.direction(); })
         .normalized();
   }
+
+  Scalar phi() const { return VectorHelpers::phi(direction()); }
+  Scalar theta() const { return VectorHelpers::theta(direction()); }
+  Scalar qop() const { return get<eBoundQOverP>(); }
 };
 
 }  // namespace Acts

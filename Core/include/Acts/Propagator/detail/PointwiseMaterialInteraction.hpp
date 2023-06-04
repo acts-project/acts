@@ -14,6 +14,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 
 namespace Acts {
 namespace detail {
@@ -76,7 +77,7 @@ struct PointwiseMaterialInteraction {
         dir(stepper.direction(state.stepping)),
         qOverP(stepper.qop(state.stepping)),
         absQ(state.options.absCharge),
-        momentum(state.options.absCharge / stepper.qop(state.stepping)),
+        momentum(PropagatorHelpers::absoluteMomentum(state, stepper)),
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),

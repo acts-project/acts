@@ -93,8 +93,7 @@ struct SingleParticleSimulation {
     actor.initialParticle = particle;
     // use AnyCharge to be able to handle neutral and charged parameters
     Acts::CurvilinearTrackParameters start(
-        particle.fourPosition(), particle.unitDirection(),
-        particle.charge() / particle.absoluteMomentum());
+        particle.fourPosition(), particle.unitDirection(), particle.qop());
     auto result = propagator.propagate(start, options);
     if (not result.ok()) {
       return result.error();

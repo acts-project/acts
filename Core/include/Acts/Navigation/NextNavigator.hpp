@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 
 #include <iomanip>
 #include <iterator>
@@ -413,8 +414,7 @@ class NextNavigator {
                            NavigationState& nState) const {
     nState.position = stepper.position(state.stepping);
     nState.direction = stepper.direction(state.stepping);
-    nState.absMomentum =
-        state.options.absCharge / std::abs(stepper.qop(state.stepping));
+    nState.absMomentum = PropagatorHelpers::absoluteMomentum(state, stepper);
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {
       ACTS_ERROR(volInfo(state) << posInfo(state, stepper)

@@ -213,7 +213,7 @@ struct SimulationActor {
     //       beta² = p²/E²
     //       gamma = 1 / sqrt(1 - beta²) = sqrt(m² + p²) / m
     //     1/gamma = m / sqrt(m² + p²) = m / E
-    const auto momentum = previous.charge() / stepper.qop(state);
+    const auto momentum = std::abs(previous.charge() / stepper.qop(state));
     const auto gammaInv = previous.mass() / previous.energy();
     const auto properTime = previous.properTime() + gammaInv * deltaLabTime;
     // copy all properties and update kinematic state from stepper

@@ -9,6 +9,7 @@
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
 namespace ActsExamples {
@@ -66,8 +67,8 @@ ProcessCode PropagationAlgorithm::execute(
     // execute the test for charged particles
     Acts::BoundTrackParameters startParameters(surface, pars, std::move(cov));
     Acts::Vector3 sPosition = startParameters.position(context.geoContext);
-    Acts::Vector3 sMomentum = startParameters.direction() * charge /
-                              startParameters.get<Acts::eBoundQOverP>();
+    Acts::Vector3 sMomentum = Acts::TrackParameterHelpers::momentum(
+        startParameters, std::abs(charge));
     PropagationOutput pOutput = m_cfg.propagatorImpl->execute(
         context, m_cfg, logger(), startParameters);
     // Record the propagator steps

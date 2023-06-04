@@ -23,6 +23,7 @@
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <cmath>
@@ -1239,9 +1240,9 @@ class AtlasStepper {
       sA[2] = C6 * Sl;
 
       // Evaluate the time propagation
-      double dtds = std::hypot(
-          1, state.options.mass /
-                 (state.options.absCharge / std::abs(qop(state.stepping))));
+      double dtds =
+          std::hypot(1, state.options.mass /
+                            PropagatorHelpers::absoluteMomentum(state, *this));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
