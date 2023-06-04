@@ -8,34 +8,6 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/BoundTrackParameters.hpp"
 #include "Acts/EventData/CurvilinearTrackParameters.hpp"
 #include "Acts/EventData/FreeTrackParameters.hpp"
-
-#include <cmath>
-
-namespace Acts {
-
-template <typename parameters_t>
-inline auto charge(const parameters_t &parameters, double absQ) {
-  return std::copysign(parameters.template get<eBoundQOverP>(), absQ);
-}
-
-template <typename parameters_t>
-inline auto absoluteMomentum(const parameters_t &parameters, double absQ) {
-  return absQ / std::abs(parameters.template get<eBoundQOverP>());
-}
-
-template <typename parameters_t>
-inline auto transverseMomentum(const parameters_t &parameters, double absQ) {
-  return std::sin(parameters.template get<eBoundTheta>()) *
-         absoluteMomentum(parameters, absQ);
-}
-
-template <typename parameters_t>
-inline auto momentum(const parameters_t &parameters, double absQ) {
-  return parameters.direction() * absoluteMomentum(parameters, absQ);
-}
-
-}  // namespace Acts

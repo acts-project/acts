@@ -11,6 +11,7 @@
 #include <Acts/EventData/Charge.hpp>
 #include <Acts/EventData/MultiComponentBoundTrackParameters.hpp>
 #include <Acts/Surfaces/PlaneSurface.hpp>
+#include <Acts/Utilities/TrackParameterHelpers.hpp>
 
 using namespace Acts;
 
@@ -24,11 +25,11 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Ones(), Vector3::Ones().normalized());
 
-  const auto ap = MultiComponentBoundTrackParameters<SinglyCharged>(surface, a);
-  const auto bp = MultiComponentBoundTrackParameters<SinglyCharged>(surface, b);
-  const auto aps = MultiComponentBoundTrackParameters<SinglyCharged>(
+  const auto ap = MultiComponentBoundTrackParameters(surface, a);
+  const auto bp = MultiComponentBoundTrackParameters(surface, b);
+  const auto aps = MultiComponentBoundTrackParameters(
       surface, std::get<1>(a.front()), std::get<2>(a.front()));
-  const auto bps = MultiComponentBoundTrackParameters<SinglyCharged>(
+  const auto bps = MultiComponentBoundTrackParameters(
       surface, std::get<1>(b.front()), std::get<2>(b.front()));
 
   BOOST_CHECK(b == ap.components());
@@ -44,8 +45,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Vector3::Ones(), Vector3::Ones().normalized());
 
-    const SingleBoundTrackParameters<SinglyCharged> single_pars(
-        surface, BoundVector::Ones(), cov);
+    const BoundTrackParameters single_pars(surface, BoundVector::Ones(), cov);
 
     const auto multi_pars = [&]() {
       std::vector<
@@ -54,21 +54,24 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
       for (int i = 0; i < 4; ++i) {
         a.push_back({0.25, single_pars.parameters(), single_pars.covariance()});
       }
-      return MultiComponentBoundTrackParameters<SinglyCharged>(surface, a);
+      return MultiComponentBoundTrackParameters(surface, a);
     }();
 
-    BOOST_CHECK_EQUAL(multi_pars.absoluteMomentum(),
-                      single_pars.absoluteMomentum());
-    BOOST_CHECK_EQUAL(multi_pars.charge(), single_pars.charge());
+    BOOST_CHECK_EQUAL(TrackParameterHelpers::absoluteMomentum(multi_pars, 1),
+                      TrackParameterHelpers::absoluteMomentum(single_pars, 1));
+    BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(multi_pars, 1),
+                      TrackParameterHelpers::charge(single_pars, 1));
     BOOST_CHECK_EQUAL(multi_pars.fourPosition(GeometryContext{}),
                       single_pars.fourPosition(GeometryContext{}));
-    BOOST_CHECK_EQUAL(multi_pars.momentum(), single_pars.momentum());
+    BOOST_CHECK_EQUAL(TrackParameterHelpers::momentum(multi_pars, 1),
+                      TrackParameterHelpers::momentum(single_pars, 1));
     BOOST_CHECK_EQUAL(multi_pars.parameters(), single_pars.parameters());
     BOOST_CHECK_EQUAL(multi_pars.position(GeometryContext{}),
                       single_pars.position(GeometryContext{}));
-    BOOST_CHECK_EQUAL(multi_pars.transverseMomentum(),
-                      single_pars.transverseMomentum());
-    BOOST_CHECK_EQUAL(multi_pars.unitDirection(), single_pars.unitDirection());
+    BOOST_CHECK_EQUAL(
+        TrackParameterHelpers::transverseMomentum(multi_pars, 1),
+        TrackParameterHelpers::transverseMomentum(single_pars, 1));
+    BOOST_CHECK_EQUAL(multi_pars.direction(), single_pars.direction());
 
     // Check the behaviour for std::nullopt or zero covariance
     if (cov && *cov != BoundSymMatrix::Zero()) {

@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
@@ -51,8 +52,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     // replace the covariance of the nominal result w/ the ridders covariance
     auto& nom = *nominalResult.endParameters;
     nom = CurvilinearTrackParameters(
-        nom.fourPosition(options.geoContext), nom.unitDirection(),
-        nom.absoluteMomentum(), nom.charge(), std::move(cov));
+        nom.fourPosition(options.geoContext), nom.direction(),
+        nom.template get<Acts::eBoundQOverP>(), std::move(cov));
   }
 
   return ThisResult::success(std::move(nominalResult));
@@ -124,7 +125,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
         calculateCovariance(derivatives, *start.covariance(), deviations);
     auto& nom = *nominalResult.endParameters;
     nom = BoundTrackParameters(nom.referenceSurface().getSharedPtr(),
-                               nom.parameters(), nom.charge(), std::move(cov));
+                               nom.parameters(), std::move(cov));
   }
   return ThisResult::success(std::move(nominalResult));
 }

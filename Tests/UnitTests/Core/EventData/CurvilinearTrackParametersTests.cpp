@@ -9,9 +9,9 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -23,17 +23,14 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using AnyCurvilinearTrackParameters =
-    SingleCurvilinearTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const BoundSymMatrix cov = BoundSymMatrix::Identity();
 
-template <typename charge_t>
-void checkParameters(const SingleCurvilinearTrackParameters<charge_t>& params,
-                     double phi, double theta, double p, double q,
-                     const Vector4& pos4, const Vector3& unitDir) {
+void checkParameters(const CurvilinearTrackParameters& params, double phi,
+                     double theta, double p, double q, const Vector4& pos4,
+                     const Vector3& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
   const auto pos = pos4.segment<3>(ePos0);
 
@@ -50,12 +47,14 @@ void checkParameters(const SingleCurvilinearTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
-                       eps);
-  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
-  BOOST_CHECK_EQUAL(params.charge(), q);
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::absoluteMomentum(params, q), p,
+                       eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::transverseMomentum(params, q),
+                       p * std::sin(theta), eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, q), p * unitDir,
+                       eps, eps);
+  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, q), q);
   // curvilinear reference surface
   CHECK_CLOSE_OR_SMALL(params.referenceSurface().center(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.referenceSurface().normal(geoCtx), unitDir, eps,
@@ -76,12 +75,12 @@ BOOST_DATA_TEST_CASE(
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  NeutralCurvilinearTrackParameters params(pos4, dir, 1 / p);
+  CurvilinearTrackParameters params(pos4, dir, 1 / p);
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
   BOOST_CHECK(not params.covariance());
 
   // reassign w/ covariance
-  params = NeutralCurvilinearTrackParameters(pos4, dir, 1 / p, cov);
+  params = CurvilinearTrackParameters(pos4, dir, 1 / p, cov);
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
@@ -114,12 +113,12 @@ BOOST_DATA_TEST_CASE(
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  AnyCurvilinearTrackParameters params(pos4, dir, p, q);
+  CurvilinearTrackParameters params(pos4, dir, q / p);
   checkParameters(params, phi, theta, p, q, pos4, dir);
   BOOST_CHECK(not params.covariance());
 
   // reassign w/ covariance
-  params = AnyCurvilinearTrackParameters(pos4, dir, p, q, cov);
+  params = CurvilinearTrackParameters(pos4, dir, q / p, cov);
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }

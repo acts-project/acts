@@ -10,7 +10,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -19,6 +18,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -29,17 +29,14 @@ namespace {
 namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using AnyBoundTrackParameters = SingleBoundTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const BoundSymMatrix cov = BoundSymMatrix::Identity();
 
-template <typename charge_t>
-void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
-                     double l0, double l1, double time, double phi,
-                     double theta, double p, double q, const Vector3& pos,
-                     const Vector3& unitDir) {
+void checkParameters(const BoundTrackParameters& params, double l0, double l1,
+                     double time, double phi, double theta, double p, double q,
+                     const Vector3& pos, const Vector3& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
   const auto pos4 = VectorHelpers::makeVector4(pos, time);
 
@@ -55,12 +52,14 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
-                       eps);
-  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
-  BOOST_CHECK_EQUAL(params.charge(), q);
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::absoluteMomentum(params, q), p,
+                       eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::transverseMomentum(params, q),
+                       p * std::sin(theta), eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, q), p * unitDir,
+                       eps, eps);
+  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, q), q);
 }
 
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,
@@ -87,12 +86,12 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = 1 / p;
-    NeutralBoundTrackParameters params(surface, vector);
+    BoundTrackParameters params(surface, vector);
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(not params.covariance());
 
     // reassign w/ covariance
-    params = NeutralBoundTrackParameters(surface, vector, cov);
+    params = BoundTrackParameters(surface, vector, cov);
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -144,12 +143,12 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
     vector[eBoundPhi] = phi;
     vector[eBoundTheta] = theta;
     vector[eBoundQOverP] = -2_e / p;
-    AnyBoundTrackParameters params(surface, vector, -2_e);
+    BoundTrackParameters params(surface, vector);
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
     BOOST_CHECK(not params.covariance());
 
     // reassign w/ covariance
-    params = AnyBoundTrackParameters(surface, vector, -2_e, cov);
+    params = BoundTrackParameters(surface, vector, cov);
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
     BOOST_CHECK(params.covariance());
     BOOST_CHECK_EQUAL(params.covariance().value(), cov);
@@ -157,8 +156,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral parameters from global information
   {
     auto params =
-        NeutralBoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p)
-            .value();
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p).value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
@@ -181,15 +179,14 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // neutral any parameters from global information
   {
     auto params =
-        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, 0_e)
-            .value();
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 1 / p).value();
     checkParameters(params, l0, l1, time, phi, theta, p, 0_e, pos, dir);
     BOOST_CHECK(not params.covariance());
   }
   // double-negative any parameters from global information
   {
     auto params =
-        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, -2_e)
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, -2_e / p)
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, -2_e, pos, dir);
     BOOST_CHECK(not params.covariance());
@@ -197,7 +194,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   // triple-positive any parameters from global information
   {
     auto params =
-        AnyBoundTrackParameters::create(surface, geoCtx, pos4, dir, p, 3_e)
+        BoundTrackParameters::create(surface, geoCtx, pos4, dir, 3_e / p)
             .value();
     checkParameters(params, l0, l1, time, phi, theta, p, 3_e, pos, dir);
     BOOST_CHECK(not params.covariance());

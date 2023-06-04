@@ -15,6 +15,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 
 #include <array>
 #include <cmath>
@@ -78,8 +79,9 @@ struct GenericDenseEnvironmentExtension {
   int bid(const propagator_state_t& state, const stepper_t& stepper,
           const navigator_t& navigator) const {
     // Check for valid particle properties
-    if (stepper.charge(state.stepping) == 0. || state.options.mass == 0. ||
-        stepper.momentum(state.stepping) < state.options.momentumCutOff) {
+    if (state.options.absCharge == 0. || state.options.mass == 0. ||
+        PropagatorHelpers::absoluteMomentum(state, stepper) <
+            state.options.momentumCutOff) {
       return 0;
     }
 
@@ -115,7 +117,7 @@ struct GenericDenseEnvironmentExtension {
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
          std::array<Scalar, 4>& kQoP, const int i = 0, const double h = 0.,
          const ThisVector3& kprev = ThisVector3::Zero()) {
-    auto q = stepper.charge(state.stepping);
+    auto q = PropagatorHelpers::charge(state, stepper);
 
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
@@ -123,7 +125,7 @@ struct GenericDenseEnvironmentExtension {
       auto volumeMaterial = navigator.currentVolumeMaterial(state.navigation);
       ThisVector3 position = stepper.position(state.stepping);
       material = (volumeMaterial->material(position.template cast<double>()));
-      initialMomentum = stepper.momentum(state.stepping);
+      initialMomentum = PropagatorHelpers::absoluteMomentum(state, stepper);
       currentMomentum = initialMomentum;
       qop[0] = q / initialMomentum;
       initializeEnergyLoss(state);
@@ -173,7 +175,7 @@ struct GenericDenseEnvironmentExtension {
                 const navigator_t& /*navigator*/, const double h) const {
     // Evaluate the new momentum
     auto newMomentum =
-        stepper.momentum(state.stepping) +
+        PropagatorHelpers::absoluteMomentum(state, stepper) +
         (h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]);
 
     // Break propagation if momentum becomes below cut-off
@@ -187,7 +189,7 @@ struct GenericDenseEnvironmentExtension {
 
     // Update momentum
     state.stepping.pars[eFreeQOverP] =
-        stepper.charge(state.stepping) / newMomentum;
+        PropagatorHelpers::absoluteMomentum(state, stepper) / newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
     state.stepping.derivative(3) = hypot(1, state.options.mass / newMomentum);
     // Update time
@@ -444,7 +446,7 @@ struct GenericDenseEnvironmentExtension {
     currentMomentum = initialMomentum + h * dPds[i - 1];
     energy[i] = hypot(currentMomentum, mass);
     dPds[i] = g * energy[i] / currentMomentum;
-    qop[i] = stepper.charge(state.stepping) / currentMomentum;
+    qop[i] = PropagatorHelpers::charge(state, stepper) / currentMomentum;
     // Calculate term for later error propagation
     if (state.stepping.covTransport) {
       dLdl[i] = (-qop[i] * qop[i] * g * energy[i] *

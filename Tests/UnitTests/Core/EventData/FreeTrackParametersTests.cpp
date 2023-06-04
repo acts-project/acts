@@ -11,10 +11,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <limits>
@@ -25,16 +25,13 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using AnyFreeTrackParameters = SingleFreeTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const FreeSymMatrix cov = FreeSymMatrix::Identity();
 
-template <typename charge_t>
-void checkParameters(const SingleFreeTrackParameters<charge_t>& params,
-                     const Vector4& pos4, const Vector3& unitDir, double p,
-                     double q) {
+void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
+                     const Vector3& unitDir, double p, double q) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
   const auto pos = pos4.segment<3>(ePos0);
 
@@ -54,12 +51,14 @@ void checkParameters(const SingleFreeTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eFreeTime], eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.transverseMomentum(),
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::absoluteMomentum(params, q), p,
+                       eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::transverseMomentum(params, q),
                        p * unitDir.template head<2>().norm(), eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.momentum(), p * unitDir, eps, eps);
-  BOOST_CHECK_EQUAL(params.charge(), q);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, q), p * unitDir,
+                       eps, eps);
+  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, q), q);
   // self-consistency
   CHECK_CLOSE_OR_SMALL(params.position(),
                        params.parameters().template segment<3>(eFreePos0), eps,

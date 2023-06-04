@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
 namespace ActsExamples {
@@ -93,8 +94,8 @@ class ConcretePropagator : public PropagatorInterface {
 
       // Activate loop protection at some pt value
       options.loopProtection =
-          (transverseMomentum(startParameters, options.absCharge) <
-           cfg.ptLoopers);
+          Acts::TrackParameterHelpers::transverseMomentum(
+              startParameters, options.absCharge) < cfg.ptLoopers;
 
       // Switch the material interaction on/off & eventually into logging mode
       auto& mInteractor = options.actionList.get<MaterialInteractor>();

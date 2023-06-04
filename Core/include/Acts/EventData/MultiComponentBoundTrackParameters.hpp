@@ -134,6 +134,14 @@ class MultiComponentBoundTrackParameters {
     }
   }
 
+  /// Access a single parameter value indentified by its index.
+  ///
+  /// @tparam kIndex Track parameter index
+  template <BoundIndices kIndex>
+  Scalar get() const {
+    return reduce([&](const Parameters& p) { return p.get<kIndex>(); });
+  }
+
   /// Space-time position four-vector.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global
