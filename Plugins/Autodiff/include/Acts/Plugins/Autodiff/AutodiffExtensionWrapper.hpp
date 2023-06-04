@@ -79,7 +79,6 @@ struct AutodiffExtensionWrapper {
   struct FakeStepperState {
     AutodiffFreeVector pars;
     AutodiffFreeVector derivative;
-    double q = 0;
     bool covTransport = false;
   };
 
@@ -93,17 +92,13 @@ struct AutodiffExtensionWrapper {
 
   // A fake stepper
   struct FakeStepper {
-    auto charge(const FakeStepperState& s) const { return s.q; }
-    auto qop(const FakeStepperState& s) const { return s.pars(eFreeQOverP); }
-    auto momentum(const FakeStepperState& s) const {
-      return s.q / s.pars(eFreeQOverP);
-    }
     auto direction(const FakeStepperState& s) const {
       return s.pars.template segment<3>(eFreeDir0);
     }
     auto position(const FakeStepperState& s) const {
       return s.pars.template segment<3>(eFreePos0);
     }
+    auto qop(const FakeStepperState& s) const { return s.pars(eFreeQOverP); }
   };
 
   // Here the autodiff jacobian is computed
@@ -119,16 +114,12 @@ struct AutodiffExtensionWrapper {
     ThisFakePropState fstate{FakeStepperState(), state.options,
                              state.navigation};
 
-    fstate.stepping.q = stepper.charge(state.stepping);
-
     // Init dependent values for autodiff
     AutodiffFreeVector initial_params;
     initial_params.segment<3>(eFreePos0) = stepper.position(state.stepping);
     initial_params(eFreeTime) = stepper.time(state.stepping);
     initial_params.segment<3>(eFreeDir0) = stepper.direction(state.stepping);
-    initial_params(eFreeQOverP) =
-        (fstate.stepping.q != 0. ? fstate.stepping.q : 1.) /
-        stepper.momentum(state.stepping);
+    initial_params(eFreeQOverP) = stepper.qop(state.stepping);
 
     const auto& sd = state.stepping.stepData;
 

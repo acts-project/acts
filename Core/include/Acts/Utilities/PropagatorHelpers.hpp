@@ -15,13 +15,15 @@ namespace PropagatorHelpers {
 
 template <typename propagator_state_t, typename stepper_t>
 inline auto charge(const propagator_state_t &state, const stepper_t &stepper) {
-  return std::copysign(stepper.qop(state.stepping), state.options.absCharge);
+  // could be the following if it was not for autodiff
+  // return std::copysign(stepper.qop(state.stepping), state.options.absCharge);
+  return (stepper.qop(state.stepping) >= 0 ? +1 : -1) * state.options.absCharge;
 }
 
 template <typename propagator_state_t, typename stepper_t>
 inline auto absoluteMomentum(const propagator_state_t &state,
                              const stepper_t &stepper) {
-  return state.options.absCharge / std::abs(stepper.qop(state.stepping));
+  return charge(state, stepper) / stepper.qop(state.stepping);
 }
 
 template <typename propagator_state_t, typename stepper_t>
