@@ -186,7 +186,7 @@ class RiddersPropagator {
   /// @param [in] deviations Vector of deviations
   /// @param [in] derivatives Slopes of each modification of the parameters
   ///
-  /// @return Propagated covariance matrix
+  /// @return Propagated jacobian matrix
   static Jacobian calculateJacobian(
       const std::vector<double>& deviations,
       const std::array<std::vector<BoundVector>, eBoundSize>& derivatives);
@@ -201,7 +201,6 @@ class RiddersPropagator {
   static BoundVector fitLinear(const std::vector<double>& deviations,
                                const std::vector<BoundVector>& derivatives);
 
-  /// Underlying propagator
   propagator_t m_propagator;
   Config m_config;
 };

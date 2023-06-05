@@ -17,7 +17,9 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
       action_list_t_result_t<CurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>;
 
-  auto startWithoutCov = start;
+  // Remove the covariance from our start parameters in order to skip jacobian
+  // transport for the nominal propagation
+  CurvilinearTrackParameters startWithoutCov = start;
   startWithoutCov.covariance() = std::nullopt;
 
   // Propagate the nominal parameters
@@ -30,7 +32,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   assert(nominalResult.endParameters);
   const auto& nominalFinalParameters = *nominalResult.endParameters;
 
-  auto jacobian = wiggleAndCalculateJacobian(options, start, nominalResult);
+  Jacobian jacobian = wiggleAndCalculateJacobian(options, start, nominalResult);
   nominalResult.transportJacobian = jacobian;
 
   if (start.covariance()) {
@@ -58,7 +60,9 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   using ThisResult = Result<action_list_t_result_t<
       BoundTrackParameters, typename propagator_options_t::action_list_type>>;
 
-  auto startWithoutCov = start;
+  // Remove the covariance from our start parameters in order to skip jacobian
+  // transport for the nominal propagation
+  BoundTrackParameters startWithoutCov = start;
   startWithoutCov.covariance() = std::nullopt;
 
   // Propagate the nominal parameters
@@ -71,7 +75,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
   assert(nominalResult.endParameters);
   const auto& nominalFinalParameters = *nominalResult.endParameters;
 
-  auto jacobian = wiggleAndCalculateJacobian(options, start, nominalResult);
+  Jacobian jacobian = wiggleAndCalculateJacobian(options, start, nominalResult);
   nominalResult.transportJacobian = jacobian;
 
   if (start.covariance()) {
@@ -99,9 +103,9 @@ auto Acts::RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
 
   // TODO add to propagator options
   // Steps for estimating derivatives
-  auto deviations = m_config.deviations;
+  const std::vector<double>* deviations = &m_config.deviations;
   if (target.type() == Surface::Disc) {
-    deviations = m_config.deviationsDisc;
+    deviations = &m_config.deviationsDisc;
   }
 
   // - for planar surfaces the dest surface is a perfect destination
@@ -124,7 +128,7 @@ auto Acts::RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
   for (unsigned int i = 0; i < eBoundSize; i++) {
     derivatives[i] =
         wiggleParameter(opts, start, i, target,
-                        nominalFinalParameters.parameters(), deviations);
+                        nominalFinalParameters.parameters(), *deviations);
   }
 
   // Test if target is disc - this may lead to inconsistent results
@@ -134,7 +138,7 @@ auto Acts::RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
     }
   }
 
-  return calculateJacobian(deviations, derivatives);
+  return calculateJacobian(*deviations, derivatives);
 }
 
 template <typename propagator_t>
