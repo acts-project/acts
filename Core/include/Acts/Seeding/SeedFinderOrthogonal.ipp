@@ -405,14 +405,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
-        if (m_config.skipPreviousTopSP) {
-          // break if cotTheta from bottom SP < cotTheta from top SP because
-          // the SP are sorted by cotTheta
-          if (cotThetaB - cotThetaT < 0) {
-            break;
-          }
-          t0 = index_t + 1;
+        // break if cotTheta from bottom SP < cotTheta from top SP because
+        // the SP are sorted by cotTheta
+        if (cotThetaB - cotThetaT < 0) {
+          break;
         }
+        t0 = index_t + 1;
         continue;
       }
 
@@ -448,12 +446,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (m_config.skipPreviousTopSP) {
-          if (cotThetaB - cotThetaT < 0) {
-            break;
-          }
-          t0 = index_t;
+        if (cotThetaB - cotThetaT < 0) {
+          break;
         }
+        t0 = index_t;
         continue;
       }
 

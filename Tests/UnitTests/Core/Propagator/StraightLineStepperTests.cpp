@@ -13,7 +13,6 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <limits>
 
@@ -88,7 +87,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
                                         1 / absMom);
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, navDir,
                                         stepSize, tolerance);
-  BOOST_CHECK_EQUAL(slsState.q, 0.);
+  BOOST_CHECK_EQUAL(slsState.absCharge, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
@@ -163,7 +162,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   Vector3 newPos(2., 4., 8.);
   Vector3 newMom(3., 9., 27.);
   double newTime(321.);
-  sls.update(slsState, newPos, newMom.normalized(), newMom.norm(), newTime);
+  sls.update(slsState, newPos, newMom.normalized(), charge / newMom.norm(),
+             newTime);
   CHECK_CLOSE_ABS(sls.position(slsState), newPos, 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsState), newMom.normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsState), newMom.norm(), 1e-6);
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreeDir0).normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreeDir0), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreeDir0).normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, Direction::Forward);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);

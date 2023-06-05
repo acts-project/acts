@@ -71,9 +71,6 @@ struct SeedFinderConfig {
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
-  // skip top SPs based on cotTheta sorting when producing triplets
-  bool skipPreviousTopSP = false;
-
   // seed confirmation
   bool seedConfirmation = false;
   // parameters for central seed confirmation
@@ -177,6 +174,19 @@ struct SeedFinderConfig {
       throw std::runtime_error(
           "Repeated conversion to internal units for SeedFinderConfig");
     }
+    // Make sure the shared ptr to the seed filter is not a nullptr
+    // And make sure the seed filter config is in internal units as well
+    if (not seedFilter) {
+      throw std::runtime_error(
+          "Invalid values for the seed filter inside the seed filter config: "
+          "nullptr");
+    }
+    if (not seedFilter->getSeedFilterConfig().isInInternalUnits) {
+      throw std::runtime_error(
+          "The internal Seed Filter configuration, contained in the seed "
+          "finder config, is not in internal units.");
+    }
+
     using namespace Acts::UnitLiterals;
     SeedFinderConfig config = *this;
     config.isInInternalUnits = true;

@@ -52,9 +52,18 @@ target_link_libraries(
     Boost::boost
   PRIVATE
     ${TORCH_LIBRARIES}
-    frnn
     std::filesystem
 )
+
+if(CUDAToolkit_FOUND)
+  target_link_libraries(
+    ActsPluginExaTrkX
+    PRIVATE
+      frnn
+  )
+else()
+  target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_CPUONLY)
+endif()
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
   target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_ONNX_BACKEND)

@@ -66,7 +66,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
                  eventData.particleHitCount.at(barcode) > 0;
 
   if (not m_cfg.keepParticlesWithoutHits and not hasHits) {
-    auto n = eventData.particlesInitial.erase(
+    [[maybe_unused]] auto n = eventData.particlesInitial.erase(
         ActsExamples::SimParticle{barcode, Acts::PdgParticle::eInvalid});
     assert(n == 1);
     return;
