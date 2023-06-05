@@ -228,9 +228,9 @@ template <typename propagator_t>
 Acts::BoundVector Acts::RiddersPropagator<propagator_t>::fitLinear(
     const std::vector<double>& deviations,
     const std::vector<Acts::BoundVector>& derivatives) {
-  assert(!derivatives.empty());
+  assert(!derivatives.empty() && "no fit without data");
   if (derivatives.size() == 1) {
-    return derivatives;
+    return derivatives[0];
   }
 
   BoundVector A = BoundVector::Zero();
