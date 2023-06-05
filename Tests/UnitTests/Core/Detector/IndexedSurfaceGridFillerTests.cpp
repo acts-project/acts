@@ -9,7 +9,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/IndexedGridFiller.hpp"
+#include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -22,6 +22,7 @@
 using namespace Acts;
 using namespace Acts::detail;
 using namespace Acts::Experimental;
+using namespace Acts::Experimental::detail;
 
 GeometryContext tContext;
 Logging::Level logLevel = Logging::VERBOSE;

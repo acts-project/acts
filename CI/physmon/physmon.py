@@ -49,6 +49,7 @@ from acts.examples.reconstruction import (
 
 
 parser = argparse.ArgumentParser()
+parser.add_argument("mode", choices=["all", "kalman", "gsf", "fullchains", "vertexing"])
 parser.add_argument("outdir")
 
 args = parser.parse_args()
@@ -221,17 +222,39 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
+            outputProtoVertices="ivf_protovertices",
+            outputVertices="ivf_fittedVertices",
             vertexFinder=VertexFinder.Iterative,
-            outputDirRoot=tp,
+            outputDirRoot=tp / "ivf",
+        )
+
+        addVertexFitting(
+            s,
+            field,
+            associatedParticles=None
+            if label in ["seeded", "orthogonal"]
+            else "particles_input",
+            outputProtoVertices="amvf_protovertices",
+            outputVertices="amvf_fittedVertices",
+            outputTime="amvf_outputTime",
+            vertexFinder=VertexFinder.AMVF,
+            outputDirRoot=tp / "amvf",
         )
 
         s.run()
         del s
 
+        for vertexing in ["ivf", "amvf"]:
+            shutil.move(
+                tp / f"{vertexing}/performance_vertexing.root",
+                tp / f"performance_{vertexing}.root",
+            )
+
         for stem in [
             "performance_ckf",
             "tracksummary_ckf",
-            "performance_vertexing",
+            "performance_ivf",
+            "performance_amvf",
         ] + (
             ["performance_seeding", "performance_ambi"]
             if label in ["seeded", "orthogonal"]
@@ -346,36 +369,36 @@ def run_vertexing(fitter, mu, events):
 with acts.FpeMonitor():
 
     ### Truth tracking with Kalman Filter
-
-    truth_tracking_kalman()
+    if args.mode == "all" or args.mode == "kalman":
+        truth_tracking_kalman()
 
     ### GSF
-
-    truth_tracking_gsf()
+    if args.mode == "all" or args.mode == "gsf":
+        truth_tracking_gsf()
 
     ### CKF track finding variations
-
-    for truthSmearedSeeded, truthEstimatedSeeded, label in [
-        (True, False, "truth_smeared"),  # if first is true, second is ignored
-        (False, True, "truth_estimated"),
-        (False, False, "seeded"),
-        (False, False, "orthogonal"),
-    ]:
-        run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
+    if args.mode == "all" or args.mode == "fullchains":
+        for truthSmearedSeeded, truthEstimatedSeeded, label in [
+            (True, False, "truth_smeared"),  # if first is true, second is ignored
+            (False, True, "truth_estimated"),
+            (False, False, "seeded"),
+            (False, False, "orthogonal"),
+        ]:
+            run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
 
     ### VERTEX MU SCAN
+    if args.mode == "all" or args.mode == "vertexing":
+        for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
+            for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
+                start = datetime.datetime.now()
 
-    for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
-        for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
-            start = datetime.datetime.now()
+                events = 5
+                run_vertexing(fitter, mu, events)
 
-            events = 5
-            run_vertexing(fitter, mu, events)
+                delta = datetime.datetime.now() - start
 
-            delta = datetime.datetime.now() - start
+                duration = delta.total_seconds() / events
 
-            duration = delta.total_seconds() / events
-
-            (
-                outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
-            ).write_text(str(duration))
+                (
+                    outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
+                ).write_text(str(duration))
