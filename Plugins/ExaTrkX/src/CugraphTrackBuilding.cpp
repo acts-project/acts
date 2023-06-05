@@ -24,7 +24,7 @@ std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
   auto numEdgesAfterF = edgesAfterFiltering.size() / 2;
   auto gOutputCTen = std::any_cast<at::Tensor>(edge_weights);
 
-  if( numEdgesAfterF == 0 ) {
+  if (numEdgesAfterF == 0) {
     return {};
   }
 
