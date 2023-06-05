@@ -240,11 +240,9 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   for (const BoundTrackParameters& trk : tracks) {
     checkLinearizers(linFactory, linState, numLinFactory, numLinState, trk,
                      vtxPos, geoContext, magFieldContext);
-    // The check for zero B-field will only work after PR #2116 (before that we
-    // approximate straight tracks by helical track with large radii => not
-    // exact enough) checkLinearizers(straightLinFactory, straightLinState,
-    // numStraightLinFactory, numStraightLinState, trk, vtxPos, geoContext,
-    // magFieldContext);
+    heckLinearizers(straightLinFactory, straightLinState, numStraightLinFactory,
+                    numStraightLinState, trk, vtxPos,
+                    geoContext magFieldContext);
   }
 }
 
