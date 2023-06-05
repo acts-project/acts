@@ -81,7 +81,7 @@ TrigFTF_GNN_DataStorage<space_point_t>::~TrigFTF_GNN_DataStorage() {
 }
 
 template <typename space_point_t>  
-int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const space_point_t& sp, bool useML = false) {
+int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const space_point_t* sp, bool useML = false) { //used to be & after spacepoint
   //make new layer directly from int? 
   const TrigFTF_GNN_Layer<space_point_t>* pL = m_geo.getTrigFTF_GNN_LayerByIndex<space_point_t>(sp.layer()); //want ftf layer 
   if(pL==nullptr) return -1;

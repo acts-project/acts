@@ -49,24 +49,25 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
 //define loadspace points funciton 
  //when calling put input of vector<simspacepoints>, now can call space_point_t 
 template <typename external_spacepoint_t>
-void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<external_spacepoint_t>& SP){ 
+//void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<external_spacepoint_t>& SP){ 
+void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(std::vector<const external_spacepoint_t*> SP){
 
-  const std::vector<TrigInDetSiLayer>& rosievector ; 
-  std::ifstream& rosiestream ; 
-  const FASTRACK_CONNECTOR* rosiefast(rosiestream) ; //this might need a constructor 
-  TrigFTF_GNN_Geometry<external_spacepoint_t>& mGNNgeo(rosievector, rosiefast); 
+  std::vector<TrigInDetSiLayer> rosievector ; //before had & after >  
+  std::ifstream rosiestream("rosiefile.txt") ; 
+  FASTRACK_CONNECTOR rosiefast(rosiestream) ; //this might need a constructor 
+  TrigFTF_GNN_Geometry<external_spacepoint_t> mGNNgeo(rosievector, &rosiefast); 
   TrigFTF_GNN_DataStorage<external_spacepoint_t> m_storage(mGNNgeo) ; 
 
   for(auto sp : SP) {
     //could check if pixel as pixels only have 1 source link (strip have 2)
-    bool isPixel = sp.isPixel(); 
-
+    // bool isPixel = sp->isPixel(); 
+    bool isPixel = true ; 
 
     if(!isPixel) continue;
     // //think not using trigseedML for now 
     // //when called input should be simspace point 
 
-    m_storage->addSpacePoint((sp), (m_config.m_useTrigSeedML > 0));
+    m_storage.addSpacePoint((sp), (m_config.m_useTrigSeedML > 0));
 
 
     std::cout<<("in seed finder load space point function") ; 
@@ -76,8 +77,8 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<ext
 
   m_config.m_phiSliceWidth = 2*m_config.phiMax/m_config.m_nMaxPhiSlice;
 
-  m_storage->sortByPhi();
-  m_storage->generatePhiIndexing(1.5*m_config.m_phiSliceWidth);
+  m_storage.sortByPhi();
+  m_storage.generatePhiIndexing(1.5*m_config.m_phiSliceWidth);
 
 }
 //filter canditates function 

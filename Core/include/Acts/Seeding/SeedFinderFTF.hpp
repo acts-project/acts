@@ -71,7 +71,8 @@ class SeedFinderFTF {
  //definition of function not the calling of it, define what input type it needs 
  //know eventually will have vector of simspacepoints, here need generic space point type 
 
-  void loadSpacePoints(const std::vector<external_spacepoint_t>&); 
+  //void loadSpacePoints(const std::vector<external_spacepoint_t>&); 
+    void loadSpacePoints(std::vector<const external_spacepoint_t*>); //trying to match type to input in examples 
 
  //create seeeds function 
 

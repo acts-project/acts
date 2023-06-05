@@ -63,14 +63,15 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     
     //this is now calling to a core algorithm 
     m_seedFinder = Acts::SeedFinderFTF<SimSpacePoint>(m_cfg.seedFinderConfig);
-      } //want to change 37 to SeedFinderFTF
+      } //this is not FTF type because it is a meber of the algs config, which is of type FTF cofig  
 
 //exectute: 
 
 ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
     const AlgorithmContext& ctx) const {
 
-  //defining things need for seeds function, need to go through to understand 
+  //defining things need for seeds function, need to go through to understand
+  //try changing to type originally needed for loadsp?  
   std::vector<const SimSpacePoint *> spacePoints;
 
 //for loop filling space points, seeing if can do without 
@@ -95,7 +96,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
       //output of function needed for seed
 
-
+  //no output to this function, input is vector of simspacepoints  
+  finder.loadSpacePoints(spacePoints); 
   //this createseeds function is defined in SeedFInderFTF in core 
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               spacePoints, create_coordinates);

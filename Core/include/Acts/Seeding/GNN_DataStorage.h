@@ -83,7 +83,7 @@ class TrigFTF_GNN_DataStorage {
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& );
   ~TrigFTF_GNN_DataStorage();
  
-  int addSpacePoint(const space_point_t&, bool); 
+  int addSpacePoint(const space_point_t*, bool); //used to be & 
 
   unsigned int numberOfNodes() const;
   void getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t>*>&);
