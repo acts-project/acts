@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
                      vtxPos, geoContext, magFieldContext);
     checkLinearizers(straightLinFactory, straightLinState,
                      numStraightLinFactory, numStraightLinState, trk, vtxPos,
-                     geoContext magFieldContext);
+                     geoContext, magFieldContext);
   }
 }
 
