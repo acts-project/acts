@@ -23,6 +23,11 @@ std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
   auto edgesAfterFiltering = std::any_cast<std::vector<int64_t>>(edges);
   auto numEdgesAfterF = edgesAfterFiltering.size() / 2;
   auto gOutputCTen = std::any_cast<at::Tensor>(edge_weights);
+
+  if( numEdgesAfterF == 0 ) {
+    return {};
+  }
+
   // ************
   // Track Labeling with cugraph::connected_components
   // ************
