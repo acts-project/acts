@@ -62,7 +62,7 @@ struct TGeoDetector {
     Acts::TGeoLayerBuilder::ElementFactory elementFactory =
         Acts::TGeoLayerBuilder::defaultElementFactory;
 
-    /// Optional geometry identfier hook to be used during closure
+    /// Optional geometry identifier hook to be used during closure
     std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
         std::make_shared<Acts::GeometryIdentifierHook>();
 

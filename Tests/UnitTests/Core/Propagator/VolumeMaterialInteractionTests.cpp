@@ -56,6 +56,8 @@ struct Stepper {
 
   Vector3 direction(const StepperState& state) const { return state.dir; }
 
+  double qop(const StepperState& state) const { return state.q / state.p; }
+
   double momentum(const StepperState& state) const { return state.p; }
 
   double charge(const StepperState& state) const { return state.q; };
@@ -95,12 +97,12 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Build the VolumeMaterialInteraction & test assignments
   detail::VolumeMaterialInteraction volMatInt(volume.get(), state, stepper);
   BOOST_CHECK_EQUAL(volMatInt.volume, volume.get());
-  BOOST_CHECK_EQUAL(volMatInt.pos, state.stepping.pos);
-  BOOST_CHECK_EQUAL(volMatInt.time, state.stepping.t);
-  BOOST_CHECK_EQUAL(volMatInt.dir, state.stepping.dir);
-  BOOST_CHECK_EQUAL(volMatInt.momentum, state.stepping.p);
-  BOOST_CHECK_EQUAL(volMatInt.q, state.stepping.q);
-  CHECK_CLOSE_ABS(volMatInt.qOverP, state.stepping.q / state.stepping.p, 1e-6);
+  BOOST_CHECK_EQUAL(volMatInt.pos, stepper.position(state.stepping));
+  BOOST_CHECK_EQUAL(volMatInt.time, stepper.time(state.stepping));
+  BOOST_CHECK_EQUAL(volMatInt.dir, stepper.direction(state.stepping));
+  BOOST_CHECK_EQUAL(volMatInt.momentum, stepper.momentum(state.stepping));
+  BOOST_CHECK_EQUAL(volMatInt.absQ, std::abs(stepper.charge(state.stepping)));
+  CHECK_CLOSE_ABS(volMatInt.qOverP, stepper.qop(state.stepping), 1e-6);
   BOOST_CHECK_EQUAL(volMatInt.mass, state.options.mass);
   BOOST_CHECK_EQUAL(volMatInt.pdg, state.options.absPdgCode);
   BOOST_CHECK_EQUAL(volMatInt.performCovarianceTransport,

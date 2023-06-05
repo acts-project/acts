@@ -28,6 +28,7 @@ class ParticleKillAction : public G4UserSteppingAction {
   /// Configuration of the Stepping action
   struct Config {
     std::shared_ptr<const Acts::Volume> volume;
+    double maxTime = std::numeric_limits<double>::infinity();
   };
 
   /// Construct the stepping action
