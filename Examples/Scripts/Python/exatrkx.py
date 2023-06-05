@@ -79,7 +79,6 @@ if "__main__" == __name__:
         modelDir,
         outputDir,
         backend=backend,
-        logLevel=acts.logging.VERBOSE,
     )
 
     s.run()
