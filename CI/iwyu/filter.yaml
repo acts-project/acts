@@ -1,0 +1,27 @@
+remove_lines:
+  # ignore unexiting std
+  - "^#include <new>"
+  - "^#include <bits/"
+  - "^#include <ext/"
+  # ignore Eigen
+  - "^(- )?#include [<\"](src|Eigen)/"
+  - "namespace Eigen {"
+  # ignore boost
+  - "^(- )?#include <boost/"
+  # don remove ipp
+  - "^- #include [<\"].*\\.ipp"
+
+replace_lines:
+  - "^#include <assert\\.h>": "#include <cassert>"
+  - "^#include <stddef\\.h>": "#include <cstddef>"
+  - "^#include <math\\.h>": "#include <cmath>"
+  - "^#include <limits\\.h>": "#include <climits>"
+  - "^#include <unistd\\.h>": "#include <cunistd>"
+  - "^#include <stdint\\.h>": "#include <cstdint>"
+  - "^#include <stdlib.h>": "#include <cstdlib>"
+  # don use ipp
+  - "^#include ([<\"].*)\\.ipp": "#include \\1.hpp"
+
+ignore_files:
+  - ".*FpeMonitor\\.[hc]pp"
+  - ".*thirdparty/"
