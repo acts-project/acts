@@ -81,10 +81,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     CovarianceMatrix m =
         ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance).eval();
 
-    static constexpr double epsilon = 1e-13;
-    m.diagonal().array() += epsilon;
-
-    chi2 = (residual.transpose() * (m.inverse()) * residual).value();
+    chi2 = (residual.transpose() * m.inverse() * residual).value();
 
     ACTS_VERBOSE("Chi2: " << chi2);
     return true;  // continue execution
