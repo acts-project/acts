@@ -1,6 +1,7 @@
 import collections
 import argparse
 from pathlib import Path
+from typing import Optional
 
 import acts
 
@@ -21,14 +22,17 @@ PhysmonSetup = collections.namedtuple(
 )
 
 
-def makeSetup() -> PhysmonSetup:
+def makeArgparser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("outdir")
+    return parser
+
+
+def makeSetup(argparser: argparse.ArgumentParser = makeArgparser()) -> PhysmonSetup:
     u = acts.UnitConstants
     srcdir = Path(__file__).resolve().parent.parent.parent
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("outdir")
-
-    args = parser.parse_args()
+    args = argparser.parse_args()
 
     matDeco = acts.IMaterialDecorator.fromFile(
         srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",

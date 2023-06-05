@@ -14,7 +14,7 @@ from acts.examples import (
     RootParticleWriter,
 )
 
-SimulationAlgorithm = Enum("Simulation", ["Fatras", "Geant4"])
+SimulationAlgorithm = Enum("SimulationAlgorithm", ["Fatras", "Geant4"])
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp

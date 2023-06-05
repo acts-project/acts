@@ -2,9 +2,11 @@
 
 import tempfile
 from pathlib import Path
+import argparse
 import shutil
 import itertools
 import contextlib
+from multiprocessing import Pool, freeze_support
 
 import acts
 from acts.examples.simulation import (
@@ -26,15 +28,20 @@ from acts.examples.reconstruction import (
     TrackSelectorConfig,
 )
 
-from physmon_common import makeSetup
+from physmon_common import makeArgparser, makeSetup
 
 u = acts.UnitConstants
 
-setup = makeSetup()
+parser = makeArgparser()
+parser.add_argument("--pool-size", default=4)
+args = parser.parse_args()
+setup = makeSetup(argparser=parser)
 
 
 def run_single_particles(particle, pT, simulation, label):
-    with tempfile.TemporaryDirectory() as temp:
+    # disabled FPE monitoring for now because of G4
+    # TODO use acts.FpeMonitor()
+    with contextlib.nullcontext(), tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(events=10000, numThreads=1)
 
         tp = Path(temp)
@@ -92,7 +99,7 @@ def run_single_particles(particle, pT, simulation, label):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
-            seedingAlgorithm=SeedingAlgorithm.Default,
+            seedingAlgorithm=SeedingAlgorithm.TruthSmeared,  # TODO SeedingAlgorithm.Default
             initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=setup.geoSel,
             outputDirRoot=tp,
@@ -125,9 +132,12 @@ def create_label(particle, pT, simulation):
     )
 
 
-# disabled FPE monitoring for now because of G4
-# TODO use acts.FpeMonitor()
-with contextlib.nullcontext():
+# TODO what this
+freeze_support()
+
+# TODO fix multiple G4 setups in one process
+# maxtasksperchild=1 because we want to avoid multiple G4 setups in one process
+with Pool(args.pool_size, maxtasksperchild=1) as pool:
     for particle, pt, simulation in itertools.product(
         [
             acts.PdgParticle.eMuon,
@@ -135,7 +145,10 @@ with contextlib.nullcontext():
             acts.PdgParticle.eElectron,
         ],
         [1 * u.GeV, 10 * u.GeV, 100 * u.GeV],
-        [SimulationAlgorithm.Fatras],  # TODO SimulationAlgorithm.Geant4
+        [SimulationAlgorithm.Fatras, SimulationAlgorithm.Geant4],
     ):
         label = create_label(particle, pt, simulation)
-        run_single_particles(particle, pt, simulation, label)
+        pool.apply_async(run_single_particles, args=(particle, pt, simulation, label))
+
+    pool.close()
+    pool.join()
