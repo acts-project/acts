@@ -63,7 +63,8 @@ BOOST_AUTO_TEST_CASE(Invalid) {
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    for (const auto& [type, st] : mon.result().stackTraces()) {
+    for (const auto& [count, type, st] : mon.result().stackTraces()) {
+      std::cout << count << std::endl;
       std::cout << type << std::endl;
       std::cout << st << std::endl;
     }
@@ -83,7 +84,8 @@ BOOST_AUTO_TEST_CASE(DivByZero) {
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
 
-    for (const auto& [type, st] : mon.result().stackTraces()) {
+    for (const auto& [count, type, st] : mon.result().stackTraces()) {
+      std::cout << count << std::endl;
       std::cout << type << std::endl;
       std::cout << st << std::endl;
     }
@@ -102,7 +104,8 @@ BOOST_AUTO_TEST_CASE(Overflow) {
     BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
     BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    for (const auto& [type, st] : mon.result().stackTraces()) {
+    for (const auto& [count, type, st] : mon.result().stackTraces()) {
+      std::cout << count << std::endl;
       std::cout << type << std::endl;
       std::cout << st << std::endl;
     }
