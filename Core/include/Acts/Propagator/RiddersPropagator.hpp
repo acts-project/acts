@@ -78,7 +78,7 @@ class RiddersPropagator {
     /// Set of deltas which will be added to the nominal track parameters
     std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
     /// See `deviations` - these are applied for disc surfaces
-    std::vector<double> deviationsDisc = {{-3e-5, -1e-5, 1e-5, 3e-5}};
+    std::vector<double> deviationsDisc = {-3e-5, -1e-5, 1e-5, 3e-5};
   };
 
   /// @brief Constructor using a propagator
