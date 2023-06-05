@@ -88,7 +88,7 @@ class FpeMonitor {
   static std::stack<FpeMonitor *> &stack();
   static GlobalState &globalState();
 
-  int m_excepts;
+  int m_excepts = 0;
   std::size_t m_stackLimit = 1000;
 
   Result m_result;
