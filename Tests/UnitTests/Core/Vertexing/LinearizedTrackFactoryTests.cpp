@@ -240,9 +240,9 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   for (const BoundTrackParameters& trk : tracks) {
     checkLinearizers(linFactory, linState, numLinFactory, numLinState, trk,
                      vtxPos, geoContext, magFieldContext);
-    heckLinearizers(straightLinFactory, straightLinState, numStraightLinFactory,
-                    numStraightLinState, trk, vtxPos,
-                    geoContext magFieldContext);
+    checkLinearizers(straightLinFactory, straightLinState,
+                     numStraightLinFactory, numStraightLinState, trk, vtxPos,
+                     geoContext magFieldContext);
   }
 }
 
