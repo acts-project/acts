@@ -13,7 +13,9 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
@@ -210,9 +212,6 @@ struct TrackStateTraits {
   using MeasurementCovariance =
       typename detail_lt::Types<M, ReadOnly>::CovarianceMap;
 
-  using IndexType = std::uint32_t;
-  static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
-
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector =
       Eigen::Matrix<typename Covariance::Scalar, M, eBoundSize, ProjectorFlags>;
@@ -244,8 +243,8 @@ class TrackStateProxy {
   using ConstMeasurementCovariance =
       typename TrackStateTraits<N, true>::MeasurementCovariance;
 
-  using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
-  static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
+  using IndexType = TrackIndexType;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -1126,9 +1125,8 @@ constexpr bool VisitorConcept = Concepts ::require<
 /// from @c TrackStateTraits using the default maximum measurement dimension.
 namespace MultiTrajectoryTraits {
 constexpr unsigned int MeasurementSizeMax = eBoundSize;
-using IndexType = TrackStateTraits<MeasurementSizeMax, true>::IndexType;
-constexpr IndexType kInvalid =
-    TrackStateTraits<MeasurementSizeMax, true>::kInvalid;
+using IndexType = TrackIndexType;
+constexpr IndexType kInvalid = kTrackIndexInvalid;
 }  // namespace MultiTrajectoryTraits
 
 template <typename T>

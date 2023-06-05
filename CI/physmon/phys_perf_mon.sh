@@ -3,22 +3,27 @@
 set -e
 
 
-mode=$1
+mode=${1:all}
 if ! [[ $mode = @(all|kalman|gsf|fullchains|vertexing) ]]; then
     echo "Usage: $0 <all|kalman|gsf|fullchains|vertexing> (outdir)"
     exit 1
 fi
 
-outdir=$2
+outdir=${2:physmon}
 [ -z "$outdir" ] && outdir=physmon
 mkdir -p $outdir
 
 refdir=CI/physmon/reference
 refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
+source $SCRIPT_DIR/setup.sh
 echo "::group::Generate validation dataset"
-CI/physmon/physmon.py $mode $outdir 2>&1 > $outdir/run.log
+CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
+CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
+CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
+CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
 echo "::endgroup::"
 
 set +e
@@ -70,19 +75,40 @@ function full_chain() {
         -p $outdir/ckf_${suffix}_plots
 
     Examples/Scripts/generic_plotter.py \
-        $outdir/performance_vertexing_${suffix}.root \
+        $outdir/performance_ivf_${suffix}.root \
         vertexing \
-        $outdir/performance_vertexing_${suffix}_hist.root \
+        $outdir/performance_ivf_${suffix}_hist.root \
         --silent \
         --config CI/physmon/vertexing_config.yml
     ec=$(($ec | $?))
 
+    # remove ntuple file because it's large
+    rm $outdir/performance_ivf_${suffix}.root
+
     run \
-        $outdir/performance_vertexing_${suffix}_hist.root \
-        $refdir/performance_vertexing_${suffix}_hist.root \
+        $outdir/performance_ivf_${suffix}_hist.root \
+        $refdir/performance_ivf_${suffix}_hist.root \
         --title "IVF ${suffix}" \
         -o $outdir/ivf_${suffix}.html \
         -p $outdir/ivf_${suffix}_plots
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/performance_amvf_${suffix}.root \
+        vertexing \
+        $outdir/performance_amvf_${suffix}_hist.root \
+        --silent \
+        --config CI/physmon/vertexing_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/performance_amvf_${suffix}.root
+
+    run \
+        $outdir/performance_amvf_${suffix}_hist.root \
+        $refdir/performance_amvf_${suffix}_hist.root \
+        --title "AMVF ${suffix}" \
+        -o $outdir/amvf_${suffix}.html \
+        -p $outdir/amvf_${suffix}_plots
 
     Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_ckf_${suffix}.root \
@@ -153,5 +179,8 @@ if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
 
     rm $outdir/performance_vertexing_*mu*
 fi
+
+CI/physmon/summary.py $outdir/*.html $outdir/summary.html
+ec=$(($ec | $?))
 
 exit $ec

@@ -35,7 +35,6 @@
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Zip.hpp"
@@ -291,7 +290,9 @@ class CombinatorialKalmanFilter {
                                 getDefaultLogger("CKF", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger(std::move(_logger)),
-        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")},
+        m_updaterLogger{m_logger->cloneWithSuffix("Updater")},
+        m_smootherLogger{m_logger->cloneWithSuffix("Smoother")} {}
 
  private:
   using KalmanNavigator = typename propagator_t::Navigator;
@@ -301,6 +302,8 @@ class CombinatorialKalmanFilter {
 
   std::unique_ptr<const Logger> m_logger;
   std::shared_ptr<const Logger> m_actorLogger;
+  std::shared_ptr<const Logger> m_updaterLogger;
+  std::shared_ptr<const Logger> m_smootherLogger;
 
   const Logger& logger() const { return *m_logger; }
 
@@ -950,7 +953,7 @@ class CombinatorialKalmanFilter {
         } else {
           // Kalman update
           auto updateRes = m_extensions.updater(
-              gctx, trackState, Direction::Forward, getDummyLogger());
+              gctx, trackState, Direction::Forward, *updaterLogger);
           if (!updateRes.ok()) {
             ACTS_ERROR("Update step failed: " << updateRes.error());
             return updateRes.error();
@@ -1131,7 +1134,7 @@ class CombinatorialKalmanFilter {
       // Smooth the track states
       auto smoothRes =
           m_extensions.smoother(state.geoContext, *result.fittedStates,
-                                lastMeasurementIndex, getDummyLogger());
+                                lastMeasurementIndex, *smootherLogger);
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -1232,8 +1235,12 @@ class CombinatorialKalmanFilter {
     /// The Surface being targeted
     SurfaceReached targetReached;
 
-    /// Logger instance
+    /// Actor logger instance
     const Logger* actorLogger{nullptr};
+    /// Updater logger instance
+    const Logger* updaterLogger{nullptr};
+    /// Smoother logger instance
+    const Logger* smootherLogger{nullptr};
 
     const Logger& logger() const { return *actorLogger; }
   };
@@ -1316,6 +1323,8 @@ class CombinatorialKalmanFilter {
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.smoothing = tfOptions.smoothing;
     combKalmanActor.actorLogger = m_actorLogger.get();
+    combKalmanActor.updaterLogger = m_updaterLogger.get();
+    combKalmanActor.smootherLogger = m_smootherLogger.get();
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;

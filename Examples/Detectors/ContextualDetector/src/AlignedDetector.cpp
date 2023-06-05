@@ -38,7 +38,7 @@ auto AlignedDetector::finalize(
     config.flushSize = cfg.flushSize;
     config.doGarbageCollection = cfg.doGarbageCollection;
 
-    // The misalingments
+    // The misalignments
     config.gSigmaX = cfg.sigmaInPlane;
     config.gSigmaY = cfg.sigmaInPlane;
     config.gSigmaZ = cfg.sigmaOutPlane;
