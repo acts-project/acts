@@ -141,7 +141,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
 
-  m_sequenceElements.push_back(element);
+  m_sequenceElements.push_back({element});
 
   std::string elementType{getAlgorithmType(*element)};
   std::string elementTypeCapitalized = elementType;
@@ -257,7 +257,7 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
   for (const auto& decorator : m_decorators) {
     names.push_back("Decorator:" + decorator->name());
   }
-  for (const auto& algorithm : m_sequenceElements) {
+  for (const auto& [algorithm, fpe] : m_sequenceElements) {
     names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" +
                     algorithm->name());
   }
@@ -409,7 +409,7 @@ int Sequencer::run() {
   size_t nWriters = 0;
   size_t nReaders = 0;
   size_t nAlgorithms = 0;
-  for (const auto& alg : m_sequenceElements) {
+  for (const auto& [alg, fpe] : m_sequenceElements) {
     if (dynamic_cast<const IWriter*>(alg.get()) != nullptr) {
       nWriters++;
     } else if (dynamic_cast<const IReader*>(alg.get()) != nullptr) {
@@ -426,7 +426,7 @@ int Sequencer::run() {
   ACTS_INFO("  " << nWriters << " writers");
 
   ACTS_VERBOSE("Initialize sequence elements");
-  for (auto& alg : m_sequenceElements) {
+  for (auto& [alg, fpe] : m_sequenceElements) {
     ACTS_VERBOSE("Initialize " << getAlgorithmType(*alg) << ": "
                                << alg->name());
     if (alg->initialize() != ProcessCode::SUCCESS) {
@@ -445,8 +445,6 @@ int Sequencer::run() {
         [&](const tbb::blocked_range<size_t>& r) {
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
-
-          auto& fpeResult = m_fpeResults.local();
 
           for (size_t event = r.begin(); event != r.end(); ++event) {
             ACTS_DEBUG("start processing event " << event);
@@ -472,8 +470,9 @@ int Sequencer::run() {
 
             ACTS_VERBOSE("Execute sequence elements");
 
-            for (auto& alg : m_sequenceElements) {
-              Acts::FpeMonitor mon;
+            for (auto& [alg, fpe] : m_sequenceElements) {
+              std::cout << "POOL " << &m_pool << std::endl;
+              Acts::FpeMonitor mon{m_pool};
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
                                       << alg->name());
@@ -482,7 +481,7 @@ int Sequencer::run() {
                                                 << ": " << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
-              fpeResult = fpeResult.merge(mon.result());
+              fpe.local().merge(mon.result());
             }
 
             nProcessedEvents++;
@@ -506,21 +505,30 @@ int Sequencer::run() {
         });
   });
 
-  Acts::FpeMonitor::Result fpeResult;
-  for (const auto& threadResult : m_fpeResults) {
-    fpeResult = fpeResult.merge(threadResult);
-  }
-
-  fpeResult.summary(std::cout);
-
   ACTS_VERBOSE("Finalize sequence elements");
-  for (auto& alg : m_sequenceElements) {
+  for (auto& [alg, fpe] : m_sequenceElements) {
     ACTS_VERBOSE("Finalize " << getAlgorithmType(*alg) << ": " << alg->name());
     if (alg->finalize() != ProcessCode::SUCCESS) {
       ACTS_FATAL("Failed to finalize " << getAlgorithmType(*alg) << ": "
                                        << alg->name());
       throw std::runtime_error("Failed to process event data");
     }
+  }
+
+  // FPE reporting
+  for (auto& [alg, fpe] : m_sequenceElements) {
+    auto merged = std::accumulate(
+        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
+    if (!merged) {
+      // no FPEs to report
+      continue;
+    }
+    ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
+                                 << alg->name());
+    ACTS_INFO((std::string{40, '-'}));
+    merged.summary(std::cout);
+    ACTS_INFO((std::string{40, '-'}));
   }
 
   // summarize timing

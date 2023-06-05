@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <memory_resource>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -131,6 +132,18 @@ class Sequencer {
   const Config &config() const { return m_cfg; }
 
  private:
+  constexpr static std::size_t kBufferSize = 10 * 1048576;  // 5M
+  std::unique_ptr<std::byte[]> m_buffer{
+      std::make_unique<std::byte[]>(kBufferSize)};
+  std::pmr::monotonic_buffer_resource m_bufferResource{m_buffer.get(),
+                                                       kBufferSize};
+  std::pmr::synchronized_pool_resource m_pool{&m_bufferResource};
+
+  struct SequenceElementWithFpeResult {
+    std::shared_ptr<SequenceElement> sequenceElement;
+    tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> fpeResult{};
+  };
+
   /// List of all configured algorithm names.
   std::vector<std::string> listAlgorithmNames() const;
   /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
@@ -140,14 +153,14 @@ class Sequencer {
   tbbWrap::task_arena m_taskArena;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
-  std::vector<std::shared_ptr<SequenceElement>> m_sequenceElements;
+  std::vector<SequenceElementWithFpeResult> m_sequenceElements;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
 
   std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
-  tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> m_fpeResults;
+  // tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> m_fpeResults;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };

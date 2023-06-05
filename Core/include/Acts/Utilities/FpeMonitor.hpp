@@ -13,7 +13,9 @@
 
 #include <atomic>
 #include <csignal>
+#include <cstddef>
 #include <memory>
+#include <memory_resource>
 #include <mutex>
 #include <stack>
 
@@ -41,28 +43,33 @@ class FpeMonitor {
       StackTrace st;
     };
 
-    Result merge(const Result &with) const;
+    Result merged(const Result &with) const;
+    void merge(const Result &with);
+
     bool encountered(FpeType type) const;
     unsigned int count(FpeType type) const;
 
-    const std::vector<FpeInfo> &stackTraces() const;
+    const std::pmr::vector<FpeInfo> &stackTraces() const;
     unsigned int numStackTraces() const;
 
     void deduplicate();
 
     void summary(std::ostream &os) const;
 
-    Result();
+    Result(std::pmr::memory_resource &mem = *std::pmr::new_delete_resource());
+
+    operator bool() const { return !m_stracktraces.empty(); }
 
    private:
-    std::vector<FpeInfo> m_stracktraces;
+    std::pmr::vector<FpeInfo> m_stracktraces;
     std::array<unsigned int, 32> m_counts{};
 
     friend FpeMonitor;
   };
 
-  FpeMonitor();
-  explicit FpeMonitor(int excepts);
+  FpeMonitor(std::pmr::memory_resource &mem = *std::pmr::new_delete_resource());
+  explicit FpeMonitor(int excepts, std::pmr::memory_resource &mem =
+                                       *std::pmr::new_delete_resource());
   ~FpeMonitor();
 
   const Result &result() const;

@@ -10,14 +10,14 @@
 
 #include <cstddef>
 #include <memory>
+#include <memory_resource>
 #include <string>
 
 namespace Acts {
 struct StackTrace {
-  StackTrace(std::size_t skip, std::size_t maxDepth);
-  StackTrace(StackTrace &&other);
+  StackTrace(std::size_t skip, std::size_t maxDepth,
+             std::pmr::memory_resource &mem = *std::pmr::new_delete_resource());
   StackTrace(const StackTrace &other);
-  StackTrace &operator=(StackTrace &&other);
   StackTrace &operator=(const StackTrace &other);
 
   std::pair<std::string, std::size_t> topSourceLocation() const;
@@ -30,7 +30,9 @@ struct StackTrace {
 
  private:
   struct Impl;
-  std::unique_ptr<Impl> m_impl;
+  std::pmr::polymorphic_allocator<Impl> m_allocator;
+
+  Impl *m_impl{nullptr};
 };
 
 }  // namespace Acts

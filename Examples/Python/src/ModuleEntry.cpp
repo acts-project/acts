@@ -238,6 +238,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       py::return_value_policy::reference_internal);
 
   py::class_<Acts::FpeMonitor::Result>(fpe, "Result")
+      .def("merged", &Acts::FpeMonitor::Result::merged)
       .def("merge", &Acts::FpeMonitor::Result::merge)
       .def("__str__", [](const Acts::FpeMonitor::Result& result) {
         std::stringstream os;

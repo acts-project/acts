@@ -210,13 +210,13 @@ BOOST_AUTO_TEST_CASE(Scoping) {
         BOOST_CHECK(mon3.result().encountered(FpeType::FLTDIV));
 
         // Test merging here
-        auto merged = mon.result().merge(mon2.result());
+        auto merged = mon.result().merged(mon2.result());
         BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
         BOOST_CHECK_EQUAL(mon2.result().count(FpeType::FLTOVF), 1);
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
         BOOST_CHECK_EQUAL(merged.numStackTraces(), 2);
-        merged = merged.merge(mon3.result());
+        merged = merged.merged(mon3.result());
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
         BOOST_CHECK_EQUAL(merged.count(FpeType::FLTDIV), 1);
@@ -242,7 +242,7 @@ BOOST_AUTO_TEST_CASE(MergeDeduplication) {
       FpeMonitor mon2;
       invalid();
 
-      auto merged = mon.result().merge(mon2.result());
+      auto merged = mon.result().merged(mon2.result());
       BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 2);
       BOOST_CHECK_EQUAL(merged.stackTraces().size(), 1);
     }

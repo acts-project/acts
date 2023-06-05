@@ -9,35 +9,47 @@
 #include "Acts/Utilities/StackTrace.hpp"
 
 #include <memory>
+#include <memory_resource>
 
 #include <boost/stacktrace/detail/frame_unwind.ipp>  // needed to avoid linker error
+#include <boost/stacktrace/frame.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
+
+namespace {
+using stacktrace_t = boost::stacktrace::basic_stacktrace<
+    std::pmr::polymorphic_allocator<boost::stacktrace::frame>>;
+}  // namespace
 
 namespace Acts {
 
 struct StackTrace::Impl {
-  Impl(boost::stacktrace::stacktrace st) : m_st(std::move(st)) {}
-  boost::stacktrace::stacktrace m_st;
+  Impl(stacktrace_t st) : m_st(std::move(st)) {}
+  stacktrace_t m_st;
 };
 
-StackTrace::StackTrace(std::size_t skip, std::size_t maxDepth) {
-  m_impl =
-      std::make_unique<Impl>(boost::stacktrace::stacktrace{skip + 1, maxDepth});
+StackTrace::StackTrace(std::size_t skip, std::size_t maxDepth,
+                       std::pmr::memory_resource &mem)
+    : m_allocator{&mem} {
+  m_impl = m_allocator.allocate(1);
+  m_allocator.construct(m_impl, stacktrace_t{skip + 1, maxDepth, &mem});
 }
 
-StackTrace::StackTrace(StackTrace &&other) = default;
-StackTrace &StackTrace::operator=(StackTrace &&other) = default;
-
-StackTrace::StackTrace(const StackTrace &other) {
-  m_impl = std::make_unique<Impl>(*other.m_impl);
+StackTrace::StackTrace(const StackTrace &other)
+    : m_allocator{other.m_allocator.resource()} {
+  m_impl = m_allocator.allocate(1);
+  m_allocator.construct(m_impl, *other.m_impl);
 }
 
 StackTrace &StackTrace::operator=(const StackTrace &other) {
-  m_impl = std::make_unique<Impl>(*other.m_impl);
+  m_impl = m_allocator.allocate(1);
+  m_allocator.construct(m_impl, *other.m_impl);
   return *this;
 }
 
-StackTrace::~StackTrace() = default;
+StackTrace::~StackTrace() {
+  assert(m_impl != nullptr);
+  m_allocator.destroy(m_impl);
+}
 
 std::ostream &operator<<(std::ostream &os, const StackTrace &st) {
   os << st.m_impl->m_st;
@@ -53,8 +65,8 @@ bool operator==(const StackTrace &lhs, const StackTrace &rhs) {
   const auto &fl = *lhs.m_impl->m_st.begin();
   const auto &fr = *rhs.m_impl->m_st.begin();
 
-  return fl.source_file() == fr.source_file() &&
-         fl.source_line() == fr.source_line();
+  // @TODO: Check all frames
+  return boost::stacktrace::hash_value(fl) == boost::stacktrace::hash_value(fr);
 }
 
 }  // namespace Acts

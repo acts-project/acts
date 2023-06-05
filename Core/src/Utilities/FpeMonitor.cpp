@@ -19,6 +19,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
+#include <memory_resource>
 #include <mutex>
 #include <stdexcept>
 #include <string_view>
@@ -34,24 +35,26 @@
 
 namespace Acts {
 
-FpeMonitor::Result::Result() = default;
+FpeMonitor::Result::Result(std::pmr::memory_resource &mem)
+    : m_stracktraces{&mem} {}
 
-FpeMonitor::Result FpeMonitor::Result::merge(const Result &with) const {
-  Result result;
+FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
+  Result result{*m_stracktraces.get_allocator().resource()};
+  result.merge(*this);
+  result.merge(with);
+  return result;
+}
+
+void FpeMonitor::Result::merge(const Result &with) {
   for (unsigned int i = 0; i < m_counts.size(); i++) {
-    result.m_counts[i] = m_counts[i] + with.m_counts[i];
+    m_counts[i] = m_counts[i] + with.m_counts[i];
   }
 
-  std::copy(m_stracktraces.begin(), m_stracktraces.end(),
-            std::back_inserter(result.m_stracktraces));
   std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
-            std::back_inserter(result.m_stracktraces));
+            std::back_inserter(m_stracktraces));
 
   // @TODO: Optimize this by not merging first and then deduplicating
-  result.deduplicate();
-
-  // @TODO: Merge stack traces
-  return result;
+  deduplicate();
 }
 
 const FpeMonitor::Result &FpeMonitor::result() const {
@@ -70,7 +73,7 @@ unsigned int FpeMonitor::Result::numStackTraces() const {
   return m_stracktraces.size();
 }
 
-const std::vector<FpeMonitor::Result::FpeInfo>
+const std::pmr::vector<FpeMonitor::Result::FpeInfo>
     &FpeMonitor::Result::stackTraces() const {
   return m_stracktraces;
 }
@@ -96,7 +99,8 @@ void FpeMonitor::Result::summary(std::ostream &os) const {
 }
 
 void FpeMonitor::Result::deduplicate() {
-  std::vector<FpeInfo> copy = std::move(m_stracktraces);
+  std::pmr::vector<FpeInfo> copy{m_stracktraces.get_allocator()};
+  copy = std::move(m_stracktraces);
   m_stracktraces.clear();
 
   for (auto &info : copy) {
@@ -114,10 +118,14 @@ void FpeMonitor::Result::deduplicate() {
   }
 }
 
-FpeMonitor::FpeMonitor()
-    : FpeMonitor{FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW} {}
+FpeMonitor::FpeMonitor(std::pmr::memory_resource &mem)
+    : m_excepts{FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW},
+      m_result{mem} {
+  enable();
+}
 
-FpeMonitor::FpeMonitor(int excepts) : m_excepts(excepts) {
+FpeMonitor::FpeMonitor(int excepts, std::pmr::memory_resource &mem)
+    : m_excepts(excepts), m_result{mem} {
   enable();
 }
 
@@ -157,6 +165,10 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   // std::cout << boost::stacktrace::stacktrace();
   std::cout << std::endl;
 
+  if (stack().empty()) {
+    return;
+  }
+
   FpeMonitor &fpe = *stack().top();
   fpe.m_result.m_counts.at(si->si_code)++;
 
@@ -166,8 +178,12 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   // collect stack trace skipping 2 frames, which should be the signal handler
   // and the calling facility. This might be platform specific, not sure
   if (fpe.m_result.m_stracktraces.size() < fpe.stackLimit()) {
+    std::cout << fpe.m_result.m_stracktraces.get_allocator().resource()
+              << std::endl;
     fpe.m_result.m_stracktraces.push_back(
-        {1, static_cast<FpeType>(si->si_code), StackTrace(2, maxDepth)});
+        {1, static_cast<FpeType>(si->si_code),
+         StackTrace(2, maxDepth,
+                    *fpe.m_result.m_stracktraces.get_allocator().resource())});
   }
 
   // @TODO: Disable this on non-x86_64
