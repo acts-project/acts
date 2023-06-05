@@ -50,14 +50,12 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 
   BoundTrackParameters boundPar{refSurface, par, cov};
 
-  double absCharge = 1_e;
   double Bz = 2_T;
 
   Acts::GeometryContext gctx;
 
   EDM4hepUtil::detail::Parameters converted =
-      EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, absCharge, Bz,
-                                                           boundPar);
+      EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz, boundPar);
 
   BOOST_CHECK(converted.covariance.has_value());
   BOOST_CHECK(converted.surface);
