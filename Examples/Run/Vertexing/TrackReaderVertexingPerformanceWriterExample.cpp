@@ -97,7 +97,6 @@ int main(int argc, char* argv[]) {
   findVertices.inputTrackParameters = trackSelectorConfig.outputTrackParameters;
   findVertices.outputProtoVertices = "fittedProtoVertices";
   findVertices.outputVertices = "fittedVertices";
-  findVertices.outputTime = "recoTimeMS";
   sequencer.addAlgorithm(std::make_shared<AdaptiveMultiVertexFinderAlgorithm>(
       findVertices, logLevel));
 
@@ -110,7 +109,6 @@ int main(int argc, char* argv[]) {
       trackSummaryReader.outputParticles;
   vertexWriterConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
-  vertexWriterConfig.inputTime = findVertices.outputTime;
   vertexWriterConfig.filePath = outputDir + "/vertexperformance_AMVF.root";
   vertexWriterConfig.treeName = "amvf";
   sequencer.addWriter(

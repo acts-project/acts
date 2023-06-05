@@ -15,7 +15,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"

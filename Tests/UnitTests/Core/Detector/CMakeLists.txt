@@ -13,4 +13,6 @@ add_unittest(SupportHelper SupportHelperTests.cpp)
 add_unittest(ProtoDetector ProtoDetectorTests.cpp)
 add_unittest(Portal PortalTests.cpp)
 add_unittest(PortalGenerators PortalGeneratorsTests.cpp)
+add_unittest(VolumeStructureBuilder VolumeStructureBuilderTests.cpp)
+
 

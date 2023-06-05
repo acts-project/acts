@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 
+#include "Acts/Utilities/VectorHelpers.hpp"
+
 namespace ActsExamples {
 
 /// Write down an interpolated magnetic field map

@@ -22,7 +22,6 @@
 #include "Acts/Tests/CommonHelpers/MultiTrajectoryTestsCommon.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <numeric>

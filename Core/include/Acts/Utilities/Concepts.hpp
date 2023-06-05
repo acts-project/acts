@@ -20,6 +20,7 @@
 
 #define ACTS_REQUIRES(x)
 #define ACTS_CONCEPT(x) typename
-#define ACTS_STATIC_CHECK_CONCEPT(concept, type)
+#define ACTS_STATIC_CHECK_CONCEPT(concept, type) \
+  static_assert(true, "Dummy assertion")
 
 #endif

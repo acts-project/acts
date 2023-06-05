@@ -14,6 +14,7 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <unordered_map>
 
