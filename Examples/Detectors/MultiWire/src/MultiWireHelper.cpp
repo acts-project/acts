@@ -63,7 +63,6 @@ ActsExamples::MultiWireHelper::getStrawSurfaces(
   strawSurfaces.reserve(detectorElements.size());
 
   // Convert the physical volumes of the detector elements to straw surfaces
-
   for (auto& detectorElement : detectorElements) {
     // auto context = Acts::GeometryContext();
     auto g4conv = Acts::Geant4PhysicalVolumeConverter();

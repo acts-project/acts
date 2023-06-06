@@ -75,6 +75,7 @@ ActsExamples::MultiWireStructureBuilder::construct(
   cuboidExtent.set(Acts::binZ, multiWireBounds[2].first - radius,
                    mCfg.multiWireBounds[2].second + radius);
 
+
   Acts::Experimental::VolumeStructureBuilder::Config vsConfig;
   vsConfig.boundsType = Acts::VolumeBounds::eCuboid;
   vsConfig.extent = cuboidExtent;
@@ -89,6 +90,7 @@ ActsExamples::MultiWireStructureBuilder::construct(
   auto dvBuilder = std::make_shared<Acts::Experimental::DetectorVolumeBuilder>(
       dvConfig,
       Acts::getDefaultLogger("DetectorVolumeBuilder", Acts::Logging::VERBOSE));
+
   auto dvComponent = dvBuilder->construct(roots, tContext);
 
   return dvComponent;
