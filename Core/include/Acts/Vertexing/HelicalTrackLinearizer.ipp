@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -134,7 +134,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     momentumJacobian(5, 0) = -d0 / betaT;
   } else {
     // Helix radius
-    ActsScalar rho{sinTheta * (1. / qOvP) / Bz};
+    ActsScalar rho = sinTheta * (1. / qOvP) / Bz;
     // Sign of helix radius
     ActsScalar h = (rho < 0.) ? -1 : 1;
 
@@ -177,7 +177,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     // As a consequence, many terms of the B matrix from Eq. 5.36 vanish.
 
     // Absolute value of rho over S
-    ActsScalar absRhoOverS{h * rho / S};
+    ActsScalar absRhoOverS = h * rho / S;
 
     // Second row
     momentumJacobian(1, 0) = rhoCotTheta * (1. - absRhoOverS);
@@ -198,7 +198,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  BoundSymMatrix weightAtPCA{parCovarianceAtPCA.inverse()};
+  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,
