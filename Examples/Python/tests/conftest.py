@@ -409,7 +409,7 @@ def material_recording(material_recording_session: Path, tmp_path: Path):
 
 #  @pytest.fixture(autouse=True)
 #  def fpe_monitoring():
-    #  print("Enabling FPE monitoring")
-    #  with acts.FpeMonitor():
-        #  yield
-    #  print("Disabling FPE monitoring")
+#  print("Enabling FPE monitoring")
+#  with acts.FpeMonitor():
+#  yield
+#  print("Disabling FPE monitoring")

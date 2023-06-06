@@ -88,7 +88,6 @@ bool operator==(const StackTrace &lhs, const StackTrace &rhs) {
   // only compare first frame
   return (boost::stacktrace::hash_value(fl.front()) ==
           boost::stacktrace::hash_value(fr.front()));
-
 }
 
 }  // namespace Acts
