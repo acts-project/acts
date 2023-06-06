@@ -17,6 +17,7 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
@@ -62,8 +63,7 @@ ActsExamples::MultiWireHelper::getStrawSurfaces(
   strawSurfaces.reserve(detectorElements.size());
 
   // Convert the physical volumes of the detector elements to straw surfaces
-  std::cout << detectorElements.size() << std::endl;
-  std::cin.ignore();
+
   for (auto& detectorElement : detectorElements) {
     // auto context = Acts::GeometryContext();
     auto g4conv = Acts::Geant4PhysicalVolumeConverter();

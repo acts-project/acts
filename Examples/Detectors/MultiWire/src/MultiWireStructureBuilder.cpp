@@ -20,6 +20,7 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MultiWire/MultiWireHelper.hpp"
@@ -30,30 +31,25 @@
 #include <vector>
 
 ActsExamples::MultiWireStructureBuilder::MultiWireStructureBuilder(
-    const ActsExamples::MultiWireStructureBuilder::Config& config) {
-  mCfg = config;
-
+    const ActsExamples::MultiWireStructureBuilder::Config& config,
+    std::unique_ptr<const Acts::Logger> logger)
+    : mCfg(config), mLogger(std::move(logger)) {
   // check if the surfaces are set
   if (mCfg.strawSurfaces.empty()) {
-    std::cout << ("MultiWireStructureBuilder: No surfaces provided- They will "
-                  "be set by gdml file")
-              << std::endl;
-    mCfg.strawSurfaces = ActsExamples::MultiWireHelper::getStrawSurfaces(
-        mCfg.sensitiveNames, mCfg.passiveNames);
+    throw std::invalid_argument(
+        "MultiWireStructureBuilder: No surfaces are given");
   }
 
-  multiWireBounds =
-      ActsExamples::MultiWireHelper::getMultiWireBounds(mCfg.strawSurfaces);
-
-  // check if the binning is set- if not it will be set using information from
-  // the surfaces
+  // check if the binning is set
   if (mCfg.lbinning.size() < 2u) {
-    std::cout << "The binning of the layer structure is not set or it is 1 "
-                 "dimensional-it will be set by the standard binning using "
-                 "surfaces' information"
-              << std::endl;
-    mCfg.lbinning = ActsExamples::MultiWireHelper::layerBinning(
-        mCfg.strawSurfaces, multiWireBounds);
+    throw std::invalid_argument(
+        "MultiWireStructureBuilder: Invalid binning detected. It must be "
+        "2-dimensional");
+  }
+
+  if (mCfg.multiWireBounds.empty()) {
+    throw std::invalid_argument(
+        "MultiWireStructureBuilder: No bounds of the multi wire are set");
   }
 }
 
@@ -72,17 +68,12 @@ ActsExamples::MultiWireStructureBuilder::construct(
 
   // Configure the external structure builder for the external structure
   Acts::ActsScalar hx = mCfg.strawSurfaces.front()->bounds().values()[1];
-  Acts::ActsScalar hy =
-      abs(multiWireBounds[1].second - multiWireBounds[1].first + 2 * radius);
-  Acts::ActsScalar hz =
-      abs(multiWireBounds[2].second - multiWireBounds[3].first + 2 * radius);
-
   Acts::Extent cuboidExtent;
   cuboidExtent.set(Acts::binX, -hx, hx);
-  cuboidExtent.set(Acts::binY, multiWireBounds[1].first - radius,
-                   multiWireBounds[1].second + radius);
+  cuboidExtent.set(Acts::binY, mCfg.multiWireBounds[1].first - radius,
+                   mCfg.multiWireBounds[1].second + radius);
   cuboidExtent.set(Acts::binZ, multiWireBounds[2].first - radius,
-                   multiWireBounds[2].second + radius);
+                   mCfg.multiWireBounds[2].second + radius);
 
   Acts::Experimental::VolumeStructureBuilder::Config vsConfig;
   vsConfig.boundsType = Acts::VolumeBounds::eCuboid;
@@ -98,7 +89,6 @@ ActsExamples::MultiWireStructureBuilder::construct(
   auto dvBuilder = std::make_shared<Acts::Experimental::DetectorVolumeBuilder>(
       dvConfig,
       Acts::getDefaultLogger("DetectorVolumeBuilder", Acts::Logging::VERBOSE));
-  // Acts::Experimental::RootDetectorVolumes roots;
   auto dvComponent = dvBuilder->construct(roots, tContext);
 
   return dvComponent;

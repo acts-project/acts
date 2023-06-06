@@ -26,6 +26,16 @@ BOOST_AUTO_TEST_CASE(MultiWireStructureBuilderFromGDML) {
   mwCfg.sensitiveNames = {"Inner_Skin_ml0"};
   mwCfg.passiveNames = {"xxx"};
 
+  auto strawSurfaces = ActsExamples::MultiWireHelper::getStrawSurfaces(
+      mwCfg.sensitiveNames, mwCfg.passiveNames);
+  auto mwBounds =
+      ActsExamples::MultiWireHelper::getMultiWireBounds(strawSurfaces);
+
+  mwCfg.strawSurfaces = strawSurfaces;
+  mwCfg.lbinning =
+      ActsExamples::MultiWireHelper::layerBinning(strawSurfaces, mwBounds);
+  mwCfg.multiWireBounds = mwBounds;
+
   Acts::Experimental::RootDetectorVolumes roots;
   auto mwBuilder = ActsExamples::MultiWireStructureBuilder(mwCfg);
 
