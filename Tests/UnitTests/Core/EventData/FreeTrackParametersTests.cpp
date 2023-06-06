@@ -52,13 +52,15 @@ void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
   CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eFreeTime], eps, eps);
   CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::absoluteMomentum(params, q), p,
-                       eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::transverseMomentum(params, q),
-                       p * unitDir.template head<2>().norm(), eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, q), p * unitDir,
-                       eps, eps);
-  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, q), q);
+  CHECK_CLOSE_OR_SMALL(
+      TrackParameterHelpers::absoluteMomentum(params, std::abs(q)), p, eps,
+      eps);
+  CHECK_CLOSE_OR_SMALL(
+      TrackParameterHelpers::transverseMomentum(params, std::abs(q)),
+      p * unitDir.template head<2>().norm(), eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, std::abs(q)),
+                       p * unitDir, eps, eps);
+  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, std::abs(q)), q);
   // self-consistency
   CHECK_CLOSE_OR_SMALL(params.position(),
                        params.parameters().template segment<3>(eFreePos0), eps,
@@ -112,12 +114,14 @@ BOOST_DATA_TEST_CASE(
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  FreeTrackParameters params(pos4, phi, theta, 1 / p);
+  FreeTrackParameters params(pos4, phi, theta,
+                             TrackParameterHelpers::qop(p, q));
   checkParameters(params, pos4, dir, p, q);
   BOOST_CHECK(not params.covariance());
 
   // reassign w/ covariance
-  params = FreeTrackParameters(pos4, phi, theta, p / q, cov);
+  params = FreeTrackParameters(pos4, phi, theta,
+                               TrackParameterHelpers::qop(p, q), cov);
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }

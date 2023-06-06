@@ -15,6 +15,11 @@
 namespace Acts {
 namespace TrackParameterHelpers {
 
+template <typename P, typename Q>
+inline auto qop(P p, Q q) {
+  return (q == 0 ? 1 : q) / p;
+}
+
 template <typename parameters_t>
 inline auto charge(const parameters_t &parameters, double absCharge) {
   assert(absCharge >= 0 && parameters.qop() != 0);

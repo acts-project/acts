@@ -48,13 +48,15 @@ void checkParameters(const CurvilinearTrackParameters& params, double phi,
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
   CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::absoluteMomentum(params, q), p,
-                       eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::transverseMomentum(params, q),
-                       p * std::sin(theta), eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, q), p * unitDir,
-                       eps, eps);
-  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, q), q);
+  CHECK_CLOSE_OR_SMALL(
+      TrackParameterHelpers::absoluteMomentum(params, std::abs(q)), p, eps,
+      eps);
+  CHECK_CLOSE_OR_SMALL(
+      TrackParameterHelpers::transverseMomentum(params, std::abs(q)),
+      p * std::sin(theta), eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, std::abs(q)),
+                       p * unitDir, eps, eps);
+  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, std::abs(q)), q);
   // curvilinear reference surface
   CHECK_CLOSE_OR_SMALL(params.referenceSurface().center(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.referenceSurface().normal(geoCtx), unitDir, eps,
@@ -113,12 +115,14 @@ BOOST_DATA_TEST_CASE(
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  CurvilinearTrackParameters params(pos4, dir, q / p);
+  CurvilinearTrackParameters params(pos4, dir,
+                                    TrackParameterHelpers::qop(p, q));
   checkParameters(params, phi, theta, p, q, pos4, dir);
   BOOST_CHECK(not params.covariance());
 
   // reassign w/ covariance
-  params = CurvilinearTrackParameters(pos4, dir, q / p, cov);
+  params = CurvilinearTrackParameters(pos4, dir,
+                                      TrackParameterHelpers::qop(p, q), cov);
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
