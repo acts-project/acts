@@ -81,8 +81,6 @@ class HelicalTrackLinearizer {
 
     // Minimum q/p value
     double minQoP = 1e-15;
-    // Maximum curvature value
-    double maxRho = 1e+15;
   };
 
   /// @brief Constructor

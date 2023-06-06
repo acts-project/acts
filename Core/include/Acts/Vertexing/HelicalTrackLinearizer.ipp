@@ -61,19 +61,27 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   // Extracting Perigee parameters and compute functions of them for later
   // usage
-  double phi = paramsAtPCA(BoundIndices::eBoundPhi);
-  double sinPhi = std::sin(phi);
-  double cosPhi = std::cos(phi);
+  ActsScalar d0 = paramsAtPCA(BoundIndices::eBoundLoc0);
 
-  double theta = paramsAtPCA(BoundIndices::eBoundTheta);
-  const double sinTheta = std::sin(theta);
-  const double tanTheta = std::tan(theta);
+  ActsScalar phi = paramsAtPCA(BoundIndices::eBoundPhi);
+  ActsScalar sinPhi = std::sin(phi);
+  ActsScalar cosPhi = std::cos(phi);
+
+  ActsScalar theta = paramsAtPCA(BoundIndices::eBoundTheta);
+  ActsScalar sinTheta = std::sin(theta);
+  ActsScalar tanTheta = std::tan(theta);
 
   // q over p
-  double qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
+  ActsScalar qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
 
-  // Charge of the particle, determines the sign of the helix radius rho
-  double sgnH = (qOvP < 0.) ? -1 : 1;
+  // Mass hypothesis: Assume Pion mass
+  ActsScalar m0 = 0.1;
+  // Assume unit charge
+  ActsScalar p = std::abs(1 / qOvP);
+  // Speed in units of c
+  ActsScalar beta = p / std::hypot(p, m0);
+  // Transverse speed (i.e., speed in the x-y plane)
+  ActsScalar betaT = beta * sinTheta;
 
   // Momentu at the PCA
   Vector3 momentumAtPCA(phi, theta, qOvP);
@@ -89,7 +97,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   if (!field.ok()) {
     return field.error();
   }
-  double Bz = (*field)[eZ];
+  ActsScalar Bz = (*field)[eZ];
 
   // If there is no magnetic field the particle has a straight trajectory
   // If there is a constant magnetic field it has a helical trajectory
@@ -104,24 +112,14 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     positionJacobian(1, 1) = -sinPhi / tanTheta;
     positionJacobian(1, 2) = 1.;
 
-    // TODO: include timing in track linearization - will be added
-    // in next PR
     // Sixth row
+    positionJacobian(5, 0) = -cosPhi / betaT;
+    positionJacobian(5, 1) = -sinPhi / betaT;
     positionJacobian(5, 3) = 1.;
 
-    // Quantities from Eq. 5.41 and 5.42 in Ref (1)
-    double R = (pca(0) - linPointPos.x()) * cosPhi +
-               (pca(1) - linPointPos.y()) * sinPhi;
-    double Q = (pca(0) - linPointPos.x()) * sinPhi -
-               (pca(1) - linPointPos.y()) * cosPhi;
-
     // Fill momentum Jacobian, i.e., matrix B from Eq. 5.40 in Ref(1)
-    // First row
-    momentumJacobian(0, 0) = -R;
-
     // Second row
-    momentumJacobian(1, 0) = Q / tanTheta;
-    momentumJacobian(1, 1) = R / (sinTheta * sinTheta);
+    momentumJacobian(1, 0) = -d0 / tanTheta;
 
     // Third row
     momentumJacobian(2, 0) = 1.;
@@ -132,69 +130,75 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     // Fifth row
     momentumJacobian(4, 2) = 1.;
 
-    // TODO: Derivatives of time --> Next PR
+    // Sixth row
+    momentumJacobian(5, 0) = -d0 / betaT;
   } else {
     // Helix radius
-    double rho{sinTheta * (1. / qOvP) / Bz};
+    ActsScalar rho{sinTheta * (1. / qOvP) / Bz};
+    // Sign of helix radius
+    ActsScalar h = (rho < 0.) ? -1 : 1;
 
     // Quantities from Eq. 5.34 in Ref(1) (see .hpp)
-    double X = pca(0) - linPointPos.x() + rho * sinPhi;
-    double Y = pca(1) - linPointPos.y() - rho * cosPhi;
-    const double S2 = (X * X + Y * Y);
+    ActsScalar X = pca(0) - linPointPos.x() + rho * sinPhi;
+    ActsScalar Y = pca(1) - linPointPos.y() - rho * cosPhi;
+    ActsScalar S2 = (X * X + Y * Y);
     // S is the 2D distance from the helix center to linPointPos
     // in the x-y plane
-    const double S = std::sqrt(S2);
+    ActsScalar S = std::sqrt(S2);
 
     // Fill position Jacobian, i.e., matrix A from Eq. 5.36 in Ref(1)
     // First row
-    positionJacobian(0, 0) = -sgnH * X / S;
-    positionJacobian(0, 1) = -sgnH * Y / S;
+    positionJacobian(0, 0) = -h * X / S;
+    positionJacobian(0, 1) = -h * Y / S;
 
-    const double S2tanTheta = S2 * tanTheta;
+    ActsScalar XoverS2 = X / S2;
+    ActsScalar YoverS2 = Y / S2;
+    ActsScalar rhoCotTheta = rho / tanTheta;
+    ActsScalar rhoOverBetaT = rho / betaT;
 
     // Second row
-    positionJacobian(1, 0) = rho * Y / S2tanTheta;
-    positionJacobian(1, 1) = -rho * X / S2tanTheta;
+    positionJacobian(1, 0) = rhoCotTheta * YoverS2;
+    positionJacobian(1, 1) = -rhoCotTheta * XoverS2;
     positionJacobian(1, 2) = 1.;
 
     // Third row
-    positionJacobian(2, 0) = -Y / S2;
-    positionJacobian(2, 1) = X / S2;
+    positionJacobian(2, 0) = -YoverS2;
+    positionJacobian(2, 1) = XoverS2;
 
-    // TODO: include timing in track linearization - will be added
-    // in next PR
     // Sixth row
+    positionJacobian(5, 0) = rhoOverBetaT * YoverS2;
+    positionJacobian(5, 1) = -rhoOverBetaT * XoverS2;
     positionJacobian(5, 3) = 1.;
 
     // Fill momentum Jacobian, i.e., B matrix from Eq. 5.36 in Ref(1).
     // Since we propagated to the PCA (point P in Ref(1)), the points
     // P and V coincide and we can choose deltaPhi = 0.
-    // One can show that if deltaPhi = 0 --> R = 0 and Q = sgnH * S.
+    // One can show that if deltaPhi = 0 --> R = 0 and Q = h * S.
     // As a consequence, many terms of the B matrix from Eq. 5.36 vanish.
-    double rhoOverS{sgnH * rho / S};
+
+    // Absolute value of rho over S
+    ActsScalar absRhoOverS{h * rho / S};
 
     // Second row
-    momentumJacobian(1, 0) = (1. - rhoOverS) * rho / tanTheta;
+    momentumJacobian(1, 0) = rhoCotTheta * (1. - absRhoOverS);
 
     // Third row
-    momentumJacobian(2, 0) = rhoOverS;
+    momentumJacobian(2, 0) = absRhoOverS;
 
     // Fourth and fifth row
     momentumJacobian(3, 1) = 1.;
     momentumJacobian(4, 2) = 1.;
 
-    // TODO: Derivatives of time --> Next PR
+    // Sixth row
+    momentumJacobian(5, 0) = rhoOverBetaT * (1. - absRhoOverS);
   }
 
   // const term in Talyor expansion from Eq. 5.38 in Ref(1)
   BoundVector constTerm =
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
-  // Set the parameter weight matrix
-  ActsSymMatrix<5> parWeight = (parCovarianceAtPCA.block<5, 5>(0, 0)).inverse();
-
-  BoundSymMatrix weightAtPCA{BoundSymMatrix::Identity()};
-  weightAtPCA.block<5, 5>(0, 0) = parWeight;
+  // The parameter weight
+  BoundSymMatrix weightAtPCA{parCovarianceAtPCA.inverse()};
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,
