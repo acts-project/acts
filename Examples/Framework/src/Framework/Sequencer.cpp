@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/StackTrace.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -28,7 +29,11 @@
 #include <numeric>
 #include <regex>
 #include <stdexcept>
+#include <string>
 #include <typeinfo>
+
+#include <boost/algorithm/string/predicate.hpp>
+#include <sys/types.h>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
@@ -473,7 +478,11 @@ int Sequencer::run() {
             ACTS_VERBOSE("Execute sequence elements");
 
             for (auto& [alg, fpe] : m_sequenceElements) {
-              Acts::FpeMonitor mon{m_pool};
+              std::optional<Acts::FpeMonitor> mon;
+              if (m_cfg.trackFpes) {
+                mon.emplace(m_pool);
+                context.fpeMonitor = &mon.value();
+              }
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
                                       << alg->name());
@@ -482,7 +491,31 @@ int Sequencer::run() {
                                                 << ": " << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
-              fpe.local().merge(mon.result());
+
+              if (mon) {
+                fpe.local().merge(mon->result());
+
+                mon->result().deduplicate();
+
+                for (const auto& [count, type, st] :
+                     mon->result().stackTraces()) {
+                  std::size_t masked = fpeMaskCount(st, type);
+                  std::cout << type << " HAVE: " << count << " MASK:" << masked
+                            << std::endl;
+                  if (masked < count) {
+                    std::stringstream ss;
+                    ss << "FPE of type " << type
+                       << " exceeded configured per-event threshold of "
+                       << masked << " (was: " << count << ")\n"
+                       << st.toString(8);
+                    ACTS_ERROR(ss.str());
+                    if (m_cfg.failOnFpe) {
+                      throw FpeFailure{ss.str()};
+                    }
+                  }
+                }
+              }
+              context.fpeMonitor = nullptr;
             }
 
             nProcessedEvents++;
@@ -517,34 +550,47 @@ int Sequencer::run() {
   }
 
   // FPE reporting
-  for (auto& [alg, fpe] : m_sequenceElements) {
-    auto merged = std::accumulate(
-        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
-        [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
-    if (!merged) {
-      // no FPEs to report
-      continue;
-    }
-    ACTS_INFO("-----------------------------------");
-    ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
-                                 << alg->name());
-    ACTS_INFO("-----------------------------------");
+  if (m_cfg.trackFpes) {
+    for (auto& [alg, fpe] : m_sequenceElements) {
+      auto merged = std::accumulate(
+          fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+          [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
+      if (!merged) {
+        // no FPEs to report
+        continue;
+      }
+      ACTS_INFO("-----------------------------------");
+      ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
+                                   << alg->name());
+      ACTS_INFO("-----------------------------------");
 
-    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
-        sorted;
-    std::transform(
-        merged.stackTraces().begin(), merged.stackTraces().end(),
-        std::back_inserter(sorted),
-        [](const auto& f) -> const auto& { return f; });
-    std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
-      return a.get().count > b.get().count;
-    });
+      std::vector<
+          std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+          sorted;
+      std::transform(
+          merged.stackTraces().begin(), merged.stackTraces().end(),
+          std::back_inserter(sorted),
+          [](const auto& f) -> const auto& { return f; });
+      std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
+        return a.get().count > b.get().count;
+      });
 
-    for (const auto& el : sorted) {
-      const auto& [count, type, st] = el.get();
-      ACTS_INFO("- " << type << ": (" << count << " times)\n" << st);
+      std::vector<
+          std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+          remaining;
+
+      for (const auto& el : sorted) {
+        const auto& [count, type, st] = el.get();
+        std::size_t masked = fpeMaskCount(st, type);
+        ACTS_INFO("- " << type << ": (" << count << " times) "
+                       << (masked > 0 ? "[MASKED: " + std::to_string(masked) +
+                                            " per event]"
+                                      : "")
+                       << "\n"
+                       << st.toString(8));
+      }
+      ACTS_INFO("-----------------------------------");
     }
-    ACTS_INFO("-----------------------------------");
   }
 
   // summarize timing
@@ -567,6 +613,28 @@ int Sequencer::run() {
   }
 
   return EXIT_SUCCESS;
+}
+
+std::size_t Sequencer::fpeMaskCount(const Acts::StackTrace& st,
+                                    Acts::FpeType type) const {
+  const auto& [file, line] = st.topSourceLocation();
+  std::string loc = file + ":" + std::to_string(line);
+  for (const auto& [filt, fType, count] : m_cfg.fpeMasks) {
+    if (boost::algorithm::ends_with(loc, filt) && fType == type) {
+      return count;
+    }
+  }
+  return 0;
+}
+
+Acts::FpeMonitor::Result Sequencer::fpeResult() const {
+  Acts::FpeMonitor::Result merged;
+  for (auto& [alg, fpe] : m_sequenceElements) {
+    merged.merge(std::accumulate(
+        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); }));
+  }
+  return merged;
 }
 
 }  // namespace ActsExamples

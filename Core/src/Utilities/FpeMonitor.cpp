@@ -91,7 +91,7 @@ bool FpeMonitor::Result::encountered(FpeType type) const {
   return count(type) > 0;
 }
 
-void FpeMonitor::Result::summary(std::ostream &os) const {
+void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
   os << "FPE result summary:\n";
   static const std::vector<FpeType> types = {
       FpeType::INTDIV, FpeType::INTOVF, FpeType::FLTDIV, FpeType::FLTOVF,
@@ -103,7 +103,7 @@ void FpeMonitor::Result::summary(std::ostream &os) const {
 
   os << "\nStack traces:\n";
   for (const auto &[count, type, st] : stackTraces()) {
-    os << "- " << type << ": (" << count << " times)\n" << st;
+    os << "- " << type << ": (" << count << " times)\n" << st.toString(depth);
   }
 }
 
@@ -143,37 +143,6 @@ FpeMonitor::~FpeMonitor() {
 }
 
 void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
-  std::cout << "SIGACTION" << std::endl;
-  switch (si->si_code) {
-    case FPE_INTDIV:
-      std::cerr << "integer divide by zero";
-      break;
-    case FPE_INTOVF:
-      std::cerr << "integer overflow";
-      break;
-    case FPE_FLTDIV:
-      std::cerr << "floating point divide by zero";
-      break;
-    case FPE_FLTOVF:
-      std::cerr << "floating point overflow";
-      break;
-    case FPE_FLTUND:
-      std::cerr << "floating point underflow";
-      break;
-    case FPE_FLTRES:
-      std::cerr << "floating point inexact result";
-      break;
-    case FPE_FLTINV:
-      std::cerr << "floating point invalid operation";
-      break;
-    case FPE_FLTSUB:
-      std::cerr << "subscript out of range";
-      break;
-  }
-
-  // std::cout << boost::stacktrace::stacktrace();
-  std::cout << std::endl;
-
   if (stack().empty()) {
     return;
   }
@@ -182,14 +151,11 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   fpe.m_result.m_counts.at(si->si_code)++;
 
   std::size_t maxDepth = static_cast<std::size_t>(-1);
-  maxDepth = 16;
 
   try {
     // collect stack trace skipping 2 frames, which should be the signal handler
     // and the calling facility. This might be platform specific, not sure
     if (fpe.m_result.m_stracktraces.size() < fpe.stackLimit()) {
-      std::cout << fpe.m_result.m_stracktraces.get_allocator().resource()
-                << std::endl;
       fpe.m_result.m_stracktraces.push_back(
           {1, static_cast<FpeType>(si->si_code),
            StackTrace(

@@ -18,12 +18,14 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <limits>
+#include <memory_resource>
 
 #include <pybind11/detail/common.h>
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
+#include <pyerrors.h>
 
 namespace py = pybind11;
 
@@ -77,6 +79,24 @@ class PyIAlgorithm : public IAlgorithm {
     }
   }
 };
+
+void trigger_divbyzero() {
+  volatile float j = 0.0;
+  volatile float r = 123 / j;
+  (void)r;
+}
+
+void trigger_overflow() {
+  volatile float j = std::numeric_limits<float>::max();
+  volatile float r = j * j;
+  (void)r;
+}
+
+void trigger_invalid() {
+  volatile float j = -1;
+  volatile float r = std::sqrt(j);
+  (void)r;
+}
 }  // namespace
 
 namespace Acts::Python {
@@ -161,7 +181,8 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
                              })
       .def_readonly("magFieldContext", &AlgorithmContext::magFieldContext)
       .def_readonly("geoContext", &AlgorithmContext::geoContext)
-      .def_readonly("calibContext", &AlgorithmContext::calibContext);
+      .def_readonly("calibContext", &AlgorithmContext::calibContext)
+      .def_readwrite("fpeMonitor", &AlgorithmContext::fpeMonitor);
 
   auto pySequenceElement =
       py::class_<ActsExamples::SequenceElement, PySequenceElement,
@@ -220,68 +241,93 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
           .def("addReader", &Sequencer::addReader)
           .def("addWriter", &Sequencer::addWriter)
           .def("addWhiteboardAlias", &Sequencer::addWhiteboardAlias)
-          .def_property_readonly("config", &Sequencer::config);
+          .def_property_readonly("config", &Sequencer::config)
+          .def_property_readonly("fpeResult", &Sequencer::fpeResult);
 
-  py::class_<Config>(sequencer, "Config")
-      .def(py::init<>())
-      .def_readwrite("skip", &Config::skip)
-      .def_readwrite("events", &Config::events)
-      .def_readwrite("logLevel", &Config::logLevel)
-      .def_readwrite("numThreads", &Config::numThreads)
-      .def_readwrite("outputDir", &Config::outputDir)
-      .def_readwrite("outputTimingFile", &Config::outputTimingFile);
+  auto c = py::class_<Config>(sequencer, "Config").def(py::init<>());
 
-  auto fpe = py::class_<Acts::FpeMonitor>(m, "_FpeMonitor");
+  ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+  ACTS_PYTHON_MEMBER(skip);
+  ACTS_PYTHON_MEMBER(events);
+  ACTS_PYTHON_MEMBER(logLevel);
+  ACTS_PYTHON_MEMBER(numThreads);
+  ACTS_PYTHON_MEMBER(outputDir);
+  ACTS_PYTHON_MEMBER(outputTimingFile);
+  ACTS_PYTHON_MEMBER(trackFpes);
+  ACTS_PYTHON_MEMBER(fpeMasks);
+  ACTS_PYTHON_MEMBER(failOnFpe);
+  ACTS_PYTHON_STRUCT_END();
+
+  auto fpem = py::class_<Sequencer::FpeMask>(sequencer, "FpeMask")
+                  .def(py::init<>())
+                  .def(py::init<std::string, Acts::FpeType, std::size_t>());
+
+  ACTS_PYTHON_STRUCT_BEGIN(fpem, Sequencer::FpeMask);
+  ACTS_PYTHON_MEMBER(loc);
+  ACTS_PYTHON_MEMBER(type);
+  ACTS_PYTHON_MEMBER(count);
+  ACTS_PYTHON_STRUCT_END();
+
+  struct FpeMonitorContext {
+    std::optional<Acts::FpeMonitor> mon;
+  };
+
+  auto fpe = py::class_<Acts::FpeMonitor>(m, "FpeMonitor")
+                 .def_static("_trigger_divbyzero", &trigger_divbyzero)
+                 .def_static("_trigger_overflow", &trigger_overflow)
+                 .def_static("_trigger_invalid", &trigger_invalid)
+                 .def_static("context", []() { return FpeMonitorContext(); });
 
   fpe.def_property_readonly(
-      "result", py::overload_cast<>(&Acts::FpeMonitor::result, py::const_),
-      py::return_value_policy::reference_internal);
+         "result", py::overload_cast<>(&Acts::FpeMonitor::result, py::const_),
+         py::return_value_policy::reference_internal)
+      .def("rearm", &Acts::FpeMonitor::rearm);
 
   py::class_<Acts::FpeMonitor::Result>(fpe, "Result")
       .def("merged", &Acts::FpeMonitor::Result::merged)
       .def("merge", &Acts::FpeMonitor::Result::merge)
+      .def("count", &Acts::FpeMonitor::Result::count)
       .def("__str__", [](const Acts::FpeMonitor::Result& result) {
         std::stringstream os;
         result.summary(os);
         return os.str();
       });
 
-  struct PyFpeMonitor {
-    std::optional<Acts::FpeMonitor> mon;
-  };
-
-  py::class_<PyFpeMonitor>(m, "FpeMonitor")
-      .def(py::init([]() { return std::make_unique<PyFpeMonitor>(); }))
+  py::class_<FpeMonitorContext>(m, "_FpeMonitorContext")
+      .def(py::init([]() { return std::make_unique<FpeMonitorContext>(); }))
       .def(
           "__enter__",
-          [](PyFpeMonitor& fm) -> Acts::FpeMonitor& {
+          [](FpeMonitorContext& fm) -> Acts::FpeMonitor& {
             fm.mon.emplace();
             return fm.mon.value();
           },
           py::return_value_policy::reference_internal)
-      .def("__exit__", [](PyFpeMonitor& fm, py::object /*exc_type*/,
+      .def("__exit__", [](FpeMonitorContext& fm, py::object /*exc_type*/,
                           py::object /*exc_value*/,
-                          py::object /*traceback*/) { fm.mon.reset(); })
+                          py::object /*traceback*/) { fm.mon.reset(); });
 
-      .def_static("_trigger_divbyzero",
-                  []() {
-                    volatile float j = 0.0;
-                    volatile float r = 123 / j;
-                    (void)r;
-                  })
+  py::enum_<Acts::FpeType>(m, "FpeType")
+      .value("INTDIV", Acts::FpeType::INTDIV)
+      .value("INTOVF", Acts::FpeType::INTOVF)
+      .value("FLTDIV", Acts::FpeType::FLTDIV)
+      .value("FLTOVF", Acts::FpeType::FLTOVF)
+      .value("FLTUND", Acts::FpeType::FLTUND)
+      .value("FLTRES", Acts::FpeType::FLTRES)
+      .value("FLTINV", Acts::FpeType::FLTINV)
+      .value("FLTSUB", Acts::FpeType::FLTSUB)
 
-      .def_static("_trigger_overflow",
-                  []() {
-                    volatile float j = std::numeric_limits<float>::max();
-                    volatile float r = j * j;
-                    (void)r;
-                  })
+      .def_property_readonly_static(
+          "values", [](py::object /*self*/) -> const auto& {
+            static const std::vector<Acts::FpeType> values = {
+                Acts::FpeType::INTDIV, Acts::FpeType::INTOVF,
+                Acts::FpeType::FLTDIV, Acts::FpeType::FLTOVF,
+                Acts::FpeType::FLTUND, Acts::FpeType::FLTRES,
+                Acts::FpeType::FLTINV, Acts::FpeType::FLTSUB};
+            return values;
+          });
 
-      .def_static("_trigger_invalid", []() {
-        volatile float j = -1;
-        volatile float r = std::sqrt(j);
-        (void)r;
-      });
+  py::register_exception<ActsExamples::FpeFailure>(m, "FpeFailure",
+                                                   PyExc_RuntimeError);
 
   using ActsExamples::RandomNumbers;
   auto randomNumbers =

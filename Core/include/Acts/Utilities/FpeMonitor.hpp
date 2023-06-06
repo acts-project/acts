@@ -14,6 +14,7 @@
 #include <atomic>
 #include <csignal>
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <memory_resource>
 #include <mutex>
@@ -54,7 +55,9 @@ class FpeMonitor {
 
     void deduplicate();
 
-    void summary(std::ostream &os) const;
+    void summary(
+        std::ostream &os,
+        std::size_t depth = std::numeric_limits<std::size_t>::max()) const;
 
     Result(std::pmr::memory_resource &mem = *std::pmr::new_delete_resource());
 

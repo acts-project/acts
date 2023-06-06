@@ -11,6 +11,7 @@
 #include <iterator>
 #include <memory>
 #include <memory_resource>
+#include <sstream>
 
 #include <boost/stacktrace/detail/frame_unwind.ipp>  // needed to avoid linker error
 #include <boost/stacktrace/frame.hpp>
@@ -58,6 +59,11 @@ StackTrace &StackTrace::operator=(const StackTrace &other) {
   return *this;
 }
 
+std::string StackTrace::toString(std::size_t depth) const {
+  return boost::stacktrace::detail::to_string(
+      m_impl->frames.data(), std::min(depth, m_impl->frames.size()));
+}
+
 StackTrace::~StackTrace() {
   if (m_impl != nullptr) {
     m_impl->~Impl();
@@ -66,8 +72,7 @@ StackTrace::~StackTrace() {
 }
 
 std::ostream &operator<<(std::ostream &os, const StackTrace &st) {
-  os << boost::stacktrace::detail::to_string(st.m_impl->frames.data(),
-                                             st.m_impl->frames.size());
+  os << st.toString();
   return os;
 }
 
@@ -80,19 +85,10 @@ bool operator==(const StackTrace &lhs, const StackTrace &rhs) {
   const auto &fl = lhs.m_impl->frames;
   const auto &fr = rhs.m_impl->frames;
 
-  if (fl.size() != fr.size()) {
-    return false;
-  }
+  // only compare first frame
+  return (boost::stacktrace::hash_value(fl.front()) ==
+          boost::stacktrace::hash_value(fr.front()));
 
-  for (size_t i = 0; i < fl.size(); i++) {
-    if (boost::stacktrace::hash_value(fl[i]) !=
-        boost::stacktrace::hash_value(fr[i])) {
-      return false;
-    }
-    break;  // only check the first frame
-  }
-
-  return true;
 }
 
 }  // namespace Acts

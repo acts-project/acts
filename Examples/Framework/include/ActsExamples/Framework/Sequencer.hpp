@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/FpeMonitor.hpp"
+#include "Acts/Utilities/StackTrace.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -34,6 +35,11 @@ namespace ActsExamples {
 
 using IterationCallback = void (*)();
 
+/// Custom exception class so FPE failures can be caught
+class FpeFailure : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
+
 class SequenceConfigurationException : public std::runtime_error {
  public:
   SequenceConfigurationException()
@@ -47,6 +53,12 @@ class SequenceConfigurationException : public std::runtime_error {
 /// back to a file.
 class Sequencer {
  public:
+  struct FpeMask {
+    std::string loc;
+    Acts::FpeType type;
+    std::size_t count;
+  };
+
   struct Config {
     /// number of events to skip at the beginning
     size_t skip = 0;
@@ -67,6 +79,10 @@ class Sequencer {
     /// Run data flow consistency checks
     /// Defaults to false right now until all components are migrated
     bool runDataFlowChecks = true;
+
+    bool trackFpes = true;
+    std::vector<FpeMask> fpeMasks{};
+    bool failOnFpe = false;
   };
 
   Sequencer(const Config &cfg);
@@ -100,6 +116,8 @@ class Sequencer {
   void addWhiteboardAlias(const std::string &aliasName,
                           const std::string &objectName);
 
+  Acts::FpeMonitor::Result fpeResult() const;
+
   /// Run the event loop.
   ///
   /// @return status code compatible with the `main()` return code
@@ -132,6 +150,14 @@ class Sequencer {
   const Config &config() const { return m_cfg; }
 
  private:
+  /// List of all configured algorithm names.
+  std::vector<std::string> listAlgorithmNames() const;
+  /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
+  std::pair<size_t, size_t> determineEventsRange() const;
+
+  std::size_t fpeMaskCount(const Acts::StackTrace &st,
+                           Acts::FpeType type) const;
+
   constexpr static std::size_t kBufferSize = 524288;  // 500 kB
   std::unique_ptr<std::byte[]> m_buffer{
       std::make_unique<std::byte[]>(kBufferSize)};
@@ -143,11 +169,6 @@ class Sequencer {
     std::shared_ptr<SequenceElement> sequenceElement;
     tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> fpeResult{};
   };
-
-  /// List of all configured algorithm names.
-  std::vector<std::string> listAlgorithmNames() const;
-  /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
-  std::pair<size_t, size_t> determineEventsRange() const;
 
   Config m_cfg;
   tbbWrap::task_arena m_taskArena;

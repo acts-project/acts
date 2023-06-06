@@ -10,7 +10,7 @@ from physmon_common import makeSetup
 
 setup = makeSetup()
 
-with acts.FpeMonitor():
+with acts.FpeMonitor.context():
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
             events=10000, numThreads=-1, logLevel=acts.logging.INFO

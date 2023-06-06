@@ -180,7 +180,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
 
 
-with acts.FpeMonitor():
+with acts.FpeMonitor.context():
     for truthSmearedSeeded, truthEstimatedSeeded, label in [
         (True, False, "truth_smeared"),  # if first is true, second is ignored
         (False, True, "truth_estimated"),

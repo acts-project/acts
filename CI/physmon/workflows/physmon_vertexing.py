@@ -136,7 +136,7 @@ def run_vertexing(fitter, mu, events):
         )
 
 
-with acts.FpeMonitor():
+with acts.FpeMonitor.context():
     for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
         for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
             start = datetime.datetime.now()

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstddef>
+#include <limits>
 #include <memory>
 #include <memory_resource>
 #include <string>
@@ -24,6 +25,9 @@ struct StackTrace {
   std::pair<std::string, std::size_t> topSourceLocation() const;
 
   ~StackTrace();
+
+  std::string toString(
+      std::size_t depth = std::numeric_limits<std::size_t>::max()) const;
 
   friend std::ostream &operator<<(std::ostream &os, const StackTrace &st);
 
