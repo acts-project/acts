@@ -20,7 +20,6 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -29,15 +28,7 @@ namespace Acts {
 namespace Test {
 
 using Covariance = BoundSymMatrix;
-// We will compare analytical and numerical computations in the case of a
-// (non-zero) constant B-field and a zero B-field.
-using AnalyticalLinearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
-using AnalyticalLinearizerStraightLine =
-    HelicalTrackLinearizer<Propagator<StraightLineStepper>>;
-using NumericalLinearizer =
-    NumericalTrackLinearizer<Propagator<EigenStepper<>>>;
-using NumericalLinearizerStraightLine =
-    NumericalTrackLinearizer<Propagator<StraightLineStepper>>;
+using Linearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -67,60 +58,48 @@ std::uniform_real_distribution<> resAngDist(0., 0.1);
 std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 
 ///
-/// @brief Test HelicalTrackLinearizer by comparing it to NumericalTrackLinearizer.
-///
-/// @note While HelicalTrackLinearizer computes the Jacobians using analytically derived formulae,
-/// NumericalTrackLinearizer uses numerical differentiation (i.e., f'(x) ~
-/// (f(x+dx) - f(x)) / dx).
+/// @brief Unit test for HelicalTrackLinearizer
 ///
 BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
-  // Number of tracks to linearize
-  unsigned int nTracks{100};
+  // Number of tracks
+  unsigned int nTracks = 100;
 
   // Set up RNG
-  int mySeed{31415};
+  int mySeed = 31415;
   std::mt19937 gen(mySeed);
 
-  // Constant B-Field and 0 B-field
-  auto constField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 2_T});
-  auto zeroField = std::make_shared<NullBField>();
+  // Set up constant B-Field
+  auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
-  // Set up stepper and propagator for constant B-field
-  EigenStepper<> stepper(constField);
+  // Set up Eigenstepper
+  EigenStepper<> stepper(bField);
+
+  // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
 
-  // Set up stepper and propagator for 0 B-field
-  StraightLineStepper straightStepper;
-  auto straightPropagator =
-      std::make_shared<Propagator<StraightLineStepper>>(straightStepper);
+  // Create perigee surface
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  // Create perigee surface, initial track parameters will be relative to it
-  std::shared_ptr<PerigeeSurface> perigeeSurface{
-      Surface::makeShared<PerigeeSurface>(Vector3{0., 0., 0.})};
+  // Create position of vertex and perigee surface
+  double x = vXYDist(gen);
+  double y = vXYDist(gen);
+  double z = vZDist(gen);
 
-  // Vertex position and corresponding d0 and z0
-  Vector4 vtxPos;
-  double d0v;
-  double z0v;
-  {
-    double x = vXYDist(gen);
-    double y = vXYDist(gen);
-    double z = vZDist(gen);
-    vtxPos << x, y, z, 0;  // TODO: add time
-    d0v = std::hypot(x, y);
-    z0v = z;
-  }
+  // Calculate d0 and z0 corresponding to vertex position
+  double d0v = std::hypot(x, y);
+  double z0v = z;
 
-  // Vector storing the tracks that we linearize
+  // Start constructing nTracks tracks in the following
   std::vector<BoundTrackParameters> tracks;
 
   // Construct random track emerging from vicinity of vertex position
+  // Vector to store track objects used for vertex fit
   for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
-    // Random charge
+    // Construct positive or negative charge randomly
     double q = qDist(gen) < 0 ? -1. : 1.;
 
-    // Random track parameters
-    // TODO add time
+    // Construct random track parameters
     BoundVector paramVec;
     paramVec << d0v + d0Dist(gen), z0v + z0Dist(gen), phiDist(gen),
         thetaDist(gen), q / pTDist(gen), 0.;
@@ -135,116 +114,130 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     // Fill vector of track objects with simple covariance matrix
     Covariance covMat;
 
-    // TODO: add time
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
     tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat));
   }
 
-  // Linearizer for constant field and corresponding state
-  AnalyticalLinearizer::Config linConfig(constField, propagator);
-  AnalyticalLinearizer linFactory(linConfig);
-  AnalyticalLinearizer::State linState(constField->makeCache(magFieldContext));
+  Linearizer::Config ltConfig(bField, propagator);
+  Linearizer linFactory(ltConfig);
+  Linearizer::State state(bField->makeCache(magFieldContext));
 
-  NumericalLinearizer::Config numLinConfig(constField, propagator);
-  NumericalLinearizer numLinFactory(numLinConfig);
-  NumericalLinearizer::State numLinState(
-      constField->makeCache(magFieldContext));
+  BoundVector vecBoundZero = BoundVector::Zero();
+  BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
+  Vector4 vecSPZero = Vector4::Zero();
+  ActsMatrix<eBoundSize, 4> matBound2SPZero = ActsMatrix<eBoundSize, 4>::Zero();
+  ActsMatrix<eBoundSize, 3> matBound2MomZero =
+      ActsMatrix<eBoundSize, 3>::Zero();
 
-  // Linearizer for 0 field and corresponding state
-  AnalyticalLinearizerStraightLine::Config straightLinConfig(
-      straightPropagator);
-  AnalyticalLinearizerStraightLine straightLinFactory(straightLinConfig);
-  AnalyticalLinearizerStraightLine::State straightLinState(
-      zeroField->makeCache(magFieldContext));
+  for (const BoundTrackParameters& parameters : tracks) {
+    LinearizedTrack linTrack =
+        linFactory
+            .linearizeTrack(parameters, Vector4::Zero(), geoContext,
+                            magFieldContext, state)
+            .value();
 
-  NumericalLinearizerStraightLine::Config numStraightLinConfig(
-      straightPropagator);
-  NumericalLinearizerStraightLine numStraightLinFactory(numStraightLinConfig);
-  NumericalLinearizerStraightLine::State numStraightLinState(
-      zeroField->makeCache(magFieldContext));
+    BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
+    BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
+    BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vecSPZero);
+    BOOST_CHECK_NE(linTrack.positionJacobian, matBound2SPZero);
+    BOOST_CHECK_NE(linTrack.momentumJacobian, matBound2MomZero);
+    BOOST_CHECK_NE(linTrack.constantTerm, vecBoundZero);
+  }
+}
 
-  // Lambda for comparing outputs of the two linearization methods
-  // We compare the linearization result at the PCA to "linPoint"
-  auto checkLinearizers =
-      [](auto& lin1, auto& linState1, auto& lin2, auto& linState2,
-         const BoundTrackParameters& track, const Vector4& linPoint,
-         const auto& geometryContext, const auto& fieldContext) {
-        // In addition to comparing the output of the linearizers, we check that
-        // they return non-zero quantities
-        BoundVector vecBoundZero = BoundVector::Zero();
-        BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
-        ActsMatrix<eBoundSize, 4> matBound2SPZero =
-            ActsMatrix<eBoundSize, 4>::Zero();
-        ActsMatrix<eBoundSize, 3> matBound2MomZero =
-            ActsMatrix<eBoundSize, 3>::Zero();
+///
+/// @brief Unit test for HelicalTrackLinearizer
+///
+BOOST_AUTO_TEST_CASE(linearized_track_factory_straightline_test) {
+  using LinearizerStraightLine =
+      HelicalTrackLinearizer<Propagator<StraightLineStepper>>;
+  // Number of tracks
+  unsigned int nTracks = 100;
 
-        // We check that the entries of the output quantities either
-        // -) have a relative difference of less than "relTol"
-        // or
-        // -) are both smaller than "small"
-        double relTol = 5e-4;
-        double small = 5e-4;
+  // Set up RNG
+  int mySeed = 31415;
+  std::mt19937 gen(mySeed);
 
-        const LinearizedTrack linTrack1 =
-            lin1.linearizeTrack(track, linPoint, geometryContext, fieldContext,
-                                linState1)
-                .value();
-        const LinearizedTrack linTrack2 =
-            lin2.linearizeTrack(track, linPoint, geometryContext, fieldContext,
-                                linState2)
-                .value();
+  // Set up stepper
+  StraightLineStepper stepper;
 
-        // There should be no problem here because both linearizers compute
-        // "parametersAtPCA" the same way
-        CHECK_CLOSE_OR_SMALL(linTrack1.parametersAtPCA,
-                             linTrack2.parametersAtPCA, relTol, small);
-        BOOST_CHECK_NE(linTrack1.parametersAtPCA, vecBoundZero);
-        BOOST_CHECK_NE(linTrack2.parametersAtPCA, vecBoundZero);
+  // Set up propagator with void navigator
+  auto propagator = std::make_shared<Propagator<StraightLineStepper>>(stepper);
 
-        // TODO: add time comparison (i.e., compare entire "positionJacobian")
-        CHECK_CLOSE_OR_SMALL((linTrack1.positionJacobian.block<5, 4>(0, 0)),
-                             (linTrack2.positionJacobian.block<5, 4>(0, 0)),
-                             relTol, small);
-        BOOST_CHECK_NE(linTrack1.positionJacobian, matBound2SPZero);
-        BOOST_CHECK_NE(linTrack2.positionJacobian, matBound2SPZero);
+  // Create perigee surface
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-        // TODO: add time comparison (i.e., compare entire "momentumJacobian")
-        CHECK_CLOSE_OR_SMALL((linTrack1.momentumJacobian.block<5, 3>(0, 0)),
-                             (linTrack2.momentumJacobian.block<5, 3>(0, 0)),
-                             relTol, small);
-        BOOST_CHECK_NE(linTrack1.momentumJacobian, matBound2MomZero);
-        BOOST_CHECK_NE(linTrack2.momentumJacobian, matBound2MomZero);
+  // Create position of vertex and perigee surface
+  double x = vXYDist(gen);
+  double y = vXYDist(gen);
+  double z = vZDist(gen);
 
-        // Again, both methods compute "covarianceAtPCA" the same way => this
-        // check should always work
-        CHECK_CLOSE_OR_SMALL(linTrack1.covarianceAtPCA,
-                             linTrack2.covarianceAtPCA, relTol, small);
-        BOOST_CHECK_NE(linTrack1.covarianceAtPCA, matBoundZero);
-        BOOST_CHECK_NE(linTrack2.covarianceAtPCA, matBoundZero);
+  // Calculate d0 and z0 corresponding to vertex position
+  double d0v = std::hypot(x, y);
+  double z0v = z;
 
-        // Check whether "linPoint" is saved correctly in the LinearizerTrack
-        // objects
-        BOOST_CHECK_EQUAL(linTrack1.linearizationPoint, linPoint);
-        BOOST_CHECK_EQUAL(linTrack2.linearizationPoint, linPoint);
+  // Start constructing nTracks tracks in the following
+  std::vector<BoundTrackParameters> tracks;
 
-        // TODO: add time comparison (i.e., compare entire "constantTerm")
-        CHECK_CLOSE_OR_SMALL(linTrack1.constantTerm.head(5),
-                             linTrack2.constantTerm.head(5), relTol, small);
-        BOOST_CHECK_NE(linTrack1.constantTerm, vecBoundZero);
-        BOOST_CHECK_NE(linTrack2.constantTerm, vecBoundZero);
-      };
+  // Construct random track emerging from vicinity of vertex position
+  // Vector to store track objects used for vertex fit
+  for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
+    // Construct positive or negative charge randomly
+    double q = qDist(gen) < 0 ? -1. : 1.;
 
-  // Compare linearizers for all tracks
-  for (const BoundTrackParameters& trk : tracks) {
-    checkLinearizers(linFactory, linState, numLinFactory, numLinState, trk,
-                     vtxPos, geoContext, magFieldContext);
-    // The check for zero B-field will only work after PR #2116 (before that we
-    // approximate straight tracks by helical track with large radii => not
-    // exact enough) checkLinearizers(straightLinFactory, straightLinState,
-    // numStraightLinFactory, numStraightLinState, trk, vtxPos, geoContext,
-    // magFieldContext);
+    // Construct random track parameters
+    BoundVector paramVec;
+    paramVec << d0v + d0Dist(gen), z0v + z0Dist(gen), phiDist(gen),
+        thetaDist(gen), q / pTDist(gen), 0.;
+
+    // Resolutions
+    double resD0 = resIPDist(gen);
+    double resZ0 = resIPDist(gen);
+    double resPh = resAngDist(gen);
+    double resTh = resAngDist(gen);
+    double resQp = resQoPDist(gen);
+
+    // Fill vector of track objects with simple covariance matrix
+    Covariance covMat;
+
+    covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+        0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
+        0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+    tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat));
+  }
+
+  // Set up helical track linearizer for the case of a non-existing
+  // magnetic field, which results in the extreme case of a straight line
+  LinearizerStraightLine::Config ltConfig(propagator);
+  LinearizerStraightLine linFactory(ltConfig);
+
+  auto field = std::make_shared<NullBField>();
+
+  LinearizerStraightLine::State state(field->makeCache(magFieldContext));
+
+  BoundVector vecBoundZero = BoundVector::Zero();
+  BoundSymMatrix matBoundZero = BoundSymMatrix::Zero();
+  Vector4 vecSPZero = Vector4::Zero();
+  ActsMatrix<eBoundSize, 4> matBound2SPZero = ActsMatrix<eBoundSize, 4>::Zero();
+  ActsMatrix<eBoundSize, 3> matBound2MomZero =
+      ActsMatrix<eBoundSize, 3>::Zero();
+
+  for (const BoundTrackParameters& parameters : tracks) {
+    LinearizedTrack linTrack =
+        linFactory
+            .linearizeTrack(parameters, Vector4::Zero(), geoContext,
+                            magFieldContext, state)
+            .value();
+
+    BOOST_CHECK_NE(linTrack.parametersAtPCA, vecBoundZero);
+    BOOST_CHECK_NE(linTrack.covarianceAtPCA, matBoundZero);
+    BOOST_CHECK_EQUAL(linTrack.linearizationPoint, vecSPZero);
+    BOOST_CHECK_NE(linTrack.positionJacobian, matBound2SPZero);
+    BOOST_CHECK_NE(linTrack.momentumJacobian, matBound2MomZero);
+    BOOST_CHECK_NE(linTrack.constantTerm, vecBoundZero);
   }
 }
 
