@@ -1,3 +1,0 @@
-set(unittest_extra_libraries ActsExamplesMultiWire)
-
-add_unittest(MultiWireStructureBuilder MultiWireStructureBuilderTests.cpp)
