@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <cmath>
 
@@ -16,25 +16,26 @@ namespace Acts {
 namespace TrackParameterHelpers {
 
 template <typename parameters_t>
-inline auto charge(const parameters_t &parameters, double absQ) {
-  assert(absQ >= 0);
-  return std::copysign(parameters.qop(), absQ);
+inline auto charge(const parameters_t &parameters, double absCharge) {
+  assert(absCharge >= 0 && parameters.qop() != 0);
+  return (parameters.qop() >= 0 ? +1 : -1) * absCharge;
 }
 
 template <typename parameters_t>
-inline auto absoluteMomentum(const parameters_t &parameters, double absQ) {
-  assert(absQ >= 0);
-  return absQ / std::abs(parameters.qop());
+inline auto absoluteMomentum(const parameters_t &parameters, double absCharge) {
+  auto q = charge(parameters, absCharge);
+  return (q == 0 ? 1 : q) / parameters.qop();
 }
 
 template <typename parameters_t>
-inline auto transverseMomentum(const parameters_t &parameters, double absQ) {
-  return std::sin(parameters.theta()) * absoluteMomentum(parameters, absQ);
+inline auto transverseMomentum(const parameters_t &parameters,
+                               double absCharge) {
+  return std::sin(parameters.theta()) * absoluteMomentum(parameters, absCharge);
 }
 
 template <typename parameters_t>
-inline auto momentum(const parameters_t &parameters, double absQ) {
-  return parameters.direction() * absoluteMomentum(parameters, absQ);
+inline Vector3 momentum(const parameters_t &parameters, double absCharge) {
+  return absoluteMomentum(parameters, absCharge) * parameters.direction();
 }
 
 }  // namespace TrackParameterHelpers

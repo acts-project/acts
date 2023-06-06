@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 #include <cmath>
 
 namespace Acts {
@@ -15,20 +17,20 @@ namespace PropagatorHelpers {
 
 template <typename propagator_state_t, typename stepper_t>
 inline auto charge(const propagator_state_t &state, const stepper_t &stepper) {
-  // could be the following if it was not for autodiff
-  // return std::copysign(stepper.qop(state.stepping), state.options.absCharge);
+  assert(state.options.absCharge >= 0 && stepper.qop(state.stepping) != 0);
   return (stepper.qop(state.stepping) >= 0 ? +1 : -1) * state.options.absCharge;
 }
 
 template <typename propagator_state_t, typename stepper_t>
 inline auto absoluteMomentum(const propagator_state_t &state,
                              const stepper_t &stepper) {
-  return charge(state, stepper) / stepper.qop(state.stepping);
+  auto q = charge(state, stepper);
+  return (q == 0 ? 1 : q) / stepper.qop(state.stepping);
 }
 
 template <typename propagator_state_t, typename stepper_t>
-inline auto momentum(const propagator_state_t &state,
-                     const stepper_t &stepper) {
+inline Vector3 momentum(const propagator_state_t &state,
+                        const stepper_t &stepper) {
   return absoluteMomentum(state, stepper) * stepper.direction(state.stepping);
 }
 

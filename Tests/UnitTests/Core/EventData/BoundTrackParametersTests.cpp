@@ -53,13 +53,15 @@ void checkParameters(const BoundTrackParameters& params, double l0, double l1,
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::absoluteMomentum(params, q), p,
-                       eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::transverseMomentum(params, q),
-                       p * std::sin(theta), eps, eps);
-  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, q), p * unitDir,
-                       eps, eps);
-  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, q), q);
+  CHECK_CLOSE_OR_SMALL(
+      TrackParameterHelpers::absoluteMomentum(params, std::abs(q)), p, eps,
+      eps);
+  CHECK_CLOSE_OR_SMALL(
+      TrackParameterHelpers::transverseMomentum(params, std::abs(q)),
+      p * std::sin(theta), eps, eps);
+  CHECK_CLOSE_OR_SMALL(TrackParameterHelpers::momentum(params, std::abs(q)),
+                       p * unitDir, eps, eps);
+  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(params, std::abs(q)), q);
 }
 
 void runTest(const std::shared_ptr<const Surface>& surface, double l0,
