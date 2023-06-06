@@ -83,11 +83,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
       geantVerboseLevel);
 
   // Suppress the printing of physics information.
-  if( logger().level() > Acts::Logging::DEBUG ) {
+  if (logger().level() > Acts::Logging::DEBUG) {
 #if G4VERSION_NUMBER >= 1100
-   G4HadronicParameters::Instance()->SetVerboseLevel(geantVerboseLevel);
-   G4HadronicProcessStore::Instance()->SetVerbose(geantVerboseLevel);
-   G4EmParameters::Instance()->SetIsPrintedFlag(true);
+    G4HadronicParameters::Instance()->SetVerboseLevel(geantVerboseLevel);
+    G4HadronicProcessStore::Instance()->SetVerbose(geantVerboseLevel);
+    G4EmParameters::Instance()->SetIsPrintedFlag(true);
 #endif
   }
 
@@ -212,7 +212,10 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
         ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
 
-  ACTS_INFO("Hit Merger: on average merged " << eventData.hitMergerSumHits / eventData.hits.size() << " steps to a hit")
+  ACTS_INFO("Step merging: mean hits per hit: "
+            << static_cast<double>(eventData.numberGeantSteps) /
+                   eventData.hits.size());
+  ACTS_INFO("Step merging: max hits per hit: " << eventData.maxStepsForHit);
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
