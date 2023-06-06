@@ -6,3 +6,4 @@ add_subdirectory(MagneticField)
 add_subdirectory(TGeoDetector)
 add_subdirectory(TelescopeDetector)
 add_subdirectory_if(MuonSpectrometerMockupDetector ACTS_BUILD_EXAMPLES_GEANT4)
+
