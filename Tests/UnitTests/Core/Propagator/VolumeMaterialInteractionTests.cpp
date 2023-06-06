@@ -15,6 +15,7 @@
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/PropagatorHelpers.hpp"
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -25,7 +26,7 @@ namespace Test {
 /// @brief Simplified stepper state
 struct StepperState {
   Vector3 pos, dir;
-  double t = 0, p = 0, q = 0;
+  double t = 0, qop = 0;
   bool covTransport = false;
   Direction navDir = Direction::Forward;
 };
@@ -57,11 +58,7 @@ struct Stepper {
 
   Vector3 direction(const StepperState& state) const { return state.dir; }
 
-  double qop(const StepperState& state) const { return state.q / state.p; }
-
-  double momentum(const StepperState& state) const { return state.p; }
-
-  double charge(const StepperState& state) const { return state.q; };
+  double qop(const StepperState& state) const { return state.qop; }
 };
 
 /// @brief Simplified navigator
@@ -84,8 +81,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.pos = Vector3(1., 2., 3.);
   state.stepping.dir = Vector3(4., 5., 6.);
   state.stepping.t = 7.;
-  state.stepping.p = 8.;
-  state.stepping.q = 9.;
+  state.stepping.qop = 9. / 8.;
   state.stepping.covTransport = true;
   state.stepping.navDir = Direction::Backward;
   state.options.mass = 10.;
@@ -101,8 +97,10 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.pos, stepper.position(state.stepping));
   BOOST_CHECK_EQUAL(volMatInt.time, stepper.time(state.stepping));
   BOOST_CHECK_EQUAL(volMatInt.dir, stepper.direction(state.stepping));
-  BOOST_CHECK_EQUAL(volMatInt.momentum, stepper.momentum(state.stepping));
-  BOOST_CHECK_EQUAL(volMatInt.absQ, std::abs(stepper.charge(state.stepping)));
+  BOOST_CHECK_EQUAL(volMatInt.momentum,
+                    PropagatorHelpers::absoluteMomentum(state, stepper));
+  BOOST_CHECK_EQUAL(volMatInt.absQ,
+                    std::abs(PropagatorHelpers::charge(state, stepper)));
   CHECK_CLOSE_ABS(volMatInt.qOverP, stepper.qop(state.stepping), 1e-6);
   BOOST_CHECK_EQUAL(volMatInt.mass, state.options.mass);
   BOOST_CHECK_EQUAL(volMatInt.pdg, state.options.absPdgCode);

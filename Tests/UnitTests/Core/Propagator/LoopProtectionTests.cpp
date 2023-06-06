@@ -194,8 +194,8 @@ BOOST_DATA_TEST_CASE(
   // this test assumes state.options.loopFraction = 0.5
   auto endMomentum =
       TrackParameterHelpers::momentum(*result.endParameters, std::abs(q));
-  CHECK_CLOSE_REL(px, endMomentum.x(), 1e-2);
-  CHECK_CLOSE_REL(py, endMomentum.y(), 1e-2);
+  CHECK_CLOSE_REL(px, -endMomentum.x(), 1e-2);
+  CHECK_CLOSE_REL(py, -endMomentum.y(), 1e-2);
   CHECK_CLOSE_REL(pz, endMomentum.z(), 1e-2);
 }
 

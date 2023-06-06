@@ -32,6 +32,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/PropagatorHelpers.hpp"
+#include "Acts/Utilities/TrackParameterHelpers.hpp"
 
 #include <fstream>
 
@@ -177,9 +178,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
+  // Test without charge and covariance matrix
+  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom);
+  esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
+                                  navDir, stepSize, tolerance);
+  BOOST_CHECK_EQUAL(TrackParameterHelpers::charge(ncp, 0), 0.);
+
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom, cov);
+  ncp =
+      CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov);
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
                                   navDir, stepSize, tolerance);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());

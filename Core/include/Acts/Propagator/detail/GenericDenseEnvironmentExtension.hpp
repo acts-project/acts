@@ -189,7 +189,7 @@ struct GenericDenseEnvironmentExtension {
 
     // Update momentum
     state.stepping.pars[eFreeQOverP] =
-        PropagatorHelpers::absoluteMomentum(state, stepper) / newMomentum;
+        PropagatorHelpers::charge(state, stepper) / newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
     state.stepping.derivative(3) = hypot(1, state.options.mass / newMomentum);
     // Update time

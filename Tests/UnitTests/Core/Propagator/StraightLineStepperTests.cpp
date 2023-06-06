@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -346,7 +347,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   sls.update(slsState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
              *plane);
   CHECK_CLOSE_OR_SMALL(sls.position(slsState), 2. * pos, eps, eps);
-  CHECK_CLOSE_ABS(sls.qop(slsState), freeParams[eFreeTime], 1e-6);
+  CHECK_CLOSE_ABS(sls.qop(slsState), freeParams[eFreeQOverP], 1e-6);
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(slsState.cov, Covariance(2. * cov), 1e-6);
 }
