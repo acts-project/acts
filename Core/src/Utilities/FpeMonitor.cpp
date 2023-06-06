@@ -40,8 +40,18 @@ FpeMonitor::Result::Result(std::pmr::memory_resource &mem)
 
 FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
   Result result{*m_stracktraces.get_allocator().resource()};
-  result.merge(*this);
-  result.merge(with);
+
+  for (unsigned int i = 0; i < m_counts.size(); i++) {
+    result.m_counts[i] = m_counts[i] + with.m_counts[i];
+  }
+
+  std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
+            std::back_inserter(result.m_stracktraces));
+  std::copy(m_stracktraces.begin(), m_stracktraces.end(),
+            std::back_inserter(result.m_stracktraces));
+
+  result.deduplicate();
+
   return result;
 }
 
@@ -53,7 +63,6 @@ void FpeMonitor::Result::merge(const Result &with) {
   std::copy(with.m_stracktraces.begin(), with.m_stracktraces.end(),
             std::back_inserter(m_stracktraces));
 
-  // @TODO: Optimize this by not merging first and then deduplicating
   deduplicate();
 }
 
@@ -175,15 +184,22 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   std::size_t maxDepth = static_cast<std::size_t>(-1);
   maxDepth = 16;
 
-  // collect stack trace skipping 2 frames, which should be the signal handler
-  // and the calling facility. This might be platform specific, not sure
-  if (fpe.m_result.m_stracktraces.size() < fpe.stackLimit()) {
-    std::cout << fpe.m_result.m_stracktraces.get_allocator().resource()
+  try {
+    // collect stack trace skipping 2 frames, which should be the signal handler
+    // and the calling facility. This might be platform specific, not sure
+    if (fpe.m_result.m_stracktraces.size() < fpe.stackLimit()) {
+      std::cout << fpe.m_result.m_stracktraces.get_allocator().resource()
+                << std::endl;
+      fpe.m_result.m_stracktraces.push_back(
+          {1, static_cast<FpeType>(si->si_code),
+           StackTrace(
+               2, maxDepth,
+               *fpe.m_result.m_stracktraces.get_allocator().resource())});
+    }
+
+  } catch (const std::bad_alloc &e) {
+    std::cout << "Unable to collect stack trace due to memory limit"
               << std::endl;
-    fpe.m_result.m_stracktraces.push_back(
-        {1, static_cast<FpeType>(si->si_code),
-         StackTrace(2, maxDepth,
-                    *fpe.m_result.m_stracktraces.get_allocator().resource())});
   }
 
   // @TODO: Disable this on non-x86_64

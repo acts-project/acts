@@ -8,6 +8,7 @@
 
 #include "Acts/Utilities/StackTrace.hpp"
 
+#include <iterator>
 #include <memory>
 #include <memory_resource>
 
@@ -23,50 +24,75 @@ using stacktrace_t = boost::stacktrace::basic_stacktrace<
 namespace Acts {
 
 struct StackTrace::Impl {
-  Impl(stacktrace_t st) : m_st(std::move(st)) {}
-  stacktrace_t m_st;
+  Impl(std::pmr::memory_resource &mem) : frames{&mem} {}
+  std::pmr::vector<boost::stacktrace::frame> frames;
 };
 
 StackTrace::StackTrace(std::size_t skip, std::size_t maxDepth,
                        std::pmr::memory_resource &mem)
     : m_allocator{&mem} {
   m_impl = m_allocator.allocate(1);
-  m_allocator.construct(m_impl, stacktrace_t{skip + 1, maxDepth, &mem});
+  m_allocator.construct(m_impl, *m_allocator.resource());
+
+  stacktrace_t st{skip + 1, maxDepth, &mem};
+  std::copy(st.begin(), st.end(), std::back_inserter(m_impl->frames));
 }
 
 StackTrace::StackTrace(const StackTrace &other)
-    : m_allocator{other.m_allocator.resource()} {
+    : m_allocator{std::pmr::new_delete_resource()} {
   m_impl = m_allocator.allocate(1);
-  m_allocator.construct(m_impl, *other.m_impl);
+  m_allocator.construct(m_impl, *m_allocator.resource());
+  std::copy(other.m_impl->frames.begin(), other.m_impl->frames.end(),
+            std::back_inserter(m_impl->frames));
+}
+
+StackTrace::StackTrace(StackTrace &&other) : m_allocator{other.m_allocator} {
+  m_impl = other.m_impl;
+  other.m_impl = nullptr;
 }
 
 StackTrace &StackTrace::operator=(const StackTrace &other) {
-  m_impl = m_allocator.allocate(1);
-  m_allocator.construct(m_impl, *other.m_impl);
+  assert(m_impl != nullptr);
+  std::copy(other.m_impl->frames.begin(), other.m_impl->frames.end(),
+            std::back_inserter(m_impl->frames));
   return *this;
 }
 
 StackTrace::~StackTrace() {
-  assert(m_impl != nullptr);
-  m_allocator.destroy(m_impl);
+  if (m_impl != nullptr) {
+    m_impl->~Impl();
+    m_allocator.deallocate(m_impl, 1);
+  }
 }
 
 std::ostream &operator<<(std::ostream &os, const StackTrace &st) {
-  os << st.m_impl->m_st;
+  os << boost::stacktrace::detail::to_string(st.m_impl->frames.data(),
+                                             st.m_impl->frames.size());
   return os;
 }
 
 std::pair<std::string, std::size_t> StackTrace::topSourceLocation() const {
-  const auto &frame = m_impl->m_st.as_vector().at(0);
+  const auto &frame = m_impl->frames.at(0);
   return {frame.source_file(), frame.source_line()};
 }
 
 bool operator==(const StackTrace &lhs, const StackTrace &rhs) {
-  const auto &fl = *lhs.m_impl->m_st.begin();
-  const auto &fr = *rhs.m_impl->m_st.begin();
+  const auto &fl = lhs.m_impl->frames;
+  const auto &fr = rhs.m_impl->frames;
 
-  // @TODO: Check all frames
-  return boost::stacktrace::hash_value(fl) == boost::stacktrace::hash_value(fr);
+  if (fl.size() != fr.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < fl.size(); i++) {
+    if (boost::stacktrace::hash_value(fl[i]) !=
+        boost::stacktrace::hash_value(fr[i])) {
+      return false;
+    }
+    break;  // only check the first frame
+  }
+
+  return true;
 }
 
 }  // namespace Acts

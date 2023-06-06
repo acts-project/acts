@@ -18,6 +18,7 @@ struct StackTrace {
   StackTrace(std::size_t skip, std::size_t maxDepth,
              std::pmr::memory_resource &mem = *std::pmr::new_delete_resource());
   StackTrace(const StackTrace &other);
+  StackTrace(StackTrace &&other);
   StackTrace &operator=(const StackTrace &other);
 
   std::pair<std::string, std::size_t> topSourceLocation() const;

@@ -132,11 +132,11 @@ class Sequencer {
   const Config &config() const { return m_cfg; }
 
  private:
-  constexpr static std::size_t kBufferSize = 10 * 1048576;  // 5M
+  constexpr static std::size_t kBufferSize = 524288;  // 500 kB
   std::unique_ptr<std::byte[]> m_buffer{
       std::make_unique<std::byte[]>(kBufferSize)};
-  std::pmr::monotonic_buffer_resource m_bufferResource{m_buffer.get(),
-                                                       kBufferSize};
+  std::pmr::monotonic_buffer_resource m_bufferResource{
+      m_buffer.get(), kBufferSize, std::pmr::null_memory_resource()};
   std::pmr::synchronized_pool_resource m_pool{&m_bufferResource};
 
   struct SequenceElementWithFpeResult {

@@ -22,6 +22,8 @@
 #include <cfenv>
 #include <chrono>
 #include <exception>
+#include <functional>
+#include <iterator>
 #include <limits>
 #include <numeric>
 #include <regex>
@@ -471,7 +473,6 @@ int Sequencer::run() {
             ACTS_VERBOSE("Execute sequence elements");
 
             for (auto& [alg, fpe] : m_sequenceElements) {
-              std::cout << "POOL " << &m_pool << std::endl;
               Acts::FpeMonitor mon{m_pool};
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
@@ -524,11 +525,26 @@ int Sequencer::run() {
       // no FPEs to report
       continue;
     }
+    ACTS_INFO("-----------------------------------");
     ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
                                  << alg->name());
-    ACTS_INFO((std::string{40, '-'}));
-    merged.summary(std::cout);
-    ACTS_INFO((std::string{40, '-'}));
+    ACTS_INFO("-----------------------------------");
+
+    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+        sorted;
+    std::transform(
+        merged.stackTraces().begin(), merged.stackTraces().end(),
+        std::back_inserter(sorted),
+        [](const auto& f) -> const auto& { return f; });
+    std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
+      return a.get().count > b.get().count;
+    });
+
+    for (const auto& el : sorted) {
+      const auto& [count, type, st] = el.get();
+      ACTS_INFO("- " << type << ": (" << count << " times)\n" << st);
+    }
+    ACTS_INFO("-----------------------------------");
   }
 
   // summarize timing
