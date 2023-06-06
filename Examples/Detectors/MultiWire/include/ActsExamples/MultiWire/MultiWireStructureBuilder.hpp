@@ -33,7 +33,6 @@ class MultiWireStructureBuilder {
     // The surfaces of the Multi Wire
     std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces;
 
-
     // The bounds of the multiwire layer according to the surfaces
     std::array<std::pair<float, float>, 3> multiWireBounds;
 
@@ -81,5 +80,3 @@ class MultiWireStructureBuilder {
   std::unique_ptr<const Acts::Logger> mLogger;
 };
 }  // namespace ActsExamples
-
-

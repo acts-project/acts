@@ -75,7 +75,6 @@ ActsExamples::MultiWireStructureBuilder::construct(
   cuboidExtent.set(Acts::binZ, multiWireBounds[2].first - radius,
                    mCfg.multiWireBounds[2].second + radius);
 
-
   Acts::Experimental::VolumeStructureBuilder::Config vsConfig;
   vsConfig.boundsType = Acts::VolumeBounds::eCuboid;
   vsConfig.extent = cuboidExtent;
