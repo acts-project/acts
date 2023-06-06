@@ -14,10 +14,8 @@
 namespace ActsExamples {
 
 struct RefittingCalibrator {
-  using Proxy =
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy;
-  using ConstProxy = Acts::MultiTrajectory<
-      Acts::ConstVectorMultiTrajectory>::ConstTrackStateProxy;
+  using Proxy = Acts::VectorMultiTrajectory::TrackStateProxy;
+  using ConstProxy = Acts::ConstVectorMultiTrajectory::ConstTrackStateProxy;
 
   struct RefittingSourceLink {
     ConstProxy state;

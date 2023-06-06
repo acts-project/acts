@@ -1270,8 +1270,12 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 
 
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
+@pytest.mark.parametrize("hardware", ["cpu", "gpu"])
 @pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
-def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
+def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend, hardware):
+    if backend == "onnx" and hardware == "cpu":
+        pytest.skip("Combination of ONNX and CPU not yet supported")
+
     root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
@@ -1293,6 +1297,9 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
     assert script.exists()
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+
+    if hardware == "cpu":
+        env["CUDA_VISIBLE_DEVICES"] = ""
 
     try:
         subprocess.check_call(
