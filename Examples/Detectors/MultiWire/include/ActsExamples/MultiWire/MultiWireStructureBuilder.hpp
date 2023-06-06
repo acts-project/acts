@@ -8,10 +8,6 @@
 
 #pragma once
 
-/*
-#include "Acts/Detector/DetectorComponents.hpp"
-#include "Acts/Detector/LayerStructureBuilder.hpp"
-#include "Acts/Detector/VolumeStructureBuilder.hpp"*/
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
@@ -37,6 +33,9 @@ class MultiWireStructureBuilder {
     // The surfaces of the Multi Wire
     std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces;
 
+    // The bounds of the multiwire layer according to the surfaces
+    std::array<std::pair<float, float>, 3> multiWireBounds;
+
     // The names of the sensitive surfaces
     std::vector<std::string> sensitiveNames;
 
@@ -52,8 +51,12 @@ class MultiWireStructureBuilder {
 
   /// Constructor
   /// @param config The configure of the MultiWireStructureBuilder
+  /// @param logger logging instance for screen output
 
-  MultiWireStructureBuilder(const Config& config);
+  MultiWireStructureBuilder(
+      const Config& config,
+      std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
+          "MultiWireStructureBuilder", Acts::Logging::VERBOSE));
 
   ~MultiWireStructureBuilder() = default;
 
@@ -71,7 +74,9 @@ class MultiWireStructureBuilder {
   Config mCfg;
 
   std::array<std::pair<float, float>, 3> multiWireBounds;
+
+  const Acts::Logger& logger() const { return *mLogger; }
+
+  std::unique_ptr<const Acts::Logger> mLogger;
 };
 }  // namespace ActsExamples
-
-// namespace Acts
