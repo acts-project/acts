@@ -13,6 +13,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsExamples/Geant4/HitMerger.hpp"
 
 #include <set>
 #include <unordered_map>
@@ -23,6 +24,7 @@
 namespace ActsExamples {
 
 class WhiteBoard;
+
 
 /// A registry for event data and the event store (per event)
 ///
@@ -37,6 +39,10 @@ class EventStoreRegistry {
   struct State {
     /// The current event store
     WhiteBoard* store = nullptr;
+
+    /// The hitmerger. The idea is, that this object is destructed after use and newly constructed
+    std::optional<HitMerger> hitMerger;
+    std::size_t hitMergerSumHits = 0;
 
     /// Use a std::set here because it allows for fast insertion and ensures
     /// uniqueness. Thus particle collisions are detected early.

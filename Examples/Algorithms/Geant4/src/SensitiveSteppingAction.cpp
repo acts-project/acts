@@ -30,13 +30,54 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
 
+  // Get G4 pointers
+  const G4Track* track = step->GetTrack();
+  const G4PrimaryParticle* primaryParticle =
+      track->GetDynamicParticle()->GetPrimaryParticle();
+  const G4VPhysicalVolume* volume = track->GetVolume();
+
   // Retrieve the event data registry
   auto& eventData = EventStoreRegistry::eventData();
 
-  // The particle after the step
-  G4Track* track = step->GetTrack();
-  G4PrimaryParticle* primaryParticle =
-      track->GetDynamicParticle()->GetPrimaryParticle();
+  // This is not the case if we have a particle-ID collision
+  if (eventData.trackIdMapping.find(track->GetTrackID()) ==
+      eventData.trackIdMapping.end()) {
+    ACTS_WARNING("Probably we found a particle ID collision");
+    return;
+  }
+
+  // Get the particle ID
+  const auto particleID = eventData.trackIdMapping.at(track->GetTrackID());
+
+  // Merge last hit if necessary. This is the case, if we are now in a different
+  // volume then the volume in which the hit merger has been created, or if we
+  // are tracking a different particle now
+  auto& hitMerger = eventData.hitMerger;
+  const bool resetHitMerger = (hitMerger->geant4Volume() != volume) or
+                              (hitMerger->particleID() != particleID);
+
+  if (hitMerger && resetHitMerger) {
+    auto& hitCount = eventData.particleHitCount;
+
+    // Get the hit count of the particle
+    const auto index = hitCount.find(particleID) != hitCount.end()
+                           ? hitCount.at(particleID)
+                           : 0;
+
+    // Merge the hit with a given hit index
+    eventData.hitMergerSumHits += hitMerger->hits().size();
+    const auto hit = hitMerger->mergeHit(index);
+
+    // Kill hit merger after we extracted the merged hit
+    hitMerger.reset();
+
+    if (hit.depositedEnergy() > m_cfg.hitMergerEnergyThreshold) {
+      // Increase counter (starts at 1 because of ++)
+      ++hitCount[particleID];
+
+      eventData.hits.push_back(hit);
+    }
+  }
 
   // Bail out if charged & configured to do so
   G4double absCharge = std::abs(track->GetParticleDefinition()->GetPDGCharge());
@@ -59,21 +100,25 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     return;
   }
 
-  // Get the physical volume & check if it has the sensitive string name
-  G4VPhysicalVolume* volume = track->GetVolume();
-  std::string volumeName = volume->GetName();
-
-  std::string mappingPfx(SensitiveSurfaceMapper::mappingPrefix);
-
-  if (volumeName.find(mappingPfx) == std::string::npos) {
+  // check if the volume has the sensitive string name
+  const std::string_view volumeName(volume->GetName());
+  if (volumeName.find(SensitiveSurfaceMapper::mappingPrefix) ==
+      std::string_view::npos) {
     return;
   }
 
-  ACTS_VERBOSE("Step in senstive volume " << volumeName);
+  // Cast out the GeometryIdentifier
+  std::string volumeNameStr(volumeName);
+  volumeNameStr.erase(0, SensitiveSurfaceMapper::mappingPrefix.size());
+
+  const Acts::GeometryIdentifier geoID(std::stoul(volumeNameStr));
+
+  ACTS_VERBOSE("Step of " << particleID << " in senstive volume "
+                          << volumeName);
 
   // Get PreStepPoint and PostStepPoint
-  G4StepPoint* preStepPoint = step->GetPreStepPoint();
-  G4StepPoint* postStepPoint = step->GetPostStepPoint();
+  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
+  const G4StepPoint* postStepPoint = step->GetPostStepPoint();
 
   G4ThreeVector preStepPosition = convertLength * preStepPoint->GetPosition();
   G4double preStepTime = convertTime * preStepPoint->GetGlobalTime();
@@ -99,29 +144,15 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   Acts::ActsScalar mZpost = postStepMomentum[2];
   Acts::ActsScalar mEpost = postStepEnergy;
 
-  // Cast out the GeometryIdentifier
-  volumeName.erase(0, mappingPfx.size());
-
-  Acts::GeometryIdentifier::Value sGeoVal = std::stoul(volumeName);
-  Acts::GeometryIdentifier geoID(sGeoVal);
-
-  // This is not the case if we have a particle-ID collision
-  if (eventData.trackIdMapping.find(track->GetTrackID()) ==
-      eventData.trackIdMapping.end()) {
-    return;
-  }
-
-  auto particleID = eventData.trackIdMapping.at(track->GetTrackID());
-
   Acts::Vector4 particlePosition(hX, hY, hZ, hT);
   Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
   Acts::Vector4 afterMomentum(mXpost, mYpost, mZpost, mEpost);
 
-  // Increase counter (starts at 1 because of ++)
-  ++eventData.particleHitCount[particleID];
+  // If we have no hit merger, create one
+  if (not eventData.hitMerger) {
+    eventData.hitMerger = HitMerger(particleID, geoID, volume);
+  }
 
-  // Fill into the registry (subtract 1 from hit-count to get 0-based index)
-  eventData.hits.emplace_back(geoID, particleID, particlePosition,
-                              beforeMomentum, afterMomentum,
-                              eventData.particleHitCount.at(particleID) - 1);
+  eventData.hitMerger->addHit(ActsFatras::Hit(
+      geoID, particleID, particlePosition, beforeMomentum, afterMomentum));
 }

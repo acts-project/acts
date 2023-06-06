@@ -31,6 +31,9 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool neutral = false;
     bool primary = true;
     bool secondary = true;
+
+    /// Hit merger energy threshold
+    double hitMergerEnergyThreshold = 0.0;
   };
 
   /// Construct the stepping action

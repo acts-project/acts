@@ -135,6 +135,14 @@ class Barcode : public Acts::MultiIndex<uint64_t, 12, 12, 16, 8, 16> {
   }
 };
 
+inline bool operator==(const Barcode &a, const Barcode &b) {
+  return a.value() == b.value();
+}
+
+inline bool operator!=(const Barcode &a, const Barcode &b) {
+  return !(a == b);
+}
+
 }  // namespace ActsFatras
 
 // specialize std::hash so Barcode can be used e.g. in an unordered_map
