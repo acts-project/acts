@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
-#include "Acts/Utilities/FpeMonitor.hpp"
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "Acts/Plugins/FpeMonitoring/StackTrace.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/StackTrace.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"

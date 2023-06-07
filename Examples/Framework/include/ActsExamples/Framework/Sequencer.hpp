@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/FpeMonitor.hpp"
-#include "Acts/Utilities/StackTrace.hpp"
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
+#include "Acts/Plugins/FpeMonitoring/StackTrace.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"

@@ -8,8 +8,8 @@
 
 #include "Acts/ActsVersion.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"

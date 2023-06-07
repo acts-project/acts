@@ -51,90 +51,82 @@ namespace Acts::Test {
 BOOST_AUTO_TEST_SUITE(FpeMonitorTest)
 
 BOOST_AUTO_TEST_CASE(Invalid) {
-  {
-    FpeMonitor mon;
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  FpeMonitor mon;
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    invalid();
+  invalid();
 
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    for (const auto& [count, type, st] : mon.result().stackTraces()) {
-      std::cout << count << std::endl;
-      std::cout << type << std::endl;
-      std::cout << st << std::endl;
-    }
+  for (const auto& [count, type, st] : mon.result().stackTraces()) {
+    std::cout << count << std::endl;
+    std::cout << type << std::endl;
+    std::cout << st << std::endl;
   }
 }
 
 BOOST_AUTO_TEST_CASE(DivByZero) {
-  {
-    FpeMonitor mon;
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  FpeMonitor mon;
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    divbyzero();
+  divbyzero();
 
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
 
-    for (const auto& [count, type, st] : mon.result().stackTraces()) {
-      std::cout << count << std::endl;
-      std::cout << type << std::endl;
-      std::cout << st << std::endl;
-    }
+  for (const auto& [count, type, st] : mon.result().stackTraces()) {
+    std::cout << count << std::endl;
+    std::cout << type << std::endl;
+    std::cout << st << std::endl;
   }
 }
 
 BOOST_AUTO_TEST_CASE(Overflow) {
-  {
-    FpeMonitor mon;
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  FpeMonitor mon;
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    overflow();
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  overflow();
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    for (const auto& [count, type, st] : mon.result().stackTraces()) {
-      std::cout << count << std::endl;
-      std::cout << type << std::endl;
-      std::cout << st << std::endl;
-    }
+  for (const auto& [count, type, st] : mon.result().stackTraces()) {
+    std::cout << count << std::endl;
+    std::cout << type << std::endl;
+    std::cout << st << std::endl;
   }
 }
 
 BOOST_AUTO_TEST_CASE(Combinations) {
-  {
-    FpeMonitor mon;
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  FpeMonitor mon;
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    invalid();
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  invalid();
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    overflow();
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  overflow();
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    divbyzero();
+  divbyzero();
 
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
-  }
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
 }
 
 BOOST_AUTO_TEST_CASE(ClearOnEnter) {
@@ -142,12 +134,10 @@ BOOST_AUTO_TEST_CASE(ClearOnEnter) {
   divbyzero();
   overflow();
 
-  {
-    FpeMonitor mon;
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
-  }
+  FpeMonitor mon;
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 }
 
 BOOST_AUTO_TEST_CASE(CheckRearmCount) {
@@ -181,71 +171,67 @@ BOOST_AUTO_TEST_CASE(CheckRearmCount) {
 }
 
 BOOST_AUTO_TEST_CASE(Scoping) {
-  {
-    FpeMonitor mon;
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+  FpeMonitor mon;
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-    invalid();
+  invalid();
+
+  {
+    FpeMonitor mon2;
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTDIV));
+
+    overflow();
 
     {
-      FpeMonitor mon2;
-      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));
-      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTOVF));
-      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTDIV));
+      FpeMonitor mon3;
+      BOOST_CHECK(!mon3.result().encountered(FpeType::FLTINV));
+      BOOST_CHECK(!mon3.result().encountered(FpeType::FLTOVF));
+      BOOST_CHECK(!mon3.result().encountered(FpeType::FLTDIV));
 
-      overflow();
+      divbyzero();
 
-      {
-        FpeMonitor mon3;
-        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTINV));
-        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTOVF));
-        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTDIV));
+      BOOST_CHECK(!mon3.result().encountered(FpeType::FLTINV));
+      BOOST_CHECK(!mon3.result().encountered(FpeType::FLTOVF));
+      BOOST_CHECK(mon3.result().encountered(FpeType::FLTDIV));
 
-        divbyzero();
-
-        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTINV));
-        BOOST_CHECK(!mon3.result().encountered(FpeType::FLTOVF));
-        BOOST_CHECK(mon3.result().encountered(FpeType::FLTDIV));
-
-        // Test merging here
-        auto merged = mon.result().merged(mon2.result());
-        BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
-        BOOST_CHECK_EQUAL(mon2.result().count(FpeType::FLTOVF), 1);
-        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
-        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
-        BOOST_CHECK_EQUAL(merged.numStackTraces(), 2);
-        merged = merged.merged(mon3.result());
-        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
-        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
-        BOOST_CHECK_EQUAL(merged.count(FpeType::FLTDIV), 1);
-        BOOST_CHECK_EQUAL(merged.numStackTraces(), 3);
-      }
-
-      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));
-      BOOST_CHECK(mon2.result().encountered(FpeType::FLTOVF));
-      BOOST_CHECK(!mon2.result().encountered(FpeType::FLTDIV));
+      // Test merging here
+      auto merged = mon.result().merged(mon2.result());
+      BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
+      BOOST_CHECK_EQUAL(mon2.result().count(FpeType::FLTOVF), 1);
+      BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
+      BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
+      BOOST_CHECK_EQUAL(merged.numStackTraces(), 2);
+      merged = merged.merged(mon3.result());
+      BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 1);
+      BOOST_CHECK_EQUAL(merged.count(FpeType::FLTOVF), 1);
+      BOOST_CHECK_EQUAL(merged.count(FpeType::FLTDIV), 1);
+      BOOST_CHECK_EQUAL(merged.numStackTraces(), 3);
     }
 
-    BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
-    BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(mon2.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTDIV));
   }
+
+  BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 }
 
 BOOST_AUTO_TEST_CASE(MergeDeduplication) {
+  FpeMonitor mon;
+  invalid();
   {
-    FpeMonitor mon;
+    FpeMonitor mon2;
     invalid();
-    {
-      FpeMonitor mon2;
-      invalid();
 
-      auto merged = mon.result().merged(mon2.result());
-      BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 2);
-      BOOST_CHECK_EQUAL(merged.stackTraces().size(), 1);
-    }
+    auto merged = mon.result().merged(mon2.result());
+    BOOST_CHECK_EQUAL(merged.count(FpeType::FLTINV), 2);
+    BOOST_CHECK_EQUAL(merged.stackTraces().size(), 1);
   }
 }
 
