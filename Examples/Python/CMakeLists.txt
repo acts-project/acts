@@ -52,7 +52,6 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesPrinters
   ActsExamplesDetectorTelescope
   ActsExamplesUtilities
-
 )
 
 set(py_files 
