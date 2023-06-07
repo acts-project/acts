@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/FpeMonitor.hpp"
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 #include <Acts/Utilities/CalibrationContext.hpp>
