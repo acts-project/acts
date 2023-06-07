@@ -28,7 +28,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
 
   // If this is not the case, there are unhandled cases of particle stopping in
   // the SensitiveSteppingAction
-  if( not eventData.hitBuffer.empty() ) {
+  if (not eventData.hitBuffer.empty()) {
     eventData.hitBuffer.clear();
     ACTS_WARNING("Hit buffer not empty after track");
   }

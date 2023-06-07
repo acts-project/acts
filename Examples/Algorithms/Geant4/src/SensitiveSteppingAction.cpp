@@ -29,8 +29,8 @@ BOOST_DESCRIBE_ENUM(G4ProcessType, fNotDefined, fTransportation,
                     fDecay, fGeneral, fParameterisation, fUserDefined,
                     fParallel, fPhonon, fUCN);
 
-BOOST_DESCRIBE_ENUM(G4TrackStatus, fAlive,
-  fStopButAlive,fStopAndKill,fKillTrackAndSecondaries,fSuspend,fPostponeToNextEvent);
+BOOST_DESCRIBE_ENUM(G4TrackStatus, fAlive, fStopButAlive, fStopAndKill,
+                    fKillTrackAndSecondaries, fSuspend, fPostponeToNextEvent);
 
 namespace {
 
@@ -152,7 +152,8 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   const bool postOnBoundary = postStepPoint->GetStepStatus() == fGeomBoundary or
                               postStepPoint->GetStepStatus() == fWorldBoundary;
   const bool particleStopped = (postStepPoint->GetKineticEnergy() == 0.0);
-  const bool particleDecayed = (postStepPoint->GetProcessDefinedStep()->GetProcessType() == fDecay);
+  const bool particleDecayed =
+      (postStepPoint->GetProcessDefinedStep()->GetProcessType() == fDecay);
 
   auto print = [](auto s) {
     return boost::describe::enum_to_string(s, "unmatched");
@@ -162,8 +163,13 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
                << ", post=" << print(postStepPoint->GetStepStatus())
                << ", post E_kin=" << std::boolalpha
                << postStepPoint->GetKineticEnergy() << ", process_type="
-               << print(postStepPoint->GetProcessDefinedStep()->GetProcessType()) << ", particle="
-               << track->GetParticleDefinition()->GetParticleName() << ", process_name=" << postStepPoint->GetProcessDefinedStep()->GetProcessName() << ", track status=" << print(track->GetTrackStatus()));
+               << print(
+                      postStepPoint->GetProcessDefinedStep()->GetProcessType())
+               << ", particle="
+               << track->GetParticleDefinition()->GetParticleName()
+               << ", process_name="
+               << postStepPoint->GetProcessDefinedStep()->GetProcessName()
+               << ", track status=" << print(track->GetTrackStatus()));
 
   // Case A: The step starts at the entry of the volume and ends at the exit.
   // Add hit to collection.
@@ -198,8 +204,9 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
     assert(std::all_of(buffer.begin(), buffer.end(),
                        [&](const auto& h) { return h.geometryId() == geoId; }));
-    assert(std::all_of(buffer.begin(), buffer.end(),
-                       [&](const auto& h) { return h.particleId() == particleId; }));
+    assert(std::all_of(buffer.begin(), buffer.end(), [&](const auto& h) {
+      return h.particleId() == particleId;
+    }));
 
     eventData.numberGeantSteps += buffer.size();
     eventData.maxStepsForHit =
