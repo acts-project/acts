@@ -48,10 +48,10 @@ void setupGeant4Simulation(
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<G4RunManager> runManager,
     std::unique_ptr<G4VUserDetectorConstruction> detector,
-    std::vector<G4UserRunAction*> runActions = {},
-    std::vector<G4UserEventAction*> eventActions = {},
-    std::vector<G4UserTrackingAction*> trackingActions = {},
-    std::vector<G4UserSteppingAction*> steppingActions = {},
+    std::vector<std::shared_ptr<G4UserRunAction>> runActions = {},
+    std::vector<std::shared_ptr<G4UserEventAction>> eventActions = {},
+    std::vector<std::shared_ptr<G4UserTrackingAction>> trackingActions = {},
+    std::vector<std::shared_ptr<G4UserSteppingAction>> steppingActions = {},
     const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry =
         nullptr,
     const std::shared_ptr<const Acts::MagneticFieldProvider>& magneticField =

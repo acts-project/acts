@@ -16,21 +16,27 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 
 #include <memory>
 #include <mutex>
 #include <string>
 
-#include "G4VUserDetectorConstruction.hh"
-
 class G4RunManager;
 class G4VUserPrimaryGeneratorAction;
+class G4VUserDetectorConstruction;
 class G4UserRunAction;
 class G4UserEventAction;
 class G4UserTrackingAction;
 class G4UserSteppingAction;
 class G4MagneticField;
 class G4VUserPhysicsList;
+
+namespace Acts {
+class TrackingGeometry;
+class MagneticFieldProvider;
+class Volume;
+}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -75,30 +81,55 @@ class Geant4Simulation final : public IAlgorithm {
     std::shared_ptr<G4RunManager> runManager;
 
     /// User Action: Primary generator action of the simulation
-    G4VUserPrimaryGeneratorAction* primaryGeneratorAction = nullptr;
+    std::shared_ptr<G4VUserPrimaryGeneratorAction> primaryGeneratorAction;
 
     /// User Action: Run
-    G4UserRunAction* runAction = nullptr;
+    std::shared_ptr<G4UserRunAction> runAction;
 
     /// User Action: Event
-    G4UserEventAction* eventAction = nullptr;
+    std::shared_ptr<G4UserEventAction> eventAction;
 
     /// User Action: Tracking
-    G4UserTrackingAction* trackingAction = nullptr;
+    std::shared_ptr<G4UserTrackingAction> trackingAction;
 
     /// User Action: Stepping
-    G4UserSteppingAction* steppingAction = nullptr;
+    std::shared_ptr<G4UserSteppingAction> steppingAction;
 
     /// Detector construction object.
-    G4VUserDetectorConstruction* detectorConstruction = nullptr;
+    std::shared_ptr<G4VUserDetectorConstruction> detectorConstruction;
 
     /// The (wrapped) ACTS Magnetic field provider as a Geant4 module
-    G4MagneticField* magneticField = nullptr;
+    std::shared_ptr<G4MagneticField> magneticField;
 
     // The ACTS to Geant4 sensitive wrapper
-    std::shared_ptr<const SensitiveSurfaceMapper> sensitiveSurfaceMapper =
-        nullptr;
+    std::shared_ptr<const SensitiveSurfaceMapper> sensitiveSurfaceMapper;
   };
+
+  static Config makeGeant4Config(
+      const Acts::Logger& logger,
+      std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+      std::shared_ptr<G4VUserDetectorConstruction> detector,
+      std::shared_ptr<G4VUserPhysicsList> physicsList,
+      const SimParticleTranslation::Config& prCfg);
+
+  static Config makeGeant4MaterialRecordingConfig(
+      Acts::Logging::Level level,
+      std::shared_ptr<G4VUserDetectorConstruction> detector,
+      std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+      const std::string& inputParticles,
+      const std::string& outputMaterialTracks);
+
+  static Config makeGeant4SimulationConfig(
+      Acts::Logging::Level level,
+      std::shared_ptr<G4VUserDetectorConstruction> detector,
+      std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+      const std::string& inputParticles,
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const std::vector<std::string>& volumeMappings,
+      const std::vector<std::string>& materialMappings,
+      std::shared_ptr<const Acts::Volume> killVolume, double killAfterTime,
+      bool recordHitsOfSecondaries, bool keepParticlesWithoutHits);
 
   /// Constructor with arguments
   ///

@@ -42,6 +42,7 @@
 
 #include <FTFP_BERT.hh>
 #include <G4RunManager.hh>
+#include <G4VUserDetectorConstruction.hh>
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {
@@ -51,10 +52,10 @@ void setupGeant4Simulation(
     ActsExamples::Sequencer& sequencer,
     std::shared_ptr<G4RunManager> runManager,
     std::unique_ptr<G4VUserDetectorConstruction> detector,
-    std::vector<G4UserRunAction*> runActions,
-    std::vector<G4UserEventAction*> eventActions,
-    std::vector<G4UserTrackingAction*> trackingActions,
-    std::vector<G4UserSteppingAction*> steppingActions,
+    std::vector<std::shared_ptr<G4UserRunAction>> runActions,
+    std::vector<std::shared_ptr<G4UserEventAction>> eventActions,
+    std::vector<std::shared_ptr<G4UserTrackingAction>> trackingActions,
+    std::vector<std::shared_ptr<G4UserSteppingAction>> steppingActions,
     const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
     const std::shared_ptr<const Acts::MagneticFieldProvider>& magneticField,
     bool materialRecording) {
@@ -89,9 +90,9 @@ void setupGeant4Simulation(
   }
 
   // Set the primarty generator
-  g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
+  g4Cfg.primaryGeneratorAction = std::make_shared<SimParticleTranslation>(
       g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", g4loglevel));
-  g4Cfg.detectorConstruction = detector.release();
+  g4Cfg.detectorConstruction = std::move(detector);
 
   // Set the user actions
   g4Cfg.runAction = runActions.empty() ? nullptr : runActions.front();
@@ -105,7 +106,7 @@ void setupGeant4Simulation(
   if (magneticField) {
     MagneticFieldWrapper::Config g4FieldCfg;
     g4FieldCfg.magneticField = magneticField;
-    g4Cfg.magneticField = new MagneticFieldWrapper(g4FieldCfg);
+    g4Cfg.magneticField = std::make_shared<MagneticFieldWrapper>(g4FieldCfg);
   }
 
   // An ACTS TrackingGeometry is provided, so simulation for sensitive
@@ -159,14 +160,14 @@ int runMaterialRecording(
   runManager->SetUserInitialization(physicsList);
 
   // The Geant4 actions needed
-  std::vector<G4UserRunAction*> runActions = {};
-  std::vector<G4UserEventAction*> eventActions = {};
-  std::vector<G4UserTrackingAction*> trackingActions = {};
+  std::vector<std::shared_ptr<G4UserRunAction>> runActions = {};
+  std::vector<std::shared_ptr<G4UserEventAction>> eventActions = {};
+  std::vector<std::shared_ptr<G4UserTrackingAction>> trackingActions = {};
 
   MaterialSteppingAction::Config mStepCfg;
   mStepCfg.excludeMaterials = {"Air", "Vacuum"};
-  std::vector<G4UserSteppingAction*> steppingActions = {
-      new MaterialSteppingAction(
+  std::vector<std::shared_ptr<G4UserSteppingAction>> steppingActions = {
+      std::make_shared<MaterialSteppingAction>(
           mStepCfg,
           Acts::getDefaultLogger("MaterialSteppingAction", g4loglevel))};
 
@@ -209,18 +210,18 @@ int runGeant4Simulation(
   runManager->SetUserInitialization(new FTFP_BERT());
 
   // The Geant4 actions needed
-  std::vector<G4UserRunAction*> runActions = {};
-  std::vector<G4UserEventAction*> eventActions = {};
-  std::vector<G4UserTrackingAction*> trackingActions = {};
-  std::vector<G4UserSteppingAction*> steppingActions = {};
+  std::vector<std::shared_ptr<G4UserRunAction>> runActions = {};
+  std::vector<std::shared_ptr<G4UserEventAction>> eventActions = {};
+  std::vector<std::shared_ptr<G4UserTrackingAction>> trackingActions = {};
+  std::vector<std::shared_ptr<G4UserSteppingAction>> steppingActions = {};
 
   ParticleTrackingAction::Config g4TrackCfg;
-  ParticleTrackingAction* particleAction = new ParticleTrackingAction(
+  auto particleAction = std::make_shared<ParticleTrackingAction>(
       g4TrackCfg, Acts::getDefaultLogger("ParticleTrackingAction", g4loglevel));
   trackingActions.push_back(particleAction);
 
   SensitiveSteppingAction::Config g4StepCfg;
-  SensitiveSteppingAction* sensitiveStepping = new SensitiveSteppingAction(
+  auto sensitiveStepping = std::make_shared<SensitiveSteppingAction>(
       g4StepCfg, Acts::getDefaultLogger("SensitiveSteppingAction", g4loglevel));
   steppingActions.push_back(sensitiveStepping);
 
