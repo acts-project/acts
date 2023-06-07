@@ -168,7 +168,8 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
               << std::endl;
   }
 
-  // @TODO: Disable this on non-x86_64
+
+#if defined(__linux__) && defined(__x86_64__)
   __uint16_t *cw = &((ucontext_t *)ctx)->uc_mcontext.fpregs->cwd;
   *cw |= FPU_EXCEPTION_MASK;
 
@@ -179,13 +180,11 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   // *mxcsr |= SSE_EXCEPTION_MASK;  // disable all SSE exceptions
   *mxcsr |= ((*mxcsr & SSE_STATUS_FLAGS) << 7);
   *mxcsr &= ~SSE_STATUS_FLAGS;  // clear all pending SSE exceptions
+#endif
 }
 
 void FpeMonitor::enable() {
-  // @TODO: Disable this on non-x86_64
-#if defined(__APPLE__)
-  std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
-#else
+#if defined(__linux__) && defined(__x86_64__)
   std::feclearexcept(m_excepts);
   feenableexcept(m_excepts);
 
@@ -196,7 +195,9 @@ void FpeMonitor::enable() {
 }
 
 void FpeMonitor::rearm() const {
+#if defined(__linux__) && defined(__x86_64__)
   feenableexcept(m_excepts);
+#endif
 }
 
 void FpeMonitor::ensureSignalHandlerInstalled() {
@@ -216,16 +217,14 @@ void FpeMonitor::ensureSignalHandlerInstalled() {
 }
 
 void FpeMonitor::disable() {
-  // @TODO: Disable this on non-x86_64
-#if defined(__APPLE__)
-  std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
-#else
+#if defined(__linux__) && defined(__x86_64__)
   std::feclearexcept(m_excepts);
-  // fedisableexcept(m_excepts);
   stack().pop();
+  if(stack().empty()) {
+    // last stack on this thread: clear exception trapping for this thread
+    fedisableexcept(m_excepts);
+  }
 #endif
-
-  // std::cout << std::bitset<32>(m_impl->m_encountered) << std::endl;
 }
 
 std::stack<FpeMonitor *> &FpeMonitor::stack() {
