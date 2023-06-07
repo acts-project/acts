@@ -19,7 +19,6 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
-#include <memory_resource>
 #include <mutex>
 #include <stdexcept>
 #include <string_view>
@@ -210,6 +209,8 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   // *mxcsr |= SSE_EXCEPTION_MASK;  // disable all SSE exceptions
   *mxcsr |= ((*mxcsr & SSE_STATUS_FLAGS) << 7);
   *mxcsr &= ~SSE_STATUS_FLAGS;  // clear all pending SSE exceptions
+#else
+  (void)ctx;
 #endif
 }
 
@@ -221,6 +222,8 @@ void FpeMonitor::enable() {
   ensureSignalHandlerInstalled();
 
   stack().push(this);
+#else
+  (void)m_excepts;
 #endif
 }
 

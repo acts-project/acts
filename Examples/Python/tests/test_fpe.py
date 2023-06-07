@@ -1,7 +1,13 @@
+import sys
+
 import pytest
 
 import acts
 import acts.examples
+
+pytestmark = pytest.mark.skipif(
+    sys.platform != "linux", reason="FPE monitoring currently only suported on Linux"
+)
 
 
 class FpeMaker(acts.examples.IAlgorithm):

@@ -18,7 +18,6 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <limits>
-#include <memory_resource>
 
 #include <pybind11/detail/common.h>
 #include <pybind11/functional.h>
