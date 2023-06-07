@@ -236,8 +236,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
     ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(sensitiveNames);
-    ACTS_PYTHON_MEMBER(passiveNames);
+    ACTS_PYTHON_MEMBER(SensitiveNames);
+    ACTS_PYTHON_MEMBER(PassiveNames);
     ACTS_PYTHON_STRUCT_END();
   }
 

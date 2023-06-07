@@ -10,7 +10,6 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 
 #include <iostream>
 #include <memory>
@@ -32,10 +31,8 @@ namespace ActsExamples {
 /// This is a class that builds a chamber by reading a gdml file
 
 class MockupSectorBuilder {
-  friend struct ChamberConfig;
-
  public:
-  // Nested configuration struct
+  /// Nested configuration struct
   struct Config {
 
     // The path of the gdml file that holds the mockup geometry
@@ -47,19 +44,18 @@ class MockupSectorBuilder {
     float toleranceOverlap = 10.;
   };
 
-  // Nested configuration struct for chamber
+  /// Nested configuration struct for chamber
   struct ChamberConfig {
 
     // The name of the chamber
     std::string name;
 
     // The names of the sensitive surfaces
-    std::vector<std::string> sensitiveNames;
+    std::vector<std::string> SensitiveNames;
 
     // The names of the passive surfaces
-    std::vector<std::string> passiveNames;
+    std::vector<std::string> PassiveNames;
 
-    }
   };
 
 
@@ -74,7 +70,7 @@ class MockupSectorBuilder {
   /// @param gctx The current geometry context object
   /// @param chamber_config The configuration chamber struct
   std::shared_ptr<Acts::Experimental::DetectorVolume> buildChamber(
-      ChamberConfig& chamberConfig);
+      const ChamberConfig& chamberConfig);
 
   /// Build Sector
   /// @param det_volumes The vector that contains the detector volumes of the Sector
@@ -95,14 +91,6 @@ class MockupSectorBuilder {
   G4VPhysicalVolume* g4World = nullptr;
 
   int maxNumberOfSectors = 8;
-
-  /// Build multi-layer
-  /// @param strawSurfaces The straw surfaces from the chamber
-  /// @param chamber_pos The position of the chamber that includes the multilayers
-  /// @param multilayer_name The name of the multilayer (wether it is the up or the bottom multilayer)
-  std::shared_ptr<Acts::Experimental::DetectorVolume> buildMultiLayer(
-      const std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces,
-      std::string multilayer_name);
 };
 
 }  // namespace ActsExamples
