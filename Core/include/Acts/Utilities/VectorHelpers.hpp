@@ -16,6 +16,8 @@
 
 #include "Eigen/Dense"
 
+#include <array>
+
 namespace Acts {
 namespace VectorHelpers {
 
