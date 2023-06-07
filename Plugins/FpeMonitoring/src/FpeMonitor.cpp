@@ -182,7 +182,6 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   FpeMonitor &fpe = *stack().top();
   fpe.m_result.m_counts.at(si->si_code)++;
 
-
   try {
     // collect stack trace skipping 2 frames, which should be the signal handler
     // and the calling facility. This might be platform specific, not sure

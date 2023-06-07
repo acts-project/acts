@@ -495,7 +495,6 @@ int Sequencer::run() {
               if (mon) {
                 fpe.local().merge(mon->result());
 
-
                 for (const auto& [count, type, st] :
                      mon->result().stackTraces()) {
                   std::size_t masked = fpeMaskCount(st, type);
