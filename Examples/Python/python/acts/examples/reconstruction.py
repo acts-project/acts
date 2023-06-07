@@ -1273,11 +1273,11 @@ def addAmbiguityResolution(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import AmbiguityResolutionAlgorithm
+    from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    alg = AmbiguityResolutionAlgorithm(
+    alg = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",
         outputTracks="filteredTrajectories",
