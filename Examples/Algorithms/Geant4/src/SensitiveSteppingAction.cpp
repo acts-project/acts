@@ -18,8 +18,22 @@
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
+#include <boost/describe.hpp>
+
+BOOST_DESCRIBE_ENUM(G4StepStatus, fWorldBoundary, fGeomBoundary,
+                    fAtRestDoItProc, fAlongStepDoItProc, fPostStepDoItProc,
+                    fUserDefinedLimit, fExclusivelyForcedProc, fUndefined);
+
+BOOST_DESCRIBE_ENUM(G4ProcessType, fNotDefined, fTransportation,
+                    fElectromagnetic, fOptical, fHadronic, fPhotolepton_hadron,
+                    fDecay, fGeneral, fParameterisation, fUserDefined,
+                    fParallel, fPhonon, fUCN);
+
+BOOST_DESCRIBE_ENUM(G4TrackStatus, fAlive,
+  fStopButAlive,fStopAndKill,fKillTrackAndSecondaries,fSuspend,fPostponeToNextEvent);
 
 namespace {
+
 ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
                             const G4StepPoint* postStepPoint,
                             ActsFatras::Barcode particleId,
@@ -106,8 +120,6 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     return;
   }
 
-  ACTS_VERBOSE("Step in senstive volume " << volumeName);
-
   // Cast out the GeometryIdentifier
   volumeName = volumeName.substr(SensitiveSurfaceMapper::mappingPrefix.size(),
                                  std::string_view::npos);
@@ -123,6 +135,8 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   const auto particleId = eventData.trackIdMapping.at(track->GetTrackID());
 
+  ACTS_VERBOSE("Step of " << particleId << " in senstive volume " << geoId);
+
   // Get PreStepPoint and PostStepPoint
   const G4StepPoint* preStepPoint = step->GetPreStepPoint();
   const G4StepPoint* postStepPoint = step->GetPostStepPoint();
@@ -133,34 +147,42 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     eventData.particleHitCount[particleId] = 0;
   }
 
+  // Extract if we are at volume boundaries
+  const bool preOnBoundary = preStepPoint->GetStepStatus() == fGeomBoundary;
+  const bool postOnBoundary = postStepPoint->GetStepStatus() == fGeomBoundary or
+                              postStepPoint->GetStepStatus() == fWorldBoundary;
+  const bool particleStopped = (postStepPoint->GetKineticEnergy() == 0.0);
+  const bool particleDecayed = (postStepPoint->GetProcessDefinedStep()->GetProcessType() == fDecay);
+
+  auto print = [](auto s) {
+    return boost::describe::enum_to_string(s, "unmatched");
+  };
+  ACTS_VERBOSE("status: pre="
+               << print(preStepPoint->GetStepStatus())
+               << ", post=" << print(postStepPoint->GetStepStatus())
+               << ", post E_kin=" << std::boolalpha
+               << postStepPoint->GetKineticEnergy() << ", process_type="
+               << print(postStepPoint->GetProcessDefinedStep()->GetProcessType()) << ", particle="
+               << track->GetParticleDefinition()->GetParticleName() << ", process_name=" << postStepPoint->GetProcessDefinedStep()->GetProcessName() << ", track status=" << print(track->GetTrackStatus()));
+
   // Case A: The step starts at the entry of the volume and ends at the exit.
   // Add hit to collection.
-  if (preStepPoint->GetStepStatus() == fGeomBoundary and
-      postStepPoint->GetStepStatus() == fGeomBoundary) {
-    const auto hit = hitFromStep(preStepPoint, postStepPoint, particleId, geoId,
-                                 eventData.particleHitCount.at(particleId));
+  if (preOnBoundary and postOnBoundary) {
+    ACTS_VERBOSE("-> merge single step to hit");
+    ++eventData.particleHitCount[particleId];
+    eventData.hits.push_back(
+        hitFromStep(preStepPoint, postStepPoint, particleId, geoId,
+                    eventData.particleHitCount.at(particleId) - 1));
 
-    if (hit.depositedEnergy() > m_cfg.hitMergerEnergyThreshold) {
-      ++eventData.particleHitCount[particleId];
-      eventData.hits.push_back(hit);
-      eventData.numberGeantSteps += 1;
-      eventData.maxStepsForHit = std::max(eventData.maxStepsForHit, 1ul);
-    }
-
+    eventData.numberGeantSteps += 1ul;
+    eventData.maxStepsForHit = std::max(eventData.maxStepsForHit, 1ul);
     return;
   }
 
-  // Case B: The step doesn't end at the exit of the volume. Add the hit to the
-  // hit buffer.
-  if (postStepPoint->GetStepStatus() != fGeomBoundary) {
-    eventData.hitBuffer.push_back(
-        hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));
-    return;
-  }
-
-  // Case C: The step ends at the exit of the volume. Add hit to hit buffer, and
+  // Case B: The step ends at the exit of the volume. Add hit to hit buffer, and
   // then combine hit buffer
-  if (postStepPoint->GetStepStatus() == fGeomBoundary) {
+  if (postOnBoundary or particleStopped or particleDecayed) {
+    ACTS_VERBOSE("-> merge buffer to hit");
     auto& buffer = eventData.hitBuffer;
     buffer.push_back(
         hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));
@@ -168,20 +190,31 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     const auto pos4 =
         0.5 * (buffer.front().fourPosition() + buffer.back().fourPosition());
 
-    const ActsFatras::Hit hit(geoId, particleId, pos4,
-                              buffer.front().momentum4Before(),
-                              buffer.back().momentum4After(),
-                              eventData.particleHitCount.at(particleId));
+    ++eventData.particleHitCount[particleId];
+    eventData.hits.emplace_back(geoId, particleId, pos4,
+                                buffer.front().momentum4Before(),
+                                buffer.back().momentum4After(),
+                                eventData.particleHitCount.at(particleId) - 1);
 
-    if (hit.depositedEnergy() > m_cfg.hitMergerEnergyThreshold) {
-      ++eventData.particleHitCount[particleId];
-      eventData.hits.push_back(hit);
-      eventData.numberGeantSteps += buffer.size();
-      eventData.maxStepsForHit =
-          std::max(eventData.maxStepsForHit, buffer.size());
-    }
+    assert(std::all_of(buffer.begin(), buffer.end(),
+                       [&](const auto& h) { return h.geometryId() == geoId; }));
+    assert(std::all_of(buffer.begin(), buffer.end(),
+                       [&](const auto& h) { return h.particleId() == particleId; }));
+
+    eventData.numberGeantSteps += buffer.size();
+    eventData.maxStepsForHit =
+        std::max(eventData.maxStepsForHit, buffer.size());
 
     buffer.clear();
+    return;
+  }
+
+  // Case C: The step doesn't end at the exit of the volume. Add the hit to the
+  // hit buffer.
+  if (not postOnBoundary) {
+    // ACTS_VERBOSE("-> add hit to buffer");
+    eventData.hitBuffer.push_back(
+        hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));
     return;
   }
 

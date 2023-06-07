@@ -130,6 +130,11 @@ class DigitizationConfig {
   const double mergeNsigma;
   /// Consider clusters that share a corner as merged (8-cell connectivity)
   const bool mergeCommonCorner;
+  /// Energy deposit threshold for accepting a hit
+  /// For a generic readout frontend we assume 1000 e/h pairs, in Si each
+  /// e/h-pair requiers on average an energy of 3.65 eV (PDG  review 2023,
+  /// Table 35.10)
+  double minEnergyDeposit = 1000 * 3.65 * Acts::UnitConstants::eV;
   /// The digitizers per GeometryIdentifiers
   Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 

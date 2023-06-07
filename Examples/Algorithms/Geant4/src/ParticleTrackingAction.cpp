@@ -26,6 +26,13 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     const G4Track* aTrack) {
   auto& eventData = EventStoreRegistry::eventData();
 
+  // If this is not the case, there are unhandled cases of particle stopping in
+  // the SensitiveSteppingAction
+  if( not eventData.hitBuffer.empty() ) {
+    eventData.hitBuffer.clear();
+    ACTS_WARNING("Hit buffer not empty after track");
+  }
+
   auto particleId = makeParticleId(aTrack->GetTrackID(), aTrack->GetParentID());
 
   // There is already a warning printed in the makeParticleId function

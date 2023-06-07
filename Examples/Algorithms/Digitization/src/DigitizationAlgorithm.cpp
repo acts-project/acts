@@ -177,6 +177,16 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
           for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
             const auto& simHit = *h;
+
+            // TODO Is this problematic with hit merging (doMerge=true)? if we
+            // discard many individual hits, which together would reach
+            // threshold, they would all be discarded...
+            if (simHit.depositedEnergy() < m_cfg.minEnergyDeposit) {
+              ACTS_VERBOSE("Discard hit with energy deposit "
+                           << simHit.depositedEnergy());
+              continue;
+            }
+
             const auto simHitIdx = simHits.index_of(h);
 
             DigitizedParameters dParameters;
