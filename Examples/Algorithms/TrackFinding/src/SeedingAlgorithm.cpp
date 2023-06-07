@@ -13,7 +13,6 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
