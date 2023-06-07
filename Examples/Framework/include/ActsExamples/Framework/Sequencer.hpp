@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
-#include "Acts/Plugins/FpeMonitoring/StackTrace.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -155,15 +154,8 @@ class Sequencer {
   /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
   std::pair<size_t, size_t> determineEventsRange() const;
 
-  std::size_t fpeMaskCount(const Acts::StackTrace &st,
+  std::size_t fpeMaskCount(const boost::stacktrace::stacktrace &st,
                            Acts::FpeType type) const;
-
-  constexpr static std::size_t kBufferSize = 524288;  // 500 kB
-  std::unique_ptr<std::byte[]> m_buffer{
-      std::make_unique<std::byte[]>(kBufferSize)};
-  std::pmr::monotonic_buffer_resource m_bufferResource{
-      m_buffer.get(), kBufferSize, std::pmr::null_memory_resource()};
-  std::pmr::synchronized_pool_resource m_pool{&m_bufferResource};
 
   struct SequenceElementWithFpeResult {
     std::shared_ptr<SequenceElement> sequenceElement;

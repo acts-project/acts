@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Plugins/FpeMonitoring/StackTrace.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <atomic>
@@ -16,9 +15,13 @@
 #include <cstddef>
 #include <limits>
 #include <memory>
-#include <memory_resource>
 #include <mutex>
 #include <stack>
+
+#include <boost/container/static_vector.hpp>
+#include <boost/stacktrace/detail/frame_unwind.ipp>  // needed to avoid linker error
+#include <boost/stacktrace/frame.hpp>
+#include <boost/stacktrace/stacktrace.hpp>
 
 namespace Acts {
 
@@ -37,11 +40,48 @@ std::ostream &operator<<(std::ostream &os, FpeType type);
 
 class FpeMonitor {
  public:
+  struct Buffer {
+    Buffer(std::size_t bufferSize)
+        : m_data{std::make_unique<std::byte[]>(bufferSize)},
+          m_size{bufferSize},
+          m_offset{0} {}
+
+    Buffer(const Buffer &) = delete;
+    Buffer(Buffer &&other) {
+      m_data = std::move(other.m_data);
+      m_size = other.m_size;
+      m_offset = other.m_offset;
+      other.m_size = 0;
+      other.m_offset = 0;
+    }
+
+    std::pair<void *, std::size_t> next() {
+      return {m_data.get() + m_offset, m_size - m_offset};
+    }
+
+    void pushOffset(std::size_t offset) {
+      assert(m_offset + offset < m_size);
+      m_offset = offset;
+    }
+
+    void reset() { m_offset = 0; }
+
+    std::size_t size() const { return m_size; }
+    std::size_t offset() const { return m_offset; }
+
+    std::byte *data() { return m_data.get(); }
+
+   private:
+    std::unique_ptr<std::byte[]> m_data;
+    std::size_t m_size;
+    std::size_t m_offset;
+  };
+
   struct Result {
     struct FpeInfo {
       std::size_t count;
       FpeType type;
-      StackTrace st;
+      boost::stacktrace::stacktrace st;
     };
 
     Result merged(const Result &with) const;
@@ -50,7 +90,7 @@ class FpeMonitor {
     bool encountered(FpeType type) const;
     unsigned int count(FpeType type) const;
 
-    const std::pmr::vector<FpeInfo> &stackTraces() const;
+    const std::vector<FpeInfo> &stackTraces() const;
     unsigned int numStackTraces() const;
 
     void deduplicate();
@@ -59,29 +99,31 @@ class FpeMonitor {
         std::ostream &os,
         std::size_t depth = std::numeric_limits<std::size_t>::max()) const;
 
-    Result(std::pmr::memory_resource &mem = *std::pmr::new_delete_resource());
+    Result() = default;
 
     operator bool() const { return !m_stracktraces.empty(); }
 
+    void add(Acts::FpeType type, void *stackPtr, std::size_t bufferSize);
+
    private:
-    std::pmr::vector<FpeInfo> m_stracktraces;
+    std::vector<FpeInfo> m_stracktraces;
     std::array<unsigned int, 32> m_counts{};
 
     friend FpeMonitor;
   };
 
-  FpeMonitor(std::pmr::memory_resource &mem = *std::pmr::new_delete_resource());
-  explicit FpeMonitor(int excepts, std::pmr::memory_resource &mem =
-                                       *std::pmr::new_delete_resource());
+  FpeMonitor();
+  explicit FpeMonitor(int excepts);
   ~FpeMonitor();
 
-  const Result &result() const;
   Result &result();
 
-  void rearm() const;
+  void consumeRecorded();
 
-  std::size_t stackLimit() const { return m_stackLimit; }
-  void setStackLimit(std::size_t limit) { m_stackLimit = limit; }
+  void rearm();
+
+  static std::string stackTraceToString(const boost::stacktrace::stacktrace &st,
+                                        std::size_t depth);
 
  private:
   void enable();
@@ -99,9 +141,13 @@ class FpeMonitor {
   static GlobalState &globalState();
 
   int m_excepts = 0;
-  std::size_t m_stackLimit = 1000;
 
   Result m_result;
+
+  Buffer m_buffer{65536};
+
+  boost::container::static_vector<std::tuple<FpeType, void *, std::size_t>, 128>
+      m_recorded;
 };
 
 }  // namespace Acts

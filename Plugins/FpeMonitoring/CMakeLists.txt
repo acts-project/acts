@@ -1,6 +1,5 @@
 add_library(
 	ActsPluginFpeMonitoring SHARED
-	src/StackTrace.cpp
 	src/FpeMonitor.cpp)
 target_include_directories(
   ActsPluginFpeMonitoring
@@ -95,63 +94,7 @@ else()
   endif()
 endif()
 
-set_source_files_properties(src/StackTrace.cpp PROPERTIES COMPILE_OPTIONS "${_fpe_options}")
-
-# See https://github.com/acts-project/vecmem/blob/main/core/CMakeLists.txt
-
-# Figure out where to get <memory_resource> from.
-include( CheckCXXSourceCompiles )
-check_cxx_source_compiles( "
-   #include <memory_resource>
-   int main() {
-       std::pmr::memory_resource* mr = nullptr;
-       std::pmr::polymorphic_allocator<int> pa(mr);
-       return 0;
-   }
-   " ACTS_HAVE_PMR_MEMORY_RESOURCE )
-   set(pmr_include "memory_resource")
-   set(pmr_ns "std::pmr")
-   if( ACTS_HAVE_PMR_MEMORY_RESOURCE )
-   message( STATUS "Using memory resource types from the std::pmr namespace" )
-   target_compile_definitions( ActsPluginFpeMonitoring PUBLIC
-     ACTS_HAVE_PMR_MEMORY_RESOURCE )
-else()
-   check_cxx_source_compiles( "
-      #include <experimental/memory_resource>
-      int main() {
-          std::experimental::pmr::memory_resource* mr = nullptr;
-          std::experimental::pmr::polymorphic_allocator<int> pa(mr);
-          return 0;
-      }
-      " ACTS_HAVE_EXPERIMENTAL_PMR_MEMORY_RESOURCE )
-      if( ACTS_HAVE_EXPERIMENTAL_PMR_MEMORY_RESOURCE )
-      message( STATUS "Using memory resource types from the "
-         "std::experimental::pmr namespace" )
-      target_compile_definitions( ActsPluginFpeMonitoring PUBLIC
-        ACTS_HAVE_EXPERIMENTAL_PMR_MEMORY_RESOURCE )
-
-      set(pmr_include "experimental/memory_resource")
-      set(pmr_ns "std::experimental::pmr")
-   else()
-      message( SEND_ERROR
-         "C++17 LFTS V1 (P0220R1) component memory_resource not found!" )
-   endif()
-endif()
-
-check_cxx_source_compiles( "
-   #include <${pmr_include}>
-   int main() {
-         ${pmr_ns}::set_default_resource(nullptr);
-         (void)${pmr_ns}::get_default_resource();
-         return 0;
-   }
-   " ACTS_HAVE_DEFAULT_RESOURCE)
-
- if(NOT ACTS_HAVE_DEFAULT_RESOURCE)
-   message(STATUS "Adding polyfill for std::pmr default resource")
-   target_sources( ActsPluginFpeMonitoring
-     PRIVATE "src/DefaultResourcePolyfill.cpp" )
-endif()
+target_compile_options(ActsPluginFpeMonitoring PUBLIC "${_fpe_options}")
 
 
 install(

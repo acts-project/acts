@@ -25,6 +25,9 @@
 #include <string_view>
 #include <vector>
 
+#include <boost/stacktrace/frame.hpp>
+#include <boost/stacktrace/safe_dump_to.hpp>
+#include <boost/stacktrace/stacktrace.hpp>
 #include <fenv.h>
 #include <signal.h>
 
@@ -35,11 +38,8 @@
 
 namespace Acts {
 
-FpeMonitor::Result::Result(std::pmr::memory_resource &mem)
-    : m_stracktraces{&mem} {}
-
 FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
-  Result result{*m_stracktraces.get_allocator().resource()};
+  Result result{};
 
   for (unsigned int i = 0; i < m_counts.size(); i++) {
     result.m_counts[i] = m_counts[i] + with.m_counts[i];
@@ -66,12 +66,41 @@ void FpeMonitor::Result::merge(const Result &with) {
   deduplicate();
 }
 
-const FpeMonitor::Result &FpeMonitor::result() const {
-  return m_result;
+void FpeMonitor::Result::add(FpeType type, void *stackPtr,
+                             std::size_t bufferSize) {
+  auto st = boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize);
+
+  auto it = std::find_if(
+      m_stracktraces.begin(), m_stracktraces.end(), [&](const FpeInfo &el) {
+        const auto &fl = *el.st.begin();
+        const auto &fr = *st.begin();
+        return el.type == type && (boost::stacktrace::hash_value(fl) ==
+                                   boost::stacktrace::hash_value(fr));
+      });
+
+  if (it != m_stracktraces.end()) {
+    it->count += 1;
+  } else {
+    m_stracktraces.push_back({1, type, std::move(st)});
+  }
 }
 
 FpeMonitor::Result &FpeMonitor::result() {
+  consumeRecorded();
   return m_result;
+}
+
+void FpeMonitor::consumeRecorded() {
+  if (m_recorded.empty()) {
+    return;
+  }
+
+  for (auto [type, stackPtr, remaining] : m_recorded) {
+    m_result.add(type, stackPtr, remaining);
+  }
+
+  m_buffer.reset();
+  m_recorded.clear();
 }
 
 unsigned int FpeMonitor::Result::count(FpeType type) const {
@@ -82,7 +111,7 @@ unsigned int FpeMonitor::Result::numStackTraces() const {
   return m_stracktraces.size();
 }
 
-const std::pmr::vector<FpeMonitor::Result::FpeInfo>
+const std::vector<FpeMonitor::Result::FpeInfo>
     &FpeMonitor::Result::stackTraces() const {
   return m_stracktraces;
 }
@@ -103,21 +132,26 @@ void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
 
   os << "\nStack traces:\n";
   for (const auto &[count, type, st] : stackTraces()) {
-    os << "- " << type << ": (" << count << " times)\n" << st.toString(depth);
+    os << "- " << type << ": (" << count << " times)\n";
+
+    os << stackTraceToString(st, depth);
   }
+  os << std::endl;
 }
 
 void FpeMonitor::Result::deduplicate() {
-  std::pmr::vector<FpeInfo> copy{m_stracktraces.get_allocator()};
+  std::vector<FpeInfo> copy{};
   copy = std::move(m_stracktraces);
   m_stracktraces.clear();
 
   for (auto &info : copy) {
-    // auto type = it.first;
-    // auto &st = it.second;
     auto it = std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
                            [&info](const FpeInfo &el) {
-                             return el.type == info.type && el.st == info.st;
+                             const auto &fl = *el.st.begin();
+                             const auto &fr = *info.st.begin();
+                             return el.type == info.type &&
+                                    (boost::stacktrace::hash_value(fl) ==
+                                     boost::stacktrace::hash_value(fr));
                            });
     if (it != m_stracktraces.end()) {
       it->count += info.count;
@@ -127,14 +161,12 @@ void FpeMonitor::Result::deduplicate() {
   }
 }
 
-FpeMonitor::FpeMonitor(std::pmr::memory_resource &mem)
-    : m_excepts{FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW},
-      m_result{mem} {
+FpeMonitor::FpeMonitor()
+    : m_excepts{FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW | FE_UNDERFLOW} {
   enable();
 }
 
-FpeMonitor::FpeMonitor(int excepts, std::pmr::memory_resource &mem)
-    : m_excepts(excepts), m_result{mem} {
+FpeMonitor::FpeMonitor(int excepts) : m_excepts(excepts) {
   enable();
 }
 
@@ -150,24 +182,23 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
   FpeMonitor &fpe = *stack().top();
   fpe.m_result.m_counts.at(si->si_code)++;
 
-  std::size_t maxDepth = static_cast<std::size_t>(-1);
 
   try {
     // collect stack trace skipping 2 frames, which should be the signal handler
     // and the calling facility. This might be platform specific, not sure
-    if (fpe.m_result.m_stracktraces.size() < fpe.stackLimit()) {
-      fpe.m_result.m_stracktraces.push_back(
-          {1, static_cast<FpeType>(si->si_code),
-           StackTrace(
-               2, maxDepth,
-               *fpe.m_result.m_stracktraces.get_allocator().resource())});
-    }
+    auto [buffer, remaining] = fpe.m_buffer.next();
+    std::size_t depth = boost::stacktrace::safe_dump_to(2, buffer, remaining);
+    std::size_t stored =
+        depth * sizeof(boost::stacktrace::frame::native_frame_ptr_t);
+    fpe.m_buffer.pushOffset(stored);  // record how much storage was consumed
+    fpe.m_recorded.emplace_back(
+        static_cast<FpeType>(si->si_code), buffer,
+        remaining);  // record buffer offset and fpe type
 
   } catch (const std::bad_alloc &e) {
     std::cout << "Unable to collect stack trace due to memory limit"
               << std::endl;
   }
-
 
 #if defined(__linux__) && defined(__x86_64__)
   __uint16_t *cw = &((ucontext_t *)ctx)->uc_mcontext.fpregs->cwd;
@@ -194,7 +225,8 @@ void FpeMonitor::enable() {
 #endif
 }
 
-void FpeMonitor::rearm() const {
+void FpeMonitor::rearm() {
+  consumeRecorded();
 #if defined(__linux__) && defined(__x86_64__)
   feenableexcept(m_excepts);
 #endif
@@ -220,7 +252,7 @@ void FpeMonitor::disable() {
 #if defined(__linux__) && defined(__x86_64__)
   std::feclearexcept(m_excepts);
   stack().pop();
-  if(stack().empty()) {
+  if (stack().empty()) {
     // last stack on this thread: clear exception trapping for this thread
     fedisableexcept(m_excepts);
   }
@@ -256,6 +288,12 @@ std::ostream &operator<<(std::ostream &os, FpeType type) {
 #undef CASE
 
   return os;
+}
+
+std::string FpeMonitor::stackTraceToString(
+    const boost::stacktrace::stacktrace &st, std::size_t depth) {
+  return boost::stacktrace::detail::to_string(st.as_vector().data(),
+                                              std::min(depth, st.size()));
 }
 
 }  // namespace Acts

@@ -278,9 +278,9 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
                  .def_static("_trigger_invalid", &trigger_invalid)
                  .def_static("context", []() { return FpeMonitorContext(); });
 
-  fpe.def_property_readonly(
-         "result", py::overload_cast<>(&Acts::FpeMonitor::result, py::const_),
-         py::return_value_policy::reference_internal)
+  fpe.def_property_readonly("result",
+                            py::overload_cast<>(&Acts::FpeMonitor::result),
+                            py::return_value_policy::reference_internal)
       .def("rearm", &Acts::FpeMonitor::rearm);
 
   py::class_<Acts::FpeMonitor::Result>(fpe, "Result")

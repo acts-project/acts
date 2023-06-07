@@ -9,7 +9,6 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
-#include "Acts/Plugins/FpeMonitoring/StackTrace.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -32,7 +31,7 @@
 #include <string>
 #include <typeinfo>
 
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/stacktrace/stacktrace.hpp>
 #include <sys/types.h>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
@@ -40,6 +39,7 @@
 #endif
 
 #include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/core/demangle.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
@@ -480,7 +480,7 @@ int Sequencer::run() {
             for (auto& [alg, fpe] : m_sequenceElements) {
               std::optional<Acts::FpeMonitor> mon;
               if (m_cfg.trackFpes) {
-                mon.emplace(m_pool);
+                mon.emplace();
                 context.fpeMonitor = &mon.value();
               }
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -495,19 +495,16 @@ int Sequencer::run() {
               if (mon) {
                 fpe.local().merge(mon->result());
 
-                mon->result().deduplicate();
 
                 for (const auto& [count, type, st] :
                      mon->result().stackTraces()) {
                   std::size_t masked = fpeMaskCount(st, type);
-                  std::cout << type << " HAVE: " << count << " MASK:" << masked
-                            << std::endl;
                   if (masked < count) {
                     std::stringstream ss;
                     ss << "FPE of type " << type
                        << " exceeded configured per-event threshold of "
                        << masked << " (was: " << count << ")\n"
-                       << st.toString(8);
+                       << Acts::FpeMonitor::stackTraceToString(st, 8);
                     ACTS_ERROR(ss.str());
                     if (m_cfg.failOnFpe) {
                       throw FpeFailure{ss.str()};
@@ -587,7 +584,7 @@ int Sequencer::run() {
                                             " per event]"
                                       : "")
                        << "\n"
-                       << st.toString(8));
+                       << Acts::FpeMonitor::stackTraceToString(st, 8));
       }
       ACTS_INFO("-----------------------------------");
     }
@@ -615,10 +612,10 @@ int Sequencer::run() {
   return EXIT_SUCCESS;
 }
 
-std::size_t Sequencer::fpeMaskCount(const Acts::StackTrace& st,
+std::size_t Sequencer::fpeMaskCount(const boost::stacktrace::stacktrace& st,
                                     Acts::FpeType type) const {
-  const auto& [file, line] = st.topSourceLocation();
-  std::string loc = file + ":" + std::to_string(line);
+  std::string loc = st.begin()->source_file() + ":" +
+                    std::to_string(st.begin()->source_line());
   for (const auto& [filt, fType, count] : m_cfg.fpeMasks) {
     if (boost::algorithm::ends_with(loc, filt) && fType == type) {
       return count;

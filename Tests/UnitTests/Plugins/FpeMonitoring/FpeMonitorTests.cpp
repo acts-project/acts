@@ -62,11 +62,6 @@ BOOST_AUTO_TEST_CASE(Invalid) {
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-  for (const auto& [count, type, st] : mon.result().stackTraces()) {
-    std::cout << count << std::endl;
-    std::cout << type << std::endl;
-    std::cout << st << std::endl;
-  }
 }
 
 BOOST_AUTO_TEST_CASE(DivByZero) {
@@ -81,11 +76,6 @@ BOOST_AUTO_TEST_CASE(DivByZero) {
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
   BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
 
-  for (const auto& [count, type, st] : mon.result().stackTraces()) {
-    std::cout << count << std::endl;
-    std::cout << type << std::endl;
-    std::cout << st << std::endl;
-  }
 }
 
 BOOST_AUTO_TEST_CASE(Overflow) {
@@ -99,11 +89,6 @@ BOOST_AUTO_TEST_CASE(Overflow) {
   BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
 
-  for (const auto& [count, type, st] : mon.result().stackTraces()) {
-    std::cout << count << std::endl;
-    std::cout << type << std::endl;
-    std::cout << st << std::endl;
-  }
 }
 
 BOOST_AUTO_TEST_CASE(Combinations) {
@@ -157,10 +142,8 @@ BOOST_AUTO_TEST_CASE(CheckRearmCount) {
   mon.rearm();
   invalid();
   BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 2);
-  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(), 2);
-  mon.result().deduplicate();
-  // now 1 because we deduplicated!
-  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(), 1);
+  BOOST_CHECK_EQUAL(mon.result().stackTraces().size(),
+                    1);  // still at one because we deduplicated
 
   mon.rearm();
   invalid2();

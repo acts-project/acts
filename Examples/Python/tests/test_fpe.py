@@ -212,3 +212,16 @@ def test_fpe_masking_single(fpe_type):
     res = s.fpeResult
     for x in acts.FpeType.values:
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
+
+
+def test_buffer_sufficient():
+    s = acts.examples.Sequencer(
+        events=10000,
+    )
+
+    s.addAlgorithm(FuncAlg("Invalid", lambda _: acts.FpeMonitor._trigger_invalid()))
+    s.run()
+
+    res = s.fpeResult
+    for x in acts.FpeType.values:
+        assert res.count(x) == (s.config.events if x == acts.FpeType.FLTINV else 0)
