@@ -11,8 +11,7 @@
 void ActsExamples::PassThroughCalibrator::calibrate(
     const MeasurementContainer& measurements,
     const ClusterContainer* /*clusters*/, const Acts::GeometryContext& /*gctx*/,
-    Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-        trackState) const {
+    Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
   Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
   const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
 
@@ -36,7 +35,6 @@ ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(
 
 void ActsExamples::MeasurementCalibratorAdapter::calibrate(
     const Acts::GeometryContext& gctx,
-    Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
-        trackState) const {
+    Acts::VectorMultiTrajectory::TrackStateProxy trackState) const {
   return m_calibrator.calibrate(m_measurements, m_clusters, gctx, trackState);
 }

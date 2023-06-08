@@ -26,6 +26,17 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     const G4Track* aTrack) {
   auto& eventData = EventStoreRegistry::eventData();
 
+  // If this is not the case, there are unhandled cases of particle stopping in
+  // the SensitiveSteppingAction
+  // TODO We could also merge the remaining hits to a hit here, but it would be
+  // nicer to investigate, if we can handle all particle stop conditions in the
+  // SensitiveSteppingAction... This seems to happen O(1) times in a ttbar
+  // event, so seems not to be too problematic
+  if (not eventData.hitBuffer.empty()) {
+    eventData.hitBuffer.clear();
+    ACTS_WARNING("Hit buffer not empty after track");
+  }
+
   auto particleId = makeParticleId(aTrack->GetTrackID(), aTrack->GetParentID());
 
   // There is already a warning printed in the makeParticleId function
