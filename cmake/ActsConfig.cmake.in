@@ -11,6 +11,9 @@
 #   - Acts_COMMIT_HASH
 #   - Acts_COMMIT_HASH_SHORT
 
+# IN_LIST seems not to work on LCG_97. This forces the right behaviour
+cmake_policy(SET CMP0057 NEW)
+
 @PACKAGE_INIT@
 
 set(Acts_COMPONENTS @_components@)
