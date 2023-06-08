@@ -18,6 +18,8 @@
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
+
+#if BOOST_VERSION >= 107800
 #include <boost/describe.hpp>
 
 BOOST_DESCRIBE_ENUM(G4StepStatus, fWorldBoundary, fGeomBoundary,
@@ -31,6 +33,7 @@ BOOST_DESCRIBE_ENUM(G4ProcessType, fNotDefined, fTransportation,
 
 BOOST_DESCRIBE_ENUM(G4TrackStatus, fAlive, fStopButAlive, fStopAndKill,
                     fKillTrackAndSecondaries, fSuspend, fPostponeToNextEvent);
+#endif
 
 namespace {
 
@@ -156,7 +159,11 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
       (postStepPoint->GetProcessDefinedStep()->GetProcessType() == fDecay);
 
   auto print = [](auto s) {
+#if BOOST_VERSION >= 107800
     return boost::describe::enum_to_string(s, "unmatched");
+#else
+    return s;
+#endif
   };
   ACTS_VERBOSE("status: pre="
                << print(preStepPoint->GetStepStatus())
