@@ -25,12 +25,7 @@ PODIO_GENERATE_DATAMODEL(
   IO_BACKEND_HANDLERS ${PODIO_IO_HANDLERS}
 )
 
-
-# message(STATUS "HEADERS: ${headers}")
-# message(STATUS "SOURCES: ${sources}")
-
 PODIO_ADD_DATAMODEL_CORE_LIB(ActsPodioEdm "${headers}" "${sources}")
-# set_target_properties(ActsPodioEdm PROPERTIES LINKER_LANGUAGE CXX)
 
 target_link_libraries(ActsPluginPodio PUBLIC 
   ActsPodioEdm 
