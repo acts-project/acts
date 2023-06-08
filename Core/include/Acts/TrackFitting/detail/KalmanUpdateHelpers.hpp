@@ -37,10 +37,10 @@ template <typename propagator_state_t, typename stepper_t,
 auto kalmanHandleMeasurement(
     propagator_state_t &state, const stepper_t &stepper,
     const extensions_t &extensions, const Surface &surface,
-    const SourceLink &source_link, MultiTrajectory<traj_t> &fittedStates,
+    const SourceLink &source_link, traj_t &fittedStates,
     const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
+        false)) -> Result<typename traj_t::TrackStateProxy> {
   // Bind the transported state to the current surface
   auto res = stepper.boundState(state.stepping, surface, doCovTransport,
                                 freeToBoundCorrection);
@@ -124,10 +124,10 @@ auto kalmanHandleMeasurement(
 template <typename propagator_state_t, typename stepper_t, typename traj_t>
 auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
-    MultiTrajectory<traj_t> &fittedStates, const size_t lastTrackIndex,
-    bool doCovTransport, const Logger &logger,
+    traj_t &fittedStates, const size_t lastTrackIndex, bool doCovTransport,
+    const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
+        false)) -> Result<typename traj_t::TrackStateProxy> {
   // No source links on surface, add either hole or passive material
   // TrackState entry multi trajectory. No storage allocation for
   // uncalibrated/calibrated measurement and filtered parameter
