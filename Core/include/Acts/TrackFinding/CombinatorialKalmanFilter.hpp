@@ -67,7 +67,7 @@ struct CombinatorialKalmanFilterTipState {
 template <typename traj_t>
 struct CombinatorialKalmanFilterExtensions {
   using candidate_container_t =
-      typename std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>;
+      typename std::vector<typename traj_t::TrackStateProxy>;
   using MeasurementSelector =
       Delegate<Result<std::pair<typename candidate_container_t::iterator,
                                 typename candidate_container_t::iterator>>(
@@ -105,13 +105,11 @@ struct CombinatorialKalmanFilterExtensions {
   /// @param candidates Measurement track state candidates
   /// @param isOutlier Output variable indicating whether the returned state is an outlier (unused)
   /// @param logger A logger instance
-  static Result<std::pair<typename std::vector<typename MultiTrajectory<
-                              traj_t>::TrackStateProxy>::iterator,
-                          typename std::vector<typename MultiTrajectory<
-                              traj_t>::TrackStateProxy>::iterator>>
+  static Result<std::pair<
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
   voidMeasurementSelector(
-      typename std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>&
-          candidates,
+      typename std::vector<typename traj_t::TrackStateProxy>& candidates,
       bool& isOutlier, const Logger& logger) {
     (void)isOutlier;
     (void)logger;
@@ -214,8 +212,7 @@ struct CombinatorialKalmanFilterResult {
 
   // These is used internally to store candidate trackstates
   std::shared_ptr<traj_t> stateBuffer;
-  std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>
-      trackStateCandidates;
+  std::vector<typename traj_t::TrackStateProxy> trackStateCandidates;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -878,18 +875,16 @@ class CombinatorialKalmanFilter {
     /// @param [in,out] nBranchesOnSurface Number of branches on surface, will be updated
     Result<void> processSelectedTrackStates(
         const Acts::GeometryContext& gctx,
-        typename std::vector<
-            typename MultiTrajectory<traj_t>::TrackStateProxy>::const_iterator
+        typename std::vector<typename traj_t::TrackStateProxy>::const_iterator
             begin,
-        typename std::vector<
-            typename MultiTrajectory<traj_t>::TrackStateProxy>::const_iterator
+        typename std::vector<typename traj_t::TrackStateProxy>::const_iterator
             end,
         result_type& result, bool isOutlier, const TipState& prevTipState,
         size_t& nBranchesOnSurface) const {
       using PM = TrackStatePropMask;
 
-      std::optional<typename MultiTrajectory<traj_t>::TrackStateProxy>
-          firstTrackState{std::nullopt};
+      std::optional<typename traj_t::TrackStateProxy> firstTrackState{
+          std::nullopt};
       for (auto it = begin; it != end; ++it) {
         auto& candidateTrackState = *it;
 
@@ -906,7 +901,7 @@ class CombinatorialKalmanFilter {
         }
 
         // copy this trackstate into fitted states MultiTrajectory
-        typename MultiTrajectory<traj_t>::TrackStateProxy trackState =
+        typename traj_t::TrackStateProxy trackState =
             result.fittedStates->getTrackState(
                 result.fittedStates->addTrackState(
                     mask, candidateTrackState.previous()));

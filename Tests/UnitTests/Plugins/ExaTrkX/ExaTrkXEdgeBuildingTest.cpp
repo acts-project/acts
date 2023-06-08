@@ -8,12 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
+#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
 
 #include <cassert>
 #include <iostream>
 
-#include <ATen/ATen.h>
 #include <Eigen/Core>
 #include <torch/torch.h>
 
@@ -76,14 +75,15 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn) {
 
   // Run the edge building
   auto random_features_cuda = random_features.to(torch::kCUDA);
-  auto edges_test = buildEdges(random_features_cuda, n_nodes, emb_dim, r, knn);
+  auto edges_test =
+      Acts::buildEdges(random_features_cuda, n_nodes, emb_dim, r, knn);
 
   // Map the edges to cantor pairs
   std::vector<int> edges_test_cantor;
 
   for (int i = 0; i < edges_test.size(1); ++i) {
-    const auto a = edges_test[0][i].item<int>();
-    const auto b = edges_test[1][i].item<int>();
+    const auto a = edges_test[0][i].template item<int>();
+    const auto b = edges_test[1][i].template item<int>();
     edges_test_cantor.push_back(a < b ? cantor_pair(a, b) : cantor_pair(b, a));
   }
 
