@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -27,7 +28,7 @@ namespace ActsExamples {
 ///  3) Else, remove the track with the highest relative shared hits (i.e.
 ///     shared hits / hits).
 ///  4) Back to square 1.
-class AmbiguityResolutionAlgorithm final : public IAlgorithm {
+class GreedyAmbiguityResolutionAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input trajectories collection.
@@ -48,7 +49,7 @@ class AmbiguityResolutionAlgorithm final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  GreedyAmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the ambiguity resolution algorithm.
   ///
@@ -61,6 +62,8 @@ class AmbiguityResolutionAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+  Acts::GreedyAmbiguityResolution m_core;
+
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
