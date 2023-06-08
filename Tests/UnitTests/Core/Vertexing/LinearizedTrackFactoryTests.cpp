@@ -70,8 +70,8 @@ std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 /// @brief Test HelicalTrackLinearizer by comparing it to NumericalTrackLinearizer.
 ///
 /// @note While HelicalTrackLinearizer computes the Jacobians using analytically derived formulae,
-/// NumericalTrackLinearizer uses numerical differentiation (i.e., f'(x) ~
-/// (f(x+dx) - f(x)) / dx).
+/// NumericalTrackLinearizer uses numerical differentiation: f'(x) ~ (f(x+dx) -
+/// f(x)) / dx).
 ///
 BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Number of tracks to linearize
@@ -238,11 +238,15 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Compare linearizers for all tracks
   for (const BoundTrackParameters& trk : tracks) {
-    checkLinearizers(linFactory, linState, numLinFactory, numLinState, trk,
-                     vtxPos, geoContext, magFieldContext);
-    checkLinearizers(straightLinFactory, straightLinState,
-                     numStraightLinFactory, numStraightLinState, trk, vtxPos,
-                     geoContext, magFieldContext);
+    BOOST_TEST_CONTEXT("Linearization in constant magnetic field") {
+      checkLinearizers(linFactory, linState, numLinFactory, numLinState, trk,
+                       vtxPos, geoContext, magFieldContext);
+    }
+    BOOST_TEST_CONTEXT("Linearization without magnetic field") {
+      checkLinearizers(straightLinFactory, straightLinState,
+                       numStraightLinFactory, numStraightLinState, trk, vtxPos,
+                       geoContext, magFieldContext);
+    }
   }
 }
 
