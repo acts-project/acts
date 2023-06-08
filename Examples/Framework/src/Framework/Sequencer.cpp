@@ -497,12 +497,13 @@ int Sequencer::run() {
 
                 for (const auto& [count, type, st] :
                      mon->result().stackTraces()) {
-                  std::size_t masked = fpeMaskCount(*st, type);
-                  if (masked < count) {
+                  auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+                  if (nMasked < count) {
                     std::stringstream ss;
                     ss << "FPE of type " << type
                        << " exceeded configured per-event threshold of "
-                       << masked << " (was: " << count << ")\n"
+                       << nMasked << " (mask: " << maskLoc
+                       << " FPEs) (seen: " << count << ")\n"
                        << Acts::FpeMonitor::stackTraceToString(*st, 8);
                     ACTS_ERROR(ss.str());
                     if (m_cfg.failOnFpe) {
@@ -577,11 +578,11 @@ int Sequencer::run() {
 
       for (const auto& el : sorted) {
         const auto& [count, type, st] = el.get();
-        std::size_t masked = fpeMaskCount(*st, type);
+        auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
         ACTS_INFO("- " << type << ": (" << count << " times) "
-                       << (masked > 0 ? "[MASKED: " + std::to_string(masked) +
-                                            " per event]"
-                                      : "")
+                       << (nMasked > 0 ? "[MASKED: " + std::to_string(nMasked) +
+                                             " per event by " + maskLoc + "]"
+                                       : "")
                        << "\n"
                        << Acts::FpeMonitor::stackTraceToString(*st, 8));
       }
@@ -611,16 +612,17 @@ int Sequencer::run() {
   return EXIT_SUCCESS;
 }
 
-std::size_t Sequencer::fpeMaskCount(const boost::stacktrace::stacktrace& st,
-                                    Acts::FpeType type) const {
-  for (const auto& [filt, fType, count] : m_cfg.fpeMasks) {
-    if (boost::algorithm::ends_with(
-            Acts::FpeMonitor::getSourceLocation(*st.begin()), filt) &&
-        fType == type) {
-      return count;
+std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
+    const boost::stacktrace::stacktrace& st, Acts::FpeType type) const {
+  for (const auto& frame : st) {
+    std::string loc = Acts::FpeMonitor::getSourceLocation(frame);
+    for (const auto& [filt, fType, count] : m_cfg.fpeMasks) {
+      if (boost::algorithm::ends_with(loc, filt) && fType == type) {
+        return {filt, count};
+      }
     }
   }
-  return 0;
+  return {"NONE", 0};
 }
 
 Acts::FpeMonitor::Result Sequencer::fpeResult() const {

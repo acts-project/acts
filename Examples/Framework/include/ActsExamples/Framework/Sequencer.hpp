@@ -157,8 +157,8 @@ class Sequencer {
   /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
   std::pair<size_t, size_t> determineEventsRange() const;
 
-  std::size_t fpeMaskCount(const boost::stacktrace::stacktrace &st,
-                           Acts::FpeType type) const;
+  std::pair<std::string, std::size_t> fpeMaskCount(
+      const boost::stacktrace::stacktrace &st, Acts::FpeType type) const;
 
   struct SequenceElementWithFpeResult {
     std::shared_ptr<SequenceElement> sequenceElement;

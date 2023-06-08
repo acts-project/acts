@@ -34,7 +34,6 @@ with _src.open() as fh:
         if m is None:
             continue
         (name,) = m.groups()
-        print(i, line.strip(), name)
         _locs[_name_to_type[name]] = f"{_src}:{i+1}"
 
 
