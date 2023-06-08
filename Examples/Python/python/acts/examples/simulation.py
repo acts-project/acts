@@ -577,6 +577,7 @@ def addGeant4(
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
+    physicsList: str = "FTFP_BERT",
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -638,6 +639,7 @@ def addGeant4(
         killAfterTime=killAfterTime,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
+        physicsList=physicsList,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
