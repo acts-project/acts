@@ -71,8 +71,8 @@ class FpeMonitor {
 
    private:
     std::unique_ptr<std::byte[]> m_data;
-    std::size_t m_size;
-    std::size_t m_offset;
+    std::size_t m_size{};
+    std::size_t m_offset{};
   };
 
   struct Result {
@@ -117,6 +117,7 @@ class FpeMonitor {
 
   FpeMonitor();
   explicit FpeMonitor(int excepts);
+  FpeMonitor(FpeMonitor &&other) = default;
   ~FpeMonitor();
 
   Result &result();

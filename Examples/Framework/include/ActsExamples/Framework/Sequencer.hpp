@@ -55,6 +55,10 @@ class Sequencer {
     std::string loc;
     Acts::FpeType type;
     std::size_t count;
+
+    bool operator==(const FpeMask &other) const {
+      return loc == other.loc && type == other.type && count == other.count;
+    }
   };
 
   struct Config {
@@ -176,5 +180,10 @@ class Sequencer {
 
   const Acts::Logger &logger() const { return *m_logger; }
 };
+
+inline std::ostream &operator<<(std::ostream &os, const Sequencer::FpeMask &m) {
+  os << "FpeMask(" << m.loc << ", " << m.type << " <= " << m.count << ")";
+  return os;
+}
 
 }  // namespace ActsExamples

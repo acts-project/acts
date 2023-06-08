@@ -256,7 +256,7 @@ void FpeMonitor::ensureSignalHandlerInstalled() {
 
   std::lock_guard lock{state.mutex};
 
-  struct sigaction action;
+  struct sigaction action {};
   action.sa_sigaction = &signalHandler;
   action.sa_flags = SA_SIGINFO;
   sigaction(SIGFPE, &action, nullptr);
@@ -312,7 +312,8 @@ std::string FpeMonitor::stackTraceToString(
                                               std::min(depth, st.size()));
 }
 
-std::string FpeMonitor::getSourceLocation(const boost::stacktrace::frame &frame) {
+std::string FpeMonitor::getSourceLocation(
+    const boost::stacktrace::frame &frame) {
   return frame.source_file() + ":" + std::to_string(frame.source_line());
 }
 

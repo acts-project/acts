@@ -28,13 +28,13 @@ _types = [
 _src = (Path(__file__).parent / "../src/ModuleEntry.cpp").resolve()
 _locs = {}
 with _src.open() as fh:
-    _name_to_type = {v.lower():k for k, v in _names.items()}
+    _name_to_type = {v.lower(): k for k, v in _names.items()}
     for i, line in enumerate(fh):
         m = re.match(r".*// ?MARK: (.*)", line)
         if m is None:
             continue
-        name, = m.groups()
-        print(i,line.strip(), name)
+        (name,) = m.groups()
+        print(i, line.strip(), name)
         _locs[_name_to_type[name]] = f"{_src}:{i+1}"
 
 
@@ -181,7 +181,6 @@ def test_fpe_rearm(fpe_type):
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
 
 
-
 def test_fpe_masking_single(fpe_type):
 
     trigger = getattr(acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
@@ -226,6 +225,31 @@ def test_fpe_masking_single(fpe_type):
     res = s.fpeResult
     for x in acts.FpeType.values:
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
+
+
+def test_masking_load_yaml(fpe_type, tmp_path):
+    import yaml
+
+    masks = [
+        acts.examples.Sequencer.FpeMask(_locs[fpe_type], fpe_type, 1),
+    ]
+    file = tmp_path / "fpe_mask.yml"
+    with file.open("w") as fh:
+        yaml.dump(acts.examples.Sequencer.FpeMask.toDict(masks), fh)
+
+    masks2 = acts.examples.Sequencer.FpeMask.fromFile(file)
+
+    assert masks2 == masks
+
+
+def test_fpe_context(fpe_type):
+    trigger = getattr(acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
+    trigger()
+
+    with acts.FpeMonitor.context() as fpe:
+        trigger()
+
+        print(fpe.result)
 
 
 def test_buffer_sufficient():

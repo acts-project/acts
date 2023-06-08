@@ -1,5 +1,6 @@
 import sys, inspect
-from typing import Optional, Protocol
+from pathlib import Path
+from typing import Optional, Protocol, Union, List, Dict
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -327,3 +328,60 @@ def defaultLogging(
         return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
 
     return customLogLevel
+
+
+def _fpeMaskFromYaml(file: Path) -> ActsPythonBindings._examples.Sequencer.FpeMask:
+    import yaml
+
+    with file.open() as fh:
+        d = yaml.safe_load(fh)
+
+    return _fpeMaskFromDict(d)
+
+
+def _fpeMaskFromFile(
+    file: Union[str, Path]
+) -> ActsPythonBindings._examples.Sequencer.FpeMask:
+    if isinstance(file, str):
+        file = Path(file)
+
+    if file.suffix in (".yml", ".yaml"):
+        try:
+            return _fpeMaskFromYaml(file)
+        except ImportError:
+            print("FPE mask input file is YAML, but PyYAML is not installed")
+            raise
+
+
+ActsPythonBindings._examples.Sequencer.FpeMask.fromFile = _fpeMaskFromFile
+
+
+def _fpeMaskToDict(
+    masks: List[ActsPythonBindings._examples.Sequencer.FpeMask],
+) -> Dict[str, Dict[str, int]]:
+    out = {}
+    for mask in masks:
+        out.setdefault(mask.loc, {})
+        out[mask.loc][mask.type.name] = mask.count
+
+    return out
+
+
+_fpe_types_to_enum = {v.name: v for v in acts.FpeType.values}
+
+
+def _fpeMaskFromDict(
+    d: Dict[str, Dict[str, int]]
+) -> List[ActsPythonBindings._examples.Sequencer.FpeMask]:
+    out = []
+    for loc, types in d.items():
+        for fpe, count in types.items():
+            out.append(
+                ActsPythonBindings._examples.Sequencer.FpeMask(
+                    loc, _fpe_types_to_enum[fpe], count
+                )
+            )
+    return out
+
+
+ActsPythonBindings._examples.Sequencer.FpeMask.toDict = _fpeMaskToDict
