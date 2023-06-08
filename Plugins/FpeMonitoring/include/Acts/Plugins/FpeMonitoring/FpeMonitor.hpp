@@ -41,8 +41,7 @@ class FpeMonitor {
   struct Buffer {
     Buffer(std::size_t bufferSize)
         : m_data{std::make_unique<std::byte[]>(bufferSize)},
-          m_size{bufferSize},
-          m_offset{0} {}
+          m_size{bufferSize} {}
 
     Buffer(const Buffer &) = delete;
     Buffer(Buffer &&other) {
