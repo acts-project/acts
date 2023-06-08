@@ -73,9 +73,6 @@ struct SurfaceIndexing {
   using Support =
       std::tuple<std::array<Acts::ActsScalar, 5u>, std::string, unsigned int>;
 
-  // Translate the binning - ACTS version
-  using LayerBinning = typename Acts::Experimental::ProtoBinning;
-
   // Translate the support - ACTS class version
   using LayerSupport =
       typename Acts::Experimental::LayerStructureBuilder::Support;

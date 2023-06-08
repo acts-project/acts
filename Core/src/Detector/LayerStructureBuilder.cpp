@@ -46,7 +46,7 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
   if (binning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant
     Acts::Experimental::detail::GridAxisGenerators::Eq<aType> aGenerator{
-        binning.edges.front(), binning.edges.back(), binning.bins()};
+        {binning.edges.front(), binning.edges.back()}, binning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else {
     // Variable

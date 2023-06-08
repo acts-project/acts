@@ -145,12 +145,10 @@ void gridZRPhhiBase(
 /// @param binsPhi is the number of bins in phi
 /// @param rMin is the minimum radius
 /// @param approximateCylinders is the flag to approximate cylinders
-/// @param innermostSignleBin is a flat to make the innermost bin a single bin
 /// @param runPortalChecks is the flag to run portal checks
 void gridZRPhhiTest(const std::string& detectorName, int binsZ = 50,
                     int binsR = 6, int binsPhi = 36, Acts::ActsScalar rMin = 0.,
                     bool approximateCylinders = false,
-                    bool innermostSignleBin = false,
                     bool runPortalChecks = true) {
   // Create a tracking geometry for reference conversion
   auto trackingGeometry = cGeometry();
@@ -193,7 +191,6 @@ void gridZRPhhiTest(const std::string& detectorName,
                     const std::vector<Acts::ActsScalar>& edgesZ,
                     const std::vector<Acts::ActsScalar>& edgesR,
                     std::size_t binsPhi, bool approximateCylinders = false,
-                    bool innermostSignleBin = false,
                     bool runPortalChecks = true) {
   // Create a tracking geometry for reference conversion
   auto trackingGeometry = cGeometry();
@@ -324,17 +321,17 @@ BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_construction) {
 // Test equidistant binning
 BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqB_z) {
   BOOST_CHECK_NO_THROW(
-      gridZRPhhiTest("EqEqEq_z_10", 10, 1, 1, 0., false, false, false));
+      gridZRPhhiTest("EqEqEq_z_10", 10, 1, 1, 0., false, false));
 }
 
 BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqB_r) {
   BOOST_CHECK_NO_THROW(
-      gridZRPhhiTest("EqEqEq_r_10", 1, 10, 1, 0., false, false, false));
+      gridZRPhhiTest("EqEqEq_r_10", 1, 10, 1, 0., false, false));
 }
 
 BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqBeqB_zr) {
   BOOST_CHECK_NO_THROW(
-      gridZRPhhiTest("EqEqEq_zr_10_20", 10, 20, 1, 0., false, false, false));
+      gridZRPhhiTest("EqEqEq_zr_10_20", 10, 20, 1, 0., false, false));
 }
 
 BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqBeqBeqC_zrphi_to0) {
@@ -360,13 +357,13 @@ BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqBeqBeqC_zrphi_trapezoids) {
 // Test variable binning
 BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_varB_z) {
   BOOST_CHECK_NO_THROW(gridZRPhhiTest("Var_z_v", {-800, 200, 500, 1000},
-                                      {10, 200}, 1, false, false, false));
+                                      {10, 200}, 1, false, false));
 }
 
 // Test variable binning
 BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_varB_r) {
-  BOOST_CHECK_NO_THROW(gridZRPhhiTest("Var_r_v", {-800, 800}, {10, 180, 200}, 1,
-                                      false, false, false));
+  BOOST_CHECK_NO_THROW(
+      gridZRPhhiTest("Var_r_v", {-800, 800}, {10, 180, 200}, 1, false, false));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
