@@ -1,4 +1,6 @@
 import sys
+import re
+from pathlib import Path
 
 import pytest
 
@@ -8,6 +10,32 @@ import acts.examples
 pytestmark = pytest.mark.skipif(
     sys.platform != "linux", reason="FPE monitoring currently only suported on Linux"
 )
+
+
+_names = {
+    acts.FpeType.FLTDIV: "DivByZero",
+    acts.FpeType.FLTOVF: "Overflow",
+    acts.FpeType.FLTINV: "Invalid",
+}
+
+
+_types = [
+    pytest.param(acts.FpeType.FLTDIV, id="FLTDIV"),
+    pytest.param(acts.FpeType.FLTOVF, id="FLTOVF"),
+    pytest.param(acts.FpeType.FLTINV, id="FLTINV"),
+]
+
+_src = (Path(__file__).parent / "../src/ModuleEntry.cpp").resolve()
+_locs = {}
+with _src.open() as fh:
+    _name_to_type = {v.lower():k for k, v in _names.items()}
+    for i, line in enumerate(fh):
+        m = re.match(r".*// ?MARK: (.*)", line)
+        if m is None:
+            continue
+        name, = m.groups()
+        print(i,line.strip(), name)
+        _locs[_name_to_type[name]] = f"{_src}:{i+1}"
 
 
 class FpeMaker(acts.examples.IAlgorithm):
@@ -58,20 +86,6 @@ def test_notrackfpe():
 
     for x in acts.FpeType.values:
         assert res.count(x) == 0
-
-
-_names = {
-    acts.FpeType.FLTDIV: "DivByZero",
-    acts.FpeType.FLTOVF: "Overflow",
-    acts.FpeType.FLTINV: "Invalid",
-}
-
-
-_types = [
-    pytest.param(acts.FpeType.FLTDIV, id="FLTDIV"),
-    pytest.param(acts.FpeType.FLTOVF, id="FLTOVF"),
-    pytest.param(acts.FpeType.FLTINV, id="FLTINV"),
-]
 
 
 @pytest.fixture(params=_types)
@@ -166,12 +180,6 @@ def test_fpe_rearm(fpe_type):
     for x in acts.FpeType.values:
         assert res.count(x) == (s.config.events * 2 if x == fpe_type else 0)
 
-
-_locs = {
-    acts.FpeType.FLTDIV: "acts/Examples/Python/src/ModuleEntry.cpp:85",
-    acts.FpeType.FLTOVF: "acts/Examples/Python/src/ModuleEntry.cpp:91",
-    acts.FpeType.FLTINV: "acts/Examples/Python/src/ModuleEntry.cpp:97",
-}
 
 
 def test_fpe_masking_single(fpe_type):
