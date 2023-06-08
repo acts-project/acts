@@ -32,9 +32,9 @@ target_link_libraries(
     ActsPluginIdentification
     ActsPluginJson
     ActsPluginLegacy
-    PluginTGeo
-    PluginEDM4hep
-    PluginPodio)
+    ActsPluginPluginTGeo
+    ActsPluginPluginEDM4hep
+    ActsPluginPluginPodio)
 
 option(DD4HEP "Build with DD4hep" ON)
 if(DD4HEP)
