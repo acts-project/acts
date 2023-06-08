@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
