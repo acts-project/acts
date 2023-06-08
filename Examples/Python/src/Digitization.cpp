@@ -57,6 +57,7 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(doMerge);
+    ACTS_PYTHON_MEMBER(minEnergyDeposit);
     ACTS_PYTHON_MEMBER(digitizationConfigs);
     ACTS_PYTHON_STRUCT_END();
 
