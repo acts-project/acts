@@ -61,7 +61,6 @@ BOOST_AUTO_TEST_CASE(Invalid) {
   BOOST_CHECK(mon.result().encountered(FpeType::FLTINV));
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
-
 }
 
 BOOST_AUTO_TEST_CASE(DivByZero) {
@@ -75,7 +74,6 @@ BOOST_AUTO_TEST_CASE(DivByZero) {
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
   BOOST_CHECK(mon.result().encountered(FpeType::FLTDIV));
-
 }
 
 BOOST_AUTO_TEST_CASE(Overflow) {
@@ -88,7 +86,6 @@ BOOST_AUTO_TEST_CASE(Overflow) {
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
   BOOST_CHECK(mon.result().encountered(FpeType::FLTOVF));
   BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
-
 }
 
 BOOST_AUTO_TEST_CASE(Combinations) {
