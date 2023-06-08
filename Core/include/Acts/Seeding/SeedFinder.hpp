@@ -32,7 +32,7 @@
 
 namespace Acts {
 
-enum class SpacePointCandidateType : short { BOTTOM, TOP };
+enum class SpacePointCandidateType : short { eBottom, eTop };
 
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
