@@ -152,7 +152,7 @@ build_linux_ubuntu:
       cmake -B build -S src
       -GNinja
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_BUILD_TYPE=RelWithDebInfo
       -DCMAKE_CXX_FLAGS=-Werror
       -DCMAKE_CXX_STANDARD=17
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
