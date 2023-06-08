@@ -24,18 +24,18 @@ namespace Acts {
 /// @class NumericalTrackLinearizer
 /// Linearizes the track parameters at the PCA to a user-provided
 /// point (linPoint). The track parameters are written as a function
-/// of the global PCA position and the momentum of the particle at
-/// the PCA. The linearization then reads (see Eq. 5.7 in Ref(1)):
+/// of the global 4D PCA position and the momentum of the particle at
+/// the PCA (i.e., (phi, theta, q/p)). The linearization then reads
+/// (see Eq. 5.7 in Ref(1)):
 ///
 /// q = A (r - r_0) + B (p - p_0) + c,
 ///
 /// where q are the Perigee parameters wrt linPoint, {r_0} r is the {initial}
-/// 4D PCA position, {p_0} p is the {initial} momentum at the PCA (phi, theta,
-/// q/p), and c is the constant term of the expansion. A and B are matrices of
-/// derivatives, denoted hereafter as "positionJacobian" and
-/// "momentumJacobian" respectively. Note that, unlike in Ref. (1), we add the
-/// time to the parametrization, which adds a row and a column to A and a row to
-/// B.
+/// 4D PCA position, {p_0} p is the {initial} momentum at the PCA, and c is
+/// the constant term of the expansion. A and B are matrices of derivatives,
+/// denoted hereafter as "positionJacobian" and "momentumJacobian" respectively.
+/// Note that, unlike in Ref. (1), we add the time to the parametrization, which
+/// adds a row and a column to A and a row to B.
 ///
 /// This class computes A and B by wiggling one of the 7 parameters
 /// at the PCA and computing the new PCA wrt linPoint. The derivatives wrt
@@ -46,6 +46,13 @@ namespace Acts {
 /// where q(p1, p2, ..., pk+delta, ... p7) are the new Perigee parameters
 /// (corresponding to the new PCA to linPoint). Note that p1 corresponds to
 /// the x-position of the PCA, p2 corresponds to the y-position of the PCA, etc.
+///
+/// @note Connection to RiddersPropagator: The RiddersPropagator does a very
+/// similar thing to what this class does, but it wiggles BoundTrackParameters
+/// (FreeTrackParameters could also be used if Propagator.hpp and Propagator.ipp
+/// were adapted to accomodate them). Here, we wiggle neither
+/// BoundTrackParameters nor FreeTrackParameters, but rather the parameters
+/// described above.
 ///
 /// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
@@ -89,7 +96,11 @@ class NumericalTrackLinearizer {
 
     // Tolerance determining how close we need to get to a surface to
     // reach it during propagation
-    ActsScalar targetTolerance{1e-12};
+    ActsScalar targetTolerance = 1e-12;
+
+    // Setting size of the perturbation delta for calculation of numerical
+    // derivatives (i.e., f'(x) ~ (f(x+delta) - f(x)) / delta)
+    ActsScalar delta = 1e-8;
   };
 
   /// @brief Constructor

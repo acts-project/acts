@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack>
@@ -16,9 +17,9 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
                    const Acts::MagneticFieldContext& mctx) const {
   // Make Perigee surface at linPointPos, transverse plane of Perigee
   // corresponds the global x-y plane
-  Vector3 linPointPos{VectorHelpers::position(linPoint)};
-  std::shared_ptr<PerigeeSurface> perigeeSurface{
-      Surface::makeShared<PerigeeSurface>(linPointPos)};
+  Vector3 linPointPos = VectorHelpers::position(linPoint);
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(linPointPos);
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
@@ -49,12 +50,18 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   BoundVector perigeeParams = endParams.parameters();
 
   // Covariance and weight matrix at the PCA to "linPoint"
-  BoundSymMatrix parCovarianceAtPCA{endParams.covariance().value()};
-  BoundSymMatrix weightAtPCA{parCovarianceAtPCA.inverse()};
+  BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
-  // Vector containing curvilinear track parameters at the PCA
-  const unsigned int nCurvilinearParams{7};
-  Acts::ActsVector<nCurvilinearParams> curvilinearParamVec;
+  // Vector containing the track parameters at the PCA
+  // Note that we parametrize the track using the following parameters:
+  // (x, y, z, t, phi, theta, q/p),
+  // where
+  // -) (x, y, z, t) is the global 4D position of the PCA
+  // -) phi and theta are the global angles of the momentum at the PCA
+  // -) q/p is the charge divided by the total momentum at the PCA
+  const unsigned int nParams = 7;
+  Acts::ActsVector<nParams> paramVec;
 
   // 4D PCA and the momentum of the track at the PCA
   // These quantities will be used in the computation of the constant term in
@@ -62,80 +69,84 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   Vector4 pca;
   Vector3 momentumAtPCA;
 
-  // Fill "curvilinearParamVec", "pca", and "momentumAtPCA"
+  // Fill "paramVec", "pca", and "momentumAtPCA"
   {
-    Vector3 globalCoords{endParams.position(gctx)};
-    double globalTime{endParams.time()};
-    double phi{perigeeParams(BoundIndices::eBoundPhi)};
-    double theta{perigeeParams(BoundIndices::eBoundTheta)};
-    double qOvP{perigeeParams(BoundIndices::eBoundQOverP)};
+    Vector3 globalCoords = endParams.position(gctx);
+    ActsScalar globalTime = endParams.time();
+    ActsScalar phi = perigeeParams(BoundIndices::eBoundPhi);
+    ActsScalar theta = perigeeParams(BoundIndices::eBoundTheta);
+    ActsScalar qOvP = perigeeParams(BoundIndices::eBoundQOverP);
 
-    curvilinearParamVec << globalCoords, globalTime, phi, theta, qOvP;
+    paramVec << globalCoords, globalTime, phi, theta, qOvP;
     pca << globalCoords, globalTime;
     momentumAtPCA << phi, theta, qOvP;
   }
 
-  // Setting size of the perturbation delta for calculation of numerical
-  // derivatives (i.e., f'(x) ~ (f(x+delta) - f(x)) / delta)
-  double delta{1e-8};
-
   // Complete Jacobian (consists of positionJacobian and momentumJacobian)
-  ActsMatrix<eBoundSize, nCurvilinearParams> completeJacobian;
+  ActsMatrix<eBoundSize, nParams> completeJacobian;
   completeJacobian.setZero();
-
-  // Curvilinear parameters at the PCA to linPoint after wiggling
-  Vector4 newPos;
-  Vector3 newDir;
-  ActsScalar newP;
-  ActsScalar newQ;
 
   // Perigee parameters wrt linPoint after wiggling
   BoundVector newPerigeeParams;
 
-  // Wiggling each of the curvilinear parameters at the PCA and computing the
-  // Perigee parametrization of the resulting new track. This allows us to
-  // approximate the numerical derivatives.
-  for (unsigned int i = 0; i < nCurvilinearParams; i++) {
+  // Check if wiggled angle theta are within definition range [0, pi]
+  assert(paramVec(5) + m_cfg.delta < M_PI &&
+         "Wiggled theta outside range, choose a smaller wiggle (i.e., delta)!"
+         "You might need to decrease targetTolerance as well.");
+  // Wiggling each of the parameters at the PCA and computing the Perigee
+  // parametrization of the resulting new track. This allows us to approximate
+  // the numerical derivatives.
+  for (unsigned int i = 0; i < nParams; i++) {
     // Wiggle
-    curvilinearParamVec(i) += delta;
-    newPos = curvilinearParamVec.head(4);
-    newDir = Vector3(
-        std::sin(curvilinearParamVec(5)) * std::cos(curvilinearParamVec(4)),
-        std::sin(curvilinearParamVec(5)) * std::sin(curvilinearParamVec(4)),
-        std::cos(curvilinearParamVec(5)));
-    newP = std::abs(1.0 / curvilinearParamVec(6));
-    newQ = (curvilinearParamVec(6) > 0 ? 1.0 : -1.0);
-    curvilinearParamVec(i) -= delta;
+    paramVec(i) += m_cfg.delta;
 
-    // Curvilinear parameters object needed for the propagation
-    CurvilinearTrackParameters newCurvilinearParams(newPos, newDir, newP, newQ);
+    // Create curvilinear track object from our parameters. This is needed for
+    // the propagation. Note that we work without covariance since we don't need
+    // it to compute the derivative.
+    Vector3 wiggledDir =
+        makeDirectionUnitFromPhiTheta(paramVec(4), paramVec(5));
+    CurvilinearTrackParameters wiggledCurvilinearParams(
+        paramVec.head(4), wiggledDir, paramVec(6));
 
     // Obtain propagation direction
     intersection =
-        perigeeSurface->intersect(gctx, newPos.head(3), newDir, false);
+        perigeeSurface->intersect(gctx, paramVec.head(3), wiggledDir, false);
     pOptions.direction = Direction::fromScalarZeroAsPositive(
         intersection.intersection.pathLength);
 
+    // Unwiggle
+    paramVec(i) -= m_cfg.delta;
+
     // Propagate to the new PCA and extract Perigee parameters
-    auto newResult = m_cfg.propagator->propagate(newCurvilinearParams,
+    auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
                                                  *perigeeSurface, pOptions);
     auto newEndParams = (*newResult->endParameters);
     newPerigeeParams = newEndParams.parameters();
 
     // Computing the numerical derivatives and filling the Jacobian
-    completeJacobian.array().col(i) =
-        (newPerigeeParams - perigeeParams) / delta;
+    // d_0 and z_0
+    completeJacobian.block<2, 1>(0, i) =
+        (newPerigeeParams.head(2) - perigeeParams.head(2)) / m_cfg.delta;
+    // We need to account for the periodicity of phi (see documentiation of
+    // difference_periodic)
+    completeJacobian(2, i) =
+        Acts::detail::difference_periodic(newPerigeeParams(2), perigeeParams(2),
+                                          2 * M_PI) /
+        m_cfg.delta;
+    // theta, q/p, and t
+    completeJacobian.block<3, 1>(3, i) =
+        (newPerigeeParams.tail(3) - perigeeParams.tail(3)) / m_cfg.delta;
   }
 
   // Extracting positionJacobian and momentumJacobian from the complete Jacobian
-  ActsMatrix<eBoundSize, 4> positionJacobian{
-      completeJacobian.block<eBoundSize, 4>(0, 0)};
-  ActsMatrix<eBoundSize, 3> momentumJacobian{
-      completeJacobian.block<eBoundSize, 3>(0, 4)};
+  ActsMatrix<eBoundSize, 4> positionJacobian =
+      completeJacobian.block<eBoundSize, 4>(0, 0);
+  ActsMatrix<eBoundSize, 3> momentumJacobian =
+      completeJacobian.block<eBoundSize, 3>(0, 4);
 
   // Constant term of Taylor expansion (Eq. 5.38 in Ref. (1))
-  BoundVector constTerm{perigeeParams - positionJacobian * pca -
-                        momentumJacobian * momentumAtPCA};
+  BoundVector constTerm =
+      perigeeParams - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
   return LinearizedTrack(perigeeParams, parCovarianceAtPCA, weightAtPCA,
                          linPoint, positionJacobian, momentumJacobian, pca,
