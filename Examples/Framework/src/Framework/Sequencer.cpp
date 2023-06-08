@@ -497,13 +497,13 @@ int Sequencer::run() {
 
                 for (const auto& [count, type, st] :
                      mon->result().stackTraces()) {
-                  std::size_t masked = fpeMaskCount(st, type);
+                  std::size_t masked = fpeMaskCount(*st, type);
                   if (masked < count) {
                     std::stringstream ss;
                     ss << "FPE of type " << type
                        << " exceeded configured per-event threshold of "
                        << masked << " (was: " << count << ")\n"
-                       << Acts::FpeMonitor::stackTraceToString(st, 8);
+                       << Acts::FpeMonitor::stackTraceToString(*st, 8);
                     ACTS_ERROR(ss.str());
                     if (m_cfg.failOnFpe) {
                       throw FpeFailure{ss.str()};
@@ -577,13 +577,13 @@ int Sequencer::run() {
 
       for (const auto& el : sorted) {
         const auto& [count, type, st] = el.get();
-        std::size_t masked = fpeMaskCount(st, type);
+        std::size_t masked = fpeMaskCount(*st, type);
         ACTS_INFO("- " << type << ": (" << count << " times) "
                        << (masked > 0 ? "[MASKED: " + std::to_string(masked) +
                                             " per event]"
                                       : "")
                        << "\n"
-                       << Acts::FpeMonitor::stackTraceToString(st, 8));
+                       << Acts::FpeMonitor::stackTraceToString(*st, 8));
       }
       ACTS_INFO("-----------------------------------");
     }

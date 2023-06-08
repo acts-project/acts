@@ -27,6 +27,7 @@
 #include <boost/stacktrace/frame.hpp>
 #include <boost/stacktrace/safe_dump_to.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
+#include <boost/stacktrace/stacktrace_fwd.hpp>
 #include <fenv.h>
 #include <signal.h>
 
@@ -36,6 +37,18 @@
 #define SSE_EXCEPTION_MASK (FPU_EXCEPTION_MASK << 7)
 
 namespace Acts {
+
+FpeMonitor::Result::FpeInfo::~FpeInfo() = default;
+
+FpeMonitor::Result::FpeInfo::FpeInfo(const FpeInfo &other)
+    : count{other.count},
+      type{other.type},
+      st{std::make_unique<boost::stacktrace::stacktrace>(*other.st)} {}
+
+FpeMonitor::Result::FpeInfo::FpeInfo(
+    std::size_t countIn, FpeType typeIn,
+    std::unique_ptr<boost::stacktrace::stacktrace> stIn)
+    : count{countIn}, type{typeIn}, st{std::move(stIn)} {}
 
 FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
   Result result{};
@@ -67,12 +80,13 @@ void FpeMonitor::Result::merge(const Result &with) {
 
 void FpeMonitor::Result::add(FpeType type, void *stackPtr,
                              std::size_t bufferSize) {
-  auto st = boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize);
+  auto st = std::make_unique<boost::stacktrace::stacktrace>(
+      boost::stacktrace::stacktrace::from_dump(stackPtr, bufferSize));
 
   auto it = std::find_if(
       m_stracktraces.begin(), m_stracktraces.end(), [&](const FpeInfo &el) {
-        const auto &fl = *el.st.begin();
-        const auto &fr = *st.begin();
+        const auto &fl = *el.st->begin();
+        const auto &fr = *st->begin();
         return el.type == type && (boost::stacktrace::hash_value(fl) ==
                                    boost::stacktrace::hash_value(fr));
       });
@@ -133,7 +147,7 @@ void FpeMonitor::Result::summary(std::ostream &os, std::size_t depth) const {
   for (const auto &[count, type, st] : stackTraces()) {
     os << "- " << type << ": (" << count << " times)\n";
 
-    os << stackTraceToString(st, depth);
+    os << stackTraceToString(*st, depth);
   }
   os << std::endl;
 }
@@ -146,8 +160,8 @@ void FpeMonitor::Result::deduplicate() {
   for (auto &info : copy) {
     auto it = std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
                            [&info](const FpeInfo &el) {
-                             const auto &fl = *el.st.begin();
-                             const auto &fr = *info.st.begin();
+                             const auto &fl = *el.st->begin();
+                             const auto &fr = *info.st->begin();
                              return el.type == info.type &&
                                     (boost::stacktrace::hash_value(fl) ==
                                      boost::stacktrace::hash_value(fr));

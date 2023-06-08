@@ -19,9 +19,7 @@
 #include <stack>
 
 #include <boost/container/static_vector.hpp>
-#include <boost/stacktrace/detail/frame_unwind.ipp>  // needed to avoid linker error
-#include <boost/stacktrace/frame.hpp>
-#include <boost/stacktrace/stacktrace.hpp>
+#include <boost/stacktrace/stacktrace_fwd.hpp>
 
 namespace Acts {
 
@@ -81,7 +79,12 @@ class FpeMonitor {
     struct FpeInfo {
       std::size_t count;
       FpeType type;
-      boost::stacktrace::stacktrace st;
+      std::unique_ptr<boost::stacktrace::stacktrace> st;
+
+      FpeInfo(std::size_t countIn, FpeType typeIn,
+              std::unique_ptr<boost::stacktrace::stacktrace> stIn);
+      FpeInfo(const FpeInfo &other);
+      ~FpeInfo();
     };
 
     Result merged(const Result &with) const;
