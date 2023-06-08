@@ -127,11 +127,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       continue;
     }
 
+    const float uIP = -1. / rM;
+    const float cosPhiM = -spM->x() * uIP;
+    const float sinPhiM = -spM->y() * uIP;
+    const float uIP2 = uIP * uIP;
+
     // Iterate over middle-top dublets
     getCompatibleDoublets<Acts::SpacePointCandidateType::TOP>(
         state.spacePointData, options, grid, state.topNeighbours, *spM.get(),
         state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
-        m_config.deltaRMaxTopSP);
+        m_config.deltaRMaxTopSP, uIP, uIP2, cosPhiM, sinPhiM);
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -164,7 +169,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     getCompatibleDoublets<Acts::SpacePointCandidateType::BOTTOM>(
         state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
-        m_config.deltaRMaxBottomSP);
+        m_config.deltaRMaxBottomSP, uIP, uIP2, cosPhiM, sinPhiM);
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -193,7 +198,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-    const float& deltaRMinSP, const float& deltaRMaxSP) const {
+    const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
+    const float& uIP2, const float& cosPhiM, const float& sinPhiM) const {
   float impactMax = m_config.impactMax;
   if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
     impactMax = -impactMax;
@@ -218,13 +224,10 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float& varianceRM = mediumSP.varianceR();
   const float& varianceZM = mediumSP.varianceZ();
 
-  const float uIP = -1. / rM;
-  const float cosPhiM = -xM * uIP;
-  const float sinPhiM = -yM * uIP;
   float vIPAbs = 0;
   if (m_config.interactionPointCut) {
     // equivalent to m_config.impactMax / (rM * rM);
-    vIPAbs = impactMax * uIP * uIP;
+    vIPAbs = impactMax * uIP2;
   }
 
   float deltaR = 0.;
