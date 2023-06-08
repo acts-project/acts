@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Detector/LayerStructureBuilder.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/detail/KdtSurfacesProvider.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -64,16 +65,16 @@ struct SurfaceIndexing {
 
   /// pyton: axis binning value, axis option, axis type, nbins, boundaries,
   /// expansion
-  using Binning = std::tuple<std::string, std::string, std::string,
-                             unsigned int, std::vector<float>, unsigned int>;
+  using Binning =
+      std::tuple<std::string, std::string, std::string, unsigned int,
+                 std::vector<Acts::ActsScalar>, unsigned int>;
 
   /// python: support description, values, type, split
   using Support =
       std::tuple<std::array<Acts::ActsScalar, 5u>, std::string, unsigned int>;
 
   // Translate the binning - ACTS version
-  using LayerBinning =
-      typename Acts::Experimental::LayerStructureBuilder::Binning;
+  using LayerBinning = typename Acts::Experimental::ProtoBinning;
 
   // Translate the support - ACTS class version
   using LayerSupport =
@@ -101,14 +102,14 @@ struct SurfaceIndexing {
     }
 
     // Translate the binnings
-    std::vector<LayerBinning> lBinnings;
+    std::vector<Acts::Experimental::ProtoBinning> lBinnings;
     for (const auto& bn : binnings) {
       // Translate the number of bins
       unsigned int nBins = std::get<3u>(bn);
       // Translate the boundaries
-      const std::vector<float>& edges = std::get<4u>(bn);
-      float eMin = edges.front();
-      float eMax = edges.back();
+      const std::vector<Acts::ActsScalar>& edges = std::get<4u>(bn);
+      Acts::ActsScalar eMin = edges.front();
+      Acts::ActsScalar eMax = edges.back();
       // Translate the value
       Acts::BinningValue bValue = Acts::binPhi;
       std::string bstring = std::get<0u>(bn);
@@ -127,10 +128,11 @@ struct SurfaceIndexing {
             "SurfaceBinning: binning type not supported.");
       }
       // Translate the option
-      Acts::BinningOption bOption = Acts::open;
+      Acts::detail::AxisBoundaryType boundaryType =
+          Acts::detail::AxisBoundaryType::Bound;
       std::string ostring = std::get<1u>(bn);
       if (ostring == "closed") {
-        bOption = Acts::closed;
+        boundaryType = Acts::detail::AxisBoundaryType::Closed;
       }
       // Translate the type
       std::string tstring = std::get<2u>(bn);
@@ -138,11 +140,11 @@ struct SurfaceIndexing {
       unsigned int expansion = std::get<5u>(bn);
       if (tstring == "arbitrary" or tstring == "variable") {
         // Set the different type
-        lBinnings.push_back(
-            {Acts::BinningData(bOption, bValue, edges), expansion});
+        lBinnings.push_back(Acts::Experimental::ProtoBinning(
+            bValue, boundaryType, edges, expansion));
       } else {
-        lBinnings.push_back(
-            {Acts::BinningData(bOption, bValue, nBins, eMin, eMax), expansion});
+        lBinnings.push_back(Acts::Experimental::ProtoBinning(
+            bValue, boundaryType, eMin, eMax, nBins, expansion));
       }
     }
 
@@ -190,7 +192,7 @@ struct SurfaceIndexing {
   ///
   void createIndexingImpl(
       const std::string& name, const Acts::Extent& lExtent,
-      const std::vector<LayerBinning>& lBinnings,
+      const std::vector<Acts::Experimental::ProtoBinning>& lBinnings,
       const std::vector<LayerSupport>& lSupports,
       Acts::Svg::IndexedSurfacesConverter::Options drawOptions) {
     // A test context for this

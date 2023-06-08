@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
       }
     }
 
-    auto protoContainer = connectInR(tContext, rVolumes, {}, logLevel);
+    auto portalContainer = connectInR(tContext, rVolumes, {}, logLevel);
     // Check the portal setup
     BOOST_CHECK(rVolumes[0u]->portalPtrs()[2u] ==
                 rVolumes[1u]->portalPtrs()[3u]);
@@ -135,8 +135,8 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
                 rVolumes[1u]->portalPtrs()[1u]);
     BOOST_CHECK(rVolumes[1u]->portalPtrs()[1u] ==
                 rVolumes[2u]->portalPtrs()[1u]);
-    BOOST_CHECK(rVolumes[0u]->portalPtrs()[0u] == protoContainer[0u]);
-    BOOST_CHECK(rVolumes[0u]->portalPtrs()[1u] == protoContainer[1u]);
+    BOOST_CHECK(rVolumes[0u]->portalPtrs()[0u] == portalContainer[0u].front());
+    BOOST_CHECK(rVolumes[0u]->portalPtrs()[1u] == portalContainer[1u].front());
 
     // A detector construction that should work
     auto detector =
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
         }
       }
       // Now call the connector
-      auto protoContainer = connectInZ(tContext, zVolumes, {}, logLevel);
+      auto portalContainer = connectInZ(tContext, zVolumes, {}, logLevel);
 
       // Check the portal setup.
       // Glued, remainders are outside skin
@@ -246,8 +246,10 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
                   zVolumes[2u]->portalPtrs()[0u]);
       BOOST_CHECK(zVolumes[2u]->portalPtrs()[1u] ==
                   zVolumes[3u]->portalPtrs()[0u]);
-      BOOST_CHECK(protoContainer[0u] == zVolumes[0u]->portalPtrs()[0u]);
-      BOOST_CHECK(protoContainer[1u] == zVolumes[3u]->portalPtrs()[1u]);
+      BOOST_CHECK(portalContainer[0u].front() ==
+                  zVolumes[0u]->portalPtrs()[0u]);
+      BOOST_CHECK(portalContainer[1u].front() ==
+                  zVolumes[3u]->portalPtrs()[1u]);
 
       // Covered with the same surface, shich is the outside skin
       std::vector<unsigned int> checkShared = {2u};
@@ -262,7 +264,8 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
                     zVolumes[2u]->portalPtrs()[ip]);
         BOOST_CHECK(zVolumes[2u]->portalPtrs()[ip] ==
                     zVolumes[3u]->portalPtrs()[ip]);
-        BOOST_CHECK(protoContainer[ip] == zVolumes[0u]->portalPtrs()[ip]);
+        BOOST_CHECK(portalContainer[ip].front() ==
+                    zVolumes[0u]->portalPtrs()[ip]);
       }
 
       auto detector =
@@ -291,24 +294,6 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
       volume00, volume01};
   BOOST_CHECK_THROW(connectInZ(tContext, volumesNonalignedBounds, {}, logLevel),
                     std::runtime_error);
-
-  // Volumes are not attached
-  auto cBounds10 = std::make_unique<Acts::CylinderVolumeBounds>(0., 100., 100);
-  auto volume10 = DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "Volume00",
-      Acts::Transform3::Identity() * Acts::Translation3(0., 0., -105.),
-      std::move(cBounds10), tryAllPortals());
-
-  auto cBounds11 = std::make_unique<Acts::CylinderVolumeBounds>(0., 100., 100);
-  auto volume11 = DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "Volume01",
-      Acts::Transform3::Identity() * Acts::Translation3(0., 0., 100.),
-      std::move(cBounds11), tryAllPortals());
-
-  std::vector<std::shared_ptr<DetectorVolume>> volumesNotAttached = {volume10,
-                                                                     volume11};
-  BOOST_CHECK_THROW(connectInZ(tContext, volumesNotAttached, {}, logLevel),
-                    std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(ConnectInPhi) {
@@ -334,7 +319,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
           std::move(cBounds), tryAllPortals()));
     }
 
-    auto protoContainer = connectInPhi(tContext, phiVolumes, {}, logLevel);
+    auto portalContainer = connectInPhi(tContext, phiVolumes, {}, logLevel);
 
     // All phiVolumes share : inner tube, outer cover, negative & positive disc
     std::vector<unsigned int> checkShared = {0u, 1u, 2u, 3u};
@@ -434,9 +419,9 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
         tryAllPortals());
 
     // Make a container representation out of it
-    std::map<unsigned int, std::shared_ptr<Portal>> ipContainer;
+    DetectorComponent::PortalContainer ipContainer;
     for (auto [ip, p] : Acts::enumerate(innerPipe->portalPtrs())) {
-      ipContainer[ip] = p;
+      ipContainer[ip] = {p};
     }
 
     // Create the r - sorted volumes
@@ -452,7 +437,7 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
       }
     }
 
-    auto protoContainerInR = connectInR(tContext, rVolumes, {}, logLevel);
+    auto portalContainerInR = connectInR(tContext, rVolumes, {}, logLevel);
 
     std::vector<Acts::ActsScalar> zValues = {-200., -120, 10., 100., 200.};
     std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {};
@@ -473,10 +458,10 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
       }
     }
     // Now call the connector
-    auto protoContainerInZ = connectInZ(tContext, zVolumes, {}, logLevel);
-    auto centralContainer = connectInR(
-        tContext, {ipContainer, protoContainerInR, protoContainerInZ}, {},
-        logLevel);
+    auto portalContainerInZ = connectInZ(tContext, zVolumes, {}, logLevel);
+    std::vector<DetectorComponent::PortalContainer> rContainers = {
+        ipContainer, portalContainerInR, portalContainerInZ};
+    auto centralContainer = connectInR(tContext, rContainers, {}, logLevel);
 
     // Let's make two endcaps
     // Nec
@@ -489,9 +474,9 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
         portalGenerator, tContext, "Nec", necTransform, std::move(necBounds),
         tryAllPortals());
 
-    std::map<unsigned int, std::shared_ptr<Portal>> necContainer;
+    DetectorComponent::PortalContainer necContainer;
     for (auto [ip, p] : Acts::enumerate(necVolume->portalPtrs())) {
-      necContainer[ip] = p;
+      necContainer[ip] = {p};
     }
 
     // Pec container
@@ -592,7 +577,7 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
 
     DetectorComponent::PortalContainer outerContainer;
     for (auto [ip, p] : Acts::enumerate(wVolume->portalPtrs())) {
-      outerContainer[ip] = p;
+      outerContainer[ip] = {p};
     }
     containers.push_back(outerContainer);
 

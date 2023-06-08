@@ -9,18 +9,22 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
+#include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 
 #include <limits>
 #include <map>
 #include <memory>
+#include <tuple>
 #include <vector>
 
 namespace Acts {
@@ -38,7 +42,7 @@ struct Options {
   /// If this is set to some reasonable value, a polygon approximation
   /// will be used for the detector volume, and the full description will
   /// be planar surfaces
-  int polygonApproximation = -1;
+  bool polygonApproximation = false;
   /// An additional transform
   Transform3 transform = Transform3::Identity();
 };
@@ -47,6 +51,7 @@ struct Options {
 ///
 /// @tparam grid_type the type of the grid used, it encapsulates the
 /// need actual bound, closed, variable, equidistant, etc. types
+/// @tparam axis_generator_t is the type of the axis generator
 ///
 /// @note no checking is done if the grid is actually a meaningful z,r,phi grid
 /// @note no checking is done on the dimensionality of the grid, has to be done
@@ -54,18 +59,26 @@ struct Options {
 ///
 /// @param gctx the geometry context
 /// @param cylindricalGrid the cylindrical grid
-/// @param rootVolumesGrid [pin, out] the root volumes grid
+/// @param axisGenerator in an instance to create an axis tuple for the root volume grid
 /// @param detectorSurfaces the detector surfaces to be filled
 ///
-/// @return a vector of detector voluemes
-template <typename grid_type, typename root_volumes_grid_type>
-std::vector<std::shared_ptr<DetectorVolume>> buildVolumes(
-    const GeometryContext& gctx, const grid_type& cylindricalGrid,
-    root_volumes_grid_type& rootVolumesGrid,
-    const std::vector<std::shared_ptr<Surface>>& detectorSurfaces = {},
-    const Options& options = Options{}) {
+/// @return a vector of detector volumes +  the portal container and the root volumes grid
+template <typename grid_type, typename axis_generator_t>
+std::tuple<std::vector<std::shared_ptr<DetectorVolume>>,
+           DetectorComponent::PortalContainer,
+           typename axis_generator_t::template grid_type<std::size_t>>
+buildVolumes(const GeometryContext& gctx, const grid_type& cylindricalGrid,
+             const axis_generator_t& axisGenerator,
+             const std::vector<std::shared_ptr<Surface>>& detectorSurfaces = {},
+             const Options& options = Options{}) {
   // Shorthand for the grid point
-  using GridPoint = typename root_volumes_grid_type::point_t;
+  // Use the same axis generator to build the root volumes grid
+  using RootVolumesGridType =
+      typename axis_generator_t::template grid_type<std::size_t>;
+
+  RootVolumesGridType rootVolumesGrid(axisGenerator());
+
+  using GridPoint = typename RootVolumesGridType::point_t;
 
   // Get the axis and
   auto axes = cylindricalGrid.axes();
@@ -73,6 +86,14 @@ std::vector<std::shared_ptr<DetectorVolume>> buildVolumes(
   auto edgesZ = axes[0]->getBinEdges();
   auto edgesR = axes[1]->getBinEdges();
   auto edgesPhi = axes[2]->getBinEdges();
+
+  // Polygon approximation needs at least 3 bins in phi
+  if (edgesPhi.size() < 4 and options.polygonApproximation) {
+    throw std::invalid_argument(
+        "CylindricalGridVolumesHelper: Polygon approximation needs at least 3 "
+        "bins in phi.");
+  }
+
   // The detector volumes to be returned
   std::vector<std::shared_ptr<DetectorVolume>> detectorVolumes;
   detectorVolumes.reserve((edgesZ.size() - 1) * (edgesR.size() - 1) *
@@ -81,9 +102,10 @@ std::vector<std::shared_ptr<DetectorVolume>> buildVolumes(
   /// Default portal generation code
   auto portalGenerator = defaultPortalGenerator();
 
-  // Remeber the last r-phi disc
-  std::vector<std::shared_ptr<DetectorVolume>> lastRPhiDisc = {};
+  DetectorComponent::PortalContainer portalContainer = {};
 
+  // Remember the last r-phi disc
+  std::vector<std::shared_ptr<DetectorVolume>> lastRPhiDisc = {};
   for (auto [iz, z] : enumerate(edgesZ)) {
     if (iz > 0) {
       // Collect the full disc
@@ -122,8 +144,27 @@ std::vector<std::shared_ptr<DetectorVolume>> buildVolumes(
               ActsScalar phiPos = 0.5 * (phi + edgesPhi[iphi - 1]);
               ActsScalar phiHalfRange = 0.5 * (phi - edgesPhi[iphi - 1]);
               // Construct the bounds
-              auto binBounds = std::make_unique<CylinderVolumeBounds>(
-                  rMin, rMax, zHalfRange, phiHalfRange, phiPos);
+              std::unique_ptr<VolumeBounds> binBounds = nullptr;
+              if (options.polygonApproximation) {
+                ActsScalar yMin = rMin * std::cos(phiHalfRange);
+                ActsScalar yMax = rMax * std::cos(phiHalfRange);
+                ActsScalar yPos = 0.5 * (yMin + yMax);
+                ActsScalar yHalfRange = 0.5 * (yMax - yMin);
+                ActsScalar xHalfMinY = rMin * std::sin(phiHalfRange);
+                ActsScalar xHalfMaxY = rMax * std::sin(phiHalfRange);
+                // Turn coordinates such that the y-axis points where x was
+                binTransform =
+                    Translation3(Vector3(yPos * std::cos(phiPos),
+                                         yPos * std::sin(phiPos), zPos)) *
+                    AngleAxis3(phiPos - M_PI / 2, Vector3(0, 0, 1));
+
+                binBounds = std::make_unique<TrapezoidVolumeBounds>(
+                    xHalfMinY, xHalfMaxY, yHalfRange, zHalfRange);
+
+              } else {
+                binBounds = std::make_unique<CylinderVolumeBounds>(
+                    rMin, rMax, zHalfRange, phiHalfRange, phiPos);
+              }
               // The bin volume to be created, either with surfaces or empty
               std::shared_ptr<DetectorVolume> binVolume = nullptr;
               // Pull the surfaces from the grid
@@ -154,50 +195,60 @@ std::vector<std::shared_ptr<DetectorVolume>> buildVolumes(
               phiRing.push_back(binVolume);
               // And to the full disc for the z fusing
               rPhiDisc.push_back(binVolume);
-              if (not options.generateCommonPortals) {
-                if (lastVolume != nullptr) {
-                  CylindricalDetectorHelper::fuseInPhi(*lastVolume, *binVolume);
+              if (lastVolume != nullptr) {
+                if (options.polygonApproximation) {
+                  PortalHelper::fuse(*lastVolume, *binVolume, {3u, 2u});
                 } else {
-                  firstVolume = binVolume;
+                  CylindricalDetectorHelper::fuseInPhi(*lastVolume, *binVolume);
                 }
-                // Register the last volume
-                lastVolume = binVolume;
+              } else {
+                firstVolume = binVolume;
               }
+              // Register the last volume
+              lastVolume = binVolume;
               // and store it
               detectorVolumes.push_back(binVolume);
             }
           }
-          // Connect the phi ring - generate common portals
-          if (options.generateCommonPortals) {
-            CylindricalDetectorHelper::connectInPhi(gctx, phiRing);
-          } else {
-            CylindricalDetectorHelper::fuseInPhi(*lastVolume, *firstVolume);
+          // Fuse the first and last volume - if there's more than one
+          if (firstVolume != lastVolume) {
+            if (options.polygonApproximation) {
+              PortalHelper::fuse(*lastVolume, *firstVolume, {3u, 2u});
+            } else {
+              CylindricalDetectorHelper::fuseInPhi(*lastVolume, *firstVolume);
+            }
           }
           if (not lastPhiRing.empty()) {
             // Connect the phi rings
             for (auto [iphi, v] : enumerate(lastPhiRing)) {
               auto keepCoverVolume = v;
               auto wasteCoverVolume = phiRing.at(iphi);
-              CylindricalDetectorHelper::fuseInR(*keepCoverVolume,
-                                                 *wasteCoverVolume);
+              if (options.polygonApproximation) {
+                PortalHelper::fuse(*keepCoverVolume, *wasteCoverVolume,
+                                   {5u, 4u});
+              } else {
+                CylindricalDetectorHelper::fuseInR(*keepCoverVolume,
+                                                   *wasteCoverVolume);
+              }
             }
           }
           lastPhiRing = phiRing;
         }
       }  // end of r loop
+
       if (not lastRPhiDisc.empty()) {
         // Connect the r-phi discs
         for (auto [ir, v] : enumerate(lastRPhiDisc)) {
           auto keepEndplateVolume = v;
           auto wastEndplateVolume = rPhiDisc.at(ir);
-          CylindricalDetectorHelper::fuseInZ(*keepEndplateVolume,
-                                             *wastEndplateVolume);
+          PortalHelper::fuse(*keepEndplateVolume, *wastEndplateVolume,
+                             {1u, 0u});
         }
       }
       lastRPhiDisc = rPhiDisc;
     }
   }
-  return detectorVolumes;
+  return {detectorVolumes, portalContainer, rootVolumesGrid};
 }
 
 }  // namespace CylindricalGridVolumesHelper

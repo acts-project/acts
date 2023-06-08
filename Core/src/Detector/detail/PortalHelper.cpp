@@ -8,11 +8,26 @@
 
 #include "Acts/Detector/detail/PortalHelper.hpp"
 
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <stdexcept>
+
+void Acts::Experimental::detail::PortalHelper::fuse(
+    DetectorVolume& keepPortalVolume, DetectorVolume& wastePortalVolume,
+    std::array<std::size_t, 2> portalIds) {
+  auto [keepId, wasteId] = portalIds;
+
+  // Fuse and swap
+  auto& keepPortal = keepPortalVolume.portalPtrs()[keepId];
+  auto& wastePortal = wastePortalVolume.portalPtrs()[wasteId];
+
+  keepPortal->fuse(wastePortal);
+  // Update the portal
+  wastePortalVolume.updatePortal(keepPortal, wasteId);
+}
 
 void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     const GeometryContext& gctx,

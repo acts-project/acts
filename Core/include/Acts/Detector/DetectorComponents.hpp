@@ -27,6 +27,20 @@ namespace Experimental {
 class DetectorVolume;
 class Portal;
 
+/// @brief Container to collect root volumes for the
+/// construction of a Detector
+///
+/// @note each root volume is expected to contain a full
+/// search tree for eventually contained sub volumes
+///
+/// This struct collects all root volumes that will then
+/// be provided to the Detector object
+struct RootDetectorVolumes {
+  std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
+  /// The detector volume updator instance
+  DetectorVolumeUpdator volumeUpdator;
+};
+
 /// @brief The currently built detector components
 /// including the constructed volumes and the current
 /// shell/coating, i.e. portals ordered in a map
@@ -36,11 +50,16 @@ class Portal;
 /// VolumeBounds derivative that is described by the given
 /// component.
 struct DetectorComponent {
-  using PortalContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
+  /// The portal contaioner is used upstream to connect components
+  /// from different building blocks
+  using PortalContainer =
+      std::map<unsigned int, std::vector<std::shared_ptr<Portal>>>;
   /// The vector of construced volume(s)
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// The current map of outside portals
-  PortalContainer portals;
+  PortalContainer portals = {};
+  /// The root volumes for direct volume search
+  RootDetectorVolumes rootVolumes = {};
 };
 
 /// @brief Holder struct for the external structure components
@@ -67,18 +86,6 @@ struct InternalStructure {
   SurfaceCandidatesUpdator surfacesUpdator;
   // Navigation delegate for volumes
   DetectorVolumeUpdator volumeUpdator;
-};
-
-/// @brief Container to collect root volumes for the
-/// construction of a Detector
-///
-/// @note each root volume is expected to contain a full
-/// search tree for eventually contained sub volumes
-///
-/// This struct collects all root volumes that will then
-/// be provided to the Detector object
-struct RootDetectorVolumes {
-  std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
 };
 
 }  // namespace Experimental

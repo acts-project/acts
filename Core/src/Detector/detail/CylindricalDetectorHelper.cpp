@@ -232,7 +232,7 @@ stripSideVolumes(
     for (const auto& s : selectedSides) {
       auto cSide = pc.find(s);
       if (cSide != pc.end()) {
-        auto p = cSide->second;
+        auto p = cSide->second.front();
         auto& sVolumes = sideVolumes[s];
         auto aVolumes =
             Acts::Experimental::detail::PortalHelper::attachedDetectorVolumes(
@@ -359,47 +359,38 @@ void checkBounds(
 void Acts::Experimental::detail::CylindricalDetectorHelper::fuseInR(
     DetectorVolume& keepCoverVolume, DetectorVolume& wasteCoverVolume) {
   // When fusing volumes at a cylinder boundary, we *keep* one
-  // portal and tranfer the portal link information from the other
+  // portal and transfer the portal link information from the other
   //
   // In this case the outer cylinder portal of the inner volume is kept,
   // the inner cylinder of the outer portal goes to waste
-
-  // Fuse and swap
-  auto& keepCover = keepCoverVolume.portalPtrs()[2u];
-  auto& wasteCover = wasteCoverVolume.portalPtrs()[3u];
-  keepCover->fuse(wasteCover);
-  // Update the portal
-  wasteCoverVolume.updatePortal(keepCover, 3u);
+  PortalHelper::fuse(keepCoverVolume, wasteCoverVolume, {2u, 3u});
 }
 
 void Acts::Experimental::detail::CylindricalDetectorHelper::fuseInZ(
     DetectorVolume& keepEndplateVolume, DetectorVolume& wasteEndplateVolume) {
-  // When fusing volumes at a cylinder boundary, we *keep* one
-  // portal and tranfer the portal link information from the other
+  // When fusing volumes at an endplate boundary, we *keep* one
+  // portal and transfer the portal link information from the other
   //
   // In this case the positive sided endplate is kept from the first
-  // volume, while the negative sided endplate is binned from the second
-
-  // Fuse and swap
-  auto& keepEndplate = keepEndplateVolume.portalPtrs()[1u];
-  auto& wasteEndplate = wasteEndplateVolume.portalPtrs()[0u];
-  keepEndplate->fuse(wasteEndplate);
-  // Update the portal
-  wasteEndplateVolume.updatePortal(keepEndplate, 0u);
+  // volume, while the negative sided endplate is thrown to waste from the
+  // second
+  PortalHelper::fuse(keepEndplateVolume, wasteEndplateVolume, {1u, 0u});
 }
 
 void Acts::Experimental::detail::CylindricalDetectorHelper::fuseInPhi(
     DetectorVolume& keepSectorVolume, DetectorVolume& wasteSectorVolume) {
+  // When fusing volumes at a phi boundary, we *keep* one
+  // portal and transfer the portal link information from the other
+  //
+  // In this case th sector boundary at lower phi is kept from the first
+  // volume, while the sector boundary at higher phi is thrown away.
+  // Depending on the number of portals, it is determined if the inner
+  // cylinder is present or not - which would create an offset
   size_t nPortals = keepSectorVolume.portals().size();
   bool innerPresent = (nPortals != 3u and nPortals != 5u);
   unsigned int iSecOffset = innerPresent ? 4u : 3u;
-
-  // Fuse and swap
-  auto& keepSector = keepSectorVolume.portalPtrs()[iSecOffset + 1u];
-  auto& wasteSector = wasteSectorVolume.portalPtrs()[iSecOffset];
-  keepSector->fuse(wasteSector);
-  // Update the portal
-  wasteSectorVolume.updatePortal(keepSector, iSecOffset);
+  PortalHelper::fuse(keepSectorVolume, wasteSectorVolume,
+                     {iSecOffset + 1u, iSecOffset});
 }
 
 Acts::Experimental::DetectorComponent::PortalContainer
@@ -428,7 +419,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in R.");
 
   // Return proto container
-  DetectorComponent::PortalContainer dShell;
+  DetectorComponent::PortalContainer portalContainer;
 
   // Innermost volume boundaries
   std::vector<ActsScalar> rBoundaries = {};
@@ -467,9 +458,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     // The number of portals indicate again if the inner is present or not,
     if (volumes[0u]->portals().size() == 4u or
         volumes[0u]->portals().size() == 6u) {
-      dShell[3u] = volumes[0u]->portalPtrs()[3u];
+      portalContainer[3u] = {volumes[0u]->portalPtrs()[3u]};
     }
-    dShell[2u] = volumes[volumes.size() - 1u]->portalPtrs()[2u];
+    portalContainer[2u] = {volumes[volumes.size() - 1u]->portalPtrs()[2u]};
   }
 
   // Check if sectors are present by the number of portals, check is done on the
@@ -531,7 +522,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     ACTS_VERBOSE("- update portals of volume '" << iv->name() << "'.");
     for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
       // Fill the map
-      dShell[i] = p;
+      portalContainer[i] = {p};
 
       // Potential offset for tube vs/ cylinder
       // - if the volume doesn't have an inner portal, indices need to
@@ -546,7 +537,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     }
   }
   // Done.
-  return dShell;
+  return portalContainer;
 }
 
 Acts::Experimental::DetectorComponent::PortalContainer
@@ -574,7 +565,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in Z.");
 
   // Return proto container
-  DetectorComponent::PortalContainer dShell;
+  DetectorComponent::PortalContainer portalContainer;
 
   // Connect in Z ?
   // - 1u corresponds to the index of the high-z disc portal for the reference
@@ -617,8 +608,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
 
   // Register what we have from the container
   if (connectZ) {
-    dShell[0u] = volumes[0u]->portalPtrs()[0u];
-    dShell[1u] = volumes[volumes.size() - 1u]->portalPtrs()[1u];
+    portalContainer[0u] = {volumes[0u]->portalPtrs()[0u]};
+    portalContainer[1u] = {volumes[volumes.size() - 1u]->portalPtrs()[1u]};
   }
 
   // Centre of gravity
@@ -723,11 +714,11 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
       ACTS_VERBOSE("-- update portal with index " << i);
       iv->updatePortal(p, static_cast<unsigned int>(i + iOffset));
       // Fill the map
-      dShell[i] = p;
+      portalContainer[i] = {p};
     }
   }
   // Done.
-  return dShell;
+  return portalContainer;
 }
 
 Acts::Experimental::DetectorComponent::PortalContainer
@@ -744,8 +735,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
 
   ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in phi.");
 
-  // Return proto container
-  DetectorComponent::PortalContainer dShell;
+  // Return portal container
+  DetectorComponent::PortalContainer portalContainer;
 
   Transform3 refTransform = volumes[0u]->transform(gctx);
 
@@ -837,12 +828,12 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
       ACTS_VERBOSE("-- update portal with index " << i);
       iv->updatePortal(p, static_cast<unsigned int>(i));
       // Fill the map
-      dShell[i] = p;
+      portalContainer[i] = {p};
     }
   }
 
   // Done.
-  return dShell;
+  return portalContainer;
 }
 
 Acts::Experimental::DetectorComponent::PortalContainer
@@ -862,12 +853,12 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   }
 
   // Return the new container
-  DetectorComponent::PortalContainer dShell;
+  DetectorComponent::PortalContainer portalContainer;
 
   // Keep the outer shells
-  dShell[0u] = volumes[1u]->portalPtrs()[0u];
-  dShell[1u] = volumes[1u]->portalPtrs()[1u];
-  dShell[2u] = volumes[1u]->portalPtrs()[2u];
+  portalContainer[0u] = {volumes[1u]->portalPtrs()[0u]};
+  portalContainer[1u] = {volumes[1u]->portalPtrs()[1u]};
+  portalContainer[2u] = {volumes[1u]->portalPtrs()[2u]};
 
   // Fuse outer cover of first with inner cylinder of wrapping volume
   auto& keepCover = volumes[0u]->portalPtrs()[2u];
@@ -917,10 +908,10 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     volumes[0u]->updatePortal(p, 3u);
     volumes[1u]->updatePortal(p, 7u);
     // Inner skin
-    dShell[3u] = p;
+    portalContainer[3u] = {p};
   }
   // Done.
-  return dShell;
+  return portalContainer;
 }
 
 Acts::Experimental::DetectorComponent::PortalContainer
@@ -935,7 +926,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   ACTS_DEBUG("Connect " << containers.size() << " proto containers in R.");
 
   // Return the new container
-  DetectorComponent::PortalContainer dShell;
+  DetectorComponent::PortalContainer portalContainer;
 
   // Fuse the cylinders - portals can be reused for this operation
   for (unsigned int ic = 1; ic < containers.size(); ++ic) {
@@ -945,19 +936,27 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
     if (formerContainer.find(2u) == formerContainer.end()) {
       throw std::invalid_argument(
           "CylindricalDetectorHelper: proto container has no outer cover, "
-          "can "
-          "not be connected in R");
+          "can not be connected in R");
     }
     if (currentContainer.find(3u) == currentContainer.end()) {
       throw std::invalid_argument(
           "CylindricalDetectorHelper: proto container has no inner cover, "
-          "can "
-          "not be connected in R");
+          "can not be connected in R");
     }
 
-    // Fuse and swap
-    std::shared_ptr<Portal> keepCylinder = containers[ic - 1].find(2u)->second;
-    std::shared_ptr<Portal> wasteCylinder = containers[ic].find(3u)->second;
+    // Fuse and swap - this module requieres a common portal surface of the
+    // container volumes
+    auto keepCylinderStore = containers[ic - 1].find(2u);
+    auto wasteCylinderStore = containers[ic].find(3u);
+    if (keepCylinderStore->second.size() != 1 or
+        wasteCylinderStore->second.size() != 1) {
+      throw std::invalid_argument(
+          "CylindricalDetectorHelper: proto container has more than one "
+          "outer/inner cover, can not be connected in R");
+    }
+
+    std::shared_ptr<Portal> keepCylinder = keepCylinderStore->second.front();
+    std::shared_ptr<Portal> wasteCylinder = wasteCylinderStore->second.front();
     keepCylinder->fuse(wasteCylinder);
     for (auto& av : wasteCylinder->attachedDetectorVolumes()[1u]) {
       av->updatePortal(keepCylinder, 3u);
@@ -966,9 +965,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
 
   // Proto container refurbishment
   if (containers[0u].find(3u) != containers[0u].end()) {
-    dShell[3u] = containers[0u].find(3u)->second;
+    portalContainer[3u] = containers[0u].find(3u)->second;
   }
-  dShell[2u] = containers[containers.size() - 1u].find(2u)->second;
+  portalContainer[2u] = containers[containers.size() - 1u].find(2u)->second;
 
   auto sideVolumes =
       stripSideVolumes(containers, {0u, 1u, 4u, 5u}, selectedOnly, logLevel);
@@ -976,12 +975,11 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   for (auto [s, volumes] : sideVolumes) {
     auto pR = connectInR(gctx, volumes, {s});
     if (pR.find(s) != pR.end()) {
-      dShell[s] = pR.find(s)->second;
+      portalContainer[s] = pR.find(s)->second;
     }
   }
-
   // Done.
-  return dShell;
+  return portalContainer;
 }
 
 Acts::Experimental::DetectorComponent::PortalContainer
@@ -996,7 +994,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   ACTS_DEBUG("Connect " << containers.size() << " proto containers in Z.");
 
   // Return the new container
-  DetectorComponent::PortalContainer dShell;
+  DetectorComponent::PortalContainer portalContainer;
 
   for (unsigned int ic = 1; ic < containers.size(); ++ic) {
     auto& formerContainer = containers[ic - 1];
@@ -1012,8 +1010,19 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
           "CylindricalDetectorHelper: proto container has no positive disc, "
           "can not be connected in Z");
     }
-    std::shared_ptr<Portal> keepDisc = formerContainer.find(1u)->second;
-    std::shared_ptr<Portal> wasteDisc = currentContainer.find(0u)->second;
+
+    // Fuse and swap - this module requieres a common portal surface of the
+    // container
+    auto keepDiscStore = containers[ic - 1].find(1u);
+    auto wasteDiscStore = containers[ic].find(0u);
+    if (keepDiscStore->second.size() != 1 or
+        wasteDiscStore->second.size() != 1) {
+      throw std::invalid_argument(
+          "CylindricalDetectorHelper: proto container has more than one "
+          "negative/positive disc, can not be connected in Z");
+    }
+    std::shared_ptr<Portal> keepDisc = keepDiscStore->second.front();
+    std::shared_ptr<Portal> wasteDisc = wasteDiscStore->second.front();
     keepDisc->fuse(wasteDisc);
     for (auto& av : wasteDisc->attachedDetectorVolumes()[1u]) {
       ACTS_VERBOSE("Update portal of detector volume '" << av->name() << "'.");
@@ -1022,8 +1031,8 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   }
 
   // Proto container refurbishment
-  dShell[0u] = containers[0u].find(0u)->second;
-  dShell[1u] = containers[containers.size() - 1u].find(1u)->second;
+  portalContainer[0u] = containers[0u].find(0u)->second;
+  portalContainer[1u] = containers[containers.size() - 1u].find(1u)->second;
 
   // Check if this is a tube or a cylinder container (check done on 1st)
   std::vector<unsigned int> nominalSides = {2u, 4u, 5u};
@@ -1041,12 +1050,12 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
     ACTS_VERBOSE(" - connect " << volumes.size() << " at selected side " << s);
     auto pR = connectInZ(gctx, volumes, {s}, logLevel);
     if (pR.find(s) != pR.end()) {
-      dShell[s] = pR.find(s)->second;
+      portalContainer[s] = pR.find(s)->second;
     }
   }
 
   // Done.
-  return dShell;
+  return portalContainer;
 }
 
 Acts::Experimental::DetectorComponent::PortalContainer
@@ -1059,9 +1068,9 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInPhi(
   throw std::invalid_argument(
       "CylindricalDetectorHelper: container connection in phi not implemented "
       "yet.");
-  DetectorComponent::PortalContainer dShell;
+  DetectorComponent::PortalContainer portalContainer;
   // Done.
-  return dShell;
+  return portalContainer;
 }
 
 Acts::Experimental::DetectorComponent::PortalContainer
@@ -1081,7 +1090,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   auto outerContainer = containers.back();
   std::shared_ptr<DetectorVolume> wrappingVolume = nullptr;
   for (auto [key, value] : outerContainer) {
-    auto attachedVolumes = value->attachedDetectorVolumes();
+    auto attachedVolumes = value.front()->attachedDetectorVolumes();
     for (const auto& ava : attachedVolumes) {
       for (const auto& av : ava) {
         if (wrappingVolume == nullptr and av != nullptr) {
@@ -1106,27 +1115,46 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   ACTS_DEBUG("Wrapping a container with volume `" << wrappingVolume->name()
                                                   << "'.");
   // Return the new container
-  DetectorComponent::PortalContainer dShell;
+  DetectorComponent::PortalContainer portalContainer;
 
   // Keep the outer shells of the proto container
-  dShell[0u] = wrappingVolume->portalPtrs()[0u];
-  dShell[1u] = wrappingVolume->portalPtrs()[1u];
-  dShell[2u] = wrappingVolume->portalPtrs()[2u];
+  portalContainer[0u] = {wrappingVolume->portalPtrs()[0u]};
+  portalContainer[1u] = {wrappingVolume->portalPtrs()[1u]};
+  portalContainer[2u] = {wrappingVolume->portalPtrs()[2u]};
 
   // Fuse outer cover of first with inner cylinder of wrapping volume
-  auto& keepCover = innerContainer[2u];
+  auto keepCoverStore = innerContainer.find(2u);
+  if (keepCoverStore->second.size() != 1u) {
+    throw std::invalid_argument(
+        "CylindricalDetectorHelper: inner container has no outer cover, "
+        "can not be wrapped in Z-R");
+  }
+
+  auto& keepCover = keepCoverStore->second.front();
   auto& wasteCover = wrappingVolume->portalPtrs()[3u];
   keepCover->fuse(wasteCover);
   wrappingVolume->updatePortal(keepCover, 3u);
 
   // Stitch sides - negative
-  auto& keepDiscN = innerContainer[0u];
+  auto keepDiscNStore = innerContainer.find(0u);
+  if (keepDiscNStore->second.size() != 1u) {
+    throw std::invalid_argument(
+        "CylindricalDetectorHelper: inner container has no negative disc, "
+        "can not be wrapped in Z-R");
+  }
+  auto& keepDiscN = keepDiscNStore->second.front();
   auto& wasteDiscN = wrappingVolume->portalPtrs()[4u];
   keepDiscN->fuse(wasteDiscN);
   wrappingVolume->updatePortal(keepDiscN, 4u);
 
   // Stich sides - positive
-  auto& keepDiscP = innerContainer[1u];
+  auto keepDiscPStore = innerContainer.find(1u);
+  if (keepDiscPStore->second.size() != 1u) {
+    throw std::invalid_argument(
+        "CylindricalDetectorHelper: inner container has no positive disc, "
+        "can not be wrapped in Z-R");
+  }
+  auto& keepDiscP = keepDiscPStore->second.front();
   auto& wasteDiscP = wrappingVolume->portalPtrs()[5u];
   keepDiscP->fuse(wasteDiscP);
   wrappingVolume->updatePortal(keepDiscP, 5u);
@@ -1135,7 +1163,13 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   if (innerContainer.size() == 4u and
       wrappingVolume->portalPtrs().size() == 8u) {
     // Inner Container portal
-    auto& centralSegment = innerContainer[3u];
+    auto centralSegmentStore = innerContainer.find(3u);
+    if (centralSegmentStore->second.size() != 1u) {
+      throw std::invalid_argument(
+          "CylindricalDetectorHelper: inner container has no central segment, "
+          "can not be wrapped in Z-R");
+    }
+    auto& centralSegment = centralSegmentStore->second.front();
     auto centralValues = centralSegment->surface().bounds().values();
     ActsScalar centralHalfLengthZ =
         centralValues[CylinderBounds::BoundValues::eHalfLengthZ];
@@ -1171,7 +1205,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
   }
 
   // Done.
-  return dShell;
+  return portalContainer;
 }
 
 std::array<std::vector<Acts::ActsScalar>, 3u>

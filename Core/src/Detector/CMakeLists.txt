@@ -8,7 +8,7 @@ target_sources(
     Detector.cpp
     DetectorVolume.cpp
     DetectorVolumeBuilder.cpp
-    GridDetectorBuilder.cpp
+    GridDetectorVolumesBuilder.cpp
     LayerStructureBuilder.cpp
     Portal.cpp
     PortalGenerators.cpp

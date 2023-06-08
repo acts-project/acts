@@ -56,12 +56,10 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   /// Final implementation of a volume builder that is purely defined
   /// by an internal and external structure builder
   ///
-  /// @param roots [in,out] the detector root volumes
   /// @param gctx The geometry context for this call
   ///
   /// @return an outgoing detector component
-  DetectorComponent construct(RootDetectorVolumes& roots,
-                              const GeometryContext& gctx) const final;
+  DetectorComponent construct(const GeometryContext& gctx) const final;
 
  private:
   /// configuration object

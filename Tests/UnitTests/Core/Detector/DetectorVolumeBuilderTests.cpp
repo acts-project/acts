@@ -131,11 +131,10 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_EmptyVolume) {
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto dvComponents = dvBuilder->construct(roots, tContext);
+  auto [volumes, portalContainer, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(roots.volumes.size() == 1u);
-  BOOST_CHECK(dvComponents.portals.size() == 4u);
+  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK(portalContainer.size() == 4u);
 
   // Get the volume and check it is empty
   auto volume = roots.volumes.front();
@@ -162,11 +161,10 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto dvComponents = dvBuilder->construct(roots, tContext);
+  auto [volumes, portalContainer, roots] = dvBuilder->construct(tContext);
 
   BOOST_CHECK(roots.volumes.size() == 1u);
-  BOOST_CHECK(dvComponents.portals.size() == 4u);
+  BOOST_CHECK(portalContainer.size() == 4u);
 
   // Get the volume and check it is empty
   auto volume = roots.volumes.front();
@@ -194,11 +192,10 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolume) {
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto dvComponents = dvBuilder->construct(roots, tContext);
+  auto [volumes, portalContainer, roots] = dvBuilder->construct(tContext);
 
   BOOST_CHECK(roots.volumes.empty());
-  BOOST_CHECK(dvComponents.portals.size() == 4u);
+  BOOST_CHECK(portalContainer.size() == 4u);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
@@ -222,9 +219,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto dvComponents = dvBuilder->construct(roots, tContext);
-
+  auto [volumes, portalContainer, roots] = dvBuilder->construct(tContext);
   BOOST_CHECK(roots.volumes.size() == 2u);
 }
 

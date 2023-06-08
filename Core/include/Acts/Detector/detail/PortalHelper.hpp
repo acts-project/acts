@@ -34,6 +34,17 @@ using PortalReplacement =
 namespace detail {
 namespace PortalHelper {
 
+/// @brief Loweset level connection, fuse two volumes
+///
+/// @param keepPortalVolume the volume where the cover is kept
+/// @param wastePortalVolume the volume where the cover is binned
+/// @param portalIds the portal indices in the respective volumes to fuse,
+///        first the keeper, then the waste
+///
+/// @note no checking is done at this case, needs to happen upstream
+void fuse(DetectorVolume& keepPortalVolume, DetectorVolume& wastePortalVolume,
+          std::array<std::size_t, 2> portalIds);
+
 /// @brief Create and attach the multi link updator, the portal will get
 /// a volume updator attached, that points to the different sub volumes
 /// depending on the global position and binning
