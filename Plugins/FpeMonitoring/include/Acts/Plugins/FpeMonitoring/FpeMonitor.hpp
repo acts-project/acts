@@ -127,6 +127,7 @@ class FpeMonitor {
 
   static std::string stackTraceToString(const boost::stacktrace::stacktrace &st,
                                         std::size_t depth);
+  static std::string getSourceLocation(const boost::stacktrace::frame &frame);
 
  private:
   void enable();

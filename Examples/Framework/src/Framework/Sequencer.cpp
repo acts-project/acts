@@ -613,10 +613,10 @@ int Sequencer::run() {
 
 std::size_t Sequencer::fpeMaskCount(const boost::stacktrace::stacktrace& st,
                                     Acts::FpeType type) const {
-  std::string loc = st.begin()->source_file() + ":" +
-                    std::to_string(st.begin()->source_line());
   for (const auto& [filt, fType, count] : m_cfg.fpeMasks) {
-    if (boost::algorithm::ends_with(loc, filt) && fType == type) {
+    if (boost::algorithm::ends_with(
+            Acts::FpeMonitor::getSourceLocation(*st.begin()), filt) &&
+        fType == type) {
       return count;
     }
   }

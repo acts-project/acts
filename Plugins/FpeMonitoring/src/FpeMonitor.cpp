@@ -312,4 +312,8 @@ std::string FpeMonitor::stackTraceToString(
                                               std::min(depth, st.size()));
 }
 
+std::string getSourceLocation(const boost::stacktrace::frame &frame) {
+  return frame.source_file() + ":" + std::to_string(frame.source_line());
+}
+
 }  // namespace Acts
