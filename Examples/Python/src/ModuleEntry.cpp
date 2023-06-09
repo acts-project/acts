@@ -91,6 +91,7 @@ void addMagneticField(Context& ctx);
 void addMaterial(Context& ctx);
 void addOutput(Context& ctx);
 void addDetector(Context& ctx);
+void addDetectorInspectors(Context& ctx);
 void addExampleAlgorithms(Context& ctx);
 void addInput(Context& ctx);
 void addGenerators(Context& ctx);
@@ -98,6 +99,7 @@ void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
+void addAmbiguityResolution(Context& ctx);
 
 // Plugins
 void addDigitization(Context& ctx);
@@ -263,6 +265,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addMaterial(ctx);
   addOutput(ctx);
   addDetector(ctx);
+  addDetectorInspectors(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);
   addGenerators(ctx);
@@ -270,6 +273,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTrackFitting(ctx);
   addTrackFinding(ctx);
   addVertexing(ctx);
+  addAmbiguityResolution(ctx);
 
   addDigitization(ctx);
   addPythia8(ctx);

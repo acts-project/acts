@@ -1,0 +1,4 @@
+[
+  { include: ["@<Eigen/src/Core/.*>", "private", "<Eigen/Dense>", "public"] },
+  { include: ["@\"src/Core/.*\"", "private", "<Eigen/Dense>", "public"] }
+]

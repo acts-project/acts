@@ -23,6 +23,7 @@
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
@@ -56,12 +57,14 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 ///
 struct PropagatorPlainOptions {
   /// Propagation direction
-  NavigationDirection direction = NavigationDirection::Forward;
+  Direction direction = Direction::Forward;
 
-  /// The |pdg| code for (eventual) material integration - pion default
-  int absPdgCode = 211;
+  /// The |pdg| code for (eventual) material integration -
+  /// pion default
+  int absPdgCode = PdgParticle::ePionPlus;
 
-  /// The mass for the particle for (eventual) material integration
+  /// The mass of the particle for (eventual) material integration -
+  /// pion default
   double mass = 139.57018 * UnitConstants::MeV;
 
   /// Maximum number of steps for one propagate call

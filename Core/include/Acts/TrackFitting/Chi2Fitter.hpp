@@ -51,9 +51,8 @@ namespace Experimental {
 /// Extension struct which holds delegates to customize the GX2F behavior
 template <typename traj_t>
 struct Chi2FitterExtensions {
-  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
-  using ConstTrackStateProxy =
-      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  using TrackStateProxy = typename traj_t::TrackStateProxy;
+  using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
@@ -241,9 +240,7 @@ class Chi2Fitter {
     using result_type = Chi2FitterResult<traj_t>;
 
     /// Allows retrieving measurements for a surface
-    const std::map<GeometryIdentifier,
-                   std::reference_wrapper<const SourceLink>>*
-        inputMeasurements = nullptr;
+    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = false;  // TODO: add later
@@ -456,7 +453,7 @@ class Chi2Fitter {
         //====================================
 
         // Get and set the type flags
-        auto& typeFlags = trackStateProxy.typeFlags();
+        auto typeFlags = trackStateProxy.typeFlags();
         typeFlags.set(TrackStateFlag::ParameterFlag);
         if (surface->surfaceMaterial() != nullptr) {
           typeFlags.set(TrackStateFlag::MaterialFlag);
@@ -501,7 +498,7 @@ class Chi2Fitter {
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
           // Set the track state flags
-          auto& typeFlags = trackStateProxy.typeFlags();
+          auto typeFlags = trackStateProxy.typeFlags();
           typeFlags.set(TrackStateFlag::ParameterFlag);
           if (surface->surfaceMaterial() != nullptr) {
             typeFlags.set(TrackStateFlag::MaterialFlag);
@@ -651,12 +648,11 @@ class Chi2Fitter {
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
-
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
-      const SourceLink& sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), sl);
+      SourceLink sl = *it;
+      auto geoId = sl.geometryId();
+      inputMeasurements.emplace(geoId, std::move(sl));
     }
 
     // TODO: for now, we use STL objects to collect the information during

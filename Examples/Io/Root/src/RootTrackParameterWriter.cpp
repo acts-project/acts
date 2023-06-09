@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -192,9 +191,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
         m_t_charge = static_cast<int>(particle.charge());
         m_t_qop = m_t_charge / p;
       } else {
-        ACTS_WARNING("Truth particle with barcode " << particleId << "="
-                                                    << particleId.value()
-                                                    << " not found!");
+        ACTS_DEBUG("Truth particle with barcode "
+                   << particleId << "=" << particleId.value() << " not found!");
       }
     }
 

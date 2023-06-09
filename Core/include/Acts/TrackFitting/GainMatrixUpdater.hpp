@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -46,11 +47,10 @@ class GainMatrixUpdater {
   /// @param[in] direction The navigation direction
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(
-      const GeometryContext& gctx,
-      typename MultiTrajectory<traj_t>::TrackStateProxy trackState,
-      NavigationDirection direction = NavigationDirection::Forward,
-      const Logger& logger = getDummyLogger()) const {
+  Result<void> operator()(const GeometryContext& gctx,
+                          typename traj_t::TrackStateProxy trackState,
+                          Direction direction = Direction::Forward,
+                          const Logger& logger = getDummyLogger()) const {
     (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
@@ -103,7 +103,7 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, NavigationDirection direction,
+      InternalTrackState trackState, Direction direction,
       const Logger& logger) const;
 };
 

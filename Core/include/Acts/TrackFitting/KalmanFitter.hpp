@@ -48,18 +48,17 @@ namespace Acts {
 /// Extension struct which holeds delegates to customize the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
-  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
-  using ConstTrackStateProxy =
-      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  using TrackStateProxy = typename traj_t::TrackStateProxy;
+  using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
-  using Smoother = Delegate<Result<void>(
-      const GeometryContext&, MultiTrajectory<traj_t>&, size_t, const Logger&)>;
+  using Smoother = Delegate<Result<void>(const GeometryContext&, traj_t&,
+                                         size_t, const Logger&)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        NavigationDirection, const Logger&)>;
+                                        Direction, const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -308,7 +307,7 @@ class KalmanFitter {
     FreeToBoundCorrection freeToBoundCorrection;
 
     /// Input MultiTrajectory
-    std::shared_ptr<MultiTrajectory<traj_t>> outputStates;
+    std::shared_ptr<traj_t> outputStates;
 
     /// The logger instance
     const Logger* actorLogger{nullptr};
@@ -362,9 +361,7 @@ class KalmanFitter {
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
-      std::string direction =
-          (state.stepping.navDir == NavigationDirection::Forward) ? "forward"
-                                                                  : "backward";
+      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -514,10 +511,7 @@ class KalmanFitter {
       result.reversed = true;
 
       // Reverse navigation direction
-      state.stepping.navDir =
-          (state.stepping.navDir == NavigationDirection::Forward)
-              ? NavigationDirection::Backward
-              : NavigationDirection::Forward;
+      state.stepping.navDir = state.stepping.navDir.invert();
 
       // Reset propagator options
       state.options.maxStepSize =
@@ -979,10 +973,7 @@ class KalmanFitter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir =
-            (state.stepping.navDir == NavigationDirection::Forward)
-                ? NavigationDirection::Backward
-                : NavigationDirection::Forward;
+        state.stepping.navDir = state.stepping.navDir.invert();
       }
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(
@@ -1051,7 +1042,8 @@ class KalmanFitter {
     // for (const auto& sl : sourcelinks) {
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), std::move(sl));
+      auto geoId = sl.geometryId();
+      inputMeasurements.emplace(geoId, std::move(sl));
     }
 
     // Create the ActionList and AbortList

@@ -206,7 +206,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               auto res =
                   digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
-                ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
+                ACTS_WARNING("Problem in hit smearing, skip hit ("
+                             << res.error().message() << ")");
                 continue;
               }
               const auto& [par, cov] = res.value();
@@ -336,6 +337,15 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     } else {
       dParameters.variances =
           std::vector<Acts::ActsScalar>(dParameters.indices.size(), -1.);
+    }
+
+    if (dParameters.variances[0] == -1) {
+      size_t ictr = b0min + size0 / 2;
+      dParameters.variances[0] = std::pow(binningData[0].width(ictr), 2) / 12.0;
+    }
+    if (dParameters.variances[1] == -1) {
+      size_t ictr = b1min + size1 / 2;
+      dParameters.variances[1] = std::pow(binningData[1].width(ictr), 2) / 12.0;
     }
 
     dParameters.cluster.sizeLoc0 = size0;

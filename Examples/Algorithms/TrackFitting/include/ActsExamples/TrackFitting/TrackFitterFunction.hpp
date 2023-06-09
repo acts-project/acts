@@ -21,6 +21,7 @@
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 
@@ -46,7 +47,7 @@ class TrackFitterFunction {
   virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
                                        const TrackParameters&,
                                        const GeneralFitterOptions&,
-                                       const MeasurementCalibrator&,
+                                       const MeasurementCalibratorAdapter&,
                                        TrackContainer&) const = 0;
 
   virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
@@ -87,7 +88,7 @@ std::shared_ptr<TrackFitterFunction> makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
+    double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger);
 
