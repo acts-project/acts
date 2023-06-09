@@ -61,7 +61,9 @@ struct ProtoBinning {
   ///
   /// @param bValue the value/cast in which this is binned
   /// @param bType the axis boundary type
-  /// @param e the bin edges (variable binning)
+  /// @param minE the lowest edge of the binning
+  /// @param maxE the highest edge of the binning
+  /// @param nbins the number of bins
   /// @param exp the expansion (in bins)
   ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
                ActsScalar minE, ActsScalar maxE, std::size_t nbins,
