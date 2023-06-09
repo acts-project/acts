@@ -392,14 +392,11 @@ _origSequencerInit = ActsPythonBindings._examples.Sequencer.__init__
 def _sequencerInit(self, *args, **kwargs):
     if "fpeMasks" in kwargs:
         m = kwargs["fpeMasks"]
-        if isinstance(m, list) and len(m) > 0 and isinstance(m[0], str):
+        if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
             n = []
             for loc, fpe, count in m:
-                n.append(
-                    ActsPythonBindings._examples.Sequencer.FpeMask(
-                        loc, _fpe_types_to_enum[fpe], count
-                    )
-                )
+                t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
+                n.append(ActsPythonBindings._examples.Sequencer.FpeMask(loc, t, count))
             kwargs["fpeMasks"] = n
     _origSequencerInit(self, *args, **kwargs)
 
