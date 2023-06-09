@@ -210,8 +210,6 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
 
   auto bphi = barrelPhi->construct(tContext);
 
-  // RootDetectorVolumes roots;
-  // BOOST_CHECK(roots.volumes.size() == 5u);
   BOOST_CHECK(bphi.portals.size() == 4u);
 }
 
