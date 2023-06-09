@@ -289,7 +289,7 @@ struct ProtoTrackData {
   std::size_t trackId;
   double x, y, z;
 
-  DFE_NAMEDTUPLE(ProtoTrackData, x, y, z, trackId);
+  DFE_NAMEDTUPLE(ProtoTrackData, trackId, x, y, z);
 };
 
 }  // namespace ActsExamples

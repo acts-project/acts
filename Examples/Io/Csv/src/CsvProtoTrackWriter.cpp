@@ -53,7 +53,7 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index hit : tracks[trackId]) {
-      auto sp = findSpacePointForIndex(hit);
+      const auto sp = findSpacePointForIndex(hit, spacepoints);
 
       if (not sp) {
         ACTS_WARNING("Could not convert index " << hit << " to spacepoint");
