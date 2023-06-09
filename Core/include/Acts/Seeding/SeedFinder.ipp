@@ -133,7 +133,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const float uIP2 = uIP * uIP;
 
     // Iterate over middle-top dublets
-    getCompatibleDoublets<Acts::SpacePointCandidateType::TOP>(
+    getCompatibleDoublets<Acts::SpacePointCandidateType::eTop>(
         state.spacePointData, options, grid, state.topNeighbours, *spM.get(),
         state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
         m_config.deltaRMaxTopSP, uIP, uIP2, cosPhiM, sinPhiM);
@@ -166,7 +166,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     // Iterate over middle-bottom dublets
-    getCompatibleDoublets<Acts::SpacePointCandidateType::BOTTOM>(
+    getCompatibleDoublets<Acts::SpacePointCandidateType::eBottom>(
         state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
         m_config.deltaRMaxBottomSP, uIP, uIP2, cosPhiM, sinPhiM);
@@ -201,7 +201,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
     const float& uIP2, const float& cosPhiM, const float& sinPhiM) const {
   float impactMax = m_config.impactMax;
-  if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+  if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
     impactMax = -impactMax;
   }
 
@@ -247,7 +247,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
 
-      if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
         deltaR = (rM - otherSP->radius());
 
         // if r-distance is too small, try next SP in bin
@@ -280,7 +280,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         otherSPCol.itr = min_itr;
       }
 
-      if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
         deltaZ = (zM - otherSP->z());
       } else {
         deltaZ = (otherSP->z() - zM);
