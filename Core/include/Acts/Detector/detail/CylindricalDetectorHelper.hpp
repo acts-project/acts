@@ -39,7 +39,8 @@ void fuseInR(DetectorVolume& keepCoverVolume, DetectorVolume& wasteCoverVolume);
 ///
 /// @param keepEndplateVolume the volume where the cover is kept
 /// @param wasteEndplateVolume the volume where the cover is binned
-void fuseInZ(DetectorVolume& keepCoverVolume, DetectorVolume& wasteCoverVolume);
+void fuseInZ(DetectorVolume& keepEndplateVolume,
+             DetectorVolume& wasteEndplateVolume);
 
 /// @brief Lowest level connection in Phi
 ///

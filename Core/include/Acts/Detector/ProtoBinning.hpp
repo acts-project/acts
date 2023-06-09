@@ -49,7 +49,7 @@ struct ProtoBinning {
       : binValue(bValue),
         axisType(Acts::detail::AxisType::Variable),
         boundaryType(bType),
-        edges(std::move(e)),
+        edges(e),
         expansion(exp) {
     if (edges.size() < 2u) {
       throw std::invalid_argument(
@@ -68,10 +68,7 @@ struct ProtoBinning {
   ProtoBinning(BinningValue bValue, Acts::detail::AxisBoundaryType bType,
                ActsScalar minE, ActsScalar maxE, std::size_t nbins,
                std::size_t exp = 0u)
-      : binValue(bValue),
-        axisType(Acts::detail::AxisType::Equidistant),
-        boundaryType(bType),
-        expansion(exp) {
+      : binValue(bValue), boundaryType(bType), expansion(exp) {
     if (minE >= maxE) {
       throw std::invalid_argument(
           "ProtoBinning: Invalid binning, min edge needs to be smaller than "
