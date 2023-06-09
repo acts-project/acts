@@ -206,7 +206,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               auto res =
                   digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
-                ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
+                ACTS_WARNING("Problem in hit smearing, skip hit ("
+                             << res.error().message() << ")");
                 continue;
               }
               const auto& [par, cov] = res.value();

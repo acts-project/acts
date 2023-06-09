@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
@@ -62,12 +63,20 @@ struct BoundParametersSmearer {
   Result operator()(generator_t& rng, const Hit& hit,
                     const Acts::Surface& surface,
                     const Acts::GeometryContext& geoCtx) const {
+    // We use the thickness of the detector element as tolerance, because Geant4
+    // treats the Surfaces as volumes and thus it is not ensured, that each hit
+    // lies exactely on the Acts::Surface
+    const auto tolerance =
+        surface.associatedDetectorElement() != nullptr
+            ? surface.associatedDetectorElement()->thickness()
+            : Acts::s_onSurfaceTolerance;
+
     // construct full bound parameters. they are probably not all needed, but it
     // is easier to just create them all and then select the requested ones.
     Acts::Result<Acts::BoundVector> boundParamsRes =
-        Acts::detail::transformFreeToBoundParameters(hit.position(), hit.time(),
-                                                     hit.unitDirection(), 0,
-                                                     surface, geoCtx);
+        Acts::detail::transformFreeToBoundParameters(
+            hit.position(), hit.time(), hit.unitDirection(), 0, surface, geoCtx,
+            tolerance);
 
     if (!boundParamsRes.ok()) {
       return boundParamsRes.error();
