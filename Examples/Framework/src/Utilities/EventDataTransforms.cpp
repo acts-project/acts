@@ -21,26 +21,34 @@ ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
   return track;
 }
 
+std::optional<ActsExamples::SimSpacePoint> ActsExamples::findSpacePointForIndex(
+    ActsExamples::Index index, const SimSpacePointContainer& spacepoints) {
+  auto match = [&](const SimSpacePoint& sp) {
+    const auto& sls = sp.sourceLinks();
+    return std::any_of(sls.begin(), sls.end(), [&](const auto& sl) {
+      return sl.template get<IndexSourceLink>().index() == index;
+    });
+  };
+
+  auto found = std::find_if(spacepoints.begin(), spacepoints.end(), match);
+
+  if (found == spacepoints.end()) {
+    return std::nullopt;
+  }
+
+  return *found;
+}
+
 ActsExamples::SimSeed ActsExamples::ProtoTrackToSeed::operator()(
     const ActsExamples::ProtoTrack& track) const {
   // Match a spacepoint to the source-link index if one of the at most two
   // source-links in the spacepoint has a matching index
   auto findSpacePoint = [&](ActsExamples::Index index) {
-    auto match = [&](const SimSpacePoint& sp) {
-      const auto& sls = sp.sourceLinks();
-      return std::any_of(sls.begin(), sls.end(), [&](const auto& sl) {
-        return sl.template get<IndexSourceLink>().index() == index;
-      });
-    };
-
-    auto found =
-        std::find_if(m_spacePoints.begin(), m_spacePoints.end(), match);
-
-    if (found == m_spacePoints.end()) {
+    auto found = findSpacePointForIndex(index, m_spacePoints);
+    if (not found) {
       throw std::runtime_error("No spacepoint found for source-link index " +
                                std::to_string(index));
     }
-
     return *found;
   };
 

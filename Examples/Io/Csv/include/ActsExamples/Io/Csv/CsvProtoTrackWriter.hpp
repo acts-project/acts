@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,60 +8,63 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
-#include <limits>
 #include <string>
 
 namespace ActsExamples {
 
-/// Write out a simhit collection before detector digitization in comma-
-/// separated-value format.
+/// @class CsvProtoTrackWriter
 ///
-/// This writes one file per event containing information about the
-/// global space points, momenta (before and after interaction) and hit index
-/// into the configured output directory. By default it writes to the
-/// current working directory. Files are named using the following schema
-///
-///     event000000001-<stem>.csv
-///     event000000002-<stem>.csv
-///     ...
-///
-/// and each line in the file corresponds to one simhit.
-class CsvSimHitWriter final : public WriterT<SimHitContainer> {
+class CsvProtoTrackWriter final : public WriterT<ProtoTrackContainer> {
  public:
   struct Config {
-    /// Which simulated (truth) hits collection to use.
-    std::string inputSimHits;
-    /// Where to place output files
+    std::string inputPrototracks;
+    /// Which measurement collection to write.
+    std::string inputSpacepoints;
+    /// Which cluster collection to write (optional)
     std::string outputDir;
-    /// Output filename stem.
-    std::string outputStem;
     /// Number of decimal digits for floating point precision in output.
-    size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    int outputPrecision = std::numeric_limits<float>::max_digits10;
   };
 
-  /// Construct the cluster writer.
-  ///
-  /// @param config is the configuration object
-  /// @param level is the logging level
-  CsvSimHitWriter(const Config& config, Acts::Logging::Level level);
+  /// Constructor with
+  /// @param config configuration struct
+  /// @param level logging level
+  CsvProtoTrackWriter(const Config& config, Acts::Logging::Level level);
 
-  /// Readonly access to the config
+  /// Virtual destructor
+  ~CsvProtoTrackWriter() override;
+
+  /// End-of-run hook
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  protected:
-  /// Type-specific write implementation.
+  /// This implementation holds the actual writing method
+  /// and is called by the WriterT<>::write interface
   ///
-  /// @param[in] ctx is the algorithm context
-  /// @param[in] simHits are the simhits to be written
+  /// @param ctx The Algorithm context with per event information
+  /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimHitContainer& simHits) override;
+                     const ProtoTrackContainer& tracks) override;
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacepoints{this,
+                                                            "inputSpacepoints"};
 };
 
 }  // namespace ActsExamples

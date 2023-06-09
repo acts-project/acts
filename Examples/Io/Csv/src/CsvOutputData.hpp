@@ -285,4 +285,11 @@ struct TrackParameterData {
                  cov_qopphi, cov_qoptheta);
 };
 
+struct ProtoTrackData {
+  std::size_t trackId;
+  double x, y, z;
+
+  DFE_NAMEDTUPLE(ProtoTrackData, x, y, z, trackId);
+};
+
 }  // namespace ActsExamples
