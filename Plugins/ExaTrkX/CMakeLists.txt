@@ -1,28 +1,3 @@
-# Only build a stub target if e.g. want to work without GPU toolchain
-if(ACTS_EXATRKX_ENABLE_STUB)
-  add_library(
-    ActsPluginExaTrkX INTERFACE
-  ) 
-  
-  target_include_directories(
-    ActsPluginExaTrkX
-    INTERFACE 
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-  )
-  
-  install(
-    TARGETS ActsPluginExaTrkX
-    EXPORT ActsPluginExaTrkXTargets
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-  install(
-    DIRECTORY include/Acts
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-  return()
-endif()
-
-
 set(SOURCES 
   src/buildEdges.cpp
 )

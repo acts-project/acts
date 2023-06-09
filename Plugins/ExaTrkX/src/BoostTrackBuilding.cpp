@@ -43,10 +43,11 @@ namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     std::any, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs, const Logger& logger) {
+    std::vector<int>& spacepointIDs) {
   ACTS_DEBUG("Start track building");
   const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
-  const auto edgeWeightTensor = std::any_cast<torch::Tensor>(weights).to(torch::kCPU);
+  const auto edgeWeightTensor =
+      std::any_cast<torch::Tensor>(weights).to(torch::kCPU);
 
   assert(edgeTensor.size(0) == 2);
   assert(edgeTensor.size(1) == edgeWeightTensor.size(0));
@@ -54,7 +55,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   const auto numSpacepoints = spacepointIDs.size();
   const auto numEdges = static_cast<std::size_t>(edgeWeightTensor.size(0));
 
-  if( numEdges == 0 ) {
+  if (numEdges == 0) {
     ACTS_WARNING("No edges remained after edge classification");
     return {};
   }
@@ -62,8 +63,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   using vertex_t = int32_t;
   std::vector<vertex_t> rowIndices(numEdges);
   std::copy(edgeTensor.data_ptr<int64_t>(),
-            edgeTensor.data_ptr<int64_t>() + numEdges,
-            rowIndices.begin());
+            edgeTensor.data_ptr<int64_t>() + numEdges, rowIndices.begin());
 
   std::vector<vertex_t> colIndices(numEdges);
   std::copy(edgeTensor.data_ptr<int64_t>() + numEdges,
@@ -72,8 +72,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
 
   std::vector<float> edgeWeights(numEdges);
   std::copy(edgeWeightTensor.data_ptr<float>(),
-            edgeWeightTensor.data_ptr<float>() + numEdges,
-            edgeWeights.begin());
+            edgeWeightTensor.data_ptr<float>() + numEdges, edgeWeights.begin());
 
   std::vector<vertex_t> trackLabels(numSpacepoints);
 

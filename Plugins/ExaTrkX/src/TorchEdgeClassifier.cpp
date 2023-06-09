@@ -17,12 +17,14 @@ using namespace torch::indexing;
 
 namespace Acts {
 
-TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg) : m_cfg(cfg) {
+TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
+                                         std::unique_ptr<const Logger> logger)
+    : m_logger(std::move(logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
   std::cout << "Using torch version " << TORCH_VERSION << std::endl;
 #ifndef ACTS_EXATRKX_CPUONLY
-  if( not torch::cuda::is_available() ) {
+  if (not torch::cuda::is_available()) {
     std::cout << "WARNING: CUDA not available, falling back to CPU\n";
   }
 #endif
@@ -39,7 +41,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg) : m_cfg(cfg) {
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, const Logger& logger) {
+    std::any inputNodes, std::any inputEdges) {
   ACTS_DEBUG("Start edge classification");
   const torch::Device device(m_deviceType);
 
@@ -70,14 +72,14 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   ACTS_VERBOSE("Size after filtering network: " << output.size(0));
   ACTS_VERBOSE("Slice of filtered output:\n"
                << output.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
-  printCudaMemInfo(logger);
+  printCudaMemInfo(logger());
 
   torch::Tensor mask = output > m_cfg.cut;
   torch::Tensor edgesAfterCut = edgeList.index({Slice(), mask});
   edgesAfterCut = edgesAfterCut.to(torch::kInt64);
 
   ACTS_VERBOSE("Size after filter cut: " << edgesAfterCut.size(1));
-  printCudaMemInfo(logger);
+  printCudaMemInfo(logger());
 
   return {nodes, edgesAfterCut, output.masked_select(mask)};
 }

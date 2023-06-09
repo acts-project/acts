@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include "Acts/Utilities/Logger.hpp"
-
 #include <any>
 #include <vector>
 
@@ -29,7 +27,7 @@ class GraphConstructionBase {
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues, const Logger &logger) = 0;
+      std::vector<float> &inputValues) = 0;
 };
 
 class EdgeClassificationBase {
@@ -42,7 +40,7 @@ class EdgeClassificationBase {
   ///
   /// @return (node_tensor, edge_tensor, score_tensor)
   virtual std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges, const Logger &logger) = 0;
+      std::any nodes, std::any edges) = 0;
 };
 
 class TrackBuildingBase {
@@ -58,7 +56,7 @@ class TrackBuildingBase {
   /// @return tracks (as vectors of node-IDs)
   virtual std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edgeWeights,
-      std::vector<int> &spacepointIDs, const Logger &logger) = 0;
+      std::vector<int> &spacepointIDs) = 0;
 };
 
 }  // namespace Acts

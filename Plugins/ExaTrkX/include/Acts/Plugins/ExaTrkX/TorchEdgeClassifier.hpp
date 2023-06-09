@@ -31,15 +31,18 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
     int nChunks = 1;  // NOTE for GNN use 1
   };
 
-  TorchEdgeClassifier(const Config &cfg);
+  TorchEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges, const Logger &logger) override;
+  std::tuple<std::any, std::any, std::any> operator()(std::any nodes,
+                                                      std::any edges) override;
 
   Config config() const { return m_cfg; }
 
  private:
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const auto &logger() const { return *m_logger; }
+
   Config m_cfg;
   c10::DeviceType m_deviceType;
   std::unique_ptr<torch::jit::Module> m_model;
