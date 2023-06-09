@@ -351,7 +351,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvProtoTrackWriter, mex,
                              "CsvProtoTrackWriter", inputSpacepoints,
-                             inputPrototracks);
+                             inputPrototracks, outputDir);
 
   {
     using Writer = ActsExamples::CsvBFieldWriter;

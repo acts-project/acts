@@ -37,7 +37,7 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   Config config() const { return m_cfg; }
 
  private:
-  std::unique_ptr<Acts::Logger> m_logger;
+  std::unique_ptr<const Acts::Logger> m_logger;
   const auto &logger() const { return *m_logger; }
 
   Config m_cfg;
