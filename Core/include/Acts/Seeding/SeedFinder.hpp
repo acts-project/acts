@@ -34,7 +34,7 @@ namespace Acts {
 
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
-enum class DetectorMeasurementInfo : short { DEFAULT, DETAILED };
+enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
 
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {

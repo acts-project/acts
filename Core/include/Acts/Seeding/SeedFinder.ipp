@@ -178,10 +178,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     // filter candidates
     if (m_config.useDetailedDoubleMeasurementInfo) {
-      filterCandidates<Acts::DetectorMeasurementInfo::DETAILED>(
+      filterCandidates<Acts::DetectorMeasurementInfo::eDetailed>(
           state.spacePointData, *spM.get(), options, seedFilterState, state);
     } else {
-      filterCandidates<Acts::DetectorMeasurementInfo::DEFAULT>(
+      filterCandidates<Acts::DetectorMeasurementInfo::eDefault>(
           state.spacePointData, *spM.get(), options, seedFilterState, state);
     }
 
@@ -458,7 +458,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     sorted_tops[i] = i;
   }
 
-  if constexpr (detailedMeasurement == Acts::DetectorMeasurementInfo::DEFAULT) {
+  if constexpr (detailedMeasurement ==
+                Acts::DetectorMeasurementInfo::eDefault) {
     std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
               [&state](const std::size_t& a, const std::size_t& b) -> bool {
                 return state.linCircleBottom[a].cotTheta <
@@ -521,7 +522,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     // x and y terms for the rotation from UV to XY plane
     float rotationTermsUVtoXY[2] = {0, 0};
     if constexpr (detailedMeasurement ==
-                  Acts::DetectorMeasurementInfo::DETAILED) {
+                  Acts::DetectorMeasurementInfo::eDetailed) {
       rotationTermsUVtoXY[0] = cosPhiM * sinTheta;
       rotationTermsUVtoXY[1] = sinPhiM * sinTheta;
     }
@@ -558,7 +559,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float iDeltaRT2 = 0.;
 
       if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::DETAILED) {
+                    Acts::DetectorMeasurementInfo::eDetailed) {
         // protects against division by 0
         float dU = lt.U - Ub;
         if (dU == 0.) {
@@ -631,7 +632,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // use geometric average
       float cotThetaAvg2 = cotThetaB * cotThetaT;
       if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::DETAILED) {
+                    Acts::DetectorMeasurementInfo::eDetailed) {
         // use arithmetic average
         float averageCotTheta = 0.5 * (cotThetaB + cotThetaT);
         cotThetaAvg2 = averageCotTheta * averageCotTheta;
@@ -661,7 +662,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
         if constexpr (detailedMeasurement ==
-                      Acts::DetectorMeasurementInfo::DETAILED) {
+                      Acts::DetectorMeasurementInfo::eDetailed) {
           continue;
         }
         // break if cotTheta from bottom SP < cotTheta from top SP because
@@ -674,7 +675,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       }
 
       if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::DETAILED) {
+                    Acts::DetectorMeasurementInfo::eDetailed) {
         rMxy = std::sqrt(rMTransf[0] * rMTransf[0] + rMTransf[1] * rMTransf[1]);
         double irMxy = 1 / rMxy;
         float Ax = rMTransf[0] * irMxy;
@@ -693,7 +694,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float B2 = 0;
 
       if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::DETAILED) {
+                    Acts::DetectorMeasurementInfo::eDetailed) {
         dU = ut - ub;
         // protects against division by 0
         if (dU == 0.) {
@@ -754,7 +755,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
         if constexpr (detailedMeasurement ==
-                      Acts::DetectorMeasurementInfo::DETAILED) {
+                      Acts::DetectorMeasurementInfo::eDetailed) {
           continue;
         }
         if (cotThetaB - cotThetaT < 0) {
@@ -768,7 +769,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // (in contrast to having to solve a quadratic function in x/y plane)
       float Im = 0;
       if constexpr (detailedMeasurement ==
-                    Acts::DetectorMeasurementInfo::DETAILED) {
+                    Acts::DetectorMeasurementInfo::eDetailed) {
         Im = std::abs((A - B * rMxy) * rMxy);
       } else {
         Im = std::abs((A - B * rM) * rM);
