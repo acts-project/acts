@@ -11,9 +11,7 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/SensitiveSteppingAction.cpp
     src/SimParticleTranslation.cpp
     src/ParticleKillAction.cpp
-    src/PhysicsListFactory.cpp
-    src/Atlas/FTFP_BERT_ATL.cc
-    src/Atlas/G4HadronPhysicsFTFP_BERT_ATL.cc)
+    src/PhysicsListFactory.cpp)
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
     list(APPEND ACTS_EXAMPLES_G4SOURCES src/DDG4DetectorConstruction.cpp)

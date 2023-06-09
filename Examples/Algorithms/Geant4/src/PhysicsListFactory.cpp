@@ -11,8 +11,7 @@
 #include <stdexcept>
 
 #include <FTFP_BERT.hh>
-
-#include "Atlas/FTFP_BERT_ATL.hh"
+#include <FTFP_BERT_ATL.hh>
 
 namespace ActsExamples {
 
