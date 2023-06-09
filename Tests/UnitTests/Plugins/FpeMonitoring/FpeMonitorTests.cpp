@@ -215,6 +215,45 @@ BOOST_AUTO_TEST_CASE(MergeDeduplication) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(ScopedSuppression) {
+  FpeMonitor mon;
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTINV));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTOVF));
+  BOOST_CHECK(!mon.result().encountered(FpeType::FLTDIV));
+
+  invalid();
+
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTOVF), 0);
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTDIV), 0);
+
+  {
+    FpeMonitor mon2{0};  // disable all
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTDIV));
+    invalid();
+    divbyzero();
+    overflow();
+    // were not registered in inner scope
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTINV));
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTOVF));
+    BOOST_CHECK(!mon2.result().encountered(FpeType::FLTDIV));
+  }
+
+  // outer scope is also unchanged
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 1);
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTOVF), 0);
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTDIV), 0);
+
+  invalid();
+
+  // outer scope gets signal after being restored on the stack
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTINV), 2);
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTOVF), 0);
+  BOOST_CHECK_EQUAL(mon.result().count(FpeType::FLTDIV), 0);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Acts::Test

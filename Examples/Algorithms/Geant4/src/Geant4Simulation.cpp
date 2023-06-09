@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
@@ -161,8 +162,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   eventData.inputParticles = &m_inputParticles;
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
-  // Start simulation. each track is simulated as a separate Geant4 event.
-  m_cfg.runManager->BeamOn(1);
+  {
+    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
+    // Start simulation. each track is simulated as a separate Geant4 event.
+    m_cfg.runManager->BeamOn(1);
+  }
 
   // Since these are std::set, this ensures that each particle is in both sets
   assert(eventData.particlesInitial.size() == eventData.particlesFinal.size());

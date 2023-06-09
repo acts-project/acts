@@ -230,10 +230,17 @@ void FpeMonitor::signalHandler(int /*signal*/, siginfo_t *si, void *ctx) {
 
 void FpeMonitor::enable() {
 #if defined(__linux__) && defined(__x86_64__)
-  std::feclearexcept(m_excepts);
-  feenableexcept(m_excepts);
-
   ensureSignalHandlerInstalled();
+
+  // clear pending exceptions so they don't immediately fire
+  std::feclearexcept(m_excepts);
+
+  if (!stack().empty()) {
+    // unset previous except state
+    fedisableexcept(stack().top()->m_excepts);
+  }
+  // apply this stack
+  feenableexcept(m_excepts);
 
   stack().push(this);
 #else
@@ -244,6 +251,7 @@ void FpeMonitor::enable() {
 void FpeMonitor::rearm() {
   consumeRecorded();
 #if defined(__linux__) && defined(__x86_64__)
+  std::feclearexcept(m_excepts);
   feenableexcept(m_excepts);
 #endif
 }
@@ -267,10 +275,14 @@ void FpeMonitor::ensureSignalHandlerInstalled() {
 void FpeMonitor::disable() {
 #if defined(__linux__) && defined(__x86_64__)
   std::feclearexcept(m_excepts);
+  assert(!stack().empty() && "FPE stack shouldn't be empty at this point");
   stack().pop();
-  if (stack().empty()) {
-    // last stack on this thread: clear exception trapping for this thread
-    fedisableexcept(m_excepts);
+  // disable excepts we enabled here
+  fedisableexcept(m_excepts);
+  if (!stack().empty()) {
+    // restore excepts from next stack element
+    std::feclearexcept(stack().top()->m_excepts);
+    feenableexcept(stack().top()->m_excepts);
   }
 #endif
 }
