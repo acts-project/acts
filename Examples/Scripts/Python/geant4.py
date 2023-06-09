@@ -34,6 +34,7 @@ def runGeant4(
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
         rnd=rnd,
+        physicsList="FTFP_BERT_ATL",
     )
     return s
 
