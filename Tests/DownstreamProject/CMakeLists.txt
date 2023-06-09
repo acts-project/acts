@@ -12,8 +12,7 @@ find_package(
     PluginIdentification
     PluginJson
     PluginLegacy
-    PluginTGeo
-    PluginEDM4hep)
+    PluginTGeo)
 
 # place artifacts in GNU-like paths, e.g. binaries in `<build>/bin`
 include(GNUInstallDirs)
@@ -46,4 +45,11 @@ if(PODIO)
   message(STATUS "Adding podio plugin")
   find_package(Acts CONFIG REQUIRED COMPONENTS PluginPodio)
   target_link_libraries( ShowActsVersion PRIVATE ActsPluginPodio)
+endif()
+
+option(EDM4HEP "Build with EDM4hep" ON)
+if(EDM4HEP)
+  message(STATUS "Adding EDM4hep plugin")
+  find_package(Acts CONFIG REQUIRED COMPONENTS PluginEDM4hep)
+  target_link_libraries( ShowActsVersion PRIVATE ActsPluginEDM4hep)
 endif()

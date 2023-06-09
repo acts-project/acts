@@ -117,7 +117,8 @@ jobs:
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
           -DDD4HEP=OFF
-          -DPODIO=OFF 
+          -DPODIO=OFF
+          -DEDM4HEP=OFF
 
       - name: Downstream build
         run: ${SETUP} && cmake --build build-downstream
