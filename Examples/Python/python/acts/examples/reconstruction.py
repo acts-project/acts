@@ -1200,15 +1200,20 @@ def addExaTrkX(
     )
 
     metricLearningConfig = {
+        "level": customLogLevel(),
         "spacepointFeatures": 3,
         "embeddingDim": 8,
         "rVal": 1.6,
         "knnVal": 500,
     }
 
-    filterConfig = {"cut": 0.21}
+    filterConfig = {
+        "level": customLogLevel(),
+        "cut": 0.21,
+    }
 
     gnnConfig = {
+        "level": customLogLevel(),
         "cut": 0.5,
     }
 

@@ -59,7 +59,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                    return std::make_shared<Alg>(
                        c, getDefaultLogger("MetricLearning", lvl));
                  }),
-                 py::arg("config"), py::arg("logger"))
+                 py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -82,7 +82,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                    return std::make_shared<Alg>(
                        c, getDefaultLogger("EdgeClassifier", lvl));
                  }),
-                 py::arg("config"), py::arg("logger"))
+                 py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -101,7 +101,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                           return std::make_shared<Alg>(
                               getDefaultLogger("EdgeClassifier", lvl));
                         }),
-                        py::arg("logger"));
+                        py::arg("level"));
   }
 #endif
 
@@ -117,7 +117,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                    return std::make_shared<Alg>(
                        c, getDefaultLogger("MetricLearning", lvl));
                  }),
-                 py::arg("config"), py::arg("logger"))
+                 py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -140,7 +140,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                    return std::make_shared<Alg>(
                        c, getDefaultLogger("EdgeClassifier", lvl));
                  }),
-                 py::arg("config"), py::arg("logger"))
+                 py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -158,7 +158,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
                           return std::make_shared<Alg>(
                               getDefaultLogger("EdgeClassifier", lvl));
                         }),
-                        py::arg("logger"));
+                        py::arg("level"));
   }
 #endif
 
