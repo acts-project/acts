@@ -387,13 +387,21 @@ def _fpeMaskFromDict(
 ActsPythonBindings._examples.Sequencer.FpeMask.toDict = _fpeMaskToDict
 
 _origSequencerInit = ActsPythonBindings._examples.Sequencer.__init__
+
+
 def _sequencerInit(self, *args, **kwargs):
     if "fpeMasks" in kwargs:
         m = kwargs["fpeMasks"]
         if isinstance(m, list):
             n = []
             for loc, fpe, count in m:
-                n.append(ActsPythonBindings._examples.Sequencer.FpeMask(loc, _fpe_types_to_enum[fpe], count))
+                n.append(
+                    ActsPythonBindings._examples.Sequencer.FpeMask(
+                        loc, _fpe_types_to_enum[fpe], count
+                    )
+                )
             kwargs["fpeMasks"] = n
     _origSequencerInit(self, *args, **kwargs)
+
+
 ActsPythonBindings._examples.Sequencer.__init__ = _sequencerInit
