@@ -131,10 +131,10 @@ ActsExamples::Geant4Simulation::makeGeant4SimulationConfig(
   g4StepCfg.neutral = false;
   g4StepCfg.primary = true;
   g4StepCfg.secondary = recordHitsOfSecondaries;
-  steppingCfg.actions.push_back(new SensitiveSteppingAction(
+  steppingCfg.actions.push_back(std::make_shared<SensitiveSteppingAction>(
       g4StepCfg, logger->cloneWithSuffix("SensitiveStepping")));
 
-  steppingCfg.actions.push_back(new ParticleKillAction(
+  steppingCfg.actions.push_back(std::make_shared<ParticleKillAction>(
       ParticleKillAction::Config{killVolume, killAfterTime},
       logger->cloneWithSuffix("Killer")));
 
@@ -250,12 +250,12 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     // Get the g4World cache
     G4VPhysicalVolume* g4World = m_cfg.detectorConstruction->Construct();
     /// Set the field ot the G4Field manager
-    G4FieldManager* fieldMgr = new G4FieldManager();
-    fieldMgr->SetDetectorField(m_cfg.magneticField.get());
-    fieldMgr->CreateChordFinder(m_cfg.magneticField.get());
+    m_fieldManager = std::make_shared<G4FieldManager>();
+    m_fieldManager->SetDetectorField(m_cfg.magneticField.get());
+    m_fieldManager->CreateChordFinder(m_cfg.magneticField.get());
 
     // Propagate down to all childrend
-    g4World->GetLogicalVolume()->SetFieldManager(fieldMgr, true);
+    g4World->GetLogicalVolume()->SetFieldManager(m_fieldManager.get(), true);
   }
 
   // Map simulation to reconstruction geometry

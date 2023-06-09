@@ -25,7 +25,7 @@ namespace ActsExamples {
 class ActsSteppingActionList : public G4UserSteppingAction {
  public:
   struct Config {
-    std::vector<G4UserSteppingAction *> actions;
+    std::vector<std::shared_ptr<G4UserSteppingAction>> actions;
   };
 
   ActsSteppingActionList(const Config &cfg) : m_cfg(cfg) {}

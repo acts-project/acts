@@ -27,7 +27,8 @@ PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
   py::module_::import("acts.ActsPythonBindingsGeant4");
 
   // This is the actual class we're binding
-  py::class_<DDG4DetectorConstruction, G4VUserDetectorConstruction>(
+  py::class_<DDG4DetectorConstruction, G4VUserDetectorConstruction,
+             std::shared_ptr<DDG4DetectorConstruction>>(
       m, "DD4DetectorConstructionImpl");
 
   // This is a python-only factory method that returns the above class.

@@ -49,12 +49,16 @@ void addGeant4HepMC3(Context& ctx);
 }
 
 PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
-  py::class_<G4VUserDetectorConstruction>(mod, "G4VUserDetectorConstruction");
+  py::class_<G4VUserDetectorConstruction,
+             std::shared_ptr<G4VUserDetectorConstruction>>(
+      mod, "G4VUserDetectorConstruction");
 
-  py::class_<G4VPhysicalVolume>(mod, "G4VPhysicalVolume");
+  py::class_<G4VPhysicalVolume, std::shared_ptr<G4VPhysicalVolume>>(
+      mod, "G4VPhysicalVolume");
 
   // This is the actual class we're binding
-  py::class_<GdmlDetectorConstruction, G4VUserDetectorConstruction>(
+  py::class_<GdmlDetectorConstruction, G4VUserDetectorConstruction,
+             std::shared_ptr<GdmlDetectorConstruction>>(
       mod, "GdmlDetectorConstructionImpl")
       .def("Construct", &GdmlDetectorConstruction::Construct);
 
@@ -100,7 +104,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     using DetectorConstruction =
         ActsExamples::Telescope::TelescopeG4DetectorConstruction;
 
-    py::class_<DetectorConstruction, G4VUserDetectorConstruction>(
+    py::class_<DetectorConstruction, G4VUserDetectorConstruction,
+               std::shared_ptr<DetectorConstruction>>(
         mod, "TelescopeG4DetectorConstructionImpl");
 
     mod.def(

@@ -31,6 +31,7 @@ class G4UserTrackingAction;
 class G4UserSteppingAction;
 class G4MagneticField;
 class G4VUserPhysicsList;
+class G4FieldManager;
 
 namespace Acts {
 class TrackingGeometry;
@@ -162,6 +163,8 @@ class Geant4Simulation final : public IAlgorithm {
 
   // Has to be mutable; algorithm interface enforces object constness
   mutable std::mutex m_runManagerLock;
+
+  std::shared_ptr<G4FieldManager> m_fieldManager;
 };
 
 }  // namespace ActsExamples
