@@ -503,7 +503,7 @@ jobs:
           && sudo chown $USER /usr/local/acts
           && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.67dd08d.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
-          && python -m pip install pyyaml jinja2
+          && python3 -m pip install pyyaml jinja2
 
       - name: Cache build
         uses: actions/cache@v3
