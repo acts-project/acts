@@ -20,6 +20,12 @@ namespace Acts {
 TorchMetricLearning::TorchMetricLearning(const Config &cfg) : m_cfg(cfg) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+  std::cout << "Using torch version " << TORCH_VERSION << std::endl;
+#ifndef ACTS_EXATRKX_CPUONLY
+  if( not torch::cuda::is_available() ) {
+    std::cout << "WARNING: CUDA not available, falling back to CPU\n";
+  }
+#endif
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
@@ -34,6 +40,7 @@ TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues, const Logger &logger) {
+  ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
