@@ -13,7 +13,7 @@ ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
   ProtoTrack track;
   track.reserve(seed.sp().size());
   for (const auto& spacePoints : seed.sp()) {
-    for (const auto& slink : spacePoints.sourceLinks()) {
+    for (const auto& slink : spacePoints->sourceLinks()) {
       const auto& islink = slink.get<IndexSourceLink>();
       track.emplace_back(islink.index());
     }

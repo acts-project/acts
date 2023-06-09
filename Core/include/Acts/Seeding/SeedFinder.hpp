@@ -9,11 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Neighbour.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -41,8 +39,8 @@ class SeedFinder {
  public:
   struct SeedingState {
     // bottom space point
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
+    std::vector<const external_spacepoint_t*> compatBottomSP;
+    std::vector<const external_spacepoint_t*> compatTopSP;
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
@@ -50,12 +48,12 @@ class SeedFinder {
     std::vector<LinCircle> linCircleTop;
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
+    std::vector<const external_spacepoint_t*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
+    CandidatesForMiddleSp<const external_spacepoint_t>
         candidates_collector;
 
     // managing doublet candidates
@@ -63,9 +61,6 @@ class SeedFinder {
         bottomNeighbours;
     boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
         topNeighbours;
-
-    // Adding space point info
-    Acts::SpacePointData spacePointData;
   };
 
   /// The only constructor. Requires a config object.
@@ -130,7 +125,6 @@ class SeedFinder {
  private:
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
-  /// @param spacePointData object contaning the spacepoint data
   /// @param options frequently changing configuration (like beam position)
   /// @param grid spacepoint grid
   /// @param otherSPsNeighbours inner or outer space points to be used in the dublet
@@ -142,24 +136,22 @@ class SeedFinder {
   /// @param isBottom wheter otherSPs contains outer or inner SPs
   template <typename out_range_t>
   void getCompatibleDoublets(
-      Acts::SpacePointData& spacePointData,
       const Acts::SeedFinderOptions& options,
       const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
           otherSPsNeighbours,
-      const InternalSpacePoint<external_spacepoint_t>& mediumSP,
+      const external_spacepoint_t& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
       const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
-  /// @param spacePointData object contaning the spacepoint data
   /// @param SpM space point candidate to be used as middle SP in a seed
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
-  void filterCandidates(Acts::SpacePointData& spacePointData,
-                        const InternalSpacePoint<external_spacepoint_t>& SpM,
+  void filterCandidates(
+                        const external_spacepoint_t& SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;

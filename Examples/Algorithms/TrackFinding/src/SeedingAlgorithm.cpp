@@ -21,6 +21,7 @@
 #include <csignal>
 #include <limits>
 #include <stdexcept>
+#include <chrono>
 
 using namespace Acts::HashedStringLiteral;
 
@@ -191,11 +192,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
+  auto start_preparation = std::chrono::high_resolution_clock::now();
+  // Config
+  Acts::SpacePointContainerConfig spConfig;
+  spConfig.useDetailedDoubleMeasurementInfo = m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo;
+  // Options
+  Acts::SpacePointContainerOptions spOptions;
+  spOptions.beamPos = {0., 0.};
+
   // Prepare interface SpacePoint backend-ACTS
   ActsExamples::SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-      spContainer(container);
+    spContainer(spConfig, spOptions, container);
 
   using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
@@ -225,44 +234,21 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   static thread_local std::vector<seed_type> seeds;
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-  state.spacePointData.resize(
-      std::distance(spContainer.begin(), spContainer.end()),
-      m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
-
-  if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    for (std::size_t grid_glob_bin(0);
-         grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
-      const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
-      for (const auto& sp : collection) {
-        std::size_t index = sp->index();
-        state.spacePointData.setTopHalfStripLength(
-            index,
-            sp->sp().template component<float>("TopHalfStripLength"_hash));
-        state.spacePointData.setBottomHalfStripLength(
-            index,
-            sp->sp().template component<float>("BottomHalfStripLength"_hash));
-        state.spacePointData.setTopStripDirection(
-            index, sp->sp().template component<Acts::Vector3>(
-                       "TopStripDirection"_hash));
-        state.spacePointData.setBottomStripDirection(
-            index, sp->sp().template component<Acts::Vector3>(
-                       "BottomStripDirection"_hash));
-        state.spacePointData.setStripCenterDistance(
-            index, sp->sp().template component<Acts::Vector3>(
-                       "StripCenterDistance"_hash));
-        state.spacePointData.setTopStripCenterPosition(
-            index, sp->sp().template component<Acts::Vector3>(
-                       "TopStripCenterPosition"_hash));
-      }
-    }
-  }
-
+  auto stop_preparation = std::chrono::high_resolution_clock::now();
+  
+  auto start = std::chrono::high_resolution_clock::now();
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
         m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
         std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
+  auto stop = std::chrono::high_resolution_clock::now();
 
+  auto duration_preparation = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_preparation - start_preparation).count();
+  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+  std::cout <<"preparation time="<<duration_preparation<<"\n";
+  std::cout <<"seeding time="<<duration<<"\n";
+  
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
@@ -272,8 +258,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   SeedContainerForStorage.reserve(seeds.size());
   for (const auto& seed : seeds) {
     const auto& sps = seed.sp();
-    SeedContainerForStorage.emplace_back(*sps[0].sp(), *sps[1].sp(),
-                                         *sps[2].sp(), seed.z(),
+    SeedContainerForStorage.emplace_back(*sps[0]->sp(), *sps[1]->sp(),
+                                         *sps[2]->sp(), seed.z(),
                                          seed.seedQuality());
   }
 

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -53,30 +52,20 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
-/// @param[in] spacePointData Auxiliary variables used by the seeding
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    Acts::SpacePointData& spacePointData,
-    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec);
-
-template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(Acts::SpacePointData& spacePointData,
-                          const std::vector<external_spacepoint_t*>& vec,
+                          const std::vector<const external_spacepoint_t*>& vec,
                           const external_spacepoint_t& spM, bool bottom,
-                          std::vector<LinCircle>& linCircleVec,
-                          callable_t&& extractFunction);
+                          std::vector<LinCircle>& linCircleVec);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
-/// @param[in] spacePointData Auxiliary variables used by the seeding
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
@@ -84,9 +73,8 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
-    Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
+    const external_spacepoint_t& sp,
     const double* spacepointPosition, double* outputCoordinates);
 
 }  // namespace Acts

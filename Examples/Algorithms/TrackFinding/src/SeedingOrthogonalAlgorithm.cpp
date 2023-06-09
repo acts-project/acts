@@ -58,10 +58,9 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
 
   // construct seed filter
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
-          Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
+    std::make_unique<Acts::SeedFilter<proxy_type>>(m_cfg.seedFilterConfig);
 
-  m_finder = Acts::SeedFinderOrthogonal<SimSpacePoint>(m_cfg.seedFinderConfig);
+  m_finder = Acts::SeedFinderOrthogonal<proxy_type>(m_cfg.seedFinderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
@@ -74,23 +73,28 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     }
   }
 
-  Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig);
+  // Config
+  Acts::SpacePointContainerConfig spConfig;
+  
+  // Options
+  Acts::SpacePointContainerOptions spOptions;
+  spOptions.beamPos = {0., 0.};
+  
+  ActsExamples::SpacePointContainer container(spacePoints);
+  Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
+    spContainer(spConfig, spOptions, container);
+  /*
+  Acts::SeedFinderOrthogonal<proxy_type> finder(m_cfg.seedFinderConfig);
+  std::vector<Acts::Seed<proxy_type>> seeds = finder.createSeeds(m_cfg.seedFinderOptions,
+						    spContainer);
 
-  std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-      const SimSpacePoint *sp)>
-      create_coordinates = [](const SimSpacePoint *sp) {
-        Acts::Vector3 position(sp->x(), sp->y(), sp->z());
-        Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
-        return std::make_pair(position, variance);
-      };
-
-  SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
-                                              spacePoints, create_coordinates);
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
-
-  m_outputSeeds(ctx, std::move(seeds));
+  */
+  // need to convert here
+  SimSeedContainer seedsToAdd;
+  m_outputSeeds(ctx, std::move(seedsToAdd));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

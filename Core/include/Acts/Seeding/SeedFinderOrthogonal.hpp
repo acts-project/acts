@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
@@ -43,17 +42,12 @@ class SeedFinderOrthogonal {
   using seed_t = Seed<external_spacepoint_t>;
 
   /**
-   * @brief The spacepoint type used by this seeder internally.
-   */
-  using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
-
-  /**
    * @brief The k-d tree type used by this seeder internally, which is
    * three-dimensional, contains internal spacepoint pointers, uses the Acts
    * scalar type for coordinates, stores its coordinates in std::arrays, and
    * has leaf size 4.
    */
-  using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
+  using tree_t = KDTree<NDims, external_spacepoint_t *, ActsScalar, std::array, 4>;
 
   /**
    * @brief Construct a new orthogonal seed finder.
@@ -103,12 +97,10 @@ class SeedFinderOrthogonal {
    * @param extract_coordinates User-defined function for extracting global position and
    * covariance of the external space point
    */
-  template <typename input_container_t, typename output_container_t,
-            typename callable_t>
+  template <typename input_container_t, typename output_container_t>
   void createSeeds(const Acts::SeedFinderOptions &options,
                    const input_container_t &spacePoints,
-                   output_container_t &out_cont,
-                   callable_t &&extract_coordinates) const;
+                   output_container_t &out_cont) const;
 
   /**
    * @brief Perform seed finding, returning a new container of seeds.
@@ -126,10 +118,9 @@ class SeedFinderOrthogonal {
    *
    * @return A vector of seeds.
    */
-  template <typename input_container_t, typename callable_t>
+  template <typename input_container_t>
   std::vector<seed_t> createSeeds(const Acts::SeedFinderOptions &options,
-                                  const input_container_t &spacePoints,
-                                  callable_t &&extract_coordinates) const;
+                                  const input_container_t &spacePoints) const;
 
  private:
   /**
@@ -152,7 +143,7 @@ class SeedFinderOrthogonal {
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeLH(
-      const internal_sp_t &low) const;
+      const external_spacepoint_t &low) const;
 
   /**
    * @brief Return the AABB rearch range for a given spacepoint, searching
@@ -169,7 +160,7 @@ class SeedFinderOrthogonal {
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeHL(
-      const internal_sp_t &high) const;
+      const external_spacepoint_t &high) const;
 
   /**
    * @brief Check whether two spacepoints form a valid tuple.
@@ -189,8 +180,8 @@ class SeedFinderOrthogonal {
    *
    * @return True if the two points form a valid pair, false otherwise.
    */
-  bool validTuple(const SeedFinderOptions &options, const internal_sp_t &low,
-                  const internal_sp_t &high, bool isMiddleInverted) const;
+  bool validTuple(const SeedFinderOptions &options, const external_spacepoint_t &low,
+                  const external_spacepoint_t &high, bool isMiddleInverted) const;
 
   /**
    * @brief Create a k-d tree from a set of spacepoints.
@@ -199,7 +190,7 @@ class SeedFinderOrthogonal {
    *
    * @return A k-d tree containing the given spacepoints.
    */
-  tree_t createTree(const std::vector<internal_sp_t *> &spacePoints) const;
+  tree_t createTree(const std::vector<external_spacepoint_t *> &spacePoints) const;
 
   /**
    * @brief Filter potential candidate pairs, and output seeds into an
@@ -215,10 +206,11 @@ class SeedFinderOrthogonal {
    * @param spacePointData Auxiliary variables used by the seeding
    */
   void filterCandidates(
-      const SeedFinderOptions &options, internal_sp_t &middle,
-      std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
+      const SeedFinderOptions &options, const external_spacepoint_t &middle,
+      const std::vector<const external_spacepoint_t *> &bottom,
+      const std::vector<const external_spacepoint_t *> &top,
       SeedFilterState seedFilterState,
-      CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
+      CandidatesForMiddleSp<const external_spacepoint_t>
           &candidates_collector,
       Acts::SpacePointData &spacePointData) const;
 

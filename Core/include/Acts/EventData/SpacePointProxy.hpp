@@ -49,13 +49,20 @@ class SpacePointProxy {
   float x() const;
   float y() const;
   float z() const;
+  float phi() const;
   float radius() const;
   float varianceR() const;
   float varianceZ() const;
 
+  const float& quality() const;
+  const float& deltaR() const;
+  
+  void setQuality(const float& value) const;
+  void setDeltaR(const float& value) const;
+  
   // component methods for additional quantities
   template <typename T>
-  T component(HashedString key) const;
+  const T& component(HashedString key) const;
 
  private:
   ContainerType& container() const;

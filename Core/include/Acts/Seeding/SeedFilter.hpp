@@ -62,15 +62,14 @@ class SeedFilter {
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
   virtual void filterSeeds_2SpFixed(
-      Acts::SpacePointData& spacePointData,
-      const InternalSpacePoint<external_spacepoint_t>& bottomSP,
-      const InternalSpacePoint<external_spacepoint_t>& middleSP,
-      const std::vector<const InternalSpacePoint<external_spacepoint_t>*>&
+      const external_spacepoint_t& bottomSP,
+      const external_spacepoint_t& middleSP,
+      const std::vector<const external_spacepoint_t*>&
           topSpVec,
       const std::vector<float>& invHelixDiameterVec,
       const std::vector<float>& impactParametersVec,
       SeedFilterState& seedFilterState,
-      CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
+      CandidatesForMiddleSp<const external_spacepoint_t>&
           candidates_collector) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
@@ -80,8 +79,7 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      Acts::SpacePointData& spacePointData,
-      CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
+      CandidatesForMiddleSp<const external_spacepoint_t>&
           candidates_collector,
       std::size_t& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
@@ -94,9 +92,8 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      Acts::SpacePointData& spacePointData,
       std::vector<typename CandidatesForMiddleSp<
-          const InternalSpacePoint<external_spacepoint_t>>::value_type>&
+          const external_spacepoint_t>::value_type>&
           candidates,
       std::size_t& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)

@@ -11,14 +11,54 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/SpacePointProxyIterator.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
 #include <vector>
+#include <math.h>
 
 namespace Acts {
+  struct SpacePointContainerConfig {
+    bool useDetailedDoubleMeasurementInfo = false;
+    bool isInInternalUnits = false;
 
+    SpacePointContainerConfig toInternalUnits() const {
+      if (isInInternalUnits) {
+        throw std::runtime_error(
+                                 "Repeated conversion to internal units for SpacePointContainerConfig");
+      }
+      using namespace Acts::UnitLiterals;
+      SpacePointContainerConfig config = *this;
+      config.isInInternalUnits = true;
+      return config;
+    };
+  };
+
+  struct SpacePointContainerOptions {
+    // location of beam in x,y plane.
+    // used as offset for Space Points
+    Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
+      0 * Acts::UnitConstants::mm};
+    bool isInInternalUnits = false;
+    
+    SpacePointContainerOptions toInternalUnits() const {
+      if (isInInternalUnits) {
+	throw std::runtime_error(
+				 "Repeated conversion to internal units for SpacePointContainerOptions");
+      }
+      using namespace Acts::UnitLiterals;
+      SpacePointContainerOptions options = *this;
+      options.isInInternalUnits = true;
+      options.beamPos[0] /= 1_mm;
+      options.beamPos[1] /= 1_mm;      
+      return options;
+    }
+  };
+  
+  
 template <typename container_t, template <typename> class holder_t>
 class SpacePointContainer {
  public:
@@ -56,7 +96,8 @@ class SpacePointContainer {
   using ProxyType =
       typename std::conditional<read_only, ConstSpacePointProxyType,
                                 SpacePointProxyType>::type;
-
+  using value_type = ProxyType;
+  
  public:
   // Constructors
   // It makes sense to support both options of
@@ -67,14 +108,18 @@ class SpacePointContainer {
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::RefHolder>::value>>
-  SpacePointContainer(container_t& container);
+  SpacePointContainer(const Acts::SpacePointContainerConfig& confing,
+		      const Acts::SpacePointContainerOptions& options,
+		      container_t& container);
 
   // Take the ownership
   // Activate only if holder_t is ValueHolder
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::ValueHolder>::value>>
-  SpacePointContainer(container_t&& container);
+  SpacePointContainer(const Acts::SpacePointContainerConfig& config,
+		      const Acts::SpacePointContainerOptions& options,
+		      container_t&& container);
 
   // If we take ownership, forbid copy operations
   // Need to define copy operations only if holder_t is RefHolder !!!
@@ -108,9 +153,9 @@ class SpacePointContainer {
   const_iterator end() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ValueType& sp(std::size_t n);
+  ValueType& sp(const std::size_t& n);
 
-  ValueType& sp(std::size_t n) const;
+  ValueType& sp(const std::size_t& n) const;
 
  private:
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
@@ -119,23 +164,38 @@ class SpacePointContainer {
   const container_t& container() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType proxy(std::size_t n);
+  ProxyType proxy(const std::size_t& n);
 
-  const ProxyType proxy(std::size_t n) const;
+  const ProxyType proxy(const std::size_t& n) const;
 
+  // const std::vector<ProxyType>& proxies() const;
+
+  // template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  // std::vector<ProxyType>& proxies();
+    
  private:
-  float x(std::size_t n) const;
-  float y(std::size_t n) const;
-  float z(std::size_t n) const;
-  float radius(std::size_t n) const;
-  float varianceR(std::size_t n) const;
-  float varianceZ(std::size_t n) const;
+  const float& x(const std::size_t& n) const;
+  const float& y(const std::size_t& n) const;
+  const float& z(const std::size_t& n) const;
+  const float& phi(const std::size_t& n) const;
+  const float& radius(const std::size_t& n) const;
+  const float& varianceR(const std::size_t& n) const;
+  const float& varianceZ(const std::size_t& n) const;
 
+  const float& quality(const std::size_t& n) const;
+  const float& deltaR(const std::size_t& n) const;
+
+  void setQuality(const std::size_t& n, const float& value) const;
+  void setDeltaR(const std::size_t& n, const float& value) const;
+  
   // component methods for additional quantities
   template <typename T>
-  T component(HashedString key, std::size_t n) const;
+  const T& component(HashedString key, const std::size_t& n) const;
 
  private:
+  Acts::SpacePointContainerConfig m_config;
+  Acts::SpacePointContainerOptions m_options;
+  mutable Acts::SpacePointData m_data;
   holder_t<container_t> m_container;
 };
 
