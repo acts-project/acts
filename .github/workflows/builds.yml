@@ -77,6 +77,7 @@ jobs:
           -DACTS_BUILD_INTEGRATIONTESTS=ON
           -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
           -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
+          -DACTS_BUILD_PLUGIN_PODIO=OFF
           -DACTS_BUILD_EXAMPLES_GEANT4=ON
           -DACTS_BUILD_EXAMPLES_HEPMC3=ON
           -DACTS_BUILD_EXAMPLES_PYTHIA8=ON
@@ -116,6 +117,7 @@ jobs:
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
           -DDD4HEP=OFF
+          -DPODIO=OFF 
 
       - name: Downstream build
         run: ${SETUP} && cmake --build build-downstream
