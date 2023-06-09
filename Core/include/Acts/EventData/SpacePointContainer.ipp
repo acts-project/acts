@@ -23,6 +23,7 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
 {
   // the following has to be changed !!!
   m_data.resize(this->size(), config.useDetailedDoubleMeasurementInfo);
+  m_proxies.reserve(this->size());
   for (std::size_t i(0); i<this->size(); ++i) {
     m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
     m_data.setY(i, this->container().y_impl(i) - m_options.beamPos[1]);
@@ -31,6 +32,8 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     m_data.setPhi(i, atan2f(m_data.y(i), m_data.x(i)));
     m_data.setVarianceR(i, this->container().varianceR_impl(i) );
     m_data.setVarianceZ(i, this->container().varianceZ_impl(i) );
+
+    m_proxies.emplace_back(*this, i);
   }
   
   // Dynamic variables
@@ -58,6 +61,7 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     m_container(std::move(container))
 {
   m_data.resize(this->size(), config.useDetailedDoubleMeasurementInfo);
+  m_proxies.reserve(this->size());
   for (std::size_t i(0); i<this->size(); ++i) {
     m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
     m_data.setY(i, this->container().y_impl(i) - m_options.beamPos[1]);
@@ -66,6 +70,8 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     m_data.setPhi(i, atan2f(m_data.y(i), m_data.x(i)));
     m_data.setVarianceR(i, this->container().varianceR_impl(i) );
     m_data.setVarianceZ(i, this->container().varianceZ_impl(i) );
+    
+    m_proxies.emplace_back(*this, i);
   }
   
   // Dynamic variables 
@@ -261,15 +267,26 @@ SpacePointContainer<container_t, holder_t>::setDeltaR(const std::size_t& n, cons
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline typename SpacePointContainer<container_t, holder_t>::ProxyType
+inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::proxy(const std::size_t& n) {
-  return {this, n};
+  return proxies()[n];
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const typename SpacePointContainer<container_t, holder_t>::ProxyType
+inline const typename SpacePointContainer<container_t, holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::proxy(const std::size_t& n) const {
-  return {*this, n};
+  return proxies()[n];
 }
+
+template <typename container_t, template <typename> class holder_t>
+const std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>& 
+SpacePointContainer<container_t, holder_t>::proxies() const
+{ return m_proxies; }
+
+template <typename container_t, template <typename> class holder_t>
+template <bool, typename>
+std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>& 
+SpacePointContainer<container_t, holder_t>::proxies()
+{ return m_proxies; }
 
 }  // namespace Acts
