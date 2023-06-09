@@ -7,6 +7,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <iostream>
+
 namespace Acts {
 
 inline const float& SpacePointData::x(const std::size_t& idx) const {
@@ -90,6 +92,7 @@ inline bool SpacePointData::hasDynamicVariable() const {
 
 inline std::any SpacePointData::component(Acts::HashedString key,
 					  const std::size_t& n) const {
+  std::cout << "Getting component with index: " << n << "/" << m_topHalfStripLength.size() << "\n"; 
   using namespace Acts::HashedStringLiteral;
   switch (key) {
   case "TopHalfStripLength"_hash:
