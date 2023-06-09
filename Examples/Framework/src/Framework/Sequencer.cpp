@@ -503,8 +503,8 @@ int Sequencer::run() {
                     ss << "FPE of type " << type
                        << " exceeded configured per-event threshold of "
                        << nMasked << " (mask: " << maskLoc
-                       << " FPEs) (seen: " << count << ")\n"
-                       << Acts::FpeMonitor::stackTraceToString(*st, 8);
+                       << ") (seen: " << count << " FPEs)\n"
+                       << Acts::FpeMonitor::stackTraceToString(*st, m_cfg.fpeStackTraceLength);
                     ACTS_ERROR(ss.str());
                     if (m_cfg.failOnFpe) {
                       throw FpeFailure{ss.str()};
@@ -584,7 +584,8 @@ int Sequencer::run() {
                                              " per event by " + maskLoc + "]"
                                        : "")
                        << "\n"
-                       << Acts::FpeMonitor::stackTraceToString(*st, 8));
+                       << Acts::FpeMonitor::stackTraceToString(
+                              *st, m_cfg.fpeStackTraceLength));
       }
       ACTS_INFO("-----------------------------------");
     }

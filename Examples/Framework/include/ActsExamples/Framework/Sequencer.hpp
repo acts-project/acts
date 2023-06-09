@@ -84,7 +84,8 @@ class Sequencer {
 
     bool trackFpes = true;
     std::vector<FpeMask> fpeMasks{};
-    bool failOnFpe = false;
+    bool failOnFpe = true;
+    std::size_t fpeStackTraceLength = 8;
   };
 
   Sequencer(const Config &cfg);
