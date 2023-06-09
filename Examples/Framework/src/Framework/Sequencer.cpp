@@ -504,7 +504,8 @@ int Sequencer::run() {
                        << " exceeded configured per-event threshold of "
                        << nMasked << " (mask: " << maskLoc
                        << ") (seen: " << count << " FPEs)\n"
-                       << Acts::FpeMonitor::stackTraceToString(*st, m_cfg.fpeStackTraceLength);
+                       << Acts::FpeMonitor::stackTraceToString(
+                              *st, m_cfg.fpeStackTraceLength);
                     ACTS_ERROR(ss.str());
                     if (m_cfg.failOnFpe) {
                       throw FpeFailure{ss.str()};
