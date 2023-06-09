@@ -62,19 +62,17 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 std::vector<std::vector<int>>
 ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const {
-  auto [nodes, edges] = (*m_cfg.graphConstructor)(inputValues, logger());
+  auto [nodes, edges] = (*m_cfg.graphConstructor)(inputValues);
   std::any edge_weights;
 
   for (auto edgeClassifier : m_cfg.edgeClassifiers) {
-    auto [newNodes, newEdges, newWeights] =
-        (*edgeClassifier)(nodes, edges, logger());
+    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(nodes, edges);
     nodes = newNodes;
     edges = newEdges;
     edge_weights = newWeights;
   }
 
-  return (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs,
-                               logger());
+  return (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
@@ -114,12 +112,21 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Make the prototracks
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
+
+  int nPrototracksLessThreeHits = 0;
   for (auto& x : trackCandidates) {
     ProtoTrack onetrack;
     std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
+
+    if( onetrack.size() < 3 ) {
+      nPrototracksLessThreeHits++;
+      continue;
+    }
+
     protoTracks.push_back(std::move(onetrack));
   }
 
+  ACTS_INFO("Skipped " << nPrototracksLessThreeHits << " proto tracks with nHits < 3");
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
   m_outputProtoTracks(ctx, std::move(protoTracks));
 

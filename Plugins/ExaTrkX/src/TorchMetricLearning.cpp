@@ -17,9 +17,17 @@
 
 namespace Acts {
 
-TorchMetricLearning::TorchMetricLearning(const Config &cfg) : m_cfg(cfg) {
+TorchMetricLearning::TorchMetricLearning(const Config &cfg,
+                                         std::unique_ptr<const Logger> logger)
+    : m_logger(std::move(logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+  std::cout << "Using torch version " << TORCH_VERSION << std::endl;
+#ifndef ACTS_EXATRKX_CPUONLY
+  if (not torch::cuda::is_available()) {
+    std::cout << "WARNING: CUDA not available, falling back to CPU\n";
+  }
+#endif
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
@@ -33,7 +41,8 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg) : m_cfg(cfg) {
 TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
-    std::vector<float> &inputValues, const Logger &logger) {
+    std::vector<float> &inputValues) {
+  ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
@@ -49,7 +58,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
                << *std::max_element(inputValues.begin(), inputValues.end())
                << ", "
                << *std::min_element(inputValues.begin(), inputValues.end()))
-  printCudaMemInfo(logger);
+  printCudaMemInfo(logger());
 
   // **********
   // Embedding
@@ -70,7 +79,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
 
   ACTS_VERBOSE("Embedding space of the first SP:\n"
                << eOutput->slice(/*dim=*/0, /*start=*/0, /*end=*/1));
-  printCudaMemInfo(logger);
+  printCudaMemInfo(logger());
 
   // ****************
   // Building Edges
@@ -83,7 +92,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   ACTS_VERBOSE("Shape of built edges: (" << edgeList->size(0) << ", "
                                          << edgeList->size(1));
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList->slice(1, 0, 5));
-  printCudaMemInfo(logger);
+  printCudaMemInfo(logger());
 
   return {eLibInputTensor, *edgeList};
 }
