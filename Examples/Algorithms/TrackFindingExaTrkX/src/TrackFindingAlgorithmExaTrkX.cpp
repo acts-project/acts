@@ -112,7 +112,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Make the prototracks
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
-
   for (auto& x : trackCandidates) {
     ProtoTrack onetrack;
     std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
