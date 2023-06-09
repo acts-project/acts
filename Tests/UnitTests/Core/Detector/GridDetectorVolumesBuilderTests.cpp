@@ -84,8 +84,6 @@ void gridZRPhhiBase(
 
   // Count the unqiue surfaces
   std::set<const Surface*> uniqueSurfaces;
-  // Count the surface hits
-  std::size_t surfaceHits = 0;
 
   // Check the number of portals
   //
@@ -121,12 +119,30 @@ void gridZRPhhiBase(
       for (const auto& s : edv->surfaces()) {
         uniqueSurfaces.insert(s);
       }
-      surfaceHits += edv->surfaces().size();
     }
   }
   // Check if portal setup if fine
   if (runPortalChecks) {
     BOOST_CHECK(uniquePortals.size() == expectedPortals);
+    // Check if the portal container is present
+  }
+
+  // Full portal definition
+  BOOST_CHECK(portalContainer.size() == 6u);
+
+  BOOST_CHECK(portalContainer[0u].size() == binsR * binsPhi);
+  BOOST_CHECK(portalContainer[1u].size() == binsR * binsPhi);
+  BOOST_CHECK(portalContainer[2u].size() == binsZ * binsPhi);
+  // Check validity if inner one is present
+  if (portalContainer[3].size() > 0u) {
+    BOOST_CHECK(portalContainer[3u].size() == binsZ * binsPhi);
+  }
+  // Check validity if phi is not closed
+  if (portalContainer[4u].size() > 0u) {
+    BOOST_CHECK(portalContainer[4u].size() == binsZ * binsR);
+  }
+  if (portalContainer[5u].size() > 0u) {
+    BOOST_CHECK(portalContainer[5u].size() == binsZ * binsR);
   }
 
   // Visualization
@@ -146,10 +162,13 @@ void gridZRPhhiBase(
 /// @param rMin is the minimum radius
 /// @param approximateCylinders is the flag to approximate cylinders
 /// @param runPortalChecks is the flag to run portal checks
+/// @param phiBoundary - special check for open phi setup
 void gridZRPhhiTest(const std::string& detectorName, int binsZ = 50,
                     int binsR = 6, int binsPhi = 36, Acts::ActsScalar rMin = 0.,
                     bool approximateCylinders = false,
-                    bool runPortalChecks = true) {
+                    bool runPortalChecks = true,
+                    const std::array<Acts::ActsScalar, 2>& phiRange = {-M_PI,
+                                                                       M_PI}) {
   // Create a tracking geometry for reference conversion
   auto trackingGeometry = cGeometry();
 
@@ -170,7 +189,7 @@ void gridZRPhhiTest(const std::string& detectorName, int binsZ = 50,
       ProtoBinning(BinningValue::binR, Acts::detail::AxisBoundaryType::Bound,
                    rMin, 300., binsR, 0),
       ProtoBinning(BinningValue::binPhi, Acts::detail::AxisBoundaryType::Closed,
-                   -M_PI, M_PI, binsPhi, 0),
+                   phiRange[0u], phiRange[1u], binsPhi, 0),
   };
 
   gdbConfig.approximateCylinders = approximateCylinders;
@@ -343,6 +362,11 @@ BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqBeqBeqC_zrphi) {
       gridZRPhhiTest("EqEqEq_zrphi_19_8_36_rmin10", 10, 8, 36, 10.));
 }
 
+BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqBeqBeqB_zrphi_open) {
+  BOOST_CHECK_NO_THROW(gridZRPhhiTest("EqEqEq_zrphi_19_8_36_rmin10_open", 10, 8,
+                                      18, 10., false, false, {-1.8, 1.8}));
+}
+
 BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqBeqBeqC_zrphi_trapezoids) {
   BOOST_CHECK_NO_THROW(
       gridZRPhhiTest("EqEqEq_zrphi_trapezoids", 10, 8, 36, 10., true));
@@ -352,6 +376,13 @@ BOOST_AUTO_TEST_CASE(GridDetectorVolumesBuilder_eqBeqBeqC_zrphi_trapezoids) {
   BOOST_CHECK_THROW(
       gridZRPhhiTest("EqEqEq_zrphi_trapezoids_throw", 10, 8, 2, 10., true),
       std::invalid_argument);
+}
+
+BOOST_AUTO_TEST_CASE(
+    GridDetectorVolumesBuilder_eqBeqBeqB_zrphi_open_trapezoids) {
+  BOOST_CHECK_NO_THROW(
+      gridZRPhhiTest("EqEqEq_zrphi_19_8_36_rmin10_open_trapezoids", 10, 8, 18,
+                     10., true, false, {-1.8, 1.8}));
 }
 
 // Test variable binning

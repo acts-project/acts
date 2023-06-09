@@ -393,6 +393,10 @@ using VarBoundVarBoundEqClosed =
              Acts::detail::AxisBoundaryType::Bound,
              Acts::detail::AxisBoundaryType::Closed>;
 
+using VarBoundVarBoundEqBound = VarVarEq<Acts::detail::AxisBoundaryType::Bound,
+                                         Acts::detail::AxisBoundaryType::Bound,
+                                         Acts::detail::AxisBoundaryType::Bound>;
+
 /// @brief  Templated base generator for a three variable axes tuple - 3D
 ///
 /// @tparam aType the type of the first axis (Bound, Closed, Open)

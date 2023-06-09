@@ -126,13 +126,13 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   // Run throuth the builders
   std::for_each(
       m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
-        auto [cvolumes, ccontainer, croots] = builder->construct(gctx);
-        atNavigationLevel = (atNavigationLevel and volumes.size() == 1u);
+        auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
+        atNavigationLevel = (atNavigationLevel and cVolumes.size() == 1u);
         // Collect individual components, volumes, containers, roots
-        volumes.insert(volumes.end(), cvolumes.begin(), cvolumes.end());
-        containers.push_back(ccontainer);
-        rootVolumes.insert(rootVolumes.end(), croots.volumes.begin(),
-                           croots.volumes.end());
+        volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
+        containers.push_back(cContainer);
+        rootVolumes.insert(rootVolumes.end(), cRoots.volumes.begin(),
+                           cRoots.volumes.end());
       });
   // Navigation level detected, connect volumes (cleaner and faster than
   // connect containers)

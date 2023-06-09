@@ -56,8 +56,8 @@ class GridDetectorVolumesBuilder : public IDetectorComponentBuilder {
     unsigned int polyhedronSegements = 4;
     /// Use a polygon approximation for the cylinders
     bool approximateCylinders = false;
-    /// The innermost is a full bin
-    bool innerMostSingleBin = false;
+    /// The tolerance when phi is declared closed
+    ActsScalar phiClosedTolerance = 0.001;
     /// A gobal transform
     Transform3 transform = Transform3::Identity();
     /// Auxiliary information
@@ -67,9 +67,9 @@ class GridDetectorVolumesBuilder : public IDetectorComponentBuilder {
   /// Constructor
   ///
   /// @param cfg is the configuration struct
-  /// @param logger logging instance for screen output
+  /// @param mlogger logging instance for screen output
   GridDetectorVolumesBuilder(const Config& cfg,
-                             std::unique_ptr<const Logger> logger =
+                             std::unique_ptr<const Logger> mlogger =
                                  getDefaultLogger("GridDetectorVolumesBuilder",
                                                   Logging::INFO));
 
@@ -156,6 +156,9 @@ class GridDetectorVolumesBuilder : public IDetectorComponentBuilder {
 
   /// Binning values from parsing
   std::array<BinningValue, 3u> m_binningValues = {};
+
+  /// Closed phi setup
+  bool m_closedPhiSetup = false;
 
   /// Private acces method to the logger
   const Logger& logger() const { return *m_logger; }

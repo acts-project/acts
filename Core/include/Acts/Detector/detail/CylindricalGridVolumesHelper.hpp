@@ -87,6 +87,10 @@ buildVolumes(const GeometryContext& gctx, const grid_type& cylindricalGrid,
   auto edgesR = axes[1]->getBinEdges();
   auto edgesPhi = axes[2]->getBinEdges();
 
+  // Detect if phi is closed or not
+  bool phiClosed = std::abs((edgesPhi.back() - edgesPhi.front()) - 2 * M_PI) <
+                   std::numeric_limits<ActsScalar>::epsilon();
+
   // Polygon approximation needs at least 3 bins in phi
   if (edgesPhi.size() < 4 and options.polygonApproximation) {
     throw std::invalid_argument(
@@ -103,6 +107,15 @@ buildVolumes(const GeometryContext& gctx, const grid_type& cylindricalGrid,
   auto portalGenerator = defaultPortalGenerator();
 
   DetectorComponent::PortalContainer portalContainer = {};
+
+  // Collect the portal for the outside containew view
+  // - this follows a CylinderVolumeBounds definition
+  std::vector<std::shared_ptr<Portal>> necPortals = {};
+  std::vector<std::shared_ptr<Portal>> pecPortals = {};
+  std::vector<std::shared_ptr<Portal>> outerPortals = {};
+  std::vector<std::shared_ptr<Portal>> innerPortals = {};
+  std::vector<std::shared_ptr<Portal>> nephPortals = {};
+  std::vector<std::shared_ptr<Portal>> pephPortals = {};
 
   // Remember the last r-phi disc
   std::vector<std::shared_ptr<DetectorVolume>> lastRPhiDisc = {};
@@ -189,6 +202,49 @@ buildVolumes(const GeometryContext& gctx, const grid_type& cylindricalGrid,
                     std::move(binBounds), binSurfaces, {}, tryNoVolumes(),
                     tryAllPortalsAndSurfaces());
               }
+
+              // Collect the outsise z portals (nec/pec)
+              if (iz == 1) {
+                necPortals.push_back(binVolume->portalPtrs()[0u]);
+              }
+              if (iz == edgesZ.size() - 1) {
+                pecPortals.push_back(binVolume->portalPtrs()[1u]);
+              }
+
+              // Collect the inner and outer portals
+              if (ir == 1 and rMin > 0.) {
+                if (not options.polygonApproximation) {
+                  innerPortals.push_back(binVolume->portalPtrs()[3u]);
+                } else {
+                  innerPortals.push_back(binVolume->portalPtrs()[4u]);
+                }
+              }
+              if (ir == edgesR.size() - 1) {
+                if (not options.polygonApproximation) {
+                  outerPortals.push_back(binVolume->portalPtrs()[2u]);
+                } else {
+                  outerPortals.push_back(binVolume->portalPtrs()[5u]);
+                }
+              }
+
+              // Collect the phi portals
+              if (not phiClosed) {
+                if (iphi == 1) {
+                  if (not options.polygonApproximation) {
+                    nephPortals.push_back(binVolume->portalPtrs()[4u]);
+                  } else {
+                    nephPortals.push_back(binVolume->portalPtrs()[2u]);
+                  }
+                }
+                if (iphi == edgesPhi.size() - 1) {
+                  if (not options.polygonApproximation) {
+                    pephPortals.push_back(binVolume->portalPtrs()[5u]);
+                  } else {
+                    pephPortals.push_back(binVolume->portalPtrs()[3u]);
+                  }
+                }
+              }
+
               // Register the detector volume in the grid
               rootVolumesGrid.atPosition(p) = detectorVolumes.size();
               // Add the volume to the phi ring for the r fusing
@@ -211,7 +267,7 @@ buildVolumes(const GeometryContext& gctx, const grid_type& cylindricalGrid,
             }
           }
           // Fuse the first and last volume - if there's more than one
-          if (firstVolume != lastVolume) {
+          if (firstVolume != lastVolume and phiClosed) {
             if (options.polygonApproximation) {
               PortalHelper::fuse(*lastVolume, *firstVolume, {3u, 2u});
             } else {
@@ -248,6 +304,15 @@ buildVolumes(const GeometryContext& gctx, const grid_type& cylindricalGrid,
       lastRPhiDisc = rPhiDisc;
     }
   }
+
+  // Register the portal container entries
+  portalContainer[0u] = necPortals;
+  portalContainer[1u] = pecPortals;
+  portalContainer[2u] = outerPortals;
+  portalContainer[3u] = innerPortals;
+  portalContainer[4u] = nephPortals;
+  portalContainer[5u] = pephPortals;
+
   return {detectorVolumes, portalContainer, rootVolumesGrid};
 }
 

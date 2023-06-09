@@ -20,14 +20,13 @@
 
 Acts::Experimental::GridDetectorVolumesBuilder::GridDetectorVolumesBuilder(
     const Acts::Experimental::GridDetectorVolumesBuilder::Config& cfg,
-    std::unique_ptr<const Acts::Logger> logger)
-    : IDetectorComponentBuilder(), m_cfg(cfg), m_logger(std::move(logger)) {
+    std::unique_ptr<const Acts::Logger> mlogger)
+    : IDetectorComponentBuilder(), m_cfg(cfg), m_logger(std::move(mlogger)) {
   // Early bail out
   if (m_cfg.binning.size() != 3u) {
     throw std::invalid_argument(
         "GridDetectorVolumesBuilder: Invalid binning, exact 3 binning values "
-        "need to "
-        "be provided, either z/r/phi or x/y/z.");
+        "need to be provided, either z/r/phi or x/y/z.");
   }
 
   // Sort & check the configuration
@@ -38,6 +37,7 @@ Acts::Experimental::GridDetectorVolumesBuilder::GridDetectorVolumesBuilder(
 
   m_binningValues = {m_cfg.binning[0].binValue, m_cfg.binning[1].binValue,
                      m_cfg.binning[2].binValue};
+
   // Unknown binning
   if (m_binningValues != cylindricalBinning and
       m_binningValues != cartesianBinning) {
@@ -45,24 +45,22 @@ Acts::Experimental::GridDetectorVolumesBuilder::GridDetectorVolumesBuilder(
         "GridDetectorVolumesBuilder: Invalid binning, must be either z/r/phi "
         "or x/y/z");
   }
-
-  // Check that only in the (z,r,phi) binning the last value can be closed
-  if (m_binningValues == cartesianBinning) {
-    for (const auto& b : m_cfg.binning) {
-      if (b.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
-        throw std::invalid_argument(
-            "GridDetectorVolumesBuilder: Invalid binning, only in z/r/phi the "
-            "last bin can be closed.");
-      }
+  // Closed disallowed and catch numerical phi closure
+  std::size_t closedDisallowed =
+      (m_binningValues == cartesianBinning) ? 3u : 2u;
+  for (auto [ib, b] : enumerate(m_cfg.binning)) {
+    if (ib < closedDisallowed and
+        b.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+      throw std::invalid_argument(
+          "GridDetectorVolumesBuilder: Invalid binning, only for z/r/phi the "
+          "last binning can be closed.");
     }
-  } else {
-    // Check that only in the (z,r,phi) binning the last value can be closed
-    for (auto [ib, b] : enumerate(m_cfg.binning)) {
-      if (ib < 2u and
-          b.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
-        throw std::invalid_argument(
-            "GridDetectorVolumesBuilder: Invalid binning, only in z/r/phi the "
-            "last bin can be closed.");
+    if (b.binValue == binPhi) {
+      // Phi binning close to 2pi - renormalize
+      if (std::abs(b.edges.back() - b.edges.front() - 2 * M_PI) <
+          m_cfg.phiClosedTolerance) {
+        m_closedPhiSetup = true;
+        ACTS_DEBUG("Closed phi setup detected, adjusting binning to [-pi,pi]");
       }
     }
   }
@@ -82,7 +80,7 @@ Acts::Experimental::GridDetectorVolumesBuilder::construct(
        m_cfg.binning[2].axisType}};
 
   // Get into the different cases: equidistant x 3
-  if (axesType == eeeType) {
+  if (axesType == eeeType and m_closedPhiSetup) {
     detail::GridAxisGenerators::EqBoundEqBoundEqClosed eBeBeC{
         {m_cfg.binning[0].edges.front(), m_cfg.binning[0].edges.back()},
         m_cfg.binning[0].bins(),
@@ -90,12 +88,22 @@ Acts::Experimental::GridDetectorVolumesBuilder::construct(
         m_cfg.binning[1].bins(),
         {-M_PI, M_PI},
         m_cfg.binning[2].bins()};
-
+    // With closed phi
     return constructT(gctx, eBeBeC);
+  } else if (axesType == eeeType) {
+    detail::GridAxisGenerators::EqBoundEqBoundEqBound eBeBeB{
+        {m_cfg.binning[0].edges.front(), m_cfg.binning[0].edges.back()},
+        m_cfg.binning[0].bins(),
+        {m_cfg.binning[1].edges.front(), m_cfg.binning[1].edges.back()},
+        m_cfg.binning[1].bins(),
+        {m_cfg.binning[2].edges.front(), m_cfg.binning[2].edges.back()},
+        m_cfg.binning[2].bins()};
+    // With triple bound
+    return constructT(gctx, eBeBeB);
   }
 
   // Get into the different cases: equidistant x 3
-  if (axesType == vveType) {
+  if (axesType == vveType and m_closedPhiSetup) {
     detail::GridAxisGenerators::VarBoundVarBoundEqClosed vBvBeC{
         m_cfg.binning[0].edges,
         m_cfg.binning[1].edges,
@@ -103,6 +111,13 @@ Acts::Experimental::GridDetectorVolumesBuilder::construct(
         m_cfg.binning[2].bins()};
 
     return constructT(gctx, vBvBeC);
+  } else if (axesType == vveType) {
+    detail::GridAxisGenerators::VarBoundVarBoundEqBound vBvBeB{
+        m_cfg.binning[0].edges,
+        m_cfg.binning[1].edges,
+        {m_cfg.binning[2].edges.front(), m_cfg.binning[2].edges.back()},
+        m_cfg.binning[2].bins()};
+    return constructT(gctx, vBvBeB);
   }
 
   // Get into the different cases: variable x 3
