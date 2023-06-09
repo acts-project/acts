@@ -113,21 +113,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
 
-  int nPrototracksLessThreeHits = 0;
   for (auto& x : trackCandidates) {
     ProtoTrack onetrack;
     std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
-
-    if (onetrack.size() < 3) {
-      nPrototracksLessThreeHits++;
-      continue;
-    }
-
     protoTracks.push_back(std::move(onetrack));
   }
 
-  ACTS_INFO("Skipped " << nPrototracksLessThreeHits
-                       << " proto tracks with nHits < 3");
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
   m_outputProtoTracks(ctx, std::move(protoTracks));
 
