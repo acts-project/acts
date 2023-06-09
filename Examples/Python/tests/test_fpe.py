@@ -95,6 +95,7 @@ def fpe_type(request):
 def test_fpe_single_nofail(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
+        failOnFpe=False,
     )
 
     s.addAlgorithm(
@@ -254,6 +255,7 @@ def test_fpe_context(fpe_type):
 def test_buffer_sufficient():
     s = acts.examples.Sequencer(
         events=10000,
+        failOnFpe=False,
     )
 
     s.addAlgorithm(FuncAlg("Invalid", lambda _: acts.FpeMonitor._trigger_invalid()))

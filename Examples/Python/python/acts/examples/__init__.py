@@ -392,7 +392,7 @@ _origSequencerInit = ActsPythonBindings._examples.Sequencer.__init__
 def _sequencerInit(self, *args, **kwargs):
     if "fpeMasks" in kwargs:
         m = kwargs["fpeMasks"]
-        if isinstance(m, list):
+        if isinstance(m, list) and len(m) > 0 and isinstance(m[0], str):
             n = []
             for loc, fpe, count in m:
                 n.append(
