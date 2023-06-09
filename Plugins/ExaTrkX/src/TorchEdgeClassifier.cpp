@@ -18,14 +18,14 @@ using namespace torch::indexing;
 namespace Acts {
 
 TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
-                                         std::unique_ptr<const Logger> logger)
-    : m_logger(std::move(logger)), m_cfg(cfg) {
+                                         std::unique_ptr<const Logger> _logger)
+    : m_logger(std::move(_logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
-  std::cout << "Using torch version " << TORCH_VERSION << std::endl;
+  ACTS_DEBUG("Using torch version " << TORCH_VERSION);
 #ifndef ACTS_EXATRKX_CPUONLY
   if (not torch::cuda::is_available()) {
-    std::cout << "WARNING: CUDA not available, falling back to CPU\n";
+    ACTS_WARNING("CUDA not available, falling back to CPU");
   }
 #endif
 
