@@ -16,9 +16,9 @@ namespace ActsExamples {
 
 struct Geant4Instance {
   std::mutex mutex;
-  G4RunManager *runManager{};
+  std::unique_ptr<G4RunManager> runManager;
 
-  Geant4Instance(G4RunManager *runManager);
+  Geant4Instance(std::unique_ptr<G4RunManager> runManager);
   Geant4Instance(const Geant4Instance &) = delete;
   Geant4Instance &operator=(const Geant4Instance &) = delete;
   ~Geant4Instance();
@@ -34,7 +34,6 @@ class Geant4Manager {
   Geant4Manager();
   ~Geant4Manager();
 
-  G4RunManager *m_runManager{};
   std::weak_ptr<Geant4Instance> m_instance;
 };
 

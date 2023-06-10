@@ -32,8 +32,6 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
 }
 
 ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
-  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ~DD4hepGeometryService()"
-            << std::endl;
   if (m_detector != nullptr) {
     m_detector->destroyInstance();
   }

@@ -40,7 +40,7 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
 
  private:
   /// The Acts DD4hep detector instrance
-  std::shared_ptr<DD4hep::DD4hepDetector> m_detector;
+  DD4hep::DD4hepDetector* m_detector;
   /// The world volume
   G4VPhysicalVolume* m_world = nullptr;
 };

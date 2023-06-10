@@ -70,11 +70,12 @@ void ActsExamples::Geant4SimulationBase::initializeCommon(
     const Config& cfg, G4VUserPhysicsList* physicsList) {
   m_gean4Instance = Geant4Manager::instance().create();
 
+  m_physicsList = physicsList;
+
   // Set the main Geant4 algorithm, primary generation, detector
   // construction
-  m_runManager = m_gean4Instance->runManager;
-  m_physicsList = physicsList;
-  m_runManager->SetUserInitialization(physicsList);
+  m_runManager = m_gean4Instance->runManager.get();
+  m_runManager->SetUserInitialization(m_physicsList);
 
   // Set the detector construction
   // G4RunManager will take care of deletion

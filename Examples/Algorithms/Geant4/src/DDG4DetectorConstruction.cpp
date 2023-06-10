@@ -21,7 +21,7 @@
 
 ActsExamples::DDG4DetectorConstruction::DDG4DetectorConstruction(
     std::shared_ptr<DD4hep::DD4hepDetector> detector)
-    : G4VUserDetectorConstruction(), m_detector(std::move(detector)) {}
+    : G4VUserDetectorConstruction(), m_detector(detector.get()) {}
 
 ActsExamples::DDG4DetectorConstruction::~DDG4DetectorConstruction() = default;
 

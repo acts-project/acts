@@ -11,8 +11,10 @@
 #include <memory>
 #include <stdexcept>
 
+#include <G4Profiler.hh>
 #include <G4RunManager.hh>
 #include <G4RunManagerFactory.hh>
+#include <G4UImanager.hh>
 #include <G4UserEventAction.hh>
 #include <G4UserRunAction.hh>
 #include <G4UserSteppingAction.hh>
@@ -23,8 +25,8 @@
 
 namespace ActsExamples {
 
-Geant4Instance::Geant4Instance(G4RunManager* _runManager)
-    : runManager(_runManager) {}
+Geant4Instance::Geant4Instance(std::unique_ptr<G4RunManager> _runManager)
+    : runManager(std::move(_runManager)) {}
 
 Geant4Instance::~Geant4Instance() = default;
 
@@ -38,16 +40,16 @@ std::shared_ptr<Geant4Instance> Geant4Manager::create() {
     throw std::runtime_error("creating a second instance is prohibited");
   }
 
-  auto instance = std::make_shared<Geant4Instance>(m_runManager);
+  auto runManager = std::unique_ptr<G4RunManager>(
+      G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly));
+
+  auto instance = std::make_shared<Geant4Instance>(std::move(runManager));
+
   m_instance = instance;
   return instance;
 }
 
-Geant4Manager::Geant4Manager() {
-  // proper memory management might cause segfaults
-  m_runManager =
-      G4RunManagerFactory::CreateRunManager(G4RunManagerType::Serial);
-}
+Geant4Manager::Geant4Manager() = default;
 
 Geant4Manager::~Geant4Manager() = default;
 

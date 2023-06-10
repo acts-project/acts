@@ -18,9 +18,7 @@
 namespace ActsExamples {
 namespace DD4hep {
 
-DD4hepDetector::~DD4hepDetector() {
-  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ~DD4hepDetector()" << std::endl;
-}
+DD4hepDetector::~DD4hepDetector() = default;
 
 auto DD4hepDetector::finalize(
     ActsExamples::DD4hep::DD4hepGeometryService::Config config,
