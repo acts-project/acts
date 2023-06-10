@@ -78,16 +78,16 @@ class DD4hepGeometryService {
   DD4hepGeometryService(const Config& cfg);
   ~DD4hepGeometryService();
 
+  /// Interface method to access to the interface of the DD4hep geometry
+  dd4hep::Detector& detector();
+
   /// Interface method to access the DD4hep geometry
   /// @return The world DD4hep DetElement
-  dd4hep::DetElement dd4hepGeometry();
+  dd4hep::DetElement& geometry();
 
   /// Interface method to Access the TGeo geometry
   /// @return The world TGeoNode (physical volume)
-  TGeoNode* tgeoGeometry();
-
-  /// Interface method to access to the interface of the DD4hep geometry
-  dd4hep::Detector* lcdd();
+  TGeoNode& tgeoGeometry();
 
   /// Interface method to access the ACTS TrackingGeometry
   ///
@@ -106,9 +106,9 @@ class DD4hepGeometryService {
   /// The config class
   Config m_cfg;
   /// Pointer to the interface to the DD4hep geometry
-  dd4hep::Detector* m_lcdd = nullptr;
+  dd4hep::Detector* m_detector = nullptr;
   /// The world DD4hep DetElement
-  dd4hep::DetElement m_dd4hepGeometry;
+  dd4hep::DetElement m_geometry;
   /// The ACTS TrackingGeometry
   std::unique_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
 

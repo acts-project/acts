@@ -27,6 +27,7 @@ struct DD4hepDetector;
 class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
  public:
   DDG4DetectorConstruction(std::shared_ptr<DD4hep::DD4hepDetector> detector);
+  ~DDG4DetectorConstruction() final;
 
   /// Convert the stored DD4hep detector to a Geant4 description.
   ///
@@ -49,6 +50,7 @@ class DDG4DetectorConstructionFactory final
  public:
   DDG4DetectorConstructionFactory(
       std::shared_ptr<DD4hep::DD4hepDetector> detector);
+  ~DDG4DetectorConstructionFactory() final;
 
   std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
 

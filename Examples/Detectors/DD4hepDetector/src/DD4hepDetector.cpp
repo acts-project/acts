@@ -18,6 +18,10 @@
 namespace ActsExamples {
 namespace DD4hep {
 
+DD4hepDetector::~DD4hepDetector() {
+  std::cout << "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ~DD4hepDetector()" << std::endl;
+}
+
 auto DD4hepDetector::finalize(
     ActsExamples::DD4hep::DD4hepGeometryService::Config config,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
@@ -26,8 +30,6 @@ auto DD4hepDetector::finalize(
   config.matDecorator = std::move(mdecorator);
   geometryService =
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
-  // trigger construction
-  geometryService->lcdd();
   TrackingGeometryPtr dd4tGeometry =
       geometryService->trackingGeometry(dd4HepContext);
   if (!dd4tGeometry) {

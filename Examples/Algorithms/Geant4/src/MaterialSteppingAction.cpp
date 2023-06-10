@@ -28,7 +28,7 @@ ActsExamples::MaterialSteppingAction::~MaterialSteppingAction() = default;
 void ActsExamples::MaterialSteppingAction::UserSteppingAction(
     const G4Step* step) {
   // Get the event data
-  auto& eventData = m_cfg.EventStoreHolder->store();
+  auto& eventData = m_cfg.eventStoreHolder->store();
 
   // Get the material & check if it is present
   G4Material* material = step->GetPreStepPoint()->GetMaterial();

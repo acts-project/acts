@@ -32,9 +32,9 @@ class Geant4Manager {
 
  private:
   Geant4Manager();
+  ~Geant4Manager();
 
-  // proper memory management might cause segfaults
-  G4RunManager *m_runManager;
+  G4RunManager *m_runManager{};
   std::weak_ptr<Geant4Instance> m_instance;
 };
 

@@ -30,6 +30,8 @@ struct DD4hepDetector {
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
+  ~DD4hepDetector();
+
   std::shared_ptr<DD4hepGeometryService> geometryService;
 
   std::pair<TrackingGeometryPtr, ContextDecorators> finalize(

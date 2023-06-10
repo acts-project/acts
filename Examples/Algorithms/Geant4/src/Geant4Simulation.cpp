@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
+#include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
@@ -45,8 +46,6 @@
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
 
-#include "Geant4Manager.hpp"
-
 ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
     const Config& cfg, std::string name, Acts::Logging::Level level)
     : IAlgorithm(std::move(name), level) {
@@ -70,6 +69,7 @@ ActsExamples::Geant4SimulationBase::~Geant4SimulationBase() = default;
 void ActsExamples::Geant4SimulationBase::initializeCommon(
     const Config& cfg, G4VUserPhysicsList* physicsList) {
   m_gean4Instance = Geant4Manager::instance().create();
+
   // Set the main Geant4 algorithm, primary generation, detector
   // construction
   m_runManager = m_gean4Instance->runManager;
@@ -104,7 +104,7 @@ void ActsExamples::Geant4SimulationBase::initializeCommon(
 #endif
 }
 
-void ActsExamples::Geant4SimulationBase::kickRunManager() {
+void ActsExamples::Geant4SimulationBase::finalizeRunManager() {
   // Set the primary generator action
   m_runManager->SetUserAction(m_primaryGeneratorAction);
 
@@ -142,7 +142,12 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   m_runManager->BeamOn(1);
 
   // Since these are std::set, this ensures that each particle is in both sets
-  assert(eventData.particlesInitial.size() == eventData.particlesFinal.size());
+  if (eventData.particlesInitial.size() != eventData.particlesFinal.size()) {
+    ACTS_WARNING(
+        "initial and final particle collections does not have the same size: "
+        << eventData.particlesInitial.size() << " vs "
+        << eventData.particlesFinal.size());
+  }
 
   // Print out warnings about possible particle collision if happened
   if (eventData.particleIdCollisionsInitial > 0 or
@@ -167,7 +172,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   // Set the primarty generator
   SimParticleTranslation::Config prCfg;
-  prCfg.EventStoreHolder = m_eventStoreHolder;
+  prCfg.eventStoreHolder = m_eventStoreHolder;
   // G4RunManager will take care of deletion
   m_primaryGeneratorAction = new SimParticleTranslation(
       prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
@@ -181,7 +186,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   // Particle action
   ParticleTrackingAction::Config trackingCfg;
-  trackingCfg.EventStoreHolder = m_eventStoreHolder;
+  trackingCfg.eventStoreHolder = m_eventStoreHolder;
   trackingCfg.keepParticlesWithoutHits = cfg.keepParticlesWithoutHits;
   // G4RunManager will take care of deletion
   m_trackingAction = new ParticleTrackingAction(
@@ -190,7 +195,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
   // Stepping actions
 
   SensitiveSteppingAction::Config stepCfg;
-  stepCfg.EventStoreHolder = m_eventStoreHolder;
+  stepCfg.eventStoreHolder = m_eventStoreHolder;
   stepCfg.charged = true;
   stepCfg.neutral = false;
   stepCfg.primary = true;
@@ -245,7 +250,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
   }
 
-  Geant4SimulationBase::kickRunManager();
+  Geant4SimulationBase::finalizeRunManager();
 
   m_inputParticles.initialize(cfg.inputParticles);
   m_outputSimHits.initialize(cfg.outputSimHits);
@@ -293,7 +298,7 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
 
   // Set the primarty generator
   SimParticleTranslation::Config prCfg;
-  prCfg.EventStoreHolder = m_eventStoreHolder;
+  prCfg.eventStoreHolder = m_eventStoreHolder;
   prCfg.forcedPdgCode = 0;
   prCfg.forcedCharge = 0.;
   prCfg.forcedMass = 0.;
@@ -301,7 +306,7 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
   m_primaryGeneratorAction = new SimParticleTranslation(
       prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
 
-  Geant4SimulationBase::kickRunManager();
+  Geant4SimulationBase::finalizeRunManager();
 
   m_inputParticles.initialize(cfg.inputParticles);
   m_outputMaterialTracks.maybeInitialize(cfg.outputMaterialTracks);

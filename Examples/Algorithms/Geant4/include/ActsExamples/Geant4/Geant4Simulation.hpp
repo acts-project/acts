@@ -76,7 +76,7 @@ class Geant4SimulationBase : public IAlgorithm {
 
  protected:
   void initializeCommon(const Config& cfg, G4VUserPhysicsList* physicsList);
-  void kickRunManager();
+  void finalizeRunManager();
 
   std::unique_ptr<const Acts::Logger> m_logger;
 

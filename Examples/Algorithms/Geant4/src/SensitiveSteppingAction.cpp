@@ -31,7 +31,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
 
   // Retrieve the event data registry
-  auto& eventData = m_cfg.EventStoreHolder->store();
+  auto& eventData = m_cfg.eventStoreHolder->store();
 
   // The particle after the step
   G4Track* track = step->GetTrack();

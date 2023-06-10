@@ -27,7 +27,6 @@
 #include <G4RunManager.hh>
 #include <G4UserEventAction.hh>
 #include <G4UserRunAction.hh>
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 

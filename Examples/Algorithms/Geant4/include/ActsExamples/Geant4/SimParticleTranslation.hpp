@@ -34,7 +34,7 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   /// Nested configuration struct that contains the
   /// input particle collection name,
   struct Config {
-    std::shared_ptr<EventStoreHolder> EventStoreHolder;
+    std::shared_ptr<EventStoreHolder> eventStoreHolder;
 
     /// Force pdgCode & mass & charge in G4 units (this is needed for Geantino
     /// simulation)
