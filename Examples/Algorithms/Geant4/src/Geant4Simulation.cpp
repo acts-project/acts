@@ -68,7 +68,8 @@ ActsExamples::Geant4SimulationBase::~Geant4SimulationBase() = default;
 
 void ActsExamples::Geant4SimulationBase::initializeCommon(
     const Config& cfg, G4VUserPhysicsList* physicsList) {
-  m_gean4Instance = Geant4Manager::instance().create();
+  m_gean4Instance = cfg.geant4Instance ? cfg.geant4Instance
+                                       : Geant4Manager::instance().create();
 
   m_physicsList = physicsList;
 
@@ -163,6 +164,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   }
 
   return ActsExamples::ProcessCode::SUCCESS;
+}
+
+std::shared_ptr<ActsExamples::Geant4Instance>
+ActsExamples::Geant4SimulationBase::geant4Instance() const {
+  return m_gean4Instance;
 }
 
 ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,

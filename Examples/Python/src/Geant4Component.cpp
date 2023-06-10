@@ -17,6 +17,7 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+#include "ActsExamples/Geant4/Geant4Manager.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
@@ -46,6 +47,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
              std::shared_ptr<DetectorConstructionFactory>>(
       mod, "DetectorConstructionFactory");
 
+  py::class_<Geant4Instance, std::shared_ptr<Geant4Instance>>(mod,
+                                                              "Geant4Instance");
+
   {
     using Algorithm = Geant4Simulation;
     using Config = Algorithm::Config;
@@ -53,7 +57,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                           std::shared_ptr<Algorithm>>(mod, "Geant4Simulation")
                    .def(py::init<const Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Algorithm::config);
+                   .def_property_readonly("config", &Algorithm::config)
+                   .def_property_readonly("geant4Instance",
+                                          &Algorithm::geant4Instance);
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
@@ -94,66 +100,6 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
     ACTS_PYTHON_STRUCT_END();
   }
-
-  mod.def(
-      "makeGeant4SimulationConfig",
-      [](std::shared_ptr<DetectorConstructionFactory>
-             detectorConstructionFactory,
-         std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
-         const std::string& inputParticles, const std::string& outputSimHits,
-         const std::string& outputParticlesInitial,
-         const std::string& outputParticlesFinal,
-         std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-         std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-         const std::vector<std::string>& volumeMappings,
-         const std::vector<std::string>& materialMappings,
-         std::shared_ptr<const Acts::Volume> killVolume, double killAfterTime,
-         bool recordHitsOfSecondaries, bool keepParticlesWithoutHits) {
-        Geant4Simulation::Config config;
-        config.randomNumbers = std::move(randomNumbers);
-        config.detectorConstructionFactory =
-            std::move(detectorConstructionFactory);
-        config.inputParticles = inputParticles;
-        config.outputSimHits = outputSimHits;
-        config.outputParticlesInitial = outputParticlesInitial;
-        config.outputParticlesFinal = outputParticlesFinal;
-        config.trackingGeometry = std::move(trackingGeometry);
-        config.magneticField = std::move(magneticField);
-        config.volumeMappings = volumeMappings;
-        config.materialMappings = materialMappings;
-        config.killVolume = std::move(killVolume);
-        config.killAfterTime = killAfterTime;
-        config.recordHitsOfSecondaries = recordHitsOfSecondaries;
-        config.keepParticlesWithoutHits = keepParticlesWithoutHits;
-        return config;
-      },
-      "detectorConstructionFactory"_a, "randomNumbers"_a, "inputParticles"_a,
-      "outputSimHits"_a, "outputParticlesInitial"_a, "outputParticlesFinal"_a,
-      py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
-      py::arg("volumeMappings") = std::vector<std::string>{},
-      py::arg("materialMappings") = std::vector<std::string>{},
-      py::arg("killVolume") = nullptr,
-      py::arg("killAfterTime") = std::numeric_limits<double>::infinity(),
-      py::arg("recordHitsOfSecondaries") = true,
-      py::arg("keepParticlesWithoutHits") = true);
-
-  mod.def(
-      "makeGeant4MaterialRecordingConfig",
-      [](std::shared_ptr<DetectorConstructionFactory>
-             detectorConstructionFactory,
-         std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
-         const std::string& inputParticles,
-         const std::string& outputMaterialTracks) {
-        Geant4MaterialRecording::Config config;
-        config.randomNumbers = std::move(randomNumbers);
-        config.detectorConstructionFactory =
-            std::move(detectorConstructionFactory);
-        config.inputParticles = inputParticles;
-        config.outputMaterialTracks = outputMaterialTracks;
-        return config;
-      },
-      "detectorConstructionFactory"_a, "randomNumbers"_a, "inputParticles"_a,
-      "outputMaterialTracks"_a);
 
   {
     py::class_<GdmlDetectorConstructionFactory, DetectorConstructionFactory,

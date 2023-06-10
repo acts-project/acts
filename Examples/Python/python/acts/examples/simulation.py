@@ -604,7 +604,7 @@ def addGeant4(
         if given, particle are killed after the global time since event creation exceeds the given value
     """
 
-    from acts.examples.geant4 import Geant4Simulation, makeGeant4SimulationConfig
+    from acts.examples.geant4 import Geant4Simulation
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -625,7 +625,9 @@ def addGeant4(
             raise AttributeError("detector not given")
         g4DetectorConstructionFactory = getG4DetectorContructionFactory(detector)
 
-    g4conf = makeGeant4SimulationConfig(
+    # Simulation
+    alg = Geant4Simulation(
+        level=customLogLevel(),
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=particles_selected,
@@ -642,12 +644,6 @@ def addGeant4(
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
 
-    # Simulation
-    alg = Geant4Simulation(
-        level=customLogLevel(),
-        config=g4conf,
-    )
-
     # Sequencer
     s.addAlgorithm(alg)
 
@@ -657,7 +653,7 @@ def addGeant4(
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=g4conf.outputParticlesInitial,
+            inputParticles=alg.config.outputParticlesInitial,
             outputParticles=particlesInitial,
         )
 
@@ -665,12 +661,12 @@ def addGeant4(
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=g4conf.outputParticlesFinal,
+            inputParticles=alg.config.outputParticlesFinal,
             outputParticles=particlesFinal,
         )
     else:
-        particlesInitial = g4conf.outputParticlesInitial
-        particlesFinal = g4conf.outputParticlesFinal
+        particlesInitial = alg.config.outputParticlesInitial
+        particlesFinal = alg.config.outputParticlesFinal
 
     # Only add alias for 'particles_initial' as this is the one we use most
     s.addWhiteboardAlias("particles", particlesInitial)
@@ -678,7 +674,7 @@ def addGeant4(
     # Output
     addSimWriters(
         s,
-        g4conf.outputSimHits,
+        alg.config.outputSimHits,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,

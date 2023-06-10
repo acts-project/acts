@@ -58,6 +58,9 @@ class Geant4SimulationBase : public IAlgorithm {
     /// Detector construction object.
     /// G4RunManager will take care of deletion
     std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory;
+
+    /// Optional Geant4 instance overwrite.
+    std::shared_ptr<Geant4Instance> geant4Instance;
   };
 
   Geant4SimulationBase(const Config& cfg, std::string name,
@@ -73,6 +76,8 @@ class Geant4SimulationBase : public IAlgorithm {
 
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
+
+  std::shared_ptr<Geant4Instance> geant4Instance() const;
 
  protected:
   void initializeCommon(const Config& cfg, G4VUserPhysicsList* physicsList);
