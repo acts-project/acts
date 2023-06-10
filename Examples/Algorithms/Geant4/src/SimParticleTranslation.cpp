@@ -12,7 +12,6 @@
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <G4ChargedGeantino.hh>
@@ -39,7 +38,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
   ACTS_DEBUG("Primary Generator Action for Event: " << eventID);
 
-  auto& eventData = EventStoreRegistry::eventData();
+  auto& eventData = m_cfg.EventStoreHolder->store();
   WhiteBoard* eventStore = eventData.store;
   if (eventStore == nullptr) {
     ACTS_WARNING("No EventStore instance could be found for this event!");
@@ -127,6 +126,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     ACTS_VERBOSE(" -> charge: " << particleCharge);
     ACTS_VERBOSE(" -> momentum: " << mom4.transpose());
 
+    // G4 will delete this
     G4PrimaryParticle* particle = new G4PrimaryParticle(particleDefinition);
 
     particle->SetMass(particleMass);

@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <memory>
 #include <optional>
@@ -28,6 +29,7 @@ namespace ActsExamples {
 class ParticleTrackingAction : public G4UserTrackingAction {
  public:
   struct Config {
+    std::shared_ptr<EventStoreHolder> EventStoreHolder;
     bool keepParticlesWithoutHits = true;
   };
 

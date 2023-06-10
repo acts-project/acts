@@ -17,7 +17,7 @@ def runGeant4(
     outputDir,
     s: acts.examples.Sequencer = None,
 ):
-    s = s or acts.examples.Sequencer(events=100, numThreads=1)
+    s = s or acts.examples.Sequencer(events=10, numThreads=1)
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
     addParticleGun(

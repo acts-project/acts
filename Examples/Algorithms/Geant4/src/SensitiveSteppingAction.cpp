@@ -9,7 +9,7 @@
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <G4RunManager.hh>
@@ -31,7 +31,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
 
   // Retrieve the event data registry
-  auto& eventData = EventStoreRegistry::eventData();
+  auto& eventData = m_cfg.EventStoreHolder->store();
 
   // The particle after the step
   G4Track* track = step->GetTrack();

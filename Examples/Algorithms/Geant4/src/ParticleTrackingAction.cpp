@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <G4ParticleDefinition.hh>
 #include <G4RunManager.hh>
@@ -24,7 +24,7 @@ ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     const G4Track* aTrack) {
-  auto& eventData = EventStoreRegistry::eventData();
+  auto& eventData = m_cfg.EventStoreHolder->store();
 
   auto particleId = makeParticleId(aTrack->GetTrackID(), aTrack->GetParentID());
 
@@ -50,7 +50,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
     const G4Track* aTrack) {
-  auto& eventData = EventStoreRegistry::eventData();
+  auto& eventData = m_cfg.EventStoreHolder->store();
 
   // The initial particle maybe was not registered because a particle ID
   // collision
@@ -112,7 +112,7 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
 std::optional<ActsExamples::SimBarcode>
 ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
                                                      G4int parentId) const {
-  auto& ed = EventStoreRegistry::eventData();
+  auto& ed = m_cfg.EventStoreHolder->store();
 
   // We already have this particle registered (it is one of the input particles
   // or we are making a final particle state)
@@ -129,7 +129,7 @@ ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
 
   auto pid = ed.trackIdMapping.at(parentId).makeDescendant();
 
-  auto key = EventStoreRegistry::State::BarcodeWithoutSubparticle::Zeros();
+  auto key = EventStore::BarcodeWithoutSubparticle::Zeros();
   key.set(0, pid.vertexPrimary())
       .set(1, pid.vertexSecondary())
       .set(2, pid.particle())

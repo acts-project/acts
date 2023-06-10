@@ -534,24 +534,24 @@ def addSimWriters(
         )
 
 
-def getG4DetectorContruction(
+def getG4DetectorContructionFactory(
     detector: Any,
 ) -> Any:
     try:
         from acts.examples import TelescopeDetector
-        from acts.examples.geant4 import TelescopeG4DetectorConstruction
+        from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory
 
         if type(detector) is TelescopeDetector:
-            return TelescopeG4DetectorConstruction(detector)
+            return TelescopeG4DetectorConstructionFactory(detector)
     except Exception as e:
         print(e)
 
     try:
         from acts.examples.dd4hep import DD4hepDetector
-        from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
+        from acts.examples.geant4.dd4hep import DDG4DetectorConstructionFactory
 
         if type(detector) is DD4hepDetector:
-            return DDG4DetectorConstruction(detector)
+            return DDG4DetectorConstructionFactory(detector)
     except Exception as e:
         print(e)
 
@@ -564,7 +564,7 @@ def addGeant4(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
-    g4detectorConstruction: Optional[Any] = None,
+    g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
     materialMappings: List[str] = [],
     inputParticles: str = "particles_input",
@@ -620,16 +620,18 @@ def addGeant4(
     else:
         particles_selected = inputParticles
 
-    if g4detectorConstruction is None:
+    if g4DetectorConstructionFactory is None:
         if detector is None:
             raise AttributeError("detector not given")
-        g4detectorConstruction = getG4DetectorContruction(detector)
+        g4DetectorConstructionFactory = getG4DetectorContructionFactory(detector)
 
     g4conf = makeGeant4SimulationConfig(
-        level=customLogLevel(),
-        detector=g4detectorConstruction,
+        detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=particles_selected,
+        outputSimHits="simhits",
+        outputParticlesInitial="particles_initial",
+        outputParticlesFinal="particles_final",
         trackingGeometry=trackingGeometry,
         magneticField=field,
         volumeMappings=volumeMappings,
@@ -639,9 +641,6 @@ def addGeant4(
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
-    g4conf.outputSimHits = "simhits"
-    g4conf.outputParticlesInitial = "particles_initial"
-    g4conf.outputParticlesFinal = "particles_final"
 
     # Simulation
     alg = Geant4Simulation(
@@ -670,8 +669,8 @@ def addGeant4(
             outputParticles=particlesFinal,
         )
     else:
-        particlesInitial = alg.config.outputParticlesInitial
-        particlesFinal = alg.config.outputParticlesFinal
+        particlesInitial = g4conf.outputParticlesInitial
+        particlesFinal = g4conf.outputParticlesFinal
 
     # Only add alias for 'particles_initial' as this is the one we use most
     s.addWhiteboardAlias("particles", particlesInitial)
@@ -679,7 +678,7 @@ def addGeant4(
     # Output
     addSimWriters(
         s,
-        alg.config.outputSimHits,
+        g4conf.outputSimHits,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,

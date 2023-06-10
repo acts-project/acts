@@ -31,7 +31,6 @@ struct DD4hepDetector {
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   std::shared_ptr<DD4hepGeometryService> geometryService;
-  dd4hep::Detector* lcdd = nullptr;
 
   std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
       DD4hepGeometryService::Config config,

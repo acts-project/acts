@@ -15,17 +15,9 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
-#include "ActsExamples/Geant4/ActsSteppingActionList.hpp"
+#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
-#include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
-#include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
-#include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
-#include "ActsExamples/Geant4/ParticleKillAction.hpp"
-#include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
-#include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
-#include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
-#include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
@@ -35,6 +27,7 @@
 #include <G4RunManager.hh>
 #include <G4UserEventAction.hh>
 #include <G4UserRunAction.hh>
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -43,78 +36,142 @@ using namespace pybind11::literals;
 
 using namespace ActsExamples;
 using namespace Acts;
+using namespace Acts::Python;
 
 namespace Acts::Python {
 void addGeant4HepMC3(Context& ctx);
 }
 
 PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
-  py::class_<G4VUserDetectorConstruction,
-             std::shared_ptr<G4VUserDetectorConstruction>>(
-      mod, "G4VUserDetectorConstruction");
-
-  py::class_<G4VPhysicalVolume, std::shared_ptr<G4VPhysicalVolume>>(
-      mod, "G4VPhysicalVolume");
-
-  // This is the actual class we're binding
-  py::class_<GdmlDetectorConstruction, G4VUserDetectorConstruction,
-             std::shared_ptr<GdmlDetectorConstruction>>(
-      mod, "GdmlDetectorConstructionImpl")
-      .def("Construct", &GdmlDetectorConstruction::Construct);
-
-  // This is a python-only factory method that returns the above class.
-  // We can apply a return value policy here so that python does NOT assume
-  // ownership of the returned pointer, and it is safe to pass to G4
-  mod.def(
-      "GdmlDetectorConstruction",
-      [](const std::string& path) {
-        return new GdmlDetectorConstruction(path);
-      },
-      py::return_value_policy::reference);
-
-  py::class_<SensitiveSurfaceMapper, std::shared_ptr<SensitiveSurfaceMapper>>(
-      mod, "SensitiveSurfaceMapper");
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      Geant4Simulation, mod, "Geant4Simulation", outputSimHits,
-      outputParticlesInitial, outputParticlesFinal, outputMaterialTracks,
-      randomNumbers, runManager, primaryGeneratorAction, runAction, eventAction,
-      trackingAction, steppingAction, detectorConstruction, magneticField,
-      sensitiveSurfaceMapper);
-
-  mod.def("makeGeant4MaterialRecordingConfig",
-          Geant4Simulation::makeGeant4MaterialRecordingConfig, "level"_a,
-          "detector"_a, "randomNumbers"_a, "inputParticles"_a,
-          "outputMaterialTracks"_a);
-
-  mod.def("makeGeant4SimulationConfig",
-          Geant4Simulation::makeGeant4SimulationConfig, "level"_a, "detector"_a,
-          "randomNumbers"_a, "inputParticles"_a,
-          py::arg("trackingGeometry") = nullptr,
-          py::arg("magneticField") = nullptr,
-          py::arg("volumeMappings") = std::vector<std::string>{},
-          py::arg("materialMappings") = std::vector<std::string>{},
-          py::arg("killVolume") = nullptr,
-          py::arg("killAfterTime") = std::numeric_limits<double>::infinity(),
-          py::arg("recordHitsOfSecondaries") = true,
-          py::arg("keepParticlesWithoutHits") = true);
+  py::class_<DetectorConstructionFactory,
+             std::shared_ptr<DetectorConstructionFactory>>(
+      mod, "DetectorConstructionFactory");
 
   {
-    using Detector = ActsExamples::Telescope::TelescopeDetector;
-    using DetectorConstruction =
-        ActsExamples::Telescope::TelescopeG4DetectorConstruction;
+    using Algorithm = Geant4Simulation;
+    using Config = Algorithm::Config;
+    auto alg = py::class_<Algorithm, ActsExamples::IAlgorithm,
+                          std::shared_ptr<Algorithm>>(mod, "Geant4Simulation")
+                   .def(py::init<const Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def_property_readonly("config", &Algorithm::config);
 
-    py::class_<DetectorConstruction, G4VUserDetectorConstruction,
-               std::shared_ptr<DetectorConstruction>>(
-        mod, "TelescopeG4DetectorConstructionImpl");
-
-    mod.def(
-        "TelescopeG4DetectorConstruction",
-        [](Detector& detector) {
-          return new DetectorConstruction(detector.config);
-        },
-        py::return_value_policy::reference);
+    auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
+                  .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
+    ACTS_PYTHON_MEMBER(inputParticles);
+    ACTS_PYTHON_MEMBER(randomNumbers);
+    ACTS_PYTHON_MEMBER(detectorConstructionFactory);
+    ACTS_PYTHON_MEMBER(outputSimHits);
+    ACTS_PYTHON_MEMBER(outputParticlesInitial);
+    ACTS_PYTHON_MEMBER(outputParticlesFinal);
+    ACTS_PYTHON_MEMBER(trackingGeometry);
+    ACTS_PYTHON_MEMBER(magneticField);
+    ACTS_PYTHON_MEMBER(volumeMappings);
+    ACTS_PYTHON_MEMBER(materialMappings);
+    ACTS_PYTHON_MEMBER(killVolume);
+    ACTS_PYTHON_MEMBER(killAfterTime);
+    ACTS_PYTHON_MEMBER(recordHitsOfSecondaries);
+    ACTS_PYTHON_MEMBER(keepParticlesWithoutHits);
+    ACTS_PYTHON_STRUCT_END();
   }
+
+  {
+    using Algorithm = Geant4MaterialRecording;
+    using Config = Algorithm::Config;
+    auto alg =
+        py::class_<Algorithm, ActsExamples::IAlgorithm,
+                   std::shared_ptr<Algorithm>>(mod, "Geant4MaterialRecording")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Algorithm::config);
+
+    auto c = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputParticles);
+    ACTS_PYTHON_MEMBER(randomNumbers);
+    ACTS_PYTHON_MEMBER(detectorConstructionFactory);
+    ACTS_PYTHON_MEMBER(outputMaterialTracks);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  mod.def(
+      "makeGeant4SimulationConfig",
+      [](std::shared_ptr<DetectorConstructionFactory>
+             detectorConstructionFactory,
+         std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+         const std::string& inputParticles, const std::string& outputSimHits,
+         const std::string& outputParticlesInitial,
+         const std::string& outputParticlesFinal,
+         std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+         std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+         const std::vector<std::string>& volumeMappings,
+         const std::vector<std::string>& materialMappings,
+         std::shared_ptr<const Acts::Volume> killVolume, double killAfterTime,
+         bool recordHitsOfSecondaries, bool keepParticlesWithoutHits) {
+        Geant4Simulation::Config config;
+        config.randomNumbers = std::move(randomNumbers);
+        config.detectorConstructionFactory =
+            std::move(detectorConstructionFactory);
+        config.inputParticles = inputParticles;
+        config.outputSimHits = outputSimHits;
+        config.outputParticlesInitial = outputParticlesInitial;
+        config.outputParticlesFinal = outputParticlesFinal;
+        config.trackingGeometry = std::move(trackingGeometry);
+        config.magneticField = std::move(magneticField);
+        config.volumeMappings = volumeMappings;
+        config.materialMappings = materialMappings;
+        config.killVolume = std::move(killVolume);
+        config.killAfterTime = killAfterTime;
+        config.recordHitsOfSecondaries = recordHitsOfSecondaries;
+        config.keepParticlesWithoutHits = keepParticlesWithoutHits;
+        return config;
+      },
+      "detectorConstructionFactory"_a, "randomNumbers"_a, "inputParticles"_a,
+      "outputSimHits"_a, "outputParticlesInitial"_a, "outputParticlesFinal"_a,
+      py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
+      py::arg("volumeMappings") = std::vector<std::string>{},
+      py::arg("materialMappings") = std::vector<std::string>{},
+      py::arg("killVolume") = nullptr,
+      py::arg("killAfterTime") = std::numeric_limits<double>::infinity(),
+      py::arg("recordHitsOfSecondaries") = true,
+      py::arg("keepParticlesWithoutHits") = true);
+
+  mod.def(
+      "makeGeant4MaterialRecordingConfig",
+      [](std::shared_ptr<DetectorConstructionFactory>
+             detectorConstructionFactory,
+         std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+         const std::string& inputParticles,
+         const std::string& outputMaterialTracks) {
+        Geant4MaterialRecording::Config config;
+        config.randomNumbers = std::move(randomNumbers);
+        config.detectorConstructionFactory =
+            std::move(detectorConstructionFactory);
+        config.inputParticles = inputParticles;
+        config.outputMaterialTracks = outputMaterialTracks;
+        return config;
+      },
+      "detectorConstructionFactory"_a, "randomNumbers"_a, "inputParticles"_a,
+      "outputMaterialTracks"_a);
+
+  {
+    py::class_<GdmlDetectorConstructionFactory, DetectorConstructionFactory,
+               std::shared_ptr<GdmlDetectorConstructionFactory>>(
+        mod, "GdmlDetectorConstructionFactory")
+        .def(py::init<std::string>());
+  }
+
+  {
+    py::class_<
+        Telescope::TelescopeG4DetectorConstructionFactory,
+        DetectorConstructionFactory,
+        std::shared_ptr<Telescope::TelescopeG4DetectorConstructionFactory>>(
+        mod, "TelescopeG4DetectorConstructionFactory")
+        .def(py::init<const Telescope::TelescopeDetector::Config&>());
+  }
+
   {
     using ISelector = Acts::IGeant4PhysicalVolumeSelector;
     auto is = py::class_<ISelector, std::shared_ptr<ISelector>>(
@@ -136,6 +193,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(passiveSurfaceSelector);
     ACTS_PYTHON_STRUCT_END();
   }
+
   {
     py::class_<Acts::Geant4DetectorElement,
                std::shared_ptr<Acts::Geant4DetectorElement>>(

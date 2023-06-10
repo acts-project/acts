@@ -9,7 +9,7 @@
 #include "ActsExamples/Geant4/ParticleKillAction.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include <G4RunManager.hh>

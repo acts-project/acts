@@ -9,9 +9,10 @@
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Geant4/ActsSteppingActionList.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
@@ -19,8 +20,11 @@
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "ActsExamples/Geant4/SimParticleTranslation.hpp"
+#include "ActsExamples/Geant4/SteppingActionList.hpp"
 
 #include <iostream>
+#include <memory>
 #include <stdexcept>
 
 #include <FTFP_BERT.hh>
@@ -41,177 +45,51 @@
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
 
-ActsExamples::Geant4Simulation::Config
-ActsExamples::Geant4Simulation::makeGeant4Config(
-    const Acts::Logger& logger,
-    std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
-    std::shared_ptr<G4VUserDetectorConstruction> detector,
-    std::shared_ptr<G4VUserPhysicsList> physicsList,
-    const SimParticleTranslation::Config& prCfg) {
-  Geant4Simulation::Config g4Cfg;
+#include "Geant4Manager.hpp"
 
-  // Set the main Geant4 algorithm, primary generation, detector
-  // construction
-  g4Cfg.randomNumbers = std::move(randomNumbers);
-  g4Cfg.runManager = std::make_shared<G4RunManager>();
-  g4Cfg.runManager->SetUserInitialization(physicsList.get());
+ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
+    const Config& cfg, std::string name, Acts::Logging::Level level)
+    : IAlgorithm(std::move(name), level) {
+  m_logger = Acts::getDefaultLogger("Geant4", level);
 
-  // Set the primarty generator
-  g4Cfg.primaryGeneratorAction = std::make_shared<SimParticleTranslation>(
-      prCfg, logger.cloneWithSuffix("SimParticleTranslation"));
-  g4Cfg.detectorConstruction = detector;
+  m_eventStoreHolder = std::make_shared<EventStoreHolder>();
 
-  return g4Cfg;
-}
-
-ActsExamples::Geant4Simulation::Config
-ActsExamples::Geant4Simulation::makeGeant4MaterialRecordingConfig(
-    Acts::Logging::Level level,
-    std::shared_ptr<G4VUserDetectorConstruction> detector,
-    std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
-    const std::string& inputParticles,
-    const std::string& outputMaterialTracks) {
-  auto logger = Acts::getDefaultLogger("Geant4", level);
-  auto physicsList = std::make_shared<MaterialPhysicsList>(
-      logger->cloneWithSuffix("MaterialPhysicsList"));
-
-  // Read the particle from the generator
-  SimParticleTranslation::Config g4PrCfg;
-  g4PrCfg.forcedPdgCode = 0;
-  g4PrCfg.forcedCharge = 0.;
-  g4PrCfg.forcedMass = 0.;
-
-  auto g4Cfg = makeGeant4Config(*logger, std::move(randomNumbers),
-                                std::move(detector), physicsList, g4PrCfg);
-  g4Cfg.inputParticles = inputParticles;
-
-  MaterialSteppingAction::Config mStepCfg;
-  mStepCfg.excludeMaterials = {"Air", "Vacuum"};
-  auto steppingAction = std::make_shared<MaterialSteppingAction>(
-      mStepCfg, logger->cloneWithSuffix("MaterialSteppingAction"));
-  g4Cfg.steppingAction = steppingAction;
-
-  // Set the material tracks at output
-  g4Cfg.outputMaterialTracks = outputMaterialTracks;
-
-  return g4Cfg;
-}
-
-ActsExamples::Geant4Simulation::Config
-ActsExamples::Geant4Simulation::makeGeant4SimulationConfig(
-    Acts::Logging::Level level,
-    std::shared_ptr<G4VUserDetectorConstruction> detector,
-    std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
-    const std::string& inputParticles,
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    const std::vector<std::string>& volumeMappings,
-    const std::vector<std::string>& materialMappings,
-    std::shared_ptr<const Acts::Volume> killVolume, double killAfterTime,
-    bool recordHitsOfSecondaries, bool keepParticlesWithoutHits) {
-  auto logger = Acts::getDefaultLogger("Geant4", level);
-
-  auto physicsList = std::make_shared<FTFP_BERT>();
-  auto g4Cfg = makeGeant4Config(*logger, std::move(randomNumbers),
-                                std::move(detector), std::move(physicsList),
-                                SimParticleTranslation::Config{});
-  g4Cfg.inputParticles = inputParticles;
-
-  // Particle action
-  ParticleTrackingAction::Config trackingCfg;
-  trackingCfg.keepParticlesWithoutHits = keepParticlesWithoutHits;
-  g4Cfg.trackingAction = std::make_shared<ParticleTrackingAction>(
-      trackingCfg, logger->cloneWithSuffix("ParticleTracking"));
-
-  // Stepping actions
-  ActsSteppingActionList::Config steppingCfg;
-
-  SensitiveSteppingAction::Config g4StepCfg;
-  g4StepCfg.charged = true;
-  g4StepCfg.neutral = false;
-  g4StepCfg.primary = true;
-  g4StepCfg.secondary = recordHitsOfSecondaries;
-  steppingCfg.actions.push_back(std::make_shared<SensitiveSteppingAction>(
-      g4StepCfg, logger->cloneWithSuffix("SensitiveStepping")));
-
-  steppingCfg.actions.push_back(std::make_shared<ParticleKillAction>(
-      ParticleKillAction::Config{killVolume, killAfterTime},
-      logger->cloneWithSuffix("Killer")));
-
-  g4Cfg.steppingAction = std::make_shared<ActsSteppingActionList>(steppingCfg);
-
-  // An ACTS Magnetic field is provided
-  if (magneticField) {
-    MagneticFieldWrapper::Config g4FieldCfg;
-    g4FieldCfg.magneticField = magneticField;
-    g4Cfg.magneticField = std::make_shared<MagneticFieldWrapper>(g4FieldCfg);
-  }
-
-  // An ACTS TrackingGeometry is provided, so simulation for sensitive
-  // detectors is turned on - they need to get matched first
-  if (trackingGeometry) {
-    SensitiveSurfaceMapper::Config ssmCfg;
-    ssmCfg.trackingGeometry = trackingGeometry;
-
-    // Take the default args if nothing provided
-    if (not volumeMappings.empty()) {
-      ssmCfg.volumeMappings = volumeMappings;
-    }
-    if (not materialMappings.empty()) {
-      ssmCfg.materialMappings = materialMappings;
-    }
-
-    g4Cfg.sensitiveSurfaceMapper =
-        std::make_shared<const SensitiveSurfaceMapper>(
-            ssmCfg, logger->cloneWithSuffix("SensitiveSurfaceMapper"));
-  }
-
-  return g4Cfg;
-}
-
-ActsExamples::Geant4Simulation::Geant4Simulation(
-    const ActsExamples::Geant4Simulation::Config& config,
-    Acts::Logging::Level level)
-    : IAlgorithm("Geant4Simulation", level), m_cfg(config) {
-  if (m_cfg.detectorConstruction == nullptr) {
-    throw std::invalid_argument("Missing G4 DetectorConstruction object");
-  }
-  if (m_cfg.primaryGeneratorAction == nullptr) {
-    throw std::invalid_argument("Missing G4 PrimaryGeneratorAction object");
-  }
-  if (!m_cfg.runManager) {
-    throw std::invalid_argument("Missing G4 RunManager object");
-  }
-  if (!m_cfg.randomNumbers) {
-    throw std::invalid_argument("Missing random numbers tool");
-  }
-
-  if (m_cfg.sensitiveSurfaceMapper) {
-    if (m_cfg.outputSimHits.empty()) {
-      ACTS_WARNING("No output sim hits collection configured");
-    }
-    m_outputSimHits.initialize(m_cfg.outputSimHits);
-
-    if (m_cfg.outputParticlesInitial.empty()) {
-      ACTS_WARNING("No output initial particles collection configured");
-    }
-    m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
-
-    if (m_cfg.outputParticlesFinal.empty()) {
-      ACTS_WARNING("No output final particles collection configured");
-    }
-    m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
-  }
-
-  if (m_cfg.inputParticles.empty()) {
+  if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
   }
+  if (!cfg.detectorConstructionFactory) {
+    throw std::invalid_argument("Missing G4 DetectorConstruction object");
+  }
+  if (!cfg.randomNumbers) {
+    throw std::invalid_argument("Missing random numbers tool");
+  }
+}
+
+ActsExamples::Geant4SimulationBase::~Geant4SimulationBase() = default;
+
+void ActsExamples::Geant4SimulationBase::initializeCommon(
+    const Config& cfg, G4VUserPhysicsList* physicsList) {
+  m_gean4Instance = Geant4Manager::instance().create();
+  // Set the main Geant4 algorithm, primary generation, detector
+  // construction
+  m_runManager = m_gean4Instance->runManager;
+  m_physicsList = physicsList;
+  m_runManager->SetUserInitialization(physicsList);
+
+  // Set the detector construction
+  // G4RunManager will take care of deletion
+  m_detectorConstruction =
+      cfg.detectorConstructionFactory->factorize().release();
+  m_runManager->SetUserInitialization(m_detectorConstruction);
+
+  // Trigger detector construction
+  m_detectorConstruction->Construct();
 
   // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
   // 3 would be also possible, but that produces infinite amount of output.
   const int geantVerboseLevel =
       logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
-  m_cfg.runManager->SetVerboseLevel(geantVerboseLevel);
+  m_runManager->SetVerboseLevel(geantVerboseLevel);
   G4EventManager::GetEventManager()->SetVerboseLevel(geantVerboseLevel);
   G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(
       geantVerboseLevel);
@@ -224,70 +102,33 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
   G4HadronicProcessStore::Instance()->SetVerbose(0);
   G4EmParameters::Instance()->SetIsPrintedFlag(true);
 #endif
-
-  // Set the detector construction
-  m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction.get());
-
-  // Set the primary generator action
-  m_cfg.runManager->SetUserAction(m_cfg.primaryGeneratorAction.get());
-
-  // Set the configured user actions
-  m_cfg.runManager->SetUserAction(m_cfg.runAction.get());
-  m_cfg.runManager->SetUserAction(m_cfg.eventAction.get());
-  m_cfg.runManager->SetUserAction(m_cfg.trackingAction.get());
-  m_cfg.runManager->SetUserAction(m_cfg.steppingAction.get());
-
-  // Initialize the Geant4 run manager
-  m_cfg.runManager->Initialize();
-
-  // Please note:
-  // The following two blocks rely on the fact that the Acts
-  // detector constructions cache the world volume
-
-  // Set the magnetic field
-  if (m_cfg.magneticField != nullptr) {
-    ACTS_INFO("Setting ACTS configured field to Geant4.");
-    // Get the g4World cache
-    G4VPhysicalVolume* g4World = m_cfg.detectorConstruction->Construct();
-    /// Set the field ot the G4Field manager
-    m_fieldManager = std::make_shared<G4FieldManager>();
-    m_fieldManager->SetDetectorField(m_cfg.magneticField.get());
-    m_fieldManager->CreateChordFinder(m_cfg.magneticField.get());
-
-    // Propagate down to all childrend
-    g4World->GetLogicalVolume()->SetFieldManager(m_fieldManager.get(), true);
-  }
-
-  // Map simulation to reconstruction geometry
-  if (m_cfg.sensitiveSurfaceMapper != nullptr) {
-    ACTS_INFO(
-        "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
-
-    G4VPhysicalVolume* g4World = m_cfg.detectorConstruction->Construct();
-    int sCounter = 0;
-    m_cfg.sensitiveSurfaceMapper->remapSensitiveNames(
-        g4World, Acts::Transform3::Identity(), sCounter);
-
-    ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
-  }
-
-  m_inputParticles.initialize(m_cfg.inputParticles);
-  m_outputMaterialTracks.maybeInitialize(m_cfg.outputMaterialTracks);
 }
 
-ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
+void ActsExamples::Geant4SimulationBase::kickRunManager() {
+  // Set the primary generator action
+  m_runManager->SetUserAction(m_primaryGeneratorAction);
 
-ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
+  // Set the configured user actions
+  m_runManager->SetUserAction(m_runAction);
+  m_runManager->SetUserAction(m_eventAction);
+  m_runManager->SetUserAction(m_trackingAction);
+  m_runManager->SetUserAction(m_steppingAction);
+
+  // Initialize the Geant4 run manager
+  m_runManager->Initialize();
+}
+
+ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Ensure exclusive access to the Geant4 run manager
-  std::lock_guard<std::mutex> guard(m_runManagerLock);
+  std::lock_guard<std::mutex> guard(m_gean4Instance->mutex);
 
   // Set the seed new per event, so that we get reproducible results
-  G4Random::setTheSeed(m_cfg.randomNumbers->generateSeed(ctx));
+  G4Random::setTheSeed(config().randomNumbers->generateSeed(ctx));
 
   // Get and reset event registry state
-  auto& eventData = EventStoreRegistry::eventData();
-  eventData = EventStoreRegistry::State{};
+  auto& eventData = m_eventStoreHolder->store();
+  eventData = EventStore{};
 
   // Register the current event store to the registry
   // this will allow access from the User*Actions
@@ -298,7 +139,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
-  m_cfg.runManager->BeamOn(1);
+  m_runManager->BeamOn(1);
 
   // Since these are std::set, this ensures that each particle is in both sets
   assert(eventData.particlesInitial.size() == eventData.particlesFinal.size());
@@ -315,36 +156,168 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
     ACTS_WARNING("- parent ID not found: " << eventData.parentIdNotFound);
   }
 
-  // Output handling: Initial/Final particles
-  if (not m_cfg.outputParticlesInitial.empty() and
-      not m_cfg.outputParticlesFinal.empty()) {
-    m_outputParticlesInitial(
-        ctx, SimParticleContainer(eventData.particlesInitial.begin(),
-                                  eventData.particlesInitial.end()));
-    m_outputParticlesFinal(
-        ctx, SimParticleContainer(eventData.particlesFinal.begin(),
-                                  eventData.particlesFinal.end()));
+  return ActsExamples::ProcessCode::SUCCESS;
+}
+
+ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
+                                                 Acts::Logging::Level level)
+    : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
+  // G4RunManager will take care of deletion
+  Geant4SimulationBase::initializeCommon(cfg, new FTFP_BERT());
+
+  // Set the primarty generator
+  SimParticleTranslation::Config prCfg;
+  prCfg.EventStoreHolder = m_eventStoreHolder;
+  // G4RunManager will take care of deletion
+  m_primaryGeneratorAction = new SimParticleTranslation(
+      prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
+
+  // Please note:
+  // The following two blocks rely on the fact that the Acts
+  // detector constructions cache the world volume
+
+  // Get the g4World cache
+  G4VPhysicalVolume* g4World = m_detectorConstruction->Construct();
+
+  // Particle action
+  ParticleTrackingAction::Config trackingCfg;
+  trackingCfg.EventStoreHolder = m_eventStoreHolder;
+  trackingCfg.keepParticlesWithoutHits = cfg.keepParticlesWithoutHits;
+  // G4RunManager will take care of deletion
+  m_trackingAction = new ParticleTrackingAction(
+      trackingCfg, m_logger->cloneWithSuffix("ParticleTracking"));
+
+  // Stepping actions
+
+  SensitiveSteppingAction::Config stepCfg;
+  stepCfg.EventStoreHolder = m_eventStoreHolder;
+  stepCfg.charged = true;
+  stepCfg.neutral = false;
+  stepCfg.primary = true;
+  stepCfg.secondary = cfg.recordHitsOfSecondaries;
+
+  ParticleKillAction::Config particleKillCfg;
+  particleKillCfg.volume = cfg.killVolume;
+  particleKillCfg.maxTime = cfg.killAfterTime;
+
+  SteppingActionList::Config steppingCfg;
+  steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(
+      stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
+  steppingCfg.actions.push_back(std::make_unique<ParticleKillAction>(
+      particleKillCfg, m_logger->cloneWithSuffix("Killer")));
+  // G4RunManager will take care of deletion
+  m_steppingAction = new SteppingActionList(steppingCfg);
+
+  // Set the magnetic field
+  if (cfg.magneticField) {
+    ACTS_INFO("Setting ACTS configured field to Geant4.");
+
+    MagneticFieldWrapper::Config g4FieldCfg;
+    g4FieldCfg.magneticField = cfg.magneticField;
+    m_magneticField = std::make_unique<MagneticFieldWrapper>(g4FieldCfg);
+
+    /// Set the field ot the G4Field manager
+    m_fieldManager = std::make_unique<G4FieldManager>();
+    m_fieldManager->SetDetectorField(m_magneticField.get());
+    m_fieldManager->CreateChordFinder(m_magneticField.get());
+
+    // Propagate down to all childrend
+    g4World->GetLogicalVolume()->SetFieldManager(m_fieldManager.get(), true);
   }
 
-  // Output handling: Simulated hits
-  if (not m_cfg.outputSimHits.empty()) {
-#if BOOST_VERSION < 107800
-    SimHitContainer container;
-    for (const auto& hit : eventData.hits) {
-      container.insert(hit);
-    }
-    m_outputSimHits(ctx, std::move(container));
-#else
-    m_outputSimHits(
-        ctx, SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
-#endif
+  // An ACTS TrackingGeometry is provided, so simulation for sensitive
+  // detectors is turned on - they need to get matched first
+  if (cfg.trackingGeometry) {
+    ACTS_INFO(
+        "Remapping selected volumes from Geant4 to Acts::Surface::GeometryID");
+
+    SensitiveSurfaceMapper::Config ssmCfg;
+    ssmCfg.trackingGeometry = cfg.trackingGeometry;
+    ssmCfg.volumeMappings = cfg.volumeMappings;
+    ssmCfg.materialMappings = cfg.materialMappings;
+
+    SensitiveSurfaceMapper sensitiveSurfaceMapper(
+        ssmCfg, m_logger->cloneWithSuffix("SensitiveSurfaceMapper"));
+    int sCounter = 0;
+    sensitiveSurfaceMapper.remapSensitiveNames(
+        g4World, Acts::Transform3::Identity(), sCounter);
+
+    ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
   }
+
+  Geant4SimulationBase::kickRunManager();
+
+  m_inputParticles.initialize(cfg.inputParticles);
+  m_outputSimHits.initialize(cfg.outputSimHits);
+  m_outputParticlesInitial.initialize(cfg.outputParticlesInitial);
+  m_outputParticlesFinal.initialize(cfg.outputParticlesFinal);
+}
+
+ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
+
+ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
+  Geant4SimulationBase::execute(ctx);
+
+  auto& eventData = m_eventStoreHolder->store();
+
+  // Output handling: Simulation
+  m_outputParticlesInitial(
+      ctx, SimParticleContainer(eventData.particlesInitial.begin(),
+                                eventData.particlesInitial.end()));
+  m_outputParticlesFinal(ctx,
+                         SimParticleContainer(eventData.particlesFinal.begin(),
+                                              eventData.particlesFinal.end()));
+
+#if BOOST_VERSION < 107800
+  SimHitContainer container;
+  for (const auto& hit : eventData.hits) {
+    container.insert(hit);
+  }
+  m_outputSimHits(ctx, std::move(container));
+#else
+  m_outputSimHits(
+      ctx, SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
+#endif
+
+  return ActsExamples::ProcessCode::SUCCESS;
+}
+
+ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
+    const Config& cfg, Acts::Logging::Level level)
+    : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
+  // G4RunManager will take care of deletion
+  Geant4SimulationBase::initializeCommon(
+      cfg, new MaterialPhysicsList(
+               m_logger->cloneWithSuffix("MaterialPhysicsList")));
+
+  // Set the primarty generator
+  SimParticleTranslation::Config prCfg;
+  prCfg.EventStoreHolder = m_eventStoreHolder;
+  prCfg.forcedPdgCode = 0;
+  prCfg.forcedCharge = 0.;
+  prCfg.forcedMass = 0.;
+  /// G4RunManager will take care of deletion
+  m_primaryGeneratorAction = new SimParticleTranslation(
+      prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
+
+  Geant4SimulationBase::kickRunManager();
+
+  m_inputParticles.initialize(cfg.inputParticles);
+  m_outputMaterialTracks.maybeInitialize(cfg.outputMaterialTracks);
+}
+
+ActsExamples::Geant4MaterialRecording::~Geant4MaterialRecording() = default;
+
+ActsExamples::ProcessCode ActsExamples::Geant4MaterialRecording::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
+  Geant4SimulationBase::execute(ctx);
+
+  auto& eventData = m_eventStoreHolder->store();
 
   // Output handling: Material tracks
-  if (not m_cfg.outputMaterialTracks.empty()) {
-    m_outputMaterialTracks(
-        ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
-  }
+  m_outputMaterialTracks(
+      ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

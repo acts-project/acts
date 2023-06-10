@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <memory>
 #include <string>
@@ -27,12 +28,14 @@ namespace ActsExamples {
 /// generator action.
 ///
 /// This also ensures that the event numbers correspond to the
-/// ACTS framework event numbers and hence harmonizes the EventStoreRegistry.
+/// ACTS framework event numbers and hence harmonizes the EventStoreHolder.
 class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
  public:
   /// Nested configuration struct that contains the
   /// input particle collection name,
   struct Config {
+    std::shared_ptr<EventStoreHolder> EventStoreHolder;
+
     /// Force pdgCode & mass & charge in G4 units (this is needed for Geantino
     /// simulation)
     std::optional<G4int> forcedPdgCode;
@@ -64,7 +67,7 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   Config m_cfg;
 
  private:
-  /// Event number cache for EventStoreRegistry harmonization
+  /// Event number cache for EventStoreHolder harmonization
   unsigned int m_eventNr = 0;
 
   /// Private access method to the logging instance

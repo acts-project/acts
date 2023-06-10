@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <memory>
 #include <string>
@@ -29,6 +30,7 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
  public:
   /// Nested configuration struct
   struct Config {
+    std::shared_ptr<EventStoreHolder> EventStoreHolder;
     std::vector<std::string> excludeMaterials = {};
   };
 

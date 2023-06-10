@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -55,7 +56,40 @@ void patchKwargsConstructor(T& c) {
 
 METHOD_TRAIT(write_method_trait_t, write);
 
+/// Pybind is not able to pass around unique_ptr because the can only be moved
+/// This holder works around that by having the unique_ptr stored in a
+/// shared_ptr
+/// @ref https://pybind11.readthedocs.io/en/stable/advanced/smart_ptrs.html
+template <typename T>
+class SharedUniquePtr final {
+ public:
+  SharedUniquePtr() = default;
+  SharedUniquePtr(T payload)
+      : SharedUniquePtr(std::make_unique<T>(std::move(payload))) {}
+  SharedUniquePtr(const T& payload)
+      : SharedUniquePtr(std::make_unique<T>(payload)) {}
+  SharedUniquePtr(T&& payload)
+      : SharedUniquePtr(std::make_unique<T>(std::move(payload))) {}
+  SharedUniquePtr(T* payload)
+      : m_holder{std::make_shared<std::unique_ptr<T>>(payload)} {}
+  SharedUniquePtr(std::unique_ptr<T> unique)
+      : m_holder{std::make_shared<std::unique_ptr<T>>(std::move(unique))} {}
+
+  const T* get() { return m_holder.get()->get(); }
+
+  /// Ejects the held object
+  std::unique_ptr<T> release() const { return std::move(*m_holder); }
+
+  /// Ejects the held object
+  operator std::unique_ptr<T>() const { return release(); }
+
+ private:
+  std::shared_ptr<std::unique_ptr<T>> m_holder;
+};
+
 }  // namespace Acts::Python
+
+PYBIND11_DECLARE_HOLDER_TYPE(T, Acts::Python::SharedUniquePtr<T>);
 
 #define ACTS_PYTHON_MEMBER(name) \
   _binding_instance.def_readwrite(#name, &_struct_type::name)

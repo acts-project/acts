@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <memory>
 #include <string>
@@ -26,6 +27,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
   struct Config {
+    std::shared_ptr<EventStoreHolder> EventStoreHolder;
     /// Selection for hit recording
     bool charged = true;
     bool neutral = false;

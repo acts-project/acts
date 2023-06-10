@@ -13,7 +13,7 @@
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <G4Material.hh>
 #include <G4RunManager.hh>
@@ -28,7 +28,7 @@ ActsExamples::MaterialSteppingAction::~MaterialSteppingAction() = default;
 void ActsExamples::MaterialSteppingAction::UserSteppingAction(
     const G4Step* step) {
   // Get the event data
-  auto& eventData = EventStoreRegistry::eventData();
+  auto& eventData = m_cfg.EventStoreHolder->store();
 
   // Get the material & check if it is present
   G4Material* material = step->GetPreStepPoint()->GetMaterial();

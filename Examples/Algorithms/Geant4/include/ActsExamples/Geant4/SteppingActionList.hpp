@@ -22,13 +22,13 @@ namespace ActsExamples {
 
 /// Geant4 only allows one user action of each type. This simple wrapper
 /// dispatches multiple actions to Geant4.
-class ActsSteppingActionList : public G4UserSteppingAction {
+class SteppingActionList : public G4UserSteppingAction {
  public:
   struct Config {
     std::vector<std::shared_ptr<G4UserSteppingAction>> actions;
   };
 
-  ActsSteppingActionList(const Config &cfg) : m_cfg(cfg) {}
+  SteppingActionList(const Config &cfg) : m_cfg(cfg) {}
 
   void UserSteppingAction(const G4Step *step) override {
     for (auto action : m_cfg.actions) {

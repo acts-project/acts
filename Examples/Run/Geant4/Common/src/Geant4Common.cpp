@@ -21,7 +21,7 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
@@ -92,7 +92,7 @@ void setupGeant4Simulation(
   // Set the primarty generator
   g4Cfg.primaryGeneratorAction = std::make_shared<SimParticleTranslation>(
       g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", g4loglevel));
-  g4Cfg.detectorConstruction = std::move(detector);
+  g4Cfg.detectorConstruction = detector.release();
 
   // Set the user actions
   g4Cfg.runAction = runActions.empty() ? nullptr : runActions.front();

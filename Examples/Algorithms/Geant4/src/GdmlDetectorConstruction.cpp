@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 
+#include <memory>
+
 #include <G4GDMLParser.hh>
 
 using namespace ActsExamples;
@@ -23,4 +25,13 @@ G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
     m_world = parser.GetWorldVolume();
   }
   return m_world;
+}
+
+GdmlDetectorConstructionFactory::GdmlDetectorConstructionFactory(
+    std::string path)
+    : m_path(std::move(path)) {}
+
+std::unique_ptr<G4VUserDetectorConstruction>
+GdmlDetectorConstructionFactory::factorize() const {
+  return std::make_unique<GdmlDetectorConstruction>(m_path);
 }

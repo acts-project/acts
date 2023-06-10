@@ -1,5 +1,4 @@
 set(ACTS_EXAMPLES_G4SOURCES
-    src/EventStoreRegistry.cpp
     src/GdmlDetectorConstruction.cpp
     src/TelescopeG4DetectorConstruction.cpp
     src/Geant4Simulation.cpp
@@ -10,7 +9,8 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/SensitiveSurfaceMapper.cpp
     src/SensitiveSteppingAction.cpp
     src/SimParticleTranslation.cpp
-    src/ParticleKillAction.cpp)
+    src/ParticleKillAction.cpp
+    src/Geant4Manager.cpp)
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
     list(APPEND ACTS_EXAMPLES_G4SOURCES src/DDG4DetectorConstruction.cpp)
