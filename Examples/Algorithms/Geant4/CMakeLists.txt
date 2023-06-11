@@ -10,11 +10,8 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/SensitiveSteppingAction.cpp
     src/SimParticleTranslation.cpp
     src/ParticleKillAction.cpp
-<<<<<<< HEAD
+    src/PhysicsListFactory.cpp
     src/Geant4Manager.cpp)
-=======
-    src/PhysicsListFactory.cpp)
->>>>>>> 18dd0adb3d2b84f6686f1dfaee1c2f2852b1a19e
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
     list(APPEND ACTS_EXAMPLES_G4SOURCES src/DDG4DetectorConstruction.cpp)

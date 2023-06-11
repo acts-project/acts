@@ -558,6 +558,7 @@ def getG4DetectorContructionFactory(
     raise AttributeError(f"cannot find a suitable detector construction for {detector}")
 
 
+geant4Instance = None
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],
@@ -626,9 +627,12 @@ def addGeant4(
             raise AttributeError("detector not given")
         g4DetectorConstructionFactory = getG4DetectorContructionFactory(detector)
 
+    global geant4Instance
+
     # Simulation
     alg = Geant4Simulation(
         level=customLogLevel(),
+        geant4Instance=geant4Instance,
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=particles_selected,
@@ -637,14 +641,16 @@ def addGeant4(
         outputParticlesFinal="particles_final",
         trackingGeometry=trackingGeometry,
         magneticField=field,
+        physicsList=physicsList,
         volumeMappings=volumeMappings,
         materialMappings=materialMappings,
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
-        physicsList=physicsList,
     )
+
+    geant4Instance = alg.geant4Instance
 
     # Sequencer
     s.addAlgorithm(alg)

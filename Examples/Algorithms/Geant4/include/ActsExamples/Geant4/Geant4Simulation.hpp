@@ -64,9 +64,12 @@ class Geant4SimulationBase : public IAlgorithm {
   };
 
   Geant4SimulationBase(const Config& cfg, std::string name,
-                       Acts::Logging::Level level = Acts::Logging::INFO);
+                       Acts::Logging::Level level);
 
   ~Geant4SimulationBase() override;
+
+  /// Initialize the algorithm
+  ProcessCode initialize() final;
 
   /// Algorithm execute method, called once per event with context
   ///
@@ -80,44 +83,15 @@ class Geant4SimulationBase : public IAlgorithm {
   std::shared_ptr<Geant4Instance> geant4Instance() const;
 
  protected:
-  void initializeCommon(const Config& cfg, G4VUserPhysicsList* physicsList);
-  void finalizeRunManager();
-
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::shared_ptr<EventStoreHolder> m_eventStoreHolder;
 
   std::shared_ptr<Geant4Instance> m_gean4Instance;
 
-  /// Our Geant4Manager is taking care of the lifetime
-  G4RunManager* m_runManager{};
-
-  /// The G4 physics list
-  G4VUserPhysicsList* m_physicsList{};
-
   /// Detector construction object.
   /// G4RunManager will take care of deletion
   G4VUserDetectorConstruction* m_detectorConstruction{};
-
-  /// User Action: Primary generator action of the simulation
-  /// G4RunManager will take care of deletion
-  G4VUserPrimaryGeneratorAction* m_primaryGeneratorAction{};
-
-  /// User Action: Run
-  /// G4RunManager will take care of deletion
-  G4UserRunAction* m_runAction{};
-
-  /// User Action: Event
-  /// G4RunManager will take care of deletion
-  G4UserEventAction* m_eventAction{};
-
-  /// User Action: Tracking
-  /// G4RunManager will take care of deletion
-  G4UserTrackingAction* m_trackingAction{};
-
-  /// User Action: Stepping
-  /// G4RunManager will take care of deletion
-  G4UserSteppingAction* m_steppingAction{};
 
   ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 };
@@ -138,13 +112,13 @@ class Geant4SimulationBase : public IAlgorithm {
 class Geant4Simulation final : public Geant4SimulationBase {
  public:
   struct Config : public Geant4SimulationBase::Config {
-    // Name of the output collection : hits
+    /// Name of the output collection : hits
     std::string outputSimHits = "simhits";
 
-    // Name of the output collection : initial particles
+    /// Name of the output collection : initial particles
     std::string outputParticlesInitial = "particles_initial";
 
-    // Name of the output collection : final particles
+    /// Name of the output collection : final particles
     std::string outputParticlesFinal = "particles_final";
 
     /// The ACTS tracking geometry
@@ -152,6 +126,8 @@ class Geant4Simulation final : public Geant4SimulationBase {
 
     /// The ACTS Magnetic field provider
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
+
+    std::string physicsList = "FTFP_BERT";
 
     std::vector<std::string> volumeMappings = {"Silicon"};
 

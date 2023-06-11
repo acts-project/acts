@@ -67,11 +67,13 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(detectorConstructionFactory);
+    ACTS_PYTHON_MEMBER(geant4Instance);
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(outputParticlesInitial);
     ACTS_PYTHON_MEMBER(outputParticlesFinal);
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(magneticField);
+    ACTS_PYTHON_MEMBER(physicsList);
     ACTS_PYTHON_MEMBER(volumeMappings);
     ACTS_PYTHON_MEMBER(materialMappings);
     ACTS_PYTHON_MEMBER(killVolume);
@@ -97,6 +99,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(detectorConstructionFactory);
+    ACTS_PYTHON_MEMBER(geant4Instance);
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
     ACTS_PYTHON_STRUCT_END();
   }
