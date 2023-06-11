@@ -75,7 +75,7 @@ def main():
             print(" * label need to be added: :construction: WIP")
             list_labels.add(':construction: WIP')
             mislabeled = True
-    else if  if ":construction: WIP" in list_labels:
+    else if ":construction: WIP" in list_labels:
         print(" * label need to be removed: :construction: WIP")
         list_labels.remove(':construction: WIP')
         mislabeled = True
