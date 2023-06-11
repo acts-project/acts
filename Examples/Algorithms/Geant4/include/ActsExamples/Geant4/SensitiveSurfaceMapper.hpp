@@ -34,7 +34,7 @@ namespace ActsExamples {
 /// elements of the Acts::TrackingGeoemtry w/o map lookup.
 class SensitiveSurfaceMapper {
  public:
-  static constexpr const char* mappingPrefix = "ActsGeoID#";
+  constexpr static std::string_view mappingPrefix = "ActsGeoID#";
 
   /// Configuration struct for the surface mapper
   struct Config {
