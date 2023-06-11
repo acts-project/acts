@@ -67,14 +67,19 @@ def main():
         print(f" * {el.filename}")
 
     print('Checking labels ...')
+    mislabeled = False
     # Check the PR is a draft
     if pull.draft:
         print("This PR is a draft!")
         if ":construction: WIP" not in list_labels:
             print(" * label need to be added: :construction: WIP")
             list_labels.add(':construction: WIP')
-            #pull.add_to_labels(':construction: WIP')
-
+            mislabeled = True
+    else if  if ":construction: WIP" in list_labels:
+        print(" * label need to be removed: :construction: WIP")
+        list_labels.remove(':construction: WIP')
+        mislabeled = True
+    
     # Check each file and compare them with the patterns
     for pattern in whatchlist_files:
         for el in files:
@@ -87,35 +92,19 @@ def main():
                 if label not in list_labels:
                     print(f" * label need to be added: {label}")
                     list_labels.add(label)
-                    #pull.add_to_labels(label)
+                    mislabeled = True
             # Found a match already, we can skip the other files
             break
 
-    # Check the addition of the label was successfull
     labels = pull.get_labels()
-    final_labels = set()
     for label in labels:
         final_labels.add(label.name)
-
-    problem = False
-    if len(final_labels) != len(list_labels):
-        problem = True
-
-    if not problem:
-        for label in list_labels:
-            if label not in final_labels:
-                problem = True
-                break
-
+        
     print (f'Labels in PR: {final_labels}')
     print (f'Expected Labels in PR: {list_labels}')
             
-    if problem:
-        #pull.create_issue_comment(f"Please add the following labels to this PR: {[el for el in list_labels if el not in final_labels]}")
+    if mislabeled:
         raise Exception(f"Please add the following labels to this PR: {[el for el in list_labels if el not in final_labels]}")
-        
-    #if 'Changes Performance' in list_labels:
-        #pull.create_issue_comment(f"This PR modifies the performance of a component")
 
 if __name__ == "__main__":
     main()
