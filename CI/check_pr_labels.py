@@ -60,6 +60,13 @@ def main():
 
     print('This PR is marked with the following labels:', list_labels)
 
+    # Check the PR is a draft
+    if pull.draft:
+        print("This PR is a draft!")
+        if ":construction: WIP" not in list_labels:
+            list_labels.add(':construction: WIP')
+            pull.add_to_labels(':construction: WIP')
+    
     # Get the list of files modified by this PR
     files = pull.get_files()
     print('List of modified files:')
@@ -105,8 +112,8 @@ def main():
     if problem:
         raise Exception(f'Something went wrong while adding the labels to the PR')
         
-    if 'Changes Performance' in list_labels:
-        pull.create_issue_comment(f"This PR modifies the performance of a component")
+    #if 'Changes Performance' in list_labels:
+        #pull.create_issue_comment(f"This PR modifies the performance of a component")
 
 if __name__ == "__main__":
     main()
