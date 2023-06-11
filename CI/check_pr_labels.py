@@ -105,7 +105,7 @@ def main():
     print (f'Expected Labels in PR: {list_labels}')
             
     if mislabeled:
-        raise Exception(f"Please add the following labels to this PR: {[el for el in list_labels if el not in final_labels]}")
+        raise Exception("Labels for this PR are not properly set. Please add/remove the labels accordingly")
 
 if __name__ == "__main__":
     main()
