@@ -96,6 +96,7 @@ def main():
             # Found a match already, we can skip the other files
             break
 
+    final_labels = set()
     labels = pull.get_labels()
     for label in labels:
         final_labels.add(label.name)
