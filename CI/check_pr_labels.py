@@ -59,13 +59,6 @@ def main():
         list_labels.add(label.name)
 
     print('This PR is marked with the following labels:', list_labels)
-
-    # Check the PR is a draft
-    if pull.draft:
-        print("This PR is a draft!")
-        if ":construction: WIP" not in list_labels:
-            list_labels.add(':construction: WIP')
-            pull.add_to_labels(':construction: WIP')
     
     # Get the list of files modified by this PR
     files = pull.get_files()
@@ -74,6 +67,14 @@ def main():
         print(f" * {el.filename}")
 
     print('Checking labels ...')
+    # Check the PR is a draft
+    if pull.draft:
+        print("This PR is a draft!")
+        if ":construction: WIP" not in list_labels:
+            print(" * label need to be added: :construction: WIP")
+            list_labels.add(':construction: WIP')
+            #pull.add_to_labels(':construction: WIP')
+
     # Check each file and compare them with the patterns
     for pattern in whatchlist_files:
         for el in files:
@@ -84,9 +85,9 @@ def main():
             # add label to PR if missing
             for label in toadd_labels:
                 if label not in list_labels:
-                    print(f" * adding label: {label}")
+                    print(f" * label need to be added: {label}")
                     list_labels.add(label)
-                    pull.add_to_labels(label)
+                    #pull.add_to_labels(label)
             # Found a match already, we can skip the other files
             break
 
@@ -110,6 +111,7 @@ def main():
     print (f'Expected Labels in PR: {list_labels}')
             
     if problem:
+        pull.create_issue_comment(f"Please add the following labels to this PR: {[el for el in list_labels if el not in final_labels]}")
         raise Exception(f'Something went wrong while adding the labels to the PR')
         
     #if 'Changes Performance' in list_labels:
