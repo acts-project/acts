@@ -111,8 +111,8 @@ def main():
     print (f'Expected Labels in PR: {list_labels}')
             
     if problem:
-        pull.create_issue_comment(f"Please add the following labels to this PR: {[el for el in list_labels if el not in final_labels]}")
-        raise Exception(f'Something went wrong while adding the labels to the PR')
+        #pull.create_issue_comment(f"Please add the following labels to this PR: {[el for el in list_labels if el not in final_labels]}")
+        raise Exception(f"Please add the following labels to this PR: {[el for el in list_labels if el not in final_labels]}")
         
     #if 'Changes Performance' in list_labels:
         #pull.create_issue_comment(f"This PR modifies the performance of a component")
