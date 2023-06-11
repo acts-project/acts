@@ -1,0 +1,20 @@
+name: Check PR labels
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check_pr_labels:
+    name: Check PR Labels
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    steps:
+      - uses: actions/checkout@v3
+      - name: install dependencies
+        run: pip3 install PyGithub
+      - name: check the labels
+        run: python3 CI/check_pr_labels.py --pull_id ${{ github.event.number }} --repository ${{ github.repository }}
