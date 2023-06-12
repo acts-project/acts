@@ -40,7 +40,6 @@ SeedFinderConfigArg = namedtuple(
         "deltaZMax",
         "maxPtScattering",
         "zBinEdges",
-        "skipPreviousTopSP",
         "zBinsCustomLooping",
         "rRangeMiddleSP",
         "useVariableMiddleSPRange",
@@ -57,7 +56,7 @@ SeedFinderConfigArg = namedtuple(
         "z",  # (min,max)
         "zOutermostLayers",  # (min,max)
     ],
-    defaults=[None] * 20 + [(None, None)] * 8,
+    defaults=[None] * 19 + [(None, None)] * 8,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -164,6 +163,7 @@ def addSeeding(
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
+    initialSigmas: Optional[list] = None,
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
     seedFinderOptionsArg: SeedFinderOptionsArg = SeedFinderOptionsArg(),
@@ -195,10 +195,13 @@ def addSeeding(
     particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
+    initialSigmas : list
+        Sets the initial covariance matrix diagonal. This is ignored in case of TruthSmearing.
+        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
-        Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
+        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
@@ -294,9 +297,7 @@ def addSeeding(
             houghTransformConfig.outputProtoTracks = "prototracks"
             houghTransformConfig.outputSeeds = "seeds"
             houghTransformConfig.trackingGeometry = trackingGeometry
-            inputProtoTracks, inputSeeds = addHoughTransformSeeding(
-                s, houghTransformConfig, logLevel
-            )
+            seeds = addHoughTransformSeeding(s, houghTransformConfig, logLevel)
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
 
@@ -307,6 +308,12 @@ def addSeeding(
             trackingGeometry=trackingGeometry,
             magneticField=field,
             **acts.examples.defaultKWArgs(
+                sigmaLoc0=initialSigmas[0] if initialSigmas is not None else None,
+                sigmaLoc1=initialSigmas[1] if initialSigmas is not None else None,
+                sigmaPhi=initialSigmas[2] if initialSigmas is not None else None,
+                sigmaTheta=initialSigmas[3] if initialSigmas is not None else None,
+                sigmaQOverP=initialSigmas[4] if initialSigmas is not None else None,
+                sigmaT0=initialSigmas[5] if initialSigmas is not None else None,
                 initialVarInflation=initialVarInflation,
             ),
         )
@@ -536,7 +543,6 @@ def addStandardSeeding(
             deltaZMax=seedFinderConfigArg.deltaZMax,
             maxPtScattering=seedFinderConfigArg.maxPtScattering,
             zBinEdges=seedFinderConfigArg.zBinEdges,
-            skipPreviousTopSP=seedFinderConfigArg.skipPreviousTopSP,
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
@@ -752,7 +758,7 @@ def addHoughTransformSeeding(
     sequence.addAlgorithm(ht)
     # potentially HT can be extended to also produce seeds, but it is not yet implemented yet
     # configuration option (outputSeeds) exists
-    return config.outputProtoTracks, ""
+    return ht.config.outputSeeds
 
 
 def addSeedPerformanceWriters(
@@ -1193,28 +1199,51 @@ def addExaTrkX(
         )
     )
 
-    # For now we don't configure only the common options so this works
-    exaTrkxModule = (
-        acts.examples.ExaTrkXTrackFindingTorch
-        if backend == ExaTrkXBackend.Torch
-        else acts.examples.ExaTrkXTrackFindingOnnx
-    )
+    metricLearningConfig = {
+        "spacepointFeatures": 3,
+        "embeddingDim": 8,
+        "rVal": 1.6,
+        "knnVal": 500,
+    }
 
-    exaTrkxFinding = exaTrkxModule(
-        modelDir=str(modelDir),
-        spacepointFeatures=3,
-        embeddingDim=8,
-        rVal=1.6,
-        knnVal=500,
-        filterCut=0.21,
-    )
+    filterConfig = {"cut": 0.21}
+
+    gnnConfig = {
+        "cut": 0.5,
+    }
+
+    if backend == ExaTrkXBackend.Torch:
+        metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
+        filterConfig["modelPath"] = str(modelDir / "filter.pt")
+        filterConfig["nChunks"] = 10
+        gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
+
+        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
+        edgeClassifiers = [
+            acts.examples.TorchEdgeClassifier(**filterConfig),
+            acts.examples.TorchEdgeClassifier(**gnnConfig),
+        ]
+        trackBuilder = acts.examples.BoostTrackBuilding()
+    elif backend == ExaTrkXBackend.Onnx:
+        metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
+        filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
+        gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
+
+        graphConstructor = acts.examples.OnnxMetricLearning(**metricLearningConfig)
+        edgeClassifiers = [
+            acts.examples.OnnxEdgeClassifier(**filterConfig),
+            acts.examples.OnnxEdgeClassifier(**gnnConfig),
+        ]
+        trackBuilder = acts.examples.CugraphTrackBuilding()
 
     s.addAlgorithm(
         acts.examples.TrackFindingAlgorithmExaTrkX(
             level=customLogLevel(),
             inputSpacePoints="spacepoints",
             outputProtoTracks="protoTracks",
-            trackFinderML=exaTrkxFinding,
+            graphConstructor=graphConstructor,
+            edgeClassifiers=edgeClassifiers,
+            trackBuilder=trackBuilder,
         )
     )
 
@@ -1244,11 +1273,11 @@ def addAmbiguityResolution(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import AmbiguityResolutionAlgorithm
+    from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    alg = AmbiguityResolutionAlgorithm(
+    alg = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",
         outputTracks="filteredTrajectories",

@@ -30,8 +30,7 @@ class MeasurementCalibrator {
   virtual void calibrate(
       const MeasurementContainer& measurements,
       const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-          trackState) const = 0;
+      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const = 0;
 
   virtual ~MeasurementCalibrator() = default;
   virtual bool needsClusters() const { return false; }
@@ -49,8 +48,7 @@ class PassThroughCalibrator : public MeasurementCalibrator {
       const MeasurementContainer& measurements,
       const ClusterContainer* /*clusters*/,
       const Acts::GeometryContext& /*gctx*/,
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-          trackState) const override;
+      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const override;
 };
 
 // Adapter class that wraps a MeasurementCalibrator to conform to the
@@ -63,10 +61,8 @@ class MeasurementCalibratorAdapter {
 
   MeasurementCalibratorAdapter() = delete;
 
-  void calibrate(
-      const Acts::GeometryContext& gctx,
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
-          trackState) const;
+  void calibrate(const Acts::GeometryContext& gctx,
+                 Acts::VectorMultiTrajectory::TrackStateProxy trackState) const;
 
  private:
   const MeasurementCalibrator& m_calibrator;
