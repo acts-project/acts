@@ -72,6 +72,8 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         outputDir=str(outputDir),
     )
 
+    outputDir = None
+
     if not ttbar:
         addParticleGun(
             s,
@@ -91,7 +93,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            npileup=50,
+            npileup=200,
             vtxGen=acts.examples.GaussianVertexGenerator(
                 stddev=acts.Vector4(
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns

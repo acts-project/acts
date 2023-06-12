@@ -130,4 +130,25 @@ void VectorTrackContainer::reserve(IndexType size) {
   }
 }
 
+void VectorTrackContainer::clear() {
+  m_tipIndex.clear();
+
+  m_params.clear();
+  m_cov.clear();
+  m_referenceSurfaces.clear();
+
+  m_nMeasurements.clear();
+  m_nHoles.clear();
+
+  m_chi2.clear();
+  m_ndf.clear();
+
+  m_nOutliers.clear();
+  m_nSharedHits.clear();
+
+  for (auto& [key, vec] : m_dynamic) {
+    vec->clear();
+  }
+}
+
 }  // namespace Acts

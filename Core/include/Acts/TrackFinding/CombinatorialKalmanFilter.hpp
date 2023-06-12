@@ -466,6 +466,7 @@ class CombinatorialKalmanFilter {
       if (result.filtered) {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
+          // @TODO: Tracks like this should not be in the final output!
           ACTS_WARNING("No tracks found");
           result.finished = true;
         } else {

@@ -949,9 +949,10 @@ def addCKFTracks(
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
-        level=customLogLevel(),
+        #  level=customLogLevel(),
+        level=acts.logging.DEBUG,
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
+            [(acts.GeometryIdentifier(), ([], [15.0], [1]))]
         ),
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",

@@ -52,6 +52,8 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  using namespace Acts::UnitLiterals;
+
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& sourceLinks = m_inputSourceLinks(ctx);
@@ -102,16 +104,30 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
 
+  auto trackContainerTemp = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainerTemp =
+      std::make_shared<Acts::VectorMultiTrajectory>();
+
+  // trackContainer->reserve(55000);
+  // trackStateContainer->reserve(4500000);
+
+  trackContainerTemp->reserve(55000);
+  trackStateContainerTemp->reserve(4500000);
+
   TrackContainer tracks(trackContainer, trackStateContainer);
+  TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
   tracks.addColumn<unsigned int>("trackGroup");
+  tracksTemp.addColumn<unsigned int>("trackGroup");
   Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
 
   unsigned int nSeed = 0;
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    trackContainerTemp->clear();
+    trackStateContainerTemp->clear();
     auto result =
-        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracks);
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracksTemp);
     m_nTotalSeeds++;
     nSeed++;
 
@@ -125,6 +141,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
       seedNumber(track) = nSeed;
+      if (track.transverseMomentum() > 1_GeV) {
+        auto destProxy = tracks.getTrack(tracks.addTrack());
+        // this currently does not copy the track states!!!
+        // @TODO: Copy track states here!
+        destProxy.copyFrom(track);
+      }
     }
   }
 
