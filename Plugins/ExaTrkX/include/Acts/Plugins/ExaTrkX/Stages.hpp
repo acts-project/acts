@@ -27,6 +27,8 @@ class GraphConstructionBase {
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
       std::vector<float> &inputValues) = 0;
+
+  virtual ~GraphConstructionBase() = default;
 };
 
 class EdgeClassificationBase {
@@ -39,6 +41,8 @@ class EdgeClassificationBase {
   /// @return (node_tensor, edge_tensor, score_tensor)
   virtual std::tuple<std::any, std::any, std::any> operator()(
       std::any nodes, std::any edges) = 0;
+
+  virtual ~EdgeClassificationBase() = default;
 };
 
 class TrackBuildingBase {
@@ -54,6 +58,8 @@ class TrackBuildingBase {
   virtual std::vector<std::vector<int>> operator()(
       std::any nodes, std::any edges, std::any edgeWeights,
       std::vector<int> &spacepointIDs) = 0;
+
+  virtual ~TrackBuildingBase() = default;
 };
 
 }  // namespace Acts
