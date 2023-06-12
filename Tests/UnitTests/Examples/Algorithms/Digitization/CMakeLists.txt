@@ -1,0 +1,4 @@
+set(unittest_extra_libraries ActsExamplesDigitization)
+
+add_unittest(ModuleClusters ModuleClustersTests.cpp)
+add_unittest(DigitizationAlgorithm DigitizationAlgorithmTests.cpp)
