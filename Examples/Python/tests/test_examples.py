@@ -607,7 +607,6 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
     seq = Sequencer(
         events=10,
         numThreads=1,
-        failOnFpe=True,
         fpeMasks=[
             (
                 "Fatras/include/ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp:66",

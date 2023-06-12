@@ -256,7 +256,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   ACTS_PYTHON_MEMBER(outputTimingFile);
   ACTS_PYTHON_MEMBER(trackFpes);
   ACTS_PYTHON_MEMBER(fpeMasks);
-  ACTS_PYTHON_MEMBER(failOnFpe);
+  ACTS_PYTHON_MEMBER(failOnFirstFpe);
   ACTS_PYTHON_MEMBER(fpeStackTraceLength);
   ACTS_PYTHON_STRUCT_END();
 

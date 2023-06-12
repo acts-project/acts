@@ -21,6 +21,7 @@
 #include <atomic>
 #include <cfenv>
 #include <chrono>
+#include <cstdlib>
 #include <exception>
 #include <functional>
 #include <iterator>
@@ -506,9 +507,13 @@ int Sequencer::run() {
                        << ") (seen: " << count << " FPEs)\n"
                        << Acts::FpeMonitor::stackTraceToString(
                               *st, m_cfg.fpeStackTraceLength);
-                    ACTS_ERROR(ss.str());
-                    if (m_cfg.failOnFpe) {
+                    m_hasFpeFailure = true;
+
+                    if (m_cfg.failOnFirstFpe) {
+                      ACTS_ERROR(ss.str());
                       throw FpeFailure{ss.str()};
+                    } else {
+                      ACTS_INFO(ss.str());
                     }
                   }
                 }
@@ -609,6 +614,10 @@ int Sequencer::run() {
   if (!m_cfg.outputDir.empty()) {
     storeTiming(names, clocksAlgorithms, numEvents,
                 joinPaths(m_cfg.outputDir, m_cfg.outputTimingFile));
+  }
+
+  if (m_hasFpeFailure) {
+    return EXIT_FAILURE;
   }
 
   return EXIT_SUCCESS;

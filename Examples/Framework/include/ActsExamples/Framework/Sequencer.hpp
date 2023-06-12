@@ -84,7 +84,7 @@ class Sequencer {
 
     bool trackFpes = true;
     std::vector<FpeMask> fpeMasks{};
-    bool failOnFpe = true;
+    bool failOnFirstFpe = false;
     std::size_t fpeStackTraceLength = 8;
   };
 
@@ -177,7 +177,7 @@ class Sequencer {
 
   std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
-  // tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> m_fpeResults;
+  std::atomic<bool> m_hasFpeFailure = false;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };

@@ -95,7 +95,7 @@ def fpe_type(request):
 def test_fpe_single_nofail(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
-        failOnFpe=False,
+        failOnFirstFpe=False,
     )
 
     s.addAlgorithm(
@@ -115,7 +115,7 @@ def test_fpe_single_nofail(fpe_type):
 def test_fpe_single_fail(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
-        failOnFpe=True,
+        failOnFirstFpe=True,
         numThreads=1,
     )
 
@@ -170,7 +170,7 @@ def test_fpe_rearm(fpe_type):
 
     s = acts.examples.Sequencer(
         events=10,
-        failOnFpe=False,
+        failOnFirstFpe=False,
         numThreads=-1,
     )
     s.addAlgorithm(Alg())
@@ -196,7 +196,7 @@ def test_fpe_masking_single(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         numThreads=-1,
-        failOnFpe=True,
+        failOnFirstFpe=True,
         fpeMasks=[
             acts.examples.Sequencer.FpeMask(_locs[fpe_type], fpe_type, 1),
         ],
@@ -212,7 +212,7 @@ def test_fpe_masking_single(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         numThreads=-1,
-        failOnFpe=True,
+        failOnFirstFpe=True,
         fpeMasks=[
             acts.examples.Sequencer.FpeMask(_locs[fpe_type], fpe_type, 3),
         ],
@@ -255,7 +255,7 @@ def test_fpe_context(fpe_type):
 def test_buffer_sufficient():
     s = acts.examples.Sequencer(
         events=10000,
-        failOnFpe=False,
+        failOnFirstFpe=False,
     )
 
     s.addAlgorithm(FuncAlg("Invalid", lambda _: acts.FpeMonitor._trigger_invalid()))
