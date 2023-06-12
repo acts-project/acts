@@ -74,8 +74,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // q over p
   ActsScalar qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
 
-  // Mass hypothesis: Assume Pion mass
-  ActsScalar m0 = 0.1;
+  // Get mass hypothesis from propagator options
+  ActsScalar m0 = pOptions.mass;
   // Assume unit charge
   ActsScalar p = std::abs(1 / qOvP);
   // Speed in units of c
@@ -193,7 +193,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     momentumJacobian(5, 0) = rhoOverBetaT * (1. - absRhoOverS);
   }
 
-  // const term in Talyor expansion from Eq. 5.38 in Ref(1)
+  // const term in Taylor expansion from Eq. 5.38 in Ref(1)
   BoundVector constTerm =
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
