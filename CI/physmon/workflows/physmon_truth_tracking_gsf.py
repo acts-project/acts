@@ -10,24 +10,26 @@ from physmon_common import makeSetup
 
 setup = makeSetup()
 
-with acts.FpeMonitor.context():
-    with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(
-            events=500, numThreads=-1, logLevel=acts.logging.INFO
-        )
+with tempfile.TemporaryDirectory() as temp:
+    s = acts.examples.Sequencer(
+        events=500, numThreads=-1, logLevel=acts.logging.INFO,
+        fpeMasks = [
+            ("Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:250", "FLTUND", 1)
+        ]
+    )
 
-        tp = Path(temp)
-        runTruthTrackingGsf(
-            setup.trackingGeometry,
-            setup.digiConfig,
-            setup.field,
-            outputDir=tp,
-            s=s,
-        )
+    tp = Path(temp)
+    runTruthTrackingGsf(
+        setup.trackingGeometry,
+        setup.digiConfig,
+        setup.field,
+        outputDir=tp,
+        s=s,
+    )
 
-        s.run()
-        del s
+    s.run()
+    del s
 
-        perf_file = tp / "performance_gsf.root"
-        assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, setup.outdir / "performance_gsf.root")
+    perf_file = tp / "performance_gsf.root"
+    assert perf_file.exists(), "Performance file not found"
+    shutil.copy(perf_file, setup.outdir / "performance_gsf.root")

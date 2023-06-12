@@ -216,10 +216,14 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
         ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
 
-  ACTS_INFO("Step merging: mean hits per hit: "
-            << static_cast<double>(eventData.numberGeantSteps) /
-                   eventData.hits.size());
-  ACTS_INFO("Step merging: max hits per hit: " << eventData.maxStepsForHit);
+  if (eventData.hits.empty()) {
+    ACTS_INFO("Step merging: No steps recorded");
+  } else {
+    ACTS_INFO("Step merging: mean hits per hit: "
+              << static_cast<double>(eventData.numberGeantSteps) /
+                     eventData.hits.size());
+    ACTS_INFO("Step merging: max hits per hit: " << eventData.maxStepsForHit);
+  }
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
