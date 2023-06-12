@@ -75,7 +75,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   ActsScalar qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
 
   // Mass hypothesis: Assume Pion mass
-  ActsScalar m0 = 0.1;
+  ActsScalar m0 = pOptions.mass;
   // Assume unit charge
   ActsScalar p = std::abs(1 / qOvP);
   // Speed in units of c
