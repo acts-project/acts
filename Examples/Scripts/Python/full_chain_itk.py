@@ -32,14 +32,14 @@ detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=10, numThreads=1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
         EtaConfig(-4.0, 4.0, uniform=True),
-        ParticleConfig(50, acts.PdgParticle.eMuon, randomizeCharge=True),
+        ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
         rnd=rnd,
     )
 else:
@@ -89,6 +89,31 @@ addSeeding(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
+    outputDirRoot=outputDir,
+)
+
+addCKFTracks(
+    s,
+    trackingGeometry,
+    field,
+    TrackSelectorConfig(
+        pt=(1.0 * u.GeV if ttbar_pu200 else 0.0, None),
+        absEta=(None, 4.0),
+        minMeasurements=6,
+    ),
+    outputDirRoot=outputDir,
+)
+
+addAmbiguityResolution(
+    s,
+    AmbiguityResolutionConfig(maximumSharedHits=3),
+    outputDirRoot=outputDir,
+)
+
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
 )
 

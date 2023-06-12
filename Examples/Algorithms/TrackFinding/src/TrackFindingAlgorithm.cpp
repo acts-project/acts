@@ -20,7 +20,6 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "Acts/TrackFinding/SeedSelector.hpp"
 
 #include <memory>
 #include <stdexcept>
