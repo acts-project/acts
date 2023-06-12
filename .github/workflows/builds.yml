@@ -202,7 +202,7 @@ jobs:
         run: cmake --build build --target install
 
       - name: Package build
-        run: tar czf build.tar.gz -C build . 
+        run: tar czf build.tar.gz -C build --exclude="*.o" .
 
       - uses: actions/upload-artifact@v3
         with:

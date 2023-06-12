@@ -1,0 +1,14 @@
+'Infrastructure':
+  - .github/**
+  - CI/**
+  - cmake/**
+'Component - Core':
+  - Core/**
+'Component - Examples':
+  - Examples/**
+'Component - Fatras':
+  - Fatras/**
+'Component - Plugins':
+  - Plugins/**
+'Component - Documentation':
+  - docs/**
