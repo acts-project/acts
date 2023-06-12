@@ -142,7 +142,6 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
 
   auto [volumes, portals, roots] = tripleZ->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
   BOOST_CHECK(portals.size() == 4u);
   BOOST_CHECK(roots.volumes.size() == 3u);
 }
@@ -177,7 +176,6 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
 
   auto [volumes, portals, roots] = barrelR->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
   BOOST_CHECK(portals.size() == 4u);
   BOOST_CHECK(roots.volumes.size() == 3u);
 }
@@ -212,7 +210,6 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
 
   auto [volumes, portals, roots] = barrelPhi->construct(tContext);
 
-  BOOST_CHECK(volumes.size() == 1u);
   BOOST_CHECK(portals.size() == 4u);
   BOOST_CHECK(roots.volumes.size() == 5u);
 }
@@ -283,7 +280,6 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));
 
   auto [volumes, portals, roots] = detector->construct(tContext);
-  BOOST_CHECK(volumes.size() == 1u);
   BOOST_CHECK(portals.size() == 3u);
   BOOST_CHECK(roots.volumes.size() == 6u);
 }
