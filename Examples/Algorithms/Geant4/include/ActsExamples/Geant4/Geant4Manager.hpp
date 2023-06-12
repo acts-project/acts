@@ -32,6 +32,9 @@ class Geant4Manager;
 /// variables themselves. In this case we would bind much thighter on the API
 /// and future changes could potentially break our Geant4 state assumtion. This
 /// is why the current interface only allows for a single G4VUserPhysicsList.
+///
+/// TODO A way out of this Geant4 lifecycle mess might be dynamically unloading
+/// and loading the Geant4 library which should reset it to its original state.
 struct Geant4Instance {
   std::mutex mutex;
   int logLevel{};
