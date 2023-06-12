@@ -193,7 +193,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     momentumJacobian(5, 0) = rhoOverBetaT * (1. - absRhoOverS);
   }
 
-  // const term in Talyor expansion from Eq. 5.38 in Ref(1)
+  // const term in Taylor expansion from Eq. 5.38 in Ref(1)
   BoundVector constTerm =
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
