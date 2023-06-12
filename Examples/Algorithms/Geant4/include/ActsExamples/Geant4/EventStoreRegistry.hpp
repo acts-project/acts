@@ -50,6 +50,13 @@ class EventStoreRegistry {
     /// The hits in sensitive detectors
     SimHitContainer::sequence_type hits;
 
+    /// Hit buffer for step merging (multiple steps in senstive volume)
+    std::vector<ActsFatras::Hit> hitBuffer;
+
+    /// Some statistics for the step merging
+    std::size_t numberGeantSteps = 0;
+    std::size_t maxStepsForHit = 0;
+
     /// Tracks recorded in material mapping
     std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;
 

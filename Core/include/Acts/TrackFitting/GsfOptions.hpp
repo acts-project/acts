@@ -32,9 +32,8 @@ using FinalMultiComponentState =
 /// The extensions needed for the GSF
 template <typename traj_t>
 struct GsfExtensions {
-  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
-  using ConstTrackStateProxy =
-      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  using TrackStateProxy = typename traj_t::TrackStateProxy;
+  using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
