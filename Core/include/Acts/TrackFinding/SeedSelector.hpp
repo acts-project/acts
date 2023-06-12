@@ -14,28 +14,31 @@
 namespace Acts {
 
   template <typename external_spacepoint_t>
-  bool voidSeedPreselector(const Acts::Seed<external_spacepoint_t>&) {
+  bool voidSeedSelector(const Acts::Seed<external_spacepoint_t>&) {
+    // By default always return true -> no selection
     return true;
   }
 
+  // Seed Selector options
   template<typename external_spacepoint_t>
-  struct SeedSelectorConfig {
-    using Preselector = Delegate<bool(const Acts::Seed<external_spacepoint_t>&)>;
-    Preselector preselector;
+  struct SeedSelectorOptions {
+    using Selector = Delegate<bool(const Acts::Seed<external_spacepoint_t>&)>;
+    Selector selector;
 
-    SeedSelectorConfig();
+    SeedSelectorOptions();
   };
 
   template<typename external_spacepoint_t>
-  SeedSelectorConfig<external_spacepoint_t>::SeedSelectorConfig() {
-    preselector.template connect<&voidSeedPreselector<external_spacepoint_t>>();
+  SeedSelectorOptions<external_spacepoint_t>::SeedSelectorOptions() {
+    selector.template connect<&voidSeedSelector<external_spacepoint_t>>();
   }
     
 
+  // Seed Selector
   template<typename external_spacepoint_t>
   class SeedSelector {
   public:
-    SeedSelector(SeedSelectorConfig<external_spacepoint_t> config);
+    SeedSelector(SeedSelectorOptions<external_spacepoint_t>&& options);
     SeedSelector(const SeedSelector&) = delete;
     SeedSelector(SeedSelector&&) = delete;
     SeedSelector& operator=(const SeedSelector&) = delete;
@@ -43,21 +46,21 @@ namespace Acts {
     
     ~SeedSelector() = default;
 
-    bool passesPreSelection(const Acts::Seed<external_spacepoint_t>&) const;
+    bool passesQualitySelection(const Acts::Seed<external_spacepoint_t>&) const;
     
   private:
-    SeedSelectorConfig<external_spacepoint_t> m_config;
+    SeedSelectorOptions<external_spacepoint_t> m_options;
   };
 
   template<typename external_spacepoint_t>
-  SeedSelector<external_spacepoint_t>::SeedSelector(SeedSelectorConfig<external_spacepoint_t> config)
-    : m_config(std::move(config))
+  SeedSelector<external_spacepoint_t>::SeedSelector(SeedSelectorOptions<external_spacepoint_t>&& options)
+    : m_options(std::move(options))
   {}
 
   template<typename external_spacepoint_t>
-  bool SeedSelector<external_spacepoint_t>::passesPreSelection(const Acts::Seed<external_spacepoint_t>& seed) const
+  bool SeedSelector<external_spacepoint_t>::passesQualitySelection(const Acts::Seed<external_spacepoint_t>& seed) const
   {
-    return (m_config.preselector)(seed);
+    return (m_options.selector)(seed);
   }
   
 }

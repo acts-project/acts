@@ -1,4 +1,4 @@
-// This file is part of the Acts project.
+// This file is part of the Acts project.OA
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
 //
@@ -18,10 +18,59 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/TrackFinding/SeedSelector.hpp"
 
 #include <csignal>
 #include <limits>
 #include <stdexcept>
+
+template<typename external_spacepoint_t, typename external_spacepoint_iterator_t>
+class MySelector {
+public:
+  static_assert(
+		std::is_same<
+		typename std::iterator_traits<external_spacepoint_iterator_t>::value_type,
+		const external_spacepoint_t*>::value,
+		"Iterator does not contain type this class was templated with");
+  
+  MySelector() = delete;
+  MySelector(const Acts::SpacePointData& data,
+	     external_spacepoint_iterator_t begin,
+	     external_spacepoint_iterator_t end)
+    : m_data(&data),
+      m_begin(begin),
+      m_end(end)
+  {}
+  ~MySelector() = default;
+
+  bool passesQualitySelection(const Acts::Seed<external_spacepoint_t>& seed) const {
+    // Get the indexes
+    const auto& bottom_itr = std::find(m_begin, m_end, seed.sp()[0]);
+    const auto& middle_itr = std::find(m_begin, m_end, seed.sp()[1]);
+    const auto& top_itr = std::find(m_begin, m_end, seed.sp()[2]);
+
+    float seed_quality = seed.seedQuality();
+    float bottom_quality = m_data->quality(std::distance(m_begin, bottom_itr));
+    float middle_quality = m_data->quality(std::distance(m_begin, middle_itr));
+    float top_quality = m_data->quality(std::distance(m_begin, top_itr));
+
+    std::cout << "qualities: seed=" << seed_quality
+	      << " bottom=" << bottom_quality
+	      << " middle=" << middle_quality
+	      << " top=" << top_quality << std::endl;
+    
+    if (bottom_quality < seed_quality) return false;
+    if (middle_quality < seed_quality) return false;
+    if (top_quality < seed_quality) return false;
+    return true;
+  }
+  
+private:
+  const Acts::SpacePointData *m_data {nullptr};
+  external_spacepoint_iterator_t m_begin;
+  external_spacepoint_iterator_t m_end;
+};
+
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -297,9 +346,32 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
 
+  // This is a proof of concept for now
+  MySelector<SimSpacePoint, decltype(spacePointPtrs.begin())> selector(state.spacePointData,
+								       spacePointPtrs.begin(),
+								       spacePointPtrs.end());
+  
+  Acts::SeedSelectorOptions<SimSpacePoint> seedSelectorOptions;
+  seedSelectorOptions.selector.template connect<&MySelector<SimSpacePoint, decltype(spacePointPtrs.begin())>::passesQualitySelection>(&selector);
+
+  Acts::SeedSelector<SimSpacePoint> seedSelector(std::move(seedSelectorOptions));
+
+  std::size_t npasses = 0;
+  for (const auto& seed : seeds) {
+    if (not seedSelector.passesQualitySelection(seed)) continue;
+    npasses++;
+  }
+
+  std::cout << "npasses: " << npasses << "/" << seeds.size() << std::endl;
+  
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
+
+  
+
+
+  
   m_outputSeeds(ctx, SimSeedContainer{seeds});
   return ActsExamples::ProcessCode::SUCCESS;
 }
