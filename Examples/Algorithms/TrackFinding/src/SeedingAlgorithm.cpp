@@ -59,9 +59,9 @@ public:
 	      << " middle=" << middle_quality
 	      << " top=" << top_quality << std::endl;
     
-    if (bottom_quality < seed_quality) return false;
-    if (middle_quality < seed_quality) return false;
-    if (top_quality < seed_quality) return false;
+    if (bottom_quality > seed_quality) return false;
+    if (middle_quality > seed_quality) return false;
+    if (top_quality > seed_quality) return false;
     return true;
   }
   
