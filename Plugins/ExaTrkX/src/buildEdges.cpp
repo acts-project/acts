@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "buildEdges.hpp"
+#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
 
 #include <iostream>
 #include <mutex>
@@ -296,7 +296,7 @@ torch::Tensor buildEdgesBruteForce(at::Tensor &embedFeatures,
 
 torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
                                int64_t numSpacepoints, int dim, float rVal,
-                               int kVal, bool flipDirections) {
+                               int kVal, [[maybe_unused]] bool flipDirections) {
 #ifndef ACTS_EXATRKX_CPUONLY
   if (torch::cuda::is_available()) {
     return buildEdgesFRNN(embedFeatures, numSpacepoints, dim, rVal, kVal,

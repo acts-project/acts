@@ -35,7 +35,6 @@ class RiddersPropagator {
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
 
- private:
   ///
   /// @note The result_type_helper struct and the action_list_t_result_t are
   /// here to allow a look'n'feel of this class like the Propagator itself
@@ -75,10 +74,19 @@ class RiddersPropagator {
       typename result_type_helper<parameters_t, action_list_t>::type;
 
  public:
+  struct Config {
+    /// Set of deltas which will be added to the nominal track parameters
+    std::vector<double> deviations = {-4e-4, -2e-4, 2e-4, 4e-4};
+    /// See `deviations` - these are applied for disc surfaces
+    std::vector<double> deviationsDisc = {-3e-5, -1e-5, 1e-5, 3e-5};
+  };
+
   /// @brief Constructor using a propagator
   ///
   /// @param [in] propagator Underlying propagator that will be used
-  RiddersPropagator(propagator_t& propagator) : m_propagator(propagator) {}
+  /// @param [in] config Config for the Ridders propagation
+  RiddersPropagator(propagator_t& propagator, Config config = {})
+      : m_propagator(propagator), m_config(std::move(config)) {}
 
   /// @brief Constructor building a propagator
   ///
@@ -87,9 +95,12 @@ class RiddersPropagator {
   ///
   /// @param [in] stepper Stepper that will be used
   /// @param [in] navigator Navigator that will be used
+  /// @param [in] config Config for the Ridders propagation
   template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
-  RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t())
-      : m_propagator(Propagator(stepper, navigator)) {}
+  RiddersPropagator(stepper_t stepper, navigator_t navigator = navigator_t(),
+                    Config config = {})
+      : m_propagator(Propagator(stepper, navigator)),
+        m_config(std::move(config)) {}
 
   /// @brief Propagation method targeting curvilinear parameters
   ///
@@ -126,6 +137,19 @@ class RiddersPropagator {
             const propagator_options_t& options) const;
 
  private:
+  /// Does the actual ridders propagation by wiggling the parameters and
+  /// propagating again. This function is called from the different propagation
+  /// overloads in order to deduplicate code.
+  ///
+  /// @param [in] options Options of the propagations
+  /// @param [in] start Start parameters
+  /// @param [in] nominalResult The result of the nominal propagation
+  template <typename propagator_options_t, typename parameters_t,
+            typename result_t>
+  Jacobian wiggleAndCalculateJacobian(const propagator_options_t& options,
+                                      const parameters_t& start,
+                                      result_t& nominalResult) const;
+
   /// @brief This function tests whether the variations on a disc as target
   /// surface lead to results on different sides wrt the center of the disc.
   /// This would lead to a flip of the phi value on the surface and therewith to
@@ -135,53 +159,52 @@ class RiddersPropagator {
   /// @param [in] derivatives Derivatives of a single parameter
   ///
   /// @return Boolean result whether a phi jump occured
-  bool inconsistentDerivativesOnDisc(
-      const std::vector<BoundVector>& derivatives) const;
+  static bool inconsistentDerivativesOnDisc(
+      const std::vector<BoundVector>& derivatives);
 
   /// @brief This function wiggles one dimension of the starting parameters,
   /// performs the propagation to a surface and collects for each change of the
   /// start parameters the slope
   ///
   /// @tparam options_t PropagatorOptions object
-  /// @tparam parameters+t Type of the parameters to start the propagation with
+  /// @tparam parameters_t Type of the parameters to start the propagation with
   ///
   /// @param [in] options Options do define how to wiggle
-  /// @param [in] startPars Start parameters that are modified
+  /// @param [in] start Start parameters which will be modified
   /// @param [in] param Index to get the parameter that will be modified
   /// @param [in] target Target surface
   /// @param [in] nominal Nominal end parameters
   /// @param [in] deviations Vector of deviations
   ///
   /// @return Vector containing each slope
-  template <typename options_t, typename parameters_t>
-  std::vector<BoundVector> wiggleDimension(
-      const options_t& options, const parameters_t& startPars,
-      const unsigned int param, const Surface& target,
-      const BoundVector& nominal, const std::vector<double>& deviations) const;
+  template <typename propagator_options_t, typename parameters_t>
+  std::vector<BoundVector> wiggleParameter(
+      const propagator_options_t& options, const parameters_t& start,
+      unsigned int param, const Surface& target, const BoundVector& nominal,
+      const std::vector<double>& deviations) const;
 
-  /// @brief This function propagates the covariance matrix
+  /// @brief This function fits the jacobian with the deviations and derivatives as input.
   ///
-  /// @param [in] derivatives Slopes of each modification of the parameters
-  /// @param [in] startCov Starting covariance
   /// @param [in] deviations Vector of deviations
+  /// @param [in] derivatives Slopes of each modification of the parameters
   ///
-  /// @return Propagated covariance matrix
-  Covariance calculateCovariance(
-      const std::array<std::vector<BoundVector>, eBoundSize>& derivatives,
-      const Covariance& startCov, const std::vector<double>& deviations) const;
+  /// @return Propagated jacobian matrix
+  static Jacobian calculateJacobian(
+      const std::vector<double>& deviations,
+      const std::array<std::vector<BoundVector>, eBoundSize>& derivatives);
 
   /// @brief This function fits a linear function through the final state
   /// parametrisations
   ///
-  /// @param [in] values Vector containing the final state parametrisations
   /// @param [in] deviations Vector of deviations
+  /// @param [in] derivatives Vector of resulting derivatives
   ///
   /// @return Vector containing the linear fit
-  BoundVector fitLinear(const std::vector<BoundVector>& values,
-                        const std::vector<double>& deviations) const;
+  static BoundVector fitLinear(const std::vector<double>& deviations,
+                               const std::vector<BoundVector>& derivatives);
 
-  /// Propagator
   propagator_t m_propagator;
+  Config m_config;
 };
 }  // namespace Acts
 
