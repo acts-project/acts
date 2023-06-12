@@ -577,6 +577,7 @@ def addGeant4(
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
+    physicsList: str = "FTFP_BERT",
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -638,6 +639,7 @@ def addGeant4(
         killAfterTime=killAfterTime,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
+        physicsList=physicsList,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
@@ -699,6 +701,7 @@ def addDigitization(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     doMerge: Optional[bool] = None,
+    minEnergyDeposit: Optional[float] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
@@ -738,6 +741,11 @@ def addDigitization(
         outputMeasurementSimHitsMap="measurement_simhits_map",
         doMerge=doMerge,
     )
+
+    # Not sure how to do this in our style
+    if minEnergyDeposit is not None:
+        digiCfg.minEnergyDeposit = minEnergyDeposit
+
     digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, customLogLevel())
 
     s.addAlgorithm(digiAlg)

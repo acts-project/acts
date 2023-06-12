@@ -402,7 +402,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
             5,
             7,
         ]  # enable custom z looping when searching for SPs, must contain numbers from 1 to the total number of bin in zBinEdges
-        skipPreviousTopSP = True
         zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
@@ -467,7 +466,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
         arithmeticAverageCotTheta = True
         impactMax = 20 * u.mm
         zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
-        skipPreviousTopSP = False
         zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
@@ -555,7 +553,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
         deltaZMax=deltaZMax,
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
-        skipPreviousTopSP=skipPreviousTopSP,
         zBinsCustomLooping=zBinsCustomLooping,
         skipZMiddleBinSearch=skipZMiddleBinSearch,
         rRangeMiddleSP=rRangeMiddleSP,
