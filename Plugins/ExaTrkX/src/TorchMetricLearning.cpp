@@ -22,7 +22,9 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
     : m_logger(std::move(_logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
-  ACTS_DEBUG("Using torch version " << TORCH_VERSION);
+  ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
+                                    << TORCH_VERSION_MINOR << "."
+                                    << TORCH_VERSION_PATCH);
 #ifndef ACTS_EXATRKX_CPUONLY
   if (not torch::cuda::is_available()) {
     ACTS_WARNING("CUDA not available, falling back to CPU");
