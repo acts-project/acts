@@ -24,28 +24,10 @@
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4/SteppingActionList.hpp"
 
-#include <iostream>
-#include <memory>
 #include <stdexcept>
 
-#include <FTFP_BERT.hh>
-#include <G4EmParameters.hh>
 #include <G4FieldManager.hh>
-#include <G4HadronicParameters.hh>
-#include <G4HadronicProcessStore.hh>
-#include <G4MagneticField.hh>
 #include <G4RunManager.hh>
-#include <G4StateManager.hh>
-#include <G4TransportationManager.hh>
-#include <G4UniformMagField.hh>
-#include <G4UserEventAction.hh>
-#include <G4UserLimits.hh>
-#include <G4UserRunAction.hh>
-#include <G4UserSteppingAction.hh>
-#include <G4UserTrackingAction.hh>
-#include <G4VUserDetectorConstruction.hh>
-#include <G4VUserPhysicsList.hh>
-#include <G4Version.hh>
 
 ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
     const Config& cfg, std::string name, Acts::Logging::Level level)
@@ -325,14 +307,11 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
 
   // Set the primarty generator
   {
-    SimParticleTranslation::Config prCfg;
-    prCfg.eventStoreHolder = m_eventStoreHolder;
-    prCfg.forcedPdgCode = 0;
-    prCfg.forcedCharge = 0.;
-    prCfg.forcedMass = 0.;
+    MaterialSteppingAction::Config mStepCfg;
+    mStepCfg.excludeMaterials = m_cfg.excludeMaterials;
     // G4RunManager will take care of deletion
-    auto primaryGeneratorAction = new SimParticleTranslation(
-        prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
+    auto primaryGeneratorAction = new MaterialSteppingAction(
+        mStepCfg, m_logger->cloneWithSuffix("MaterialSteppingAction"));
     // Clear primary generation action if it exists
     if (runManager->GetUserPrimaryGeneratorAction() != nullptr) {
       delete runManager->GetUserPrimaryGeneratorAction();

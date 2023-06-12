@@ -18,7 +18,6 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <memory>
-#include <mutex>
 #include <string>
 
 class G4RunManager;
@@ -171,8 +170,11 @@ class Geant4Simulation final : public Geant4SimulationBase {
 class Geant4MaterialRecording final : public Geant4SimulationBase {
  public:
   struct Config : public Geant4SimulationBase::Config {
-    // Name of the output collection: material tracks
+    /// Name of the output collection: material tracks
     std::string outputMaterialTracks = "material_tracks";
+
+    /// Materials to exclude from the recording.
+    std::vector<std::string> excludeMaterials = {"Air", "Vacuum"};
   };
 
   /// Material recording constructor
