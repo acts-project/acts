@@ -45,6 +45,7 @@ class SensitiveSurfaceMapper;
 class EventStoreHolder;
 struct Geant4Instance;
 
+/// Abtracts common Geant4 Acts algorithm behaviour.
 class Geant4SimulationBase : public IAlgorithm {
  public:
   /// Nested configuration struct for the Geant4 simulation
@@ -83,9 +84,13 @@ class Geant4SimulationBase : public IAlgorithm {
   std::shared_ptr<Geant4Instance> geant4Instance() const;
 
  protected:
+  void commonInitialization();
+
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::shared_ptr<EventStoreHolder> m_eventStoreHolder;
+
+  int m_geant4Level{};
 
   std::shared_ptr<Geant4Instance> m_gean4Instance;
 
@@ -97,18 +102,6 @@ class Geant4SimulationBase : public IAlgorithm {
 };
 
 /// Algorithm to run Geant4 simulation in the ActsExamples framework
-///
-/// This algorithm can be configured with the standardard Geant4
-/// components:
-/// - (a) the generator Action
-/// - (b) detector construction and magnetic field
-/// - (c) the user actions
-///
-/// In order to run within the ACTS framework, acces to the
-/// EventData is provided by a EventStoreHolder which provides
-/// individual slots for the event containers and the store.
-///
-/// The Geant4Simulation algorithm clears those after processing.
 class Geant4Simulation final : public Geant4SimulationBase {
  public:
   struct Config : public Geant4SimulationBase::Config {
@@ -127,6 +120,7 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// The ACTS Magnetic field provider
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
 
+    /// If a physics list has to be instantiated this one is chosen.
     std::string physicsList = "FTFP_BERT";
 
     std::vector<std::string> volumeMappings = {"Silicon"};

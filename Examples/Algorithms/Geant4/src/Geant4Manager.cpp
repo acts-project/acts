@@ -32,49 +32,38 @@
 
 namespace ActsExamples {
 
-Geant4Instance::Geant4Instance(std::unique_ptr<G4RunManager> _runManager)
-    : runManager(std::move(_runManager)) {}
-
-Geant4Instance::~Geant4Instance() {
-  clearPhysicsList();
-}
-
-void Geant4Instance::registerPhysicsList(
-    std::string name, std::unique_ptr<G4VUserPhysicsList> physicsList) {
-  if (physicsLists.find(name) != physicsLists.end()) {
-    throw std::invalid_argument("name already mapped");
+Geant4Instance::Geant4Instance(int _logLevel,
+                               std::unique_ptr<G4RunManager> _runManager,
+                               std::unique_ptr<G4VUserPhysicsList> _physicsList,
+                               std::string _physicsListName)
+    : logLevel(_logLevel),
+      runManager(std::move(_runManager)),
+      physicsList(_physicsList.release()),
+      physicsListName(std::move(_physicsListName)) {
+  if (runManager == nullptr) {
+    std::invalid_argument("runManager cannot be null");
   }
-  physicsLists.emplace(std::move(name), physicsList.release());
-}
-
-G4VUserPhysicsList* Geant4Instance::getPhysicsList(
-    const std::string& name) const {
-  auto it = physicsLists.find(name);
-  if (it == physicsLists.end()) {
-    throw std::invalid_argument("name not mapped");
+  if (physicsList == nullptr) {
+    std::invalid_argument("physicsList cannot be null");
   }
-  return it->second;
+
+  // Set physics list
+  runManager->SetUserInitialization(physicsList);
 }
 
-G4VUserPhysicsList* Geant4Instance::createRegisterAndGetPhysicsList(
-    const std::string& name) {
-  auto it = physicsLists.find(name);
-  if (it == physicsLists.end()) {
-    auto physicsList = Geant4Manager::instance().createPhysicsList(name);
-    it = physicsLists.emplace(name, physicsList.release()).first;
-  }
-  return it->second;
-}
-
-G4VUserPhysicsList* Geant4Instance::registerAndGetAnonymousPhysicsList(
-    std::unique_ptr<G4VUserPhysicsList> physicsList) {
-  delete anonymousPhysicList;
-  anonymousPhysicList = physicsList.release();
-  return anonymousPhysicList;
-}
+Geant4Instance::~Geant4Instance() = default;
 
 void Geant4Instance::tweekLogging(int level) const {
-  runManager->SetVerboseLevel(level);
+  Geant4Manager::tweekLogging(*runManager, level);
+}
+
+Geant4Manager& Geant4Manager::instance() {
+  static Geant4Manager manager;
+  return manager;
+}
+
+void Geant4Manager::tweekLogging(G4RunManager& runManager, int level) {
+  runManager.SetVerboseLevel(level);
   G4EventManager::GetEventManager()->SetVerboseLevel(level);
   G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(
       level);
@@ -88,27 +77,14 @@ void Geant4Instance::tweekLogging(int level) const {
 #endif
 }
 
-void Geant4Instance::clearPhysicsList() {
-  // delete all physics lists except the active one since Geant4 will do that
-  for (auto it = physicsLists.begin(); it != physicsLists.end();) {
-    if (it->second != runManager->GetUserPhysicsList()) {
-      delete it->second;
-      it = physicsLists.erase(it);
-    } else {
-      ++it;
-    }
-  }
-  if (anonymousPhysicList != runManager->GetUserPhysicsList()) {
-    delete anonymousPhysicList;
-  }
+std::shared_ptr<Geant4Instance> Geant4Manager::create(int logLevel,
+                                                      std::string physicsList) {
+  return create(logLevel, createPhysicsList(physicsList), physicsList);
 }
 
-Geant4Manager& Geant4Manager::instance() {
-  static Geant4Manager manager;
-  return manager;
-}
-
-std::shared_ptr<Geant4Instance> Geant4Manager::create() {
+std::shared_ptr<Geant4Instance> Geant4Manager::create(
+    int logLevel, std::unique_ptr<G4VUserPhysicsList> physicsList,
+    std::string physicsListName) {
   if (!m_instance.expired()) {
     throw std::runtime_error("creating a second instance is prohibited");
   }
@@ -121,7 +97,9 @@ std::shared_ptr<Geant4Instance> Geant4Manager::create() {
   auto runManager = std::unique_ptr<G4RunManager>(
       G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly));
 
-  auto instance = std::make_shared<Geant4Instance>(std::move(runManager));
+  auto instance = std::make_shared<Geant4Instance>(
+      logLevel, std::move(runManager), std::move(physicsList),
+      std::move(physicsListName));
 
   m_created = true;
   m_instance = instance;
@@ -130,19 +108,25 @@ std::shared_ptr<Geant4Instance> Geant4Manager::create() {
 
 void Geant4Manager::registerPhysicsListFactory(
     std::string name, std::shared_ptr<PhysicsListFactory> physicsListFactory) {
-  if (m_physicsListsFactory.find(name) != m_physicsListsFactory.end()) {
+  if (m_physicsListFactories.find(name) != m_physicsListFactories.end()) {
     throw std::invalid_argument("name already mapped");
   }
-  m_physicsListsFactory.emplace(std::move(name), std::move(physicsListFactory));
+  m_physicsListFactories.emplace(std::move(name),
+                                 std::move(physicsListFactory));
 }
 
 std::unique_ptr<G4VUserPhysicsList> Geant4Manager::createPhysicsList(
     const std::string& name) const {
-  auto it = m_physicsListsFactory.find(name);
-  if (it == m_physicsListsFactory.end()) {
+  auto it = m_physicsListFactories.find(name);
+  if (it == m_physicsListFactories.end()) {
     throw std::invalid_argument("name not mapped");
   }
   return it->second->factorize();
+}
+
+const std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>>&
+Geant4Manager::getPhysicsListFactories() const {
+  return m_physicsListFactories;
 }
 
 Geant4Manager::Geant4Manager() {

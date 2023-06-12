@@ -15,6 +15,7 @@ class G4VUserPhysicsList;
 
 namespace ActsExamples {
 
+/// A factory around G4VUserPhysicsList which allows on demand instantiation.
 class PhysicsListFactory {
  public:
   virtual ~PhysicsListFactory() = default;
@@ -22,6 +23,7 @@ class PhysicsListFactory {
   virtual std::unique_ptr<G4VUserPhysicsList> factorize() const = 0;
 };
 
+/// Convenience implementation of PhysicsListFactory from std::function
 class PhysicsListFactoryFunction final : public PhysicsListFactory {
  public:
   using Function = std::function<std::unique_ptr<G4VUserPhysicsList>()>;

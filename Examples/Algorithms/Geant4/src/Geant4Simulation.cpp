@@ -64,31 +64,33 @@ ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
 
   m_eventStoreHolder = std::make_shared<EventStoreHolder>();
 
-  m_gean4Instance = cfg.geant4Instance ? cfg.geant4Instance
-                                       : Geant4Manager::instance().create();
-  auto runManager = m_gean4Instance->runManager.get();
-
   // tweek logging
   {
     // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
     // 3 would be also possible, but that produces infinite amount of output.
-    const auto geant4Level = logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
-    m_gean4Instance->tweekLogging(geant4Level);
+    m_geant4Level = logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
   }
-
-  // Clear detector construction if it exists
-  if (runManager->GetUserDetectorConstruction() != nullptr) {
-    delete runManager->GetUserDetectorConstruction();
-  }
-  // Set the detector construction
-  // G4RunManager will take care of deletion
-  m_detectorConstruction =
-      cfg.detectorConstructionFactory->factorize().release();
-  runManager->SetUserInitialization(m_detectorConstruction);
-  runManager->ReinitializeGeometry(true, true);
 }
 
 ActsExamples::Geant4SimulationBase::~Geant4SimulationBase() = default;
+
+void ActsExamples::Geant4SimulationBase::commonInitialization() {
+  auto runManager = m_gean4Instance->runManager.get();
+
+  // Set the detector construction
+  {
+    // Clear detector construction if it exists
+    if (runManager->GetUserDetectorConstruction() != nullptr) {
+      delete runManager->GetUserDetectorConstruction();
+    }
+    // G4RunManager will take care of deletion
+    m_detectorConstruction =
+        config().detectorConstructionFactory->factorize().release();
+    runManager->SetUserInitialization(m_detectorConstruction);
+    runManager->ReinitializeGeometry(true, true);
+    runManager->InitializeGeometry();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::initialize() {
   auto runManager = m_gean4Instance->runManager.get();
@@ -154,12 +156,16 @@ ActsExamples::Geant4SimulationBase::geant4Instance() const {
 ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
                                                  Acts::Logging::Level level)
     : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
+  m_gean4Instance =
+      m_cfg.geant4Instance
+          ? m_cfg.geant4Instance
+          : Geant4Manager::instance().create(m_geant4Level, m_cfg.physicsList);
+  if (m_gean4Instance->physicsListName != m_cfg.physicsList) {
+    throw std::runtime_error("inconsistent physics list");
+  }
   auto runManager = m_gean4Instance->runManager.get();
 
-  // Set physics list
-  runManager->SetUserInitialization(
-      m_gean4Instance->createRegisterAndGetPhysicsList(cfg.physicsList));
-  runManager->PhysicsHasBeenModified();
+  commonInitialization();
 
   // Set the primarty generator
   {
@@ -301,14 +307,21 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
 ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
     const Config& cfg, Acts::Logging::Level level)
     : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
+  auto physicsListName = "MaterialPhysicsList";
+  m_gean4Instance =
+      m_cfg.geant4Instance
+          ? m_cfg.geant4Instance
+          : Geant4Manager::instance().create(
+                m_geant4Level,
+                std::make_unique<MaterialPhysicsList>(
+                    m_logger->cloneWithSuffix("MaterialPhysicsList")),
+                physicsListName);
+  if (m_gean4Instance->physicsListName != physicsListName) {
+    throw std::runtime_error("inconsistent physics list");
+  }
   auto runManager = m_gean4Instance->runManager.get();
 
-  // Set physics list
-  runManager->SetUserInitialization(
-      m_gean4Instance->registerAndGetAnonymousPhysicsList(
-          std::make_unique<MaterialPhysicsList>(
-              m_logger->cloneWithSuffix("MaterialPhysicsList"))));
-  runManager->PhysicsHasBeenModified();
+  commonInitialization();
 
   // Set the primarty generator
   {
@@ -329,7 +342,7 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
   }
 
   m_inputParticles.initialize(cfg.inputParticles);
-  m_outputMaterialTracks.maybeInitialize(cfg.outputMaterialTracks);
+  m_outputMaterialTracks.initialize(cfg.outputMaterialTracks);
 }
 
 ActsExamples::Geant4MaterialRecording::~Geant4MaterialRecording() = default;

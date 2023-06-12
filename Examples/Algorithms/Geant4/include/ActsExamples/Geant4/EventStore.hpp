@@ -26,7 +26,7 @@ namespace ActsExamples {
 
 class WhiteBoard;
 
-/// A registry for event data and the event store (per event)
+/// Common event store for all Geant4 related sub algorithms
 struct EventStore {
  public:
   /// The current event store

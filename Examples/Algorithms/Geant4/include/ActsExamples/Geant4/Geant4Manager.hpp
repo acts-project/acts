@@ -19,41 +19,65 @@ class G4VUserPhysicsList;
 namespace ActsExamples {
 
 class PhysicsListFactory;
+class Geant4Manager;
 
+/// Manages the life time of G4RunManager and G4VUserPhysicsList.
+///
+/// G4RunManager must only be instantiated once and must be deleted at a later
+/// point before main ends.
+///
+/// In principle it should be possible to use multiple G4VUserPhysicsList
+/// objects during one G4RunManager lifecycle. But Geant4 does not provide a
+/// single way to achieve this and the user has to modify the correct state
+/// variables themselves. In this case we would bind much thighter on the API
+/// and future changes could potentially break our Geant4 state assumtion. This
+/// is why the current interface only allows for a single G4VUserPhysicsList.
 struct Geant4Instance {
   std::mutex mutex;
+  int logLevel{};
   std::unique_ptr<G4RunManager> runManager;
-  std::unordered_map<std::string, G4VUserPhysicsList *> physicsLists;
-  G4VUserPhysicsList *anonymousPhysicList{};
+  G4VUserPhysicsList *physicsList;
+  std::string physicsListName;
 
-  Geant4Instance(std::unique_ptr<G4RunManager> runManager);
+  Geant4Instance(int logLevel, std::unique_ptr<G4RunManager> runManager,
+                 std::unique_ptr<G4VUserPhysicsList> physicsList,
+                 std::string physicsListName);
   Geant4Instance(const Geant4Instance &) = delete;
   Geant4Instance &operator=(const Geant4Instance &) = delete;
   ~Geant4Instance();
 
-  void registerPhysicsList(std::string name,
-                           std::unique_ptr<G4VUserPhysicsList> physicsList);
-  G4VUserPhysicsList *getPhysicsList(const std::string &name) const;
-  G4VUserPhysicsList *createRegisterAndGetPhysicsList(const std::string &name);
-  G4VUserPhysicsList *registerAndGetAnonymousPhysicsList(
-      std::unique_ptr<G4VUserPhysicsList> physicsList);
-
+  /// Set logging consistently accross common Geant4 modules
+  ///
+  /// Convenience method which calls into Geant4Manager
   void tweekLogging(int level) const;
-
-  void clearPhysicsList();
 };
 
+/// Allows easy instantiation of a Geant4Instance object
 class Geant4Manager {
  public:
   static Geant4Manager &instance();
 
-  /// This can only be called once due to Geant4 limitations
-  std::shared_ptr<Geant4Instance> create();
+  /// Set logging consistently accross common Geant4 modules
+  static void tweekLogging(G4RunManager &runManager, int level);
 
+  /// This can only be called once due to Geant4 limitations
+  std::shared_ptr<Geant4Instance> create(int logLevel, std::string physicsList);
+
+  /// This can only be called once due to Geant4 limitations
+  std::shared_ptr<Geant4Instance> create(
+      int logLevel, std::unique_ptr<G4VUserPhysicsList> physicsList,
+      std::string physicsListName);
+
+  /// Registers a named physics list factory to the manager for easy
+  /// instantiation when needed.
   void registerPhysicsListFactory(
       std::string name, std::shared_ptr<PhysicsListFactory> physicsListFactroy);
   std::unique_ptr<G4VUserPhysicsList> createPhysicsList(
       const std::string &name) const;
+
+  /// Get the current list of physics list factories.
+  const std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>>
+      &getPhysicsListFactories() const;
 
  private:
   Geant4Manager();
@@ -62,7 +86,7 @@ class Geant4Manager {
   bool m_created = false;
   std::weak_ptr<Geant4Instance> m_instance;
   std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>>
-      m_physicsListsFactory;
+      m_physicsListFactories;
 };
 
 }  // namespace ActsExamples
