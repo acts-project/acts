@@ -17,10 +17,20 @@ with tempfile.TemporaryDirectory() as temp:
         logLevel=acts.logging.INFO,
         fpeMasks=[
             (
-                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:250",
-                "FLTUND",
+                "Fatras/include/ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp:66",
+                acts.FpeType.FLTUND,
                 1,
-            )
+            ),
+            (
+                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:178",
+                acts.FpeType.FLTUND,
+                1,
+            ),
+            (
+                "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:187",
+                acts.FpeType.FLTUND,
+                1,
+            ),
         ],
     )
 
