@@ -20,8 +20,7 @@ namespace {
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 template <typename input_track_t>
 struct BilloirTrack {
-  BilloirTrack(const input_track_t* params)
-      : originalTrack(params) {}
+  BilloirTrack(const input_track_t* params) : originalTrack(params) {}
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
@@ -29,14 +28,14 @@ struct BilloirTrack {
   double chi2 = 0;
 
   // We drop the summation index i from Ref. (1) for better readability
-  Acts::ActsMatrix<Acts::eBoundSize, Acts::eBoundSize> W;   // Wi weight matrix 
-  Acts::ActsMatrix<Acts::eBoundSize, 4> D;                  // Di (position Jacobian)
-  Acts::ActsMatrix<Acts::eBoundSize, 3> E;                  // Ei (momentum Jacobian)
-  Acts::ActsSymMatrix<3> C;                                 //  = sum{Ei^T Wi * Ei}
-  Acts::ActsMatrix<4, 3> B;                                 //  = Di^T * Wi * Ei
-  Acts::ActsSymMatrix<3> Cinv;                              //  = (Ei^T * Wi * Ei)^-1
-  Acts::Vector3 U;                                          //  = Ei^T * Wi * dqi
-  Acts::ActsMatrix<4, 3> BCinv;                             //  = Bi * Ci^-1
+  Acts::ActsMatrix<Acts::eBoundSize, Acts::eBoundSize> W;  // Wi weight matrix
+  Acts::ActsMatrix<Acts::eBoundSize, 4> D;  // Di (position Jacobian)
+  Acts::ActsMatrix<Acts::eBoundSize, 3> E;  // Ei (momentum Jacobian)
+  Acts::ActsSymMatrix<3> C;                 //  = sum{Ei^T Wi * Ei}
+  Acts::ActsMatrix<4, 3> B;                 //  = Di^T * Wi * Ei
+  Acts::ActsSymMatrix<3> Cinv;              //  = (Ei^T * Wi * Ei)^-1
+  Acts::Vector3 U;                          //  = Ei^T * Wi * dqi
+  Acts::ActsMatrix<4, 3> BCinv;             //  = Bi * Ci^-1
   Acts::BoundVector deltaQ;
 };
 
@@ -87,7 +86,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
   std::vector<BilloirTrack<input_track_t>> billoirTracks;
   std::vector<Vector3> trackMomenta;
-  //Vertex estimate
+  // Vertex estimate
   Vector4 linPoint = vertexingOptions.vertexConstraint.fullPosition();
   Vertex<input_track_t> fittedVertex;
 
@@ -144,14 +143,14 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       BoundSymMatrix W = linTrack.weightAtPCA;
       ActsMatrix<4, eBoundSize> DtW = D.transpose() * W;
       ActsMatrix<3, eBoundSize> EtW = E.transpose() * W;
-      
+
       // compute track quantities for Billoir fit
       billoirTrack.D = D;
       billoirTrack.E = E;
       billoirTrack.W = W;
       billoirTrack.C = EtW * E;
-      billoirTrack.B = DtW * E;                         // Di^T * Wi * Ei
-      billoirTrack.U = EtW * billoirTrack.deltaQ;       // Ei^T * Wi * dqi
+      billoirTrack.B = DtW * E;                        // Di^T * Wi * Ei
+      billoirTrack.U = EtW * billoirTrack.deltaQ;      // Ei^T * Wi * dqi
       billoirTrack.Cinv = (billoirTrack.C).inverse();  // (Ei^T * Wi * Ei)^-1
       billoirTrack.BCinv =
           billoirTrack.B * billoirTrack.Cinv;  // BCinv = Bi * Ci^-1
@@ -172,14 +171,20 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     // beam constraint
     // Vdel = T-sum{Bi*Ci^-1*Ui}
     Vector4 Vdel = billoirVertex.T - billoirVertex.sumBCinvU;
-    SymMatrix4 invCovDeltaV = billoirVertex.A - billoirVertex.sumBCinvBt;  // invCovDeltaV = A-sum{Bi*Ci^-1*Bi^T}
+    SymMatrix4 invCovDeltaV =
+        billoirVertex.A -
+        billoirVertex.sumBCinvBt;  // invCovDeltaV = A-sum{Bi*Ci^-1*Bi^T}
     if (isConstraintFit) {
-      // Position of vertex constraint in Billoir frame (i.e., in coordinate system with origin at linPoint)
-      // This will be 0 for first iteration but != 0 from second on since our first guess for the vertex position is the vertex constraint position
+      // Position of vertex constraint in Billoir frame (i.e., in coordinate
+      // system with origin at linPoint) This will be 0 for first iteration but
+      // != 0 from second on since our first guess for the vertex position is
+      // the vertex constraint position
       Vector4 posInBilloirFrame =
           vertexingOptions.vertexConstraint.fullPosition() - linPoint;
 
-      // For vertex contraint: T -> T + Cb^-1 (b - V0) where Cb is the covariance matrix of the constraint, b is the constraint position, and V0 is the vertex estimate (see Ref. (1))
+      // For vertex contraint: T -> T + Cb^-1 (b - V0) where Cb is the
+      // covariance matrix of the constraint, b is the constraint position, and
+      // V0 is the vertex estimate (see Ref. (1))
       Vdel += vertexingOptions.vertexConstraint.fullCovariance().inverse() *
               posInBilloirFrame;
       // For vertex constraint: A -> A + Cb^-1
@@ -231,7 +236,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       ActsMatrix<4, 3> covVP = billoirTrack.B;
 
       // cov(P,P), 3x3 matrix
-      ActsSymMatrix<3> covPP = billoirTrack.Cinv + billoirTrack.BCinv.transpose() * covDeltaV * billoirTrack.BCinv;
+      ActsSymMatrix<3> covPP =
+          billoirTrack.Cinv +
+          billoirTrack.BCinv.transpose() * covDeltaV * billoirTrack.BCinv;
 
       ActsSymMatrix<7> cov;
       cov.setZero();
@@ -243,13 +250,12 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // covdelta_P calculation
       covDeltaP[iTrack] = transMat * cov * transMat.transpose();
       // Calculate chi2 per track.
-      billoirTrack.chi2 =
-          ((billoirTrack.deltaQ - billoirTrack.D * deltaV -
-            billoirTrack.E * deltaP)
-               .transpose())
-              .dot(billoirTrack.W *
-                   (billoirTrack.deltaQ - billoirTrack.D * deltaV -
-                    billoirTrack.E * deltaP));
+      billoirTrack.chi2 = ((billoirTrack.deltaQ - billoirTrack.D * deltaV -
+                            billoirTrack.E * deltaP)
+                               .transpose())
+                              .dot(billoirTrack.W * (billoirTrack.deltaQ -
+                                                     billoirTrack.D * deltaV -
+                                                     billoirTrack.E * deltaP));
       newChi2 += billoirTrack.chi2;
     }
 
