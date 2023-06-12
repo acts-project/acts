@@ -31,6 +31,11 @@ with tempfile.TemporaryDirectory() as temp:
                 acts.FpeType.FLTUND,
                 1,
             ),
+            (
+                "Acts/Utilities/GaussianMixtureReduction.hpp:198",
+                acts.FpeType.FLTUND,
+                1,
+            ),
         ],
     )
 
