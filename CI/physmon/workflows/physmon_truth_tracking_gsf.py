@@ -12,10 +12,16 @@ setup = makeSetup()
 
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
-        events=500, numThreads=-1, logLevel=acts.logging.INFO,
-        fpeMasks = [
-            ("Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:250", "FLTUND", 1)
-        ]
+        events=500,
+        numThreads=-1,
+        logLevel=acts.logging.INFO,
+        fpeMasks=[
+            (
+                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:250",
+                "FLTUND",
+                1,
+            )
+        ],
     )
 
     tp = Path(temp)
