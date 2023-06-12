@@ -105,7 +105,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
     // contains the GeometryID/
     if (mappedSurface != nullptr) {
       ++sCounter;
-      std::string mappedVolumeName = SensitiveSurfaceMapper::mappingPrefix;
+      std::string mappedVolumeName(SensitiveSurfaceMapper::mappingPrefix);
       mappedVolumeName += std::to_string(mappedSurface->geometryId().value());
       ACTS_VERBOSE("Found matching surface " << mappedSurface->geometryId()
                                              << " at position "
