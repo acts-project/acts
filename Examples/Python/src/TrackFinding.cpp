@@ -18,7 +18,6 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
