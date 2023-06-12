@@ -41,10 +41,8 @@ def main():
     list_labels = set()
     whatchlist_files = whatch_list()
 
-    github_token = ""
-    try:
-        github_token = str(os.getenv('GITHUB_TOKEN'))
-    except Exception:
+    github_token = str(os.getenv('GITHUB_TOKEN'))
+    if github_token == "":
         raise Exception("Env variables are not properly set! Check the .env file is present and/or the env variables are set.")
     
     github = Github(github_token)
@@ -67,18 +65,15 @@ def main():
         print(f" * {el.filename}")
 
     print('Checking labels ...')
-    mislabeled = False
     # Check the PR is a draft
     if pull.draft:
         print("This PR is a draft!")
         if ":construction: WIP" not in list_labels:
             print(" * label need to be added: :construction: WIP")
-            list_labels.add(':construction: WIP')
-            mislabeled = True
+            pull.add_to_labels(':construction: WIP')
     elif ":construction: WIP" in list_labels:
         print(" * label need to be removed: :construction: WIP")
-        list_labels.remove(':construction: WIP')
-        mislabeled = True
+        pull.remove_from_labels(':construction: WIP')
     
     # Check each file and compare them with the patterns
     for pattern in whatchlist_files:
@@ -91,8 +86,8 @@ def main():
             for label in toadd_labels:
                 if label not in list_labels:
                     print(f" * label need to be added: {label}")
-                    list_labels.add(label)
-                    mislabeled = True
+                    pull.add_to_labels(label)
+
             # Found a match already, we can skip the other files
             break
 

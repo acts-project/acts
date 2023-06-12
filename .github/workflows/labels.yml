@@ -15,7 +15,7 @@ jobs:
     
     steps:
       - uses: actions/checkout@v3
-      - name: install dependencies
-        run: pip3 install PyGithub
-      - name: check the labels
-        run: python3 CI/check_pr_labels.py --pull_id ${{ github.event.number }} --repository ${{ github.repository }}
+      - name: labeler
+        uses: uses: actions/labeler@v4
+	Infrastructure:
+	  - aby: ['.github/**', 'CI/**']
