@@ -606,6 +606,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
 
   // apply cut on the number of top SP if seedConfirmation is true
   SeedFilterState seedFilterState;
+  bool search_bot_hl = true;
+  bool search_bot_lh = true;
   if (m_config.seedConfirmation) {
     // check if middle SP is in the central or forward region
     SeedConfirmationRangeConfig seedConfRange =
@@ -621,11 +623,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     // set max bottom radius for seed confirmation
     seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
     // continue if number of top SPs is smaller than minimum
-    if (top_lh_v.size() + top_hl_v.size() < seedFilterState.nTopSeedConf) {
-      //			std::cout << "conf " <<
-      //top_lh_v.size()+top_hl_v.size()  << " seedFilterState.nTopSeedConf " <<
-      //seedFilterState.nTopSeedConf << std::endl;
-      return;
+    if (top_lh_v.size() < seedFilterState.nTopSeedConf) {
+      search_bot_lh = false;
+    }
+    if (top_hl_v.size() < seedFilterState.nTopSeedConf) {
+      search_bot_hl = false;
     }
   }
 
@@ -633,7 +635,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Next, we perform a search for bottom candidates in increasing z tracks,
    * which only makes sense if we found any bottom candidates.
    */
-  if (!top_lh_v.empty()) {
+  if (!top_lh_v.empty() and search_bot_lh) {
     tree.rangeSearchMapDiscard(
         bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
                          const typename tree_t::coordinate_t &,
@@ -647,7 +649,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   /*
    * And repeat for the top spacepoints for decreasing z tracks!
    */
-  if (!top_hl_v.empty()) {
+  if (!top_hl_v.empty() and search_bot_hl) {
     tree.rangeSearchMapDiscard(
         bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
                          const typename tree_t::coordinate_t &,
@@ -658,28 +660,28 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
         });
   }
 
+  /*
+   * If we have candidates for increasing z tracks, we try to combine them.
+   */
+  if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
+    filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
+                     candidates_collector, spacePointData);
+  }
+  /*
+   * Try to combine candidates for decreasing z tracks.
+   */
+  if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
+    filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
+                     candidates_collector, spacePointData);
+  }
+  /*
+   * Run a seed filter, just like in other seeding algorithms.
+   */
   if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or
       (!bottom_hl_v.empty() && !top_hl_v.empty())) {
-    std::vector<internal_sp_t *> bottom_v, top_v;
-
-    // reserve memory
-    bottom_v.reserve(bottom_lh_v.size() + bottom_hl_v.size());
-    top_v.reserve(top_lh_v.size() + top_hl_v.size());
-
-    // concatenate the vectors
-    bottom_v.insert(bottom_v.end(), bottom_lh_v.begin(), bottom_lh_v.end());
-    bottom_v.insert(bottom_v.end(), bottom_hl_v.begin(), bottom_hl_v.end());
-    top_v.insert(top_v.end(), top_lh_v.begin(), top_lh_v.end());
-    top_v.insert(top_v.end(), top_hl_v.begin(), top_hl_v.end());
-
-    /*
-     * Run a seed filter, just like in other seeding algorithms.
-     */
-    filterCandidates(options, middle, bottom_v, top_v, seedFilterState,
-                     candidates_collector);
-    m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
-                                              seedFilterState.numQualitySeeds,
-                                              std::back_inserter(out_cont));
+    m_config.seedFilter->filterSeeds_1SpFixed(
+        spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
+        std::back_inserter(out_cont));
   }
 }
 
