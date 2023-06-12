@@ -74,7 +74,7 @@ class TrackStateType {
   /// @param pos the bit position
   /// @return if the bit at @p pos is one or not
   bool test(std::size_t pos) const {
-    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    std::bitset<sizeof(raw_type) * 8> bs{*m_raw};
     return bs.test(pos);
   }
 
@@ -82,7 +82,7 @@ class TrackStateType {
   /// @param pos the position of the bit to change
   /// @param value the value to change the bit to
   void set(std::size_t pos, bool value = true) {
-    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    std::bitset<sizeof(raw_type) * 8> bs{*m_raw};
     bs.set(pos, value);
     *m_raw = bs.to_ullong();
   }
@@ -109,7 +109,7 @@ class ConstTrackStateType {
   /// @param pos the bit position
   /// @return if the bit at @p pos is one or not
   bool test(std::size_t pos) const {
-    std::bitset<sizeof(raw_type)> bs{*m_raw};
+    std::bitset<sizeof(raw_type) * 8> bs{*m_raw};
     return bs.test(pos);
   }
 
