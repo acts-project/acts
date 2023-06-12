@@ -8,6 +8,7 @@
 
 #include "Acts/Detector/CylindricalContainerBuilder.hpp"
 #include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
@@ -230,6 +231,24 @@ void addExperimentaGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
 
     // Detector builder
+    auto dBuilder =
+        py::class_<DetectorBuilder, IDetectorBuilder,
+                   std::shared_ptr<DetectorBuilder>>(m, "DetectorBuilder")
+            .def(py::init([](const DetectorBuilder::Config& config,
+                             const std::string& name,
+                             Acts::Logging::Level level) {
+              return std::make_shared<DetectorBuilder>(
+                  config, getDefaultLogger(name, level));
+            }));
+
+    auto dConfig = py::class_<DetectorBuilder::Config>(dBuilder, "Config")
+                       .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(dConfig, DetectorBuilder::Config);
+    ACTS_PYTHON_MEMBER(name);
+    ACTS_PYTHON_MEMBER(builder);
+    ACTS_PYTHON_MEMBER(auxilliary);
+    ACTS_PYTHON_STRUCT_END();
   }
 }
 
