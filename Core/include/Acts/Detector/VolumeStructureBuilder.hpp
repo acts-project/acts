@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <optional>
+#include <string>
 
 namespace Acts {
 namespace Experimental {
@@ -36,14 +37,16 @@ class VolumeStructureBuilder : public IExternalStructureBuilder {
     std::vector<ActsScalar> boundValues = {};
     /// The optional extent to feed into the values
     std::optional<Extent> extent = std::nullopt;
+    /// Some auxilliary information
+    std::string auxilliary = "";
   };
 
   /// Constructor
   ///
   /// @param cfg is the configuration struct
-  /// @param logger logging instance for screen output
+  /// @param mlogger logging instance for screen output
   VolumeStructureBuilder(const Config& cfg,
-                         std::unique_ptr<const Logger> logger =
+                         std::unique_ptr<const Logger> mlogger =
                              getDefaultLogger("VolumeStructureBuilder",
                                               Logging::INFO));
 

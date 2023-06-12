@@ -57,15 +57,13 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
                                           55., -800, 2., 22u);
 
   SurfaceProvider endcap{unpackSurfaces(rSurfaces)};
-
-  using LayerBinning = Acts::Experimental::LayerStructureBuilder::Binning;
-
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxilliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfaces = endcap;
-  lsConfig.binnings = {LayerBinning{
-      Acts::BinningData(Acts::closed, Acts::binPhi, 22u, -M_PI, M_PI), 1u}};
+  lsConfig.binnings = {ProtoBinning(Acts::binPhi,
+                                    Acts::detail::AxisBoundaryType::Closed,
+                                    -M_PI, M_PI, 22u, 1u)};
 
   auto endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
@@ -122,17 +120,16 @@ BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
 
   SurfaceProvider barrel{unpackSurfaces(cSurfaces)};
 
-  using LayerBinning = Acts::Experimental::LayerStructureBuilder::Binning;
-
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxilliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfaces = barrel;
-  lsConfig.binnings = {
-      LayerBinning{Acts::BinningData(Acts::open, Acts::binZ, 14u, -480., 480.),
-                   1u},
-      LayerBinning{
-          Acts::BinningData(Acts::closed, Acts::binPhi, 32u, -M_PI, M_PI), 1u}};
+  lsConfig.binnings = {Acts::Experimental::ProtoBinning{
+                           Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
+                           -480., 480., 14u, 1u},
+                       Acts::Experimental::ProtoBinning(
+                           Acts::binPhi, Acts::detail::AxisBoundaryType::Closed,
+                           -M_PI, M_PI, 32u, 1u)};
 
   auto barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));

@@ -20,8 +20,8 @@
 
 Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
     const Acts::Experimental::VolumeStructureBuilder::Config& cfg,
-    std::unique_ptr<const Acts::Logger> logger)
-    : IExternalStructureBuilder(), m_cfg(cfg), m_logger(std::move(logger)) {
+    std::unique_ptr<const Acts::Logger> mlogger)
+    : IExternalStructureBuilder(), m_cfg(cfg), m_logger(std::move(mlogger)) {
   // Sanity cross-checks
   if (m_cfg.boundValues.empty() and not m_cfg.extent.has_value()) {
     throw std::invalid_argument(
@@ -37,6 +37,11 @@ Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
 Acts::Experimental::ExternalStructure
 Acts::Experimental::VolumeStructureBuilder::construct(
     [[maybe_unused]] const Acts::GeometryContext& gctx) const {
+  // Print out the auxilliary information
+  if (not m_cfg.auxilliary.empty()) {
+    ACTS_DEBUG(m_cfg.auxilliary);
+  }
+
   // The volume bounds to be constructed
   std::unique_ptr<VolumeBounds> volumeBounds = nullptr;
 

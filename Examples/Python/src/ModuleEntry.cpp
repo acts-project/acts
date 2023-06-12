@@ -81,10 +81,12 @@ void addUnits(Context& ctx);
 void addLogging(Context& ctx);
 void addPdgParticle(Context& ctx);
 void addAlgebra(Context& ctx);
+void addBinning(Context& ctx);
 
 void addPropagation(Context& ctx);
 
 void addGeometry(Context& ctx);
+void addExperimentaGeometry(Context& ctx);
 
 void addMagneticField(Context& ctx);
 
@@ -258,9 +260,12 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addLogging(ctx);
   addPdgParticle(ctx);
   addAlgebra(ctx);
+  addBinning(ctx);
 
   addPropagation(ctx);
   addGeometry(ctx);
+  addExperimentaGeometry(ctx);
+
   addMagneticField(ctx);
   addMaterial(ctx);
   addOutput(ctx);

@@ -8,9 +8,8 @@
 
 #pragma once
 
+#include "Acts/Detector/interface/IDetectorBuilder.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
-#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
-#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -19,26 +18,21 @@
 namespace Acts {
 namespace Experimental {
 
-/// @brief A generic detector volume builder that uses
-/// an external builder for shape and portals and an internal
-/// structure builder for volume internals.
+/// @brief Standard generaic Detector builer that calls
+/// the top level component buiilder and transfers the
+/// result into a detector object
 ///
-/// @note Although this helper builds only a single volume,
-/// it is to the outside presented as a DetectorComponent with
-/// shell; like this it can be transparently be used for the
-/// downstream detector construction process.
-class DetectorVolumeBuilder : public IDetectorComponentBuilder {
+/// @note This is the last builder in the chain and the
+/// the returned detector object is const and cannot be
+/// modified anymore.
+class DetectorBuilder : public IDetectorBuilder {
  public:
   /// Nested configuration object
   struct Config {
     /// The name of the volume to be built
     std::string name = "unnamed";
     /// An external builder
-    std::shared_ptr<const IExternalStructureBuilder> externalsBuilder = nullptr;
-    /// An internal builder
-    std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
-    /// Add eventual internal volume to root
-    bool addInternalsToRoot = false;
+    std::shared_ptr<const IDetectorComponentBuilder> builder = nullptr;
     /// Auxilliary information
     std::string auxilliary = "";
   };
@@ -47,10 +41,9 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   ///
   /// @param cfg is the configuration struct
   /// @param mlogger logging instance for screen output
-  DetectorVolumeBuilder(const Config& cfg,
-                        std::unique_ptr<const Logger> mlogger =
-                            getDefaultLogger("DetectorVolumeBuilder",
-                                             Logging::INFO));
+  DetectorBuilder(const Config& cfg,
+                  std::unique_ptr<const Logger> mlogger =
+                      getDefaultLogger("DetectorBuilder", Logging::INFO));
 
   /// Final implementation of a volume builder that is purely defined
   /// by an internal and external structure builder
@@ -58,7 +51,8 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   /// @param gctx The geometry context for this call
   ///
   /// @return an outgoing detector component
-  DetectorComponent construct(const GeometryContext& gctx) const final;
+  std::shared_ptr<const Detector> construct(
+      const GeometryContext& gctx) const final;
 
  private:
   /// configuration object

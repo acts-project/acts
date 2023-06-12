@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -56,14 +57,6 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::optional<Transform3> transform = std::nullopt;
   };
 
-  /// @brief The surface binning definition
-  struct Binning {
-    /// Define the binning of the surfaces
-    BinningData data;
-    /// An expansion for the filling (in bins)
-    size_t expansion = 0u;
-  };
-
   /// @brief Configuration struct for the LayerStructureBuilder
   ///
   /// It contain:
@@ -76,7 +69,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     /// Definition of Supports
     std::vector<Support> supports = {};
     /// Definition of Binnings
-    std::vector<Binning> binnings = {};
+    std::vector<ProtoBinning> binnings = {};
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
     /// Extra information, mainly for screen output

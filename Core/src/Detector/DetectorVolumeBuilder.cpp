@@ -9,13 +9,14 @@
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
 #include <stdexcept>
 
 Acts::Experimental::DetectorVolumeBuilder::DetectorVolumeBuilder(
     const Acts::Experimental::DetectorVolumeBuilder::Config& cfg,
-    std::unique_ptr<const Acts::Logger> logger)
-    : IDetectorComponentBuilder(), m_cfg(cfg), m_logger(std::move(logger)) {
+    std::unique_ptr<const Acts::Logger> mlogger)
+    : IDetectorComponentBuilder(), m_cfg(cfg), m_logger(std::move(mlogger)) {
   if (m_cfg.externalsBuilder == nullptr) {
     throw std::invalid_argument(
         "DetectorVolumeBuilder: no external structure builder defined.");
@@ -24,7 +25,9 @@ Acts::Experimental::DetectorVolumeBuilder::DetectorVolumeBuilder(
 
 Acts::Experimental::DetectorComponent
 Acts::Experimental::DetectorVolumeBuilder::construct(
-    RootDetectorVolumes& roots, const GeometryContext& gctx) const {
+    const GeometryContext& gctx) const {
+  // The outgoing root volumes
+  std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
   // Screen printout of the auxilliary information
   if (not m_cfg.auxilliary.empty()) {
     ACTS_DEBUG(m_cfg.auxilliary);
@@ -37,7 +40,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
 
   // Although only a single volume, describe it as a
   // container shell for further processing
-  DetectorComponent::PortalContainer shell;
+  DetectorComponent::PortalContainer portalContainer;
   // The detector volume to be constructed
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
   // If there are no internals, the volume is fully defined
@@ -56,7 +59,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
     // Add the internally created volumes as root volumes
     if (m_cfg.addInternalsToRoot) {
       for (const auto& v : volumes) {
-        roots.volumes.push_back(v);
+        rootVolumes.push_back(v);
       }
     }
     // Contruct the DetectorVolume
@@ -67,13 +70,14 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   }
   // All portals are defined and build the current shell
   for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
-    shell[ip] = p;
+    portalContainer[ip] = p;
   }
   // Add to the root volume collection if configured
-  if (m_cfg.addToRoot) {
-    ACTS_VERBOSE("DetectorVolume is being attached to the root volumes.");
-    roots.volumes.push_back(dVolume);
-  }
+  rootVolumes.push_back(dVolume);
   // The newly built volume is the only produced volume
-  return Acts::Experimental::DetectorComponent{{dVolume}, shell};
+  // The newly built volume is the only produced volume
+  return Acts::Experimental::DetectorComponent{
+      {dVolume},
+      portalContainer,
+      RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
 }
