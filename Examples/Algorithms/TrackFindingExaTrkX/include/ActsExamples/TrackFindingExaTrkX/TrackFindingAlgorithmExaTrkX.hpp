@@ -10,9 +10,12 @@
 
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+
+#include <boost/multi_array.hpp>
 
 #include <string>
 #include <vector>
@@ -24,6 +27,14 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   struct Config {
     /// Input spacepoints collection.
     std::string inputSpacePoints;
+
+    /// Input cluster information (Optional). If given, the following features
+    /// are added:
+    /// * cell count
+    /// * sum cell activations
+    /// * cluster size in local x
+    /// * cluster size in local y
+    std::string inputClusters;
 
     /// Output protoTracks collection.
     std::string outputProtoTracks;
@@ -59,13 +70,15 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
  private:
   std::vector<std::vector<int>> runPipeline(
-      std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const;
+      boost::multi_array<float, 2>& features, std::vector<int>& spacepointIDs) const;
 
   // configuration
   Config m_cfg;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this,
+                                                            "InputClusters"};
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};

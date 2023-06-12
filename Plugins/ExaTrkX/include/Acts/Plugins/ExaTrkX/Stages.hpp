@@ -11,6 +11,8 @@
 #include <any>
 #include <vector>
 
+#include <boost/multi_array.hpp>
+
 namespace Acts {
 
 // TODO maybe replace std::any with some kind of variant<unique_ptr<torch>,
@@ -26,7 +28,7 @@ class GraphConstructionBase {
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues) = 0;
+      boost::multi_array<float, 2> &inputValues) = 0;
 
   virtual ~GraphConstructionBase() = default;
 };

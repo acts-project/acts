@@ -15,6 +15,8 @@
 
 #include "printCudaMemInfo.hpp"
 
+using namespace torch::indexing;
+
 namespace Acts {
 
 TorchMetricLearning::TorchMetricLearning(const Config &cfg,
@@ -43,59 +45,56 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
-    std::vector<float> &inputValues) {
+    boost::multi_array<float, 2> &inputValues) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
-  // Clone models (solve memory leak? members can be const...)
-  auto e_model = m_model->clone();
-  e_model.to(device);
-
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information [r, phi, z]: "
-               << inputValues[0] << ", " << inputValues[1] << ", "
-               << inputValues[2]);
-  ACTS_VERBOSE("Max and min spacepoint: "
-               << *std::max_element(inputValues.begin(), inputValues.end())
-               << ", "
-               << *std::min_element(inputValues.begin(), inputValues.end()))
+               << inputValues[0][0] << ", " << inputValues[0][1] << ", "
+               << inputValues[0][2]);
   printCudaMemInfo(logger());
+
+  const int64_t numSpacepoints = inputValues.shape()[0];
+  const int64_t numAllFeatures = inputValues.shape()[1];
+
+  auto e_opts = torch::TensorOptions().dtype(torch::kFloat32).device(device);
+  torch::Tensor nodeFeatureTensor = torch::from_blob(inputValues.data(), {numSpacepoints, numAllFeatures}, e_opts);
 
   // **********
   // Embedding
   // **********
 
-  int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
-  std::vector<torch::jit::IValue> eInputTensorJit;
-  auto e_opts = torch::TensorOptions().dtype(torch::kFloat32);
-  torch::Tensor eLibInputTensor =
-      torch::from_blob(inputValues.data(),
-                       {numSpacepoints, m_cfg.spacepointFeatures}, e_opts)
-          .to(torch::kFloat32);
+  // Clone models (solve memory leak? members can be const...)
+  auto e_model = m_model->clone();
+  e_model.to(device);
 
-  eInputTensorJit.push_back(eLibInputTensor.to(device));
-  std::optional<at::Tensor> eOutput =
-      e_model.forward(eInputTensorJit).toTensor();
-  eInputTensorJit.clear();
+  if( m_cfg.numFeatures > numAllFeatures ) {
+    throw std::runtime_error("requested more features then available");
+  }
+
+  std::vector<torch::jit::IValue> inputTensors;
+  inputTensors.push_back(m_cfg.numFeatures < numAllFeatures ? nodeFeatureTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}}) : nodeFeatureTensor);
+  auto output = e_model.forward(inputTensors).toTensor();
+  inputTensors.clear();
 
   ACTS_VERBOSE("Embedding space of the first SP:\n"
-               << eOutput->slice(/*dim=*/0, /*start=*/0, /*end=*/1));
+               << output.slice(/*dim=*/0, /*start=*/0, /*end=*/1));
   printCudaMemInfo(logger());
 
   // ****************
   // Building Edges
   // ****************
 
-  std::optional<torch::Tensor> edgeList = buildEdges(
-      *eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
-  eOutput.reset();
+  auto edgeList = buildEdges(
+      output, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
 
-  ACTS_VERBOSE("Shape of built edges: (" << edgeList->size(0) << ", "
-                                         << edgeList->size(1));
-  ACTS_VERBOSE("Slice of edgelist:\n" << edgeList->slice(1, 0, 5));
+  ACTS_VERBOSE("Shape of built edges: (" << edgeList.size(0) << ", "
+                                         << edgeList.size(1));
+  ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
-  return {eLibInputTensor, *edgeList};
+  return {nodeFeatureTensor, edgeList};
 }
 }  // namespace Acts
