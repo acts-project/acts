@@ -35,7 +35,7 @@ class TrackModifier final : public IAlgorithm {
     /// parameters input was set.
     std::string outputTrackParameters;
 
-    /// When turned on, only keed the diagonal of the cov matrix.
+    /// When turned on, only keep the diagonal of the cov matrix.
     bool dropCovariance{false};
     /// Scale cov matrix;
     double covScale{1};

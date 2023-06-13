@@ -9,7 +9,7 @@
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -44,6 +44,8 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
                                           << m_cfg.absEtaMax << ")");
   ACTS_DEBUG("selection particle pt [" << m_cfg.ptMin << "," << m_cfg.ptMax
                                        << ")");
+  ACTS_DEBUG("selection particle m [" << m_cfg.mMin << "," << m_cfg.mMax
+                                      << ")");
   ACTS_DEBUG("remove charged particles " << m_cfg.removeCharged);
   ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
 }
@@ -70,7 +72,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
            within(std::abs(p.position()[Acts::ePos2]), m_cfg.absZMin,
                   m_cfg.absZMax) and
            within(rho, m_cfg.rhoMin, m_cfg.rhoMax) and
-           within(p.time(), m_cfg.timeMin, m_cfg.timeMax);
+           within(p.time(), m_cfg.timeMin, m_cfg.timeMax) and
+           within(p.mass(), m_cfg.mMin, m_cfg.mMax);
   };
 
   // prepare input/ output types

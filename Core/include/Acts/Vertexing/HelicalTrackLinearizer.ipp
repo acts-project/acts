@@ -190,11 +190,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   BoundVector constTerm =
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
-  // Set the parameter weight matrix
-  ActsSymMatrix<5> parWeight = (parCovarianceAtPCA.block<5, 5>(0, 0)).inverse();
-
-  BoundSymMatrix weightAtPCA{BoundSymMatrix::Identity()};
-  weightAtPCA.block<5, 5>(0, 0) = parWeight;
+  // The parameter weight
+  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,

@@ -188,7 +188,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
             ++currentElement.properties;
           }
         } else {
-          errorStrings.push_back(w + line + " ] Unkown command.");
+          errorStrings.push_back(w + line + " ] Unknown command.");
         }
       }
     } else {
@@ -212,7 +212,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
           errorStrings.push_back(
               w + line + std::string(" ] Element expected ") +
               std::to_string(elements[cElement].properties) +
-              std::string(" propertes, while found ") +
+              std::string(" properties, while found ") +
               std::to_string(lineSplit.size()) + std::string("."));
         }
       }

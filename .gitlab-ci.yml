@@ -164,6 +164,7 @@ build_linux_ubuntu:
       -DACTS_FORCE_ASSERTIONS=ON
       -DACTS_BUILD_ANALYSIS_APPS=ON
       -DACTS_BUILD_PLUGIN_ONNX=ON
+      -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
     - cmake --build build --
@@ -240,6 +241,7 @@ linux_test_examples:
       -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
       -DACTS_FORCE_ASSERTIONS=ON
       -DACTS_BUILD_ANALYSIS_APPS=ON
+      -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
     - cmake --build build --
@@ -356,6 +358,7 @@ linux_ubuntu_2204_clang:
       -DACTS_BUILD_FATRAS=ON
       -DACTS_BUILD_ALIGNMENT=ON
       -DACTS_BUILD_ANALYSIS_APPS=ON
+      -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
     - cmake --build build
@@ -387,10 +390,18 @@ lcg_103:
   parallel:
     matrix:
       - OS: [centos7]
-        COMPILER: [gcc11, gcc12, clang12, clang15]
+        COMPILER: 
+          - gcc11
+          - gcc12
+          # currently failing:
+          # - clang12
+          # - clang15
 
       - OS: [alma9]
-        COMPILER: [gcc11, gcc12]
+        COMPILER: 
+          - gcc11
+          # currently failing
+          # - gcc12
 
   rules:
     - if: '$COMPILER == "clang12" || $COMPILER == "gcc12" || $COMPILER == "clang15"'

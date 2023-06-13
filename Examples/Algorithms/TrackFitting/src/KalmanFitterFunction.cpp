@@ -17,7 +17,6 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
@@ -40,8 +39,7 @@ struct SimpleReverseFilteringLogic {
   double momentumThreshold = 0;
 
   bool doBackwardFiltering(
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::ConstTrackStateProxy
-          trackState) const {
+      Acts::VectorMultiTrajectory::ConstTrackStateProxy trackState) const {
     auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
     return (momentum <= momentumThreshold);
   }

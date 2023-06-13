@@ -16,7 +16,6 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
@@ -189,9 +188,9 @@ struct EventDataView3D {
   /// parameters
   /// @param smoothedConfig The visualization options for the smoothed
   /// parameters
-  template <typename D>
+  template <typename traj_t>
   static void drawMultiTrajectory(
-      IVisualization3D& helper, const Acts::MultiTrajectory<D>& multiTraj,
+      IVisualization3D& helper, const traj_t& multiTraj,
       const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,

@@ -39,10 +39,11 @@ ParticleSelectorConfig = namedtuple(
         "eta",  # (min,max)
         "absEta",  # (min,max)
         "pt",  # (min,max)
+        "m",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
     ],
-    defaults=[(None, None)] * 7 + [None] * 2,
+    defaults=[(None, None)] * 8 + [None] * 2,
 )
 
 
@@ -187,6 +188,7 @@ def addPythia8(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
+    printPythiaEventListing: Optional[Union[None, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the particle generation using Pythia8
@@ -213,6 +215,8 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
+    printPythiaEventListing
+        None or "short" or "long"
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -224,6 +228,18 @@ def addPythia8(
     )
     if not isinstance(beam, Iterable):
         beam = (beam, beam)
+
+    if printPythiaEventListing is None:
+        printShortEventListing = False
+        printLongEventListing = False
+    elif printPythiaEventListing == "short":
+        printShortEventListing = True
+        printLongEventListing = False
+    elif printPythiaEventListing == "long":
+        printShortEventListing = False
+        printLongEventListing = True
+    else:
+        raise RuntimeError("Invalid pythia config")
 
     generators = []
     if nhard is not None and nhard > 0:
@@ -238,6 +254,8 @@ def addPythia8(
                         pdgBeam1=beam[1],
                         cmsEnergy=cmsEnergy,
                         settings=hardProcess,
+                        printLongEventListing=printLongEventListing,
+                        printShortEventListing=printShortEventListing,
                     ),
                 ),
             )
@@ -349,6 +367,8 @@ def addParticleSelection(
                 absEtaMax=config.absEta[1],
                 ptMin=config.pt[0],
                 ptMax=config.pt[1],
+                mMin=config.m[0],
+                mMax=config.m[1],
                 removeCharged=config.removeCharged,
                 removeNeutral=config.removeNeutral,
             ),
@@ -476,7 +496,6 @@ def addSimWriters(
     particlesInitial="particles_initial",
     particlesFinal="particles_final",
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if outputDirCsv is not None:
@@ -577,6 +596,8 @@ def addGeant4(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
+    killAfterTime: float = float("inf"),
+    physicsList: str = "FTFP_BERT",
 ) -> None:
     """This function steers the detector simulation using Geant4
 
@@ -600,6 +621,8 @@ def addGeant4(
         the output folder for the Root output, None triggers no output
     killVolume: acts.Volume, None
         if given, particles are killed when going outside of this volume.
+    killAfterTime: float, None
+        if given, particle are killed after the global time since event creation exceeds the given value
     """
 
     from acts.examples.geant4 import Geant4Simulation, makeGeant4SimulationConfig
@@ -633,8 +656,10 @@ def addGeant4(
         volumeMappings=volumeMappings,
         materialMappings=materialMappings,
         killVolume=killVolume,
+        killAfterTime=killAfterTime,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
+        physicsList=physicsList,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
@@ -696,6 +721,7 @@ def addDigitization(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     doMerge: Optional[bool] = None,
+    minEnergyDeposit: Optional[float] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
@@ -735,6 +761,11 @@ def addDigitization(
         outputMeasurementSimHitsMap="measurement_simhits_map",
         doMerge=doMerge,
     )
+
+    # Not sure how to do this in our style
+    if minEnergyDeposit is not None:
+        digiCfg.minEnergyDeposit = minEnergyDeposit
+
     digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, customLogLevel())
 
     s.addAlgorithm(digiAlg)

@@ -36,14 +36,14 @@ namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
 
-/// This tests the interseciton with cylinders
+/// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
   double radius = 1_m;
   double halfZ = 10_m;
 
   auto testCylinderIntersection = [&](const Transform3& transform) -> void {
-    // A cylinder created alinged with a provided transform
+    // A cylinder created aligned with a provided transform
     auto aCylinder =
         Surface::makeShared<CylinderSurface>(transform, radius, halfZ);
 
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     auto aIntersection =
         aCylinder->intersect(tgContext, onCylinder, alongX, true);
 
-    // Check the validity of the interseciton
+    // Check the validity of the intersection
     BOOST_CHECK(aIntersection);
     // The status of this one should be on surface
     BOOST_CHECK(aIntersection.intersection.status ==
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     auto cIntersection =
         aCylinder->intersect(tgContext, atCenter, alongX, true);
 
-    // Check the validity of the interseciton
+    // Check the validity of the intersection
     BOOST_CHECK(cIntersection);
     // The status of this one MUST be reachable
     BOOST_CHECK(cIntersection.intersection.status ==
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     auto oIntersection =
         aCylinder->intersect(tgContext, outCylinder, alongX, true);
 
-    // Check the validity of the interseciton
+    // Check the validity of the intersection
     BOOST_CHECK(oIntersection);
     // The status of this one MUST be reachable
     BOOST_CHECK(oIntersection.intersection.status ==
@@ -120,14 +120,14 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     auto iIntersection =
         aCylinder->intersect(tgContext, outCylinder, transXY, false);
 
-    // Check the validity of the interseciton
+    // Check the validity of the intersection
     BOOST_CHECK(!iIntersection);
 
     // From edge tests - wo boundary test
     auto eIntersection =
         aCylinder->intersect(tgContext, atEdge, transTZ, false);
 
-    // Check the validity of the interseciton
+    // Check the validity of the intersection
     BOOST_CHECK(eIntersection);
     // This should be the positive one
     BOOST_CHECK(eIntersection.intersection.pathLength > 0.);
@@ -165,13 +165,13 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
   testCylinderIntersection(aTransform);
 }
 
-/// This tests the interseciton with cylinders
+/// This tests the intersection with cylinders
 /// and looks for valid, non-valid, solutions
 BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
   double alpha = 0.25 * M_PI;
 
   auto testConeIntersection = [&](const Transform3& transform) -> void {
-    // A cone suface ready to use
+    // A cone surface ready to use
     auto aCone = Surface::makeShared<ConeSurface>(transform, alpha, true);
 
     // Linear transform
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     BOOST_CHECK(aCone->isOnSurface(tgContext, onCone, transXY, false));
     auto aIntersection = aCone->intersect(tgContext, onCone, transXY, true);
 
-    // Check the validity of the interseciton
+    // Check the validity of the intersection
     BOOST_CHECK(aIntersection);
     // The status of this one should be on surface
     BOOST_CHECK(aIntersection.intersection.status ==
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     // Intersection from outside without chance of hitting the cylinder
     auto iIntersection = aCone->intersect(tgContext, outCone, perpXY, false);
 
-    // Check the validity of the interseciton
+    // Check the validity of the intersection
     BOOST_CHECK(!iIntersection);
   };
 
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
   testConeIntersection(aTransform);
 }
 
-/// This tests the interseciton with planar surfaces (plane, disk)
+/// This tests the intersection with planar surfaces (plane, disk)
 /// as those share the same PlanarHelper methods, only one test is
 /// sufficient
 /// - it looks for valid, non-valid, solutions
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
     auto aPlane = Surface::makeShared<PlaneSurface>(
         transform, std::make_shared<RectangleBounds>(halfX, halfY));
 
-    /// Forward interseciton test
+    /// Forward intersection test
     Vector3 before = transform * Vector3(-50_cm, -1_m, -1_m);
     Vector3 onit = transform * Vector3(11_cm, -22_cm, 0_m);
     Vector3 after = transform * Vector3(33_cm, 12_mm, 1_m);
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(PlanarIntersectionTest) {
   testPlanarIntersection(aTransform);
 }
 
-/// This tests the interseciton with line like surfaces (straw, perigee)
+/// This tests the intersection with line like surfaces (straw, perigee)
 /// as those share the same methods, only one test is
 /// sufficient
 /// - it looks for valid, non-valid, solutions
@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(LineIntersectionTest) {
     // A Plane created with a specific transform
     auto aLine = Surface::makeShared<StrawSurface>(transform, radius, halfZ);
 
-    /// Forward interseciton test
+    /// Forward intersection test
     Vector3 before = transform * Vector3(-50_cm, -1_m, -1_m);
     Vector3 onit1 = transform * Vector3(0_m, 0_m, 0_m);
     Vector3 onitP = transform * Vector3(1_cm, 0_m, 23_um);

@@ -88,9 +88,9 @@ class Hit {
   }
   /// Average normalized particle direction vector through the surface.
   Vector3 unitDirection() const {
-    auto dir0 = m_before4 / (2 * m_before4.segment<3>(Acts::eMom0).norm());
-    auto dir1 = m_after4 / (2 * m_after4.segment<3>(Acts::eMom0).norm());
-    return (dir0 + dir1).segment<3>(Acts::eMom0).normalized();
+    auto dir0 = m_before4.segment<3>(Acts::eMom0).normalized();
+    auto dir1 = m_after4.segment<3>(Acts::eMom0).normalized();
+    return ((dir0 + dir1) / 2.).segment<3>(Acts::eMom0).normalized();
   }
   /// Energy deposited by the hit.
   ///

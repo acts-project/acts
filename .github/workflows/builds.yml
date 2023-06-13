@@ -39,8 +39,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -84,12 +85,20 @@ jobs:
           -DACTS_BUILD_FATRAS=ON
           -DACTS_BUILD_ALIGNMENT=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: ${SETUP} && cmake --build build
 
       - name: ccache stats
         run: ${SETUP} && ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
         run: ${SETUP} && cmake --build build --target test
@@ -137,8 +146,9 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -167,12 +177,20 @@ jobs:
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ONNX=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: cmake --build build
 
       - name: ccache stats
         run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
         run: ctest --test-dir build -j$(nproc)
@@ -184,7 +202,7 @@ jobs:
         run: cmake --build build --target install
 
       - name: Package build
-        run: tar czf build.tar.gz -C build . 
+        run: tar czf build.tar.gz -C build --exclude="*.o" .
 
       - uses: actions/upload-artifact@v3
         with:
@@ -321,8 +339,9 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux_${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -350,12 +369,20 @@ jobs:
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
       - name: Build
         run: cmake --build build
 
       - name: ccache stats
         run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
         run: cmake --build build --target test
@@ -408,8 +435,9 @@ jobs:
           dnf -y install ninja-build tbb-devel ccache
           && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -438,6 +466,12 @@ jobs:
       # the build fails for technical reasons.
       - name: ccache stats
         run: ccache -s
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
       - name: Unit tests
         run: ${SETUP} && cmake --build build --target test
       - name: Integration tests
@@ -501,8 +535,9 @@ jobs:
           && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ACTS/ci/macOS/deps.67dd08d.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -528,10 +563,17 @@ jobs:
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+          -DACTS_BUILD_PLUGIN_ACTSVG=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
       - name: Unit tests
         run: cmake --build build --target test
       - name: Integration tests
@@ -561,8 +603,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -584,6 +627,12 @@ jobs:
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
   sycl:
     runs-on: ubuntu-latest
@@ -594,8 +643,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -621,3 +671,9 @@ jobs:
           && cmake --build build
       - name: ccache stats
         run: ccache -s
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}

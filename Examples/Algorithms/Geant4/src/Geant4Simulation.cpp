@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
@@ -84,11 +83,13 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
       geantVerboseLevel);
 
   // Suppress the printing of physics information.
+  if (logger().level() > Acts::Logging::DEBUG) {
 #if G4VERSION_NUMBER >= 1100
-  G4HadronicParameters::Instance()->SetVerboseLevel(0);
-  G4HadronicProcessStore::Instance()->SetVerbose(0);
-  G4EmParameters::Instance()->SetIsPrintedFlag(true);
+    G4HadronicParameters::Instance()->SetVerboseLevel(geantVerboseLevel);
+    G4HadronicProcessStore::Instance()->SetVerbose(geantVerboseLevel);
+    G4EmParameters::Instance()->SetIsPrintedFlag(true);
 #endif
+  }
 
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
@@ -210,6 +211,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
     m_outputMaterialTracks(
         ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
+
+  ACTS_INFO("Step merging: mean hits per hit: "
+            << static_cast<double>(eventData.numberGeantSteps) /
+                   eventData.hits.size());
+  ACTS_INFO("Step merging: max hits per hit: " << eventData.maxStepsForHit);
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
