@@ -46,9 +46,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
-  // TODO there was a problem with negative device index... Hardcode to device 0
-  // for now
-  const torch::Device device(m_deviceType, 0);
+  const torch::Device device(m_deviceType);
 
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information [r, phi, z]: "
@@ -66,9 +64,12 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
 
   const int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
   std::vector<torch::jit::IValue> inputTensors;
-  auto opts = torch::TensorOptions().dtype(torch::kFloat32).device(device);
-  torch::Tensor inputTensor = torch::from_blob(
-      inputValues.data(), {numSpacepoints, m_cfg.spacepointFeatures}, opts);
+  auto opts = torch::TensorOptions().dtype(torch::kFloat32);
+  torch::Tensor inputTensor =
+      torch::from_blob(inputValues.data(),
+                       {numSpacepoints, m_cfg.spacepointFeatures}, opts)
+          .to(torch::kFloat32)
+          .to(device);
 
   // Clone models (solve memory leak? members can be const...)
   auto model = m_model->clone();

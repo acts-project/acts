@@ -46,10 +46,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     std::any inputNodes, std::any inputEdges) {
   ACTS_DEBUG("Start edge classification");
   c10::InferenceMode guard(true);
-
-  // TODO there was a problem with negative device index... Hardcode to device 0
-  // for now
-  const torch::Device device(m_deviceType, 0);
+  const torch::Device device(m_deviceType);
 
   const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
