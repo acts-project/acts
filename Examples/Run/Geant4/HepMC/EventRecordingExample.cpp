@@ -67,8 +67,8 @@ int main(int argc, char* argv[]) {
   ActsExamples::EventRecording::Config erConfig;
   erConfig.inputParticles = particleReader.outputParticles;
   erConfig.outputHepMcTracks = "geant-event";
-  erConfig.detectorConstruction =
-      std::make_unique<ActsExamples::DDG4DetectorConstruction>(detector);
+  erConfig.detectorConstructionFactory =
+      std::make_unique<ActsExamples::DDG4DetectorConstructionFactory>(detector);
   erConfig.seed1 = vm["g4-rnd-seed1"].as<unsigned int>();
   erConfig.seed2 = vm["g4-rnd-seed2"].as<unsigned int>();
 

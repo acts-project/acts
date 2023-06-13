@@ -21,7 +21,6 @@
 #include <HepMC3/GenParticle.h>
 
 #include "EventAction.hpp"
-#include "G4RunManager.hh"
 #include "PrimaryGeneratorAction.hpp"
 #include "RunAction.hpp"
 #include "SteppingAction.hpp"
@@ -42,15 +41,18 @@ ActsExamples::EventRecording::EventRecording(
   if (m_cfg.outputHepMcTracks.empty()) {
     throw std::invalid_argument("Missing output event collection");
   }
-  if (m_cfg.detectorConstruction == nullptr) {
+  if (!m_cfg.detectorConstructionFactory) {
     throw std::invalid_argument("Missing detector construction object");
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputEvents.initialize(m_cfg.outputHepMcTracks);
 
-  /// Now set up the Geant4 simulation
-  m_runManager->SetUserInitialization(m_cfg.detectorConstruction);
+  // Now set up the Geant4 simulation
+
+  // G4RunManager deals with the lifetime of these objects
+  m_runManager->SetUserInitialization(
+      m_cfg.detectorConstructionFactory->factorize().release());
   m_runManager->SetUserInitialization(new FTFP_BERT);
   m_runManager->SetUserAction(new ActsExamples::Geant4::HepMC3::RunAction());
   m_runManager->SetUserAction(

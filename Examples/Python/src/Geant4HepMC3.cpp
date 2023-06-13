@@ -28,8 +28,8 @@ void addGeant4HepMC3(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       EventRecording, h3, "EventRecording", inputParticles, outputHepMcTracks,
-      detectorConstruction, seed1, seed2, processesCombine, processSelect,
-      processesReject);
+      detectorConstructionFactory, seed1, seed2, processesCombine,
+      processSelect, processesReject);
 }
 
 }  // namespace Acts::Python
