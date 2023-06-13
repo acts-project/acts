@@ -35,7 +35,7 @@ class OnnxMetricLearning final : public Acts::GraphConstructionBase {
   ~OnnxMetricLearning();
 
   std::tuple<std::any, std::any> operator()(
-      std::vector<float>& inputValues) override;
+      boost::multi_array<float, 2> &inputValues) override;
 
   Config config() const { return m_cfg; }
 

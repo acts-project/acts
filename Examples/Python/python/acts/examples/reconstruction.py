@@ -1200,15 +1200,22 @@ def addExaTrkX(
     )
 
     metricLearningConfig = {
-        "spacepointFeatures": 3,
+        "level": customLogLevel(),
+        "numFeatures": 3,
         "embeddingDim": 8,
         "rVal": 1.6,
         "knnVal": 500,
     }
 
-    filterConfig = {"cut": 0.21}
+    filterConfig = {
+        "level": customLogLevel(),
+        "numFeatures": 3,
+        "cut": 0.21,
+    }
 
     gnnConfig = {
+        "level": customLogLevel(),
+        "numFeatures": 3,
         "cut": 0.5,
     }
 
@@ -1223,7 +1230,7 @@ def addExaTrkX(
             acts.examples.TorchEdgeClassifier(**filterConfig),
             acts.examples.TorchEdgeClassifier(**gnnConfig),
         ]
-        trackBuilder = acts.examples.BoostTrackBuilding()
+        trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
     elif backend == ExaTrkXBackend.Onnx:
         metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
@@ -1234,7 +1241,7 @@ def addExaTrkX(
             acts.examples.OnnxEdgeClassifier(**filterConfig),
             acts.examples.OnnxEdgeClassifier(**gnnConfig),
         ]
-        trackBuilder = acts.examples.CugraphTrackBuilding()
+        trackBuilder = acts.examples.CugraphTrackBuilding(customLogLevel())
 
     s.addAlgorithm(
         acts.examples.TrackFindingAlgorithmExaTrkX(

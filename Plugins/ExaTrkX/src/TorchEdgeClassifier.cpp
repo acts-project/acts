@@ -18,14 +18,16 @@ using namespace torch::indexing;
 namespace Acts {
 
 TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
-                                         std::unique_ptr<const Logger> logger)
-    : m_logger(std::move(logger)), m_cfg(cfg) {
+                                         std::unique_ptr<const Logger> _logger)
+    : m_logger(std::move(_logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
-  std::cout << "Using torch version " << TORCH_VERSION << std::endl;
+  ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
+                                    << TORCH_VERSION_MINOR << "."
+                                    << TORCH_VERSION_PATCH);
 #ifndef ACTS_EXATRKX_CPUONLY
   if (not torch::cuda::is_available()) {
-    std::cout << "WARNING: CUDA not available, falling back to CPU\n";
+    ACTS_INFO("CUDA not available, falling back to CPU");
   }
 #endif
 
@@ -43,18 +45,21 @@ TorchEdgeClassifier::~TorchEdgeClassifier() {}
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     std::any inputNodes, std::any inputEdges) {
   ACTS_DEBUG("Start edge classification");
+  c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
   const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
 
-  c10::InferenceMode guard(true);
+  if( m_cfg.numFeatures > nodes.size(1) ) {
+    throw std::runtime_error("requested more features then available");
+  }
 
   std::vector<at::Tensor> results;
   results.reserve(m_cfg.nChunks);
 
   std::vector<torch::jit::IValue> inputTensors(2);
-  inputTensors[0] = nodes;
+  inputTensors[0] = m_cfg.numFeatures < nodes.size(1) ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}}) : nodes;
 
   const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.nChunks);
   for (const auto& chunk : chunks) {
