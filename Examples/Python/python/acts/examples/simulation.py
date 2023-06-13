@@ -39,10 +39,11 @@ ParticleSelectorConfig = namedtuple(
         "eta",  # (min,max)
         "absEta",  # (min,max)
         "pt",  # (min,max)
+        "m",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
     ],
-    defaults=[(None, None)] * 7 + [None] * 2,
+    defaults=[(None, None)] * 8 + [None] * 2,
 )
 
 
@@ -187,6 +188,7 @@ def addPythia8(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
+    printPythiaEventListing: Optional[Union[None, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the particle generation using Pythia8
@@ -213,6 +215,8 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
+    printPythiaEventListing
+        None or "short" or "long"
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -224,6 +228,18 @@ def addPythia8(
     )
     if not isinstance(beam, Iterable):
         beam = (beam, beam)
+
+    if printPythiaEventListing is None:
+        printShortEventListing = False
+        printLongEventListing = False
+    elif printPythiaEventListing == "short":
+        printShortEventListing = True
+        printLongEventListing = False
+    elif printPythiaEventListing == "long":
+        printShortEventListing = False
+        printLongEventListing = True
+    else:
+        raise RuntimeError("Invalid pythia config")
 
     generators = []
     if nhard is not None and nhard > 0:
@@ -238,6 +254,8 @@ def addPythia8(
                         pdgBeam1=beam[1],
                         cmsEnergy=cmsEnergy,
                         settings=hardProcess,
+                        printLongEventListing=printLongEventListing,
+                        printShortEventListing=printShortEventListing,
                     ),
                 ),
             )
@@ -349,6 +367,8 @@ def addParticleSelection(
                 absEtaMax=config.absEta[1],
                 ptMin=config.pt[0],
                 ptMax=config.pt[1],
+                mMin=config.m[0],
+                mMax=config.m[1],
                 removeCharged=config.removeCharged,
                 removeNeutral=config.removeNeutral,
             ),

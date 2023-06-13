@@ -61,6 +61,13 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
   m_pythia8->rndm.rndmEnginePtr(&rndmEngine);
   m_pythia8->next();
 
+  if (m_cfg.printShortEventListing) {
+    m_pythia8->process.list();
+  }
+  if (m_cfg.printLongEventListing) {
+    m_pythia8->event.list();
+  }
+
   // convert generated final state particles into internal format
   for (int ip = 0; ip < m_pythia8->event.size(); ++ip) {
     const auto& genParticle = m_pythia8->event[ip];
