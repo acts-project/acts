@@ -43,7 +43,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             events=500,
             numThreads=-1,
             logLevel=acts.logging.INFO,
-            fpeMasks=[("Core/src/Utilities/AnnealingUtility.cpp:43", "FLTUND", 1)],
+            fpeMasks=[
+                ("Core/src/Utilities/AnnealingUtility.cpp:43", "FLTUND", 1),
+                ("Core/src/Utilities/AnnealingUtility.cpp:40", "FLTUND", 1),
+            ],
         )
 
         tp = Path(temp)
