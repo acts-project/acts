@@ -537,7 +537,27 @@ class TrackProxy {
     // @TODO: Add constraint on which track proxies are allowed,
     // this is only implicit right now
 
-    tipIndex() = other.tipIndex();
+    // @FIXME: This is inefficient and bad! REPLACE!
+    std::vector<typename track_proxy_t::ConstTrackStateProxy> trackStates;
+    trackStates.reserve(other.nTrackStates());
+
+    for (auto ts : other.trackStates()) {
+      trackStates.push_back(ts);
+    }
+    // std::transform(other.trackStates().begin(), other.trackStates().end(),
+    // std::back_inserter(trackStates),
+    // [](const auto& ts) { return ConstTrackStateProxy{ts}; });
+
+    for (auto it = trackStates.rbegin(); it != trackStates.rend(); ++it) {
+      const auto& srcTrackState = *it;
+      auto destTrackState = appendTrackState(srcTrackState.getMask());
+      if (srcTrackState.hasCalibrated()) {
+        destTrackState.allocateCalibrated(srcTrackState.calibratedSize());
+      }
+      destTrackState.copyFrom(srcTrackState, Acts::TrackStatePropMask::All,
+                              true);
+    }
+
     parameters() = other.parameters();
     covariance() = other.covariance();
     if (other.hasReferenceSurface()) {
