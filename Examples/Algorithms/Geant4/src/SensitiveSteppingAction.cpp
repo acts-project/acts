@@ -20,61 +20,6 @@
 #include <G4VPhysicalVolume.hh>
 #include <boost/describe.hpp>
 
-BOOST_DESCRIBE_ENUM(G4StepStatus, fWorldBoundary, fGeomBoundary,
-                    fAtRestDoItProc, fAlongStepDoItProc, fPostStepDoItProc,
-                    fUserDefinedLimit, fExclusivelyForcedProc, fUndefined);
-
-BOOST_DESCRIBE_ENUM(G4ProcessType, fNotDefined, fTransportation,
-                    fElectromagnetic, fOptical, fHadronic, fPhotolepton_hadron,
-                    fDecay, fGeneral, fParameterisation, fUserDefined,
-                    fParallel, fPhonon, fUCN);
-
-BOOST_DESCRIBE_ENUM(G4TrackStatus, fAlive, fStopButAlive, fStopAndKill,
-                    fKillTrackAndSecondaries, fSuspend, fPostponeToNextEvent);
-
-namespace {
-
-ActsFatras::Hit hitFromStep(const G4StepPoint* preStepPoint,
-                            const G4StepPoint* postStepPoint,
-                            ActsFatras::Barcode particleId,
-                            Acts::GeometryIdentifier geoId, int32_t index) {
-  static constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
-  static constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
-  static constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
-
-  G4ThreeVector preStepPosition = convertLength * preStepPoint->GetPosition();
-  G4double preStepTime = convertTime * preStepPoint->GetGlobalTime();
-  G4ThreeVector postStepPosition = convertLength * postStepPoint->GetPosition();
-  G4double postStepTime = convertTime * postStepPoint->GetGlobalTime();
-
-  G4ThreeVector preStepMomentum = convertEnergy * preStepPoint->GetMomentum();
-  G4double preStepEnergy = convertEnergy * preStepPoint->GetTotalEnergy();
-  G4ThreeVector postStepMomentum = convertEnergy * postStepPoint->GetMomentum();
-  G4double postStepEnergy = convertEnergy * postStepPoint->GetTotalEnergy();
-
-  Acts::ActsScalar hX = 0.5 * (preStepPosition[0] + postStepPosition[0]);
-  Acts::ActsScalar hY = 0.5 * (preStepPosition[1] + postStepPosition[1]);
-  Acts::ActsScalar hZ = 0.5 * (preStepPosition[2] + postStepPosition[2]);
-  Acts::ActsScalar hT = 0.5 * (preStepTime + postStepTime);
-
-  Acts::ActsScalar mXpre = preStepMomentum[0];
-  Acts::ActsScalar mYpre = preStepMomentum[1];
-  Acts::ActsScalar mZpre = preStepMomentum[2];
-  Acts::ActsScalar mEpre = preStepEnergy;
-  Acts::ActsScalar mXpost = postStepMomentum[0];
-  Acts::ActsScalar mYpost = postStepMomentum[1];
-  Acts::ActsScalar mZpost = postStepMomentum[2];
-  Acts::ActsScalar mEpost = postStepEnergy;
-
-  Acts::Vector4 particlePosition(hX, hY, hZ, hT);
-  Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
-  Acts::Vector4 afterMomentum(mXpost, mYpost, mZpost, mEpost);
-
-  return ActsFatras::Hit(geoId, particleId, particlePosition, beforeMomentum,
-                         afterMomentum, index);
-}
-}  // namespace
-
 #if BOOST_VERSION >= 107800
 #include <boost/describe.hpp>
 
