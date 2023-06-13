@@ -952,7 +952,7 @@ def addCKFTracks(
         #  level=customLogLevel(),
         level=acts.logging.DEBUG,
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), ([], [15.0], [1]))]
+            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",

@@ -108,12 +108,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto trackStateContainerTemp =
       std::make_shared<Acts::VectorMultiTrajectory>();
 
-  // trackContainer->reserve(55000);
-  // trackStateContainer->reserve(4500000);
-
-  trackContainerTemp->reserve(55000);
-  trackStateContainerTemp->reserve(4500000);
-
   TrackContainer tracks(trackContainer, trackStateContainer);
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
@@ -141,11 +135,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
       seedNumber(track) = nSeed;
-      if (track.transverseMomentum() > 1_GeV) {
+      const auto eta = -std::log(std::tan(track.theta() / 2));
+      if (track.transverseMomentum() > 1_GeV && std::abs(eta) < 3.0 &&
+          track.nMeasurements() >= 7) {
         auto destProxy = tracks.getTrack(tracks.addTrack());
-        // this currently does not copy the track states!!!
-        // @TODO: Copy track states here!
-        destProxy.copyFrom(track);
+        destProxy.copyFrom(track, true);  // make sure we copy track states!
       }
     }
   }

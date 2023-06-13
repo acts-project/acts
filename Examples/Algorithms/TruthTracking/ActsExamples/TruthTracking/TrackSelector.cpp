@@ -74,7 +74,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
 
   trackContainer->reserve(inputTracks.size());
 
-  ACTS_VERBOSE("Track container size before filtering: " << inputTracks.size());
+  ACTS_DEBUG("Track container size before filtering: " << inputTracks.size());
 
   for (auto track : inputTracks) {
     if (!isValidTrack(track)) {
@@ -84,8 +84,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     destProxy.copyFrom(track);
   }
 
-  ACTS_VERBOSE(
-      "Track container size after filtering: " << filteredTracks.size());
+  ACTS_DEBUG("Track container size after filtering: " << filteredTracks.size());
 
   ConstTrackContainer outputTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(
