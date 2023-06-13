@@ -321,18 +321,12 @@ bool Acts::AdaptiveMultiVertexFitter<
   for (auto vtx : state.vertexCollection) {
     Vector3 diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
                    vtx->fullPosition().template head<3>();
-
-    SymMatrix3 vtxWgt = SymMatrix3::Zero();
-
-    if (auto vtxfullCovInverse =
-            safeInverse(vtx->fullCovariance().template block<3, 3>(0, 0));
-        vtxfullCovInverse) {
-      vtxWgt = *vtxfullCovInverse;
-    } else {
+    auto vtxWgt = safeInverse(vtx->fullCovariance().template block<3, 3>(0, 0));
+    if (!vtxWgt) {
       ACTS_WARNING("Vertex covariance is not invertible. Skip vertex.");
       continue;
     }
-    double relativeShift = diff.dot(vtxWgt * diff);
+    double relativeShift = diff.dot(vtxWgt.value() * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
       return false;
     }
