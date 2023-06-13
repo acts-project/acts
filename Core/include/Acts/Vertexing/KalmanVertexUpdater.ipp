@@ -74,29 +74,18 @@ void Acts::KalmanVertexUpdater::updatePosition(
   const ActsSymMatrix<5> trkParamWeight =
       linTrack.weightAtPCA.block<5, 5>(0, 0);
 
-  ActsMatrix<3, 3> tmp_inverse = ActsMatrix<3, 3>::Zero();
-  long double threshold = Eigen::NumTraits<long double>::dummy_precision();
-  // Determant threshold is Eigen::NumTraits<double>::dummy_precision() 1e-12
-  // Which is used in computeInverseWithCheck
-
-  bool is_invertible_vtx_cov = false;
-  bool is_invertible_vtx_transpose_weight_Jac = false;
-  bool is_invertible_new_vtx_cov = false;
-
   // Vertex to be updated
   const Vector3& oldVtxPos = vtx.position();
-  (vtx.covariance())
-      .computeInverseWithCheck(tmp_inverse, is_invertible_vtx_cov, threshold);
-  if (is_invertible_vtx_cov) {
-    matrixCache.oldVertexWeight = tmp_inverse;
+
+  auto vtxcovInverse = safeInverse(vtx.covariance());
+  if (vtxcovInverse) {
+    matrixCache.oldVertexWeight = *vtxcovInverse;
   }
 
   // W_k matrix
-  (momJac.transpose() * (trkParamWeight * momJac))
-      .computeInverseWithCheck(
-          tmp_inverse, is_invertible_vtx_transpose_weight_Jac, threshold);
-  if (is_invertible_vtx_transpose_weight_Jac) {
-    matrixCache.momWeightInv = tmp_inverse;
+  auto WkInverse = safeInverse(momJac.transpose() * (trkParamWeight * momJac));
+  if (WkInverse) {
+    matrixCache.momWeightInv = *WkInverse;
   }
 
   // G_b = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
@@ -105,15 +94,15 @@ void Acts::KalmanVertexUpdater::updatePosition(
       trkParamWeight *
           (momJac * (matrixCache.momWeightInv * momJac.transpose())) *
           trkParamWeight.transpose();
-  if (is_invertible_vtx_cov && is_invertible_vtx_transpose_weight_Jac) {
+  if (vtxcovInverse && WkInverse) {
     // New vertex cov matrix
     matrixCache.newVertexWeight =
         matrixCache.oldVertexWeight +
         trackWeight * sign * posJac.transpose() * (gBmat * posJac);
-    matrixCache.newVertexWeight.computeInverseWithCheck(
-        tmp_inverse, is_invertible_new_vtx_cov, threshold);
-    if (is_invertible_new_vtx_cov) {
-      matrixCache.newVertexCov = tmp_inverse;
+
+    if (auto newVtxWeightInverse = safeInverse(matrixCache.newVertexWeight);
+        newVtxWeightInverse) {
+      matrixCache.newVertexCov = *newVtxWeightInverse;
 
       // New vertex position
       matrixCache.newVertexPos =
