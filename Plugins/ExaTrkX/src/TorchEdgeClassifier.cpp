@@ -50,13 +50,17 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
 
+  if( m_cfg.numFeatures > nodes.size(1) ) {
+    throw std::runtime_error("requested more features then available");
+  }
+
   c10::InferenceMode guard(true);
 
   std::vector<at::Tensor> results;
   results.reserve(m_cfg.nChunks);
 
   std::vector<torch::jit::IValue> inputTensors(2);
-  inputTensors[0] = nodes;
+  inputTensors[0] = m_cfg.numFeatures < nodes.size(1) ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}}) : nodes;
 
   const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.nChunks);
   for (const auto& chunk : chunks) {

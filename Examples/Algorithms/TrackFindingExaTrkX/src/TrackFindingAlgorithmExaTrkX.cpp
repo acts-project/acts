@@ -96,7 +96,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   const std::size_t numFeatures = clusters ? 7 : 3;
   ACTS_INFO("Received " << num_spacepoints << " spacepoints");
 
-  boost::multi_array<float, 2> features(std::array{num_spacepoints, numFeatures});
+  boost::multi_array<float, 2> features(std::array<std::size_t,2>{num_spacepoints, numFeatures});
   std::vector<int> spacepointIDs;
 
   spacepointIDs.reserve(spacepoints.size());
