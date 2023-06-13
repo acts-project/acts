@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include <mutex>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 
 class G4RunManager;
