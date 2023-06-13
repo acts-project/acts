@@ -29,7 +29,7 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
                                     << TORCH_VERSION_PATCH);
 #ifndef ACTS_EXATRKX_CPUONLY
   if (not torch::cuda::is_available()) {
-    ACTS_WARNING("CUDA not available, falling back to CPU");
+    ACTS_INFO("CUDA not available, falling back to CPU");
   }
 #endif
 
@@ -59,25 +59,24 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   const int64_t numSpacepoints = inputValues.shape()[0];
   const int64_t numAllFeatures = inputValues.shape()[1];
 
-  auto e_opts = torch::TensorOptions().dtype(torch::kFloat32).device(device);
-  torch::Tensor nodeFeatureTensor = torch::from_blob(inputValues.data(), {numSpacepoints, numAllFeatures}, e_opts);
+  auto opts = torch::TensorOptions().dtype(torch::kFloat32).device(device);
+  torch::Tensor inputTensor = torch::from_blob(inputValues.data(), {numSpacepoints, numAllFeatures}, opts);
 
   // **********
   // Embedding
   // **********
 
-  // Clone models (solve memory leak? members can be const...)
-  auto e_model = m_model->clone();
-  e_model.to(device);
-
   if( m_cfg.numFeatures > numAllFeatures ) {
     throw std::runtime_error("requested more features then available");
   }
 
+  // Clone models (solve memory leak? members can be const...)
+  auto model = m_model->clone();
+  model.to(device);
+
   std::vector<torch::jit::IValue> inputTensors;
-  inputTensors.push_back(m_cfg.numFeatures < numAllFeatures ? nodeFeatureTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}}) : nodeFeatureTensor);
-  auto output = e_model.forward(inputTensors).toTensor();
-  inputTensors.clear();
+  inputTensors.push_back(m_cfg.numFeatures < numAllFeatures ? inputTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}}) : inputTensor);
+  auto output = model.forward(inputTensors).toTensor();
 
   ACTS_VERBOSE("Embedding space of the first SP:\n"
                << output.slice(/*dim=*/0, /*start=*/0, /*end=*/1));
@@ -87,14 +86,14 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // Building Edges
   // ****************
 
-  auto edgeList = buildEdges(
-      output, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
+  auto edgeList = buildEdges(output, numSpacepoints, m_cfg.embeddingDim,
+                             m_cfg.rVal, m_cfg.knnVal);
 
   ACTS_VERBOSE("Shape of built edges: (" << edgeList.size(0) << ", "
                                          << edgeList.size(1));
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
-  return {nodeFeatureTensor, edgeList};
+  return {inputTensor, edgeList};
 }
 }  // namespace Acts

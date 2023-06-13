@@ -27,7 +27,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
                                     << TORCH_VERSION_PATCH);
 #ifndef ACTS_EXATRKX_CPUONLY
   if (not torch::cuda::is_available()) {
-    ACTS_WARNING("CUDA not available, falling back to CPU");
+    ACTS_INFO("CUDA not available, falling back to CPU");
   }
 #endif
 
