@@ -47,6 +47,9 @@ class ParticleSelector final : public IAlgorithm {
     // Momentum cuts.
     double ptMin = 0;
     double ptMax = std::numeric_limits<double>::infinity();
+    // Rest mass cuts
+    double mMin = 0;
+    double mMax = std::numeric_limits<double>::infinity();
     /// Remove charged particles.
     bool removeCharged = false;
     /// Remove neutral particles.
