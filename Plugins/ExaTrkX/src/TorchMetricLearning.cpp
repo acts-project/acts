@@ -46,7 +46,9 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
     std::vector<float> &inputValues) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
-  const torch::Device device(m_deviceType);
+  // TODO there was a problem with negative device index... Hardcode to device 0
+  // for now
+  const torch::Device device(m_deviceType, 0);
 
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information [r, phi, z]: "
