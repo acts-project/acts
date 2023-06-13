@@ -520,6 +520,38 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(DynamicColumns, factory_t, holder_types) {
   BOOST_CHECK_EQUAL((t.template component<float, "col_a"_hash>()), 5.6f);
 }
 
+BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
+  VectorTrackContainer vtc{};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{vtc, mtj};
+
+  auto t = tc.getTrack(tc.addTrack());
+
+  for (size_t i = 0; i < 10; i++) {
+    t.appendTrackState();
+  }
+
+  std::vector<IndexType> exp;
+  exp.resize(t.nTrackStates());
+  std::iota(exp.rbegin(), exp.rend(), 0);
+  std::vector<IndexType> act;
+  std::transform(t.trackStates().begin(), t.trackStates().end(),
+                 std::back_inserter(act),
+                 [](const auto& ts) { return ts.index(); });
+
+  BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
+
+  // reverse!
+  t.reverseTrackStates();
+
+  std::iota(exp.begin(), exp.end(), 0);
+  act.clear();
+  std::transform(t.trackStates().begin(), t.trackStates().end(),
+                 std::back_inserter(act),
+                 [](const auto& ts) { return ts.index(); });
+  BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
+}
+
 BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
   // mutable source
   VectorTrackContainer vtc{};
@@ -537,9 +569,9 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
 
   for (size_t i = 0; i < 10; i++) {
     auto t = tc.getTrack(tc.addTrack());
-    t.appendTrackState().predicted() = BoundVector::Identity();
-    t.appendTrackState().predicted() = BoundVector::Identity() * 2;
-    t.appendTrackState().predicted() = BoundVector::Identity() * 3;
+    t.appendTrackState().predicted() = BoundVector::Ones();
+    t.appendTrackState().predicted() = BoundVector::Ones() * 2;
+    t.appendTrackState().predicted() = BoundVector::Ones() * 3;
 
     t.template component<size_t>("counter") = i;
     t.template component<bool>("odd") = i % 2 == 0;
