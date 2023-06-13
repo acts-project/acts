@@ -40,7 +40,10 @@ setup = makeSetup()
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=500, numThreads=-1, logLevel=acts.logging.INFO
+            events=500,
+            numThreads=-1,
+            logLevel=acts.logging.INFO,
+            fpeMasks=[("Core/src/Utilities/AnnealingUtility.cpp:43", "FLTUND", 1)],
         )
 
         tp = Path(temp)
@@ -180,11 +183,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
 
 
-with acts.FpeMonitor.context():
-    for truthSmearedSeeded, truthEstimatedSeeded, label in [
-        (True, False, "truth_smeared"),  # if first is true, second is ignored
-        (False, True, "truth_estimated"),
-        (False, False, "seeded"),
-        (False, False, "orthogonal"),
-    ]:
-        run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
+for truthSmearedSeeded, truthEstimatedSeeded, label in [
+    (True, False, "truth_smeared"),  # if first is true, second is ignored
+    (False, True, "truth_estimated"),
+    (False, False, "seeded"),
+    (False, False, "orthogonal"),
+]:
+    run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
