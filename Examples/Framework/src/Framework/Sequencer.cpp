@@ -37,11 +37,12 @@
 #include <TROOT.h>
 #endif
 
+#include <cstdlib>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/core/demangle.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
-#include <stdlib.h>
 
 namespace ActsExamples {
 

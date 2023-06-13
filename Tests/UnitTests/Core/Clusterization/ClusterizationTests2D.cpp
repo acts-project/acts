@@ -13,6 +13,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdlib>
 #include <iostream>
 #include <iterator>
 #include <memory>
@@ -22,7 +23,6 @@
 #include <vector>
 
 #include <boost/functional/hash.hpp>
-#include <stdlib.h>
 
 namespace Acts {
 namespace Test {

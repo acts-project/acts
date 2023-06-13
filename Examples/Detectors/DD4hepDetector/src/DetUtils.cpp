@@ -16,10 +16,9 @@
 
 #include <cstddef>
 
+#include <DD4hep/CartesianGridXZ.h>
 #include <DD4hep/Segmentations.h>
 #include <XML/XMLTags.h>
-
-#include "DD4hep/CartesianGridXZ.h"
 
 namespace det {
 namespace utils {

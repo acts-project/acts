@@ -18,9 +18,8 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <cmath>
+#include <cstdlib>
 #include <utility>
-
-#include <stdlib.h>
 
 Acts::TGeoCylinderDiscSplitter::TGeoCylinderDiscSplitter(
     const TGeoCylinderDiscSplitter::Config& cfg,

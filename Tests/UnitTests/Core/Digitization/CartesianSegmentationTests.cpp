@@ -19,9 +19,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>
+#include <cstdlib>
 #include <memory>
-
-#include <stdlib.h>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

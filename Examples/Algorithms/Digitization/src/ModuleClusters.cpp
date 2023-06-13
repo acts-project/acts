@@ -15,11 +15,10 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
-
-#include <stdlib.h>
 
 namespace ActsExamples {
 

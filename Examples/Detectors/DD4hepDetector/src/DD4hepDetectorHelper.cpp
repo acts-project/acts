@@ -16,8 +16,7 @@
 
 #include <cstddef>
 
-#include <DD4hep/Segmentations.h>
-
+#include "DD4hep/Segmentations.h"
 #include "DD4hep/CartesianGridXY.h"
 
 using namespace ActsExamples::DD4hep;

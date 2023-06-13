@@ -8,9 +8,8 @@
 
 #include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
 
+#include <cstdlib>
 #include <utility>
-
-#include <stdlib.h>
 
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTypes.hh"

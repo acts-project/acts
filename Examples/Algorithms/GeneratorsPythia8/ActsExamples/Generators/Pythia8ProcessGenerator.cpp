@@ -18,10 +18,7 @@
 #include <random>
 #include <utility>
 
-#include <Pythia8/Basics.h>
-#include <Pythia8/Event.h>
 #include <Pythia8/Pythia.h>
-#include <Pythia8/Settings.h>
 
 namespace {
 struct FrameworkRndmEngine : public Pythia8::RndmEngine {
