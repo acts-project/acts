@@ -59,8 +59,8 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   const int64_t numSpacepoints = inputValues.shape()[0];
   const int64_t numAllFeatures = inputValues.shape()[1];
 
-  auto opts = torch::TensorOptions().dtype(torch::kFloat32).device(device);
-  torch::Tensor inputTensor = torch::from_blob(inputValues.data(), {numSpacepoints, numAllFeatures}, opts);
+  auto opts = torch::TensorOptions().dtype(torch::kFloat32);
+  torch::Tensor inputTensor = torch::from_blob(inputValues.data(), {numSpacepoints, numAllFeatures}, opts).to(device);
 
   // **********
   // Embedding

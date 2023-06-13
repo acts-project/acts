@@ -45,6 +45,7 @@ TorchEdgeClassifier::~TorchEdgeClassifier() {}
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     std::any inputNodes, std::any inputEdges) {
   ACTS_DEBUG("Start edge classification");
+  c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
   const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
@@ -53,8 +54,6 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   if( m_cfg.numFeatures > nodes.size(1) ) {
     throw std::runtime_error("requested more features then available");
   }
-
-  c10::InferenceMode guard(true);
 
   std::vector<at::Tensor> results;
   results.reserve(m_cfg.nChunks);
