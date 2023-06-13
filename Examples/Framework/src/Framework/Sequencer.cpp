@@ -25,6 +25,7 @@
 #include <cctype>
 #include <chrono>
 #include <cstdint>
+#include <cstdlib>
 #include <numeric>
 #include <ostream>
 #include <ratio>
@@ -36,8 +37,6 @@
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
-
-#include <cstdlib>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/core/demangle.hpp>

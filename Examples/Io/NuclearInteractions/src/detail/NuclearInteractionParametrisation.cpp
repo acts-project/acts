@@ -18,8 +18,8 @@
 #include <memory>
 
 #include <Eigen/Eigenvalues>
-#include <TH1.h>
 #include <TMath.h>
+#include <TVectorF.h>
 #include <TVectorT.h>
 
 namespace ActsExamples {

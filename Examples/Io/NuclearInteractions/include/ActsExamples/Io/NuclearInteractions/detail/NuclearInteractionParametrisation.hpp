@@ -20,10 +20,7 @@
 #include <vector>
 
 #include <TH1F.h>
-#include <TVectorF.h>
 #include <TVectorFfwd.h>
-
-class TH1F;
 
 namespace ActsExamples {
 namespace detail {
