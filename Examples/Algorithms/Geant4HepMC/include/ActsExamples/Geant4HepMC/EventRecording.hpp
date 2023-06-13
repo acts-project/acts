@@ -17,15 +17,13 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 
-#include <functional>
 #include <memory>
 #include <mutex>
 
 #include <HepMC3/GenEvent.h>
 
-#include "G4VUserDetectorConstruction.hh"
-
 class G4RunManager;
+class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 
@@ -38,7 +36,7 @@ class EventRecording final : public ActsExamples::IAlgorithm {
     /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
 
-    G4VUserDetectorConstruction* detectorConstruction{nullptr};
+    std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction;
 
     /// random number seed 1
     int seed1 = 12345;
