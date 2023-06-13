@@ -65,16 +65,14 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   const int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
   std::vector<torch::jit::IValue> inputTensors;
   auto opts = torch::TensorOptions().dtype(torch::kFloat32).device(device);
-  torch::Tensor inputTensor =
-      torch::from_blob(inputValues.data(),
-                       {numSpacepoints, m_cfg.spacepointFeatures}, opts)
-          .to(torch::kFloat32);
+  torch::Tensor inputTensor = torch::from_blob(
+      inputValues.data(), {numSpacepoints, m_cfg.spacepointFeatures}, opts);
 
   // Clone models (solve memory leak? members can be const...)
   auto model = m_model->clone();
   model.to(device);
 
-  inputTensors.push_back(inputTensor.to(device));
+  inputTensors.push_back(inputTensor);
   auto output = model.forward(inputTensors).toTensor();
   inputTensors.clear();
 
