@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 #include "ActsExamples/Detector/DD4hepDetectorOptions.hpp"
@@ -39,6 +40,7 @@ int main(int argc, char* argv[]) {
   // Setup the DD4hep detector
   auto dd4hepCfg = Options::readDD4hepConfig<po::variables_map>(vars);
   auto geometrySvc = std::make_shared<DD4hep::DD4hepGeometryService>(dd4hepCfg);
+  auto detector = std::make_shared<DD4hep::DD4hepDetector>(geometrySvc);
   auto magneticField = ActsExamples::Options::readMagneticField(vars);
   auto uniqueTrackingGeometry =
       geometrySvc->trackingGeometry(Acts::GeometryContext());
@@ -46,6 +48,6 @@ int main(int argc, char* argv[]) {
       uniqueTrackingGeometry.release());
 
   return runGeant4Simulation(
-      vars, std::make_unique<DDG4DetectorConstruction>(*geometrySvc->lcdd()),
+      vars, std::make_unique<DDG4DetectorConstructionFactory>(detector),
       trackingGeometry);
 }

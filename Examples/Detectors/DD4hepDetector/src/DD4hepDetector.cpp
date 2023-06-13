@@ -18,6 +18,12 @@
 namespace ActsExamples {
 namespace DD4hep {
 
+DD4hepDetector::DD4hepDetector() = default;
+
+DD4hepDetector::DD4hepDetector(
+    std::shared_ptr<DD4hepGeometryService> _geometryService)
+    : geometryService(std::move(_geometryService)) {}
+
 DD4hepDetector::~DD4hepDetector() = default;
 
 auto DD4hepDetector::finalize(
