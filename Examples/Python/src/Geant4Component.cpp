@@ -16,6 +16,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Geant4/ActsSteppingActionList.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
@@ -53,6 +54,7 @@
 #include <G4VUserDetectorConstruction.hh>
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 class G4UserSteppingAction;
 class G4VUserPhysicsList;

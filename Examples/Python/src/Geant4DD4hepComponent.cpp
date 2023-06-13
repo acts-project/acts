@@ -12,9 +12,8 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <G4VUserDetectorConstruction.hh>
-#include <pybind11/detail/common.h>
-#include <pybind11/detail/descr.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 class G4VUserDetectorConstruction;
 

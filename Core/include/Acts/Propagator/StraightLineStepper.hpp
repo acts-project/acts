@@ -8,13 +8,6 @@
 
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <functional>
-#include <limits>
-#include <string>
-#include <tuple>
-
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
@@ -34,6 +27,13 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <limits>
+#include <string>
+#include <tuple>
 
 namespace Acts {
 template <class charge_t>

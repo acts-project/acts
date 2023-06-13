@@ -16,11 +16,10 @@
 
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <iosfwd>
 #include <stdexcept>
 #include <vector>
-
-#include <stdlib.h>
 
 namespace Acts {
 

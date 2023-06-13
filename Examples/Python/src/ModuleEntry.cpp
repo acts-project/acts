@@ -26,6 +26,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -34,16 +35,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include <pybind11/attr.h>
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
-#include <pybind11/detail/descr.h>
-#include <pybind11/detail/type_caster_base.h>
-#include <pybind11/gil.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
-#include <pyerrors.h>
-#include <stdlib.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
