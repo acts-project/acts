@@ -174,7 +174,9 @@ void VectorMultiTrajectory::clear_impl() {
   m_params.clear();
   m_cov.clear();
   m_meas.clear();
+  m_measOffset.clear();
   m_measCov.clear();
+  m_measCovOffset.clear();
   m_jac.clear();
   m_sourceLinks.clear();
   m_projectors.clear();
