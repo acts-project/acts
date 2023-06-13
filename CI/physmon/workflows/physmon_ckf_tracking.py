@@ -46,6 +46,11 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             fpeMasks=[
                 ("Core/src/Utilities/AnnealingUtility.cpp:43", "FLTUND", 1),
                 ("Core/src/Utilities/AnnealingUtility.cpp:40", "FLTUND", 1),
+                (
+                    "Core/include/Acts/Vertexing/AdaptiveMultiVertexFinder.ipp:119",
+                    "FLTUND",
+                    1,
+                ),
             ],
         )
 
