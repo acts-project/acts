@@ -66,7 +66,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // Embedding
   // **********
 
-  if( m_cfg.numFeatures > numAllFeatures ) {
+  if (m_cfg.numFeatures > numAllFeatures) {
     throw std::runtime_error("requested more features then available");
   }
 
@@ -75,7 +75,10 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   model.to(device);
 
   std::vector<torch::jit::IValue> inputTensors;
-  inputTensors.push_back(m_cfg.numFeatures < numAllFeatures ? inputTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}}) : inputTensor);
+  inputTensors.push_back(
+      m_cfg.numFeatures < numAllFeatures
+          ? inputTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}})
+          : inputTensor);
   auto output = model.forward(inputTensors).toTensor();
 
   ACTS_VERBOSE("Embedding space of the first SP:\n"

@@ -62,7 +62,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
 std::vector<std::vector<int>>
 ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
-    boost::multi_array<float, 2>& features, std::vector<int>& spacepointIDs) const {
+    boost::multi_array<float, 2>& features,
+    std::vector<int>& spacepointIDs) const {
   auto [nodes, edges] = (*m_cfg.graphConstructor)(features);
   std::any edge_weights;
 
@@ -77,7 +78,13 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
 }
 
 enum feat : std::size_t {
-  eR, ePhi, eZ, eCellCount, eCellSum, eClusterX, eClusterY
+  eR,
+  ePhi,
+  eZ,
+  eCellCount,
+  eCellSum,
+  eClusterX,
+  eClusterY
 };
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
@@ -86,7 +93,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   const auto& spacepoints = m_inputSpacePoints(ctx);
 
   std::optional<ClusterContainer> clusters;
-  if( m_inputClusters.isInitialized() ) {
+  if (m_inputClusters.isInitialized()) {
     clusters = m_inputClusters(ctx);
   }
 
@@ -100,8 +107,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   std::vector<int> spacepointIDs;
 
   spacepointIDs.reserve(spacepoints.size());
-  for (auto i=0ul; i<num_spacepoints; ++i) {
-    const auto &sp = spacepoints[i];
+  for (auto i = 0ul; i < num_spacepoints; ++i) {
+    const auto& sp = spacepoints[i];
     // For now just take the first index since does require one single index per
     // spacepoint
     const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
@@ -111,13 +118,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     features[i][ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
     features[i][eZ] = sp.z() / m_cfg.zScale;
 
-
-    if(clusters) {
-      const auto &cluster = clusters->at(sl.index());
-      const auto &chnls = cluster.channels;
+    if (clusters) {
+      const auto& cluster = clusters->at(sl.index());
+      const auto& chnls = cluster.channels;
 
       features[i][eCellCount] = cluster.channels.size();
-      features[i][eCellSum] = std::accumulate(chnls.begin(), chnls.end(), 0.0, [](double s, const Cluster::Cell &c){ return s + c.activation; });
+      features[i][eCellSum] = std::accumulate(
+          chnls.begin(), chnls.end(), 0.0,
+          [](double s, const Cluster::Cell& c) { return s + c.activation; });
       features[i][eClusterX] = cluster.sizeLoc0;
       features[i][eClusterY] = cluster.sizeLoc1;
     }
