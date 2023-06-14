@@ -15,28 +15,9 @@ with tempfile.TemporaryDirectory() as temp:
         events=500,
         numThreads=-1,
         logLevel=acts.logging.INFO,
-        fpeMasks=[
-            (
-                "Fatras/include/ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp:66",
-                acts.FpeType.FLTUND,
-                1,
-            ),
-            (
-                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:178",
-                acts.FpeType.FLTUND,
-                1,
-            ),
-            (
-                "Core/include/Acts/TrackFitting/detail/GsfUtils.hpp:187",
-                acts.FpeType.FLTUND,
-                1,
-            ),
-            (
-                "Acts/Utilities/GaussianMixtureReduction.hpp:198",
-                acts.FpeType.FLTUND,
-                1,
-            ),
-        ],
+        fpeMasks=acts.examples.FpeMask.fromFile(
+            Path(__file__).parent / "fpe_masks.yml"
+        ),
     )
 
     tp = Path(temp)
