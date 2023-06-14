@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 
+#include <memory>
 #include <string>
 #include <vector>
 
