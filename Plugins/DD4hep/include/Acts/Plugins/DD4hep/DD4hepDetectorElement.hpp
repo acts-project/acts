@@ -7,15 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
 #include <memory>
 #include <string>
 
-#include <DD4hep/Segmentations.h>
-
 #include "DD4hep/DetElement.h"
+#include "DD4hep/Segmentations.h"
 
 namespace Acts {
 

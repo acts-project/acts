@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -31,11 +32,10 @@
 #include <utility>
 #include <vector>
 
-#include <RtypesCore.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-#include <ctype.h>
 
+#include "RtypesCore.h"
 #include "TGeoArb8.h"
 #include "TGeoBBox.h"
 #include "TGeoBoolNode.h"
@@ -68,8 +68,8 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
     }
 
     // The sign of the axes
-    int xs = islower(axes.at(0)) != 0 ? -1 : 1;
-    int ys = islower(axes.at(1)) != 0 ? -1 : 1;
+    int xs = std::islower(axes.at(0)) != 0 ? -1 : 1;
+    int ys = std::islower(axes.at(1)) != 0 ? -1 : 1;
 
     // Create translation and rotation
     Vector3 t(scalor * translation[0], scalor * translation[1],
@@ -229,8 +229,8 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       }
 
       // The sign of the axes
-      int xs = islower(axes.at(0)) != 0 ? -1 : 1;
-      int ys = islower(axes.at(1)) != 0 ? -1 : 1;
+      int xs = std::islower(axes.at(0)) != 0 ? -1 : 1;
+      int ys = std::islower(axes.at(1)) != 0 ? -1 : 1;
 
       // Create translation and rotation
       Vector3 t(scalor * translation[0], scalor * translation[1],
@@ -334,8 +334,8 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   double thickness = 0.;
 
   // The sign of the axes
-  int xs = islower(axes.at(0)) != 0 ? -1 : 1;
-  int ys = islower(axes.at(1)) != 0 ? -1 : 1;
+  int xs = std::islower(axes.at(0)) != 0 ? -1 : 1;
+  int ys = std::islower(axes.at(1)) != 0 ? -1 : 1;
 
   // Set up the columns : only cyclic iterations are allowed
   Vector3 cx = xs * ax;

@@ -39,13 +39,13 @@
 #include <stdexcept>
 #include <utility>
 
-#include <DD4hep/Alignments.h>
-#include <DD4hep/DetElement.h>
-#include <DD4hep/Volumes.h>
-#include <RtypesCore.h>
 #include <boost/algorithm/string.hpp>
 
+#include "DD4hep/Alignments.h"
+#include "DD4hep/DetElement.h"
+#include "DD4hep/Volumes.h"
 #include "DDRec/DetectorData.h"
+#include "RtypesCore.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 

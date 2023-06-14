@@ -18,9 +18,9 @@
 #include <tuple>
 #include <utility>
 
-#include <RtypesCore.h>
 #include <boost/algorithm/string.hpp>
 
+#include "RtypesCore.h"
 #include "TGeoArb8.h"
 #include "TGeoBBox.h"
 #include "TGeoBoolNode.h"
