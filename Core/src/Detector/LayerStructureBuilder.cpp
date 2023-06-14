@@ -125,7 +125,12 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
 Acts::Experimental::LayerStructureBuilder::LayerStructureBuilder(
     const Acts::Experimental::LayerStructureBuilder::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
-    : IInternalStructureBuilder(), m_cfg(cfg), m_logger(std::move(logger)) {}
+    : IInternalStructureBuilder(), m_cfg(cfg), m_logger(std::move(logger)) {
+  if (m_cfg.surfacesProvider == nullptr) {
+    throw std::invalid_argument(
+        "LayerStructureBuilder: surfaces provider is nullptr.");
+  }
+}
 
 Acts::Experimental::InternalStructure
 Acts::Experimental::LayerStructureBuilder::construct(
@@ -141,7 +146,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
 
   // Retrieve the layer surfaces
   SurfaceCandidatesUpdator internalCandidatesUpdator;
-  auto internalSurfaces = m_cfg.surfaces();
+  auto internalSurfaces = m_cfg.surfacesProvider->surfaces(gctx);
   ACTS_DEBUG("Building internal layer structure from "
              << internalSurfaces.size() << " provided surfaces.");
 

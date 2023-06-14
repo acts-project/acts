@@ -11,11 +11,17 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/KdtSurfacesProvider.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
+#include "Acts/Detector/interface/IDetectorBuilder.hpp"
+#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/ISurfacesProvider.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/Volume.hpp"
@@ -122,11 +128,40 @@ void addExperimentaGeometry(Context& ctx) {
 
   using namespace Acts::Experimental;
 
-  { py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector"); }
+  {  // Detector definition
+    py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector");
+  }
 
-  {
+  {  // Detector volume definition
     py::class_<DetectorVolume, std::shared_ptr<DetectorVolume>>(
         m, "DetectorVolume");
+  }
+
+  {
+    // The surface hiearchy map
+    using SurfaceHierarchyMap =
+        Acts::GeometryHierarchyMap<std::shared_ptr<Surface>>;
+
+    py::class_<SurfaceHierarchyMap, std::shared_ptr<SurfaceHierarchyMap>>(
+        m, "SurfaceHierarchyMap");
+
+    // Extract volume / layer surfaces
+    mex.def("extractVolumeLayerSurfaces", [](const SurfaceHierarchyMap& smap,
+                                             bool sensitiveOnly) {
+      std::map<unsigned int,
+               std::map<unsigned int, std::vector<std::shared_ptr<Surface>>>>
+          surfaceVolumeLayerMap;
+      for (const auto& surface : smap) {
+        auto gid = surface->geometryId();
+        // Exclusion criteria
+        if (sensitiveOnly and gid.sensitive() == 0) {
+          continue;
+        };
+        surfaceVolumeLayerMap[gid.volume()][gid.layer()].push_back(surface);
+      }
+      // Return the surface volume map
+      return surfaceVolumeLayerMap;
+    });
   }
 
   {
@@ -140,8 +175,13 @@ void addExperimentaGeometry(Context& ctx) {
                           std::size_t>());
 
     // The internal layer structure builder
+    py::class_<Acts::Experimental::IInternalStructureBuilder,
+               std::shared_ptr<Acts::Experimental::IInternalStructureBuilder>>(
+        m, "IInternalStructureBuilder");
+
     auto lsBuilder =
-        py::class_<LayerStructureBuilder, IInternalStructureBuilder,
+        py::class_<LayerStructureBuilder,
+                   Acts::Experimental::IInternalStructureBuilder,
                    std::shared_ptr<LayerStructureBuilder>>(
             m, "LayerStructureBuilder")
             .def(py::init([](const LayerStructureBuilder::Config& config,
@@ -156,16 +196,33 @@ void addExperimentaGeometry(Context& ctx) {
             .def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(lsConfig, LayerStructureBuilder::Config);
-    ACTS_PYTHON_MEMBER(surfaces);
+    ACTS_PYTHON_MEMBER(surfacesProvider);
     ACTS_PYTHON_MEMBER(supports);
     ACTS_PYTHON_MEMBER(binnings);
     ACTS_PYTHON_MEMBER(nSegments);
     ACTS_PYTHON_MEMBER(auxilliary);
     ACTS_PYTHON_STRUCT_END();
 
+    // The internal layer structure builder
+    py::class_<Acts::Experimental::ISurfacesProvider,
+               std::shared_ptr<Acts::Experimental::ISurfacesProvider>>(
+        m, "ISurfacesProvider");
+
+    auto lsSurfaces =
+        py::class_<LayerStructureBuilder::SurfacesHolder,
+                   Acts::Experimental::ISurfacesProvider,
+                   std::shared_ptr<LayerStructureBuilder::SurfacesHolder>>(
+            m, "SurfacesHolder")
+            .def(py::init<std::vector<std::shared_ptr<Surface>>>());
+
     // The external volume structure builder
+    py::class_<Acts::Experimental::IExternalStructureBuilder,
+               std::shared_ptr<Acts::Experimental::IExternalStructureBuilder>>(
+        m, "IExternalStructureBuilder");
+
     auto vsBuilder =
-        py::class_<VolumeStructureBuilder, IExternalStructureBuilder,
+        py::class_<VolumeStructureBuilder,
+                   Acts::Experimental::IExternalStructureBuilder,
                    std::shared_ptr<VolumeStructureBuilder>>(
             m, "VolumeStructureBuilder")
             .def(py::init([](const VolumeStructureBuilder::Config& config,
@@ -186,8 +243,13 @@ void addExperimentaGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
 
     // Put them together to a detector volume
+    py::class_<Acts::Experimental::IDetectorComponentBuilder,
+               std::shared_ptr<Acts::Experimental::IDetectorComponentBuilder>>(
+        m, "IDetectorComponentBuilder");
+
     auto dvBuilder =
-        py::class_<DetectorVolumeBuilder, IDetectorComponentBuilder,
+        py::class_<DetectorVolumeBuilder,
+                   Acts::Experimental::IDetectorComponentBuilder,
                    std::shared_ptr<DetectorVolumeBuilder>>(
             m, "DetectorVolumeBuilder")
             .def(py::init([](const DetectorVolumeBuilder::Config& config,
@@ -195,7 +257,8 @@ void addExperimentaGeometry(Context& ctx) {
                              Acts::Logging::Level level) {
               return std::make_shared<DetectorVolumeBuilder>(
                   config, getDefaultLogger(name, level));
-            }));
+            }))
+            .def("construct", &DetectorVolumeBuilder::construct);
 
     auto dvConfig =
         py::class_<DetectorVolumeBuilder::Config>(dvBuilder, "Config")
@@ -210,7 +273,8 @@ void addExperimentaGeometry(Context& ctx) {
 
     // Cylindrical container builder
     auto ccBuilder =
-        py::class_<CylindricalContainerBuilder, IDetectorComponentBuilder,
+        py::class_<CylindricalContainerBuilder,
+                   Acts::Experimental::IDetectorComponentBuilder,
                    std::shared_ptr<CylindricalContainerBuilder>>(
             m, "CylindricalContainerBuilder")
             .def(py::init([](const CylindricalContainerBuilder::Config& config,
@@ -218,7 +282,8 @@ void addExperimentaGeometry(Context& ctx) {
                              Acts::Logging::Level level) {
               return std::make_shared<CylindricalContainerBuilder>(
                   config, getDefaultLogger(name, level));
-            }));
+            }))
+            .def("construct", &CylindricalContainerBuilder::construct);
 
     auto ccConfig =
         py::class_<CylindricalContainerBuilder::Config>(ccBuilder, "Config")
@@ -232,14 +297,15 @@ void addExperimentaGeometry(Context& ctx) {
 
     // Detector builder
     auto dBuilder =
-        py::class_<DetectorBuilder, IDetectorBuilder,
-                   std::shared_ptr<DetectorBuilder>>(m, "DetectorBuilder")
+        py::class_<DetectorBuilder, std::shared_ptr<DetectorBuilder>>(
+            m, "DetectorBuilder")
             .def(py::init([](const DetectorBuilder::Config& config,
                              const std::string& name,
                              Acts::Logging::Level level) {
               return std::make_shared<DetectorBuilder>(
                   config, getDefaultLogger(name, level));
-            }));
+            }))
+            .def("construct", &DetectorBuilder::construct);
 
     auto dConfig = py::class_<DetectorBuilder::Config>(dBuilder, "Config")
                        .def(py::init<>());

@@ -38,13 +38,6 @@ std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
   return uSurfaces;
 }
 
-/// @brief  Simple helper struct acting as a surface provider
-struct SurfaceProvider {
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
-
-  std::vector<std::shared_ptr<Acts::Surface>> operator()() { return surfaces; }
-};
-
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(Detector)
@@ -56,11 +49,12 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., -800, 2., 22u);
 
-  SurfaceProvider endcap{unpackSurfaces(rSurfaces)};
+  auto endcapSurfaces = std::make_shared<LayerStructureBuilder::SurfacesHolder>(
+      unpackSurfaces(rSurfaces));
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxilliary = "*** Endcap with 22 surfaces ***";
-  lsConfig.surfaces = endcap;
+  lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {ProtoBinning(Acts::binPhi,
                                     Acts::detail::AxisBoundaryType::Closed,
                                     -M_PI, M_PI, 22u, 1u)};
@@ -113,17 +107,18 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
 }
 
 // Test the creation of a cylindrical structure
-BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
+BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto cSurfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145, 72,
                                               3., 2., {32u, 14u});
 
-  SurfaceProvider barrel{unpackSurfaces(cSurfaces)};
+  auto barrelSurfaces = std::make_shared<LayerStructureBuilder::SurfacesHolder>(
+      unpackSurfaces(cSurfaces));
 
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxilliary = "*** Barrel with 448 surfaces ***";
-  lsConfig.surfaces = barrel;
+  lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {Acts::Experimental::ProtoBinning{
                            Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
                            -480., 480., 14u, 1u},

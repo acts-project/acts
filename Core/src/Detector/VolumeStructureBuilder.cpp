@@ -45,8 +45,8 @@ Acts::Experimental::VolumeStructureBuilder::construct(
   // The volume bounds to be constructed
   std::unique_ptr<VolumeBounds> volumeBounds = nullptr;
 
-  // The transform of the volume, default: identity
-  auto transform = Transform3::Identity();
+  // The transform from the extent
+  auto eTransform = Transform3::Identity();
   std::vector<ActsScalar> boundValues = m_cfg.boundValues;
 
   // This code dispatches into the dedicated volume types
@@ -73,9 +73,9 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         const auto& vExtent = m_cfg.extent.value();
         if (vExtent.constrains(binX) and vExtent.constrains(binY) and
             vExtent.constrains(binZ)) {
-          transform.pretranslate(Vector3(vExtent.medium(binX),
-                                         vExtent.medium(binY),
-                                         vExtent.medium(binZ)));
+          eTransform.pretranslate(Vector3(vExtent.medium(binX),
+                                          vExtent.medium(binY),
+                                          vExtent.medium(binZ)));
           boundValues = {0.5 * vExtent.interval(binX),
                          0.5 * vExtent.interval(binY),
                          0.5 * vExtent.interval(binZ)};
@@ -116,7 +116,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         ACTS_VERBOSE("Cylinder: estimate parameters from Extent.");
         const auto& vExtent = m_cfg.extent.value();
         if (vExtent.constrains(binR) and vExtent.constrains(binZ)) {
-          transform.pretranslate(Vector3(0., 0., vExtent.medium(binZ)));
+          eTransform.pretranslate(Vector3(0., 0., vExtent.medium(binZ)));
           boundValues = {vExtent.min(binR), vExtent.max(binR),
                          0.5 * vExtent.interval(binZ)};
           if (vExtent.constrains(binPhi)) {
@@ -177,5 +177,6 @@ Acts::Experimental::VolumeStructureBuilder::construct(
   }
   // Return the transform, the volume bounds, and some default portal
   // generators
-  return {transform, std::move(volumeBounds), defaultPortalGenerator()};
+  return {Transform3(m_cfg.transform * eTransform), std::move(volumeBounds),
+          defaultPortalGenerator()};
 }

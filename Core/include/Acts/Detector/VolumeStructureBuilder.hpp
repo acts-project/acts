@@ -24,15 +24,24 @@ namespace Experimental {
 
 /// This class provides the external detector volume structure, configured
 /// either from:
+///
 ///  - a volume extent
 ///  - from an array with volume bounds identification
 ///
+/// @note A starting transform (defaulted to identity) can be provided,
+/// in case of volume bounds construction from an ```Acts::Extent```
+/// object, the transform steming from the extent definition will
+/// be applied on top of the provided starting transform.
+/// In case of volume bounds construction from an array of values,
+/// the starting transform is already the final volume placement.
 class VolumeStructureBuilder : public IExternalStructureBuilder {
  public:
   /// Nexted configuration struct
   struct Config {
     /// A defined volume bound type
     VolumeBounds::BoundsType boundsType = VolumeBounds::BoundsType::eOther;
+    /// The starting transform
+    Transform3 transform = Transform3::Identity();
     /// The values (if already defined)
     std::vector<ActsScalar> boundValues = {};
     /// The optional extent to feed into the values

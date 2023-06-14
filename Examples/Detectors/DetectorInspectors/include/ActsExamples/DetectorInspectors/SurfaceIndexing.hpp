@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Detector/KdtSurfacesProvider.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
-#include "Acts/Detector/detail/KdtSurfacesProvider.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
@@ -37,7 +37,7 @@ std::vector<std::shared_ptr<Acts::Surface>> readSurfacesFromJson(
 template <size_t kDIM>
 struct SurfaceIndexing {
   /// The KDT structure definition
-  using KDT = Acts::Experimental::detail::KdtSurfaces<
+  using KDT = Acts::Experimental::KdtSurfaces<
       kDIM, 100u, Acts::Experimental::detail::PolyhedronReferenceGenerator>;
 
  public:
@@ -195,15 +195,15 @@ struct SurfaceIndexing {
     // A test context for this
     Acts::GeometryContext tContext;
 
-    Acts::Experimental::detail::KdtSurfacesProvider<kDIM> selectedSurfaces;
-    selectedSurfaces.kdt = m_surfacesKDT;
-    selectedSurfaces.region = lExtent;
+    auto selectedSurfaces =
+        std::make_shared<Acts::Experimental::KdtSurfacesProvider<kDIM>>(
+            m_surfacesKDT, lExtent);
 
     // Configure the layer structure builder
     Acts::Experimental::LayerStructureBuilder::Config lsConfig;
     lsConfig.auxilliary =
         std::string("*** Building ") + name + std::string(" ***");
-    lsConfig.surfaces = selectedSurfaces;
+    lsConfig.surfacesProvider = selectedSurfaces;
     lsConfig.binnings = lBinnings;
     lsConfig.supports = lSupports;
 

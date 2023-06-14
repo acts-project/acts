@@ -13,6 +13,7 @@
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
+#include "ActsExamples/Io/Json/JsonSurfacesReader.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 
 #include <fstream>
@@ -132,6 +133,20 @@ void addJson(Context& ctx) {
           Acts::ProtoDetector pDetector = jDetector["detector"];
           return pDetector;
         }));
+  }
+
+  {
+    auto sjOptions = py::class_<ActsExamples::JsonSurfacesReader::Options>(
+                         mex, "SurfaceJsonOptions")
+                         .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(sjOptions,
+                             ActsExamples::JsonSurfacesReader::Options);
+    ACTS_PYTHON_MEMBER(inputFile);
+    ACTS_PYTHON_MEMBER(jsonEntryPath);
+    ACTS_PYTHON_STRUCT_END();
+
+    mex.def("readSurfaceFromJson", ActsExamples::JsonSurfacesReader::read);
   }
 }
 }  // namespace Acts::Python
