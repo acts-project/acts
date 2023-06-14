@@ -16,9 +16,8 @@
 #include <string>
 #include <vector>
 
-#include "G4VPhysicalVolume.hh"
-
 class G4VPhysicalVolume;
+
 namespace Acts {
 namespace Experimental {
 class DetectorVolume;

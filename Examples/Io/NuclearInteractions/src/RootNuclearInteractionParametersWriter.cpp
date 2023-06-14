@@ -26,6 +26,7 @@
 #include <TDirectory.h>
 #include <TFile.h>
 #include <TH1.h>
+#include <TVectorT.h>
 
 namespace ActsExamples {
 struct AlgorithmContext;
