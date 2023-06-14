@@ -8,7 +8,11 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <mutex>
@@ -27,6 +31,9 @@ using TrackParameterWriter = WriterT<TrackParametersContainer>;
 /// speed. The event number is part of the written data.
 class RootTrackParameterWriter final : public TrackParameterWriter {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+  using HitSimHitsMap = IndexMultimap<Index>;
+
   struct Config {
     /// Input estimated track parameters collection.
     std::string inputTrackParameters;
@@ -59,18 +66,30 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   ~RootTrackParameterWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trackParams are parameters to write
-  ProcessCode writeT(
-      const AlgorithmContext& ctx,
-      const TrackParametersContainer& trackParams) final override;
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const TrackParametersContainer& trackParams) override;
 
  private:
-  Config m_cfg;             ///< The config class
+  Config m_cfg;  ///< The config class
+
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
+  ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree

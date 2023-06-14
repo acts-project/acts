@@ -23,7 +23,7 @@ void addPythia8(Context& ctx) {
   auto mex = ctx.get("examples");
 
   auto p8 = mex.def_submodule("pythia8");
-  ctx.modules["pythia8"] = &p8;
+  ctx.modules["pythia8"] = p8;
 
   using Gen = ActsExamples::Pythia8Generator;
   auto gen = py::class_<Gen, ActsExamples::EventGenerator::ParticlesGenerator,
@@ -36,7 +36,11 @@ void addPythia8(Context& ctx) {
       .def_readwrite("pdgBeam0", &Gen::Config::pdgBeam0)
       .def_readwrite("pdgBeam1", &Gen::Config::pdgBeam1)
       .def_readwrite("cmsEnergy", &Gen::Config::cmsEnergy)
-      .def_readwrite("settings", &Gen::Config::settings);
+      .def_readwrite("settings", &Gen::Config::settings)
+      .def_readwrite("printShortEventListing",
+                     &Gen::Config::printShortEventListing)
+      .def_readwrite("printLongEventListing",
+                     &Gen::Config::printLongEventListing);
 
   patchClassesWithConfig(p8);
 }

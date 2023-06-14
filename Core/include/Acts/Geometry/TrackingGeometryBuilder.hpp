@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -48,6 +49,10 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
 
     /// The optional material decorator for this
     std::shared_ptr<const IMaterialDecorator> materialDecorator = nullptr;
+
+    /// Optional geometry identifier hook to be used during closure
+    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
+        std::make_shared<GeometryIdentifierHook>();
   };
 
   /// Constructor
@@ -77,7 +82,7 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
 
   /// Get configuration method
   /// @return the current configuration
-  Config getConfiguration() const;
+  const Config& getConfiguration() const;
 
   /// set logging instance
   /// @param newLogger the new logging instance
@@ -93,10 +98,5 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;
 };
-
-inline TrackingGeometryBuilder::Config
-TrackingGeometryBuilder::getConfiguration() const {
-  return m_cfg;
-}
 
 }  // namespace Acts

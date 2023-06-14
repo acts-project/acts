@@ -12,15 +12,16 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
 
 namespace ActsExamples {
 
 /// Select particles by applying some selection cuts.
-class ParticleSelector final : public BareAlgorithm {
+class ParticleSelector final : public IAlgorithm {
  public:
   struct Config {
     /// The input particles collection.
@@ -46,16 +47,14 @@ class ParticleSelector final : public BareAlgorithm {
     // Momentum cuts.
     double ptMin = 0;
     double ptMax = std::numeric_limits<double>::infinity();
+    // Rest mass cuts
+    double mMin = 0;
+    double mMax = std::numeric_limits<double>::infinity();
     /// Remove charged particles.
     bool removeCharged = false;
     /// Remove neutral particles.
     bool removeNeutral = false;
   };
-
-  /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
-  /// Construct particle selector config from user variables.
-  static Config readConfig(const Options::Variables& vars);
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);
 
@@ -66,6 +65,11 @@ class ParticleSelector final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

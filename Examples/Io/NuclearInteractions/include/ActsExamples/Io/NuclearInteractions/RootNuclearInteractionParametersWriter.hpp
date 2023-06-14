@@ -54,19 +54,21 @@ class RootNuclearInteractionParametersWriter final
   /// @param level Message level declaration
   RootNuclearInteractionParametersWriter(const Config& config,
                                          Acts::Logging::Level level);
-  ~RootNuclearInteractionParametersWriter() final override;
+  ~RootNuclearInteractionParametersWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] event Fraction of an event that will be stored in @p
   /// m_eventFractionCollection
-  ProcessCode writeT(
-      const AlgorithmContext& /*ctx*/,
-      const ExtractedSimulationProcessContainer& event) final override;
+  ProcessCode writeT(const AlgorithmContext& /*ctx*/,
+                     const ExtractedSimulationProcessContainer& event) override;
 
  private:
   Config m_cfg;             ///< The config class

@@ -75,10 +75,10 @@ class IterativeVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(const vfitter_t& fitter, const Linearizer_t& lin, sfinder_t sfinder,
+    Config(const vfitter_t& fitter, Linearizer_t lin, sfinder_t sfinder,
            const IPEstimator& est)
         : vertexFitter(fitter),
-          linearizer(lin),
+          linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
           ipEst(est) {}
 
@@ -94,7 +94,7 @@ class IterativeVertexFinder {
     /// ImpactPointEstimator
     IPEstimator ipEst;
 
-    /// Vertex finder configuration variables
+    // Vertex finder configuration variables
     bool useBeamConstraint = false;
     double significanceCutSeeding = 10;
     double maximumChi2cutForSeeding = 36.;
@@ -105,6 +105,9 @@ class IterativeVertexFinder {
     bool doMaxTracksCut = false;
     int maxTracks = 5000;
     double cutOffTrackWeight = 0.01;
+    /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
+    /// decide if a track should be checked for reassignment to other vertices
+    double cutOffTrackWeightReassign = 1;
   };
 
   /// State struct
@@ -170,8 +173,6 @@ class IterativeVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance

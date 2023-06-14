@@ -12,7 +12,6 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
@@ -190,7 +189,7 @@ class CylinderVolumeBounds : public VolumeBounds {
 
  private:
   /// The internal version of the bounds can be float/double
-  std::array<double, eSize> m_values;
+  std::array<double, eSize> m_values{};
   /// Bounds of the inner CylinderBounds
   std::shared_ptr<const CylinderBounds> m_innerCylinderBounds{nullptr};
   /// Bounds of the inner CylinderBounds

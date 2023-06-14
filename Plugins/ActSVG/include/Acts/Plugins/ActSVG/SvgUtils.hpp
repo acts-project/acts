@@ -8,21 +8,21 @@
 
 #pragma once
 
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "actsvg/meta.hpp"
 
 #include <array>
 #include <fstream>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts {
-
 namespace Svg {
 
 struct Style {
   // Fill parameters
-  std::array<int, 3> fillColor = {0, 0, 0};
+  std::array<int, 3> fillColor = {255, 255, 255};
   ActsScalar fillOpacity = 1.;
 
   // Highlight parameters
@@ -32,7 +32,33 @@ struct Style {
   ActsScalar strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
 
+  ActsScalar highlightStrokeWidth = 2;
+  std::array<int, 3> highlightStrokeColor = {0, 0, 0};
+
+  std::vector<int> strokeDasharray = {};
+
+  unsigned int fontSize = 14u;
+
   unsigned int nSegments = 72u;
+
+  /// Conversion to fill and stroke object from the base library
+  /// @return a tuple of actsvg digestable objects
+  std::tuple<actsvg::style::fill, actsvg::style::stroke> fillAndStroke() const {
+    actsvg::style::fill fll;
+    fll._fc._rgb = fillColor;
+    fll._fc._opacity = fillOpacity;
+    fll._fc._hl_rgb = highlightColor;
+    fll._fc._highlight = highlights;
+
+    actsvg::style::stroke str;
+    str._sc._rgb = strokeColor;
+    str._sc._hl_rgb = highlightStrokeColor;
+    str._width = strokeWidth;
+    str._hl_width = highlightStrokeWidth;
+    str._dasharray = strokeDasharray;
+
+    return std::tie(fll, str);
+  }
 };
 
 /// Create a group
@@ -54,10 +80,10 @@ inline static actsvg::svg::object group(
 
 /// Helper method to a measure
 ///
-/// @param xStart the start position
-/// @param yStart the start position
-/// @param xEnd the start position
-/// @param yEnd the start position
+/// @param xStart the start position x
+/// @param yStart the start position y
+/// @param xEnd the end position x
+/// @param yEnd the end position y
 ///
 /// @return a single svg object as a measure
 inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
@@ -92,13 +118,45 @@ inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
 /// @param yMin the minimum y value
 /// @param yMax the maximum y value
 ///
-/// @retrun an svg object
+/// @return an svg object
 inline static actsvg::svg::object axesXY(ActsScalar xMin, ActsScalar xMax,
                                          ActsScalar yMin, ActsScalar yMax) {
   return actsvg::draw::x_y_axes(
       "x_y_axis",
       {static_cast<actsvg::scalar>(xMin), static_cast<actsvg::scalar>(xMax)},
       {static_cast<actsvg::scalar>(yMin), static_cast<actsvg::scalar>(yMax)});
+}
+
+// Helper method to draw axes
+///
+/// @param xPos the minimum x value
+/// @param yPos the maximum x value
+/// @param title the title of the info box
+/// @param info the text of the info box
+/// @param infoBoxStyle the style of the info box
+/// @param object the connected object
+///
+/// @return an svg object
+inline static actsvg::svg::object infoBox(ActsScalar xPos, ActsScalar yPos,
+                                          const std::string& title,
+                                          const std::vector<std::string>& info,
+                                          const Style& infoBoxStyle,
+                                          const actsvg::svg::object& object) {
+  auto [fill, stroke] = infoBoxStyle.fillAndStroke();
+
+  actsvg::style::font titleFont;
+  titleFont._fc = actsvg::style::color{{255, 255, 255}};
+  titleFont._size = infoBoxStyle.fontSize;
+
+  actsvg::style::fill infoFill = fill;
+  infoFill._fc._opacity = 0.4;
+  actsvg::style::font infoFont;
+  infoFont._size = infoBoxStyle.fontSize;
+
+  return actsvg::draw::connected_info_box(
+      object._id + "_infoBox",
+      {static_cast<actsvg::scalar>(xPos), static_cast<actsvg::scalar>(yPos)},
+      title, fill, titleFont, info, infoFill, infoFont, stroke, object);
 }
 
 /// Helper method to write to file
@@ -121,5 +179,4 @@ inline static void toFile(const std::vector<actsvg::svg::object>& objects,
 }
 
 }  // namespace Svg
-
 }  // namespace Acts

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import os
+
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 import acts
 import acts.examples
@@ -14,7 +14,6 @@ def runTruthTrackingKalman(
     field: acts.MagneticFieldProvider,
     outputDir: Path,
     digiConfigFile: Path,
-    decorators=[],
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
@@ -23,7 +22,6 @@ def runTruthTrackingKalman(
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
-        PhiConfig,
         ParticleConfig,
         addFatras,
         addDigitization,
@@ -70,6 +68,7 @@ def runTruthTrackingKalman(
         trackingGeometry,
         field,
         rnd=rnd,
+        enableInteractions=True,
     )
 
     addDigitization(
@@ -93,7 +92,11 @@ def runTruthTrackingKalman(
     )
 
     addKalmanTracks(
-        s, trackingGeometry, field, directNavigation, reverseFilteringMomThreshold
+        s,
+        trackingGeometry,
+        field,
+        directNavigation,
+        reverseFilteringMomThreshold,
     )
 
     # Output
@@ -122,7 +125,9 @@ def runTruthTrackingKalman(
     s.addWriter(
         acts.examples.TrackFinderPerformanceWriter(
             level=acts.logging.INFO,
-            inputProtoTracks="sortedprototracks" if directNavigation else "prototracks",
+            inputProtoTracks="sorted_truth_particle_tracks"
+            if directNavigation
+            else "truth_particle_tracks",
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "performance_track_finder.root"),

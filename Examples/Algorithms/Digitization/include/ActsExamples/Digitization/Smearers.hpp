@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cmath>
 #include <limits>
@@ -22,6 +23,22 @@
 
 namespace ActsExamples {
 namespace Digitization {
+
+/// Exact smearing of a single parameter.
+///
+struct Exact {
+  /// Call operator for the SmearFunction caller interface.
+  ///
+  /// @param value parameter to be smeared
+  /// @param rnd random generator to be used for the call
+  ///
+  /// @return a Result that is always ok(), and just returns
+  /// the value and a stddev of 0.0
+  Acts::Result<std::pair<double, double>> operator()(
+      double value, RandomEngine& /*rnd*/) const {
+    return std::pair{value, 0.0};
+  }
+};
 
 /// Gaussian smearing of a single parameter.
 ///
@@ -122,13 +139,13 @@ struct Uniform {
   /// Construct with a @param pitch standard deviation and @param range
   Uniform(double pitch, const std::pair<double, double>& range_)
       : binningData(Acts::open, Acts::binX,
-                    (range_.second - range_.first) / pitch, range_.first,
-                    range_.second) {}
+                    static_cast<size_t>((range_.second - range_.first) / pitch),
+                    range_.first, range_.second) {}
 
   /// Constructor with a binning data in order to get the bin borders.
   ///
   /// @param bu the binning data
-  Uniform(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
+  Uniform(Acts::BinningData&& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -159,13 +176,13 @@ struct Digital {
   /// Construct with a @param pitch standard deviation and @param range
   Digital(double pitch, const std::pair<double, double>& range_)
       : binningData(Acts::open, Acts::binX,
-                    (range_.second - range_.first) / pitch, range_.first,
-                    range_.second) {}
+                    static_cast<size_t>((range_.second - range_.first) / pitch),
+                    range_.first, range_.second) {}
 
   /// Constructor with a bin utility in order to get the bin borders.
   ///
   /// @param bu the bin utility within hich the parameter is allowed
-  Digital(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
+  Digital(Acts::BinningData&& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -174,7 +191,7 @@ struct Digital {
   ///
   /// @return a Result is uniformly distributed between bin borders
   Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomEngine& /*unused*/) const {
+      double value, RandomEngine& /*rnd*/) const {
     if (binningData.min < value and binningData.max > value) {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];

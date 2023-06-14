@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsConstruction) {
 
 BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeBoundsRecreation) {
   CutoutCylinderVolumeBounds original(5, 10, 15, 30, 25);
-  std::array<double, CutoutCylinderVolumeBounds::eSize> values;
+  std::array<double, CutoutCylinderVolumeBounds::eSize> values{};
   std::vector<double> valvector = original.values();
   std::copy_n(valvector.begin(), CutoutCylinderVolumeBounds::eSize,
               values.begin());
@@ -192,10 +192,9 @@ BOOST_AUTO_TEST_CASE(CutoutCylinderVolumeOrientedBoundaries) {
   for (auto& os : ccvbOrientedSurfaces) {
     auto onSurface = os.first->binningPosition(geoCtx, binR);
     auto osNormal = os.first->normal(geoCtx, onSurface);
-    double nDir = (double)os.second;
     // Check if you step inside the volume with the oriented normal
-    auto insideCcvb = onSurface + nDir * osNormal;
-    auto outsideCCvb = onSurface - nDir * osNormal;
+    Vector3 insideCcvb = onSurface + os.second * osNormal;
+    Vector3 outsideCCvb = onSurface - os.second * osNormal;
 
     BOOST_CHECK(ccvb.inside(insideCcvb));
     BOOST_CHECK(!ccvb.inside(outsideCCvb));

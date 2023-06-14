@@ -66,13 +66,11 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
   auto nzTransform = transform * Translation3(0., 0., -get(eHalfLengthZ));
   auto sf =
       Surface::makeShared<PlaneSurface>(nzTransform, m_faceXYTrapezoidBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Forward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
   //   (2) - At positive local z
   auto pzTransform = transform * Translation3(0., 0., get(eHalfLengthZ));
   sf = Surface::makeShared<PlaneSurface>(pzTransform, m_faceXYTrapezoidBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Backward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
 
   double poshOffset = get(eHalfLengthY) / std::tan(get(eAlpha));
   double neghOffset = get(eHalfLengthY) / std::tan(get(eBeta));
@@ -86,8 +84,7 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
                      s_planeYZ;
   sf =
       Surface::makeShared<PlaneSurface>(fbTransform, m_faceBetaRectangleBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Forward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
 
   // (4) - At point A, attached to alpha opening angle
   Vector3 faPosition(get(eHalfLengthXnegY) + poshOffset, 0., 0.);
@@ -96,8 +93,7 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
       AngleAxis3(-0.5 * M_PI + get(eAlpha), Vector3(0., 0., 1.)) * s_planeYZ;
   sf = Surface::makeShared<PlaneSurface>(faTransform,
                                          m_faceAlphaRectangleBounds);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Backward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
 
   // Face surfaces zx
   //   (5) - At negative local y
@@ -105,15 +101,13 @@ Acts::OrientedSurfaces Acts::TrapezoidVolumeBounds::orientedSurfaces(
       transform * Translation3(0., -get(eHalfLengthY), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(nxTransform,
                                          m_faceZXRectangleBoundsBottom);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Forward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Positive));
   //   (6) - At positive local y
   auto pxTransform =
       transform * Translation3(topShift, get(eHalfLengthY), 0.) * s_planeZX;
   sf = Surface::makeShared<PlaneSurface>(pxTransform,
                                          m_faceZXRectangleBoundsTop);
-  oSurfaces.push_back(
-      OrientedSurface(std::move(sf), NavigationDirection::Backward));
+  oSurfaces.push_back(OrientedSurface(std::move(sf), Direction::Negative));
 
   return oSurfaces;
 }

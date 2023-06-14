@@ -9,8 +9,16 @@ from acts import UnitConstants as u
 
 if "__main__" == __name__:
     import os
-    from digitization import configureDigitization
-    from acts.examples.reconstruction import addExaTrkx
+    import sys
+    from digitization import runDigitization
+    from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
+
+    backend = ExaTrkXBackend.Torch
+
+    if "onnx" in sys.argv:
+        backend = ExaTrkXBackend.Onnx
+    if "torch" in sys.argv:
+        backend = ExaTrkXBackend.Torch
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -23,35 +31,54 @@ if "__main__" == __name__:
         inputParticlePath = None
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
     geometrySelection = (
         srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
     )
     assert geometrySelection.exists()
 
-    onnxdir = Path(cwd=os.getcwd()) / "onnx_models"
-    assert (
-        (onnxdir / "embedding.onnx").exists()
-        and (onnxdir / "filtering.onnx").exists()
-        and (onnxdir / "gnn.onnx").exists()
+    digiConfigFile = (
+        srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
     )
+    assert digiConfigFile.exists()
 
-    s = acts.examples.Sequencer(events=2, numThreads=-1)
+    if backend == ExaTrkXBackend.Torch:
+        modelDir = Path.cwd() / "torchscript_models"
+        assert (modelDir / "embed.pt").exists()
+        assert (modelDir / "filter.pt").exists()
+        assert (modelDir / "gnn.pt").exists()
+    else:
+        modelDir = Path.cwd() / "onnx_models"
+        assert (modelDir / "embedding.onnx").exists()
+        assert (modelDir / "filtering.onnx").exists()
+        assert (modelDir / "gnn.onnx").exists()
+
+    s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
 
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())
 
-    s = configureDigitization(
+    s = runDigitization(
         trackingGeometry,
         field,
         outputDir,
-        inputParticlePath,
+        digiConfigFile=digiConfigFile,
+        particlesInput=inputParticlePath,
         outputRoot=True,
         outputCsv=True,
         s=s,
     )
 
-    addExaTrkx(s, trackingGeometry, geometrySelection, onnxdir, outputDir)
+    addExaTrkX(
+        s,
+        trackingGeometry,
+        geometrySelection,
+        modelDir,
+        outputDir,
+        backend=backend,
+    )
 
     s.run()

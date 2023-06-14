@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = sqrt(x * x + y * y);
+    double d0_v = std::hypot(x, y);
     double z0_v = z;
 
     // Start constructing nTracks tracks in the following
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = sqrt(x * x + y * y);
+    double d0_v = std::hypot(x, y);
     double z0_v = z;
 
     // Start constructing nTracks tracks in the following
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
     std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](InputTrack params) { return params.parameters(); };
+        [](const InputTrack& params) { return params.parameters(); };
 
     VertexFinder finder(cfg, extractParameters);
     VertexFinder::State state;

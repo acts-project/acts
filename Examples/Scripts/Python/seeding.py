@@ -84,7 +84,7 @@ def runSeeding(
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
         rnd=rnd,
-        preselectParticles=None,
+        preSelectParticles=None,
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
@@ -100,7 +100,8 @@ def runSeeding(
         addSeeding,
         TruthSeedRanges,
         ParticleSmearingSigmas,
-        SeedfinderConfigArg,
+        SeedFinderConfigArg,
+        SeedFinderOptionsArg,
     )
 
     addSeeding(
@@ -109,7 +110,7 @@ def runSeeding(
         field,
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.5, 2.5), nHits=(9, None)),
         ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
-        SeedfinderConfigArg(
+        SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(1 * u.mm, 60 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
@@ -118,8 +119,10 @@ def runSeeding(
             sigmaScattering=50,
             radLengthPerSeed=0.1,
             minPt=500 * u.MeV,
-            bFieldInZ=1.99724 * u.T,
             impactMax=3 * u.mm,
+        ),
+        SeedFinderOptionsArg(
+            bFieldInZ=1.99724 * u.T,
         ),
         acts.logging.VERBOSE,
         seedingAlgorithm=seedingAlgorithm,

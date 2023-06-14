@@ -1,11 +1,15 @@
 import os
+import shutil
 from typing import List, Union
 import contextlib
 
 import acts
-from acts.examples import BareAlgorithm
+from acts.examples import IAlgorithm
 
-geant4Enabled = any(v.startswith("G4") for v in os.environ.keys())
+geant4Enabled = (
+    any(v.startswith("G4") for v in os.environ.keys())
+    or "GEANT4_DATA_DIR" in os.environ
+)
 if geant4Enabled:
     try:
         import acts.examples.geant4
@@ -47,10 +51,45 @@ try:
 except ImportError:
     edm4hepEnabled = False
 
+try:
+    import acts.examples.onnx
+
+    onnxEnabled = True
+except ImportError:
+    onnxEnabled = False
+
+
+try:
+    import acts.examples
+
+    pythia8Enabled = hasattr(acts.examples, "pythia8")
+except ImportError:
+    pythia8Enabled = False
+
+
+exatrkxEnabled = shutil.which("nvidia-smi") is not None
+if exatrkxEnabled:
+    try:
+        from acts.examples import TrackFindingAlgorithmExaTrkX
+    except ImportError:
+        exatrkxEnabled = False
+
+try:
+    import podio
+
+    podioEnabled = True
+except ModuleNotFoundError:
+    podioEnabled = False
+
 isCI = os.environ.get("CI", "false") == "true"
 
+if isCI:
+    for k, v in dict(locals()).items():
+        if k.endswith("Enabled"):
+            locals()[k] = True
 
-class AssertCollectionExistsAlg(BareAlgorithm):
+
+class AssertCollectionExistsAlg(IAlgorithm):
     events_seen = 0
     collections: List[str]
 
@@ -66,7 +105,7 @@ class AssertCollectionExistsAlg(BareAlgorithm):
             self.collections = [collections]
         else:
             self.collections = collections
-        BareAlgorithm.__init__(self, name=name, level=level, *args, **kwargs)
+        IAlgorithm.__init__(self, name=name, level=level, *args, **kwargs)
 
     def execute(self, ctx):
         for collection in self.collections:

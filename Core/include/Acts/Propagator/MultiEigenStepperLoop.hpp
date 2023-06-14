@@ -20,9 +20,9 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -63,23 +63,35 @@ struct WeightedComponentReducerLoop {
     return toVector3(s.components, eFreeDir0).normalized();
   }
 
+  // TODO: Maybe we can cache this value and only update it when the parameters
+  // change
+  template <typename stepper_state_t>
+  static ActsScalar qop(const stepper_state_t& s) {
+    return std::accumulate(
+        s.components.begin(), s.components.end(), ActsScalar{0.},
+        [](const auto& sum, const auto& cmp) -> ActsScalar {
+          return sum + cmp.weight * cmp.state.pars[eFreeQOverP];
+        });
+  }
+
   template <typename stepper_state_t>
   static ActsScalar momentum(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum +
-                 cmp.weight * (1 / (cmp.state.pars[eFreeQOverP] / cmp.state.q));
+          return sum + cmp.weight * std::abs(cmp.state.absCharge /
+                                             cmp.state.pars[eFreeQOverP]);
         });
   }
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    return std::accumulate(s.components.begin(), s.components.end(),
-                           ActsScalar{0.},
-                           [](const auto& sum, const auto& cmp) -> ActsScalar {
-                             return sum + cmp.weight * cmp.state.q;
-                           });
+    return std::accumulate(
+        s.components.begin(), s.components.end(), ActsScalar{0.},
+        [](const auto& sum, const auto& cmp) -> ActsScalar {
+          return sum + cmp.weight * std::copysign(cmp.state.absCharge,
+                                                  cmp.state.pars[eFreeQOverP]);
+        });
   }
 
   template <typename stepper_state_t>
@@ -135,12 +147,12 @@ struct MaxMomentumReducerLoop {
   template <typename stepper_state_t>
   static ActsScalar momentum(const stepper_state_t& s) {
     const auto& cmp = maxMomenutmIt(s.components);
-    return 1.0 / (cmp.state.pars[eFreeQOverP] / cmp.state.q);
+    return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    return maxMomenutmIt(s.components).state.q;
+    return maxMomenutmIt(s.components).state.absCharge;
   }
 
   template <typename stepper_state_t>
@@ -181,6 +193,13 @@ class MultiEigenStepperLoop
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
 
+  /// How to extract a single component state when calling .boundState() or
+  /// .curvilinearState()
+  MixtureReductionMethod m_finalReductionMethod = MixtureReductionMethod::eMean;
+
+  /// The logger (used if no logger is provided by caller of methods)
+  std::unique_ptr<const Acts::Logger> m_logger;
+
   /// Small vector type for speeding up some computations where we need to
   /// accumulate stuff of components. We think 16 is a reasonable amount here.
   template <typename T>
@@ -206,8 +225,14 @@ class MultiEigenStepperLoop
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
   /// Constructor from a magnetic field and a optionally provided Logger
-  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField)
-      : EigenStepper<extensionlist_t, auctioneer_t>(bField) {}
+  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
+                        MixtureReductionMethod finalReductionMethod =
+                            MixtureReductionMethod::eMean,
+                        std::unique_ptr<const Logger> logger =
+                            getDefaultLogger("GSF", Logging::INFO))
+      : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
+        m_finalReductionMethod(finalReductionMethod),
+        m_logger(std::move(logger)) {}
 
   struct State {
     /// The struct that stores the individual components
@@ -221,9 +246,9 @@ class MultiEigenStepperLoop
     SmallVector<Component> components;
 
     bool covTransport = false;
-    NavigationDirection navDir;
+    Direction navDir;
     double pathAccumulated = 0.;
-    int steps = 0;
+    std::size_t steps = 0;
 
     /// geoContext
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -256,7 +281,7 @@ class MultiEigenStepperLoop
         const GeometryContext& gctx, const MagneticFieldContext& mctx,
         const std::shared_ptr<const MagneticFieldProvider>& bfield,
         const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        NavigationDirection ndir = NavigationDirection::Forward,
+        Direction ndir = Direction::Forward,
         double ssize = std::numeric_limits<double>::max(),
         double stolerance = s_onSurfaceTolerance)
         : navDir(ndir), geoContext(gctx), magContext(mctx) {
@@ -273,7 +298,7 @@ class MultiEigenStepperLoop
         components.push_back(
             {SingleState(gctx, bfield->makeCache(mctx), std::move(singlePars),
                          ndir, ssize, stolerance),
-             weight, Intersection3D::Status::reachable});
+             weight, Intersection3D::Status::onSurface});
       }
 
       if (std::get<2>(multipars.components().front())) {
@@ -287,10 +312,10 @@ class MultiEigenStepperLoop
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const MultiComponentBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = NavigationDirection::Forward,
+                  Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State(gctx, mctx, SingleStepper::m_bField, par, ndir, ssize,
+    return State(gctx, mctx, SingleStepper::m_bField, par, navDir, ssize,
                  stolerance);
   }
 
@@ -304,8 +329,7 @@ class MultiEigenStepperLoop
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface,
-      const NavigationDirection navDir = NavigationDirection::Forward,
+      const Surface& surface, const Direction navDir = Direction::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     for (auto& component : state.components) {
       SingleStepper::resetState(component.state, boundParams, cov, surface,
@@ -343,7 +367,6 @@ class MultiEigenStepperLoop
     // ComponentProxy and the ConstComponentProxy
     auto status() const { return cmp.status; }
     auto weight() const { return cmp.weight; }
-    auto charge() const { return cmp.state.q; }
     auto pathAccumulated() const { return cmp.state.pathAccumulated; }
     const auto& pars() const { return cmp.state.pars; }
     const auto& derivative() const { return cmp.state.derivative; }
@@ -383,7 +406,6 @@ class MultiEigenStepperLoop
     using Base = ComponentProxyBase<typename State::Component>;
 
     // Import the const accessors from ComponentProxyBase
-    using Base::charge;
     using Base::cmp;
     using Base::cov;
     using Base::derivative;
@@ -407,7 +429,6 @@ class MultiEigenStepperLoop
     // ComponentProxyBase
     auto& status() { return cmp.status; }
     auto& weight() { return cmp.weight; }
-    auto& charge() { return cmp.state.q; }
     auto& pathAccumulated() { return cmp.state.pathAccumulated; }
     auto& pars() { return cmp.state.pars; }
     auto& derivative() { return cmp.state.derivative; }
@@ -519,11 +540,15 @@ class MultiEigenStepperLoop
   }
 
   /// Get the number of components
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
   std::size_t numberComponents(const State& state) const {
     return state.components.size();
   }
 
   /// Remove missed components from the component state
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
   void removeMissedComponents(State& state) const {
     auto new_end = std::remove_if(
         state.components.begin(), state.components.end(), [](const auto& cmp) {
@@ -533,10 +558,31 @@ class MultiEigenStepperLoop
     state.components.erase(new_end, state.components.end());
   }
 
+  /// Reweight the components
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  void reweightComponents(State& state) const {
+    ActsScalar sumOfWeights = 0.0;
+    for (const auto& cmp : state.components) {
+      sumOfWeights += cmp.weight;
+    }
+    for (auto& cmp : state.components) {
+      cmp.weight /= sumOfWeights;
+    }
+  }
+
   /// Reset the number of components
+  ///
+  /// @param [in,out] state  The stepping state (thread-local cache)
   void clearComponents(State& state) const { state.components.clear(); }
 
   /// Add a component to the Multistepper
+  ///
+  /// @param [in,out] state  The stepping state (thread-local cache)
+  /// @param [in] pars Parameters of the component to add
+  /// @param [in] weight Weight of the component to add
+  ///
+  /// @note: It is not ensured that the weights are normalized afterwards
   /// @note This function makes no garantuees about how new components are
   /// initialized, it is up to the caller to ensure that all components are
   /// valid in the end.
@@ -604,10 +650,10 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
-  /// @param logger [in] A @c LoggerWrapper instance
+  /// @param logger [in] A @c Loggerinstance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      LoggerWrapper logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger()) const {
     using Status = Intersection3D::Status;
 
     std::array<int, 4> counts = {0, 0, 0, 0};
@@ -616,6 +662,14 @@ class MultiEigenStepperLoop
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
           *this, component.state, surface, bcheck, logger);
       ++counts[static_cast<std::size_t>(component.status)];
+    }
+
+    // If at least one component is on a surface, we can remove all missed
+    // components before the step. If not, we must keep them for the case that
+    // all components miss and we need to retarget
+    if (counts[static_cast<std::size_t>(Status::onSurface)] > 0) {
+      removeMissedComponents(state);
+      reweightComponents(state);
     }
 
     ACTS_VERBOSE("Component status wrt "
@@ -636,6 +690,15 @@ class MultiEigenStepperLoop
         counts[static_cast<std::size_t>(Status::reachable)] > 0) {
       state.stepCounterAfterFirstComponentOnSurface = 0;
       ACTS_VERBOSE("started stepCounterAfterFirstComponentOnSurface");
+    }
+
+    // If there are no components onSurface, but the counter is switched on
+    // (e.g., if the navigator changes the target surface), we need to switch it
+    // off again
+    if (state.stepCounterAfterFirstComponentOnSurface &&
+        counts[static_cast<std::size_t>(Status::onSurface)] == 0) {
+      state.stepCounterAfterFirstComponentOnSurface.reset();
+      ACTS_VERBOSE("switch off stepCounterAfterFirstComponentOnSurface");
     }
 
     // This is a 'any_of' criterium. As long as any of the components has a
@@ -733,8 +796,9 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
     std::stringstream ss;
-    for (const auto& component : state.components)
+    for (const auto& component : state.components) {
       ss << component.state.stepSize.toString() << " || ";
+    }
 
     return ss.str();
   }
@@ -825,12 +889,14 @@ class MultiEigenStepperLoop
   ///
   /// @param [in,out] state is the propagation state associated with the track
   /// parameters that are being propagated.
+  /// @param [in] navigator is the navigator of the propagation
   ///
   /// The state contains the desired step size. It can be negative during
   /// backwards track propagation, and since we're using an adaptive
   /// algorithm, it can be modified by the stepper class during propagation.
-  template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const;
+  template <typename propagator_state_t, typename navigator_t>
+  Result<double> step(propagator_state_t& state,
+                      const navigator_t& navigator) const;
 };
 
 }  // namespace Acts

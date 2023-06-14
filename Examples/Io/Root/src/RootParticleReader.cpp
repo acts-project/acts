@@ -10,9 +10,11 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 
 #include <iostream>
 
@@ -25,9 +27,7 @@ ActsExamples::RootParticleReader::RootParticleReader(
     Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_cfg(config),
-      m_logger(Acts::getDefaultLogger(name(), level)),
-      m_events(0),
-      m_inputChain(nullptr) {
+      m_logger(Acts::getDefaultLogger(name(), level)) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   if (m_cfg.filePath.empty()) {
@@ -36,6 +36,10 @@ ActsExamples::RootParticleReader::RootParticleReader(
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
+
+  m_outputParticles.initialize(m_cfg.particleCollection);
+  m_outputPrimaryVertices.maybeInitialize(m_cfg.vertexPrimaryCollection);
+  m_outputSecondaryVertices.maybeInitialize(m_cfg.vertexSecondaryCollection);
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_id", &m_eventId);
@@ -141,11 +145,14 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     for (unsigned int i = 0; i < nParticles; i++) {
       SimParticle p;
 
+      p.setProcess(static_cast<ActsFatras::ProcessType>((*m_process)[i]));
+      p.setPdg(static_cast<Acts::PdgParticle>((*m_particleType)[i]));
+      p.setCharge((*m_q)[i]);
+      p.setMass((*m_m)[i]);
       p.setParticleId((*m_particleId)[i]);
       p.setPosition4((*m_vx)[i], (*m_vy)[i], (*m_vz)[i], (*m_vt)[i]);
       p.setDirection((*m_px)[i], (*m_py)[i], (*m_pz)[i]);
       p.setAbsoluteMomentum((*m_p)[i]);
-      p.setCharge((*m_q)[i]);
 
       particleContainer.insert(particleContainer.end(), p);
       priVtxCollection.push_back((*m_vertexPrimary)[i]);
@@ -153,17 +160,14 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     }
 
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.particleCollection,
-                           std::move(particleContainer));
+    m_outputParticles(context, std::move(particleContainer));
 
     if (not m_cfg.vertexPrimaryCollection.empty()) {
-      context.eventStore.add(m_cfg.vertexPrimaryCollection,
-                             std::move(priVtxCollection));
+      m_outputPrimaryVertices(context, std::move(priVtxCollection));
     }
 
     if (not m_cfg.vertexSecondaryCollection.empty()) {
-      context.eventStore.add(m_cfg.vertexSecondaryCollection,
-                             std::move(secVtxCollection));
+      m_outputSecondaryVertices(context, std::move(secVtxCollection));
     }
   }
   // Return success flag

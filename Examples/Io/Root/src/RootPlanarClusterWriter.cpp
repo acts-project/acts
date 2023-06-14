@@ -35,6 +35,9 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
@@ -85,13 +88,15 @@ ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
+  m_outputFile->Close();
+
   ACTS_INFO("Wrote clusters to tree '" << m_cfg.treeName << "' in '"
                                        << m_cfg.filePath << "'");
-  m_outputFile->Close();
+
   return ProcessCode::SUCCESS;
 }
 
@@ -100,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
     const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
         clusters) {
   // retrieve simulated hits
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = m_inputSimHits(ctx);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -165,8 +170,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       }
       // write hit-particle truth association
       // each hit can have multiple particles, e.g. in a dense environment
-      const auto& sl = static_cast<const Acts::DigitizationSourceLink&>(
-          cluster.sourceLink());
+      const auto& sl = cluster.sourceLink().get<Acts::DigitizationSourceLink>();
       for (auto idx : sl.indices()) {
         auto it = simHits.nth(idx);
         if (it == simHits.end()) {

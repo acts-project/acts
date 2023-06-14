@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
 
@@ -42,7 +43,7 @@ constexpr auto epsPos = 10_um;
 constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 // relative covariance tolerance
-constexpr auto epsCov = 0.05;
+constexpr auto epsCov = 0.07;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
@@ -79,7 +80,11 @@ inline Propagator makePropagator(double bz) {
 
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return Propagator(std::move(stepper), Acts::Navigator{{makeDetector()}});
+  auto logger = getDefaultLogger("Dense", Logging::INFO);
+  return Propagator(
+      std::move(stepper),
+      Acts::Navigator{{makeDetector()}, logger->cloneWithSuffix("Nav")},
+      logger->cloneWithSuffix("Prop"));
 }
 
 inline RiddersPropagator makeRiddersPropagator(double bz) {

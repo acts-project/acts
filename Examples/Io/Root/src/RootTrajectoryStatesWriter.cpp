@@ -12,7 +12,6 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -24,6 +23,7 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <ios>
+#include <limits>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -59,6 +59,11 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -219,39 +224,28 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
 }
 
 ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  m_outputFile->Close();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write states of trajectories to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
-  }
+ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::finalize() {
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote states of trajectories to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
+
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-  using HitSimHitsMap = IndexMultimap<Index>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
-
   auto& gctx = ctx.geoContext;
   // Read additional input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto& hitSimHitsMap =
-      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -266,17 +260,19 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
-      continue;
-    }
-
     // The trajectory index
     m_multiTrajNr = itraj;
 
-    // The trajectory entry indices and the multiTrajectory
-    const auto& mj = traj.multiTrajectory();
+    // The trajectory entry indices
     const auto& trackTips = traj.tips();
+
+    // Dont write empty MultiTrajectory
+    if (trackTips.empty()) {
+      continue;
+    }
+
+    // The MultiTrajectory
+    const auto& mj = traj.multiTrajectory();
 
     // Loop over the entry indices for the subtrajectories
     for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {
@@ -296,17 +292,18 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
                                     particleHitCounts);
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        auto barcode = particleHitCounts.front().particleId.value();
+        auto barcode = particleHitCounts.front().particleId;
         // Find the truth particle via the barcode
         auto ip = particles.find(barcode);
         if (ip != particles.end()) {
           const auto& particle = *ip;
-          ACTS_DEBUG("Find the truth particle with barcode = " << barcode);
+          ACTS_VERBOSE("Find the truth particle with barcode "
+                       << barcode << "=" << barcode.value());
           // Get the truth particle charge
-          truthQ = particle.charge();
+          truthQ = static_cast<int>(particle.charge());
         } else {
-          ACTS_WARNING("Truth particle with barcode = " << barcode
-                                                        << " not found!");
+          ACTS_DEBUG("Truth particle with barcode "
+                     << barcode << "=" << barcode.value() << " not found!");
         }
       }
 
@@ -323,8 +320,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
-        const auto& sl =
-            static_cast<const IndexSourceLink&>(state.uncalibrated());
+        auto sl =
+            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         const auto hitIdx = sl.index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =
@@ -376,8 +373,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         m_pathLength.push_back(state.pathLength());
 
         // expand the local measurements into the full bound space
-        Acts::BoundVector meas =
-            state.projector().transpose() * state.calibrated();
+        Acts::BoundVector meas = state.effectiveProjector().transpose() *
+                                 state.effectiveCalibrated();
         // extract local and global position
         Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
         Acts::Vector3 mom(1, 1, 1);
@@ -426,12 +423,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
               //
               // local hit residual info
               auto H = state.effectiveProjector();
-              auto resCov = state.effectiveCalibratedCovariance() +
-                            H * covariance * H.transpose();
+              auto hitCov = state.effectiveCalibratedCovariance();
+              auto resCov = hitCov + H * covariance * H.transpose();
               auto res = state.effectiveCalibrated() - H * parameters;
+
               m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
               m_err_x_hit.push_back(
-                  sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                  sqrt(hitCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
               m_pull_x_hit.push_back(
                   res[Acts::eBoundLoc0] /
                   sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
@@ -442,7 +440,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
                     sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
                 m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
                 m_err_y_hit.push_back(
-                    sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                    sqrt(hitCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
               } else {
                 float nan = std::numeric_limits<float>::quiet_NaN();
                 m_pull_y_hit.push_back(nan);
@@ -505,9 +503,12 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
             m_pull_eQOP[ipar].push_back(
                 (parameters[Acts::eBoundQOverP] - truthQOP) /
                 sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+            double sigmaTime =
+                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
             m_pull_eT[ipar].push_back(
-                (parameters[Acts::eBoundTime] - truthTIME) /
-                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+                sigmaTime == 0.0
+                    ? std::numeric_limits<double>::quiet_NaN()
+                    : (parameters[Acts::eBoundTime] - truthTIME) / sigmaTime);
 
             // further track parameter info
             Acts::FreeVector freeParams =

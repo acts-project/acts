@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -29,10 +30,9 @@ class GainMatrixUpdater {
                      false>::Parameters filtered;
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Covariance filteredCovariance;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Measurement calibrated;
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::MeasurementCovariance calibratedCovariance;
+    // This is used to build a covariance matrix view in the .cpp file
+    double* calibrated;
+    double* calibratedCovariance;
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Projector projector;
     unsigned int calibratedSize;
@@ -47,11 +47,10 @@ class GainMatrixUpdater {
   /// @param[in] direction The navigation direction
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(
-      const GeometryContext& gctx,
-      typename MultiTrajectory<traj_t>::TrackStateProxy trackState,
-      NavigationDirection direction = NavigationDirection::Forward,
-      LoggerWrapper logger = getDummyLogger()) const {
+  Result<void> operator()(const GeometryContext& gctx,
+                          typename traj_t::TrackStateProxy trackState,
+                          Direction direction = Direction::Forward,
+                          const Logger& logger = getDummyLogger()) const {
     (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
@@ -81,8 +80,17 @@ class GainMatrixUpdater {
             trackState.predictedCovariance(),
             trackState.filtered(),
             trackState.filteredCovariance(),
-            trackState.calibrated(),
-            trackState.calibratedCovariance(),
+            // This abuses an incorrectly sized vector / matrix to access the
+            // data pointer! This works (don't use the matrix as is!), but be
+            // careful!
+            trackState
+                .template calibrated<
+                    MultiTrajectoryTraits::MeasurementSizeMax>()
+                .data(),
+            trackState
+                .template calibratedCovariance<
+                    MultiTrajectoryTraits::MeasurementSizeMax>()
+                .data(),
             trackState.projector(),
             trackState.calibratedSize(),
         },
@@ -95,8 +103,8 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, NavigationDirection direction,
-      LoggerWrapper logger) const;
+      InternalTrackState trackState, Direction direction,
+      const Logger& logger) const;
 };
 
 }  // namespace Acts

@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 
@@ -217,7 +218,7 @@ struct SurfaceArrayCreatorFixture {
   }
 };
 
-void draw_surfaces(SrfVec surfaces, const std::string& fname) {
+void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
   std::ofstream os;
   os.open(fname);
 

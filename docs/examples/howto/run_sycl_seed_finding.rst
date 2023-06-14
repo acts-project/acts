@@ -56,7 +56,7 @@ Also, by setting the variable ``SYCL_SEARCH_SUPPORT_LIBRARIES`` it is possible t
 Trying the code
 ---------------
 
-We can build the unit test ActsUnitTestSeedfinderSycl for this purpose (actually, this is not a unit test).
+We can build the unit test ActsUnitTestSeedFinderSycl for this purpose (actually, this is not a unit test).
 The test compares the results of the CPU and SYCL seed finding algorithm in terms of speed and precision.
 
 It takes the following command-line options:
@@ -97,7 +97,7 @@ In the end, we should see something like this:
 
 .. code-block:: bash
 
-    [bash][atspot01]:build > SYCL_BE=PI_CUDA bin/ActsUnitTestSeedfinderSycl -f /atlas/acts_data/atlas_seeds/pu200/evt10.txt -m
+    [bash][atspot01]:build > SYCL_BE=PI_CUDA bin/ActsUnitTestSeedFinderSycl -f /atlas/acts_data/atlas_seeds/pu200/evt10.txt -m
         11:48:57    QueueWrapper   INFO      Running on: GeForce RTX 2060
         read 360734 SP from file /atlas/acts_data/atlas_seeds/pu200/evt10.txt
         Preparation time: 0.637518

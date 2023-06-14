@@ -25,6 +25,8 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
+#include <ostream>
+#include <string>
 
 namespace Acts {
 
@@ -66,6 +68,9 @@ class Surface : public virtual GeometryObject,
     Curvilinear = 6,
     Other = 7
   };
+
+  /// Helper strings for screen output
+  static std::array<std::string, SurfaceType::Other> s_surfaceTypeNames;
 
  protected:
   /// Constructor with Transform3 as a shared object
@@ -239,6 +244,11 @@ class Surface : public virtual GeometryObject,
   const std::shared_ptr<const ISurfaceMaterial>& surfaceMaterialSharedPtr()
       const;
 
+  /// Assign a detector element
+  ///
+  /// @param detelement Detector element which is represented by this surface
+  void assignDetectorElement(const DetectorElementBase& detelement);
+
   /// Assign the surface material description
   ///
   /// The material is usually derived in a complicated way and loaded from
@@ -388,12 +398,13 @@ class Surface : public virtual GeometryObject,
   /// @param position The position to start from
   /// @param direction The direction at start
   /// @param bcheck the Boundary Check
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  virtual SurfaceIntersection intersect(const GeometryContext& gctx,
-                                        const Vector3& position,
-                                        const Vector3& direction,
-                                        const BoundaryCheck& bcheck) const = 0;
+  virtual SurfaceIntersection intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
@@ -401,6 +412,11 @@ class Surface : public virtual GeometryObject,
   /// @param sl is the ostream to be dumped into
   virtual std::ostream& toStream(const GeometryContext& gctx,
                                  std::ostream& sl) const;
+
+  /// Output into a std::string
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  std::string toString(const GeometryContext& gctx) const;
 
   /// Return properly formatted class name
   virtual std::string name() const = 0;

@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -40,6 +39,11 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map input collection");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
+
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
@@ -84,7 +88,7 @@ ActsExamples::RootMeasurementWriter::~RootMeasurementWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::finalize() {
   /// Close the file if it's yours
   m_outputFile->cd();
   for (auto dTree = m_outputTrees.begin(); dTree != m_outputTrees.end();
@@ -98,13 +102,12 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& hitSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
-      m_cfg.inputMeasurementSimHitsMap);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   ClusterContainer clusters;
   if (not m_cfg.inputClusters.empty()) {
-    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
+    clusters = m_inputClusters(ctx);
   }
 
   // Exclusive access to the tree while writing

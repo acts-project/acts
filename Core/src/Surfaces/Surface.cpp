@@ -10,10 +10,16 @@
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <utility>
+
+std::array<std::string, Acts::Surface::SurfaceType::Other>
+    Acts::Surface::s_surfaceTypeNames = {
+        "Cone", "Cylinder", "Disc", "Perigee", "Plane", "Straw", "Curvilinear"};
 
 Acts::Surface::Surface(const Transform3& transform)
     : GeometryObject(), m_transform(transform) {}
@@ -31,7 +37,6 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * other.transform(gctx)),
-      m_associatedLayer(nullptr),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Acts::Surface::~Surface() = default;
@@ -210,6 +215,12 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
   return sl;
 }
 
+std::string Acts::Surface::toString(const GeometryContext& gctx) const {
+  std::stringstream ss;
+  toStream(gctx, ss);
+  return ss.str();
+}
+
 bool Acts::Surface::operator!=(const Acts::Surface& sf) const {
   return !(operator==(sf));
 }
@@ -221,7 +232,7 @@ Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
 }
 
 Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
-                                    const Vector3& /*unused*/) const {
+                                    const Vector3& /*position*/) const {
   return normal(gctx, Vector2(Vector2::Zero()));
 }
 
@@ -239,8 +250,8 @@ bool Acts::Surface::insideBounds(const Vector2& lposition,
 }
 
 Acts::RotationMatrix3 Acts::Surface::referenceFrame(
-    const GeometryContext& gctx, const Vector3& /*unused*/,
-    const Vector3& /*unused*/) const {
+    const GeometryContext& gctx, const Vector3& /*position*/,
+    const Vector3& /*momentum*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
@@ -326,7 +337,7 @@ const Acts::DetectorElementBase* Acts::Surface::associatedDetectorElement()
 }
 
 const Acts::Layer* Acts::Surface::associatedLayer() const {
-  return (m_associatedLayer);
+  return m_associatedLayer;
 }
 
 const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
@@ -336,6 +347,14 @@ const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
 const std::shared_ptr<const Acts::ISurfaceMaterial>&
 Acts::Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
+}
+
+void Acts::Surface::assignDetectorElement(
+    const DetectorElementBase& detelement) {
+  m_associatedDetElement = &detelement;
+  // resetting the transform as it will be handled through the detector element
+  // now
+  m_transform = Transform3::Identity();
 }
 
 void Acts::Surface::assignSurfaceMaterial(

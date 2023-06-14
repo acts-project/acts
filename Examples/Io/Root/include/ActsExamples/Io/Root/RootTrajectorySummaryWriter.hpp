@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
@@ -39,6 +41,8 @@ namespace ActsExamples {
 class RootTrajectorySummaryWriter final
     : public WriterT<TrajectoriesContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// Input (fitted) trajectories collection
     std::string inputTrajectories;
@@ -59,20 +63,28 @@ class RootTrajectorySummaryWriter final
   /// @param config Configuration struct
   /// @param level Message level declaration
   RootTrajectorySummaryWriter(const Config& config, Acts::Logging::Level level);
-  ~RootTrajectorySummaryWriter() final override;
+  ~RootTrajectorySummaryWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trajectories are what to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
  private:
-  Config m_cfg;             ///< The config class
+  Config m_cfg;  ///< The config class
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMaps"};
+
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree

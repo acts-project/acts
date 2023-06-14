@@ -10,15 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
-#include <algorithm>
 #include <array>
-#include <iostream>
-#include <limits>
-#include <ostream>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -313,8 +309,8 @@ class AxisAlignedBoundingBox {
    */
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::ostream& svg(std::ostream& os, value_type w, value_type h,
-                    value_type unit = 10, std::string label = "",
-                    std::string fillcolor = "grey") const;
+                    value_type unit = 10, const std::string& label = "",
+                    const std::string& fillcolor = "grey") const;
 
  private:
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>

@@ -10,10 +10,12 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
 #include <memory>
@@ -25,7 +27,7 @@ struct FatrasSimulation;
 }
 
 /// Fast track simulation using the Acts propagation and navigation.
-class FatrasSimulation final : public BareAlgorithm {
+class FatrasSimulation final : public IAlgorithm {
  public:
   struct Config {
     /// The particles input collection.
@@ -50,15 +52,15 @@ class FatrasSimulation final : public BareAlgorithm {
     /// Minimal absolute momentum for particles to be simulated.
     double pMin = 0.5 * Acts::UnitConstants::GeV;
     /// Simulate (multiple) scattering for charged particles.
-    bool emScattering = false;
+    bool emScattering = true;
     /// Simulate ionisiation/excitation energy loss of charged particles.
-    bool emEnergyLossIonisation = false;
+    bool emEnergyLossIonisation = true;
     /// Simulate radiative energy loss of charged particles.
-    bool emEnergyLossRadiation = false;
+    bool emEnergyLossRadiation = true;
     /// Simulate electron-positron pair production by photon conversion.
-    bool emPhotonConversion = false;
+    bool emPhotonConversion = true;
     /// Generate simulation hits on sensitive surfaces.
-    bool generateHitsOnSensitive = false;
+    bool generateHitsOnSensitive = true;
     /// Generate simulation hits on surfaces with associated material.
     bool generateHitsOnMaterial = false;
     /// Generate simulation hits on passive surfaces, i.e neither sensitive nor
@@ -73,26 +75,29 @@ class FatrasSimulation final : public BareAlgorithm {
     size_t averageHitsPerParticle = 16u;
   };
 
-  /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
-  /// Construct particle selector config from user variables.
-  static Config readConfig(const Options::Variables& vars);
-
   /// Construct the algorithm from a config.
   ///
   /// @param cfg is the configuration struct
   /// @param lvl is the logging level
   FatrasSimulation(Config cfg, Acts::Logging::Level lvl);
-  ~FatrasSimulation() final override;
+  ~FatrasSimulation() override;
 
   /// Run the simulation for a single event.
   ///
   /// @param ctx the algorithm context containing all event information
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticlesInitial{
+      this, "OutputParticlesInitial"};
+  WriteDataHandle<SimParticleContainer> m_outputParticlesFinal{
+      this, "OutputParticlesFinal"};
 
  private:
   Config m_cfg;

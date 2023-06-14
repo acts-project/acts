@@ -28,7 +28,7 @@ class DetectorElementBase;
 /// The PlaneSurface extends the Surface class with the possibility to
 /// convert local to global positions (vice versa).
 ///
-/// @image html PlaneSurface.png
+/// @image html figures/PlaneSurface.png
 ///
 class PlaneSurface : public Surface {
 #ifndef DOXYGEN
@@ -45,9 +45,9 @@ class PlaneSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transf is the additional transfrom applied after copying
+  /// @param transform is the additional transfrom applied after copying
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
-               const Transform3& transf);
+               const Transform3& transform);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -65,9 +65,9 @@ class PlaneSurface : public Surface {
 
   /// Constructor for Planes with (optional) shared bounds object
   ///
-  /// @param htrans transform in 3D that positions this surface
+  /// @param transform transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  PlaneSurface(const Transform3& htrans,
+  PlaneSurface(const Transform3& transform,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
@@ -156,6 +156,7 @@ class PlaneSurface : public Surface {
   /// @param direction The direction of the interesection attempt,
   /// (@note expected to be normalized)
   /// @param bcheck The boundary check directive
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
   ///
@@ -177,8 +178,8 @@ class PlaneSurface : public Surface {
   /// @return the SurfaceIntersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
   ///

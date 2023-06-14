@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(RadialBoundsRecreation) {
   RadialBounds original(minRadius, maxRadius, halfPhiSector, avgPhi);
   // const bool symmetric(false);
   auto valvector = original.values();
-  std::array<double, RadialBounds::eSize> values;
+  std::array<double, RadialBounds::eSize> values{};
   std::copy_n(valvector.begin(), RadialBounds::eSize, values.begin());
   RadialBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

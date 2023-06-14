@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -29,8 +30,6 @@
 namespace ActsExamples {
 namespace EDM4hepUtil {
 
-static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
-
 using MapParticleIdFrom =
     std::function<ActsFatras::Barcode(edm4hep::MCParticle particle)>;
 using MapParticleIdTo =
@@ -46,8 +45,8 @@ using MapGeometryIdTo =
 /// Inpersistent information:
 /// - particle ID
 /// - process
-ActsFatras::Particle readParticle(edm4hep::MCParticle from,
-                                  MapParticleIdFrom particleMapper);
+ActsFatras::Particle readParticle(const edm4hep::MCParticle& from,
+                                  const MapParticleIdFrom& particleMapper);
 
 /// Write a Fatras particle into EDM4hep.
 ///
@@ -64,8 +63,8 @@ void writeParticle(const ActsFatras::Particle& from,
 /// - hit index
 /// - digitization channel
 ActsFatras::Hit readSimHit(const edm4hep::SimTrackerHit& from,
-                           MapParticleIdFrom particleMapper,
-                           MapGeometryIdFrom geometryMapper);
+                           const MapParticleIdFrom& particleMapper,
+                           const MapGeometryIdFrom& geometryMapper);
 
 /// Writes a Fatras hit to EDM4hep.
 ///
@@ -74,8 +73,8 @@ ActsFatras::Hit readSimHit(const edm4hep::SimTrackerHit& from,
 /// - hit index
 /// - digitization channel
 void writeSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
-                 MapParticleIdTo particleMapper,
-                 MapGeometryIdTo geometryMapper);
+                 const MapParticleIdTo& particleMapper,
+                 const MapGeometryIdTo& geometryMapper);
 
 /// Reads a measurement cluster from EDM4hep.
 ///
@@ -87,10 +86,10 @@ void writeSimHit(const ActsFatras::Hit& from, edm4hep::MutableSimTrackerHit to,
 /// Known issues:
 /// - cluster channels are read from inappropriate fields
 /// - local 2D coordinates and time are read from position
-Measurement readMeasurement(edm4hep::TrackerHitPlane from,
+Measurement readMeasurement(const edm4hep::TrackerHitPlane& from,
                             const edm4hep::TrackerHitCollection* fromClusters,
                             Cluster* toCluster,
-                            MapGeometryIdFrom geometryMapper);
+                            const MapGeometryIdFrom& geometryMapper);
 
 /// Writes a measurement cluster to EDM4hep.
 ///
@@ -106,19 +105,15 @@ void writeMeasurement(const Measurement& from,
                       edm4hep::MutableTrackerHitPlane to,
                       const Cluster* fromCluster,
                       edm4hep::TrackerHitCollection& toClusters,
-                      MapGeometryIdTo geometryMapper);
+                      const MapGeometryIdTo& geometryMapper);
 
 /// Writes a trajectory to EDM4hep.
 ///
 /// Inpersistent information:
 /// - trajectory state incomplete
 /// - relation to the particles
-///
-/// Known issues:
-/// - curvature parameter
-/// - track state local coordinates are written to (D0,Z0)
-/// - covariance incorrect
-void writeTrajectory(const Trajectories& from, edm4hep::MutableTrack to,
+void writeTrajectory(const Acts::GeometryContext& gctx, double Bz,
+                     const Trajectories& from, edm4hep::MutableTrack to,
                      std::size_t fromIndex,
                      const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap);
 

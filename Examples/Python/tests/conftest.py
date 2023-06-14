@@ -1,3 +1,4 @@
+import multiprocessing
 from pathlib import Path
 import sys
 import os
@@ -24,6 +25,13 @@ import pytest
 
 import acts
 import acts.examples
+
+try:
+    import ROOT
+
+    ROOT.gSystem.ResetSignals()
+except ImportError:
+    pass
 
 try:
     if acts.logging.getFailureThreshold() != acts.logging.WARNING:
@@ -231,12 +239,7 @@ DetectorConfig = namedtuple(
 )
 
 
-@pytest.fixture(
-    params=[
-        "generic",
-        "odd",
-    ]
-)
+@pytest.fixture(params=["generic", pytest.param("odd", marks=pytest.mark.odd)])
 def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -332,6 +335,10 @@ def fatras(ptcl_gun, trk_geo, rng):
             trackingGeometry=trk_geo,
             magneticField=field,
             generateHitsOnSensitive=True,
+            emScattering=False,
+            emEnergyLossIonisation=False,
+            emEnergyLossRadiation=False,
+            emPhotonConversion=False,
         )
 
         s.addAlgorithm(simAlg)
@@ -357,33 +364,38 @@ def fatras(ptcl_gun, trk_geo, rng):
     return _factory
 
 
+def _do_material_recording(d: Path):
+    from material_recording import runMaterialRecording
+
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
+
+    dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
+        detector
+    )
+
+    s = acts.examples.Sequencer(events=2, numThreads=1)
+
+    runMaterialRecording(dd4hepG4Construction, str(d), tracksPerEvent=100, s=s)
+    s.run()
+
+
 @pytest.fixture(scope="session")
 def material_recording_session():
     if not helpers.geant4Enabled:
         pytest.skip("Geantino recording requested, but Geant4 is not set up")
 
     if not helpers.dd4hepEnabled:
-        pytest.skip("DD4hep recording requested, but Geant4 is not set up")
-
-    from material_recording import runMaterialRecording
-
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
-    )
-    dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
-        dd4hepSvc
-    )
+        pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
     with tempfile.TemporaryDirectory() as d:
 
-        s = acts.examples.Sequencer(events=2, numThreads=1)
-
-        runMaterialRecording(dd4hepG4Construction, str(d), tracksPerEvent=100, s=s)
-        s.run()
-
-        del s
-        del dd4hepSvc
-        del dd4hepG4Construction
+        p = multiprocessing.Process(target=_do_material_recording, args=(d,))
+        p.start()
+        p.join()
+        if p.exitcode != 0:
+            raise RuntimeError("Failure to exeecute material recording")
 
         yield Path(d)
 
@@ -393,3 +405,11 @@ def material_recording(material_recording_session: Path, tmp_path: Path):
     target = tmp_path / material_recording_session.name
     shutil.copytree(material_recording_session, target)
     yield target
+
+
+@pytest.fixture(autouse=True)
+def fpe_monitoring():
+    print("Enabling FPE monitoring")
+    with acts.FpeMonitor():
+        yield
+    print("Disabling FPE monitoring")

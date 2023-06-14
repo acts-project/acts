@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     std::shared_ptr<PerigeeSurface> perigeeSurface =
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
     // Calculate d0 and z0 corresponding to vertex position
-    double d0V = sqrt(x * x + y * y);
+    double d0V = std::hypot(x, y);
     double z0V = z;
 
     // Start constructing nTracks tracks in the following
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
     std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](InputTrack params) { return params.parameters(); };
+        [](const InputTrack& params) { return params.parameters(); };
 
     // Set up Billoir Vertex Fitter
     using VertexFitter = FullBilloirVertexFitter<InputTrack, Linearizer>;
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
         Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0V = sqrt(x * x + y * y);
+    double d0V = std::hypot(x, y);
     double z0V = z;
 
     // Start constructing nTracks tracks in the following

@@ -11,7 +11,7 @@ u = acts.UnitConstants
 
 
 def runGeant4(
-    geometryService,
+    detector,
     trackingGeometry,
     field,
     outputDir,
@@ -20,7 +20,6 @@ def runGeant4(
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
-    seed = 42
     addParticleGun(
         s,
         EtaConfig(-2.0, 2.0),
@@ -29,12 +28,13 @@ def runGeant4(
     outputDir = Path(outputDir)
     addGeant4(
         s,
-        geometryService,
+        detector,
         trackingGeometry,
         field,
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
-        seed=seed,
+        rnd=rnd,
+        physicsList="FTFP_BERT_ATL",
     )
     return s
 
@@ -46,4 +46,4 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runGeant4(detector.geometryService, trackingGeometry, field, Path.cwd()).run()
+    runGeant4(detector, trackingGeometry, field, Path.cwd()).run()

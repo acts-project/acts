@@ -11,6 +11,9 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 
 #include <vector>
 
@@ -30,6 +33,36 @@ makeTrackParametersPointerContainer(
     trackParametersPointers.push_back(&trackParam);
   }
   return trackParametersPointers;
+}
+
+inline auto makeParameterContainers(
+    const ActsExamples::AlgorithmContext& ctx,
+    const ReadDataHandle<std::vector<Acts::BoundTrackParameters>>&
+        inputTrackParametersHandle,
+    const ReadDataHandle<TrajectoriesContainer>& inputTrajectoriesHandle) {
+  std::vector<Acts::BoundTrackParameters> inputTrackParameters;
+  std::vector<const Acts::BoundTrackParameters*> inputTrackPointers;
+
+  if (inputTrackParametersHandle.isInitialized()) {
+    const auto& tmp = inputTrackParametersHandle(ctx);
+    inputTrackParameters = tmp;
+    inputTrackPointers = makeTrackParametersPointerContainer(tmp);
+  } else {
+    const auto& inputTrajectories = inputTrajectoriesHandle(ctx);
+
+    for (const auto& trajectories : inputTrajectories) {
+      for (auto tip : trajectories.tips()) {
+        if (!trajectories.hasTrackParameters(tip)) {
+          continue;
+        }
+        const auto& trackParam = trajectories.trackParameters(tip);
+        inputTrackParameters.push_back(trackParam);
+        inputTrackPointers.push_back(&trackParam);
+      }
+    }
+  }
+
+  return std::make_tuple(inputTrackParameters, inputTrackPointers);
 }
 
 /// Create proto vertices from reconstructed vertices.

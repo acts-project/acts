@@ -8,8 +8,6 @@
 
 #pragma once
 
-#pragma once
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
@@ -65,6 +63,31 @@ void convert(const GeometryContext& gctx, const TrackingVolume& tVolume,
              const Options& cOptions, State& cState);
 
 }  // namespace TrackingGeometryConverter
+
+namespace TrackingGeometryProjections {
+
+struct Options {
+  std::string prefix = "";
+
+  TrackingGeometryConverter::Options trackingGeometryOptions;
+
+  std::array<std::array<Acts::ActsScalar, 2>, 2> rzAxes;
+  std::vector<ActsScalar> rzEtaLines;
+};
+
+/// Convert into xy and zr projections only
+///
+/// @param gctx the geometry context
+/// @param tVolume the tracking volume
+/// @param cOptions the conversion options
+///
+/// @note best performant if configured with options
+/// that omit the module info and grid info
+///
+std::array<actsvg::svg::object, 2> convert(
+    const GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
+    const Options& cOptions);
+}  // namespace TrackingGeometryProjections
 
 }  // namespace Svg
 

@@ -1,5 +1,6 @@
 import pytest
 import os
+from pathlib import Path
 import multiprocessing
 
 from helpers import (
@@ -12,7 +13,7 @@ from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
 import acts
-from acts import PlanarModuleStepper
+from acts import PlanarModuleStepper, UnitConstants as u
 from acts.examples import (
     RootParticleWriter,
     RootParticleReader,
@@ -138,17 +139,19 @@ def test_root_reader_interface(reader, conf_const, tmp_path):
 
 @pytest.mark.slow
 @pytest.mark.root
+@pytest.mark.odd
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 def test_root_material_track_reader(material_recording):
 
-    # recreate sequencer
+    input_tracks = material_recording / "geant4_material_tracks.root"
+    assert input_tracks.exists()
 
     s = Sequencer(numThreads=1)
 
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            fileList=[str(material_recording / "geant4_material_tracks.root")],
+            fileList=[str(input_tracks)],
         )
     )
 
@@ -173,7 +176,6 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
     config = CsvMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
         inputClusters=digiAlg.config.outputClusters,
-        inputSimHits=simAlg.config.outputSimHits,
         inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         outputDir=str(out),
     )
@@ -352,7 +354,7 @@ def test_edm4hep_simhit_reader(tmp_path):
             level=acts.logging.INFO,
             inputPath=tmp_file,
             outputSimHits="simhits",
-            dd4hepGeometryService=detector.geometryService,
+            dd4hepDetector=detector,
         )
     )
 
@@ -380,8 +382,6 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
     config = EDM4hepMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
         inputClusters=digiAlg.config.outputClusters,
-        inputSimHits=simAlg.config.outputSimHits,
-        inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         outputPath=str(out),
     )
     s.addWriter(EDM4hepMeasurementWriter(level=acts.logging.INFO, config=config))
@@ -461,3 +461,55 @@ def test_edm4hep_particle_reader(tmp_path, conf_const, ptcl_gun):
     s.run()
 
     assert alg.events_seen == 10
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_tracks_reader(tmp_path):
+    from acts.examples.edm4hep import EDM4hepTrackWriter, EDM4hepTrackReader
+
+    detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    out = tmp_path / "tracks_edm4hep.root"
+
+    s.addWriter(
+        EDM4hepTrackWriter(
+            level=acts.logging.VERBOSE,
+            inputTracks="kfTracks",
+            outputPath=str(out),
+            Bz=2 * u.T,
+        )
+    )
+
+    s.run()
+
+    del s
+
+    s = Sequencer(numThreads=1)
+    s.addReader(
+        EDM4hepTrackReader(
+            level=acts.logging.VERBOSE,
+            outputTracks="kfTracks",
+            inputPath=str(out),
+            Bz=2 * u.T,
+        )
+    )
+
+    s.run()

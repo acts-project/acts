@@ -4,6 +4,8 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+import shutil
+import datetime
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -12,7 +14,9 @@ on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
 project = "Acts"
 author = "The Acts authors"
-copyright = "2014–2022 CERN for the benefit of the Acts project"
+copyright = (
+    f"2014–{datetime.date.today().year} CERN for the benefit of the Acts project"
+)
 # version = '@PROJECT_VERSION@'
 # release = '@PROJECT_VERSION@'
 
@@ -43,8 +47,11 @@ highlight_language = "cpp"
 smartquotes = True
 numfig = True
 
-myst_enable_extensions = ["dollarmath", "colon_fence"]
+myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
 myst_heading_anchors = 3
+
+linkcheck_retries = 5
+linkcheck_ignore = [r"https://doi.org/.*", r"https://cernvm.cern.ch/.*"]
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -90,7 +97,7 @@ breathe_default_members = (
 
 env = os.environ.copy()
 env["DOXYGEN_WARN_AS_ERROR"] = "NO"
-cwd = os.path.dirname(__file__)
+cwd = Path(__file__).parent
 
 if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
@@ -104,6 +111,8 @@ if on_readthedocs or tags.has("run_doxygen"):
         ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
     )
 
+api_index_target = cwd / "api/api.rst"
+
 if on_readthedocs or tags.has("run_apidoc"):
     print("Executing breathe apidoc in", cwd)
     subprocess.check_call(
@@ -112,7 +121,12 @@ if on_readthedocs or tags.has("run_apidoc"):
         cwd=cwd,
         env=env,
     )
+    if not api_index_target.exists():
+        shutil.copyfile(cwd / "api/api_index.rst", api_index_target)
     print("breathe apidoc completed")
+else:
+    if not api_index_target.exists():
+        shutil.copyfile(cwd / "api/api_stub.rst", api_index_target)
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

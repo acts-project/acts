@@ -30,7 +30,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool charged = true;
     bool neutral = false;
     bool primary = true;
-    bool secondary = false;
+    bool secondary = true;
   };
 
   /// Construct the stepping action
@@ -45,7 +45,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
 
   /// @brief Interface Method doing the step and records the data
   /// @param step is the Geant4 step of the particle
-  void UserSteppingAction(const G4Step* step) final override;
+  void UserSteppingAction(const G4Step* step) override;
 
  protected:
   Config m_cfg;

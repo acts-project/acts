@@ -9,7 +9,7 @@ following commands will clone the repository, configure, and build the core
 library:
 
 ```console
-$ git clone --recursive https://github.com/acts-project/acts <source>
+$ git clone https://github.com/acts-project/acts <source>
 $ cmake -B <build> -S <source>
 $ cmake --build <build>
 ```
@@ -37,7 +37,7 @@ components:
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
--   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin, the Exa.TrkX plugin and some examples
+-   [ONNX Runtime](https://onnxruntime.ai/) >= 1.12.0 for the ONNX plugin, the Exa.TrkX plugin and some examples
 -   [Pythia8](https://pythia.org) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
@@ -183,20 +183,33 @@ However, if you have the necessary prerequisites installed it is possible to use
 it locally. Acts developers regularly use different Linux distributions
 and macOS to build and develop Acts.
 
+(build_docs)=
 ## Building the documentation
 
 The documentation uses [Doxygen][doxygen] to extract the source code
-documentation and [Sphinx][sphinx] with the [Breathe][breathe] and
-[Exhale][exhale] extensions to generate the documentation website. To build the
-documentation locally, you need to have [Doxygen][doxygen] installed from your
-package manager. [Sphinx][sphinx] and its extensions can be installed using the
-Python package manager via
+documentation and [Sphinx][sphinx] with the [Breathe][breathe] extension to
+generate the documentation website. To build the documentation locally, you
+need to have [Doxygen][doxygen] version `1.9.5` or newer installed.
+[Sphinx][sphinx] and a few other depencencies can be installed using the Python
+package manager `pip`:
 
 ```console
 $ cd <source>
-# --user installs to a user-specific directory instead of the system
-$ pip install --user -r docs/requirements.txt
+$ pip install -r docs/requirements.txt
 ```
+
+:::{tip}
+It is **strongly recommended** to use a [virtual
+environment](https://realpython.com/python-virtual-environments-a-primer/) for
+this purpose! For example, run 
+
+```console
+$ python -m venv docvenv
+$ source docvenv/bin/activate
+```
+
+to create a local virtual environment, and then run the `pip` command above.
+:::
 
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
 
@@ -213,18 +226,24 @@ $ cmake --build <build> --target docs # default fast option
 $ cmake --build <build> --target docs-with-api # full documentation
 ```
 
-The default option includes the Doxygen, Sphinx, and the Breathe extension, i.e.
-the source code information can be used in the manually written documentation
-but the full API documentation is not generated. The second target builds the
-full documentation using Exhale to automatically generate the API documentation.
-This is equivalent to the public [Read the Docs][rtd_acts] documentation, but
-the build takes around ten minutes to finish.
+The default option includes the Doxygen, Sphinx, and the Breathe extension,
+i.e. the source code information can be used in the manually written
+documentation but the full API documentation is not generated. The second
+target builds the full documentation to automatically generate full API
+listings. This is equivalent to the public [Read the Docs][rtd_acts]
+documentation, but the build takes a while to finish.
 
 [doxygen]: https://doxygen.nl/
 [sphinx]: https://www.sphinx-doc.org
 [breathe]: https://breathe.readthedocs.io
 [exhale]: https://exhale.readthedocs.io
 [rtd_acts]: https://acts.readthedocs.io
+
+A special phony target exists to clean the documentation output files:
+
+```console
+$ cmake --build <build> --target clean-docs
+```
 
 ## Build options
 
@@ -240,24 +259,32 @@ options must be specified in subsequent calls to configure the project. The
 following options are available to configure the project and enable optional
 components.
 
+<!-- CMAKE_OPTS_BEGIN -->
 | Option                              | Description                                                                                                                                                                                                                        |
 |-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ACTS_BUILD_EVERYTHING               | Build with most options enabled (except<br>HepMC3 and documentation)<br> type: `bool`, default: `OFF`                                                                                                                              |
 | ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter<br>definitions header<br> type: `filepath`, default: `""`                                                                                                                                        |
 | ACTS_FORCE_ASSERTIONS               | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                      |
+| ACTS_USE_SYSTEM_LIBS                | Use system libraries by default<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
 | ACTS_BUILD_PLUGIN_AUTODIFF          | Build the autodiff plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
-| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system<br>instead of the bundled version<br> type: `bool`, default: `OFF`                                                                                                                             |
+| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system<br>instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                     |
+| ACTS_USE_SYSTEM_ACTSVG              | Use the ActSVG system library<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                             |
+| ACTS_BUILD_PLUGIN_ACTSVG            | Build SVG display plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                          |
 | ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_BUILD_PLUGIN_EDM4HEP           | Build EDM4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                              |
+| ACTS_BUILD_PLUGIN_GEANT4            | Build Geant4 plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
-| ACTS_USE_SYSTEM_ACTSDD4HEP          | Use the ActsDD4hep glue library provided<br>by the system instead of building it<br> type: `bool`, default: `OFF`                                                                                                                  |
+| ACTS_EXATRKX_ENABLE_ONNX            | Build the Onnx backend for the exatrkx<br>plugin<br> type: `bool`, default: `OFF`                                                                                                                                                  |
+| ACTS_EXATRKX_ENABLE_TORCH           | Build the torchscript backend for the<br>exatrkx plugin<br> type: `bool`, default: `ON`                                                                                                                                            |
 | ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
 | ACTS_BUILD_PLUGIN_JSON              | Build json plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
-| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `OFF`                                                                                                                       |
+| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                               |
 | ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_BUILD_PLUGIN_MLPACK            | Build MLpack plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_SETUP_VECMEM                   | Explicitly set up vecmem for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
-| ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `OFF`                                                                                                                                                      |
+| ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                              |
 | ACTS_BUILD_PLUGIN_SYCL              | Build SYCL plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
 | ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
@@ -271,12 +298,14 @@ components.
 | ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
 | ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
 | ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
-| ACTS_USE_SYSTEM_PYBIND11            | Use a system installation of pybind11<br> type: `bool`, default: `OFF`                                                                                                                                                             |
-| ACTS_USE_EXAMPLES_TBB               | Use Threading Building Blocks library in the examples<br> type: `bool`, default: `ON`                                                                                                                                              |
+| ACTS_BUILD_EXAMPLES_BINARIES        | Build the examples binaries (deprecated)<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_USE_SYSTEM_PYBIND11            | Use a system installation of pybind11<br> type: `bool`, default: `ACTS_USE_SYSTEM_LIBS -> OFF`                                                                                                                                     |
+| ACTS_USE_EXAMPLES_TBB               | Use Threading Building Blocks library in<br>the examples<br> type: `bool`, default: `ON`                                                                                                                                           |
 | ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
 | ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
 | ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
 | ACTS_BUILD_UNITTESTS                | Build unit tests<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
+| ACTS_BUILD_NONCOMPILE_TESTS         | Build tests that check build failure<br>invariants<br> type: `bool`, default: `OFF`                                                                                                                                                |
 | ACTS_RUN_CLANG_TIDY                 | Run clang-tidy static analysis<br> type: `bool`, default: `OFF`                                                                                                                                                                    |
 | ACTS_BUILD_DOCS                     | Build documentation<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
 | ACTS_SETUP_BOOST                    | Explicitly set up Boost for the project<br> type: `bool`, default: `ON`                                                                                                                                                            |
@@ -289,6 +318,7 @@ components.
 | ACTS_GPERF_INSTALL_DIR              | Hint to help find gperf if profiling is<br>enabled<br> type: `string`, default: `""`                                                                                                                                               |
 | ACTS_ENABLE_LOG_FAILURE_THRESHOLD   | Enable failing on log messages with<br>level above certain threshold<br> type: `bool`, default: `OFF`                                                                                                                              |
 | ACTS_LOG_FAILURE_THRESHOLD          | Log level above which an exception<br>should be automatically thrown. If<br>ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set<br>and this is unset, this will enable a<br>runtime check of the log level.<br> type: `string`, default: `""` |
+<!-- CMAKE_OPTS_END -->
 
 
 All Acts-specific options are disabled or empty by default and must be
@@ -328,7 +358,7 @@ The following environment variables might be useful.
 ## The OpenDataDetector
 
 Acts comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map. 
-It is available via the git submodule feature by performing the following steps (git lfs need to be installed on your machine):
+It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.github.com/) need to be installed on your machine):
 
 ```console
 $ git submodule init

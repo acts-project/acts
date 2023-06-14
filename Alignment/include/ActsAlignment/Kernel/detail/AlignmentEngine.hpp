@@ -103,7 +103,7 @@ void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
 /// ingredients
 template <typename traj_t, typename parameters_t = BoundTrackParameters>
 TrackAlignmentState trackAlignmentState(
-    const GeometryContext& gctx, const Acts::MultiTrajectory<traj_t>& multiTraj,
+    const GeometryContext& gctx, const traj_t& multiTraj,
     const size_t& entryIndex,
     const std::pair<ActsDynamicMatrix, std::unordered_map<size_t, size_t>>&
         globalTrackParamsCov,
@@ -118,7 +118,8 @@ TrackAlignmentState trackAlignmentState(
   std::vector<std::pair<size_t, bool>> measurementStates;
   measurementStates.reserve(15);
   // Number of smoothed states on the track
-  size_t nSmoothedStates = 0;
+  // size_t nSmoothedStates = 0; // commented because clang-tidy complains about
+  // unused
   // Number of alignable surfaces on the track
   size_t nAlignSurfaces = 0;
 
@@ -126,7 +127,8 @@ TrackAlignmentState trackAlignmentState(
   multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
     // Remember the number of smoothed states
     if (ts.hasSmoothed()) {
-      nSmoothedStates++;
+      // nSmoothedStates++; // commented because clang-tidy complains about
+      // unused
     } else {
       // @note: this should in principle never happen now. But still keep it as a note
       return true;

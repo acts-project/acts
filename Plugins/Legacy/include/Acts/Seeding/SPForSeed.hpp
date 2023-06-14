@@ -39,18 +39,18 @@ class SPForSeed {
 
  public:
   SPForSeed();
-  SPForSeed(SpacePoint* const&, const float*);
-  SPForSeed(SpacePoint* const&, const float*, const float*);
-  SPForSeed(const SPForSeed&);
+  SPForSeed(SpacePoint* const& /*sp*/, const float* /*r*/);
+  SPForSeed(SpacePoint* const& /*sp*/, const float* /*r*/, const float* /*sc*/);
+  SPForSeed(const SPForSeed& /*sp*/);
   virtual ~SPForSeed();
-  SPForSeed& operator=(const SPForSeed&);
+  SPForSeed& operator=(const SPForSeed& /*sp*/);
 
-  void set(SpacePoint* const&, const float*);
-  void set(SpacePoint* const&, const float*, const float*);
-  void setQuality(float);
-  void setParam(const float&);
+  void set(SpacePoint* const& /*sp*/, const float* /*r*/);
+  void set(SpacePoint* const& /*sp*/, const float* /*r*/, const float* /*sc*/);
+  void setQuality(float /*q*/);
+  void setParam(const float& /*p*/);
 
-  const SpacePoint* spacepoint;
+  const SpacePoint* spacepoint = nullptr;
   const float& x() const { return m_x; }
   const float& y() const { return m_y; }
   const float& z() const { return m_z; }
@@ -64,16 +64,16 @@ class SPForSeed {
   const int& surface() const { return m_surface; }
 
  protected:
-  float m_x;     // x-coordinate in beam system coordinates
-  float m_y;     // y-coordinate in beam system coordinates
-  float m_z;     // z-coordinate in beam system coordinetes
-  float m_r;     // radius       in beam system coordinates
-  float m_covr;  //
-  float m_covz;  //
-  float m_param;
-  float m_q;
+  float m_x = 0;     // x-coordinate in beam system coordinates
+  float m_y = 0;     // y-coordinate in beam system coordinates
+  float m_z = 0;     // z-coordinate in beam system coordinetes
+  float m_r = 0;     // radius       in beam system coordinates
+  float m_covr = 0;  //
+  float m_covz = 0;  //
+  float m_param = 0;
+  float m_q = 0;
 
-  int m_surface;  // surface identifier
+  int m_surface = 0;  // surface identifier
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ inline SPForSeed<SpacePoint>::SPForSeed(const SPForSeed& sp) {
 /////////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline SPForSeed<SpacePoint>::~SPForSeed() {}
+inline SPForSeed<SpacePoint>::~SPForSeed() = default;
 
 /////////////////////////////////////////////////////////////////////////////////
 // Set
@@ -148,7 +148,7 @@ inline void SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r) {
   m_x = r[0];
   m_y = r[1];
   m_z = r[2];
-  m_r = sqrt(m_x * m_x + m_y * m_y);
+  m_r = std::hypot(m_x, m_y);
   m_surface = sp->surface;
   m_q = 100000.;
 
@@ -188,7 +188,7 @@ inline void SPForSeed<SpacePoint>::set(SpacePoint* const& sp, const float* r,
   m_x = r[0];
   m_y = r[1];
   m_z = r[2];
-  m_r = sqrt(m_x * m_x + m_y * m_y);
+  m_r = std::hypot(m_x, m_y);
   m_q = 100000.;
   if (!sp->clusterList().second) {
     m_covr = sp->covr * 9. * sc[0];

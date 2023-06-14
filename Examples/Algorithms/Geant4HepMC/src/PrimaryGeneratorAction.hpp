@@ -39,7 +39,7 @@ class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction {
   static PrimaryGeneratorAction* instance();
 
   /// Interface method to generate the primary
-  void GeneratePrimaries(G4Event*) final override;
+  void GeneratePrimaries(G4Event* event) override;
 
   /// Prepare the particle gun with initial parameters
   void prepareParticleGun(const ActsExamples::SimParticle& part);

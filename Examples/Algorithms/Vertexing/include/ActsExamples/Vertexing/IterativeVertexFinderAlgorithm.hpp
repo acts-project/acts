@@ -10,23 +10,48 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/IterativeVertexFinder.hpp"
+#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
+#include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
-class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
+class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  using IPEstimator =
+      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
+  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+  using Fitter =
+      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+  using Seeder = Acts::TrackDensityVertexFinder<
+      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+  using Finder = Acts::IterativeVertexFinder<Fitter, Seeder>;
+  using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
+
+  using VertexCollection =
+      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
+
   struct Config {
-    /// Input track parameters collection
+    /// Optional. Input track parameters collection
     std::string inputTrackParameters;
+    /// Optional. Input trajectories container.
+    std::string inputTrajectories;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
-    /// Output reconstruction time in ms
-    std::string outputTime = "time";
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
@@ -45,6 +70,17 @@ class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
+      m_inputTrackParameters{this, "InputTrackParameters"};
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
+      this, "OutputProtoVertices"};
+
+  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
 };
 
 }  // namespace ActsExamples

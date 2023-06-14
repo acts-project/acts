@@ -27,10 +27,8 @@ ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
       m_elementThickness(thickness),
       m_elementPlanarBounds(std::move(pBounds)),
       m_elementDiscBounds(nullptr),
-      m_digitizationModule(digitizationModule) {
-  auto mutableSurface =
-      std::const_pointer_cast<Acts::Surface>(m_elementSurface);
-  mutableSurface->assignSurfaceMaterial(material);
+      m_digitizationModule(std::move(digitizationModule)) {
+  m_elementSurface->assignSurfaceMaterial(std::move(material));
 }
 
 ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
@@ -47,8 +45,6 @@ ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
       m_elementThickness(thickness),
       m_elementPlanarBounds(nullptr),
       m_elementDiscBounds(std::move(dBounds)),
-      m_digitizationModule(digitizationModule) {
-  auto mutableSurface =
-      std::const_pointer_cast<Acts::Surface>(m_elementSurface);
-  mutableSurface->assignSurfaceMaterial(material);
+      m_digitizationModule(std::move(digitizationModule)) {
+  m_elementSurface->assignSurfaceMaterial(std::move(material));
 }

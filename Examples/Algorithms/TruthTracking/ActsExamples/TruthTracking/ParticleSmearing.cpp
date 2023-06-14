@@ -20,20 +20,22 @@
 
 ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
                                                  Acts::Logging::Level level)
-    : BareAlgorithm("ParticleSmearing", level), m_cfg(config) {
+    : IAlgorithm("ParticleSmearing", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output tracks parameters collection");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
 
 ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     const AlgorithmContext& ctx) const {
   // setup input and output containers
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& particles = m_inputParticles(ctx);
   TrackParametersContainer parameters;
   parameters.reserve(particles.size());
 
@@ -87,7 +89,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
-                             << "," << phi << "," << theta << ","
+                             << ", " << phi << ", " << theta << ", "
                              << (q != 0 ? q / p : 1 / p));
       ACTS_VERBOSE("   to: " << perigee
                                     ->localToGlobal(
@@ -96,9 +98,9 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                                                       params[Acts::eBoundLoc1]},
                                         particle.unitDirection() * p)
                                     .transpose()
-                             << ", " << params[Acts::eBoundTime] << ","
-                             << params[Acts::eBoundPhi] << ","
-                             << params[Acts::eBoundTheta] << ","
+                             << ", " << params[Acts::eBoundTime] << ", "
+                             << params[Acts::eBoundPhi] << ", "
+                             << params[Acts::eBoundTheta] << ", "
                              << params[Acts::eBoundQOverP]);
 
       // build the track covariance matrix using the smearing sigmas
@@ -122,6 +124,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(parameters));
+  m_outputTrackParameters(ctx, std::move(parameters));
   return ProcessCode::SUCCESS;
 }

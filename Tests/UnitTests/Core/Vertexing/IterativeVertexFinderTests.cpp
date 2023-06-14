@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                              ipEstimator);
 
     cfg.reassignTracksAfterFirstFit = true;
@@ -181,7 +181,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       std::vector<TrackAtVertex<BoundTrackParameters>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
-      double d0_v = sqrt(x * x + y * y);
+      double d0_v = std::hypot(x, y);
       double z0_v = z;
 
       // Construct random track emerging from vicinity of vertex position
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
     std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](InputTrack params) { return params.parameters(); };
+        [](const InputTrack& params) { return params.parameters(); };
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                              ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       std::vector<TrackAtVertex<InputTrack>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
-      double d0_v = sqrt(x * x + y * y);
+      double d0_v = std::hypot(x, y);
       double z0_v = z;
 
       // Construct random track emerging from vicinity of vertex position
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   static_assert(VertexFinderConcept<VertexFinder>,
                 "Vertex finder does not fulfill vertex finder concept.");
 
-  VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+  VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                            ipEstimator);
 
   cfg.useBeamConstraint = true;

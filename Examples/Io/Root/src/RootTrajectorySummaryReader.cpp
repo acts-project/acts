@@ -25,14 +25,15 @@ ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
     Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
-      m_cfg(config),
-      m_events(0),
-      m_inputChain(nullptr) {
+      m_cfg(config) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing input filename");
   }
+
+  m_outputTrackParameters.initialize(m_cfg.outputTracks);
+  m_outputParticles.initialize(m_cfg.outputParticles);
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_nr", &m_eventNr);
@@ -216,10 +217,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
                                      truthParticle);
     }
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.outputTracks,
-                           std::move(trackParameterCollection));
-    context.eventStore.add(m_cfg.outputParticles,
-                           std::move(truthParticleCollection));
+    m_outputTrackParameters(context, std::move(trackParameterCollection));
+    m_outputParticles(context, std::move(truthParticleCollection));
   } else {
     ACTS_WARNING("Could not read in event.");
   }

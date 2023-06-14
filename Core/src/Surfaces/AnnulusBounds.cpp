@@ -9,7 +9,7 @@
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
@@ -281,7 +281,7 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
     double minDist = std::numeric_limits<double>::max();
 
     Vector2 currentClosest;
-    double currentDist;
+    double currentDist = 0;
 
     // do projection in STRIP PC
 

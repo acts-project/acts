@@ -8,8 +8,10 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
 
@@ -26,8 +28,10 @@ namespace ActsExamples {
 /// Then we could use particles only satistying provided criteria as the 'seeds'
 /// of CKF instead of handling all the truth particles.
 //
-class TruthSeedSelector final : public BareAlgorithm {
+class TruthSeedSelector final : public IAlgorithm {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// The input truth particles that should be used to create proto tracks.
     std::string inputParticles;
@@ -60,19 +64,20 @@ class TruthSeedSelector final : public BareAlgorithm {
 
   TruthSeedSelector(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const override final;
-
-  /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
-
-  /// Construct particle selector config from user variables.
-  static Config readConfig(const Options::Variables& vars);
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

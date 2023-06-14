@@ -38,7 +38,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///
 ///
 /// @param [in] worldDetElement the DD4hep DetElement of the world
-/// @param [in] loggingLevel is the debug logging level of the conversion and
+/// @param [in] logger A logger instance
 /// geometry building
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
 /// binned in a layer in phi direction.
@@ -77,6 +77,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///                              ascending. The default is sorting by ID.
 /// @param gctx The geometry context to use
 /// @param matDecorator is the material decorator that loads material maps
+/// @param geometryIdentifierHook Hook to apply to surfaces during geometry closure.
 ///
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full TrackingGeometry
@@ -88,8 +89,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// can provide their own function
 
 std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
-    dd4hep::DetElement worldDetElement,
-    Logging::Level loggingLevel = Logging::Level::INFO,
+    dd4hep::DetElement worldDetElement, const Logger& logger,
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
     BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
@@ -97,7 +97,9 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors = sortDetElementsByID,
     const GeometryContext& gctx = GeometryContext(),
-    std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr);
+    std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr,
+    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
+        std::make_shared<GeometryIdentifierHook>());
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
 ///
@@ -107,8 +109,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 ///
 ///
 /// @param [in] subDetector the DD4hep DetElement of the subdetector
-/// @param [in] loggingLevel is the debug logging level of the conversion and
-/// geometry building
+/// @param [in] logger A logger instance
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
 /// binned in a layer in phi direction.
 /// @note Possible binningtypes:
@@ -139,8 +140,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 /// @return std::shared_ptr the Acts::CylinderVolumeBuilder which can be used to
 /// build the full tracking geometry
 std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
-    dd4hep::DetElement subDetector,
-    Logging::Level loggingLevel = Logging::Level::INFO,
+    dd4hep::DetElement subDetector, const Logger& logger,
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
     BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
@@ -149,7 +149,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder
 std::shared_ptr<const CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
-    Logging::Level loggingLevel = Logging::Level::INFO);
+    const Logger& logger);
 
 /// Method internally used by convertDD4hepDetector to collect all sub detectors
 /// Sub detector means each 'compound' DetElement or DetElements which are
@@ -158,10 +158,10 @@ std::shared_ptr<const CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
 /// detectors should be collected
 /// @param [out] subdetectors the DD4hep::DetElements of the sub detectors
 /// contained by detElement
-/// @param logger a @c LoggerWrapper for output
+/// @param logger a @c Logger  for output
 void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
                                 std::vector<dd4hep::DetElement>& subdetectors,
-                                LoggerWrapper logger);
+                                const Logger& logger);
 
 /// Method internally used by convertDD4hepDetector to collect all volumes of a
 /// compound detector
@@ -177,9 +177,9 @@ void collectCompounds_dd4hep(dd4hep::DetElement& detElement,
 /// layers should be collected
 /// @param [out] layers the DD4hep::DetElements of the layers contained by
 /// detElement
-/// @param logger a @c LoggerWrapper for output
+/// @param logger a @c Logger for output
 void collectLayers_dd4hep(dd4hep::DetElement& detElement,
                           std::vector<dd4hep::DetElement>& layers,
-                          LoggerWrapper logger);
+                          const Logger& logger);
 
 }  // namespace Acts

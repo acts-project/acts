@@ -16,7 +16,6 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
@@ -335,7 +334,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   IPEstimator ip3dEst(ip3dEstCfg);
 
   std::vector<double> temperatures(1, 3.);
-  AnnealingUtility::Config annealingConfig(temperatures);
+  AnnealingUtility::Config annealingConfig;
+  annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::Config fitterCfg(

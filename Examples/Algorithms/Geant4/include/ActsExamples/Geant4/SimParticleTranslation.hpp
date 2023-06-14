@@ -33,13 +33,11 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   /// Nested configuration struct that contains the
   /// input particle collection name,
   struct Config {
-    /// The input particle collection
-    std::string inputParticles = "";
-
-    /// Force pdgCode & mass (this is needed for Geantino simulation)
-    bool forceParticle = false;
-    G4int forcedPdgCode = 998;
-    G4double forcedMass = 0.;
+    /// Force pdgCode & mass & charge in G4 units (this is needed for Geantino
+    /// simulation)
+    std::optional<G4int> forcedPdgCode;
+    std::optional<G4double> forcedCharge;  // e.g. 1 for charged geantino
+    std::optional<G4double> forcedMass;    // e.g. 0 for geantino
 
     /// The number of hits per particle to be expected
     /// @note best to include secondaries for that
@@ -55,12 +53,12 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
                              Acts::getDefaultLogger("SimParticleTranslation",
                                                     Acts::Logging::INFO));
 
-  ~SimParticleTranslation() final override;
+  ~SimParticleTranslation() override;
 
   /// Interface method to generate the primary
   ///
   /// @param anEvent is the event that will be run
-  void GeneratePrimaries(G4Event* anEvent) final override;
+  void GeneratePrimaries(G4Event* anEvent) override;
 
  protected:
   Config m_cfg;

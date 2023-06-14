@@ -12,18 +12,17 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/ParticleSmearingOptions.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <string>
-
-#include <boost/filesystem.hpp>
 
 /// Setup sim hit csv reader
 ///
@@ -49,7 +48,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 ///
 /// @param vars The configuration variables
 /// @param sequencer The framework sequencer
-/// @param randomNumbers The random number service
+/// @param rnd The random number service
 /// @param trackingGeometry The TrackingGeometry for the tracking setup
 /// @param inputSimHits The input sim hit collection (e.g. from sim hit reader)
 ///
@@ -57,7 +56,7 @@ ActsExamples::CsvParticleReader::Config setupParticleReading(
 ActsExamples::DigitizationConfig setupDigitization(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
-    std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+    std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     const std::string& inputSimHits);
 
@@ -65,7 +64,7 @@ ActsExamples::DigitizationConfig setupDigitization(
 ///
 /// @param vars The configuration variables
 /// @param sequencer The framework sequencer
-/// @param randomNumbers The random number service
+/// @param rnd The random number service
 /// @param inputParticles The input particle collection (e.g. from particle
 /// reader or from particle selection)
 ///
@@ -73,7 +72,7 @@ ActsExamples::DigitizationConfig setupDigitization(
 ActsExamples::ParticleSmearing::Config setupParticleSmearing(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
-    std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+    std::shared_ptr<const ActsExamples::RandomNumbers> rnd,
     const std::string& inputParticles);
 
 /// Setup reading measurements

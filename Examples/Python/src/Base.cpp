@@ -26,9 +26,8 @@ namespace Acts::Python {
 void addUnits(Context& ctx) {
   auto& m = ctx.get("main");
   auto u = m.def_submodule("UnitConstants");
-  using namespace Acts::UnitConstants;
 
-#define UNIT(x) u.attr(#x) = x;
+#define UNIT(x) u.attr(#x) = Acts::UnitConstants::x;
 
   UNIT(fm)
   UNIT(pm)
@@ -184,6 +183,7 @@ void addLogging(Acts::Python::Context& ctx) {
 
   static py::exception<Logging::ThresholdFailure> exc(
       logging, "ThresholdFailure", PyExc_RuntimeError);
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   py::register_exception_translator([](std::exception_ptr p) {
     try {
       if (p) {
@@ -225,7 +225,8 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("eNeutron", Acts::PdgParticle::eNeutron)
       .value("eAntiNeutron", Acts::PdgParticle::eAntiNeutron)
       .value("eProton", Acts::PdgParticle::eProton)
-      .value("eAntiProton", Acts::PdgParticle::eAntiProton);
+      .value("eAntiProton", Acts::PdgParticle::eAntiProton)
+      .value("eLead", Acts::PdgParticle::eLead);
 }
 
 void addAlgebra(Acts::Python::Context& ctx) {
@@ -237,7 +238,9 @@ void addAlgebra(Acts::Python::Context& ctx) {
         Acts::Vector2 v;
         v << a[0], a[1];
         return v;
-      }));
+      }))
+      .def("__getitem__",
+           [](const Acts::Vector2& self, Eigen::Index i) { return self[i]; });
 
   py::class_<Acts::Vector3>(m, "Vector3")
       .def(py::init<double, double, double>())
@@ -245,7 +248,9 @@ void addAlgebra(Acts::Python::Context& ctx) {
         Acts::Vector3 v;
         v << a[0], a[1], a[2];
         return v;
-      }));
+      }))
+      .def("__getitem__",
+           [](const Acts::Vector3& self, Eigen::Index i) { return self[i]; });
 
   py::class_<Acts::Vector4>(m, "Vector4")
       .def(py::init<double, double, double, double>())
@@ -253,7 +258,9 @@ void addAlgebra(Acts::Python::Context& ctx) {
         Acts::Vector4 v;
         v << a[0], a[1], a[2], a[3];
         return v;
-      }));
+      }))
+      .def("__getitem__",
+           [](const Acts::Vector4& self, Eigen::Index i) { return self[i]; });
 }
 
 }  // namespace Acts::Python

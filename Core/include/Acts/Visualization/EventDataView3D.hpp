@@ -16,7 +16,6 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
@@ -189,9 +188,9 @@ struct EventDataView3D {
   /// parameters
   /// @param smoothedConfig The visualization options for the smoothed
   /// parameters
-  template <typename D>
+  template <typename traj_t>
   static void drawMultiTrajectory(
-      IVisualization3D& helper, const Acts::MultiTrajectory<D>& multiTraj,
+      IVisualization3D& helper, const traj_t& multiTraj,
       const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
@@ -200,6 +199,8 @@ struct EventDataView3D {
       const ViewConfig& predictedConfig = s_viewPredicted,
       const ViewConfig& filteredConfig = s_viewFiltered,
       const ViewConfig& smoothedConfig = s_viewSmoothed) {
+    // @TODO: Refactor based on Track class
+
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
@@ -225,9 +226,8 @@ struct EventDataView3D {
       // @Todo: how to draw 1D measurement?
       if (measurementConfig.visible and state.hasCalibrated() and
           state.calibratedSize() == 2) {
-        const Vector2& lposition = state.calibrated().template head<2>();
-        const SymMatrix2 covariance =
-            state.calibratedCovariance().template topLeftCorner<2, 2>();
+        const Vector2& lposition = state.template calibrated<2>();
+        const SymMatrix2 covariance = state.template calibratedCovariance<2>();
         drawCovarianceCartesian(helper, lposition, covariance,
                                 state.referenceSurface().transform(gctx),
                                 locErrorScale, measurementConfig);

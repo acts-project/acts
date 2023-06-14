@@ -28,13 +28,13 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <list>
 #include <stdexcept>
+#include <vector>
 
 ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     ActsExamples::PlanarSteppingAlgorithm::Config config,
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("PlanarSteppingAlgorithm", level),
+    : ActsExamples::IAlgorithm("PlanarSteppingAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing input hits collection");
@@ -69,6 +69,17 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers tool");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+
+  m_outputClusters.initialize(m_cfg.outputClusters);
+  m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
+  m_outputDigiSourceLinks.initialize(m_cfg.outputDigiSourceLinks);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementParticlesMap.initialize(
+      m_cfg.outputMeasurementParticlesMap);
+  m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+
   // fill the digitizables map to allow lookup by geometry id only
   m_cfg.trackingGeometry->visitSurfaces([this](const Acts::Surface* surface) {
     Digitizable dg;
@@ -95,20 +106,15 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  using ClusterContainer =
-      ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
-
   // retrieve input
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = m_inputSimHits(ctx);
 
   // prepare output containers
   ClusterContainer clusters;
 
-  // These are lists because we need stable addresses
-  std::list<IndexSourceLink> sourceLinkStorage;
-  std::list<Acts::DigitizationSourceLink> digiSourceLinks;
+  std::vector<Acts::DigitizationSourceLink> digiSourceLinks;
 
-  GeometryIdMultiset<std::reference_wrapper<IndexSourceLink>> sourceLinks;
+  GeometryIdMultiset<IndexSourceLink> sourceLinks;
   MeasurementContainer measurements;
   IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
   IndexMultimap<Index> hitSimHitsMap;
@@ -196,19 +202,19 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       Acts::DigitizationSourceLink& digiSourceLink = digiSourceLinks.back();
 
       Acts::PlanarModuleCluster cluster(
-          dg.surface->getSharedPtr(), digiSourceLink, std::move(cov), localX,
-          localY, simHit.time(), std::move(usedCells));
+          dg.surface->getSharedPtr(), Acts::SourceLink{digiSourceLink}, cov,
+          localX, localY, simHit.time(), std::move(usedCells));
 
       // the measurement container is unordered and the index under which
       // the measurement will be stored is known before adding it.
       Index hitIdx = measurements.size();
-      sourceLinkStorage.emplace_back(moduleGeoId, hitIdx);
-      IndexSourceLink& sourceLink = sourceLinkStorage.back();
+      IndexSourceLink sourceLink{moduleGeoId, hitIdx};
 
       sourceLinks.insert(sourceLinks.end(), sourceLink);
 
-      auto meas = Acts::makeMeasurement(sourceLink, par, cov, Acts::eBoundLoc0,
-                                        Acts::eBoundLoc1, Acts::eBoundTime);
+      auto meas = Acts::makeMeasurement(Acts::SourceLink{sourceLink}, par, cov,
+                                        Acts::eBoundLoc0, Acts::eBoundLoc1,
+                                        Acts::eBoundTime);
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.
@@ -224,15 +230,11 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
   ACTS_DEBUG("digitized " << simHits.size() << " hits into " << clusters.size()
                           << " clusters");
 
-  ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
-  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
-                     std::move(sourceLinkStorage));
-  ctx.eventStore.add(m_cfg.outputDigiSourceLinks, std::move(digiSourceLinks));
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
-  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
-                     std::move(hitParticlesMap));
-  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
-                     std::move(hitSimHitsMap));
+  m_outputClusters(ctx, std::move(clusters));
+  m_outputSourceLinks(ctx, std::move(sourceLinks));
+  m_outputDigiSourceLinks(ctx, std::move(digiSourceLinks));
+  m_outputMeasurements(ctx, std::move(measurements));
+  m_outputMeasurementParticlesMap(ctx, std::move(hitParticlesMap));
+  m_outputMeasurementSimHitsMap(ctx, std::move(hitSimHitsMap));
   return ActsExamples::ProcessCode::SUCCESS;
 }

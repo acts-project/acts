@@ -28,7 +28,7 @@ namespace Acts {
 /// since it builds the surfaces of all TrackingVolumes at container level
 /// for a cylindrical tracking geometry.
 ///
-/// @image html CylinderSurface.png
+/// @image html figures/CylinderSurface.png
 
 class CylinderSurface : public Surface {
 #ifndef DOXYGEN
@@ -177,14 +177,15 @@ class CylinderSurface : public Surface {
   /// @param position The position to start from
   /// @param direction The direction at start
   /// @param bcheck the Boundary Check
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// If possible returns both solutions for the cylinder
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceIntersection intersect(const GeometryContext& gctx,
-                                const Vector3& position,
-                                const Vector3& direction,
-                                const BoundaryCheck& bcheck) const final;
+  SurfaceIntersection intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Path correction due to incident of the track
   ///

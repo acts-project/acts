@@ -147,14 +147,17 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
           auto maskTransform = interNode->GetRightMatrix();
           // Get the only vertices
           const Double_t* polyVrt = maskShape->GetVertices();
-          // the poly has a translation matrix in ROOT
-          // we apply it to the vertices directly
-          const Double_t* polyTrl = nullptr;
-          polyTrl = (maskTransform->GetTranslation());
+          // Apply the whole transformation stored for the
+          // polyhedron, since there is a translation and
+          // also a side flip that needs to be applied.
+          // @TODO check that 3rd coordinate is not altered by
+          // the transformation ?
           std::vector<Vector2> vertices;
           for (unsigned int v = 0; v < 8; v += 2) {
-            Vector2 vtx = Vector2((polyTrl[0] + polyVrt[v + 0]) * scalor,
-                                  (polyTrl[1] + polyVrt[v + 1]) * scalor);
+            std::array<double, 3> local{polyVrt[v + 0], polyVrt[v + 1], 0.};
+            std::array<double, 3> global{};
+            maskTransform->LocalToMaster(local.data(), global.data());
+            Vector2 vtx = Vector2(global[0] * scalor, global[1] * scalor);
             vertices.push_back(vtx);
           }
 

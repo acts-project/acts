@@ -4,7 +4,7 @@ add_library(
   src/DigitizationConfig.cpp
   src/MeasurementCreation.cpp
   src/PlanarSteppingAlgorithm.cpp
-  src/DigitizationOptions.cpp
+  src/DigitizationConfigurator.cpp
   src/ModuleClusters.cpp)
 target_include_directories(
   ActsExamplesDigitization
@@ -13,7 +13,6 @@ target_link_libraries(
   ActsExamplesDigitization
   PUBLIC
     ActsCore ActsPluginIdentification ActsExamplesFramework)
-target_link_libraries(ActsExamplesDigitization PRIVATE Boost::program_options)
 
 install(
   TARGETS ActsExamplesDigitization

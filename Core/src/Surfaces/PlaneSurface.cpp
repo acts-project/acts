@@ -26,8 +26,10 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
 
 Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                                  const PlaneSurface& other,
-                                 const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+                                 const Transform3& transform)
+    : GeometryObject(),
+      Surface(gctx, other, transform),
+      m_bounds(other.m_bounds) {}
 
 Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
     : Surface(), m_bounds(nullptr) {
@@ -76,16 +78,16 @@ Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
 
 Acts::Vector3 Acts::PlaneSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*momentum*/) const {
   return transform(gctx) *
          Vector3(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
 
 Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/, double tolerance) const {
+    const Vector3& /*momentum*/, double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
-  if (loc3Dframe.z() * loc3Dframe.z() > tolerance * tolerance) {
+  if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Vector2>::success({loc3Dframe.x(), loc3Dframe.y()});
@@ -170,12 +172,13 @@ double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
 
 Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction);
+      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status != Intersection3D::Status::unreachable and bcheck) {
     // Built-in local to global for speed reasons
@@ -191,7 +194,7 @@ Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
 }
 
 Acts::ActsMatrix<2, 3> Acts::PlaneSurface::localCartesianToBoundLocalDerivative(
-    const GeometryContext& /*unused*/, const Vector3& /*unused*/) const {
+    const GeometryContext& /*gctx*/, const Vector3& /*position*/) const {
   const ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Identity();
   return loc3DToLocBound;
 }
