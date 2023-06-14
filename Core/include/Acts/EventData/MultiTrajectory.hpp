@@ -348,9 +348,9 @@ class TrackStateProxy {
   ///       an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
-  template <bool RO = ReadOnly, bool ReadOnlyOther,
+  template <typename track_state_proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  void copyFrom(TrackStateProxy<Trajectory, M, ReadOnlyOther> other,
+  void copyFrom(const track_state_proxy_t& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {
     using PM = TrackStatePropMask;
