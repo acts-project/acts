@@ -47,19 +47,18 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
              std::shared_ptr<DetectorConstructionFactory>>(
       mod, "DetectorConstructionFactory");
 
-  py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod,
-                                                              "Geant4Handle");
+  py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod, "Geant4Handle");
 
   {
     using Algorithm = Geant4Simulation;
     using Config = Algorithm::Config;
-    auto alg = py::class_<Algorithm, ActsExamples::IAlgorithm,
-                          std::shared_ptr<Algorithm>>(mod, "Geant4Simulation")
-                   .def(py::init<const Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Algorithm::config)
-                   .def_property_readonly("geant4Handle",
-                                          &Algorithm::geant4Handle);
+    auto alg =
+        py::class_<Algorithm, ActsExamples::IAlgorithm,
+                   std::shared_ptr<Algorithm>>(mod, "Geant4Simulation")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Algorithm::config)
+            .def_property_readonly("geant4Handle", &Algorithm::geant4Handle);
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
