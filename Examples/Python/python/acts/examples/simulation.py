@@ -366,7 +366,8 @@ def addFatras(
     rnd: acts.examples.RandomNumbers,
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
-    enableInteractions=False,
+    enableInteractions: bool = False,
+    pMin: Optional[float] = None,
     inputParticles: str = "particles_input",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -389,6 +390,7 @@ def addFatras(
     postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
         Similar to preSelectParticles but applied after simulation to "particles_initial", therefore also filters secondaries.
     enableInteractions : Enable the particle interactions in the simulation
+    pMin : Minimum monmentum of particles simulated by FATRAS
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
@@ -424,6 +426,7 @@ def addFatras(
         emEnergyLossIonisation=enableInteractions,
         emEnergyLossRadiation=enableInteractions,
         emPhotonConversion=enableInteractions,
+        pMin=pMin,
     )
 
     # Sequencer
