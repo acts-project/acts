@@ -507,7 +507,8 @@ int Sequencer::run() {
                        << ") (seen: " << count << " FPEs)\n"
                        << Acts::FpeMonitor::stackTraceToString(
                               *st, m_cfg.fpeStackTraceLength);
-                    m_hasFpeFailure = true;
+
+                    m_nUnmaskedFpe += (count - nMasked);
 
                     if (m_cfg.failOnFirstFpe) {
                       ACTS_ERROR(ss.str());
@@ -593,7 +594,12 @@ int Sequencer::run() {
                        << Acts::FpeMonitor::stackTraceToString(
                               *st, m_cfg.fpeStackTraceLength));
       }
-      ACTS_INFO("-----------------------------------");
+    }
+
+    if (m_nUnmaskedFpe > 0) {
+      ACTS_ERROR("Encountered " << m_nUnmaskedFpe << " unmasked FPEs");
+    } else {
+      ACTS_INFO("No unmasked FPEs encountered");
     }
   }
 
@@ -616,7 +622,7 @@ int Sequencer::run() {
                 joinPaths(m_cfg.outputDir, m_cfg.outputTimingFile));
   }
 
-  if (m_hasFpeFailure) {
+  if (m_nUnmaskedFpe > 0) {
     return EXIT_FAILURE;
   }
 

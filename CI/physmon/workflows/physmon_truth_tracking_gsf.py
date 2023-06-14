@@ -15,8 +15,8 @@ with tempfile.TemporaryDirectory() as temp:
         events=500,
         numThreads=-1,
         logLevel=acts.logging.INFO,
-        fpeMasks=acts.examples.FpeMask.fromFile(
-            Path(__file__).parent / "fpe_masks.yml"
+        fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
+            Path(__file__).parent.parent / "fpe_masks.yml"
         ),
     )
 

@@ -177,7 +177,7 @@ class Sequencer {
 
   std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
-  std::atomic<bool> m_hasFpeFailure = false;
+  std::atomic<std::size_t> m_nUnmaskedFpe = 0;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };
