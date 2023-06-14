@@ -224,4 +224,23 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
   }
 }
 
+void VectorMultiTrajectory::reserve(std::size_t n) {
+  m_index.reserve(n);
+  m_previous.reserve(n);
+  m_params.reserve(n * 2);
+  m_cov.reserve(n * 2);
+  m_meas.reserve(n * 2);
+  m_measOffset.reserve(n);
+  m_measCov.reserve(n * 2 * 2);
+  m_measCovOffset.reserve(n);
+  m_jac.reserve(n);
+  m_sourceLinks.reserve(n);
+  m_projectors.reserve(n);
+  m_referenceSurfaces.reserve(n);
+
+  for (auto& [key, vec] : m_dynamic) {
+    vec->reserve(n);
+  }
+}
+
 }  // namespace Acts
