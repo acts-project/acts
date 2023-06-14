@@ -77,15 +77,4 @@ struct EventStore {
   std::unordered_map<BarcodeWithoutSubparticle, std::size_t> subparticleMap;
 };
 
-/// This could potentially serve multiple threads
-class EventStoreHolder {
- public:
-  EventStoreHolder() : m_store(std::make_unique<EventStore>()) {}
-
-  EventStore& store() const { return *m_store; }
-
- private:
-  std::unique_ptr<EventStore> m_store;
-};
-
 }  // namespace ActsExamples

@@ -35,19 +35,19 @@ class Geant4Manager;
 ///
 /// TODO A way out of this Geant4 lifecycle mess might be dynamically unloading
 /// and loading the Geant4 library which should reset it to its original state.
-struct Geant4Instance {
+struct Geant4Handle {
   std::mutex mutex;
   int logLevel{};
   std::unique_ptr<G4RunManager> runManager;
   G4VUserPhysicsList *physicsList;
   std::string physicsListName;
 
-  Geant4Instance(int logLevel, std::unique_ptr<G4RunManager> runManager,
-                 std::unique_ptr<G4VUserPhysicsList> physicsList,
-                 std::string physicsListName);
-  Geant4Instance(const Geant4Instance &) = delete;
-  Geant4Instance &operator=(const Geant4Instance &) = delete;
-  ~Geant4Instance();
+  Geant4Handle(int logLevel, std::unique_ptr<G4RunManager> runManager,
+               std::unique_ptr<G4VUserPhysicsList> physicsList,
+               std::string physicsListName);
+  Geant4Handle(const Geant4Handle &) = delete;
+  Geant4Handle &operator=(const Geant4Handle &) = delete;
+  ~Geant4Handle();
 
   /// Set logging consistently accross common Geant4 modules
   ///
@@ -55,7 +55,7 @@ struct Geant4Instance {
   void tweekLogging(int level) const;
 };
 
-/// Allows easy instantiation of a Geant4Instance object
+/// Allows easy instantiation of a Geant4Handle object
 class Geant4Manager {
  public:
   static Geant4Manager &instance();
@@ -64,10 +64,10 @@ class Geant4Manager {
   static void tweekLogging(G4RunManager &runManager, int level);
 
   /// This can only be called once due to Geant4 limitations
-  std::shared_ptr<Geant4Instance> create(int logLevel, std::string physicsList);
+  std::shared_ptr<Geant4Handle> create(int logLevel, std::string physicsList);
 
   /// This can only be called once due to Geant4 limitations
-  std::shared_ptr<Geant4Instance> create(
+  std::shared_ptr<Geant4Handle> create(
       int logLevel, std::unique_ptr<G4VUserPhysicsList> physicsList,
       std::string physicsListName);
 
@@ -87,7 +87,7 @@ class Geant4Manager {
   ~Geant4Manager();
 
   bool m_created = false;
-  std::weak_ptr<Geant4Instance> m_instance;
+  std::weak_ptr<Geant4Handle> m_handle;
   std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>>
       m_physicsListFactories;
 };

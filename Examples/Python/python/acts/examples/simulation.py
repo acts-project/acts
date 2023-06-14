@@ -578,8 +578,8 @@ def getG4DetectorContructionFactory(
     raise AttributeError(f"cannot find a suitable detector construction for {detector}")
 
 
-# holds the Geant4Instance for potential reuse
-__geant4Instance = None
+# holds the Geant4Handle for potential reuse
+__geant4Handle = None
 
 
 def addGeant4(
@@ -650,12 +650,12 @@ def addGeant4(
             raise AttributeError("detector not given")
         g4DetectorConstructionFactory = getG4DetectorContructionFactory(detector)
 
-    global __geant4Instance
+    global __geant4Handle
 
     # Simulation
     alg = Geant4Simulation(
         level=customLogLevel(),
-        geant4Instance=__geant4Instance,
+        geant4Handle=__geant4Handle,
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=particles_selected,
@@ -673,7 +673,7 @@ def addGeant4(
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
 
-    __geant4Instance = alg.geant4Instance
+    __geant4Handle = alg.geant4Handle
 
     # Sequencer
     s.addAlgorithm(alg)

@@ -27,7 +27,8 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
   struct Config {
-    std::shared_ptr<EventStoreHolder> eventStoreHolder;
+    std::shared_ptr<EventStore> eventStore;
+
     /// Selection for hit recording
     bool charged = true;
     bool neutral = false;

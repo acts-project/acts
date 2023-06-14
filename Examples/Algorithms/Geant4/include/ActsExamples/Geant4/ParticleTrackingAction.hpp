@@ -29,7 +29,8 @@ namespace ActsExamples {
 class ParticleTrackingAction : public G4UserTrackingAction {
  public:
   struct Config {
-    std::shared_ptr<EventStoreHolder> eventStoreHolder;
+    std::shared_ptr<EventStore> eventStore;
+
     bool keepParticlesWithoutHits = true;
   };
 

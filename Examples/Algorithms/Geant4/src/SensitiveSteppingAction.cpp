@@ -87,7 +87,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   // Unit conversions G4->::ACTS
 
   // Retrieve the event data registry
-  auto& eventData = m_cfg.eventStoreHolder->store();
+  auto& eventData = *m_cfg.eventStore;
 
   // The particle after the step
   G4Track* track = step->GetTrack();

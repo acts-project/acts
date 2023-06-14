@@ -28,13 +28,13 @@ namespace ActsExamples {
 /// generator action.
 ///
 /// This also ensures that the event numbers correspond to the
-/// ACTS framework event numbers and hence harmonizes the EventStoreHolder.
+/// ACTS framework event numbers and hence harmonizes the EventStore.
 class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
  public:
   /// Nested configuration struct that contains the
   /// input particle collection name,
   struct Config {
-    std::shared_ptr<EventStoreHolder> eventStoreHolder;
+    std::shared_ptr<EventStore> eventStore;
 
     /// Force pdgCode & mass & charge in G4 units (this is needed for Geantino
     /// simulation)
@@ -67,7 +67,7 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
   Config m_cfg;
 
  private:
-  /// Event number cache for EventStoreHolder harmonization
+  /// Event number cache for EventStore harmonization
   unsigned int m_eventNr = 0;
 
   /// Private access method to the logging instance

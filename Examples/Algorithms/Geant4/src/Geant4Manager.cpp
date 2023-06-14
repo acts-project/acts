@@ -32,10 +32,10 @@
 
 namespace ActsExamples {
 
-Geant4Instance::Geant4Instance(int _logLevel,
-                               std::unique_ptr<G4RunManager> _runManager,
-                               std::unique_ptr<G4VUserPhysicsList> _physicsList,
-                               std::string _physicsListName)
+Geant4Handle::Geant4Handle(int _logLevel,
+                           std::unique_ptr<G4RunManager> _runManager,
+                           std::unique_ptr<G4VUserPhysicsList> _physicsList,
+                           std::string _physicsListName)
     : logLevel(_logLevel),
       runManager(std::move(_runManager)),
       physicsList(_physicsList.release()),
@@ -51,9 +51,9 @@ Geant4Instance::Geant4Instance(int _logLevel,
   runManager->SetUserInitialization(physicsList);
 }
 
-Geant4Instance::~Geant4Instance() = default;
+Geant4Handle::~Geant4Handle() = default;
 
-void Geant4Instance::tweekLogging(int level) const {
+void Geant4Handle::tweekLogging(int level) const {
   Geant4Manager::tweekLogging(*runManager, level);
 }
 
@@ -77,33 +77,33 @@ void Geant4Manager::tweekLogging(G4RunManager& runManager, int level) {
 #endif
 }
 
-std::shared_ptr<Geant4Instance> Geant4Manager::create(int logLevel,
-                                                      std::string physicsList) {
+std::shared_ptr<Geant4Handle> Geant4Manager::create(int logLevel,
+                                                    std::string physicsList) {
   return create(logLevel, createPhysicsList(physicsList), physicsList);
 }
 
-std::shared_ptr<Geant4Instance> Geant4Manager::create(
+std::shared_ptr<Geant4Handle> Geant4Manager::create(
     int logLevel, std::unique_ptr<G4VUserPhysicsList> physicsList,
     std::string physicsListName) {
-  if (!m_instance.expired()) {
-    throw std::runtime_error("creating a second instance is prohibited");
+  if (!m_handle.expired()) {
+    throw std::runtime_error("creating a second handle is prohibited");
   }
   if (m_created) {
     throw std::runtime_error(
-        "creating a new instance is prohibited. you have to hold onto the "
+        "creating a new handle is prohibited. you have to hold onto the "
         "first one.");
   }
 
   auto runManager = std::unique_ptr<G4RunManager>(
       G4RunManagerFactory::CreateRunManager(G4RunManagerType::SerialOnly));
 
-  auto instance = std::make_shared<Geant4Instance>(
-      logLevel, std::move(runManager), std::move(physicsList),
-      std::move(physicsListName));
+  auto handle = std::make_shared<Geant4Handle>(logLevel, std::move(runManager),
+                                               std::move(physicsList),
+                                               std::move(physicsListName));
 
   m_created = true;
-  m_instance = instance;
-  return instance;
+  m_handle = handle;
+  return handle;
 }
 
 void Geant4Manager::registerPhysicsListFactory(

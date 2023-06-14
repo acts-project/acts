@@ -41,8 +41,8 @@ namespace ActsExamples {
 
 class DetectorConstructionFactory;
 class SensitiveSurfaceMapper;
-class EventStoreHolder;
-struct Geant4Instance;
+struct EventStore;
+struct Geant4Handle;
 
 /// Abtracts common Geant4 Acts algorithm behaviour.
 class Geant4SimulationBase : public IAlgorithm {
@@ -60,7 +60,7 @@ class Geant4SimulationBase : public IAlgorithm {
     std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory;
 
     /// Optional Geant4 instance overwrite.
-    std::shared_ptr<Geant4Instance> geant4Instance;
+    std::shared_ptr<Geant4Handle> geant4Handle;
   };
 
   Geant4SimulationBase(const Config& cfg, std::string name,
@@ -80,18 +80,18 @@ class Geant4SimulationBase : public IAlgorithm {
   /// Readonly access to the configuration
   virtual const Config& config() const = 0;
 
-  std::shared_ptr<Geant4Instance> geant4Instance() const;
+  std::shared_ptr<Geant4Handle> geant4Handle() const;
 
  protected:
   void commonInitialization();
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::shared_ptr<EventStoreHolder> m_eventStoreHolder;
+  std::shared_ptr<EventStore> m_eventStore;
 
   int m_geant4Level{};
 
-  std::shared_ptr<Geant4Instance> m_gean4Instance;
+  std::shared_ptr<Geant4Handle> m_gean4Instance;
 
   /// Detector construction object.
   /// G4RunManager will take care of deletion

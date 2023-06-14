@@ -24,7 +24,7 @@ ActsExamples::ParticleTrackingAction::ParticleTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
     const G4Track* aTrack) {
-  auto& eventData = m_cfg.eventStoreHolder->store();
+  auto& eventData = *m_cfg.eventStore;
 
   // If this is not the case, there are unhandled cases of particle stopping in
   // the SensitiveSteppingAction
@@ -61,7 +61,7 @@ void ActsExamples::ParticleTrackingAction::PreUserTrackingAction(
 
 void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
     const G4Track* aTrack) {
-  auto& eventData = m_cfg.eventStoreHolder->store();
+  auto& eventData = *m_cfg.eventStore;
 
   // The initial particle maybe was not registered because a particle ID
   // collision
@@ -123,7 +123,7 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
 std::optional<ActsExamples::SimBarcode>
 ActsExamples::ParticleTrackingAction::makeParticleId(G4int trackId,
                                                      G4int parentId) const {
-  auto& ed = m_cfg.eventStoreHolder->store();
+  auto& ed = *m_cfg.eventStore;
 
   // We already have this particle registered (it is one of the input particles
   // or we are making a final particle state)

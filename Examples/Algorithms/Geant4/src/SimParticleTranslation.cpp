@@ -38,7 +38,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
   ACTS_DEBUG("Primary Generator Action for Event: " << eventID);
 
-  auto& eventData = m_cfg.eventStoreHolder->store();
+  auto& eventData = *m_cfg.eventStore;
   WhiteBoard* eventStore = eventData.store;
   if (eventStore == nullptr) {
     ACTS_WARNING("No EventStore instance could be found for this event!");

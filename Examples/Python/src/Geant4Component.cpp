@@ -47,8 +47,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
              std::shared_ptr<DetectorConstructionFactory>>(
       mod, "DetectorConstructionFactory");
 
-  py::class_<Geant4Instance, std::shared_ptr<Geant4Instance>>(mod,
-                                                              "Geant4Instance");
+  py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod,
+                                                              "Geant4Handle");
 
   {
     using Algorithm = Geant4Simulation;
@@ -58,8 +58,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                    .def(py::init<const Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Algorithm::config)
-                   .def_property_readonly("geant4Instance",
-                                          &Algorithm::geant4Instance);
+                   .def_property_readonly("geant4Handle",
+                                          &Algorithm::geant4Handle);
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
                   .def(py::init<>());
@@ -67,7 +67,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(detectorConstructionFactory);
-    ACTS_PYTHON_MEMBER(geant4Instance);
+    ACTS_PYTHON_MEMBER(geant4Handle);
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(outputParticlesInitial);
     ACTS_PYTHON_MEMBER(outputParticlesFinal);
@@ -99,7 +99,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(inputParticles);
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(detectorConstructionFactory);
-    ACTS_PYTHON_MEMBER(geant4Instance);
+    ACTS_PYTHON_MEMBER(geant4Handle);
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
     ACTS_PYTHON_STRUCT_END();
   }

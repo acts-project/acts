@@ -44,7 +44,7 @@ ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
 
   m_logger = Acts::getDefaultLogger("Geant4", level);
 
-  m_eventStoreHolder = std::make_shared<EventStoreHolder>();
+  m_eventStore = std::make_shared<EventStore>();
 
   // tweek logging
   {
@@ -93,7 +93,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   G4Random::setTheSeed(config().randomNumbers->generateSeed(ctx));
 
   // Get and reset event registry state
-  auto& eventData = m_eventStoreHolder->store();
+  auto& eventData = *m_eventStore;
   eventData = EventStore{};
 
   // Register the current event store to the registry
@@ -130,18 +130,17 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::shared_ptr<ActsExamples::Geant4Instance>
-ActsExamples::Geant4SimulationBase::geant4Instance() const {
+std::shared_ptr<ActsExamples::Geant4Handle>
+ActsExamples::Geant4SimulationBase::geant4Handle() const {
   return m_gean4Instance;
 }
 
 ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
                                                  Acts::Logging::Level level)
     : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
-  m_gean4Instance =
-      m_cfg.geant4Instance
-          ? m_cfg.geant4Instance
-          : Geant4Manager::instance().create(m_geant4Level, m_cfg.physicsList);
+  m_gean4Instance = m_cfg.geant4Handle ? m_cfg.geant4Handle
+                                       : Geant4Manager::instance().create(
+                                             m_geant4Level, m_cfg.physicsList);
   if (m_gean4Instance->physicsListName != m_cfg.physicsList) {
     throw std::runtime_error("inconsistent physics list");
   }
@@ -152,7 +151,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
   // Set the primarty generator
   {
     SimParticleTranslation::Config prCfg;
-    prCfg.eventStoreHolder = m_eventStoreHolder;
+    prCfg.eventStore = m_eventStore;
     // G4RunManager will take care of deletion
     auto primaryGeneratorAction = new SimParticleTranslation(
         prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
@@ -174,7 +173,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
   // Particle action
   {
     ParticleTrackingAction::Config trackingCfg;
-    trackingCfg.eventStoreHolder = m_eventStoreHolder;
+    trackingCfg.eventStore = m_eventStore;
     trackingCfg.keepParticlesWithoutHits = cfg.keepParticlesWithoutHits;
     // G4RunManager will take care of deletion
     auto trackingAction = new ParticleTrackingAction(
@@ -189,7 +188,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
   // Stepping actions
   {
     SensitiveSteppingAction::Config stepCfg;
-    stepCfg.eventStoreHolder = m_eventStoreHolder;
+    stepCfg.eventStore = m_eventStore;
     stepCfg.charged = true;
     stepCfg.neutral = false;
     stepCfg.primary = true;
@@ -262,7 +261,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   Geant4SimulationBase::execute(ctx);
 
-  auto& eventData = m_eventStoreHolder->store();
+  auto& eventData = *m_eventStore;
 
   // Output handling: Simulation
   m_outputParticlesInitial(
@@ -291,8 +290,8 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
     : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
   auto physicsListName = "MaterialPhysicsList";
   m_gean4Instance =
-      m_cfg.geant4Instance
-          ? m_cfg.geant4Instance
+      m_cfg.geant4Handle
+          ? m_cfg.geant4Handle
           : Geant4Manager::instance().create(
                 m_geant4Level,
                 std::make_unique<MaterialPhysicsList>(
@@ -330,7 +329,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4MaterialRecording::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   Geant4SimulationBase::execute(ctx);
 
-  auto& eventData = m_eventStoreHolder->store();
+  auto& eventData = *m_eventStore;
 
   // Output handling: Material tracks
   m_outputMaterialTracks(
