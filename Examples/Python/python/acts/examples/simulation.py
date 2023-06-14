@@ -413,20 +413,22 @@ def addFatras(
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
-        level=customLogLevel(),
-        inputParticles=particles_selected,
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
-        outputSimHits="simhits",
-        randomNumbers=rnd,
-        trackingGeometry=trackingGeometry,
-        magneticField=field,
-        generateHitsOnSensitive=True,
-        emScattering=enableInteractions,
-        emEnergyLossIonisation=enableInteractions,
-        emEnergyLossRadiation=enableInteractions,
-        emPhotonConversion=enableInteractions,
-        pMin=pMin,
+        **acts.examples.defaultKWArgs(
+            level=customLogLevel(),
+            inputParticles=particles_selected,
+            outputParticlesInitial="particles_initial",
+            outputParticlesFinal="particles_final",
+            outputSimHits="simhits",
+            randomNumbers=rnd,
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
+            generateHitsOnSensitive=True,
+            emScattering=enableInteractions,
+            emEnergyLossIonisation=enableInteractions,
+            emEnergyLossRadiation=enableInteractions,
+            emPhotonConversion=enableInteractions,
+            pMin=pMin,
+        )
     )
 
     # Sequencer
