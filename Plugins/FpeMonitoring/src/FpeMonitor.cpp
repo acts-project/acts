@@ -98,6 +98,18 @@ void FpeMonitor::Result::add(FpeType type, void *stackPtr,
   }
 }
 
+bool FpeMonitor::Result::contains(
+    FpeType type, const boost::stacktrace::stacktrace &st) const {
+  return std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
+                      [&](const FpeInfo &el) {
+                        const auto &fl = *el.st->begin();
+                        const auto &fr = *st.begin();
+                        return el.type == type &&
+                               (boost::stacktrace::hash_value(fl) ==
+                                boost::stacktrace::hash_value(fr));
+                      }) != m_stracktraces.end();
+}
+
 FpeMonitor::Result &FpeMonitor::result() {
   consumeRecorded();
   return m_result;

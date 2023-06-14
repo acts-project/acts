@@ -92,7 +92,7 @@ def fpe_type(request):
     yield request.param
 
 
-def test_fpe_single_nofail(fpe_type):
+def test_fpe_single_fail_at_end(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         failOnFirstFpe=False,
@@ -106,13 +106,15 @@ def test_fpe_single_nofail(fpe_type):
             )(),
         )
     )
-    s.run()
+    with pytest.raises(RuntimeError):
+        s.run()
+    # fails, but will have run all 10 events
     res = s.fpeResult
     for x in acts.FpeType.values:
         assert res.count(x) == (s.config.events if x == fpe_type else 0)
 
 
-def test_fpe_single_fail(fpe_type):
+def test_fpe_single_fail_immediately(fpe_type):
     s = acts.examples.Sequencer(
         events=10,
         failOnFirstFpe=True,
@@ -174,7 +176,8 @@ def test_fpe_rearm(fpe_type):
         numThreads=-1,
     )
     s.addAlgorithm(Alg())
-    s.run()
+    with pytest.raises(RuntimeError):
+        s.run()
 
     res = s.fpeResult
     for x in acts.FpeType.values:
@@ -259,7 +262,8 @@ def test_buffer_sufficient():
     )
 
     s.addAlgorithm(FuncAlg("Invalid", lambda _: acts.FpeMonitor._trigger_invalid()))
-    s.run()
+    with pytest.raises(RuntimeError):
+        s.run()
 
     res = s.fpeResult
     for x in acts.FpeType.values:

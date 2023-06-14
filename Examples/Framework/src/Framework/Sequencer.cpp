@@ -494,7 +494,7 @@ int Sequencer::run() {
               }
 
               if (mon) {
-                fpe.local().merge(mon->result());
+                auto& local = fpe.local();
 
                 for (const auto& [count, type, st] :
                      mon->result().stackTraces()) {
@@ -513,11 +513,13 @@ int Sequencer::run() {
                     if (m_cfg.failOnFirstFpe) {
                       ACTS_ERROR(ss.str());
                       throw FpeFailure{ss.str()};
-                    } else {
+                    } else if (!local.contains(type, *st)) {
                       ACTS_INFO(ss.str());
                     }
                   }
                 }
+
+                local.merge(mon->result());
               }
               context.fpeMonitor = nullptr;
             }

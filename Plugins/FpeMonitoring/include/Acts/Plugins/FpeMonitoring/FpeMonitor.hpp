@@ -97,6 +97,8 @@ class FpeMonitor {
 
     void deduplicate();
 
+    bool contains(FpeType type, const boost::stacktrace::stacktrace &st) const;
+
     void summary(
         std::ostream &os,
         std::size_t depth = std::numeric_limits<std::size_t>::max()) const;
