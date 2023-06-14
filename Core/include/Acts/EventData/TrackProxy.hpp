@@ -12,6 +12,7 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
@@ -19,8 +20,8 @@
 
 namespace Acts {
 
-template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t>
+template <ACTS_CONCEPT(Acts::TrackContainerBackend) track_container_t,
+          typename traj_t, template <typename> class holder_t>
 class TrackContainer;
 
 namespace detail_tc {
@@ -544,6 +545,10 @@ class TrackProxy {
     }
     nMeasurements() = other.nMeasurements();
     nHoles() = other.nHoles();
+    nOutliers() = other.nOutliers();
+    nSharedHits() = other.nSharedHits();
+    chi2() = other.chi2();
+    nDoF() = other.nDoF();
 
     // This will only be valid if the backends match and support this operation
     m_container->copyDynamicFrom(m_index, other.m_container->container(),

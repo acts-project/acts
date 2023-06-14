@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
+#include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -28,8 +28,11 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     /// Output protoTracks collection.
     std::string outputProtoTracks;
 
-    /// ML based track finder
-    std::shared_ptr<Acts::ExaTrkXTrackFindingBase> trackFinderML;
+    std::shared_ptr<Acts::GraphConstructionBase> graphConstructor;
+
+    std::vector<std::shared_ptr<Acts::EdgeClassificationBase>> edgeClassifiers;
+
+    std::shared_ptr<Acts::TrackBuildingBase> trackBuilder;
 
     /// Scaling of the input features
     float rScale = 1.f;
@@ -55,6 +58,9 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  std::vector<std::vector<int>> runPipeline(
+      std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const;
+
   // configuration
   Config m_cfg;
 

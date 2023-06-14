@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"

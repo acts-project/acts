@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
 
@@ -61,8 +62,7 @@ struct GenericDefaultExtension {
          const navigator_t& /*navigator*/, ThisVector3& knew,
          const Vector3& bField, std::array<Scalar, 4>& kQoP, const int i = 0,
          const double h = 0., const ThisVector3& kprev = ThisVector3::Zero()) {
-    auto qop =
-        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
+    auto qop = stepper.qop(state.stepping);
     // First step does not rely on previous data
     if (i == 0) {
       knew = qop * stepper.direction(state.stepping).cross(bField);
@@ -182,8 +182,7 @@ struct GenericDefaultExtension {
 
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
-    auto qop =
-        stepper.charge(state.stepping) / stepper.momentum(state.stepping);
+    auto qop = stepper.qop(state.stepping);
 
     D = FreeMatrix::Identity();
 
@@ -244,9 +243,8 @@ struct GenericDefaultExtension {
 
     D(3, 7) =
         h * state.options.mass * state.options.mass *
-        stepper.charge(state.stepping) /
-        (stepper.momentum(state.stepping) *
-         std::hypot(1., state.options.mass / stepper.momentum(state.stepping)));
+        stepper.qop(state.stepping) /
+        std::hypot(1., state.options.mass / stepper.momentum(state.stepping));
     return true;
   }
 };

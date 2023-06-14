@@ -598,8 +598,7 @@ BOOST_AUTO_TEST_CASE(AppendTrackState) {
   TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
   auto t = tc.getTrack(tc.addTrack());
 
-  std::vector<MultiTrajectory<VectorMultiTrajectory>::TrackStateProxy>
-      trackStates;
+  std::vector<VectorMultiTrajectory::TrackStateProxy> trackStates;
   trackStates.push_back(t.appendTrackState());
   trackStates.push_back(t.appendTrackState());
   trackStates.push_back(t.appendTrackState());

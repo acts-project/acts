@@ -155,6 +155,10 @@ class Particle {
   constexpr Scalar charge() const { return m_charge; }
   /// Particle mass.
   constexpr Scalar mass() const { return m_mass; }
+  /// Particl qop.
+  constexpr Scalar qop() const {
+    return (charge() == 0 ? 1 : charge()) / absoluteMomentum();
+  }
 
   /// Space-time position four-vector.
   constexpr const Vector4 &fourPosition() const { return m_position4; }
