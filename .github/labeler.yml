@@ -12,3 +12,21 @@
   - Plugins/**
 'Component - Documentation':
   - docs/**
+'Changes Performance':
+  - CI/physmon/reference/**
+'Event Data Model':
+  - '**/*EventData*/**'
+'Clustering':
+  - '**/*Clusterization*/**'
+'SP formation':
+  - '**/*SpacePointFormation*/**'
+'Seeding':
+  - '**/*Seeding*/**'
+'Track Finding':
+  - '**/*TrackFinding*/**'
+'Track Fitting':
+  - '**/*TrackFitting*/**'
+'Vertexing':
+  - '**/*Vertexing*/**'
+'Ambiguity Resolution':
+  - '**/*AmbiguityResolution*/**'
