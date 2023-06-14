@@ -12,7 +12,7 @@
 
 template <typename external_spacepoint_t>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
-    Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index)
+    const Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index)
     : m_group(group), m_max_localBins(m_group->m_grid->numLocalBins()) {
   m_max_localBins[INDEX::PHI] += 1;
   if (index == m_group->m_grid->size()) {
@@ -236,12 +236,12 @@ inline size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
 
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
-Acts::BinnedSPGroup<external_spacepoint_t>::begin() {
+Acts::BinnedSPGroup<external_spacepoint_t>::begin() const {
   return {*this, 0};
 }
 
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
-Acts::BinnedSPGroup<external_spacepoint_t>::end() {
+Acts::BinnedSPGroup<external_spacepoint_t>::end() const {
   return {*this, m_grid->size()};
 }

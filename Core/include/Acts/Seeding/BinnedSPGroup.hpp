@@ -40,7 +40,7 @@ class BinnedSPGroupIterator {
   // Never take ownerships
   BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>&& group,
                         std::size_t) = delete;
-  BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>& group,
+  BinnedSPGroupIterator(const BinnedSPGroup<external_spacepoint_t>& group,
                         std::size_t index);
 
   BinnedSPGroupIterator(const BinnedSPGroupIterator&) = delete;
@@ -65,7 +65,7 @@ class BinnedSPGroupIterator {
 
  private:
   /// The group, it contains the grid and the bin finders
-  Acts::detail::RefHolder<BinnedSPGroup<external_spacepoint_t>> m_group;
+  Acts::detail::RefHolder<const BinnedSPGroup<external_spacepoint_t>> m_group;
   /// Max Local Bins - limits of the grid
   std::array<std::size_t, 2> m_max_localBins;
   /// Current Local Bins
@@ -106,10 +106,14 @@ class BinnedSPGroup {
 
   size_t size() const;
 
-  BinnedSPGroupIterator<external_spacepoint_t> begin();
-  BinnedSPGroupIterator<external_spacepoint_t> end();
+  BinnedSPGroupIterator<external_spacepoint_t> begin() const;
+  BinnedSPGroupIterator<external_spacepoint_t> end() const;
 
   Acts::SpacePointGrid<external_spacepoint_t>& grid() {
+    return *m_grid.get();
+  }
+
+  const Acts::SpacePointGrid<external_spacepoint_t>& grid() const {
     return *m_grid.get();
   }
 

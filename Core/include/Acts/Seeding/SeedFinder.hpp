@@ -19,6 +19,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Seeding/BinnedSPGroup.hpp"
 
 #include <array>
 #include <limits>
@@ -129,6 +130,15 @@ class SeedFinder {
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs) const;
 
+  template<template <typename...> typename container_t>
+  void createSeeds(
+      const Acts::SeedFinderOptions& options,
+      const Acts::SeedSelectorOptions<external_spacepoint_t>& seedSelectorOptions,
+      SeedingState& state,
+      const Acts::BinnedSPGroup<external_spacepoint_t>& binnedGroup,
+      container_t<Acts::Seed<external_spacepoint_t>>& outContainer,
+      const Acts::Range1D<float>& rMiddleSPRange) const;
+  
  private:
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs

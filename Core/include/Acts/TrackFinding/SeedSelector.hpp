@@ -38,7 +38,7 @@ namespace Acts {
   template<typename external_spacepoint_t>
   class SeedSelector {
   public:
-    SeedSelector(SeedSelectorOptions<external_spacepoint_t>&& options);
+    SeedSelector(SeedSelectorOptions<external_spacepoint_t> options);
     SeedSelector(const SeedSelector&) = delete;
     SeedSelector(SeedSelector&&) = delete;
     SeedSelector& operator=(const SeedSelector&) = delete;
@@ -46,19 +46,19 @@ namespace Acts {
     
     ~SeedSelector() = default;
 
-    bool passesQualitySelection(const Acts::Seed<external_spacepoint_t>&) const;
+    bool selected(const Acts::Seed<external_spacepoint_t>&) const;
     
   private:
     SeedSelectorOptions<external_spacepoint_t> m_options;
   };
 
   template<typename external_spacepoint_t>
-  SeedSelector<external_spacepoint_t>::SeedSelector(SeedSelectorOptions<external_spacepoint_t>&& options)
+  SeedSelector<external_spacepoint_t>::SeedSelector(SeedSelectorOptions<external_spacepoint_t> options)
     : m_options(std::move(options))
   {}
 
   template<typename external_spacepoint_t>
-  bool SeedSelector<external_spacepoint_t>::passesQualitySelection(const Acts::Seed<external_spacepoint_t>& seed) const
+  bool SeedSelector<external_spacepoint_t>::selected(const Acts::Seed<external_spacepoint_t>& seed) const
   {
     return (m_options.selector)(seed);
   }

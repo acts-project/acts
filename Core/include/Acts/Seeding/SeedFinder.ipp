@@ -36,6 +36,38 @@ SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
 }
 
 template <typename external_spacepoint_t, typename platform_t>
+template<template <typename...> typename container_t>
+void SeedFinder<external_spacepoint_t, platform_t>::createSeeds(
+							   const Acts::SeedFinderOptions& options,
+							   const Acts::SeedSelectorOptions<external_spacepoint_t>& seedSelectorOptions,
+							   SeedingState& state,
+							   const Acts::BinnedSPGroup<external_spacepoint_t>& binnedGroup,
+							   container_t<Acts::Seed<external_spacepoint_t>>& outContainer,
+							   const Acts::Range1D<float>& rMiddleSPRange) const
+{
+  // Computation - find the seeds
+  for (const auto [bottom, middle, top] : binnedGroup) {
+    createSeedsForGroup(options, state, binnedGroup.grid(),
+			std::back_inserter(outContainer),
+			bottom, middle, top,
+			rMiddleSPRange);
+  }
+  
+  // apply selection
+  Acts::SeedSelector<external_spacepoint_t> seedSelector(seedSelectorOptions);
+  
+  std::size_t current_n = 0;
+  for (std::size_t i(0); i<outContainer.size(); ++i) {
+    const auto& seed = outContainer[i];
+    if (not seedSelector.selected(seed)) continue;
+    outContainer[current_n++] = outContainer[i];
+  }
+
+  // Remove seeds that didn't pass the selection
+  outContainer.erase(outContainer.begin() + current_n, outContainer.end());
+}
+  
+template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,

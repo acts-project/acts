@@ -25,7 +25,7 @@
 #include <stdexcept>
 
 template<typename external_spacepoint_t, typename external_spacepoint_iterator_t>
-class MySelector {
+class AtlasSeedSelector {
 public:
   static_assert(
 		std::is_same<
@@ -33,15 +33,15 @@ public:
 		const external_spacepoint_t*>::value,
 		"Iterator does not contain type this class was templated with");
   
-  MySelector() = delete;
-  MySelector(const Acts::SpacePointData& data,
-	     external_spacepoint_iterator_t begin,
-	     external_spacepoint_iterator_t end)
+  AtlasSeedSelector() = delete;
+  AtlasSeedSelector(const Acts::SpacePointData& data,
+		    external_spacepoint_iterator_t begin,
+		    external_spacepoint_iterator_t end)
     : m_data(&data),
       m_begin(begin),
       m_end(end)
   {}
-  ~MySelector() = default;
+  ~AtlasSeedSelector() = default;
 
   bool passesQualitySelection(const Acts::Seed<external_spacepoint_t>& seed) const {
     // Get the indexes
@@ -59,9 +59,10 @@ public:
 	      << " middle=" << middle_quality
 	      << " top=" << top_quality << std::endl;
     
-    if (bottom_quality > seed_quality) return false;
-    if (middle_quality > seed_quality) return false;
-    if (top_quality > seed_quality) return false;
+    if (bottom_quality > seed_quality and
+	middle_quality > seed_quality and
+	top_quality > seed_quality)
+      return false;
     return true;
   }
   
@@ -340,35 +341,20 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
-  for (const auto [bottom, middle, top] : spacePointsGrouping) {
-    m_seedFinder.createSeedsForGroup(
-        m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
-        std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
-  }
-
   // This is a proof of concept for now
-  MySelector<SimSpacePoint, decltype(spacePointPtrs.begin())> selector(state.spacePointData,
-								       spacePointPtrs.begin(),
-								       spacePointPtrs.end());
+  AtlasSeedSelector<SimSpacePoint, decltype(spacePointPtrs.begin())> selector(state.spacePointData,
+									      spacePointPtrs.begin(),
+									      spacePointPtrs.end());
   
   Acts::SeedSelectorOptions<SimSpacePoint> seedSelectorOptions;
-  seedSelectorOptions.selector.template connect<&MySelector<SimSpacePoint, decltype(spacePointPtrs.begin())>::passesQualitySelection>(&selector);
+  seedSelectorOptions.selector.template connect<&AtlasSeedSelector<SimSpacePoint, decltype(spacePointPtrs.begin())>::passesQualitySelection>(&selector);
 
-  Acts::SeedSelector<SimSpacePoint> seedSelector(std::move(seedSelectorOptions));
-
-  std::size_t npasses = 0;
-  for (const auto& seed : seeds) {
-    if (not seedSelector.passesQualitySelection(seed)) continue;
-    npasses++;
-  }
-
-  std::cout << "npasses: " << npasses << "/" << seeds.size() << std::endl;
+  m_seedFinder.createSeeds(m_cfg.seedFinderOptions, seedSelectorOptions,
+			   state, spacePointsGrouping,
+			   seeds, rMiddleSPRange);
   
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
-                        << spacePointPtrs.size() << " space points");
-
-
-  
+	     << spacePointPtrs.size() << " space points");
 
 
   
