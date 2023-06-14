@@ -202,10 +202,16 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
     std::array<Vector3, nCorners> neighbors;
     const auto& cornerIndices = m_cfg.grid.closestPointsIndices(gridPosition);
 
+    if (!isInsideLocal(gridPosition)) {
+      return MagneticFieldError::OutOfBounds;
+    }
+
     size_t i = 0;
     for (size_t index : cornerIndices) {
       neighbors.at(i++) = m_cfg.transformBField(m_cfg.grid.at(index), position);
     }
+
+    assert(i == nCorners);
 
     return FieldCell(lowerLeft, upperRight, std::move(neighbors));
   }
