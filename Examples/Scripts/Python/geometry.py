@@ -25,10 +25,10 @@ def runGeometry(
     decorators,
     outputDir,
     events=1,
-    outputObj=False,
-    outputCsv=False,
+    outputObj=True,
+    outputCsv=True,
     outputJson=True,
-    outputRoot=False,
+    outputRoot=True,
 ):
 
     for ievt in range(events):
@@ -88,8 +88,8 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    #detector, trackingGeometry, decorators = AlignedDetector.create()
+    detector, trackingGeometry, decorators = AlignedDetector.create()
     # detector, trackingGeometry, decorators = GenericDetector.create()
-    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
+    # detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
