@@ -55,10 +55,6 @@ class Sequencer {
     std::string loc;
     Acts::FpeType type;
     std::size_t count;
-
-    bool operator==(const FpeMask &other) const {
-      return loc == other.loc && type == other.type && count == other.count;
-    }
   };
 
   struct Config {

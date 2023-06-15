@@ -263,13 +263,11 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   auto fpem = py::class_<Sequencer::FpeMask>(sequencer, "FpeMask")
                   .def(py::init<>())
                   .def(py::init<std::string, Acts::FpeType, std::size_t>())
-                  .def("__repr__",
-                       [](const Sequencer::FpeMask& self) {
-                         std::stringstream ss;
-                         ss << self;
-                         return ss.str();
-                       })
-                  .def(py::self == py::self);
+                  .def("__repr__", [](const Sequencer::FpeMask& self) {
+                    std::stringstream ss;
+                    ss << self;
+                    return ss.str();
+                  });
 
   ACTS_PYTHON_STRUCT_BEGIN(fpem, Sequencer::FpeMask);
   ACTS_PYTHON_MEMBER(loc);
