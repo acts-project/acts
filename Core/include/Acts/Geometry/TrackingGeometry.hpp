@@ -19,6 +19,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace Acts {
 
@@ -26,6 +27,7 @@ class Layer;
 class Surface;
 class PerigeeSurface;
 class IMaterialDecorator;
+class TrackingVolume;
 
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;

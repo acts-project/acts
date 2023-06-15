@@ -8,17 +8,20 @@
 
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <cmath>
-#include <cstdint>
+#include <memory>
 #include <stdexcept>
-#include <vector>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::TrackSelector::TrackSelector(const Config& config,
                                            Acts::Logging::Level level)

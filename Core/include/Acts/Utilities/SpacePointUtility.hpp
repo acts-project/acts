@@ -9,19 +9,25 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <iostream>
 #include <memory>
+#include <system_error>
+#include <utility>
 #include <vector>
 
 namespace Acts {
+class SourceLink;
 
 /// @brief Storage container for variables related to the calculation of space
 /// points

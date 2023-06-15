@@ -8,12 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Detector/detail/KdtSurfacesProvider.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
 #include <memory>
+#include <utility>
 #include <vector>
 
 using namespace Acts;

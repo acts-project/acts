@@ -10,17 +10,28 @@
 
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <mutex>
+#include <string>
+#include <vector>
 
 class TFile;
 class TTree;
+namespace Acts {
+class PlanarModuleCluster;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootPlanarClusterWriter
 ///

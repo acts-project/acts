@@ -8,12 +8,23 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+
+#include <cstddef>
+#include <limits>
+#include <string>
+
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Select truth particles to be used as 'seeds' of reconstruction algorithms,
 /// e.g. track fitting and track finding.

@@ -10,15 +10,23 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <array>
+#include <cmath>
+#include <memory>
+#include <stdexcept>
+#include <tuple>
 
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"

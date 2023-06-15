@@ -10,7 +10,11 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <memory>
+#include <utility>
 
 namespace Acts {
 

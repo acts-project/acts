@@ -10,9 +10,17 @@
 
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
-#include "Acts/Utilities/BinningData.hpp"
 
+#include <algorithm>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
+
+namespace Acts {
+namespace Experimental {
+class DetectorVolume;
+}  // namespace Experimental
+}  // namespace Acts
 
 namespace {
 

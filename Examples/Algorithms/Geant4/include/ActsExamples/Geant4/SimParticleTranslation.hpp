@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <G4VUserPrimaryGeneratorAction.hh>

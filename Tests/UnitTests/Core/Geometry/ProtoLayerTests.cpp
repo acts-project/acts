@@ -9,15 +9,24 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 
+#include <array>
 #include <cmath>
+#include <memory>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 

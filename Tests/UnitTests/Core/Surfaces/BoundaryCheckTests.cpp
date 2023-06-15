@@ -11,9 +11,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <vector>
 
 #include "BoundaryCheckTestsRefs.hpp"
 
@@ -45,8 +48,6 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
-#include "BoundaryCheckTestsRefs.hpp"
-
   BoundaryCheck bcheck(true);
 
   for (size_t i = 0; i < rectTestPoints.size(); i++) {

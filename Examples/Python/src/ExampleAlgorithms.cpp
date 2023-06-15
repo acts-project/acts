@@ -6,16 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Printers/HitsPrinter.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
-#include <memory>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

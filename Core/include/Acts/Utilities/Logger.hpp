@@ -17,8 +17,11 @@
 #include <memory>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <thread>
+#include <utility>
 
 // clang-format off
 /// @brief macro to use a local Acts::Logger object

@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 
+#include <array>
 #include <functional>
 
 namespace ActsFatras {

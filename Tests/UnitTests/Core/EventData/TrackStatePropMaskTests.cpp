@@ -13,7 +13,10 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <bitset>
+#include <cstddef>
+#include <type_traits>
 
 using namespace Acts;
 

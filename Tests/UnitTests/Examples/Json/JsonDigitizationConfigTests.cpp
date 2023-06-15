@@ -8,15 +8,20 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <fstream>
-#include <iostream>
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 using namespace Acts;
 

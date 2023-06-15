@@ -8,6 +8,8 @@
 
 #include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
 
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+
 void Acts::to_json(nlohmann::json& j, const Acts::SurfaceBounds& bounds) {
   j["type"] = boundTypes[bounds.type()];
   j["values"] = bounds.values();

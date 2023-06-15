@@ -8,11 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {

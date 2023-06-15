@@ -9,19 +9,20 @@
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
-#include "Acts/Geometry/CylinderLayer.hpp"
-#include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <iterator>
+#include <ostream>
+
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
-
-#include "XML/XMLElements.h"
 
 std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,

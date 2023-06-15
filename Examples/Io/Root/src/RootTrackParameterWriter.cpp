@@ -8,21 +8,26 @@
 
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <ios>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <TFile.h>
 #include <TTree.h>

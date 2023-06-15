@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -16,8 +18,6 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
@@ -25,8 +25,15 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <ostream>
 #include <string>
+#include <tuple>
+#include <type_traits>
 #include <utility>
+
+namespace Acts {
+class ISurfaceMaterial;
+}  // namespace Acts
 
 Acts::TrackingVolume::TrackingVolume(
     const Transform3& transform, VolumeBoundsPtr volbounds,

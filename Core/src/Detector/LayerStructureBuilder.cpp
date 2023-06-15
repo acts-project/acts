@@ -13,11 +13,28 @@
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/detail/SupportHelper.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
+#include <cmath>
+#include <cstddef>
+#include <ostream>
+#include <set>
 #include <stdexcept>
+#include <utility>
+
+namespace Acts {
+namespace Experimental {
+class DetectorVolume;
+}  // namespace Experimental
+}  // namespace Acts
 
 namespace {
 

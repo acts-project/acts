@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/Extent.hpp"
 
+#include <cstddef>
 #include <vector>
 
 namespace Acts {

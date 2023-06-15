@@ -8,6 +8,16 @@
 
 #include "ActsExamples/Utilities/Helpers.hpp"
 
+#include <cassert>
+
+#include <TAxis.h>
+#include <TEfficiency.h>
+#include <TFitResult.h>
+#include <TFitResultPtr.h>
+#include <TH1.h>
+#include <TH2.h>
+#include <TProfile.h>
+
 namespace ActsExamples {
 
 namespace PlotHelpers {

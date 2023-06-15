@@ -8,13 +8,34 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <functional>
 #include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
 
 namespace tt = boost::test_tools;
 using Acts::VectorHelpers::makeVector4;

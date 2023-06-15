@@ -16,7 +16,9 @@
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <limits>
+#include <optional>
 
 namespace ActsExamples {
 

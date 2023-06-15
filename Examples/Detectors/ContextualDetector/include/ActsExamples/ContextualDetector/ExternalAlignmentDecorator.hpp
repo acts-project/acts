@@ -15,7 +15,13 @@
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Acts {
@@ -23,6 +29,7 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 namespace Contextual {
 

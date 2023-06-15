@@ -13,6 +13,10 @@
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <memory>
+#include <utility>
 
 /// Mockup class
 class G4VPhysicalVolume {};
