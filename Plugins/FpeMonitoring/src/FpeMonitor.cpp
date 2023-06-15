@@ -28,8 +28,6 @@
 #include <boost/stacktrace/safe_dump_to.hpp>
 #include <boost/stacktrace/stacktrace.hpp>
 #include <boost/stacktrace/stacktrace_fwd.hpp>
-#include <fenv.h>
-#include <signal.h>
 
 #define FPU_EXCEPTION_MASK 0x3f
 #define FPU_STATUS_FLAGS 0xff
