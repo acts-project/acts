@@ -92,21 +92,20 @@ inline bool SpacePointData::hasDynamicVariable() const {
 
 inline std::any SpacePointData::component(Acts::HashedString key,
 					  const std::size_t& n) const {
-  std::cout << "Getting component with index: " << n << "/" << m_topHalfStripLength.size() << "\n"; 
   using namespace Acts::HashedStringLiteral;
   switch (key) {
   case "TopHalfStripLength"_hash:
-    return m_topHalfStripLength[n];
+    return &m_topHalfStripLength[n];
   case "BottomHalfStripLength"_hash:
-    return m_bottomHalfStripLength[n];
+    return &m_bottomHalfStripLength[n];
   case "TopStripDirection"_hash:
-    return m_topStripDirection[n];
+    return &m_topStripDirection[n];
   case "BottomStripDirection"_hash:
-    return m_bottomStripDirection[n];
+    return &m_bottomStripDirection[n];
   case "StripCenterDistance"_hash:
-    return m_stripCenterDistance[n];
+    return &m_stripCenterDistance[n];
   case "TopStripCenterPosition"_hash:
-    return m_topStripCenterPosition[n];
+    return &m_topStripCenterPosition[n];
   default:
     throw std::runtime_error("no such component " + std::to_string(key));
   }

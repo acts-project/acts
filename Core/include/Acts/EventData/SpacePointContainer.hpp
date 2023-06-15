@@ -158,6 +158,8 @@ class SpacePointContainer {
   ValueType& sp(const std::size_t& n) const;
 
  private:
+  void initialize();
+
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   container_t& container();
 

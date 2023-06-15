@@ -21,33 +21,7 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     m_options(options.toInternalUnits()),
     m_container(container)
 {
-  // the following has to be changed !!!
-  m_data.resize(this->size(), config.useDetailedDoubleMeasurementInfo);
-  m_proxies.reserve(this->size());
-  for (std::size_t i(0); i<this->size(); ++i) {
-    m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
-    m_data.setY(i, this->container().y_impl(i) - m_options.beamPos[1]);
-    m_data.setZ(i, this->container().z_impl(i) );
-    m_data.setRadius(i, std::sqrt(m_data.x(i)*m_data.x(i) + m_data.y(i)*m_data.y(i)));
-    m_data.setPhi(i, atan2f(m_data.y(i), m_data.x(i)));
-    m_data.setVarianceR(i, this->container().varianceR_impl(i) );
-    m_data.setVarianceZ(i, this->container().varianceZ_impl(i) );
-
-    m_proxies.emplace_back(*this, i);
-  }
-  
-  // Dynamic variables
-  if (config.useDetailedDoubleMeasurementInfo) {
-    using namespace Acts::HashedStringLiteral;
-    for (std::size_t i(0); i<this->size(); ++i) {
-      m_data.setTopHalfStripLength(i, std::any_cast<float>(this->container().component_impl("TopHalfStripLength"_hash, i)));
-      m_data.setBottomHalfStripLength(i, std::any_cast<float>(this->container().component_impl("BottomHalfStripLength"_hash, i)));
-      m_data.setTopStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripDirection"_hash, i)));
-      m_data.setBottomStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("BottomStripDirection"_hash, i)));
-      m_data.setStripCenterDistance(i,  std::any_cast<Acts::Vector3>(this->container().component_impl("StripCenterDistance"_hash, i)));
-      m_data.setTopStripCenterPosition(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripCenterPosition"_hash, i)));
-    }
-  }
+  this->initialize();
 }
 
 template <typename container_t, template <typename> class holder_t>
@@ -60,7 +34,13 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     m_options(options.toInternalUnits()),
     m_container(std::move(container))
 {
-  m_data.resize(this->size(), config.useDetailedDoubleMeasurementInfo);
+  this->initialize();
+}
+
+template <typename container_t, template <typename> class holder_t>
+void SpacePointContainer<container_t, holder_t>::initialize()
+{
+  m_data.resize(this->size(), m_config.useDetailedDoubleMeasurementInfo);
   m_proxies.reserve(this->size());
   for (std::size_t i(0); i<this->size(); ++i) {
     m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
@@ -70,19 +50,19 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     m_data.setPhi(i, atan2f(m_data.y(i), m_data.x(i)));
     m_data.setVarianceR(i, this->container().varianceR_impl(i) );
     m_data.setVarianceZ(i, this->container().varianceZ_impl(i) );
-    
+
     m_proxies.emplace_back(*this, i);
   }
-  
-  // Dynamic variables 
-  if (config.useDetailedDoubleMeasurementInfo) {
+
+  // Dynamic variables
+  if (m_config.useDetailedDoubleMeasurementInfo) {
     using namespace Acts::HashedStringLiteral;
     for (std::size_t i(0); i<this->size(); ++i) {
       m_data.setTopHalfStripLength(i, std::any_cast<float>(this->container().component_impl("TopHalfStripLength"_hash, i)));
       m_data.setBottomHalfStripLength(i, std::any_cast<float>(this->container().component_impl("BottomHalfStripLength"_hash, i)));
       m_data.setTopStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripDirection"_hash, i)));
       m_data.setBottomStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("BottomStripDirection"_hash, i)));
-      m_data.setStripCenterDistance(i, 	std::any_cast<Acts::Vector3>(this->container().component_impl("StripCenterDistance"_hash, i)));
+      m_data.setStripCenterDistance(i,  std::any_cast<Acts::Vector3>(this->container().component_impl("StripCenterDistance"_hash, i)));
       m_data.setTopStripCenterPosition(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripCenterPosition"_hash, i)));
     }
   }
@@ -121,6 +101,7 @@ template <typename container_t, template <typename> class holder_t>
 template <typename T>
 const T& SpacePointContainer<container_t, holder_t>::component(HashedString key,
 							       const std::size_t& n) const {
+
   using namespace Acts::HashedStringLiteral;
   switch (key) {
     case "TopHalfStripLength"_hash:
@@ -129,7 +110,7 @@ const T& SpacePointContainer<container_t, holder_t>::component(HashedString key,
     case "BottomStripDirection"_hash:
     case "StripCenterDistance"_hash:
     case "TopStripCenterPosition"_hash:
-      return *std::any_cast<T*>(m_data.component(key, n));
+      return *std::any_cast<const T*>(m_data.component(key, n));
     default:
       throw std::runtime_error("no such component " + std::to_string(key));
   }
