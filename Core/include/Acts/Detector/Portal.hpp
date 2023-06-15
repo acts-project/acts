@@ -17,15 +17,20 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <array>
 #include <map>
 #include <memory>
 #include <optional>
+#include <vector>
 
 namespace Acts {
 
 class ISurfaceMaterial;
+class Surface;
 
 namespace Experimental {
+class DetectorVolume;
+struct NavigationState;
 
 /// A portal description between the detector volumes
 ///

@@ -8,15 +8,21 @@
 
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <algorithm>
+#include <ostream>
 #include <stdexcept>
-#include <vector>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 using namespace ActsExamples;
 

@@ -17,14 +17,18 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Event generator based on separate particles and vertex generators.
 ///

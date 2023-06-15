@@ -8,20 +8,32 @@
 
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <cstdint>
 #include <ios>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>

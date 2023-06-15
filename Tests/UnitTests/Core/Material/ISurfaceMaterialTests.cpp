@@ -9,9 +9,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 
-#include <climits>
+#include <cstddef>
+#include <ostream>
 
 namespace Acts {
 

@@ -8,12 +8,17 @@
 
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+
+#include <cstddef>
+#include <ostream>
+#include <unordered_map>
+#include <utility>
 
 #include <G4Material.hh>
 #include <G4RunManager.hh>

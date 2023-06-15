@@ -9,24 +9,18 @@
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <tuple>
 #include <utility>
 
 #include <boost/algorithm/string.hpp>
 
+#include "RtypesCore.h"
 #include "TGeoArb8.h"
 #include "TGeoBBox.h"
 #include "TGeoBoolNode.h"

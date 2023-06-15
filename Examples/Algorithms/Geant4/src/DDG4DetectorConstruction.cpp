@@ -8,13 +8,14 @@
 
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 
-#include <stdexcept>
-
+#include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
-#include <DD4hep/Plugins.h>
-#include <DD4hep/Printout.h>
 #include <DDG4/Geant4Converter.h>
 #include <DDG4/Geant4GeometryInfo.h>
+#include <DDG4/Geant4Mapping.h>
+#include <Parsers/Printout.h>
+
+class G4VPhysicalVolume;
 
 ActsExamples::DDG4DetectorConstruction::DDG4DetectorConstruction(
     dd4hep::Detector& detector)

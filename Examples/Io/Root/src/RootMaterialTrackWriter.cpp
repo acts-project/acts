@@ -9,12 +9,24 @@
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/Volume.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <ios>
-#include <iostream>
 #include <stdexcept>
+#include <type_traits>
 
 #include <TFile.h>
 #include <TTree.h>

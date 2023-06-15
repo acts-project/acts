@@ -9,17 +9,22 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <array>
 #include <limits>
+#include <memory>
 #include <string>
 
 namespace ActsExamples {
+class RandomNumbers;
+struct AlgorithmContext;
 
 /// Create track states by smearing truth particle information.
 ///

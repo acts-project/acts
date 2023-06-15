@@ -8,12 +8,17 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <algorithm>
+#include <cmath>
 
 namespace Acts {
 namespace detail {

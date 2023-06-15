@@ -8,11 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <array>
 #include <cmath>
+#include <cstddef>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {

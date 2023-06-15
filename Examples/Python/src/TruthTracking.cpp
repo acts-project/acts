@@ -7,6 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
@@ -16,11 +18,18 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
+#include <array>
+#include <cstddef>
 #include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace ActsExamples {
+class IAlgorithm;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 

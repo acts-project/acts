@@ -10,16 +10,34 @@
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
+#include <cstddef>
 #include <iterator>
+#include <memory>
+#include <numeric>
+#include <random>
+#include <stdexcept>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace {
 

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 
 #include "TEfficiency.h"
 #include "TFitResult.h"
@@ -17,6 +18,12 @@
 #include "TH2F.h"
 #include "TProfile.h"
 #include "TROOT.h"
+
+class TEfficiency;
+class TH1D;
+class TH1F;
+class TH2F;
+class TProfile;
 
 namespace ActsExamples {
 

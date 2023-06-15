@@ -10,16 +10,23 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cmath>
-#include <system_error>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 using Acts::VectorHelpers::perp;

@@ -18,6 +18,7 @@
 #include <vector>
 
 namespace ActsExamples {
+struct Trajectories;
 
 /// Associate a particle to its hit count within a proto track.
 struct ParticleHitCount {

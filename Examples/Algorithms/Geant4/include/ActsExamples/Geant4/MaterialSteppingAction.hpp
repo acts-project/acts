@@ -16,6 +16,8 @@
 
 #include <G4UserSteppingAction.hh>
 
+class G4Step;
+
 namespace ActsExamples {
 
 /// @class MaterialSteppingAction

@@ -6,17 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
-
-#include <functional>
-#include <memory>
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <G4VUserDetectorConstruction.hh>
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+class G4VUserDetectorConstruction;
 
 namespace py = pybind11;
 

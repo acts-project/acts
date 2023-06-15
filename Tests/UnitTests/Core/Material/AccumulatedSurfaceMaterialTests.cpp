@@ -8,10 +8,18 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <climits>
+#include <array>
+#include <cstddef>
+#include <memory>
+#include <vector>
 
 namespace Acts {
 namespace Test {

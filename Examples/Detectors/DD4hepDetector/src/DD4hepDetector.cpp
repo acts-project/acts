@@ -9,9 +9,9 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
+
+#include <stdexcept>
 
 #include <boost/program_options.hpp>
 

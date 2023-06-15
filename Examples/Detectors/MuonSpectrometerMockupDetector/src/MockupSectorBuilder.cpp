@@ -8,11 +8,13 @@
 
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
@@ -21,16 +23,23 @@
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
-#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
 #include <algorithm>
-#include <iostream>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <stdexcept>
 #include <string>
+#include <tuple>
 #include <utility>
 #include <vector>
 

@@ -8,11 +8,10 @@
 
 #include "Acts/Surfaces/EllipseBounds.hpp"
 
-#include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <cmath>
 #include <iomanip>
 #include <iostream>
 

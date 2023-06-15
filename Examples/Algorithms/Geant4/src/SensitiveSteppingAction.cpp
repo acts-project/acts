@@ -8,9 +8,19 @@
 
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 #include <G4RunManager.hh>
 #include <G4Step.hh>
@@ -18,6 +28,8 @@
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
+
+class G4PrimaryParticle;
 
 #if BOOST_VERSION >= 107800
 #include <boost/describe.hpp>

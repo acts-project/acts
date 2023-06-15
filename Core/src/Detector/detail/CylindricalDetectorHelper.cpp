@@ -8,13 +8,14 @@
 
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 
-#include "Acts/Detector/Detector.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -22,13 +23,25 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <iterator>
+#include <map>
+#include <ostream>
 #include <stdexcept>
+#include <string>
+#include <tuple>
+#include <utility>
 
 // Indexing of the portals follows the generation order of portals in the
 // CylinderVolumeBounds and BevelledCylinderVolumeBounds (latter for wrapping)
