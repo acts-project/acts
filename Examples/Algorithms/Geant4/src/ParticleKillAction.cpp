@@ -8,9 +8,12 @@
 
 #include "ActsExamples/Geant4/ParticleKillAction.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
-#include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "Acts/Geometry/Volume.hpp"
+
+#include <ostream>
+#include <utility>
 
 #include <G4RunManager.hh>
 #include <G4Step.hh>

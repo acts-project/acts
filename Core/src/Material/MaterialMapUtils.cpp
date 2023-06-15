@@ -10,13 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <iostream>
+#include <initializer_list>
 #include <limits>
+#include <set>
 #include <tuple>
 #include <utility>
 

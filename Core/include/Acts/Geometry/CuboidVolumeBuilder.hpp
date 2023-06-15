@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <iosfwd>
 #include <memory>

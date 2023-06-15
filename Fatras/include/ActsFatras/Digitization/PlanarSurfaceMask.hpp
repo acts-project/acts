@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <array>
+#include <vector>
 
 namespace Acts {
 class Surface;

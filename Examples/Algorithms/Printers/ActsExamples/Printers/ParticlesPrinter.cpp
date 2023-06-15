@@ -11,10 +11,13 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 ActsExamples::ParticlesPrinter::ParticlesPrinter(const Config& cfg,
                                                  Acts::Logging::Level lvl)

@@ -8,13 +8,14 @@
 
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
+#include <utility>
+
 namespace ActsExamples {
+struct AlgorithmContext;
 
 SeedsToPrototracks::SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(std::move(cfg)) {

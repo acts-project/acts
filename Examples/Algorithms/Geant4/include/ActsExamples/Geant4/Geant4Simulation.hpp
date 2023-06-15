@@ -17,9 +17,11 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
 #include "G4VUserDetectorConstruction.hh"
 
@@ -31,10 +33,13 @@ class G4UserTrackingAction;
 class G4UserSteppingAction;
 class G4MagneticField;
 class G4VUserPhysicsList;
+class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 
 class SensitiveSurfaceMapper;
+class RandomNumbers;
+struct AlgorithmContext;
 
 /// Algorithm to run Geant4 simulation in the ActsExamples framework
 ///

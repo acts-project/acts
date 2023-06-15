@@ -8,9 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include <Acts/EventData/Charge.hpp>
 #include <Acts/EventData/MultiComponentBoundTrackParameters.hpp>
 #include <Acts/Surfaces/PlaneSurface.hpp>
+
+#include <algorithm>
+#include <initializer_list>
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <vector>
 
 using namespace Acts;
 

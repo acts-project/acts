@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+
 namespace Acts {
 
 /// Convert a geometry hierarchy map to/from Json.
