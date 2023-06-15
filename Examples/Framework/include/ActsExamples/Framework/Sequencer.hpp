@@ -161,6 +161,8 @@ class Sequencer {
   std::pair<std::string, std::size_t> fpeMaskCount(
       const boost::stacktrace::stacktrace &st, Acts::FpeType type) const;
 
+  void fpeReport() const;
+
   struct SequenceElementWithFpeResult {
     std::shared_ptr<SequenceElement> sequenceElement;
     tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> fpeResult{};

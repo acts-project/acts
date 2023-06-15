@@ -557,55 +557,7 @@ int Sequencer::run() {
     }
   }
 
-  // FPE reporting
-  if (m_cfg.trackFpes) {
-    for (auto& [alg, fpe] : m_sequenceElements) {
-      auto merged = std::accumulate(
-          fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
-          [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
-      if (!merged) {
-        // no FPEs to report
-        continue;
-      }
-      ACTS_INFO("-----------------------------------");
-      ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
-                                   << alg->name());
-      ACTS_INFO("-----------------------------------");
-
-      std::vector<
-          std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
-          sorted;
-      std::transform(
-          merged.stackTraces().begin(), merged.stackTraces().end(),
-          std::back_inserter(sorted),
-          [](const auto& f) -> const auto& { return f; });
-      std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
-        return a.get().count > b.get().count;
-      });
-
-      std::vector<
-          std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
-          remaining;
-
-      for (const auto& el : sorted) {
-        const auto& [count, type, st] = el.get();
-        auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
-        ACTS_INFO("- " << type << ": (" << count << " times) "
-                       << (nMasked > 0 ? "[MASKED: " + std::to_string(nMasked) +
-                                             " per event by " + maskLoc + "]"
-                                       : "")
-                       << "\n"
-                       << Acts::FpeMonitor::stackTraceToString(
-                              *st, m_cfg.fpeStackTraceLength));
-      }
-    }
-
-    if (m_nUnmaskedFpe > 0) {
-      ACTS_ERROR("Encountered " << m_nUnmaskedFpe << " unmasked FPEs");
-    } else {
-      ACTS_INFO("No unmasked FPEs encountered");
-    }
-  }
+  fpeReport();
 
   // summarize timing
   Duration totalWall = Clock::now() - clockWallStart;
@@ -631,6 +583,57 @@ int Sequencer::run() {
   }
 
   return EXIT_SUCCESS;
+}
+
+void Sequencer::fpeReport() const {
+  if (!m_cfg.trackFpes) {
+    return;
+  }
+
+  for (auto& [alg, fpe] : m_sequenceElements) {
+    auto merged = std::accumulate(
+        fpe.begin(), fpe.end(), Acts::FpeMonitor::Result{},
+        [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); });
+    if (!merged) {
+      // no FPEs to report
+      continue;
+    }
+    ACTS_INFO("-----------------------------------");
+    ACTS_INFO("FPE summary for " << getAlgorithmType(*alg) << ": "
+                                 << alg->name());
+    ACTS_INFO("-----------------------------------");
+
+    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+        sorted;
+    std::transform(
+        merged.stackTraces().begin(), merged.stackTraces().end(),
+        std::back_inserter(sorted),
+        [](const auto& f) -> const auto& { return f; });
+    std::sort(sorted.begin(), sorted.end(), [](const auto& a, const auto& b) {
+      return a.get().count > b.get().count;
+    });
+
+    std::vector<std::reference_wrapper<const Acts::FpeMonitor::Result::FpeInfo>>
+        remaining;
+
+    for (const auto& el : sorted) {
+      const auto& [count, type, st] = el.get();
+      auto [maskLoc, nMasked] = fpeMaskCount(*st, type);
+      ACTS_INFO("- " << type << ": (" << count << " times) "
+                     << (nMasked > 0 ? "[MASKED: " + std::to_string(nMasked) +
+                                           " per event by " + maskLoc + "]"
+                                     : "")
+                     << "\n"
+                     << Acts::FpeMonitor::stackTraceToString(
+                            *st, m_cfg.fpeStackTraceLength));
+    }
+  }
+
+  if (m_nUnmaskedFpe > 0) {
+    ACTS_ERROR("Encountered " << m_nUnmaskedFpe << " unmasked FPEs");
+  } else {
+    ACTS_INFO("No unmasked FPEs encountered");
+  }
 }
 
 std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
