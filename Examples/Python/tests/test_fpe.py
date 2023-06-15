@@ -1,4 +1,5 @@
 import sys
+import os
 import re
 from pathlib import Path
 
@@ -7,9 +8,16 @@ import pytest
 import acts
 import acts.examples
 
-pytestmark = pytest.mark.skipif(
-    sys.platform != "linux", reason="FPE monitoring currently only suported on Linux"
-)
+pytestmark = [
+    pytest.mark.skipif(
+        sys.platform != "linux",
+        reason="FPE monitoring currently only suported on Linux",
+    ),
+    pytest.mark.skipif(
+        "ACTS_SEQUENCER_DISABLE_FPEMON" in os.environ,
+        reason="Sequencer is configured to disable FPE monitoring",
+    ),
+]
 
 
 _names = {
