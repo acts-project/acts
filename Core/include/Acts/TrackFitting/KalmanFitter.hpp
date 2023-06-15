@@ -48,15 +48,14 @@ namespace Acts {
 /// Extension struct which holeds delegates to customize the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
-  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
-  using ConstTrackStateProxy =
-      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  using TrackStateProxy = typename traj_t::TrackStateProxy;
+  using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
-  using Smoother = Delegate<Result<void>(
-      const GeometryContext&, MultiTrajectory<traj_t>&, size_t, const Logger&)>;
+  using Smoother = Delegate<Result<void>(const GeometryContext&, traj_t&,
+                                         size_t, const Logger&)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         Direction, const Logger&)>;
@@ -308,7 +307,7 @@ class KalmanFitter {
     FreeToBoundCorrection freeToBoundCorrection;
 
     /// Input MultiTrajectory
-    std::shared_ptr<MultiTrajectory<traj_t>> outputStates;
+    std::shared_ptr<traj_t> outputStates;
 
     /// The logger instance
     const Logger* actorLogger{nullptr};
@@ -1043,7 +1042,8 @@ class KalmanFitter {
     // for (const auto& sl : sourcelinks) {
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), std::move(sl));
+      auto geoId = sl.geometryId();
+      inputMeasurements.emplace(geoId, std::move(sl));
     }
 
     // Create the ActionList and AbortList

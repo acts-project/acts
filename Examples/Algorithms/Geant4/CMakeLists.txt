@@ -10,7 +10,8 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/SensitiveSurfaceMapper.cpp
     src/SensitiveSteppingAction.cpp
     src/SimParticleTranslation.cpp
-    src/ParticleKillAction.cpp)
+    src/ParticleKillAction.cpp
+    src/PhysicsListFactory.cpp)
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
     list(APPEND ACTS_EXAMPLES_G4SOURCES src/DDG4DetectorConstruction.cpp)
@@ -29,7 +30,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesGeant4
-  PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorTelescope ${Geant4_LIBRARIES})
+  PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorTelescope Boost::headers ${Geant4_LIBRARIES})
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
   if(${DD4hep_VERSION} VERSION_LESS 1.11)

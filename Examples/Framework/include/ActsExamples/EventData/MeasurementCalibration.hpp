@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include <ActsExamples/EventData/Measurement.hpp>
 
@@ -23,11 +24,11 @@ class MeasurementCalibrator {
  public:
   virtual void calibrate(
       const MeasurementContainer& measurements,
-      const Acts::GeometryContext& gctx,
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-          trackState) const = 0;
+      const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
+      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const = 0;
 
   virtual ~MeasurementCalibrator() = default;
+  virtual bool needsClusters() const { return false; }
 };
 
 // Calibrator to convert an index source link to a measurement as-is
@@ -40,9 +41,9 @@ class PassThroughCalibrator : public MeasurementCalibrator {
   /// @param trackState The track state to calibrate
   void calibrate(
       const MeasurementContainer& measurements,
+      const ClusterContainer* /*clusters*/,
       const Acts::GeometryContext& /*gctx*/,
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-          trackState) const override;
+      Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const override;
 };
 
 // Adapter class that wraps a MeasurementCalibrator to conform to the
@@ -50,16 +51,18 @@ class PassThroughCalibrator : public MeasurementCalibrator {
 class MeasurementCalibratorAdapter {
  public:
   MeasurementCalibratorAdapter(const MeasurementCalibrator& calibrator,
-                               const MeasurementContainer& measurements);
+                               const MeasurementContainer& measurements,
+                               const ClusterContainer* clusters = nullptr);
 
-  void calibrate(
-      const Acts::GeometryContext& gctx,
-      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
-          trackState) const;
+  MeasurementCalibratorAdapter() = delete;
+
+  void calibrate(const Acts::GeometryContext& gctx,
+                 Acts::VectorMultiTrajectory::TrackStateProxy trackState) const;
 
  private:
   const MeasurementCalibrator& m_calibrator;
   const MeasurementContainer& m_measurements;
+  const ClusterContainer* m_clusters;
 };
 
 }  // namespace ActsExamples

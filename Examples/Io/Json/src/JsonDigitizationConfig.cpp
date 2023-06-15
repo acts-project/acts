@@ -96,7 +96,7 @@ void from_json(
   } else if (sType == "Exact") {
     f = Digitization::Exact{};
   } else {
-    throw std::invalid_argument("Unkown smearer type '" + sType + "'");
+    throw std::invalid_argument("Unknown smearer type '" + sType + "'");
   }
 }
 

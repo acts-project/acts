@@ -3,47 +3,33 @@
 
 This plugin contains a track finding module based on Graph Neural Networks (GNNs) which is developed by the [Exa.TrkX](https://exatrkx.github.io/) team. Build instructions and dependencies can be found in the [README](https://github.com/acts-project/acts/blob/main/Plugins/ExaTrkX/README.md) of the plugin.
 
-## Model
+## Stages
 
-The Exa.TrkX pipeline is a three-stage GNN-based algorithm:
+The Exa.TrkX pipeline is a multi-stage GNN-based algorithm. In principle, there are three types of stages:
 
-1) **Graph building** (*Embedding stage*): This is done via metric learning approach. A neural network tries to learn a mapping that minimizes the distance between points of the same track in the embedded space. In this embedded space then a graph is built using a fixed nearest-neighbor search.
-2) **Graph size reduction** (*Filter stage*): The resulting graph is typically to large for processing with a GNN. Therefore a binary classifier reduces the graph size further and removes easy to identify not matching edges.
-3) **Edge classification** (*GNN stage*): Finally, a GNN is used to find the edges in the Graph that belong to tracks. This is done by scoring each edge with a number between 0 and 1, and a corresponding *edge cut*.
+1) **Graph construction**: This stage constructs the initial graph from the space points. Currently, there is only a metric-learning based approach implemented: A neural network tries to learn a mapping that minimizes the distance between points of the same track in the embedded space. In this embedded space then a graph is built using a fixed nearest-neighbor search.
+2) **Edge classification**: In this stage, a graph is taken from the previous stage, and a edge-classification is performed on the edges. This can be done either by a simple feed forward network or by a GNN.
+3) **Track building stage**: In this stage, track candidates are built from the edges and the scores of the previous edge classification stage. Currently, there are simple track building algorithms built on top of a *weakly connected components* algorithm available.
 
-Finally, the track candidates must be extracted by a algorithm that finds the *weakly connected components* in the graph depending on the *edge cut*.
+A typical pipline consists e.g. of 4 stages:
+
+```
+Graph construction: Metric learning
+                |
+                v
+   Edge classification: Filter
+                |
+                V
+   Edge classification: GNN
+                |
+                V
+ Track building with boost::graph
+```
 
 ## Implementation
 
-### Neural network backend
-
-Currently there are two backends available:
-
-- The **TorchScript** backend requires besides *libtorch* also *TorchScatter* that implements the scatter operators used in the graph neural network. The corresponding class is {class}`Acts::ExaTrkXTrackFindingTorch`.
-- The **ONNX** backend is currently not as well maintained as the TorchScript backend. The main reason is, that some scattering operators are not available in ONNX, so that the graph neural network cannot be exported correctely in the `.onnx` format. The corresponding class is {class}`Acts::ExaTrkXTrackFindingOnnx`.
-
-### Graph building
-
-Both backends use currently different libraries for graph building.
-
-- The TorchScript backend uses *Boost.Graph* for graph building.
-- The ONNX backend uses the *cugraph* library for graph building
-
-## API and examples integration
-
-The interface of the backends is defined by {class}`Acts::ExaTrkXTrackFindingBase` which is also used by `ActsExamples::TrackFindingAlgorithmExaTrkX`. The inference can be called with the `getTracks` function:
-
-```{doxygenclass} Acts::ExaTrkXTrackFindingBase
----
-outline:
-members: getTracks
----
-```
-
-This function takes the the input data as a `std::vector<double>` (e.g., a flattened $N \times 3$ array in cylindric coordinates like $[r_0, \varphi_0, z_0, r_1, \dots \varphi_N, z_N]$), as well as some corresponding spacepoint ids as a `std::vector<int>`. It then fills a `std::vector<std::vector<int>>` with the found track candidates using the provided spacepoint ids. Logging and timing measurements can be enabled with the remaining arguments. The hyperparameters of the models are defined in the `Config` member structs.
-
 :::{note}
-Any kind of preprocessing (scaling, ...) of the input values must be done before passing them to the inference.
+The codebase is currently under refactoring, the documentation will be updated once the code has stabilized.
 :::
 
 See [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/exatrkx.py) for the corresponding python example.

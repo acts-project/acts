@@ -72,18 +72,14 @@ class MeasurementSelector {
   ///
 
   template <typename traj_t>
-  Result<std::pair<typename std::vector<typename MultiTrajectory<
-                       traj_t>::TrackStateProxy>::iterator,
-                   typename std::vector<typename MultiTrajectory<
-                       traj_t>::TrackStateProxy>::iterator>>
-  select(std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>&
-             candidates,
+  Result<std::pair<
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+      typename std::vector<typename traj_t::TrackStateProxy>::iterator>>
+  select(std::vector<typename traj_t::TrackStateProxy>& candidates,
          bool& isOutlier, const Logger& logger) const {
-    using Result =
-        Result<std::pair<typename std::vector<typename MultiTrajectory<
-                             traj_t>::TrackStateProxy>::iterator,
-                         typename std::vector<typename MultiTrajectory<
-                             traj_t>::TrackStateProxy>::iterator>>;
+    using Result = Result<std::pair<
+        typename std::vector<typename traj_t::TrackStateProxy>::iterator,
+        typename std::vector<typename traj_t::TrackStateProxy>::iterator>>;
 
     ACTS_VERBOSE("Invoked MeasurementSelector");
 
@@ -196,7 +192,7 @@ class MeasurementSelector {
  private:
   template <typename traj_t, typename cut_value_t>
   static cut_value_t VariableCut(
-      const typename Acts::MultiTrajectory<traj_t>::TrackStateProxy& trackState,
+      const typename traj_t::TrackStateProxy& trackState,
       const Acts::MeasurementSelector::Config::Iterator selector,
       const std::vector<cut_value_t>& cuts, const Logger& logger) {
     const auto& etaBins = selector->etaBins;

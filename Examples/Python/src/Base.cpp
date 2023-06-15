@@ -26,9 +26,8 @@ namespace Acts::Python {
 void addUnits(Context& ctx) {
   auto& m = ctx.get("main");
   auto u = m.def_submodule("UnitConstants");
-  using namespace Acts::UnitConstants;
 
-#define UNIT(x) u.attr(#x) = x;
+#define UNIT(x) u.attr(#x) = Acts::UnitConstants::x;
 
   UNIT(fm)
   UNIT(pm)

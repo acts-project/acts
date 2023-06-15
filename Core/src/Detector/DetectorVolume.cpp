@@ -15,13 +15,12 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <cassert>
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, const std::string& name,
-    const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
     std::vector<std::shared_ptr<Surface>> surfaces,
     std::vector<std::shared_ptr<DetectorVolume>> volumes,
     DetectorVolumeUpdator&& detectorVolumeUpdator,
@@ -53,7 +52,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, const std::string& name,
-    const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : DetectorVolume(gctx, name, transform, std::move(bounds), {}, {},
                      tryNoVolumes(), std::move(surfaceCandidateUpdator)) {}
@@ -61,7 +60,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 std::shared_ptr<Acts::Experimental::DetectorVolume>
 Acts::Experimental::DetectorVolume::makeShared(
     const GeometryContext& gctx, const std::string& name,
-    const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
     std::vector<std::shared_ptr<Surface>> surfaces,
     std::vector<std::shared_ptr<DetectorVolume>> volumes,
     DetectorVolumeUpdator&& detectorVolumeUpdator,
@@ -75,7 +74,7 @@ Acts::Experimental::DetectorVolume::makeShared(
 std::shared_ptr<Acts::Experimental::DetectorVolume>
 Acts::Experimental::DetectorVolume::makeShared(
     const GeometryContext& gctx, const std::string& name,
-    const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
   return std::shared_ptr<DetectorVolume>(
       new DetectorVolume(gctx, name, transform, std::move(bounds),

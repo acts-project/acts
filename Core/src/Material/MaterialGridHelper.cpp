@@ -9,7 +9,6 @@
 #include "Acts/Material/MaterialGridHelper.hpp"
 
 #include "Acts/Utilities/BinningData.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <cmath>
 #include <stdexcept>

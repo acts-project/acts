@@ -9,6 +9,7 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
@@ -35,10 +36,11 @@ void addTrackFitting(Context& ctx) {
                                 inputSimHits, inputMeasurementSimHitsMap,
                                 outputProtoTracks);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFittingAlgorithm, mex, "TrackFittingAlgorithm",
-      inputMeasurements, inputSourceLinks, inputProtoTracks,
-      inputInitialTrackParameters, outputTracks, fit, pickTrack, calibrator);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFittingAlgorithm, mex,
+                                "TrackFittingAlgorithm", inputMeasurements,
+                                inputSourceLinks, inputProtoTracks,
+                                inputInitialTrackParameters, inputClusters,
+                                outputTracks, fit, pickTrack, calibrator);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::RefittingAlgorithm, mex,
                                 "RefittingAlgorithm", inputTracks, outputTracks,
@@ -74,9 +76,16 @@ void addTrackFitting(Context& ctx) {
               return std::make_shared<PassThroughCalibrator>();
             });
 
-    py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
-        .value("mean", Acts::FinalReductionMethod::eMean)
-        .value("maxWeight", Acts::FinalReductionMethod::eMaxWeight);
+    mex.def(
+        "makeScalingCalibrator",
+        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
+          return std::make_shared<ActsExamples::ScalingCalibrator>(path);
+        },
+        py::arg("path"));
+
+    py::enum_<Acts::MixtureReductionMethod>(mex, "FinalReductionMethod")
+        .value("mean", Acts::MixtureReductionMethod::eMean)
+        .value("maxWeight", Acts::MixtureReductionMethod::eMaxWeight);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles",
@@ -91,9 +100,9 @@ void addTrackFitting(Context& ctx) {
         [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
            std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
            BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-           double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
-           bool abortOnError, bool disableAllMaterialHandling,
-           Logging::Level level) {
+           double weightCutoff,
+           Acts::MixtureReductionMethod finalReductionMethod, bool abortOnError,
+           bool disableAllMaterialHandling, Logging::Level level) {
           return ActsExamples::makeGsfFitterFunction(
               trackingGeometry, magneticField, betheHeitlerApprox,
               maxComponents, weightCutoff, finalReductionMethod, abortOnError,

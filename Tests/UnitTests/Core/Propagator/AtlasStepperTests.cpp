@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   auto newUnitDir = (unitDir + Vector3(1, -1, -1)).normalized();
   auto newAbsMom = 0.9 * absMom;
 
-  stepper.update(state, newPos, newUnitDir, newAbsMom, newTime);
+  stepper.update(state, newPos, newUnitDir, charge / newAbsMom, newTime);
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);
@@ -473,7 +473,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
 
   // 2) Perigee surface
   // Setting some parameters
-  newPos << 1.5, -2.5, 3.5;
+  newPos << -2.06155, -2.06155, 3.5;
   newAbsMom *= 0.45;
   newTime = 2.3;
   newCharge = 1.;

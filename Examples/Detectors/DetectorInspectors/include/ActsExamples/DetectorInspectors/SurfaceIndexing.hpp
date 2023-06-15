@@ -16,7 +16,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
 #include <memory>
@@ -38,7 +37,7 @@ template <size_t kDIM>
 struct SurfaceIndexing {
   /// The KDT structure definition
   using KDT = Acts::Experimental::detail::KdtSurfaces<
-      kDIM, 100u, Acts::Experimental::PolyhedronReferenceGenerator>;
+      kDIM, 100u, Acts::Experimental::detail::PolyhedronReferenceGenerator>;
 
  public:
   /// Constructor from arguments
@@ -213,7 +212,7 @@ struct SurfaceIndexing {
         lsConfig, Acts::getDefaultLogger(name, Acts::Logging::VERBOSE));
 
     auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
-        builder.create(tContext);
+        builder.construct(tContext);
 
     // The displaying
     auto pIndexedStructure = Acts::Svg::IndexedSurfacesConverter::convert(
