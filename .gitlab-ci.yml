@@ -212,7 +212,7 @@ linux_physmon:
   artifacts:
     when: always
     paths:
-      - physmon
+      - src/physmon
 
   script:
     - apt-get update && apt-get install -y git-lfs
