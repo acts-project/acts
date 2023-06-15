@@ -10,7 +10,13 @@
 
 #include "Acts/Digitization/DigitizationModule.hpp"
 
+#include <memory>
+
 #include "DD4hep/Segmentations.h"
+
+namespace Acts {
+class DigitizationModule;
+}  // namespace Acts
 
 /// In case several sensitive modules have the same segmentation it can and
 /// should be shared between these modules to save memory and time.

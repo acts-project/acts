@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -21,9 +23,14 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
+#include <array>
+#include <cmath>
+#include <cstddef>
 #include <optional>
+#include <vector>
 
 namespace Acts {
+class IVisualization3D;
 
 static ViewConfig s_viewParameter = ViewConfig({0, 0, 255});
 static ViewConfig s_viewMeasurement = ViewConfig({255, 102, 0});

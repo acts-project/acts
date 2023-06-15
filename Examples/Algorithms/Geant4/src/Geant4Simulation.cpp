@@ -8,13 +8,21 @@
 
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
+#include <cassert>
+#include <cstddef>
 #include <iostream>
+#include <map>
 #include <stdexcept>
+#include <utility>
 
 #include <G4EmParameters.hh>
 #include <G4FieldManager.hh>
@@ -32,6 +40,7 @@
 #include <G4VUserDetectorConstruction.hh>
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
+#include <Randomize.hh>
 
 ActsExamples::Geant4Simulation::Geant4Simulation(
     const ActsExamples::Geant4Simulation::Config& config,

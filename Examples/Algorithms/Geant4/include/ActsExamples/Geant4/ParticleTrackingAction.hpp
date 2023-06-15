@@ -19,6 +19,8 @@
 #include <G4Track.hh>
 #include <G4UserTrackingAction.hh>
 
+class G4Track;
+
 namespace ActsExamples {
 
 /// The G4UserTrackingAction that is called for every track in

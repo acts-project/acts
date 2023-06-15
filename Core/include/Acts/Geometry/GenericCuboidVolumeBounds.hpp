@@ -13,6 +13,7 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 
 #include <array>
+#include <cstddef>
 #include <ostream>
 #include <vector>
 

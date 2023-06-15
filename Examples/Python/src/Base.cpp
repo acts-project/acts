@@ -14,7 +14,11 @@
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <array>
+#include <exception>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>

@@ -8,6 +8,14 @@
 
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/detail/covariance_helper.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
+
+#include <algorithm>
+#include <ostream>
+#include <utility>
+
 namespace Acts {
 
 Result<void> GainMatrixSmoother::calculate(

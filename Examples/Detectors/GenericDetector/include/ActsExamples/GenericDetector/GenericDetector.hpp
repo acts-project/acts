@@ -10,7 +10,9 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace Acts {

@@ -27,6 +27,12 @@
 #include <vector>
 
 namespace ActsExamples {
+class DataHandleBase;
+class IAlgorithm;
+class IContextDecorator;
+class IReader;
+class IWriter;
+class SequenceElement;
 
 using IterationCallback = void (*)();
 

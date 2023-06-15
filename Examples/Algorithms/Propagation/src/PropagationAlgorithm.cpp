@@ -8,7 +8,15 @@
 
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
+#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
+
+#include <stdexcept>
 
 namespace ActsExamples {
 
