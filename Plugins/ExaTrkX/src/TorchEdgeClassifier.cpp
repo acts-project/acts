@@ -74,8 +74,8 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   auto output = torch::cat(results);
   results.clear();
 
-  ACTS_VERBOSE("Size after filtering network: " << output.size(0));
-  ACTS_VERBOSE("Slice of filtered output:\n"
+  ACTS_VERBOSE("Size after classifier: " << output.size(0));
+  ACTS_VERBOSE("Slice of classified output:\n"
                << output.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
   printCudaMemInfo(logger());
 
@@ -83,7 +83,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   torch::Tensor edgesAfterCut = edgeList.index({Slice(), mask});
   edgesAfterCut = edgesAfterCut.to(torch::kInt64);
 
-  ACTS_VERBOSE("Size after filter cut: " << edgesAfterCut.size(1));
+  ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
 
   return {nodes, edgesAfterCut, output.masked_select(mask)};

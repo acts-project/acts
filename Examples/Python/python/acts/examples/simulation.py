@@ -371,6 +371,7 @@ def addFatras(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    pMin=None,
 ) -> None:
     """This function steers the detector simulation using Fatras
 
@@ -424,6 +425,7 @@ def addFatras(
         emEnergyLossIonisation=enableInteractions,
         emEnergyLossRadiation=enableInteractions,
         emPhotonConversion=enableInteractions,
+        pMin=pMin,
     )
 
     # Sequencer

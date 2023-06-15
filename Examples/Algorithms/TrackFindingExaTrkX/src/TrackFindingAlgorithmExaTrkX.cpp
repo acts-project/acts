@@ -107,6 +107,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   std::vector<int> spacepointIDs;
 
   spacepointIDs.reserve(spacepoints.size());
+
+  double sumCells=0.0;
+  double sumActivation=0.0;
+  
   for (auto i = 0ul; i < num_spacepoints; ++i) {
     const auto& sp = spacepoints[i];
     // For now just take the first index since does require one single index per
@@ -128,8 +132,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
           [](double s, const Cluster::Cell& c) { return s + c.activation; });
       features[i][eClusterX] = cluster.sizeLoc0;
       features[i][eClusterY] = cluster.sizeLoc1;
+
+      sumCells += features[i][eCellCount];
+      sumActivation += features[i][eCellSum];
     }
   }
+
+  ACTS_DEBUG("Avg cell count: " << sumCells/spacepoints.size());
+  ACTS_DEBUG("Avg activation: " << sumActivation/sumCells);
 
   // Run the pipeline
   const auto trackCandidates = runPipeline(features, spacepointIDs);
@@ -137,12 +147,21 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Make the prototracks
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
+
+  int nShortTracks = 0;
+
   for (auto& x : trackCandidates) {
     ProtoTrack onetrack;
     std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
+
+    if( onetrack.size() < 3 ) {
+        nShortTracks++;
+        continue;
+    }
     protoTracks.push_back(std::move(onetrack));
   }
 
+  ACTS_INFO("Removed " << nShortTracks << " with less then 3 hits");
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
   m_outputProtoTracks(ctx, std::move(protoTracks));
 

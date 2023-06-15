@@ -79,6 +79,11 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
       m_cfg.numFeatures < numAllFeatures
           ? inputTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}})
           : inputTensor);
+
+
+  ACTS_DEBUG("embedding input tensor shape " << inputTensors[0].toTensor().size(0) << ", " << inputTensors[0].toTensor().size(1));
+
+
   auto output = model.forward(inputTensors).toTensor();
 
   ACTS_VERBOSE("Embedding space of the first SP:\n"
