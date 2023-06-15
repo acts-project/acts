@@ -78,11 +78,10 @@ class FpeMonitor {
     struct FpeInfo {
       std::size_t count;
       FpeType type;
-      std::unique_ptr<boost::stacktrace::stacktrace> st;
+      std::shared_ptr<const boost::stacktrace::stacktrace> st;
 
       FpeInfo(std::size_t countIn, FpeType typeIn,
-              std::unique_ptr<boost::stacktrace::stacktrace> stIn);
-      FpeInfo(const FpeInfo &other);
+              std::shared_ptr<const boost::stacktrace::stacktrace> stIn);
       ~FpeInfo();
     };
 

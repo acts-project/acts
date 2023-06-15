@@ -51,14 +51,9 @@ bool areFpesEquivalent(
 
 FpeMonitor::Result::FpeInfo::~FpeInfo() = default;
 
-FpeMonitor::Result::FpeInfo::FpeInfo(const FpeInfo &other)
-    : count{other.count},
-      type{other.type},
-      st{std::make_unique<boost::stacktrace::stacktrace>(*other.st)} {}
-
 FpeMonitor::Result::FpeInfo::FpeInfo(
     std::size_t countIn, FpeType typeIn,
-    std::unique_ptr<boost::stacktrace::stacktrace> stIn)
+    std::shared_ptr<const boost::stacktrace::stacktrace> stIn)
     : count{countIn}, type{typeIn}, st{std::move(stIn)} {}
 
 FpeMonitor::Result FpeMonitor::Result::merged(const Result &with) const {
