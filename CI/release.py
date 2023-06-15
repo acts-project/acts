@@ -153,13 +153,6 @@ def update_zenodo(zenodo_file: Path, repo: str, next_version):
     zenodo_file.write_text(json.dumps(data, indent=2))
 
 
-def update_zenodo(zenodo_file: Path, repo: str, next_version):
-    data = json.loads(zenodo_file.read_text())
-    data["title"] = f"{repo}: v{next_version}"
-    data["version"] = f"v{next_version}"
-    zenodo_file.write_text(json.dumps(data, indent=2))
-
-
 def update_citation(citation_file: Path, next_version):
     with citation_file.open() as fh:
         data = yaml.safe_load(fh)
