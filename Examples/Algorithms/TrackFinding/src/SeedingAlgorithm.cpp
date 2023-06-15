@@ -45,14 +45,12 @@ public:
 
   bool passesQualitySelection(const Acts::Seed<external_spacepoint_t>& seed) const {
     // Get the indexes
-    const auto& bottom_itr = std::find(m_begin, m_end, seed.sp()[0]);
-    const auto& middle_itr = std::find(m_begin, m_end, seed.sp()[1]);
-    const auto& top_itr = std::find(m_begin, m_end, seed.sp()[2]);
+    const auto& [bottom_idx, middle_idx, top_idx] = seed.idxs();
 
     float seed_quality = seed.seedQuality();
-    float bottom_quality = m_data->quality(std::distance(m_begin, bottom_itr));
-    float middle_quality = m_data->quality(std::distance(m_begin, middle_itr));
-    float top_quality = m_data->quality(std::distance(m_begin, top_itr));
+    float bottom_quality = m_data->quality(bottom_idx);
+    float middle_quality = m_data->quality(middle_idx);
+    float top_quality = m_data->quality(top_idx);
 
     std::cout << "qualities: seed=" << seed_quality
 	      << " bottom=" << bottom_quality
@@ -62,7 +60,7 @@ public:
     if (bottom_quality > seed_quality and
 	middle_quality > seed_quality and
 	top_quality > seed_quality)
-      return false;
+      return true; //false;
     return true;
   }
   
@@ -357,7 +355,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 	     << spacePointPtrs.size() << " space points");
 
 
-  
-  m_outputSeeds(ctx, SimSeedContainer{seeds});
+   m_outputSeeds(ctx, SimSeedContainer{seeds});
   return ActsExamples::ProcessCode::SUCCESS;
 }

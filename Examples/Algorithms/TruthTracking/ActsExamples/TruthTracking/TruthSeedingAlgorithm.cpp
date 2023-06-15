@@ -174,6 +174,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
           *spacePointsOnTrack[bestSPIndices[0]],
           *spacePointsOnTrack[bestSPIndices[1]],
           *spacePointsOnTrack[bestSPIndices[2]],
+	  bestSPIndices[0], bestSPIndices[1], bestSPIndices[2],
           static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z())};
 
       seededParticles.insert(particle);
