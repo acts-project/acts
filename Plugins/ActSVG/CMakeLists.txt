@@ -2,6 +2,7 @@ add_library(
   ActsPluginActSVG SHARED
   src/EventDataSvgConverter.cpp
   src/LayerSvgConverter.cpp
+  src/PortalSvgConverter.cpp
   src/SurfaceArraySvgConverter.cpp
   src/SurfaceSvgConverter.cpp
   src/TrackingGeometrySvgConverter.cpp)

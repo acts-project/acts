@@ -111,7 +111,9 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
     // Set the openings
     actsvg::scalar ri = static_cast<actsvg::scalar>(boundValues[0]);
     actsvg::scalar ro = static_cast<actsvg::scalar>(boundValues[1]);
+    actsvg::scalar zp = static_cast<actsvg::scalar>(surface.center(gctx).z());
     pSurface._radii = {ri, ro};
+    pSurface._zparameters = {zp, zp};
     pSurface._opening = {
         static_cast<actsvg::scalar>(boundValues[3] - boundValues[2]),
         static_cast<actsvg::scalar>(boundValues[3] + boundValues[2])};
