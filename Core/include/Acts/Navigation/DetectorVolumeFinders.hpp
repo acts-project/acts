@@ -184,13 +184,27 @@ struct GenericIndexedVolumeFinder : public IDetectorVolumeFinder {
   }
 };
 
+template <typename grid_type>
+using IndexedVolumeLookupHelper =
+    IndexedLookupHelper<grid_type, IndexedDetectorVolumeExtractor,
+                        DetectorVolumeFiller>;
+
 /// @brief  An indexed volume implementation access
 ///
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
 using IndexedDetectorVolumeFinder =
-    GenericIndexedVolumeFinder<IndexedLookupHelper<
-        grid_type, IndexedDetectorVolumeExtractor, DetectorVolumeFiller>>;
+    GenericIndexedVolumeFinder<IndexedVolumeLookupHelper<grid_type>>;
+
+template <typename grid_type>
+inline static IndexedDetectorVolumeFinder<grid_type>
+makeIndexedDetectorVolumeFinder(
+    grid_type igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
+    const Transform3& itr = Transform3::Identity()) {
+  auto lookupHelper = IndexedVolumeLookupHelper<grid_type>(
+      std::forward<grid_type>(igrid), icasts, itr);
+  return IndexedDetectorVolumeFinder<grid_type>(std::move(lookupHelper));
+}
 
 }  // namespace Experimental
 }  // namespace Acts

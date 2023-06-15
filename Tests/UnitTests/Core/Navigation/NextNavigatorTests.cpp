@@ -9,14 +9,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NextNavigator.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -33,26 +35,34 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 
 BOOST_AUTO_TEST_CASE(NextNavigator) {
   auto innerVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), tgContext,
-      "Inner Volume", Acts::Transform3::Identity(),
+      Acts::Experimental::makePortalGenerator<
+          const Acts::Experimental::PortalAndSubPortalGenerator>(),
+      tgContext, "Inner Volume", Acts::Transform3::Identity(),
       std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3),
       std::vector<std::shared_ptr<Acts::Surface>>(),
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(),
-      Acts::Experimental::tryAllSubVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+      Acts::Experimental::makeDetectorVolumeFinder<
+          const Acts::Experimental::TrialAndErrorVolumeFinder>(),
+      Acts::Experimental::makeSurfaceCandidatesDelegate<
+          const Acts::Experimental::AllPortalsAndSurfaces>());
 
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), tgContext,
-      "Detector Volume", Acts::Transform3::Identity(),
+      Acts::Experimental::makePortalGenerator<
+          const Acts::Experimental::PortalAndSubPortalGenerator>(),
+      tgContext, "Detector Volume", Acts::Transform3::Identity(),
       std::make_unique<Acts::CuboidVolumeBounds>(10, 10, 10),
       std::vector<std::shared_ptr<Acts::Surface>>(),
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(
           {innerVolume}),
-      Acts::Experimental::tryAllSubVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+      Acts::Experimental::makeDetectorVolumeFinder<
+          const Acts::Experimental::TrialAndErrorVolumeFinder>(),
+      Acts::Experimental::makeSurfaceCandidatesDelegate<
+          const Acts::Experimental::AllPortalsAndSurfaces>());
 
   auto detector = Acts::Experimental::Detector::makeShared(
-      "Detector", {detectorVolume}, Acts::Experimental::tryRootVolumes());
+      "Detector", {detectorVolume},
+      Acts::Experimental::makeDetectorVolumeFinder<
+          const Acts::Experimental::RootVolumeFinder>());
 
   using ActionListType = Acts::ActionList<>;
   using AbortListType = Acts::AbortList<>;
