@@ -38,6 +38,17 @@
 
 namespace Acts {
 
+namespace {
+bool areFpesEquivalent(
+    std::pair<FpeType, const boost::stacktrace::stacktrace &> lhs,
+    std::pair<FpeType, const boost::stacktrace::stacktrace &> rhs) {
+  const auto &fl = *lhs.second.begin();
+  const auto &fr = *rhs.second.begin();
+  return lhs.first == rhs.first && (boost::stacktrace::hash_value(fl) ==
+                                    boost::stacktrace::hash_value(fr));
+}
+}  // namespace
+
 FpeMonitor::Result::FpeInfo::~FpeInfo() = default;
 
 FpeMonitor::Result::FpeInfo::FpeInfo(const FpeInfo &other)
@@ -85,10 +96,7 @@ void FpeMonitor::Result::add(FpeType type, void *stackPtr,
 
   auto it = std::find_if(
       m_stracktraces.begin(), m_stracktraces.end(), [&](const FpeInfo &el) {
-        const auto &fl = *el.st->begin();
-        const auto &fr = *st->begin();
-        return el.type == type && (boost::stacktrace::hash_value(fl) ==
-                                   boost::stacktrace::hash_value(fr));
+        return areFpesEquivalent({el.type, *el.st}, {type, *st});
       });
 
   if (it != m_stracktraces.end()) {
@@ -102,11 +110,7 @@ bool FpeMonitor::Result::contains(
     FpeType type, const boost::stacktrace::stacktrace &st) const {
   return std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
                       [&](const FpeInfo &el) {
-                        const auto &fl = *el.st->begin();
-                        const auto &fr = *st.begin();
-                        return el.type == type &&
-                               (boost::stacktrace::hash_value(fl) ==
-                                boost::stacktrace::hash_value(fr));
+                        return areFpesEquivalent({el.type, *el.st}, {type, st});
                       }) != m_stracktraces.end();
 }
 
@@ -170,14 +174,11 @@ void FpeMonitor::Result::deduplicate() {
   m_stracktraces.clear();
 
   for (auto &info : copy) {
-    auto it = std::find_if(m_stracktraces.begin(), m_stracktraces.end(),
-                           [&info](const FpeInfo &el) {
-                             const auto &fl = *el.st->begin();
-                             const auto &fr = *info.st->begin();
-                             return el.type == info.type &&
-                                    (boost::stacktrace::hash_value(fl) ==
-                                     boost::stacktrace::hash_value(fr));
-                           });
+    auto it = std::find_if(
+        m_stracktraces.begin(), m_stracktraces.end(),
+        [&info](const FpeInfo &el) {
+          return areFpesEquivalent({el.type, *el.st}, {info.type, *info.st});
+        });
     if (it != m_stracktraces.end()) {
       it->count += info.count;
       continue;
