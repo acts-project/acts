@@ -209,6 +209,10 @@ linux_physmon:
   tags:
     - docker
 
+  artifacts:
+    paths:
+      - physmon
+
   script:
     - apt-get update && apt-get install -y git-lfs
 
