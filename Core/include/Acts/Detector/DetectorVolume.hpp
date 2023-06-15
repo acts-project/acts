@@ -100,12 +100,12 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
   DetectorVolume(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
+      DetectorVolumeFinder detectorVolumeFinder,
+      SurfaceCandidatesDelegate surfaceCandidatesDelegate) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -119,28 +119,28 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
   DetectorVolume(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
+      SurfaceCandidatesDelegate surfaceCandidatesDelegate) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
   /// @note This is called by the @class DetectorVolumeFactory
   static std::shared_ptr<DetectorVolume> makeShared(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
+      DetectorVolumeFinder detectorVolumeFinder,
+      SurfaceCandidatesDelegate surfaceCandidatesDelegate);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
   /// @note This is called by the @class DetectorVolumeFactory
   static std::shared_ptr<DetectorVolume> makeShared(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
+      SurfaceCandidatesDelegate surfaceCandidatesDelegate);
 
  public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
@@ -217,20 +217,6 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @return an Extent object
   Extent extent(const GeometryContext& gctx, size_t nseg = 1) const;
 
-  /// Initialize/update the navigation status in this environment
-  ///
-  /// This method calls:
-  ///
-  /// - the local navigation delegate for candidate surfaces
-  /// - the portal navigation delegate for candidate exit portals
-  /// - set the current detector volume
-  ///
-  /// @param gctx is the current geometry context
-  /// @param nState [in,out] is the detector navigation state to be updated
-  ///
-  void updateNavigationState(const GeometryContext& gctx,
-                             NavigationState& nState) const;
-
   /// Non-const access to the portals
   ///
   /// @return the portal shared pointer store
@@ -274,7 +260,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   const std::vector<const DetectorVolume*>& volumes() const;
 
   /// Const access to the detector volume updator
-  const DetectorVolumeUpdator& detectorVolumeUpdator() const;
+  const DetectorVolumeFinder& detectorVolumeFinder() const;
 
   /// This method allows to udate the navigation state updator
   /// module.
@@ -284,12 +270,12 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param volumes the volumes the new navigation state updator points to
   ///
   void assignSurfaceCandidatesUpdator(
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator,
+      SurfaceCandidatesDelegate surfaceCandidatesDelegate,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
-  const SurfaceCandidatesUpdator& surfaceCandidatesUpdator() const;
+  const SurfaceCandidatesDelegate& surfaceCandidatesDelegate() const;
 
   /// Update a portal given a portal index
   ///
@@ -376,10 +362,10 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// BoundingBox
   std::shared_ptr<const BoundingBox> m_boundingBox;
 
-  DetectorVolumeUpdator m_detectorVolumeUpdator;
+  DetectorVolumeFinder m_detectorVolumeFinder;
 
   /// The navigation state updator
-  SurfaceCandidatesUpdator m_surfaceCandidatesUpdator;
+  SurfaceCandidatesDelegate m_surfaceCandidatesDelegate;
 
   /// Volume material (optional)
   std::shared_ptr<IVolumeMaterial> m_volumeMaterial = nullptr;
@@ -399,15 +385,16 @@ class DetectorVolumeFactory {
   /// Create a detector volume - from factory
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
-      const std::string& name, const Transform3& transform,
+      std::string name, const Transform3& transform,
       std::shared_ptr<VolumeBounds> bounds,
-      const std::vector<std::shared_ptr<Surface>>& surfaces,
-      const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
+      std::vector<std::shared_ptr<Surface>> surfaces,
+      std::vector<std::shared_ptr<DetectorVolume>> volumes,
+      DetectorVolumeFinder detectorVolumeFinder,
+      SurfaceCandidatesDelegate surfaceCandidatesDelegate) {
     auto dVolume = DetectorVolume::makeShared(
-        gctx, name, transform, std::move(bounds), surfaces, volumes,
-        std::move(detectorVolumeUpdator), std::move(surfaceCandidateUpdator));
+        gctx, std::move(name), transform, std::move(bounds),
+        std::move(surfaces), std::move(volumes),
+        std::move(detectorVolumeFinder), std::move(surfaceCandidatesDelegate));
     dVolume->construct(gctx, portalGenerator);
     return dVolume;
   }
@@ -415,131 +402,14 @@ class DetectorVolumeFactory {
   /// Create a detector volume - from factory
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
-      const std::string& name, const Transform3& transform,
+      std::string name, const Transform3& transform,
       std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
-    auto dVolume =
-        DetectorVolume::makeShared(gctx, name, transform, std::move(bounds),
-                                   std::move(surfaceCandidateUpdator));
+      SurfaceCandidatesDelegate surfaceCandidatesDelegate) {
+    auto dVolume = DetectorVolume::makeShared(
+        gctx, std::move(name), transform, std::move(bounds),
+        std::move(surfaceCandidatesDelegate));
     dVolume->construct(gctx, portalGenerator);
     return dVolume;
-  }
-};
-
-/// Helper extractors: all portals
-struct AllPortalsExtractor {
-  /// Extract the portals from the volume
-  ///
-  /// @param gctx the geometry contextfor this extraction call
-  /// @param nState is the current navigation state
-  ///
-  /// @return a vector of raw Portal pointers
-  inline static const std::vector<const Portal*> extract(
-      [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState) {
-    if (nState.currentVolume == nullptr) {
-      throw std::runtime_error(
-          "AllPortalsExtractor: no detector volume given.");
-    }
-    return nState.currentVolume->portals();
-  }
-};
-
-/// Helper extractors: all surfaces
-struct AllSurfacesExtractor {
-  /// Extract the surfaces from the volume
-  ///
-  /// @param gctx the geometry contextfor this extraction call
-  /// @param nState is the current navigation state
-  /// @param indices is an ignored index vector
-  ///
-  /// @return a vector of raw Surface pointers
-  inline static const std::vector<const Surface*> extract(
-      [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
-    if (nState.currentVolume == nullptr) {
-      throw std::runtime_error(
-          "AllSurfacesExtractor: no detector volume given.");
-    }
-    return nState.currentVolume->surfaces();
-  }
-};
-
-/// Helper extractors: indexed surfaces
-struct IndexedSurfacesExtractor {
-  /// Extract the surfaces from the volume
-  ///
-  /// @param gctx the geometry contextfor this extraction call
-  /// @param nState is the current navigation state
-  /// @param indices are access indices into the surfaces store
-  ///
-  /// @note no out of boudns checking is done
-  ///
-  /// @return a vector of raw Surface pointers
-  inline static const std::vector<const Surface*> extract(
-      [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t>& indices) {
-    if (nState.currentVolume == nullptr) {
-      throw std::runtime_error(
-          "IndexedSurfacesExtractor: no detector volume given.");
-    }
-    // Get the surface container
-    const auto& surfaces = nState.currentVolume->surfaces();
-    // The extracted surfaces
-    std::vector<const Surface*> eSurfaces;
-    eSurfaces.reserve(indices.size());
-    std::for_each(indices.begin(), indices.end(),
-                  [&](const auto& i) { eSurfaces.push_back(surfaces[i]); });
-    return eSurfaces;
-  }
-};
-
-/// Helper extractors: all sub volumes of a volume
-struct AllSubVolumesExtractor {
-  /// Extract the sub volumes from the volume
-  ///
-  /// @param gctx the geometry contextfor this extraction call
-  /// @param nState is the current navigation state
-  /// @param indices are access indices into the volume store (ignored)
-  ///
-  /// @return a vector of raw DetectorVolume pointers
-  inline static const std::vector<const DetectorVolume*> extract(
-      [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
-    if (nState.currentVolume == nullptr) {
-      throw std::runtime_error(
-          "AllSubVolumesExtractor: no detector volume given.");
-    }
-    return nState.currentVolume->volumes();
-  }
-};
-
-/// Helper extractors: indexed sub volume of a volume
-struct IndexedSubVolumesExtractor {
-  /// Extract the sub volumes from the volume
-  ///
-  /// @param gctx the geometry contextfor this extraction call
-  /// @param nState is the current navigation state
-  /// @param indices are access indices into the volume store
-  ///
-  /// @return a vector of raw DetectorVolume pointers
-  inline static const std::vector<const DetectorVolume*> extract(
-      [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t>& indices) {
-    if (nState.currentVolume == nullptr) {
-      throw std::runtime_error(
-          "AllSubVolumesExtractor: no detector volume given.");
-    }
-    // Get the sub volumes container
-    const auto& volumes = nState.currentVolume->volumes();
-    // The extracted volumes
-    std::vector<const DetectorVolume*> eVolumes;
-    eVolumes.reserve(indices.size());
-    std::for_each(indices.begin(), indices.end(),
-                  [&](const auto& i) { eVolumes.push_back(volumes[i]); });
-    return eVolumes;
   }
 };
 

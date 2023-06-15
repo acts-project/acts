@@ -9,6 +9,8 @@
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 
 #include <stdexcept>
 
@@ -46,11 +48,11 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
     // Contruct the DetectorVolume
     dVolume = DetectorVolumeFactory::construct(
         portalGenerator, gctx, m_cfg.name, transform, std::move(bounds),
-        tryAllPortals());
+        makeSurfaceCandidatesDelegate<const AllPortals>());
   } else {
     // Internal structure is present
     ACTS_VERBOSE("Internal structure is being built.")
-    auto [surfaces, volumes, surfacesUpdator, volumeUpdator] =
+    auto [surfaces, volumes, surfacesDelegate, volumeFinder] =
         m_cfg.internalsBuilder->construct(gctx);
 
     // Add the internally created volumes as root volumes
@@ -62,8 +64,8 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
     // Contruct the DetectorVolume
     dVolume = DetectorVolumeFactory::construct(
         portalGenerator, gctx, m_cfg.name, transform, std::move(bounds),
-        surfaces, volumes, std::move(surfacesUpdator),
-        std::move(volumeUpdator));
+        std::move(surfaces), std::move(volumes), std::move(volumeFinder),
+        std::move(surfacesDelegate));
   }
   // All portals are defined and build the current shell
   for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {

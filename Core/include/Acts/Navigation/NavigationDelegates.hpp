@@ -18,13 +18,21 @@ class Surface;
 
 namespace Experimental {
 
-/// Base class for navigation delegates
-/// This allows to define a common Owning delegate
-/// schema, which in turn allows for accessing the holder
-/// of the delegate implementation for e.g. I/O or display
-class INavigationDelegate {
+class ISurfaceCandidatesDelegate {
  public:
-  virtual ~INavigationDelegate() = default;
+  virtual ~ISurfaceCandidatesDelegate() = default;
+
+  virtual void update(const GeometryContext& gctx,
+                      const NavigationState& nState,
+                      NavigationState::SurfaceCandidates& candidates) const = 0;
+};
+
+class IDetectorVolumeFinder {
+ public:
+  virtual ~IDetectorVolumeFinder() = default;
+
+  virtual const DetectorVolume* find(const GeometryContext& gctx,
+                                     const NavigationState& nState) const = 0;
 };
 
 /// Declare an updator for the local navigation, i.e. the
@@ -41,9 +49,11 @@ class INavigationDelegate {
 ///
 /// @note it relies on the detector volume to be set to the state
 /// Memory  managed navigation state updator
-using SurfaceCandidatesUpdator =
-    OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
-                   INavigationDelegate>;
+using SurfaceCandidatesDelegate =
+    OwningDelegate<void(const GeometryContext& gctx,
+                        const NavigationState& nState,
+                        NavigationState::SurfaceCandidates& candidates),
+                   ISurfaceCandidatesDelegate>;
 
 /// Declare a Detctor Volume finding or switching delegate
 ///
@@ -51,15 +61,26 @@ using SurfaceCandidatesUpdator =
 /// @param nState [in, out] is the navigation state to be updated
 ///
 /// @return the new DetectorVolume into which one changes at this switch
-using DetectorVolumeUpdator =
-    OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
-                   INavigationDelegate>;
+using DetectorVolumeFinder =
+    OwningDelegate<const DetectorVolume*(const GeometryContext& gctx,
+                                         const NavigationState& nState),
+                   IDetectorVolumeFinder>;
 
-/// @brief  A dummy constructed updator
-inline static DetectorVolumeUpdator unconnectedUpdator() {
-  DetectorVolumeUpdator unconnected;
-  unconnected.disconnect();
-  return unconnected;
+template <typename Derived, typename... Args>
+inline static SurfaceCandidatesDelegate makeSurfaceCandidatesDelegate(
+    Args... args) {
+  SurfaceCandidatesDelegate delegate;
+  delegate.template connect<&Derived::update>(
+      std::make_unique<Derived>(std::forward<Args>(args)...));
+  return delegate;
+}
+
+template <typename Derived, typename... Args>
+inline static DetectorVolumeFinder makeDetectorVolumeFinder(Args... args) {
+  DetectorVolumeFinder delegate;
+  delegate.template connect<&Derived::find>(
+      std::make_unique<Derived>(std::forward<Args>(args)...));
+  return delegate;
 }
 
 }  // namespace Experimental

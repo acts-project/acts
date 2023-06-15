@@ -40,6 +40,7 @@ class Delegate;
 ///
 template <typename R, typename H, DelegateType O, typename... Args>
 class Delegate<R(Args...), H, O> {
+ public:
   static constexpr DelegateType kOwnership = O;
 
   /// Alias of the return type
@@ -48,6 +49,7 @@ class Delegate<R(Args...), H, O> {
   /// Alias to the function pointer type this class will store
   using function_type = return_type (*)(const holder_type *, Args...);
 
+ private:
   using function_ptr_type = return_type (*)(Args...);
 
   using deleter_type = void (*)(const holder_type *);

@@ -10,105 +10,179 @@
 
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/detail/IndexedLookupHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/NavigationDelegateHelpers.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-#include <exception>
+#include <stdexcept>
 
 namespace Acts {
 namespace Experimental {
 
-struct NoopFinder : public INavigationDelegate {
-  inline void update(const GeometryContext& /*gctx*/,
-                     NavigationState& /*nState*/) const {}
-};
+using SingleIndex = std::size_t;
 
-struct RootVolumeFinder : public INavigationDelegate {
-  inline void update(const GeometryContext& gctx,
-                     NavigationState& nState) const {
-    if (nState.currentDetector == nullptr) {
+using VariableBoundAxis =
+    Acts::detail::Axis<Acts::detail::AxisType::Variable,
+                       Acts::detail::AxisBoundaryType::Bound>;
+using VariableBoundIndexGrid1 =
+    Acts::detail::Grid<SingleIndex, VariableBoundAxis>;
+
+struct RootVolumeFinder final : public IDetectorVolumeFinder {
+  inline const DetectorVolume* find(const GeometryContext& gctx,
+                                    const NavigationState& nState) const final {
+    auto currentDetector = nState.currentDetector;
+
+    if (currentDetector == nullptr) {
       throw std::runtime_error(
           "DetectorVolumeFinders: no detector set to navigation state.");
     }
 
-    const auto& volumes = nState.currentDetector->rootVolumes();
+    const auto& volumes = currentDetector->rootVolumes();
     for (const auto v : volumes) {
       if (v->inside(gctx, nState.position)) {
-        nState.currentVolume = v;
-        v->detectorVolumeUpdator()(gctx, nState);
-        return;
+        if (v->detectorVolumeFinder()) {
+          return v->detectorVolumeFinder()(gctx, nState);
+        }
+        return v;
       }
     }
-    nState.currentVolume = nullptr;
+
+    return nullptr;
   }
 };
 
-struct TrialAndErrorVolumeFinder : public INavigationDelegate {
-  inline void update(const GeometryContext& gctx,
-                     NavigationState& nState) const {
-    if (nState.currentVolume == nullptr) {
+struct TrialAndErrorVolumeFinder final : public IDetectorVolumeFinder {
+  inline const DetectorVolume* find(const GeometryContext& gctx,
+                                    const NavigationState& nState) const final {
+    auto currentVolume = nState.currentVolume;
+
+    if (currentVolume == nullptr) {
       throw std::runtime_error(
           "DetectorVolumeFinders: no volume set to navigation state.");
     }
 
-    const auto& volumes = nState.currentVolume->volumes();
+    if (!currentVolume->inside(gctx, nState.position)) {
+      return nullptr;
+    }
+
+    const auto& volumes = currentVolume->volumes();
     for (const auto v : volumes) {
       if (v->inside(gctx, nState.position)) {
-        nState.currentVolume = v;
-        v->detectorVolumeUpdator()(gctx, nState);
-        return;
+        if (v->detectorVolumeFinder()) {
+          return v->detectorVolumeFinder()(gctx, nState);
+        }
+        return v;
       }
     }
+
+    return currentVolume;
   }
 };
 
-/// Generate a delegate to try the root volumes
-inline static DetectorVolumeUpdator tryRootVolumes() {
-  DetectorVolumeUpdator vFinder;
-  vFinder.connect<&RootVolumeFinder::update>(
-      std::make_unique<const RootVolumeFinder>());
-  return vFinder;
-}
-
-/// Generate a delegate to try all sub volumes
-inline static DetectorVolumeUpdator tryAllSubVolumes() {
-  DetectorVolumeUpdator vFinder;
-  vFinder.connect<&TrialAndErrorVolumeFinder::update>(
-      std::make_unique<const TrialAndErrorVolumeFinder>());
-  return vFinder;
-}
-
-/// Generate a delegate to try no volume
-inline static DetectorVolumeUpdator tryNoVolumes() {
-  DetectorVolumeUpdator vFinder;
-  vFinder.connect<&NoopFinder::update>(std::make_unique<const NoopFinder>());
-  return vFinder;
-}
-
-/// @brief A helper struct that allows to extrace a volume
-/// from the detector by its index
-struct IndexedDetectorVolumeExtractor {
-  /// Extract the surfaces from the volume
+/// @brief The end of world sets the volume pointer of the
+/// navigation state to nullptr, usually indicates the end of
+/// the known world, hence the name
+struct EndOfWorldVolume final : public IDetectorVolumeFinder {
+  /// @brief a null volume link - explicitely
   ///
-  /// @param gctx the geometry contextfor this extraction call
-  /// @param nState is the current navigation state
-  /// @param index is the index in the global detector volume store
-  ///
-  /// @return a raw DetectorVolume pointer
-  inline static const DetectorVolume* extract(
-      [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, size_t index) noexcept(false) {
-    if (nState.currentDetector == nullptr) {
-      throw std::runtime_error("IndexedVolumeExtractor: no detector given.");
+  /// @note the method parameters are ignored
+  inline const DetectorVolume* find(
+      const GeometryContext& /*gctx*/,
+      const NavigationState& /*nState*/) const final {
+    return nullptr;
+  }
+};
+
+/// @brief Single volume updator, it sets the current navigation
+/// volume to the volume in question
+///
+struct SingleDetectorVolume final : public IDetectorVolumeFinder {
+  const DetectorVolume* dVolume = nullptr;
+
+  /// @brief Allowed constructor
+  /// @param sVolume the volume to which it points
+  SingleDetectorVolume(const DetectorVolume* sVolume) noexcept(false)
+      : dVolume(sVolume) {
+    if (sVolume == nullptr) {
+      throw std::invalid_argument(
+          "DetectorVolumeUpdators: nullptr provided, use EndOfWorld instead.");
     }
-    // Get the volume container from the detector
-    const auto& volumes = nState.currentDetector->volumes();
-    return volumes[index];
+  }
+
+  /// @brief a null volume link - explicitely
+  ///
+  /// @note the method parameters are ignored
+  ///
+  inline const DetectorVolume* find(
+      const GeometryContext& /*gctx*/,
+      const NavigationState& /*nState*/) const final {
+    return dVolume;
+  }
+};
+
+/// @brief This is used for volumes that are indexed in a bound
+/// 1-dimensional grid, e.g. a z-spaced array, or an r-spaced array
+/// of volumes.
+///
+struct BoundVolumesGrid1 final : public IDetectorVolumeFinder {
+  using IndexedUpdator =
+      IndexedLookupHelper<VariableBoundIndexGrid1, DetectorVolumesCollection,
+                          DetectorVolumeFiller>;
+
+  // The indexed updator
+  IndexedUpdator indexedUpdator;
+
+  /// Allowed constructor with explicit arguments
+  ///
+  /// @param gBoundaries the grid boundaries
+  /// @param bValue the binning value
+  /// @param cVolumes the contained volumes
+  /// @param bTransform is the optional transform
+  BoundVolumesGrid1(
+      const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
+      const std::vector<const DetectorVolume*>& cVolumes,
+      const Transform3& bTransform = Transform3::Identity()) noexcept(false)
+      : indexedUpdator(IndexedUpdator(VariableBoundIndexGrid1(std::make_tuple(
+                                          VariableBoundAxis(gBoundaries))),
+                                      {bValue}, bTransform)) {
+    indexedUpdator.extractor.dVolumes = cVolumes;
+
+    if (gBoundaries.size() != cVolumes.size() + 1u) {
+      throw std::invalid_argument(
+          "DetectorVolumeUpdators: mismatching boundaries and volume numbers");
+    }
+    // Initialize the grid entries
+    for (std::size_t ib = 1u; ib < gBoundaries.size(); ++ib) {
+      indexedUpdator.grid.at(ib) = ib - 1;
+    }
+  }
+
+  /// @brief This updator relies on an 1D single index grid
+  ///
+  /// @param gctx the geometry context
+  /// @param nState [in,out] the navigation state to be updated
+  inline const DetectorVolume* find(const GeometryContext& gctx,
+                                    const NavigationState& nState) const final {
+    return indexedUpdator.lookup(gctx, nState);
+  }
+};
+
+template <typename indexed_lookup_t>
+struct GenericIndexedVolumeFinder : public IDetectorVolumeFinder {
+  indexed_lookup_t indexedLookup;
+
+  GenericIndexedVolumeFinder(indexed_lookup_t&& _indexedLookup)
+      : indexedLookup(std::move(_indexedLookup)) {}
+
+  inline const DetectorVolume* find(const GeometryContext& gctx,
+                                    const NavigationState& nState) const final {
+    // Extract the index grid entry
+    return indexedLookup.lookup(gctx, nState);
   }
 };
 
@@ -116,9 +190,9 @@ struct IndexedDetectorVolumeExtractor {
 ///
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
-using IndexedDetectorVolumeImpl =
-    IndexedUpdatorImpl<grid_type, IndexedDetectorVolumeExtractor,
-                       DetectorVolumeFiller>;
+using IndexedDetectorVolumeFinder =
+    GenericIndexedVolumeFinder<IndexedLookupHelper<
+        grid_type, IndexedDetectorVolumeExtractor, DetectorVolumeFiller>>;
 
 }  // namespace Experimental
 }  // namespace Acts

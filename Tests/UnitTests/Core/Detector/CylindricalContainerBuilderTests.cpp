@@ -16,6 +16,8 @@
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -56,10 +58,10 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
         (m_transform), std::make_shared<surface_bounds_type>(m_surfaceBounds));
 
     auto bounds = std::make_unique<CylinderVolumeBounds>(m_volumeBounds);
-    auto portalGenerator = defaultPortalGenerator();
     auto volume = DetectorVolumeFactory::construct(
-        portalGenerator, tContext, m_name, m_transform, std::move(bounds),
-        {surface}, {}, tryNoVolumes(), tryAllPortalsAndSurfaces());
+        makePortalGenerator<const DefaultPortalGenerator>(), tContext, m_name,
+        m_transform, std::move(bounds), {surface}, {}, {},
+        makeSurfaceCandidatesDelegate<const AllPortalsAndSurfaces>());
 
     // Add to the roots
     roots.volumes.push_back(volume);

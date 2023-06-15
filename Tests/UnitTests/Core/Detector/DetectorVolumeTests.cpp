@@ -15,9 +15,8 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -42,6 +41,23 @@ using namespace Acts::Experimental;
 
 Acts::GeometryContext tContext;
 
+auto portalGenerator = Acts::Experimental::makePortalGenerator<
+    const Acts::Experimental::DefaultPortalGenerator>();
+auto portalAndSubPortalGenerator = Acts::Experimental::makePortalGenerator<
+    const Acts::Experimental::PortalAndSubPortalGenerator>();
+auto tryAllPortals = []() {
+  return Acts::Experimental::makeSurfaceCandidatesDelegate<
+      const Acts::Experimental::AllPortals>();
+};
+auto tryAllPortalsAndSurfaces = []() {
+  return Acts::Experimental::makeSurfaceCandidatesDelegate<
+      const Acts::Experimental::AllPortalsAndSurfaces>();
+};
+auto tryAllSubVolumes = []() {
+  return Acts::Experimental::makeDetectorVolumeFinder<
+      const Acts::Experimental::TrialAndErrorVolumeFinder>();
+};
+
 BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
@@ -53,8 +69,6 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   auto fullCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(0., rOuter, zHalfL);
-
-  auto portalGenerator = defaultPortalGenerator();
 
   // Misconfigured - null pointer for bounds
   BOOST_CHECK_THROW(
@@ -117,8 +131,6 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
   auto fullCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(0., 10., 100.);
 
-  auto portalGenerator = defaultPortalGenerator();
-
   auto fullCylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "FullCylinderVolume", nominal,
       std::move(fullCylinderBounds), tryAllPortals());
@@ -145,12 +157,9 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   auto smallBoxBounds =
       std::make_unique<Acts::CuboidVolumeBounds>(smallBox, smallBox, smallBox);
 
-  auto portals = defaultPortalGenerator();
-  auto generatePortalsUpdateInternals = defaultPortalAndSubPortalGenerator();
-
   // Create the inner box
   auto innerBox = DetectorVolumeFactory::construct(
-      portals, tContext, "InnerBox", nominal, std::move(smallBoxBounds),
+      portalGenerator, tContext, "InnerBox", nominal, std::move(smallBoxBounds),
       tryAllPortals());
 
   std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
@@ -160,7 +169,7 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   // Create the outer box and insert the inner box, use a portal generator
   // with sub portal registration
   auto outerBox = DetectorVolumeFactory::construct(
-      generatePortalsUpdateInternals, tContext, "OuterBox", nominal,
+      portalAndSubPortalGenerator, tContext, "OuterBox", nominal,
       std::move(bigBoxBounds), surfaces, volumes, tryAllSubVolumes(),
       tryAllPortals());
 
@@ -172,15 +181,14 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   BOOST_CHECK(outerBox->inside(tContext, nState.position));
   nState.currentVolume = outerBox.get();
 
-  outerBox->updateNavigationState(tContext, nState);
+  outerBox->surfaceCandidatesDelegate()(tContext, nState,
+                                        nState.surfaceCandidates);
 
   // We should have 12 candidates, 6 inner, 6 outer portals
   BOOST_CHECK(nState.surfaceCandidates.size() == 12u);
 }
 
 BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
-  auto portalGenerator = defaultPortalGenerator();
-
   std::vector<Acts::ActsScalar> radii = {100, 102, 104, 106, 108, 110};
   auto cylinderVoumeBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(80, 130, 200);
@@ -194,7 +202,7 @@ BOOST_AUTO_TEST_CASE(CylinderWithSurfacesTestExtractors) {
   // A full cylinder
   auto cylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "CylinderVolume", Acts::Transform3::Identity(),
-      std::move(cylinderVoumeBounds), surfaces, {}, tryNoVolumes(),
+      std::move(cylinderVoumeBounds), surfaces, {}, {},
       tryAllPortalsAndSurfaces());
 
   // The navigation state

@@ -170,7 +170,9 @@ Acts::Experimental::VolumeStructureBuilder::construct(
     default:
       break;
   }
+
   // Return the transform, the volume bounds, and some default portal
   // generators
-  return {transform, std::move(volumeBounds), defaultPortalGenerator()};
+  return {transform, std::move(volumeBounds),
+          makePortalGenerator<const DefaultPortalGenerator>()};
 }

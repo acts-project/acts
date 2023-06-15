@@ -11,14 +11,15 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 
 #include <stdexcept>
 
 std::vector<std::shared_ptr<Acts::Experimental::Portal>>
-Acts::Experimental::generatePortals(
+Acts::Experimental::DefaultPortalGenerator::generate(
     const Transform3& dTransform, const VolumeBounds& dBounds,
-    const std::shared_ptr<DetectorVolume>& dVolume) noexcept(false) {
+    const std::shared_ptr<DetectorVolume>& dVolume) const {
   if (dVolume == nullptr) {
     throw std::runtime_error("PortalsGenerator: no detector volume provided.");
   }
@@ -31,14 +32,11 @@ Acts::Experimental::generatePortals(
     // Create a portal from the surface
     auto portal = Portal::makeShared(oSurface.first);
     // Create a shared link instance & delegate
-    auto singleLinkImpl =
-        std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
-    DetectorVolumeUpdator singleLink;
-    singleLink.connect<&SingleDetectorVolumeImpl::update>(
-        std::move(singleLinkImpl));
+    auto singleLink =
+        makeDetectorVolumeFinder<const SingleDetectorVolume>(dVolume.get());
     // Update the volume link and the store
-    portal->assignDetectorVolumeUpdator(oSurface.second, std::move(singleLink),
-                                        {dVolume});
+    portal->assignDetectorVolumeFinder(oSurface.second, std::move(singleLink),
+                                       {dVolume});
     // Portal is prepared
     portals.push_back(std::move(portal));
   }
@@ -47,17 +45,10 @@ Acts::Experimental::generatePortals(
   return portals;
 }
 
-Acts::Experimental::PortalGenerator
-Acts::Experimental::defaultPortalGenerator() {
-  PortalGenerator pGenerator;
-  pGenerator.connect<&generatePortals>();
-  return pGenerator;
-}
-
 std::vector<std::shared_ptr<Acts::Experimental::Portal>>
-Acts::Experimental::generatePortalsUpdateInternals(
+Acts::Experimental::PortalAndSubPortalGenerator::generate(
     const Transform3& dTransform, const VolumeBounds& dBounds,
-    const std::shared_ptr<DetectorVolume>& dVolume) noexcept(false) {
+    const std::shared_ptr<DetectorVolume>& dVolume) const {
   if (dVolume == nullptr) {
     throw std::runtime_error(
         "generatePortalsUpdateInternals: no detector volume provided.");
@@ -67,21 +58,12 @@ Acts::Experimental::generatePortalsUpdateInternals(
   for (auto& vPtr : dVolume->volumePtrs()) {
     for (auto& pPtr : vPtr->portalPtrs()) {
       // Creating a link to the mother
-      auto motherLinkImpl =
-          std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
-      DetectorVolumeUpdator motherLink;
-      motherLink.connect<&SingleDetectorVolumeImpl::update>(
-          std::move(motherLinkImpl));
-      pPtr->assignDetectorVolumeUpdator(std::move(motherLink), {dVolume});
+      auto motherLink =
+          makeDetectorVolumeFinder<const SingleDetectorVolume>(dVolume.get());
+      pPtr->assignDetectorVolumeFinder(std::move(motherLink), {dVolume});
     }
   }
-  // Return from the standard generator
-  return generatePortals(dTransform, dBounds, dVolume);
-}
 
-Acts::Experimental::PortalGenerator
-Acts::Experimental::defaultPortalAndSubPortalGenerator() {
-  PortalGenerator pGenerator;
-  pGenerator.connect<&generatePortalsUpdateInternals>();
-  return pGenerator;
+  // Return from the standard generator
+  return defaultGenerator.generate(dTransform, dBounds, dVolume);
 }

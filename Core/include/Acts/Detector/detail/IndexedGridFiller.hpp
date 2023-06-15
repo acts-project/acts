@@ -13,7 +13,6 @@
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -234,7 +233,7 @@ struct IndexedGridFiller {
   /// @tparam reference_generator the generator for reference points to be filled
   ///
   /// @param gctx the geometry context of the operation
-  /// @param iGrid [in,out] the index grid object to be filled
+  /// @param indexLookup [in,out] the index grid object to be filled
   /// @param iObjects the object container to be indexed
   /// @param rGenerator the reference point generator for position queries
   /// @param aToAll the indices that are assigned to all bins
@@ -242,12 +241,13 @@ struct IndexedGridFiller {
   /// @note as this is a Detector module, the objects within the indexed_objects container
   /// are assumed to have pointer semantics
   ///
-  template <typename index_grid, typename indexed_objects,
-            typename reference_generator>
-  void fill(
-      const GeometryContext& gctx, index_grid& iGrid,
-      const indexed_objects& iObjects, const reference_generator& rGenerator,
-      const typename index_grid::grid_type::value_type& aToAll = {}) const {
+  template <typename index_lookup, typename indexed_objects,
+            typename reference_generator,
+            typename grid_type = typename index_lookup::grid_type>
+  void fill(const GeometryContext& gctx, index_lookup& indexLookup,
+            const indexed_objects& iObjects,
+            const reference_generator& rGenerator,
+            const typename grid_type::value_type& aToAll = {}) const {
     // Loop over the surfaces to be filled
     for (auto [io, o] : enumerate(iObjects)) {
       // Exclude indices that should be handled differently
@@ -256,22 +256,22 @@ struct IndexedGridFiller {
       }
       // Get the reference positions
       auto refs = rGenerator.references(gctx, *o);
-      std::vector<typename index_grid::grid_type::point_t> gridQueries;
+      std::vector<typename index_lookup::grid_type::point_t> gridQueries;
       gridQueries.reserve(refs.size());
       for (const auto& ref : refs) {
         // Cast the transfrom according to the grid binning
-        gridQueries.push_back(iGrid.castPosition(ref));
+        gridQueries.push_back(indexLookup.castPosition(ref));
       }
       ACTS_DEBUG(gridQueries.size() << " reference points generated.");
-      auto lIndices = localIndices<decltype(iGrid.grid)>(
-          iGrid.grid, gridQueries, binExpansion);
+      auto lIndices =
+          localIndices<grid_type>(indexLookup.grid, gridQueries, binExpansion);
       ACTS_DEBUG(lIndices.size() << " indices assigned.");
       if (oLogger->level() <= Logging::VERBOSE) {
         ACTS_VERBOSE("- list of indices: " << outputIndices(lIndices));
       }
       // Now fill the surface indices
       for (const auto& li : lIndices) {
-        auto& bContent = iGrid.grid.atLocalBins(li);
+        auto& bContent = indexLookup.grid.atLocalBins(li);
         if (std::find(bContent.begin(), bContent.end(), io) == bContent.end()) {
           bContent.push_back(io);
         }
@@ -280,7 +280,7 @@ struct IndexedGridFiller {
 
     // Assign the indices into all
     if (not aToAll.empty()) {
-      assignToAll(iGrid, aToAll);
+      assignToAll(indexLookup.grid, aToAll);
     }
   }
 
@@ -289,10 +289,10 @@ struct IndexedGridFiller {
   /// This is useful if e.g. certain objects are to be attempted in any case,
   /// regardless of their binning.
   ///
-  template <typename index_grid, typename indices>
-  void assignToAll(index_grid& iGrid, const indices& idcs) const {
-    for (std::size_t gi = 0; gi < iGrid.grid.size(true); ++gi) {
-      auto& bContent = iGrid.grid.at(gi);
+  template <typename grid_type, typename indices_type>
+  void assignToAll(grid_type& grid, const indices_type& idcs) const {
+    for (std::size_t gi = 0; gi < grid.size(true); ++gi) {
+      auto& bContent = grid.at(gi);
       for (const auto& io : idcs) {
         if (std::find(bContent.begin(), bContent.end(), io) == bContent.end()) {
           bContent.push_back(io);

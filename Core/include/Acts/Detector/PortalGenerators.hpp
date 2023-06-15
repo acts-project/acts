@@ -21,46 +21,60 @@ namespace Experimental {
 class DetectorVolume;
 class Portal;
 
+class IPortalGenerator {
+ public:
+  virtual ~IPortalGenerator() = default;
+
+  virtual std::vector<std::shared_ptr<Portal>> generate(
+      const Transform3& dTransform, const VolumeBounds& dBounds,
+      const std::shared_ptr<DetectorVolume>& dVolume) const = 0;
+};
+
 /// The Portal genertor definition
-using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3&, const VolumeBounds&,
-    const std::shared_ptr<DetectorVolume>&)>;
+using PortalGenerator =
+    OwningDelegate<std::vector<std::shared_ptr<Portal>>(
+                       const Transform3&, const VolumeBounds&,
+                       const std::shared_ptr<DetectorVolume>&),
+                   IPortalGenerator>;
 
-/// @brief Generator function for creation of portal surfaces
-///
-/// @param dTransform a contextually resolved transform
-/// @param dBounds the detecor volume bounds
-/// @param dVolume the reference to the detector volume which generates this volume
-///
-/// @return a vector of newly created portals with registered inside volume
-std::vector<std::shared_ptr<Portal>> generatePortals(
-    const Transform3& dTransform, const VolumeBounds& dBounds,
-    const std::shared_ptr<DetectorVolume>& dVolume) noexcept(false);
+struct DefaultPortalGenerator final : public IPortalGenerator {
+  /// @brief Generator function for creation of portal surfaces
+  ///
+  /// @param dTransform a contextually resolved transform
+  /// @param dBounds the detecor volume bounds
+  /// @param dVolume the reference to the detector volume which generates this volume
+  ///
+  /// @return a vector of newly created portals with registered inside volume
+  std::vector<std::shared_ptr<Portal>> generate(
+      const Transform3& dTransform, const VolumeBounds& dBounds,
+      const std::shared_ptr<DetectorVolume>& dVolume) const final;
+};
 
-/// Create a default portal generator that connects to the
-/// static method.
-///
-PortalGenerator defaultPortalGenerator();
+struct PortalAndSubPortalGenerator final : public IPortalGenerator {
+  DefaultPortalGenerator defaultGenerator;
 
-/// @brief Calls the portal generation and adds registration to sub portals
-///
-/// This code is split off the PortalGenerator code in order to allow
-/// unit testing of the portal generation wihtout detector volume construction
-///
-/// @param dTransform a contextually resolved transform
-/// @param dBounds the detecor volume bounds
-/// @param dVolume the reference to the detector volume which generates this volume
-///
-/// @return a vector of newly created portals with registered inside volume
-std::vector<std::shared_ptr<Portal>> generatePortalsUpdateInternals(
-    const Transform3& dTransform, const VolumeBounds& dBounds,
-    const std::shared_ptr<DetectorVolume>& dVolume) noexcept(false);
+  /// @brief Calls the portal generation and adds registration to sub portals
+  ///
+  /// This code is split off the PortalGenerator code in order to allow
+  /// unit testing of the portal generation wihtout detector volume construction
+  ///
+  /// @param dTransform a contextually resolved transform
+  /// @param dBounds the detecor volume bounds
+  /// @param dVolume the reference to the detector volume which generates this volume
+  ///
+  /// @return a vector of newly created portals with registered inside volume
+  std::vector<std::shared_ptr<Portal>> generate(
+      const Transform3& dTransform, const VolumeBounds& dBounds,
+      const std::shared_ptr<DetectorVolume>& dVolume) const final;
+};
 
-/// Create a default portal generator that connects to the
-/// static method.
-///
-/// @note parameters are ignored in this case
-PortalGenerator defaultPortalAndSubPortalGenerator();
+template <typename Derived, typename... Args>
+inline static PortalGenerator makePortalGenerator(Args... args) {
+  PortalGenerator delegate;
+  delegate.template connect<&Derived::generate>(
+      std::make_unique<Derived>(std::forward<Args>(args)...));
+  return delegate;
+}
 
 }  // namespace Experimental
 }  // namespace Acts

@@ -9,7 +9,8 @@
 #include "Acts/Detector/detail/PortalHelper.hpp"
 
 #include "Acts/Detector/Portal.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <stdexcept>
@@ -26,12 +27,11 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     // Check if the boundaries need a transform
     const auto pTransform = p->surface().transform(gctx);
     // Creating a link to the mother
-    auto volumes1D = std::make_unique<const BoundVolumesGrid1Impl>(
-        boundaries, binning, cVolumes, pTransform.inverse());
-    DetectorVolumeUpdator dVolumeUpdator;
-    dVolumeUpdator.connect<&BoundVolumesGrid1Impl::update>(
-        std::move(volumes1D));
-    p->assignDetectorVolumeUpdator(dir, std::move(dVolumeUpdator), volumes);
+    DetectorVolumeFinder detectorVolumeFinder =
+        makeDetectorVolumeFinder<const BoundVolumesGrid1>(
+            boundaries, binning, cVolumes, pTransform.inverse());
+    p->assignDetectorVolumeFinder(dir, std::move(detectorVolumeFinder),
+                                  volumes);
   }
 }
 

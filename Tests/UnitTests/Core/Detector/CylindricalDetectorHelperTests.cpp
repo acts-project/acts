@@ -18,8 +18,8 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -40,7 +40,13 @@ Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
 Acts::GeometryContext tContext;
 std::vector<std::shared_ptr<DetectorVolume>> eVolumes = {};
 
-auto portalGenerator = defaultPortalGenerator();
+auto portalGenerator = makePortalGenerator<const DefaultPortalGenerator>();
+auto tryAllPortals = []() {
+  return makeSurfaceCandidatesDelegate<const AllPortals>();
+};
+auto tryRootVolumes = []() {
+  return makeDetectorVolumeFinder<const RootVolumeFinder>();
+};
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 

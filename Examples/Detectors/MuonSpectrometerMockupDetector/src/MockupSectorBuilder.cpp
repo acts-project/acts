@@ -14,7 +14,8 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
@@ -136,13 +137,16 @@ ActsExamples::MockupSectorBuilder::buildChamber(
 
   // create the detector volume for the chamber
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), gctx,
-      chamberConfig.name,
+      Acts::Experimental::makePortalGenerator<
+          const Acts::Experimental::DefaultPortalGenerator>(),
+      gctx, chamberConfig.name,
       Acts::Transform3(Acts::Translation3(chamber_position)),
       std::move(detectorVolumeBounds), strawSurfaces,
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
-      Acts::Experimental::tryAllSubVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+      Acts::Experimental::makeDetectorVolumeFinder<
+          const Acts::Experimental::RootVolumeFinder>(),
+      Acts::Experimental::makeSurfaceCandidatesDelegate<
+          const Acts::Experimental::AllPortalsAndSurfaces>());
 
   return detectorVolume;
 }
@@ -264,13 +268,16 @@ ActsExamples::MockupSectorBuilder::buildSector(
       // create the shifted chamber
       auto detectorVolumeSec =
           Acts::Experimental::DetectorVolumeFactory::construct(
-              Acts::Experimental::defaultPortalAndSubPortalGenerator(), gctx,
-              "detectorVolumeChamber_" + std::to_string(itr), shift_vol,
+              Acts::Experimental::makePortalGenerator<
+                  const Acts::Experimental::PortalAndSubPortalGenerator>(),
+              gctx, "detectorVolumeChamber_" + std::to_string(itr), shift_vol,
               std::move(bounds), shiftedSurfaces,
               std::vector<
                   std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
-              Acts::Experimental::tryAllSubVolumes(),
-              Acts::Experimental::tryAllPortalsAndSurfaces());
+              Acts::Experimental::makeDetectorVolumeFinder<
+                  const Acts::Experimental::TrialAndErrorVolumeFinder>(),
+              Acts::Experimental::makeSurfaceCandidatesDelegate<
+                  const Acts::Experimental::AllPortalsAndSurfaces>());
 
       chambersOfSectors[itr].push_back(detectorVolumeSec);
 
@@ -283,12 +290,15 @@ ActsExamples::MockupSectorBuilder::buildSector(
   for (std::size_t i = 0; i < cylinderVolumesBounds.size(); ++i) {
     detectorCylinderVolumesOfSector.push_back(
         Acts::Experimental::DetectorVolumeFactory::construct(
-            Acts::Experimental::defaultPortalAndSubPortalGenerator(), gctx,
-            "cylinder_volume_" + std::to_string(i), transform,
+            Acts::Experimental::makePortalGenerator<
+                const Acts::Experimental::PortalAndSubPortalGenerator>(),
+            gctx, "cylinder_volume_" + std::to_string(i), transform,
             std::move(cylinderVolumesBounds[i]),
             std::vector<std::shared_ptr<Acts::Surface>>{}, chambersOfSectors[i],
-            Acts::Experimental::tryAllSubVolumes(),
-            Acts::Experimental::tryAllPortalsAndSurfaces()));
+            Acts::Experimental::makeDetectorVolumeFinder<
+                const Acts::Experimental::TrialAndErrorVolumeFinder>(),
+            Acts::Experimental::makeSurfaceCandidatesDelegate<
+                const Acts::Experimental::AllPortalsAndSurfaces>()));
 
   }  // end of cylinder volumes
 
@@ -299,12 +309,16 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
   // creation of the mother volume
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalAndSubPortalGenerator(), gctx,
-      "detectorVolumeSector", transform,
+      Acts::Experimental::makePortalGenerator<
+          const Acts::Experimental::PortalAndSubPortalGenerator>(),
+      gctx, "detectorVolumeSector", transform,
       std::move(cylinderVolumesBoundsOfMother),
       std::vector<std::shared_ptr<Acts::Surface>>{},
-      detectorCylinderVolumesOfSector, Acts::Experimental::tryAllSubVolumes(),
-      Acts::Experimental::tryAllPortalsAndSurfaces());
+      detectorCylinderVolumesOfSector,
+      Acts::Experimental::makeDetectorVolumeFinder<
+          const Acts::Experimental::TrialAndErrorVolumeFinder>(),
+      Acts::Experimental::makeSurfaceCandidatesDelegate<
+          const Acts::Experimental::AllPortalsAndSurfaces>());
 
   return detectorVolume;
 }

@@ -235,9 +235,9 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
   AllPortalsProvider allPortals;
   AllSurfacesProvider allSurfaces;
   auto allPortalsAllSurfaces =
-      Acts::Experimental::ChainedUpdatorImpl<AllPortalsProvider,
-                                             AllSurfacesProvider>(
-          std::tie(allPortals, allSurfaces));
+      Acts::Experimental::ChainedSurfaceCandidatesDelegate<AllPortalsProvider,
+                                                           AllSurfacesProvider>(
+          std::make_tuple(allPortals, allSurfaces));
 
   allPortalsAllSurfaces.update(tContext, nState);
   BOOST_CHECK(nState.surfaceCandidates.size() == 5u);
@@ -261,9 +261,9 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
   auto grid1DSurfaces = Grid1DSurfacesProvider(std::move(grid), {Acts::binR});
 
   auto allPortalsGrid1DSurfaces =
-      Acts::Experimental::ChainedUpdatorImpl<AllPortalsProvider,
-                                             Grid1DSurfacesProvider>(
-          std::tie(allPortals, grid1DSurfaces));
+      Acts::Experimental::ChainedSurfaceCandidatesDelegate<
+          AllPortalsProvider, Grid1DSurfacesProvider>(
+          std::make_tuple(allPortals, grid1DSurfaces));
 
   allPortalsGrid1DSurfaces.update(tContext, nState);
   BOOST_CHECK(nState.surfaceCandidates.size() == 4u);
@@ -288,9 +288,9 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
       Grid2DSurfacesProvider(std::move(grid), {Acts::binR, Acts::binZ});
 
   auto allPortalsGrid2DSurfaces =
-      Acts::Experimental::ChainedUpdatorImpl<AllPortalsProvider,
-                                             Grid2DSurfacesProvider>(
-          std::tie(allPortals, grid2DSurfaces));
+      Acts::Experimental::ChainedSurfaceCandidatesDelegate<
+          AllPortalsProvider, Grid2DSurfacesProvider>(
+          std::make_tuple(allPortals, grid2DSurfaces));
 
   allPortalsGrid2DSurfaces.update(tContext, nState);
   BOOST_CHECK(nState.surfaceCandidates.size() == 3u);

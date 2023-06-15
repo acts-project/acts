@@ -18,8 +18,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -32,6 +31,25 @@ using namespace Acts;
 using namespace Acts::Experimental;
 
 GeometryContext tContext;
+
+auto portalGenerator = []() {
+  return Acts::Experimental::makePortalGenerator<
+      const Acts::Experimental::DefaultPortalGenerator>();
+};
+auto portalAndSubPortalGenerator = Acts::Experimental::makePortalGenerator<
+    const Acts::Experimental::PortalAndSubPortalGenerator>();
+auto tryAllPortals = []() {
+  return Acts::Experimental::makeSurfaceCandidatesDelegate<
+      const Acts::Experimental::AllPortals>();
+};
+auto tryAllPortalsAndSurfaces = []() {
+  return Acts::Experimental::makeSurfaceCandidatesDelegate<
+      const Acts::Experimental::AllPortalsAndSurfaces>();
+};
+auto tryRootVolumes = []() {
+  return Acts::Experimental::makeDetectorVolumeFinder<
+      const Acts::Experimental::RootVolumeFinder>();
+};
 
 /// @brief Mockup external structure builder
 /// @tparam bounds_type the volume bounds type that is constructed
@@ -46,7 +64,7 @@ class ExternalsBuilder : public IExternalStructureBuilder {
   ExternalStructure construct(
       [[maybe_unused]] const GeometryContext& gctx) const final {
     return {m_transform, std::make_unique<bounds_type>(m_bounds),
-            defaultPortalGenerator()};
+            portalGenerator()};
   }
 
  private:
@@ -69,7 +87,7 @@ class InternalSurfaceBuilder : public IInternalStructureBuilder {
       [[maybe_unused]] const GeometryContext& gctx) const final {
     auto surface = Surface::makeShared<surface_type>(
         m_transform, std::make_shared<bounds_type>(m_bounds));
-    return {{surface}, {}, tryAllPortalsAndSurfaces(), tryNoVolumes()};
+    return {{surface}, {}, tryAllPortalsAndSurfaces(), {}};
   }
 
  private:
@@ -91,9 +109,8 @@ class InternalVolumeBuilder : public IInternalStructureBuilder {
   InternalStructure construct(
       [[maybe_unused]] const GeometryContext& gctx) const final {
     auto bounds = std::make_unique<bounds_type>(m_bounds);
-    auto portalGenerator = defaultPortalGenerator();
     auto volume = DetectorVolumeFactory::construct(
-        portalGenerator, tContext, "InternalVolume", m_transform,
+        portalGenerator(), tContext, "InternalVolume", m_transform,
         std::move(bounds), tryAllPortals());
     return {{}, {volume}, tryAllPortals(), tryRootVolumes()};
   }

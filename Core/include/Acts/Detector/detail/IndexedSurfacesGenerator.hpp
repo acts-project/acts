@@ -10,7 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
@@ -60,7 +61,7 @@ struct IndexedSurfacesGenerator {
   ///
   /// @return a SurfaceCandidateUpdator delegate
   template <typename axis_generator, typename reference_generator>
-  SurfaceCandidatesUpdator operator()(
+  SurfaceCandidatesDelegate operator()(
       const GeometryContext& gctx, const axis_generator& aGenerator,
       const reference_generator& rGenerator) const {
     ACTS_DEBUG("Indexing " << surfaces.size() << " surface, "
@@ -70,33 +71,29 @@ struct IndexedSurfacesGenerator {
         typename axis_generator::template grid_type<std::vector<std::size_t>>;
     GridType grid(std::move(aGenerator()));
 
-    std::array<BinningValue, decltype(grid)::DIM> bvArray = {};
+    std::array<BinningValue, GridType::DIM> bvArray = {};
     for (auto [ibv, bv] : enumerate(bValues)) {
       bvArray[ibv] = bv;
     }
 
     // The indexed surfaces delegate
-    IndexedSurfacesImpl<GridType> indexedSurfaces(std::move(grid), bvArray,
-                                                  transform);
+    auto indexedSurfaces =
+        makeIndexedSurfaces<GridType>(std::move(grid), bvArray, transform);
 
     // Fill the bin indicies
     IndexedGridFiller filler{binExpansion};
     filler.oLogger = oLogger->cloneWithSuffix("_filler");
-    filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
+    filler.fill(gctx, indexedSurfaces.indexedLookup, surfaces, rGenerator,
+                assignToAll);
 
     // The portal delegate
-    AllPortalsImpl allPortals;
+    AllPortals allPortals;
 
     // The chained delegate: indexed surfaces and all portals
-    using DelegateType = IndexedSurfacesAllPortalsImpl<decltype(grid)>;
-    auto indesSurfacesAllPortals = std::make_unique<const DelegateType>(
-        std::tie(indexedSurfaces, allPortals));
-
+    using DelegateType = IndexedSurfacesAllPortals<GridType>;
     // Create the delegate and connect it
-    SurfaceCandidatesUpdator nStateUpdator;
-    nStateUpdator.connect<&DelegateType::update>(
-        std::move(indesSurfacesAllPortals));
-    return nStateUpdator;
+    return makeSurfaceCandidatesDelegate<const DelegateType>(
+        std::make_tuple(indexedSurfaces, allPortals));
   }
 
   /// Access to the logger

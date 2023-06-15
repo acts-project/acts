@@ -12,9 +12,10 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NextNavigator.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -85,5 +86,6 @@ int main() {
 
   auto detector_sector = Acts::Experimental::Detector::makeShared(
       "Detector", {detectorVolume_sector},
-      Acts::Experimental::tryRootVolumes());
+      Acts::Experimental::makeDetectorVolumeFinder<
+          const Experimental::RootVolumeFinder>());
 }
