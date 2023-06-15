@@ -33,7 +33,6 @@
 #include <typeinfo>
 
 #include <boost/stacktrace/stacktrace.hpp>
-#include <sys/types.h>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
