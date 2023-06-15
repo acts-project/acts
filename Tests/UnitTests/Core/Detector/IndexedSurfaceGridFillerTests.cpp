@@ -10,10 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/IndexedGridFiller.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
@@ -29,11 +31,11 @@ Logging::Level logLevel = Logging::VERBOSE;
 namespace {
 
 /// Helper method to count how many bins are not empty
-template <typename indexed_surface_grid>
-std::size_t countBins(const indexed_surface_grid& isGrid) {
+template <typename grid_type>
+std::size_t countBins(const grid_type& grid) {
   std::size_t nonEmptyBins = 0u;
-  for (std::size_t igb = 0u; igb < isGrid.grid.size(); ++igb) {
-    const auto& gb = isGrid.grid.at(igb);
+  for (std::size_t igb = 0u; igb < grid.size(); ++igb) {
+    const auto& gb = grid.at(igb);
     if (not gb.empty()) {
       ++nonEmptyBins;
     }
@@ -104,12 +106,12 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
   // x-y Axes & Grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-5., 5., 5);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisY(-5., 5., 5);
-  Grid<std::vector<unsigned int>, decltype(axisX), decltype(axisY)> gridXY(
+  Grid<std::vector<std::size_t>, decltype(axisX), decltype(axisY)> gridXY(
       {axisX, axisY});
 
   // Indexed Surface grid
-  IndexedSurfacesImpl<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                      {binX, binY});
+  auto indexedGridXY =
+      makeIndexedSurfaces<decltype(gridXY)>(std::move(gridXY), {binX, binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -123,9 +125,10 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
 
   // Fill the surface
-  filler.fill(tContext, indexedGridXY, surfaces, generator);
+  filler.fill(tContext, indexedGridXY.indexedLookup, surfaces, generator);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
+  std::size_t nonEmptyBins =
+      countBins<decltype(gridXY)>(indexedGridXY.indexedLookup.grid);
   // Check the correct number of filled bins
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
   BOOST_CHECK(nonEmptyBins == 1u);
@@ -140,12 +143,12 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
   // x-y Axes & Grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-5., 5., 5);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisY(-5., 5., 5);
-  Grid<std::vector<unsigned int>, decltype(axisX), decltype(axisY)> gridXY(
+  Grid<std::vector<std::size_t>, decltype(axisX), decltype(axisY)> gridXY(
       {axisX, axisY});
 
   // Indexed Surface grid
-  IndexedSurfacesImpl<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                      {binX, binY});
+  auto indexedGridXY =
+      makeIndexedSurfaces<decltype(gridXY)>(std::move(gridXY), {binX, binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -160,9 +163,10 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
 
   // Fill the surface
-  filler.fill(tContext, indexedGridXY, surfaces, generator);
+  filler.fill(tContext, indexedGridXY.indexedLookup, surfaces, generator);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
+  std::size_t nonEmptyBins =
+      countBins<decltype(gridXY)>(indexedGridXY.indexedLookup.grid);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
   BOOST_CHECK(nonEmptyBins == 1u);
 }
@@ -177,12 +181,12 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
   // x-y Axes & Grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-5., 5., 5);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisY(-5., 5., 5);
-  Grid<std::vector<unsigned int>, decltype(axisX), decltype(axisY)> gridXY(
+  Grid<std::vector<std::size_t>, decltype(axisX), decltype(axisY)> gridXY(
       {axisX, axisY});
 
   // Indexed Surface grid
-  IndexedSurfacesImpl<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                      {binX, binY});
+  auto indexedGridXY =
+      makeIndexedSurfaces<decltype(gridXY)>(std::move(gridXY), {binX, binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -197,9 +201,10 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
 
   // Fill the surface
-  filler.fill(tContext, indexedGridXY, surfaces, generator);
+  filler.fill(tContext, indexedGridXY.indexedLookup, surfaces, generator);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
+  std::size_t nonEmptyBins =
+      countBins<decltype(gridXY)>(indexedGridXY.indexedLookup.grid);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
   BOOST_CHECK(nonEmptyBins == 25u);
 }
@@ -214,12 +219,12 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
   // x-y Axes & Grid
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisX(-9., 9., 9);
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisY(-9., 9., 9);
-  Grid<std::vector<unsigned int>, decltype(axisX), decltype(axisY)> gridXY(
+  Grid<std::vector<std::size_t>, decltype(axisX), decltype(axisY)> gridXY(
       {axisX, axisY});
 
   // Indexed Surface grid
-  IndexedSurfacesImpl<decltype(gridXY)> indexedGridXY(std::move(gridXY),
-                                                      {binX, binY});
+  auto indexedGridXY =
+      makeIndexedSurfaces<decltype(gridXY)>(std::move(gridXY), {binX, binY});
 
   // Create a single surface in the center
   auto rBounds = std::make_shared<RectangleBounds>(4., 4.);
@@ -234,9 +239,10 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
   std::vector<std::shared_ptr<Surface>> surfaces = {pSurface};
 
   // Fill the surface
-  filler.fill(tContext, indexedGridXY, surfaces, generator);
+  filler.fill(tContext, indexedGridXY.indexedLookup, surfaces, generator);
 
-  std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
+  std::size_t nonEmptyBins =
+      countBins<decltype(gridXY)>(indexedGridXY.indexedLookup.grid);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
   BOOST_CHECK(nonEmptyBins == 49u);
 }
@@ -252,12 +258,12 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-9., 9., 9);
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(-M_PI, M_PI,
                                                                 36);
-  Grid<std::vector<unsigned int>, decltype(axisZ), decltype(axisPhi)> gridZPhi(
+  Grid<std::vector<std::size_t>, decltype(axisZ), decltype(axisPhi)> gridZPhi(
       {axisZ, axisPhi});
 
   // Indexed Surface grid
-  IndexedSurfacesImpl<decltype(gridZPhi)> indexedGridZPhi(std::move(gridZPhi),
-                                                          {binZ, binPhi});
+  auto indexedGridZPhi = makeIndexedSurfaces<decltype(gridZPhi)>(
+      std::move(gridZPhi), {binZ, binPhi});
 
   auto cBounds = std::make_shared<CylinderBounds>(10, 2., M_PI / 30, 0.);
   auto cSurface = Surface::makeShared<CylinderSurface>(Transform3::Identity(),
@@ -271,10 +277,10 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
   std::vector<std::shared_ptr<Surface>> surfaces = {cSurface};
 
   // Fill the surface
-  filler.fill(tContext, indexedGridZPhi, surfaces, generator);
+  filler.fill(tContext, indexedGridZPhi.indexedLookup, surfaces, generator);
 
   std::size_t nonEmptyBins =
-      countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
+      countBins<decltype(gridZPhi)>(indexedGridZPhi.indexedLookup.grid);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
   BOOST_CHECK(nonEmptyBins == 6u);
 }
@@ -288,12 +294,12 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   Axis<AxisType::Equidistant, AxisBoundaryType::Bound> axisZ(-9., 9., 9);
   Axis<AxisType::Equidistant, AxisBoundaryType::Closed> axisPhi(-M_PI, M_PI,
                                                                 36);
-  Grid<std::vector<unsigned int>, decltype(axisZ), decltype(axisPhi)> gridZPhi(
+  Grid<std::vector<std::size_t>, decltype(axisZ), decltype(axisPhi)> gridZPhi(
       {axisZ, axisPhi});
 
   // Indexed Surface grid
-  IndexedSurfacesImpl<decltype(gridZPhi)> indexedGridZPhi(std::move(gridZPhi),
-                                                          {binZ, binPhi});
+  auto indexedGridZPhi = makeIndexedSurfaces<decltype(gridZPhi)>(
+      std::move(gridZPhi), {binZ, binPhi});
 
   auto cBounds = std::make_shared<CylinderBounds>(10, 2., M_PI / 10, 0.);
   auto tf = AngleAxis3(M_PI, Vector3::UnitZ()) * Transform3::Identity();
@@ -307,10 +313,10 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   std::vector<std::shared_ptr<Surface>> surfaces = {cSurface};
 
   // Fill the surface
-  filler.fill(tContext, indexedGridZPhi, surfaces, generator);
+  filler.fill(tContext, indexedGridZPhi.indexedLookup, surfaces, generator);
 
   std::size_t nonEmptyBins =
-      countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
+      countBins<decltype(gridZPhi)>(indexedGridZPhi.indexedLookup.grid);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
   BOOST_CHECK(nonEmptyBins == 9u);
 }

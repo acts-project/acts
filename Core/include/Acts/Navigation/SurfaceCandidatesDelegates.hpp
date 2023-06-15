@@ -138,10 +138,12 @@ template <typename grid_type>
 using IndexedSurfacesAllPortals =
     ChainedSurfaceCandidatesDelegate<IndexedSurfaces<grid_type>, AllPortals>;
 
-template <typename grid_type, typename... Args>
-inline static IndexedSurfaces<grid_type> makeIndexedSurfaces(Args&&... args) {
-  auto lookupHelper =
-      IndexedSurfacesLookupHelper<grid_type>(std::forward<Args>(args)...);
+template <typename grid_type>
+inline static IndexedSurfaces<grid_type> makeIndexedSurfaces(
+    grid_type igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
+    const Transform3& itr = Transform3::Identity()) {
+  auto lookupHelper = IndexedSurfacesLookupHelper<grid_type>(
+      std::forward<grid_type>(igrid), icasts, itr);
   return IndexedSurfaces<grid_type>(std::move(lookupHelper));
 }
 

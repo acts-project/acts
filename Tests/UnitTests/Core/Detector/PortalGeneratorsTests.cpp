@@ -13,8 +13,9 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>
@@ -45,13 +46,13 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   Acts::CylinderVolumeBounds cBar(0., 100, 200.);
 
   auto dTransform = Acts::Transform3::Identity();
-  auto pGenerator = defaultPortalGenerator();
   auto dVolume = DetectorVolumeFactory::construct(
-      pGenerator, tContext, "dummy", dTransform,
-      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
-      tryAllPortalsAndSurfaces());
+      makePortalGenerator<const DefaultPortalGenerator>(), tContext, "dummy",
+      dTransform, std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
+      makeSurfaceCandidatesDelegate<const AllPortalsAndSurfaces>());
 
-  auto cBarPortals = generatePortals(dTransform, cBar, dVolume);
+  auto cBarPortals =
+      DefaultPortalGenerator{}.generate(dTransform, cBar, dVolume);
 
   BOOST_CHECK(cBarPortals.size() == 3u);
   // Check they are not nullptrs
@@ -82,7 +83,8 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
 
   // Tube Cylinder
   Acts::CylinderVolumeBounds cTube(10., 100, 200.);
-  auto cTubePortals = generatePortals(dTransform, cTube, dVolume);
+  auto cTubePortals =
+      DefaultPortalGenerator{}.generate(dTransform, cTube, dVolume);
   BOOST_CHECK(cTubePortals.size() == 4u);
   // Check they are not nullptrs
   for (const auto& p : cTubePortals) {
@@ -109,7 +111,8 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   Acts::Vector3 posPhiSecDir(r * std::cos(alpha), -r * std::sin(alpha), 0.);
 
   Acts::CylinderVolumeBounds cTubeSector(10., 100., 200., alpha, 0.);
-  auto cTubeSectorPortals = generatePortals(dTransform, cTubeSector, dVolume);
+  auto cTubeSectorPortals =
+      DefaultPortalGenerator{}.generate(dTransform, cTubeSector, dVolume);
   BOOST_CHECK(cTubeSectorPortals.size() == 6u);
   // Check they are not nullptrs
   for (const auto& p : cTubeSectorPortals) {

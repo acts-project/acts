@@ -15,7 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -27,18 +27,18 @@ namespace Acts {
 namespace Experimental {
 
 /// a simple link to volume struct
-class LinkToVolumeImpl : public INavigationDelegate {
+class LinkToVolume final : public IDetectorVolumeFinder {
  public:
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
 
   /// Constructor from volume
-  LinkToVolumeImpl(std::shared_ptr<DetectorVolume> dv)
-      : dVolume(std::move(dv)) {}
+  LinkToVolume(std::shared_ptr<DetectorVolume> dv) : dVolume(std::move(dv)) {}
 
   /// @return the link to the contained volume
   /// @note the parameters are ignored
-  void link(const GeometryContext& /*gctx*/, NavigationState& nState) const {
-    nState.currentVolume = dVolume.get();
+  const DetectorVolume* find(const GeometryContext& /*gctx*/,
+                             const NavigationState& /*nState*/) const final {
+    return dVolume.get();
   }
 };
 
@@ -66,15 +66,14 @@ BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(PortalTest) {
   auto dTransform = Acts::Transform3::Identity();
-  auto pGenerator = defaultPortalGenerator();
   auto volumeA = DetectorVolumeFactory::construct(
-      pGenerator, tContext, "dummyA", dTransform,
-      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
-      tryAllPortalsAndSurfaces());
+      makePortalGenerator<const DefaultPortalGenerator>(), tContext, "dummyA",
+      dTransform, std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
+      makeSurfaceCandidatesDelegate<const AllPortalsAndSurfaces>());
   auto volumeB = DetectorVolumeFactory::construct(
-      pGenerator, tContext, "dummyB", dTransform,
-      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
-      tryAllPortalsAndSurfaces());
+      makePortalGenerator<const DefaultPortalGenerator>(), tContext, "dummyB",
+      dTransform, std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
+      makeSurfaceCandidatesDelegate<const AllPortalsAndSurfaces>());
 
   // A rectangle bound surface
   auto rectangle = std::make_shared<Acts::RectangleBounds>(10., 100.);
@@ -93,11 +92,9 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK(portalA == unpackToShared<const Portal>(*portalA));
 
   // Create a links to volumes
-  auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
-  DetectorVolumeUpdator linkToA;
-  linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
-  portalA->assignDetectorVolumeUpdator(Acts::Direction::Positive,
-                                       std::move(linkToA), {volumeA});
+  portalA->assignDetectorVolumeFinder(
+      Acts::Direction::Positive,
+      makeDetectorVolumeFinder<const LinkToVolume>(volumeA), {volumeA});
 
   auto attachedDetectorVolumes = portalA->attachedDetectorVolumes();
   BOOST_CHECK(attachedDetectorVolumes[0u].empty());
@@ -116,11 +113,9 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK(nState.currentVolume == nullptr);
 
   auto portalB = Portal::makeShared(surface);
-  DetectorVolumeUpdator linkToB;
-  auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
-  linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
-  portalB->assignDetectorVolumeUpdator(Acts::Direction::Negative,
-                                       std::move(linkToB), {volumeB});
+  portalB->assignDetectorVolumeFinder(
+      Acts::Direction::Negative,
+      makeDetectorVolumeFinder<const LinkToVolume>(volumeB), {volumeB});
 
   // Reverse: positive volume nullptr, negative volume volumeB
   nState.direction = Acts::Vector3(0., 0., 1.);
@@ -143,20 +138,16 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK(portalA == portalB);
 
   // An invalid fusing setup
-  auto linkToAIImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
-  auto linkToBIImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
 
   auto portalAI = Portal::makeShared(surface);
-  DetectorVolumeUpdator linkToAI;
-  linkToAI.connect<&LinkToVolumeImpl::link>(std::move(linkToAIImpl));
-  portalAI->assignDetectorVolumeUpdator(Acts::Direction::Positive,
-                                        std::move(linkToAI), {volumeA});
+  portalAI->assignDetectorVolumeFinder(
+      Acts::Direction::Positive,
+      makeDetectorVolumeFinder<const LinkToVolume>(volumeA), {volumeA});
 
   auto portalBI = Portal::makeShared(surface);
-  DetectorVolumeUpdator linkToBI;
-  linkToBI.connect<&LinkToVolumeImpl::link>(std::move(linkToBIImpl));
-  portalBI->assignDetectorVolumeUpdator(Acts::Direction::Positive,
-                                        std::move(linkToBI), {volumeB});
+  portalBI->assignDetectorVolumeFinder(
+      Acts::Direction::Positive,
+      makeDetectorVolumeFinder<const LinkToVolume>(volumeB), {volumeB});
 
   BOOST_CHECK_THROW(portalAI->fuse(portalBI), std::runtime_error);
 }

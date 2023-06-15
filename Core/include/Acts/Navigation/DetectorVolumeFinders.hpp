@@ -24,13 +24,11 @@
 namespace Acts {
 namespace Experimental {
 
-using SingleIndex = std::size_t;
-
 using VariableBoundAxis =
     Acts::detail::Axis<Acts::detail::AxisType::Variable,
                        Acts::detail::AxisBoundaryType::Bound>;
 using VariableBoundIndexGrid1 =
-    Acts::detail::Grid<SingleIndex, VariableBoundAxis>;
+    Acts::detail::Grid<std::size_t, VariableBoundAxis>;
 
 struct RootVolumeFinder final : public IDetectorVolumeFinder {
   inline const DetectorVolume* find(const GeometryContext& gctx,
