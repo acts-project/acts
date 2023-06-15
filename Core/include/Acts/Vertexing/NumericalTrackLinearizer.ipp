@@ -119,8 +119,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
                                                  *perigeeSurface, pOptions);
-    auto newEndParams = (*newResult->endParameters);
-    newPerigeeParams = newEndParams.parameters();
+    newPerigeeParams = (*newResult->endParameters).parameters();
 
     // Computing the numerical derivatives and filling the Jacobian
     // d_0 and z_0
