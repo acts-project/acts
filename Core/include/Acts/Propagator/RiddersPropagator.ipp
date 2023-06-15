@@ -133,7 +133,7 @@ auto Acts::RiddersPropagator<propagator_t>::wiggleAndCalculateJacobian(
 
   // Test if target is disc - this may lead to inconsistent results
   if (target.type() == Surface::Disc) {
-    for (const auto& d : derivatives) {
+    for ([[maybe_unused]] const auto& d : derivatives) {
       assert(!inconsistentDerivativesOnDisc(d));
     }
   }

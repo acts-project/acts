@@ -169,7 +169,9 @@ class VectorMultiTrajectoryBase {
         m_params{other.m_params},
         m_cov{other.m_cov},
         m_meas{other.m_meas},
+        m_measOffset{other.m_measOffset},
         m_measCov{other.m_measCov},
+        m_measCovOffset{other.m_measCovOffset},
         m_jac{other.m_jac},
         m_sourceLinks{other.m_sourceLinks},
         m_projectors{other.m_projectors},
@@ -406,6 +408,8 @@ class VectorMultiTrajectory final
   IndexType addTrackState_impl(
       TrackStatePropMask mask = TrackStatePropMask::All,
       IndexType iprevious = kInvalid);
+
+  void reserve(std::size_t n);
 
   void shareFrom_impl(IndexType iself, IndexType iother,
                       TrackStatePropMask shareSource,

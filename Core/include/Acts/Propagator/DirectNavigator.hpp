@@ -186,52 +186,20 @@ class DirectNavigator {
     state.navigationBreak = navigationBreak;
   }
 
-  /// @brief Navigator status call
+  /// @brief Initialize call - start of propagation
   ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  /// @tparam stepper_t is the used type of the Stepper by the Propagator
+  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   ///
-  /// @param [in,out] state is the mutable propagator state object
+  /// @param [in,out] state is the propagation state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void status(propagator_state_t& state, const stepper_t& stepper) const {
-    // Screen output
-    ACTS_VERBOSE("Entering navigator::status.");
-
-    // Navigator status always resets the current surface
-    state.navigation.currentSurface = nullptr;
-    // Output the position in the sequence
-    ACTS_VERBOSE(std::distance(state.navigation.navSurfaceIter,
-                               state.navigation.navSurfaces.end())
-                 << " out of " << state.navigation.navSurfaces.size()
-                 << " surfaces remain to try.");
-
-    // Check if we are on surface
-    if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
-      // Establish the surface status
-      auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter, false);
-      if (surfaceStatus == Intersection3D::Status::onSurface) {
-        // Set the current surface
-        state.navigation.currentSurface = *state.navigation.navSurfaceIter;
-        ACTS_VERBOSE("Current surface set to  "
-                     << state.navigation.currentSurface->geometryId())
-        // Move the sequence to the next surface
-        ++state.navigation.navSurfaceIter;
-        if (state.navigation.navSurfaceIter !=
-            state.navigation.navSurfaces.end()) {
-          ACTS_VERBOSE("Next surface candidate is  "
-                       << (*state.navigation.navSurfaceIter)->geometryId());
-          stepper.releaseStepSize(state.stepping);
-        }
-      } else if (surfaceStatus == Intersection3D::Status::reachable) {
-        ACTS_VERBOSE("Next surface reachable at distance  "
-                     << stepper.outputStepSize(state.stepping));
-      }
-    }
+  void initialize(propagator_state_t& state, const stepper_t& stepper) const {
+    (void)state;
+    (void)stepper;
   }
 
-  /// @brief Navigator target call
+  /// @brief Navigator pre step call
   ///
   /// @tparam propagator_state_t is the type of Propagatgor state
   /// @tparam stepper_t is the used type of the Stepper by the Propagator
@@ -239,7 +207,7 @@ class DirectNavigator {
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void target(propagator_state_t& state, const stepper_t& stepper) const {
+  void preStep(propagator_state_t& state, const stepper_t& stepper) const {
     // Screen output
     ACTS_VERBOSE("Entering navigator::target.");
 
@@ -273,6 +241,51 @@ class DirectNavigator {
         state.navigation.targetReached = true;
         // Announce it then
         ACTS_VERBOSE("No target Surface, job done.");
+      }
+    }
+  }
+
+  /// @brief Navigator post step call
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t is the used type of the Stepper by the Propagator
+  ///
+  /// @param [in,out] state is the mutable propagator state object
+  /// @param [in] stepper Stepper in use
+  template <typename propagator_state_t, typename stepper_t>
+  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
+    // Screen output
+    ACTS_VERBOSE("Entering navigator::postStep.");
+
+    // Navigator post step always resets the current surface
+    state.navigation.currentSurface = nullptr;
+    // Output the position in the sequence
+    ACTS_VERBOSE(std::distance(state.navigation.navSurfaceIter,
+                               state.navigation.navSurfaces.end())
+                 << " out of " << state.navigation.navSurfaces.size()
+                 << " surfaces remain to try.");
+
+    // Check if we are on surface
+    if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
+      // Establish the surface status
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, **state.navigation.navSurfaceIter, false);
+      if (surfaceStatus == Intersection3D::Status::onSurface) {
+        // Set the current surface
+        state.navigation.currentSurface = *state.navigation.navSurfaceIter;
+        ACTS_VERBOSE("Current surface set to  "
+                     << state.navigation.currentSurface->geometryId())
+        // Move the sequence to the next surface
+        ++state.navigation.navSurfaceIter;
+        if (state.navigation.navSurfaceIter !=
+            state.navigation.navSurfaces.end()) {
+          ACTS_VERBOSE("Next surface candidate is  "
+                       << (*state.navigation.navSurfaceIter)->geometryId());
+          stepper.releaseStepSize(state.stepping);
+        }
+      } else if (surfaceStatus == Intersection3D::Status::reachable) {
+        ACTS_VERBOSE("Next surface reachable at distance  "
+                     << stepper.outputStepSize(state.stepping));
       }
     }
   }
