@@ -9,15 +9,17 @@
 #pragma once
 
 #include <system_error>
+#include <type_traits>
 
 namespace Acts {
 namespace Experimental {
 
 enum class GsfError {
-  NoMeasurementStatesCreatedForward = 1,
+  StartParametersNotOnStartSurface = 1,
+  StartParametersHaveNoCovariance,
+  NoMeasurementStatesCreatedForward,
   NoMeasurementStatesCreatedBackward,
   NoMeasurementStatesCreatedFinal,
-  StartParametersNotOnStartSurface
 };
 
 std::error_code make_error_code(GsfError e);

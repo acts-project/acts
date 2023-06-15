@@ -8,7 +8,12 @@
 
 #include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <TEfficiency.h>
+#include <TH2.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;

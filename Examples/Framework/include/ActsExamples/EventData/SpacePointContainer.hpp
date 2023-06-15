@@ -64,11 +64,8 @@ class SpacePointContainer {
   std::any component_impl(Acts::HashedString key, std::size_t /*n*/) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
-      case "TopHalfStripLength"_hash:
-      case "BottomHalfStripLength"_hash:
-        return static_cast<float>(0.);
-      case "TopStripDirection"_hash:
-      case "BottomStripDirection"_hash:
+      case "TopStripVector"_hash:
+      case "BottomStripVector"_hash:
       case "StripCenterDistance"_hash:
       case "TopStripCenterPosition"_hash:
         return Acts::Vector3(0, 0, 0);

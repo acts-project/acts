@@ -8,13 +8,26 @@
 
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <ostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
     ActsExamples::TruthSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -55,6 +68,7 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
   m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
   m_outputSeeds.initialize(m_cfg.outputSeeds);
 }
 
@@ -184,6 +198,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   ACTS_VERBOSE("Found " << seeds.size() << " seeds");
 
   m_outputParticles(ctx, std::move(seededParticles));
+  m_outputProtoTracks(ctx, std::move(tracks));
   m_outputSeeds(ctx, std::move(seeds));
 
   return ActsExamples::ProcessCode::SUCCESS;

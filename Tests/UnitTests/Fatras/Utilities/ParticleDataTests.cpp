@@ -10,7 +10,11 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
+
+#include <cmath>
+#include <string_view>
 
 using Acts::PdgParticle;
 using namespace Acts::UnitLiterals;

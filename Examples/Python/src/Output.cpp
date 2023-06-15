@@ -6,7 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
@@ -21,6 +27,7 @@
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
+#include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
@@ -33,17 +40,29 @@
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
-#include "ActsExamples/Io/Root/RootVertexPerformanceWriter.hpp"
+#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
-#include "ActsExamples/Validation/ResPlotTool.hpp"
 
+#include <array>
 #include <memory>
-#include <string_view>
+#include <string>
+#include <tuple>
+#include <vector>
 
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class TrackingGeometry;
+namespace detail {
+struct Step;
+}  // namespace detail
+}  // namespace Acts
+namespace ActsExamples {
+class IWriter;
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -290,12 +309,11 @@ void addOutput(Context& ctx) {
                              filePath, treeName, fileMode);
 
   ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::RootVertexPerformanceWriter, mex,
-      "RootVertexPerformanceWriter", inputAllTruthParticles,
-      inputSelectedTruthParticles, inputTrackParameters,
+      ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
+      inputAllTruthParticles, inputSelectedTruthParticles, inputTrackParameters,
       inputAssociatedTruthParticles, inputTrackParameters, inputTrajectories,
-      inputMeasurementParticlesMap, inputVertices, inputTime, filePath,
-      treeName, fileMode, minTrackVtxMatchFraction, truthMatchProbMin);
+      inputMeasurementParticlesMap, inputVertices, filePath, treeName, fileMode,
+      minTrackVtxMatchFraction, truthMatchProbMin);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,
@@ -330,12 +348,12 @@ void addOutput(Context& ctx) {
       trackingGeometry, outputDir, outputPrecision, writeSensitive,
       writeBoundary, writeSurfaceGrid, writeLayerVolume, writePerEvent);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTrajectories, inputParticles, inputMeasurementParticlesMap, filePath,
-      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
-      duplicationPlotToolConfig, trackSummaryPlotToolConfig, truthMatchProbMin,
-      nMeasurementsMin, ptMin, duplicatedPredictor);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CKFPerformanceWriter, mex,
+                             "CKFPerformanceWriter", inputTrajectories,
+                             inputParticles, inputMeasurementParticlesMap,
+                             filePath, fileMode, effPlotToolConfig,
+                             fakeRatePlotToolConfig, duplicationPlotToolConfig,
+                             trackSummaryPlotToolConfig, duplicatedPredictor);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,

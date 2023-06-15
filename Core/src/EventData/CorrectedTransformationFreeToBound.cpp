@@ -8,7 +8,19 @@
 
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
                                                    ActsScalar alpha_,
@@ -42,7 +54,7 @@ std::optional<std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>>
 Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Acts::FreeVector& freeParams,
     const Acts::FreeSymMatrix& freeCovariance, const Acts::Surface& surface,
-    const Acts::GeometryContext& geoContext, NavigationDirection navDir,
+    const Acts::GeometryContext& geoContext, Direction navDir,
     const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
@@ -83,9 +95,9 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
   covSqrt = U * D;
 
   // Define kappa = alpha*alpha*N
-  ActsScalar kappa = m_alpha * m_alpha * eFreeSize;
+  ActsScalar kappa = m_alpha * m_alpha * static_cast<double>(eFreeSize);
   // lambda = alpha*alpha*N - N
-  ActsScalar lambda = kappa - eFreeSize;
+  ActsScalar lambda = kappa - static_cast<double>(eFreeSize);
   // gamma = sqrt(labmda + N)
   ActsScalar gamma = std::sqrt(kappa);
 

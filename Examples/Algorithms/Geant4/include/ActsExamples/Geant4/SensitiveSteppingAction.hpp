@@ -15,6 +15,8 @@
 
 #include <G4UserSteppingAction.hh>
 
+class G4Step;
+
 namespace ActsExamples {
 
 /// The G4SteppingAction that is called for every step in
@@ -30,7 +32,7 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
     bool charged = true;
     bool neutral = false;
     bool primary = true;
-    bool secondary = false;
+    bool secondary = true;
   };
 
   /// Construct the stepping action

@@ -58,10 +58,8 @@ void SpacePointContainer<container_t, holder_t>::initialize()
   if (m_config.useDetailedDoubleMeasurementInfo) {
     using namespace Acts::HashedStringLiteral;
     for (std::size_t i(0); i<this->size(); ++i) {
-      m_data.setTopHalfStripLength(i, std::any_cast<float>(this->container().component_impl("TopHalfStripLength"_hash, i)));
-      m_data.setBottomHalfStripLength(i, std::any_cast<float>(this->container().component_impl("BottomHalfStripLength"_hash, i)));
-      m_data.setTopStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripDirection"_hash, i)));
-      m_data.setBottomStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("BottomStripDirection"_hash, i)));
+      m_data.setTopStripVector(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripVector"_hash, i)));
+      m_data.setBottomStripVector(i, std::any_cast<Acts::Vector3>(this->container().component_impl("BottomStripVector"_hash, i)));
       m_data.setStripCenterDistance(i,  std::any_cast<Acts::Vector3>(this->container().component_impl("StripCenterDistance"_hash, i)));
       m_data.setTopStripCenterPosition(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripCenterPosition"_hash, i)));
     }
@@ -101,13 +99,10 @@ template <typename container_t, template <typename> class holder_t>
 template <typename T>
 const T& SpacePointContainer<container_t, holder_t>::component(HashedString key,
 							       const std::size_t& n) const {
-
   using namespace Acts::HashedStringLiteral;
   switch (key) {
-    case "TopHalfStripLength"_hash:
-    case "BottomHalfStripLength"_hash:
-    case "TopStripDirection"_hash:
-    case "BottomStripDirection"_hash:
+    case "TopStripVector"_hash:
+    case "BottomStripVector"_hash:
     case "StripCenterDistance"_hash:
     case "TopStripCenterPosition"_hash:
       return *std::any_cast<const T*>(m_data.component(key, n));

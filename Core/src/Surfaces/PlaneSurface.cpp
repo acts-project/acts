@@ -8,18 +8,22 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <numeric>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
     : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
@@ -172,12 +176,13 @@ double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
 
 Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // Get the contextual transform
   const auto& gctxTransform = transform(gctx);
   // Use the intersection helper for planar surfaces
   auto intersection =
-      PlanarHelper::intersect(gctxTransform, position, direction);
+      PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
   // Evaluate boundary check if requested (and reachable)
   if (intersection.status != Intersection3D::Status::unreachable and bcheck) {
     // Built-in local to global for speed reasons

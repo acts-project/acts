@@ -7,17 +7,34 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <pybind11/functional.h>
+#include <array>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -91,6 +108,7 @@ void addMagneticField(Context& ctx);
 void addMaterial(Context& ctx);
 void addOutput(Context& ctx);
 void addDetector(Context& ctx);
+void addDetectorInspectors(Context& ctx);
 void addExampleAlgorithms(Context& ctx);
 void addInput(Context& ctx);
 void addGenerators(Context& ctx);
@@ -98,6 +116,7 @@ void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
+void addAmbiguityResolution(Context& ctx);
 
 // Plugins
 void addDigitization(Context& ctx);
@@ -107,7 +126,8 @@ void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
-void addMLTrackFinding(Context& ctx);
+void addOnnx(Context& ctx);
+void addOnnxMlpack(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -115,11 +135,11 @@ using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindings, m) {
   Acts::Python::Context ctx;
-  ctx.modules["main"] = &m;
+  ctx.modules["main"] = m;
   auto mex = m.def_submodule("_examples");
-  ctx.modules["examples"] = &mex;
+  ctx.modules["examples"] = mex;
   auto prop = m.def_submodule("_propagator");
-  ctx.modules["propagation"] = &prop;
+  ctx.modules["propagation"] = prop;
   m.doc() = "Acts";
 
   m.attr("__version__") =
@@ -262,6 +282,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addMaterial(ctx);
   addOutput(ctx);
   addDetector(ctx);
+  addDetectorInspectors(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);
   addGenerators(ctx);
@@ -269,6 +290,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addTrackFitting(ctx);
   addTrackFinding(ctx);
   addVertexing(ctx);
+  addAmbiguityResolution(ctx);
 
   addDigitization(ctx);
   addPythia8(ctx);
@@ -277,5 +299,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
   addSvg(ctx);
-  addMLTrackFinding(ctx);
+  addOnnx(ctx);
+  addOnnxMlpack(ctx);
 }

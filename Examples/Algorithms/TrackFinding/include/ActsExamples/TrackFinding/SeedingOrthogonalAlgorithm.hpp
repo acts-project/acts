@@ -14,19 +14,23 @@
 #include "Acts/Seeding/SeedFinderOrthogonal.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include "Acts/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Construct track seeds from space points.
 class SeedingOrthogonalAlgorithm final : public IAlgorithm {

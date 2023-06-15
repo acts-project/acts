@@ -13,11 +13,14 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
+#include <cstddef>
 #include <functional>
+#include <tuple>
 #include <utility>
 #include <vector>
 

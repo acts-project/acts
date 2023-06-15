@@ -10,13 +10,24 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -282,10 +293,9 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeOrientedBoundaries) {
   for (auto& os : cvbOrientedSurfaces) {
     auto onSurface = os.first->binningPosition(geoCtx, binR);
     auto osNormal = os.first->normal(geoCtx, onSurface);
-    double nDir = (double)os.second;
     // Check if you step inside the volume with the oriented normal
-    auto insideCvb = onSurface + nDir * osNormal;
-    auto outsideCvb = onSurface - nDir * osNormal;
+    Vector3 insideCvb = onSurface + os.second * osNormal;
+    Vector3 outsideCvb = onSurface - os.second * osNormal;
 
     BOOST_CHECK(cvb.inside(insideCvb));
     BOOST_CHECK(!cvb.inside(outsideCvb));

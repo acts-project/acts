@@ -10,10 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
 
 namespace tt = boost::test_tools;
 
@@ -57,8 +62,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_helper) {
   sinTheta = std::sin(theta);
   cosTheta = std::cos(theta);
 
-  const ActsScalar c =
-      std::sqrt(direction.y() * direction.y() + direction.z() * direction.z());
+  const ActsScalar c = std::hypot(direction.y(), direction.z());
   const ActsScalar invC = 1. / c;
   CHECK_CLOSE_REL(f2cJacobian(eBoundLoc0, eFreePos1), -direction.z() * invC,
                   1e-5);

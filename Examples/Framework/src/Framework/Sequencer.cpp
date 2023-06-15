@@ -8,9 +8,13 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -18,12 +22,16 @@
 
 #include <algorithm>
 #include <atomic>
-#include <cfenv>
+#include <cctype>
 #include <chrono>
-#include <exception>
-#include <limits>
+#include <cstdint>
+#include <cstdlib>
 #include <numeric>
+#include <ostream>
+#include <ratio>
+#include <regex>
 #include <stdexcept>
+#include <string_view>
 #include <typeinfo>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
@@ -56,6 +64,31 @@ size_t saturatedAdd(size_t a, size_t b) {
   size_t res = a + b;
   res |= -static_cast<int>(res < a);
   return res;
+}
+
+/// Shorten some common but lengthy C++ constructs
+std::string demangleAndShorten(std::string name) {
+  name = boost::core::demangle(name.c_str());
+
+  // Remove std::allocator from vector
+  const static std::regex vector_pattern(
+      R"??(std::vector<(.*), std::allocator<(\1\s*)>\s*>)??");
+  name = std::regex_replace(name, vector_pattern, "std::vector<$1>");
+
+  // Shorten Acts::BoundVariantMeasurement
+  const static std::regex variant_pattern(
+      R"??(std::variant<(Acts::Measurement<Acts::BoundIndices, [0-9]ul>(,|)\s+)+>)??");
+  name = std::regex_replace(name, variant_pattern,
+                            "Acts::BoundVariantMeasurement");
+
+  // strip namespaces
+  boost::algorithm::replace_all(name, "std::", "");
+  boost::algorithm::replace_all(name, "boost::container::", "");
+  boost::algorithm::replace_all(name, "Acts::", "");
+  boost::algorithm::replace_all(name, "ActsExamples::", "");
+  boost::algorithm::replace_all(name, "ActsFatras::", "");
+
+  return name;
 }
 
 }  // namespace
@@ -126,7 +159,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
   }
 
   auto symbol = [&](const char* in) {
-    std::string s = boost::core::demangle(in);
+    std::string s = demangleAndShorten(in);
     size_t pos = 0;
     while (pos + 80 < s.size()) {
       ACTS_INFO("   " + s.substr(pos, pos + 80));
@@ -156,10 +189,9 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
                    << "\nat this point in the sequence (source: "
                    << source.fullName() << "),"
                    << "\nbut the type will be\n"
-                   << "'" << boost::core::demangle(source.typeInfo().name())
-                   << "'"
+                   << "'" << demangleAndShorten(source.typeInfo().name()) << "'"
                    << "\nand not\n"
-                   << "'" << boost::core::demangle(handle->typeInfo().name())
+                   << "'" << demangleAndShorten(handle->typeInfo().name())
                    << "'");
         valid = false;
       }

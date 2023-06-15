@@ -8,12 +8,29 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 
+#include <any>
+#include <cassert>
+#include <cstddef>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace Acts {
+class Surface;
+template <typename T>
+struct IsReadOnlyTrackContainer;
 
 namespace detail_vtc {
 
@@ -60,12 +77,18 @@ class VectorTrackContainerBase {
         return &instance.m_params[itrack];
       case "cov"_hash:
         return &instance.m_cov[itrack];
-      case "referenceSurface"_hash:
-        return &instance.m_referenceSurfaces[itrack];
       case "nMeasurements"_hash:
         return &instance.m_nMeasurements[itrack];
       case "nHoles"_hash:
         return &instance.m_nHoles[itrack];
+      case "chi2"_hash:
+        return &instance.m_chi2[itrack];
+      case "ndf"_hash:
+        return &instance.m_ndf[itrack];
+      case "nOutliers"_hash:
+        return &instance.m_nOutliers[itrack];
+      case "nSharedHits"_hash:
+        return &instance.m_nSharedHits[itrack];
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {
@@ -96,6 +119,14 @@ class VectorTrackContainerBase {
     result = result && m_nMeasurements.size() == size;
     assert(result);
     result = result && m_nHoles.size() == size;
+    assert(result);
+    result = result && m_chi2.size() == size;
+    assert(result);
+    result = result && m_ndf.size() == size;
+    assert(result);
+    result = result && m_nOutliers.size() == size;
+    assert(result);
+    result = result && m_nSharedHits.size() == size;
 
     for (const auto& [key, col] : m_dynamic) {
       (void)key;
@@ -114,6 +145,10 @@ class VectorTrackContainerBase {
     }
   }
 
+  const Surface* referenceSurface_impl(IndexType itrack) const {
+    return m_referenceSurfaces[itrack].get();
+  }
+
   std::size_t size_impl() const {
     assert(checkConsistency());
     return m_tipIndex.size();
@@ -127,6 +162,10 @@ class VectorTrackContainerBase {
 
   std::vector<unsigned int> m_nMeasurements;
   std::vector<unsigned int> m_nHoles;
+  std::vector<float> m_chi2;
+  std::vector<unsigned int> m_ndf;
+  std::vector<unsigned int> m_nOutliers;
+  std::vector<unsigned int> m_nSharedHits;
 
   std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
@@ -195,11 +234,20 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
       const detail_vtc::VectorTrackContainerBase& other);
 
   void reserve(IndexType size);
+  void clear();
+
+  void setReferenceSurface_impl(IndexType itrack,
+                                std::shared_ptr<const Surface> surface) {
+    m_referenceSurfaces[itrack] = std::move(surface);
+  }
 
   // END INTERFACE
 };
 
+ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, VectorTrackContainer);
+
 class ConstVectorTrackContainer;
+
 template <>
 struct IsReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
 
@@ -238,6 +286,9 @@ class ConstVectorTrackContainer final
 
   // END INTERFACE
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend,
+                          ConstVectorTrackContainer);
 
 inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)

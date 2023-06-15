@@ -7,6 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/TutorialVertexFinderAlgorithm.hpp"
@@ -30,13 +32,12 @@ void addVertexing(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      inputTrajectories, outputProtoVertices, outputVertices, outputTime,
-      bField);
+      inputTrajectories, outputProtoVertices, outputVertices, bField);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::IterativeVertexFinderAlgorithm, mex,
-      "IterativeVertexFinderAlgorithm", inputTrackParameters, inputTrajectories,
-      outputProtoVertices, outputVertices, outputTime, bField);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
+                                mex, "IterativeVertexFinderAlgorithm",
+                                inputTrackParameters, inputTrajectories,
+                                outputProtoVertices, outputVertices, bField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TutorialVertexFinderAlgorithm,
                                 mex, "TutorialVertexFinderAlgorithm",

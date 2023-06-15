@@ -8,13 +8,18 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -24,12 +29,22 @@
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <atomic>
+#include <cstddef>
 #include <functional>
+#include <limits>
+#include <memory>
+#include <string>
 #include <vector>
 
 #include <tbb/combinable.h>
 
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class TrackFindingAlgorithm final : public IAlgorithm {
  public:
@@ -58,7 +73,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
   /// contains shared_ptr anyways.
   static std::shared_ptr<TrackFinderFunction> makeTrackFinderFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+      const Acts::Logger& logger);
 
   struct Config {
     /// Input measurements collection.

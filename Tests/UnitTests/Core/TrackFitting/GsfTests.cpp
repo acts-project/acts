@@ -9,16 +9,53 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
+#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Holders.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
+#include <array>
+#include <functional>
+#include <map>
 #include <memory>
+#include <optional>
 #include <random>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
 #include "FitterTestsCommon.hpp"
 
@@ -42,8 +79,6 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
 }
 
 FitterTester tester;
-
-const auto logger = getDefaultLogger("GSF", Logging::INFO);
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
@@ -182,6 +217,37 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
 
   tester.test_ZeroFieldWithOutliers(gsfZero, options, multi_pars, rng, true,
                                     false, false);
+}
+
+BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+  using namespace Acts::Experimental::GsfConstants;
+  std::string key(kFinalMultiComponentStateColumn);
+  tracks.template addColumn<FinalMultiComponentState>(key);
+
+  auto multi_pars = makeParameters();
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         multi_pars, tester.resolutions, rng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+
+  // create a boundless target surface near the tracker exit
+  Acts::Vector3 center(-3._m, 0., 0.);
+  Acts::Vector3 normal(1., 0., 0.);
+  auto targetSurface =
+      Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
+
+  options.referenceSurface = targetSurface.get();
+
+  auto res = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), multi_pars,
+                         options, tracks);
+
+  BOOST_REQUIRE(res.ok());
+  BOOST_CHECK(res->template component<FinalMultiComponentState>(
+                     kFinalMultiComponentStateColumn)
+                  .has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

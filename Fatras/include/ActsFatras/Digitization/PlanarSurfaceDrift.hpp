@@ -12,8 +12,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <functional>
 
 namespace ActsFatras {

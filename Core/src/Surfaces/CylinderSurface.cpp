@@ -8,14 +8,23 @@
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
 
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <system_error>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class DetectorElementBase;
+}  // namespace Acts
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -210,7 +219,8 @@ Acts::detail::RealQuadraticEquation Acts::CylinderSurface::intersectionSolver(
 
 Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   const auto& gctxTransform = transform(gctx);
 
   // Solve the quadratic equation
@@ -223,10 +233,9 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
 
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
-  Intersection3D::Status status1 =
-      std::abs(qe.first) < std::abs(s_onSurfaceTolerance)
-          ? Intersection3D::Status::onSurface
-          : Intersection3D::Status::reachable;
+  Intersection3D::Status status1 = std::abs(qe.first) < std::abs(tolerance)
+                                       ? Intersection3D::Status::onSurface
+                                       : Intersection3D::Status::reachable;
 
   // Helper method for boundary check
   auto boundaryCheck =
@@ -245,8 +254,8 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
       // Create the reference vector in local
       const Vector3 vecLocal(solution - tMatrix.block<3, 1>(0, 3));
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
-      double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc1];
-      double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + tolerance;
+      double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc1];
+      double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + modifiedTolerance;
       return std::abs(cZ) < std::abs(hZ) ? status
                                          : Intersection3D::Status::missed;
     }
@@ -264,10 +273,9 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
-  Intersection3D::Status status2 =
-      std::abs(qe.second) < std::abs(s_onSurfaceTolerance)
-          ? Intersection3D::Status::onSurface
-          : Intersection3D::Status::reachable;
+  Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
+                                       ? Intersection3D::Status::onSurface
+                                       : Intersection3D::Status::reachable;
   // Check first solution for boundary compatiblity
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);

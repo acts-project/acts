@@ -10,14 +10,34 @@
 #include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
+#include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Holders.hpp"
 
+#include <cstddef>
 #include <iterator>
+#include <memory>
+#include <numeric>
+#include <random>
+#include <stdexcept>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace {
 
@@ -240,6 +260,18 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t2.nHoles() = 67;
   BOOST_CHECK_EQUAL(t.nHoles(), 67);
 
+  t2.nOutliers() = 68;
+  BOOST_CHECK_EQUAL(t.nOutliers(), 68);
+
+  t2.nSharedHits() = 69;
+  BOOST_CHECK_EQUAL(t.nSharedHits(), 69);
+
+  t2.chi2() = 555.0;
+  BOOST_CHECK_EQUAL(t2.chi2(), 555.0);
+
+  t2.nDoF() = 123;
+  BOOST_CHECK_EQUAL(t2.nDoF(), 123);
+
   // const checks: should not compile
   // const auto& ctc = tc;
   // ctc.getTrack(idx).covariance().setRandom();
@@ -258,13 +290,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
       auto ts =
           traj.getTrackState(traj.addTrackState(TrackStatePropMask::All, prev));
       TestTrackState pc(rng, 2u);
-      fillTrackState(pc, TrackStatePropMask::All, ts);
+      fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
       return ts;
     } else {
       auto ts = traj.getTrackState(
           traj.addTrackState(TrackStatePropMask::All, prev.index()));
       TestTrackState pc(rng, 2u);
-      fillTrackState(pc, TrackStatePropMask::All, ts);
+      fillTrackState<VectorMultiTrajectory>(pc, TrackStatePropMask::All, ts);
       return ts;
     }
   };
@@ -431,6 +463,55 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(BuildFromConstRef) {
+  VectorTrackContainer mutVtc;
+  VectorMultiTrajectory mutMtj;
+
+  TrackContainer mutTc{mutVtc, mutMtj};
+  static_assert(!mutTc.ReadOnly, "Unexpectedly read only");
+
+  auto t = mutTc.getTrack(mutTc.addTrack());
+  t.appendTrackState();
+  t.appendTrackState();
+  t.appendTrackState();
+  t = mutTc.getTrack(mutTc.addTrack());
+  t.appendTrackState();
+
+  BOOST_CHECK_EQUAL(mutTc.size(), 2);
+  BOOST_CHECK_EQUAL(mutMtj.size(), 4);
+
+  ConstVectorTrackContainer vtc{std::move(mutVtc)};
+  ConstVectorMultiTrajectory mtj{std::move(mutMtj)};
+
+  // moved from
+  BOOST_CHECK_EQUAL(mutTc.size(), 0);
+  BOOST_CHECK_EQUAL(mutMtj.size(), 0);
+
+  TrackContainer ctc{vtc, mtj};
+  static_assert(ctc.ReadOnly, "Unexpectedly not read only");
+
+  // Does not compile:
+  // ctc.addTrack();
+
+  BOOST_CHECK_EQUAL(ctc.size(), 2);
+  BOOST_CHECK_EQUAL(mtj.size(), 4);
+
+  const auto& cvtc = vtc;
+  const auto& cmtj = mtj;
+
+  TrackContainer crtc{cvtc, cmtj};
+
+  BOOST_CHECK_EQUAL(crtc.size(), 2);
+  BOOST_CHECK_EQUAL(cmtj.size(), 4);
+
+  // Does not compile: holder deduced to ConstRefHolder, but is not RO
+  // const auto& mrvtc = mutVtc;
+  // const auto& mrmtj = mutMtj;
+  // TrackContainer mrtc{mrvtc, mrmtj};
+  // static_assert(ctc.ReadOnly, "Unexpectedly not read only");
+  // mrtc.addTrack();
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(BuildReadOnly, factory_t, const_holder_types) {
   factory_t factory;
   auto& tc = factory.trackContainer();
@@ -529,6 +610,65 @@ BOOST_AUTO_TEST_CASE(EnsureDynamicColumns) {
 
   BOOST_CHECK(tc2.hasColumn("counter"));
   BOOST_CHECK(tc2.hasColumn("odd"));
+}
+
+BOOST_AUTO_TEST_CASE(AppendTrackState) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = tc.getTrack(tc.addTrack());
+
+  std::vector<VectorMultiTrajectory::TrackStateProxy> trackStates;
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+
+  BOOST_CHECK_EQUAL(trackStates.size(), t.nTrackStates());
+
+  for (size_t i = trackStates.size() - 1; i > 0; i--) {
+    BOOST_CHECK_EQUAL(trackStates.at(i).index(), i);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CalculateQuantities) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = tc.getTrack(tc.addTrack());
+
+  // std::vector<
+
+  auto ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().set(SharedHitFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(HoleFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(HoleFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().set(SharedHitFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  calculateTrackQuantities(t);
+
+  BOOST_CHECK_EQUAL(t.nHoles(), 2);
+  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
+  BOOST_CHECK_EQUAL(t.nOutliers(), 3);
+  BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -48,8 +48,7 @@ struct TestOutlierFinder {
   /// @retval False if the measurement is not an outlier
   /// @retval True if the measurement is an outlier
   template <typename traj_t>
-  bool operator()(typename Acts::MultiTrajectory<traj_t>::ConstTrackStateProxy
-                      state) const {
+  bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     if (not state.hasCalibrated() or not state.hasPredicted()) {
       return false;
@@ -73,8 +72,7 @@ struct TestReverseFilteringLogic {
   /// @retval False if we don't use the reverse filtering for the smoothing of the track
   /// @retval True if we use the reverse filtering for the smoothing of the track
   template <typename traj_t>
-  bool operator()(typename Acts::MultiTrajectory<traj_t>::ConstTrackStateProxy
-                      state) const {
+  bool operator()(typename traj_t::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     auto momentum = fabs(1 / state.filtered()[Acts::eBoundQOverP]);
     std::cout << "momentum : " << momentum << std::endl;
@@ -225,8 +223,7 @@ struct FitterTester {
     // backward filtering requires a reference surface
     options.referenceSurface = &start.referenceSurface();
     // this is the default option. set anyways for consistency
-    options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::Forward;
+    options.propagatorPlainOptions.direction = Acts::Direction::Forward;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
@@ -285,8 +282,7 @@ struct FitterTester {
         start.charge(), start.covariance());
 
     options.referenceSurface = &startOuter.referenceSurface();
-    options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::Backward;
+    options.propagatorPlainOptions.direction = Acts::Direction::Backward;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};

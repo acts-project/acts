@@ -8,6 +8,8 @@
 
 #include "Acts/TrackFitting/GsfError.hpp"
 
+#include <string>
+
 namespace {
 
 class GsfErrorCategory : public std::error_category {
@@ -20,6 +22,8 @@ class GsfErrorCategory : public std::error_category {
     using Acts::Experimental::GsfError;
 
     switch (static_cast<GsfError>(c)) {
+      case GsfError::StartParametersHaveNoCovariance:
+        return "Start parameters have no Covariance";
       case GsfError::StartParametersNotOnStartSurface:
         return "Start parameters don't lie in the start surface";
       case GsfError::NoMeasurementStatesCreatedForward:

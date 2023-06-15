@@ -8,6 +8,7 @@
 
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
@@ -15,7 +16,6 @@
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
@@ -26,6 +26,8 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+
+#include <algorithm>
 
 void Acts::to_json(nlohmann::json& j,
                    const Acts::SurfaceAndMaterialWithContext& surface) {
@@ -101,7 +103,6 @@ std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
   } else if (sType == "PerigeeSurface") {
     Transform3 pTransform;
     nlohmann::json trfj = j["transform"];
-    ;
     from_json(trfj, pTransform);
     mutableSf = Surface::makeShared<PerigeeSurface>(pTransform);
   }

@@ -8,23 +8,30 @@
 
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 
-#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <ios>
 #include <limits>
+#include <memory>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -274,9 +281,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           t_pT = t_p * perp(particle.unitDirection());
 
           if (pSurface != nullptr) {
+            auto intersection =
+                pSurface->intersect(ctx.geoContext, particle.position(),
+                                    particle.unitDirection(), false);
+            auto position = intersection.intersection.position;
+
             // get the truth perigee parameter
-            auto lpResult = pSurface->globalToLocal(
-                ctx.geoContext, particle.position(), particle.unitDirection());
+            auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,
+                                                    particle.unitDirection());
             if (lpResult.ok()) {
               t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
               t_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
@@ -285,15 +297,14 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
             }
           }
         } else {
-          ACTS_WARNING("Truth particle with barcode "
-                       << majorityParticleId << "="
-                       << majorityParticleId.value()
-                       << " not found in the input collection!");
+          ACTS_DEBUG("Truth particle with barcode "
+                     << majorityParticleId << "=" << majorityParticleId.value()
+                     << " not found in the input collection!");
         }
       }
       if (not foundMajorityParticle) {
-        ACTS_WARNING("Truth particle for mj " << itraj << " subtraj "
-                                              << isubtraj << " not found!");
+        ACTS_DEBUG("Truth particle for mj " << itraj << " subtraj " << isubtraj
+                                            << " not found!");
       }
 
       // Push the corresponding truth particle info for the track.

@@ -14,8 +14,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <iostream>
+#include <array>
+#include <cmath>
+#include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -40,7 +44,7 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
 
   double phiMin = std::atan2(-3_mm, 15_mm);
   double phiMax = std::atan2(3_mm, 15_mm);
-  double rMin = std::sqrt(15_mm * 15_mm + 3_mm * 3_mm);
+  double rMin = std::hypot(15_mm, 3_mm);
 
   CHECK_CLOSE_ABS(gExt.min(binX), 15_mm, 1e-6);
   CHECK_CLOSE_ABS(gExt.max(binX), 18_mm, 1e-6);

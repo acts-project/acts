@@ -9,17 +9,26 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <cstddef>
 #include <limits>
+#include <memory>
+#include <string>
 
 namespace Acts {
 
 class DetectorElementBase;
+class PlanarBounds;
+class SurfaceBounds;
 
 /// @class PlaneSurface
 ///
@@ -156,6 +165,7 @@ class PlaneSurface : public Surface {
   /// @param direction The direction of the interesection attempt,
   /// (@note expected to be normalized)
   /// @param bcheck The boundary check directive
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// <b>mathematical motivation:</b>
   ///
@@ -177,8 +187,8 @@ class PlaneSurface : public Surface {
   /// @return the SurfaceIntersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Return a Polyhedron for the surfaces
   ///

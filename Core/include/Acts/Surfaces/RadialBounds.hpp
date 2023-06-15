@@ -10,10 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cmath>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -163,10 +168,10 @@ inline void RadialBounds::checkConsistency() noexcept(false) {
     throw std::invalid_argument("RadialBounds: invalid radial setup");
   }
   if (get(eHalfPhiSector) < 0. or get(eHalfPhiSector) > M_PI) {
-    throw std::invalid_argument("CylinderBounds: invalid phi sector setup.");
+    throw std::invalid_argument("RadialBounds: invalid phi sector setup.");
   }
   if (get(eAveragePhi) != detail::radian_sym(get(eAveragePhi))) {
-    throw std::invalid_argument("CylinderBounds: invalid phi positioning.");
+    throw std::invalid_argument("RadialBounds: invalid phi positioning.");
   }
 }
 

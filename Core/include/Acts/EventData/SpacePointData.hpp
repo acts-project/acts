@@ -74,20 +74,12 @@ class SpacePointData {
   bool hasDynamicVariable() const;
 
   std::any component(Acts::HashedString key, const std::size_t& n) const;
-  
-  const float& getTopHalfStripLength(const std::size_t& idx) const;
-  const float& getBottomHalfStripLength(const std::size_t& idx) const;
-  const Acts::Vector3& getTopStripDirection(const std::size_t& idx) const;
-  const Acts::Vector3& getBottomStripDirection(const std::size_t& idx) const;
-  const Acts::Vector3& getStripCenterDistance(const std::size_t& idx) const;
-  const Acts::Vector3& getTopStripCenterPosition(const std::size_t& idx) const;
 
-  void setTopHalfStripLength(const std::size_t& idx, const float& value);
-  void setBottomHalfStripLength(const std::size_t& idx, const float& value);
-  void setTopStripDirection(const std::size_t& idx, const Acts::Vector3& value);
-  void setBottomStripDirection(const std::size_t& idx, const Acts::Vector3& value);
-  void setStripCenterDistance(const std::size_t& idx, const Acts::Vector3& value);
-  void setTopStripCenterPosition(const std::size_t& idx, const Acts::Vector3& value);
+  void setTopStripVector(std::size_t idx, const Acts::Vector3& value);
+  void setBottomStripVector(std::size_t idx, const Acts::Vector3& value);
+  void setStripCenterDistance(std::size_t idx, const Acts::Vector3& value);
+  void setTopStripCenterPosition(std::size_t idx, const Acts::Vector3& value);
+
 
  private:
   /// base variables
@@ -104,10 +96,8 @@ class SpacePointData {
   std::vector<float> m_deltaR{};
 
   /// dynamic variables
-  std::vector<float> m_topHalfStripLength{};
-  std::vector<float> m_bottomHalfStripLength{};
-  std::vector<Acts::Vector3> m_topStripDirection{};
-  std::vector<Acts::Vector3> m_bottomStripDirection{};
+  std::vector<Acts::Vector3> m_topStripVector{};
+  std::vector<Acts::Vector3> m_bottomStripVector{};
   std::vector<Acts::Vector3> m_stripCenterDistance{};
   std::vector<Acts::Vector3> m_topStripCenterPosition{};
 };

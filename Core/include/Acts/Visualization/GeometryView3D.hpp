@@ -9,11 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
+
+#include <string>
 
 namespace Acts {
 
@@ -22,6 +23,13 @@ class Surface;
 class SurfaceArray;
 class TrackingVolume;
 struct Polyhedron;
+class AbstractVolume;
+class IVisualization3D;
+
+namespace Experimental {
+class DetectorVolume;
+class Portal;
+}  // namespace Experimental
 
 static ViewConfig s_viewSensitive = ViewConfig({0, 180, 240});
 static ViewConfig s_viewPassive = ViewConfig({240, 280, 0});

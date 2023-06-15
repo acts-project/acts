@@ -14,6 +14,7 @@
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iosfwd>
 #include <limits>
@@ -67,10 +68,29 @@ class Particle {
   }
 
   /// Set the process type that generated this particle.
-  Particle &setProcess(ProcessType proc) { return m_process = proc, *this; }
+  Particle &setProcess(ProcessType proc) {
+    m_process = proc;
+    return *this;
+  }
+  /// Set the pdg.
+  Particle setPdg(Acts::PdgParticle pdg) {
+    m_pdg = pdg;
+    return *this;
+  }
+  /// Set the charge.
+  Particle setCharge(Scalar charge) {
+    m_charge = charge;
+    return *this;
+  }
+  /// Set the mass.
+  Particle setMass(Scalar mass) {
+    m_mass = mass;
+    return *this;
+  }
   /// Set the particle ID.
   Particle &setParticleId(Barcode barcode) {
-    return m_particleId = barcode, *this;
+    m_particleId = barcode;
+    return *this;
   }
   /// Set the space-time position four-vector.
   Particle &setPosition4(const Vector4 &pos4) {
@@ -111,9 +131,6 @@ class Particle {
     return *this;
   }
 
-  /// Set the particle charge.
-  Particle &setCharge(Scalar charge) { return m_charge = charge, *this; }
-
   /// Change the energy by the given amount.
   ///
   /// Energy loss corresponds to a negative change. If the updated energy
@@ -139,6 +156,10 @@ class Particle {
   constexpr Scalar charge() const { return m_charge; }
   /// Particle mass.
   constexpr Scalar mass() const { return m_mass; }
+  /// Particl qop.
+  constexpr Scalar qop() const {
+    return (charge() == 0 ? 1 : charge()) / absoluteMomentum();
+  }
 
   /// Space-time position four-vector.
   constexpr const Vector4 &fourPosition() const { return m_position4; }

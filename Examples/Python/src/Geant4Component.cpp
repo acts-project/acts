@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -14,20 +15,33 @@
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Geant4/ActsSteppingActionList.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
+#include "ActsExamples/Geant4/ParticleKillAction.hpp"
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
+#include "ActsExamples/Geant4/PhysicsListFactory.hpp"
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
+#include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
+#include <array>
 #include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <FTFP_BERT.hh>
 #include <G4MagneticField.hh>
@@ -41,6 +55,17 @@
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+class G4UserSteppingAction;
+class G4VUserPhysicsList;
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+class Volume;
+}  // namespace Acts
+namespace ActsExamples {
+class RandomNumbers;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -78,12 +103,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       Geant4Simulation, mod, "Geant4Simulation", outputSimHits,
       outputParticlesInitial, outputParticlesFinal, outputMaterialTracks,
-      randomNumbers, runManager, primaryGeneratorAction, runActions,
-      eventActions, trackingActions, steppingActions, detectorConstruction,
-      magneticField, sensitiveSurfaceMapper);
+      randomNumbers, runManager, primaryGeneratorAction, runAction, eventAction,
+      trackingAction, steppingAction, detectorConstruction, magneticField,
+      sensitiveSurfaceMapper);
 
   auto makeGeant4Config =
-      [](Acts::Logging::Level& level,
+      [](const Acts::Logger& logger,
          std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
          G4VUserDetectorConstruction* detector, G4VUserPhysicsList* physicsList,
          const SimParticleTranslation::Config& prCfg)
@@ -98,7 +123,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     // Set the primarty generator
     g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
-        prCfg, Acts::getDefaultLogger("SimParticleTranslation", level));
+        prCfg, logger.cloneWithSuffix("SimParticleTranslation"));
     g4Cfg.detectorConstruction = detector;
 
     return g4Cfg;
@@ -111,8 +136,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
           const std::string& inputParticles,
           const std::string& outputMaterialTracks) {
+        auto logger = Acts::getDefaultLogger("Geant4", level);
         auto physicsList = new MaterialPhysicsList(
-            Acts::getDefaultLogger("MaterialPhysicsList", level));
+            logger->cloneWithSuffix("MaterialPhysicsList"));
 
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
@@ -120,15 +146,15 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         g4PrCfg.forcedCharge = 0.;
         g4PrCfg.forcedMass = 0.;
 
-        auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
-                                      physicsList, g4PrCfg);
+        auto g4Cfg = makeGeant4Config(*logger, std::move(randomNumbers),
+                                      detector, physicsList, g4PrCfg);
         g4Cfg.inputParticles = inputParticles;
 
         MaterialSteppingAction::Config mStepCfg;
         mStepCfg.excludeMaterials = {"Air", "Vacuum"};
         auto steppingAction = new MaterialSteppingAction(
-            mStepCfg, Acts::getDefaultLogger("MaterialSteppingAction", level));
-        g4Cfg.steppingActions = {steppingAction};
+            mStepCfg, logger->cloneWithSuffix("MaterialSteppingAction"));
+        g4Cfg.steppingAction = steppingAction;
 
         // Set the material tracks at output
         g4Cfg.outputMaterialTracks = outputMaterialTracks;
@@ -141,34 +167,47 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   mod.def(
       "makeGeant4SimulationConfig",
       [makeGeant4Config](
-          Acts::Logging::Level& level, G4VUserDetectorConstruction* detector,
+          Acts::Logging::Level level, G4VUserDetectorConstruction* detector,
           std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
           const std::string& inputParticles,
           const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
           const std::shared_ptr<const Acts::MagneticFieldProvider>&
               magneticField,
           const std::vector<std::string>& volumeMappings,
-          const std::vector<std::string>& materialMappings) {
-        auto physicsList = new FTFP_BERT();
+          const std::vector<std::string>& materialMappings,
+          std::shared_ptr<const Acts::Volume> killVolume, double killAfterTime,
+          bool recordHitsOfSecondaries, bool keepParticlesWithoutHits,
+          std::string physicsList) {
+        auto logger = Acts::getDefaultLogger("Geant4", level);
 
-        // Read the particle from the generator
-        SimParticleTranslation::Config g4PrCfg;
-
-        auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
-                                      physicsList, g4PrCfg);
+        auto g4Cfg =
+            makeGeant4Config(*logger, std::move(randomNumbers), detector,
+                             PhysicsListFactory().factorize(physicsList),
+                             SimParticleTranslation::Config{});
         g4Cfg.inputParticles = inputParticles;
 
-        ParticleTrackingAction::Config g4TrackCfg;
-        ParticleTrackingAction* particleAction = new ParticleTrackingAction(
-            g4TrackCfg,
-            Acts::getDefaultLogger("ParticleTrackingAction", level));
-        g4Cfg.trackingActions.push_back(particleAction);
+        // Particle action
+        ParticleTrackingAction::Config trackingCfg;
+        trackingCfg.keepParticlesWithoutHits = keepParticlesWithoutHits;
+        g4Cfg.trackingAction = new ParticleTrackingAction(
+            trackingCfg, logger->cloneWithSuffix("ParticleTracking"));
+
+        // Stepping actions
+        ActsSteppingActionList::Config steppingCfg;
 
         SensitiveSteppingAction::Config g4StepCfg;
-        G4UserSteppingAction* steppingAction = new SensitiveSteppingAction(
-            g4StepCfg,
-            Acts::getDefaultLogger("SensitiveSteppingAction", level));
-        g4Cfg.steppingActions.push_back(steppingAction);
+        g4StepCfg.charged = true;
+        g4StepCfg.neutral = false;
+        g4StepCfg.primary = true;
+        g4StepCfg.secondary = recordHitsOfSecondaries;
+        steppingCfg.actions.push_back(new SensitiveSteppingAction(
+            g4StepCfg, logger->cloneWithSuffix("SensitiveStepping")));
+
+        steppingCfg.actions.push_back(new ParticleKillAction(
+            ParticleKillAction::Config{killVolume, killAfterTime},
+            logger->cloneWithSuffix("Killer")));
+
+        g4Cfg.steppingAction = new ActsSteppingActionList(steppingCfg);
 
         // An ACTS Magnetic field is provided
         if (magneticField) {
@@ -193,8 +232,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
           g4Cfg.sensitiveSurfaceMapper =
               std::make_shared<const SensitiveSurfaceMapper>(
-                  ssmCfg,
-                  Acts::getDefaultLogger("SensitiveSurfaceMapper", level));
+                  ssmCfg, logger->cloneWithSuffix("SensitiveSurfaceMapper"));
         }
 
         return g4Cfg;
@@ -202,7 +240,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
-      py::arg("materialMappings") = std::vector<std::string>{});
+      py::arg("materialMappings") = std::vector<std::string>{},
+      py::arg("killVolume") = nullptr,
+      py::arg("killAfterTime") = std::numeric_limits<double>::infinity(),
+      py::arg("recordHitsOfSecondaries") = true,
+      py::arg("keepParticlesWithoutHits") = true,
+      py::arg("physicsList") = "FTFP_BERT");
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;
@@ -279,8 +322,36 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT_END();
   }
 
+  {
+    using MockupSectorBuilder = ActsExamples::MockupSectorBuilder;
+    using Config = ActsExamples::MockupSectorBuilder::Config;
+    using ChamberConfig = ActsExamples::MockupSectorBuilder::ChamberConfig;
+
+    auto ms =
+        py::class_<MockupSectorBuilder, std::shared_ptr<MockupSectorBuilder>>(
+            mod, "MockupSectorBuilder")
+            .def(py::init<const Config&>())
+            .def("buildChamber", &MockupSectorBuilder::buildChamber)
+            .def("buildSector", &MockupSectorBuilder::buildSector)
+            .def("drawSector", &MockupSectorBuilder::drawSector);
+
+    auto c = py::class_<Config>(ms, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(gdmlPath);
+    ACTS_PYTHON_MEMBER(NumberOfSectors);
+    ACTS_PYTHON_MEMBER(toleranceOverlap);
+    ACTS_PYTHON_STRUCT_END();
+
+    auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
+    ACTS_PYTHON_MEMBER(name);
+    ACTS_PYTHON_MEMBER(SensitiveNames);
+    ACTS_PYTHON_MEMBER(PassiveNames);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
   Acts::Python::Context ctx;
-  ctx.modules["geant4"] = &mod;
+  ctx.modules["geant4"] = mod;
 
   addGeant4HepMC3(ctx);
 }

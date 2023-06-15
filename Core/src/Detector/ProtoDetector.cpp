@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,10 +8,11 @@
 
 #include "Acts/Detector/ProtoDetector.hpp"
 
-#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
-#include <exception>
+#include <cstddef>
 #include <sstream>
+#include <stdexcept>
 
 void Acts::ProtoVolume::extendUp(Acts::ProtoVolume& ptVolume) {
   ptVolume.extent.extend(extent);

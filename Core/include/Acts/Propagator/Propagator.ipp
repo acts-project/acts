@@ -7,6 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/Propagator/PropagatorError.hpp"
+#include "Acts/Propagator/detail/LoopProtection.hpp"
+
+#include <type_traits>
 
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
@@ -17,7 +21,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   ACTS_VERBOSE("Entering propagation.");
 
   // Navigator initialize state call
-  m_navigator.status(state, m_stepper);
+  m_navigator.initialize(state, m_stepper);
   // Pre-Stepping call to the action list
   state.options.actionList(state, m_stepper, m_navigator, result, logger());
   // assume negative outcome, only set to true later if we actually have
@@ -29,8 +33,6 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   // Pre-Stepping: abort condition check
   if (!state.options.abortList(state, m_stepper, m_navigator, result,
                                logger())) {
-    // Pre-Stepping: target setting
-    m_navigator.target(state, m_stepper);
     // Stepping loop
     ACTS_VERBOSE("Starting stepping loop.");
 
@@ -38,6 +40,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
 
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
+      // Pre-Stepping: target setting
+      m_navigator.preStep(state, m_stepper);
       // Perform a propagation step - it takes the propagation state
       Result<double> res = m_stepper.step(state, m_navigator);
       if (res.ok()) {
@@ -52,15 +56,14 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
         return res.error();
       }
       // Post-stepping:
-      // navigator status call - action list - aborter list - target call
-      m_navigator.status(state, m_stepper);
+      // navigator post step call - action list - aborter list
+      m_navigator.postStep(state, m_stepper);
       state.options.actionList(state, m_stepper, m_navigator, result, logger());
       if (state.options.abortList(state, m_stepper, m_navigator, result,
                                   logger())) {
         terminatedNormally = true;
         break;
       }
-      m_navigator.target(state, m_stepper);
     }
   } else {
     ACTS_VERBOSE("Propagation terminated without going into stepping loop.");

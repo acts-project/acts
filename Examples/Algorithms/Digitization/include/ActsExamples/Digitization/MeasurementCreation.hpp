@@ -14,7 +14,13 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
+#include <array>
+#include <cstddef>
+#include <tuple>
+#include <vector>
+
 namespace ActsExamples {
+class IndexSourceLink;
 
 /// Struct to identify digitized parameters
 ///

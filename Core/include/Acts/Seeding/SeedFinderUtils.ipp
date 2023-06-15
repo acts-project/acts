@@ -143,20 +143,22 @@ inline bool xyzCoordinateCheck(
     const double* spacepointPosition, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
+  bool hasValueStored = spacePointData.hasDynamicVariable();
+  if (not hasValueStored) {
+    return false;
+  }
+
   using namespace Acts::HashedStringLiteral;
-  const float& topHalfStripLength = sp.template component<float>("TopHalfStripLength"_hash);
-  const float& bottomHalfStripLength = sp.template component<float>("BottomHalfStripLength"_hash);
-  const Acts::Vector3& topStripDirection = sp.template component<Acts::Vector3>("TopStripDirection"_hash);
-  const Acts::Vector3& bottomStripDirection = sp.template component<Acts::Vector3>("BottomStripDirection"_hash);
+  const Acts::Vector3& topStripVector = sp.template component<Acts::Vector3>("TopStripVector"_hash);
+  const Acts::Vector3& bottomStripVector = sp.template component<Acts::Vector3>("BottomStripVector"_hash);
   const Acts::Vector3& stripCenterDistance = sp.template component<Acts::Vector3>("StripCenterDistance"_hash);
 
-  // prepare variables
-  double xTopStripVector = topHalfStripLength * topStripDirection[0];
-  double yTopStripVector = topHalfStripLength * topStripDirection[1];
-  double zTopStripVector = topHalfStripLength * topStripDirection[2];
-  double xBottomStripVector = bottomHalfStripLength * bottomStripDirection[0];
-  double yBottomStripVector = bottomHalfStripLength * bottomStripDirection[1];
-  double zBottomStripVector = bottomHalfStripLength * bottomStripDirection[2];
+  const double& xTopStripVector = topStripVector[0];
+  const double& yTopStripVector = topStripVector[1];
+  const double& zTopStripVector = topStripVector[2];
+  const double& xBottomStripVector = bottomStripVector[0];
+  const double& yBottomStripVector = bottomStripVector[1];
+  const double& zBottomStripVector = bottomStripVector[2];
 
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {yTopStripVector * spacepointPosition[2] -

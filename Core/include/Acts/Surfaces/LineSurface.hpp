@@ -8,15 +8,26 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <memory>
+#include <string>
 
 namespace Acts {
 
 class LineBounds;
+class DetectorElementBase;
+class SurfaceBounds;
 
 ///  @class LineSurface
 ///
@@ -197,6 +208,7 @@ class LineSurface : public Surface {
   /// @param direction The global direction at the starting point
   ///        @note exptected to be normalized
   /// @param bcheck The boundary check directive for the estimate
+  /// @param tolerance the tolerance used for the intersection
   ///
   ///   <b>mathematical motivation:</b>
   ///   Given two lines in parameteric form:<br>
@@ -228,8 +240,8 @@ class LineSurface : public Surface {
   /// @return is the intersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces

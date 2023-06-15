@@ -14,7 +14,9 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
-#include "edm4hep/SimTrackerHitCollection.h"
+#include <edm4hep/MCParticleCollection.h>
+#include <edm4hep/SimTrackerHitCollection.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -23,17 +25,11 @@ EDM4hepSimHitReader::EDM4hepSimHitReader(
     : m_cfg(config),
       m_logger(Acts::getDefaultLogger("EDM4hepSimHitReader", level)) {
   m_reader.openFile(m_cfg.inputPath);
-  m_store.setReader(&m_reader);
 
   m_outputParticles.maybeInitialize(m_cfg.outputParticles);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
-  m_eventsRange = std::make_pair(0, m_reader.getEntries());
-
-  m_collections = m_reader.getCollectionIDTable()->names();
-
-  m_mcParticleCollection =
-      &m_store.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
+  m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
 }
 
 std::string EDM4hepSimHitReader::EDM4hepSimHitReader::name() const {
@@ -45,13 +41,15 @@ std::pair<size_t, size_t> EDM4hepSimHitReader::availableEvents() const {
 }
 
 ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
-  m_store.clear();
-  m_reader.goToEvent(ctx.eventNumber);
+  podio::Frame frame = m_reader.readEntry("events", ctx.eventNumber);
+
+  const auto& mcParticleCollection =
+      frame.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
 
   if (!m_cfg.outputParticles.empty()) {
     SimParticleContainer::sequence_type unordered;
 
-    for (const auto& mcParticle : *m_mcParticleCollection) {
+    for (const auto& mcParticle : mcParticleCollection) {
       auto particle = EDM4hepUtil::readParticle(
           mcParticle, [](const edm4hep::MCParticle& p) {
             ActsFatras::Barcode result;
@@ -70,42 +68,32 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
 
   SimHitContainer::sequence_type unordered;
 
-  // TODO does it make sense to query all of them?
-  for (const auto& name : m_collections) {
-    auto& collection = m_store.get<podio::CollectionBase>(name);
+  const auto& simTrackerHitCollection =
+      frame.get<edm4hep::SimTrackerHitCollection>(m_cfg.inputSimTrackerHits);
 
-    if (!collection.isValid()) {
+  for (const auto& simTrackerHit : simTrackerHitCollection) {
+    try {
+      auto hit = EDM4hepUtil::readSimHit(
+          simTrackerHit,
+          [](const edm4hep::MCParticle& particle) {
+            ActsFatras::Barcode result;
+            // TODO dont use podio internal id
+            result.setParticle(particle.id());
+            return result;
+          },
+          [&](std::uint64_t cellId) {
+            auto detElement =
+                m_cfg.dd4hepDetector->lcdd->volumeManager().lookupDetElement(
+                    cellId);
+            Acts::GeometryIdentifier result = detElement.volumeID();
+            return result;
+          });
+      unordered.push_back(std::move(hit));
+    } catch (...) {
+      ACTS_ERROR("EDM4hepSimHitReader: failed to convert SimTrackerHit");
       continue;
     }
-
-    if (collection.getValueTypeName() == "edm4hep::SimTrackerHit") {
-      for (const auto& simTrackerHit :
-           (const edm4hep::SimTrackerHitCollection&)collection) {
-        try {
-          auto hit = EDM4hepUtil::readSimHit(
-              simTrackerHit,
-              [](const edm4hep::MCParticle& particle) {
-                ActsFatras::Barcode result;
-                // TODO dont use podio internal id
-                result.setParticle(particle.id());
-                return result;
-              },
-              [&](std::uint64_t cellId) {
-                auto detElement = m_cfg.dd4hepDetector->lcdd->volumeManager()
-                                      .lookupDetElement(cellId);
-                Acts::GeometryIdentifier result = detElement.volumeID();
-                return result;
-              });
-          unordered.push_back(std::move(hit));
-        } catch (...) {
-          ACTS_ERROR("EDM4hepSimHitReader: failed to convert SimTrackerHit");
-          continue;
-        }
-      }
-    }
   }
-
-  m_reader.endOfEvent();
 
   SimHitContainer simHits;
   simHits.insert(unordered.begin(), unordered.end());

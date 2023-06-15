@@ -9,16 +9,27 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <string>
 
 namespace Acts {
 
 class DetectorElementBase;
+class DiscBounds;
+class SurfaceBounds;
 
 /// @class DiscSurface
 ///
@@ -243,6 +254,7 @@ class DiscSurface : public Surface {
   /// @param direction The global direction at the starting point
   ///        @note expected to be normalized (no checking)
   /// @param bcheck The boundary check prescription
+  /// @param tolerance the tolerance used for the intersection
   ///
   ///  <b>mathematical motivation:</b>
   ///
@@ -263,8 +275,8 @@ class DiscSurface : public Surface {
   /// @return The SurfaceIntersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// Implement the binningValue
   ///

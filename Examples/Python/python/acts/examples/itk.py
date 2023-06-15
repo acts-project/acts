@@ -304,6 +304,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
     zMin = -3000 * u.mm
+    zOutermostLayers = (-2700 * u.mm, 2700 * u.mm)
     beamPos = (0 * u.mm, 0 * u.mm)
     collisionRegionMin = -200 * u.mm
     collisionRegionMax = 200 * u.mm
@@ -401,7 +402,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
             5,
             7,
         ]  # enable custom z looping when searching for SPs, must contain numbers from 1 to the total number of bin in zBinEdges
-        skipPreviousTopSP = True
         zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
@@ -433,7 +433,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         seedConfirmationFilter = True
         impactWeightFactor = 100
         compatSeedLimit = 3
-        numSeedIncrement = float("inf")
+        numSeedIncrement = 100
         seedWeightIncrement = 0
         useDetailedDoubleMeasurementInfo = False
         maxSeedsPerSpMConf = 5
@@ -453,7 +453,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         arithmeticAverageCotTheta = True
         impactMax = 20 * u.mm
         zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
-        skipPreviousTopSP = False
         zBinNeighborsTop = [
             [0, 0],
             [-1, 0],
@@ -506,7 +505,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         deltaZMax=deltaZMax,
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
-        skipPreviousTopSP=skipPreviousTopSP,
         zBinsCustomLooping=zBinsCustomLooping,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
@@ -521,6 +519,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         collisionRegion=(collisionRegionMin, collisionRegionMax),
         r=(None, rMaxSeedFinderConfig),
         z=(zMin, zMax),
+        zOutermostLayers=zOutermostLayers,
     )
 
     seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)

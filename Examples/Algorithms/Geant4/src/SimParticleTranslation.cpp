@@ -8,13 +8,18 @@
 
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Geant4/EventStoreRegistry.hpp"
-#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <ostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 #include <G4ChargedGeantino.hh>
 #include <G4Event.hh>
@@ -24,7 +29,10 @@
 #include <G4PrimaryParticle.hh>
 #include <G4PrimaryVertex.hh>
 #include <G4UnitsTable.hh>
-#include <globals.hh>
+
+namespace ActsExamples {
+class WhiteBoard;
+}  // namespace ActsExamples
 
 ActsExamples::SimParticleTranslation::SimParticleTranslation(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -54,10 +62,6 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
   // Get the number of input particles
   const auto inputParticles = (*eventData.inputParticles)(*eventStore);
-
-  // Reserve appropriate resources for initial/final particles
-  eventData.particlesInitial.reserve(inputParticles.size());
-  eventData.particlesFinal.reserve(inputParticles.size());
 
   // Reserve hopefully enough hit space
   eventData.hits.reserve(inputParticles.size() * m_cfg.reserveHitsPerParticle);
@@ -120,7 +124,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
     // Skip if tranlation failed
     if (particleDefinition == nullptr) {
-      ACTS_VERBOSE(
+      ACTS_DEBUG(
           "Could not translate particle with PDG code : " << particlePdgCode);
       continue;
     }

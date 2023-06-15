@@ -7,11 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
 
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include "TGeoManager.h"
 
@@ -22,6 +26,7 @@ class SurfaceBounds;
 class PlanarBounds;
 class DiscBounds;
 class DigitizationModule;
+class Surface;
 
 /// @class TGeoDetectorElement
 ///
@@ -114,6 +119,11 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// Return surface associated with this detector element
   const Surface& surface() const override;
 
+  /// Return surface associated with this detector element
+  ///
+  /// @note this is the non-const access
+  Surface& surface() override;
+
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const DigitizationModule> digitizationModule()
       const final {
@@ -151,6 +161,10 @@ inline const Transform3& TGeoDetectorElement::transform(
 }
 
 inline const Surface& TGeoDetectorElement::surface() const {
+  return (*m_surface);
+}
+
+inline Surface& TGeoDetectorElement::surface() {
   return (*m_surface);
 }
 

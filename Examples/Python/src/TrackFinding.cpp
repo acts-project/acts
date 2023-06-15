@@ -1,17 +1,26 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021-2022 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SpacePointContainer.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
@@ -22,10 +31,24 @@
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
+#include <array>
+#include <cstddef>
 #include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
+namespace ActsExamples {
+class IAlgorithm;
+class SimSpacePoint;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -89,6 +112,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(zMax);
+    ACTS_PYTHON_MEMBER(zOutermostLayers);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
@@ -101,7 +125,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
-    ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
@@ -151,11 +174,11 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(zMax);
+    ACTS_PYTHON_MEMBER(zOutermostLayers);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(deltaZMax);
-    ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(deltaPhiMax);
     ACTS_PYTHON_MEMBER(highland);
@@ -247,13 +270,22 @@ void addTrackFinding(Context& ctx) {
     using Alg = ActsExamples::TrackFindingAlgorithm;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackFindingAlgorithm")
-                   .def(py::init<const Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config)
-                   .def_static("makeTrackFinderFunction",
-                               &Alg::makeTrackFinderFunction);
+    auto alg =
+        py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
+            mex, "TrackFindingAlgorithm")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config)
+            .def_static("makeTrackFinderFunction",
+                        [](std::shared_ptr<const Acts::TrackingGeometry>
+                               trackingGeometry,
+                           std::shared_ptr<const Acts::MagneticFieldProvider>
+                               magneticField,
+                           Logging::Level level) {
+                          return Alg::makeTrackFinderFunction(
+                              trackingGeometry, magneticField,
+                              *Acts::getDefaultLogger("TrackFinding", level));
+                        });
 
     py::class_<Alg::TrackFinderFunction,
                std::shared_ptr<Alg::TrackFinderFunction>>(
@@ -310,11 +342,6 @@ void addTrackFinding(Context& ctx) {
                      std::pair<GeometryIdentifier, MeasurementSelectorCuts>>>())
             .def(py::init(constructor));
   }
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionAlgorithm, mex,
-                                "AmbiguityResolutionAlgorithm", inputTracks,
-                                outputTracks, maximumSharedHits,
-                                maximumIterations, nMeasurementsMin);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,
                                 "SeedsToPrototracks", inputSeeds,

@@ -8,6 +8,12 @@
 
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
+#include "Acts/EventData/SourceLink.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
+
+#include <vector>
+
 ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
     const ActsExamples::SimSeed& seed) {
   ProtoTrack track;

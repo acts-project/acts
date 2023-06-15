@@ -5,9 +5,15 @@ configure_file(
 # source files will be added later
 add_library(
   ActsCore SHARED "")
+
 target_compile_features(
   ActsCore
-  PUBLIC cxx_std_17)
+  PUBLIC ${ACTS_CXX_STANDARD_FEATURE})
+
+if(ACTS_CONCEPTS_SUPPORTED)
+  target_compile_definitions(ActsCore PUBLIC ACTS_CONCEPTS_SUPPORTED)
+endif()
+
 target_include_directories(
   ActsCore
   PUBLIC
@@ -143,3 +149,4 @@ add_subdirectory(src/TrackFitting)
 add_subdirectory(src/Utilities)
 add_subdirectory(src/Vertexing)
 add_subdirectory(src/Visualization)
+add_subdirectory(src/AmbiguityResolution)

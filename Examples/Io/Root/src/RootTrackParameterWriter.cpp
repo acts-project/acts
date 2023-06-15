@@ -8,22 +8,26 @@
 
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/Seed.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <ios>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -192,9 +196,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
         m_t_charge = static_cast<int>(particle.charge());
         m_t_qop = m_t_charge / p;
       } else {
-        ACTS_WARNING("Truth particle with barcode " << particleId << "="
-                                                    << particleId.value()
-                                                    << " not found!");
+        ACTS_DEBUG("Truth particle with barcode "
+                   << particleId << "=" << particleId.value() << " not found!");
       }
     }
 

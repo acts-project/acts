@@ -94,14 +94,10 @@ inline std::any SpacePointData::component(Acts::HashedString key,
 					  const std::size_t& n) const {
   using namespace Acts::HashedStringLiteral;
   switch (key) {
-  case "TopHalfStripLength"_hash:
-    return &m_topHalfStripLength[n];
-  case "BottomHalfStripLength"_hash:
-    return &m_bottomHalfStripLength[n];
-  case "TopStripDirection"_hash:
-    return &m_topStripDirection[n];
-  case "BottomStripDirection"_hash:
-    return &m_bottomStripDirection[n];
+  case "TopStripVector"_hash:
+    return &m_topStripVector[n];
+  case "BottomStripVector"_hash:
+    return &m_bottomStripVector[n];
   case "StripCenterDistance"_hash:
     return &m_stripCenterDistance[n];
   case "TopStripCenterPosition"_hash:
@@ -110,64 +106,28 @@ inline std::any SpacePointData::component(Acts::HashedString key,
     throw std::runtime_error("no such component " + std::to_string(key));
   }
 }
-  
-inline const float& SpacePointData::getTopHalfStripLength(
-    const std::size_t& idx) const {
-  return m_topHalfStripLength[idx];
+
+void SpacePointData::setTopStripVector(std::size_t idx, 
+				       const Acts::Vector3& value) 
+{
+  m_topStripVector[idx] = value;
 }
 
-inline const float& SpacePointData::getBottomHalfStripLength(
-    const std::size_t& idx) const {
-  return m_bottomHalfStripLength[idx];
+void SpacePointData::setBottomStripVector(std::size_t idx, 
+					  const Acts::Vector3& value)
+{
+  m_bottomStripVector[idx] = value;
 }
 
-inline const Acts::Vector3& SpacePointData::getTopStripDirection(
-    const std::size_t& idx) const {
-  return m_topStripDirection[idx];
-}
-
-inline const Acts::Vector3& SpacePointData::getBottomStripDirection(
-    const std::size_t& idx) const {
-  return m_bottomStripDirection[idx];
-}
-
-inline const Acts::Vector3& SpacePointData::getStripCenterDistance(
-    const std::size_t& idx) const {
-  return m_stripCenterDistance[idx];
-}
-
-inline const Acts::Vector3& SpacePointData::getTopStripCenterPosition(
-    const std::size_t& idx) const {
-  return m_topStripCenterPosition[idx];
-}
-
-inline void SpacePointData::setTopHalfStripLength(const std::size_t& idx,
-                                                  const float& value) {
-  m_topHalfStripLength[idx] = value;
-}
-
-inline void SpacePointData::setBottomHalfStripLength(const std::size_t& idx,
-                                                     const float& value) {
-  m_bottomHalfStripLength[idx] = value;
-}
-
-inline void SpacePointData::setTopStripDirection(const std::size_t& idx,
-                                                 const Acts::Vector3& value) {
-  m_topStripDirection[idx] = value;
-}
-
-inline void SpacePointData::setBottomStripDirection(
-    const std::size_t& idx, const Acts::Vector3& value) {
-  m_bottomStripDirection[idx] = value;
-}
-
-inline void SpacePointData::setStripCenterDistance(const std::size_t& idx,
-                                                   const Acts::Vector3& value) {
+void SpacePointData::setStripCenterDistance(std::size_t idx, 
+					    const Acts::Vector3& value)
+{
   m_stripCenterDistance[idx] = value;
 }
 
-inline void SpacePointData::setTopStripCenterPosition(
-    const std::size_t& idx, const Acts::Vector3& value) {
+void SpacePointData::setTopStripCenterPosition(std::size_t idx, 
+					       const Acts::Vector3& value)
+{ 
   m_topStripCenterPosition[idx] = value;
 }
 
@@ -186,10 +146,8 @@ inline void SpacePointData::resize(const std::size_t& n, bool resizeDynamic) {
   m_deltaR.resize(n, 0.);
 
   if (resizeDynamic) {
-    m_topHalfStripLength.resize(n, 0.);
-    m_bottomHalfStripLength.resize(n, 0.);
-    m_topStripDirection.resize(n, {0, 0, 0});
-    m_bottomStripDirection.resize(n, {0, 0, 0});
+    m_topStripVector.resize(n, {0, 0, 0});
+    m_bottomStripVector.resize(n, {0, 0, 0});
     m_stripCenterDistance.resize(n, {0, 0, 0});
     m_topStripCenterPosition.resize(n, {0, 0, 0});
   }
@@ -208,10 +166,8 @@ inline void SpacePointData::clear() {
   m_quality.clear();
   m_deltaR.clear();
   // dynamicvariables
-  m_topHalfStripLength.clear();
-  m_bottomHalfStripLength.clear();
-  m_topStripDirection.clear();
-  m_bottomStripDirection.clear();
+  m_topStripVector.clear();
+  m_bottomStripVector.clear();
   m_stripCenterDistance.clear();
   m_topStripCenterPosition.clear();
 }

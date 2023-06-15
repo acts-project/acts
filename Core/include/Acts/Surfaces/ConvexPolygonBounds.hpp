@@ -9,11 +9,17 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <exception>
+#include <iosfwd>
+#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
