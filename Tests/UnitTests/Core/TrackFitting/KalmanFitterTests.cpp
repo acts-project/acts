@@ -26,9 +26,7 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
