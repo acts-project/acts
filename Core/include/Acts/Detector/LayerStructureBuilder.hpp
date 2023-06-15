@@ -46,7 +46,7 @@ namespace Experimental {
 class LayerStructureBuilder : public IInternalStructureBuilder {
  public:
   /// @brief A holder struct for surfaces
-  class SurfacesHolder : public ISurfacesProvider {
+  class SurfacesHolder final : public ISurfacesProvider {
    public:
     /// Constructor with predefined surfaces
     /// @param isurfaces is the vector of surfaces

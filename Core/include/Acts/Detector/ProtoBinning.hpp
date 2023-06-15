@@ -86,8 +86,7 @@ struct ProtoBinning {
     }
   }
 
-  // return function
-  std::size_t bins() const { return (edges.size() - 1u); }
+  std::size_t bins() const { return edges.size() - 1u; }
 };
 
 }  // namespace Experimental

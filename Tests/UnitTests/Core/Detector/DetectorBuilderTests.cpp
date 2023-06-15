@@ -23,7 +23,7 @@
 
 #include <stdexcept>
 
-class CompBuilder : public Acts::Experimental::IDetectorComponentBuilder {
+class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
  public:
   Acts::Experimental::DetectorComponent construct(
       const Acts::GeometryContext& gctx) const final {

@@ -107,8 +107,6 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
 Acts::Experimental::DetectorComponent
 Acts::Experimental::CylindricalContainerBuilder::construct(
     const GeometryContext& gctx) const {
-  RootDetectorVolumes roots;
-
   // Return container object
   DetectorComponent::PortalContainer rContainer;
   bool atNavigationLevel = true;

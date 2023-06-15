@@ -27,9 +27,6 @@ Acts::Experimental::DetectorBuilder::DetectorBuilder(
 std::shared_ptr<const Acts::Experimental::Detector>
 Acts::Experimental::DetectorBuilder::construct(
     const GeometryContext& gctx) const {
-  // The outgoing root volumes
-  std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
-
   // Screen printout of the auxilliary information
   if (not m_cfg.auxilliary.empty()) {
     ACTS_DEBUG(m_cfg.auxilliary);

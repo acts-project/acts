@@ -128,14 +128,12 @@ void addExperimentaGeometry(Context& ctx) {
 
   using namespace Acts::Experimental;
 
-  {  // Detector definition
-    py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector");
-  }
+  // Detector definition
+  py::class_<Detector, std::shared_ptr<Detector>>(m, "Detector");
 
-  {  // Detector volume definition
-    py::class_<DetectorVolume, std::shared_ptr<DetectorVolume>>(
-        m, "DetectorVolume");
-  }
+  // Detector volume definition
+  py::class_<DetectorVolume, std::shared_ptr<DetectorVolume>>(m,
+                                                              "DetectorVolume");
 
   {
     // The surface hiearchy map
@@ -166,14 +164,15 @@ void addExperimentaGeometry(Context& ctx) {
 
   {
     // Be able to construct a proto binning
-    auto pBinning =
-        py::class_<ProtoBinning>(m, "ProtoBinning")
-            .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
-                          const std::vector<Acts::ActsScalar>&, std::size_t>())
-            .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
-                          Acts::ActsScalar, Acts::ActsScalar, std::size_t,
-                          std::size_t>());
+    py::class_<ProtoBinning>(m, "ProtoBinning")
+        .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
+                      const std::vector<Acts::ActsScalar>&, std::size_t>())
+        .def(py::init<Acts::BinningValue, Acts::detail::AxisBoundaryType,
+                      Acts::ActsScalar, Acts::ActsScalar, std::size_t,
+                      std::size_t>());
+  }
 
+  {
     // The internal layer structure builder
     py::class_<Acts::Experimental::IInternalStructureBuilder,
                std::shared_ptr<Acts::Experimental::IInternalStructureBuilder>>(
@@ -202,19 +201,22 @@ void addExperimentaGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(nSegments);
     ACTS_PYTHON_MEMBER(auxilliary);
     ACTS_PYTHON_STRUCT_END();
+  }
 
+  {
     // The internal layer structure builder
     py::class_<Acts::Experimental::ISurfacesProvider,
                std::shared_ptr<Acts::Experimental::ISurfacesProvider>>(
         m, "ISurfacesProvider");
 
-    auto lsSurfaces =
-        py::class_<LayerStructureBuilder::SurfacesHolder,
-                   Acts::Experimental::ISurfacesProvider,
-                   std::shared_ptr<LayerStructureBuilder::SurfacesHolder>>(
-            m, "SurfacesHolder")
-            .def(py::init<std::vector<std::shared_ptr<Surface>>>());
+    py::class_<LayerStructureBuilder::SurfacesHolder,
+               Acts::Experimental::ISurfacesProvider,
+               std::shared_ptr<LayerStructureBuilder::SurfacesHolder>>(
+        m, "SurfacesHolder")
+        .def(py::init<std::vector<std::shared_ptr<Surface>>>());
+  }
 
+  {
     // The external volume structure builder
     py::class_<Acts::Experimental::IExternalStructureBuilder,
                std::shared_ptr<Acts::Experimental::IExternalStructureBuilder>>(
@@ -241,7 +243,9 @@ void addExperimentaGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(boundValues);
     ACTS_PYTHON_MEMBER(auxilliary);
     ACTS_PYTHON_STRUCT_END();
+  }
 
+  {
     // Put them together to a detector volume
     py::class_<Acts::Experimental::IDetectorComponentBuilder,
                std::shared_ptr<Acts::Experimental::IDetectorComponentBuilder>>(
@@ -270,7 +274,9 @@ void addExperimentaGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(externalsBuilder);
     ACTS_PYTHON_MEMBER(auxilliary);
     ACTS_PYTHON_STRUCT_END();
+  }
 
+  {
     // Cylindrical container builder
     auto ccBuilder =
         py::class_<CylindricalContainerBuilder,
@@ -294,7 +300,9 @@ void addExperimentaGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(binning);
     ACTS_PYTHON_MEMBER(auxilliary);
     ACTS_PYTHON_STRUCT_END();
+  }
 
+  {
     // Detector builder
     auto dBuilder =
         py::class_<DetectorBuilder, std::shared_ptr<DetectorBuilder>>(

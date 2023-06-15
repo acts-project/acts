@@ -25,7 +25,7 @@ namespace Experimental {
 /// @note This is the last builder in the chain and the
 /// the returned detector object is const and cannot be
 /// modified anymore.
-class DetectorBuilder : public IDetectorBuilder {
+class DetectorBuilder final : public IDetectorBuilder {
  public:
   /// Nested configuration object
   struct Config {
