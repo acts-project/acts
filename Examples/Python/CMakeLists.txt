@@ -167,7 +167,7 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_ONNX)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesFrameworkML ActsExamplesTrackFindingML)
   target_sources(ActsPythonBindings PRIVATE src/Onnx.cpp)
   target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibrator.cpp)
   list(APPEND py_files examples/onnx/__init__.py)

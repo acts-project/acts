@@ -38,11 +38,6 @@ target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
 
-if (ACTS_BUILD_PLUGIN_ONNX)
-  target_sources(ActsExamplesFramework PRIVATE src/EventData/NeuralCalibrator.cpp)
-  target_link_libraries(ActsExamplesFramework PRIVATE ActsPluginOnnx)
-endif()
-
 if(ACTS_USE_EXAMPLES_TBB)
   # newer DD4hep version require TBB and search internally for TBB in
   # config-only mode. to avoid mismatches we explicitly search using
@@ -74,3 +69,5 @@ install(
 install(
   DIRECTORY include/ActsExamples 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)
