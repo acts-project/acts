@@ -219,15 +219,15 @@ linux_physmon:
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
     - pip3 install histcmp==0.5.2
-    - pip3 install -r Examples/Scripts/requirements.txt
+    - pip3 install -r src/Examples/Scripts/requirements.txt
     - /usr/local/bin/geant4-config --install-datasets
     - source /usr/local/bin/thisroot.sh
     - source /usr/local/bin/thisdd4hep_only.sh
     - source /usr/local/bin/geant4.sh
     - source build/python/setup.sh
     - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
-    - echo "::endgroup::"
-    - export PYTHONPATH="${PYTHONPATH}":"${GITHUB_WORKSPACE}/Examples/Scripts/Python"
+    - cd src
+    - export PYTHONPATH="${PYTHONPATH}":"${PWD}/Examples/Scripts/Python"
     - CI/physmon/phys_perf_mon.sh all physmon
 
 ###############################
