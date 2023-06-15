@@ -8,10 +8,20 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace Acts {
 namespace Test {

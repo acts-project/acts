@@ -8,6 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/PdgParticle.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 
 #include "Dataset.hpp"

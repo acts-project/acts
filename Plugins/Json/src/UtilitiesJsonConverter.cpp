@@ -8,7 +8,16 @@
 
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 void Acts::to_json(nlohmann::json& j, const Acts::BinningData& bd) {
   // Common to all bin utilities

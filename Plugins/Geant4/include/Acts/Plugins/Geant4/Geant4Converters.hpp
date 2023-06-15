@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <array>
 #include <memory>
 #include <tuple>
 

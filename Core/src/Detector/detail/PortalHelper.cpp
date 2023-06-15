@@ -11,9 +11,12 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <stdexcept>
+#include <utility>
 
 void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     const GeometryContext& gctx,

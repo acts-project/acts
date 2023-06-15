@@ -8,7 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -16,9 +18,10 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include <cmath>
 #include <memory>
+#include <vector>
 
 using namespace Acts::Experimental;
 

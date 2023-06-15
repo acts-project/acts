@@ -11,7 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <cstddef>
 #include <functional>
 
 namespace Acts {

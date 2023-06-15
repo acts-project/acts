@@ -8,13 +8,26 @@
 
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <ostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
     ActsExamples::TruthSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)

@@ -15,6 +15,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -23,6 +24,7 @@
 
 namespace Acts {
 namespace Experimental {
+struct NavigationState;
 
 class Detector : public std::enable_shared_from_this<Detector> {
  protected:

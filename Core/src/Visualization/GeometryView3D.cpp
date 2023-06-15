@@ -10,7 +10,11 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -22,7 +26,18 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
+#include <ostream>
+#include <utility>
+#include <vector>
 
 #include <limits.h>
 #include <unistd.h>

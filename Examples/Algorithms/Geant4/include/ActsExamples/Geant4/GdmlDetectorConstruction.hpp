@@ -8,7 +8,11 @@
 
 #pragma once
 
+#include <string>
+
 #include <G4VUserDetectorConstruction.hh>
+
+class G4VPhysicalVolume;
 
 namespace ActsExamples {
 

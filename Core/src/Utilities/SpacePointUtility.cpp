@@ -8,7 +8,16 @@
 
 #include "Acts/Utilities/SpacePointUtility.hpp"
 
-#include <iostream>
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
+
 namespace Acts {
 
 Result<double> SpacePointUtility::differenceOfMeasurementsChecked(

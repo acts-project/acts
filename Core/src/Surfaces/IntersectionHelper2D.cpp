@@ -13,8 +13,6 @@
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 #include <cmath>
-#include <iostream>
-#include <tuple>
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
     const Vector2& s0, const Vector2& s1, const Vector2& origin,

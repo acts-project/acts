@@ -8,7 +8,20 @@
 
 #include "Acts/Detector/Portal.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+
+#include <cstddef>
+#include <stdexcept>
+#include <utility>
+
+namespace Acts {
+namespace Experimental {
+class DetectorVolume;
+}  // namespace Experimental
+}  // namespace Acts
 
 Acts::Experimental::Portal::Portal(std::shared_ptr<Surface> surface)
     : m_surface(std::move(surface)) {}

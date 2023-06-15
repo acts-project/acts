@@ -8,15 +8,23 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <cassert>
+#include <iterator>
+
+namespace Acts {
+class IVolumeMaterial;
+}  // namespace Acts
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, std::string name, const Transform3& transform,

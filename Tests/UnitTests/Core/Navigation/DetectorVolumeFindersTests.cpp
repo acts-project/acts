@@ -18,12 +18,17 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <stdexcept>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 // A test context

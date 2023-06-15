@@ -16,6 +16,8 @@
 #include <vector>
 
 namespace Acts {
+class VolumeBounds;
+
 namespace Experimental {
 
 class DetectorVolume;
