@@ -398,6 +398,7 @@ def _sequencerInit(self, *args, **kwargs):
             for loc, fpe, count in m:
                 t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
                 n.append(ActsPythonBindings._examples.Sequencer.FpeMask(loc, t, count))
+            kwargs["fpeMasks"] = n
     if "ACTS_SEQUENCER_DISABLE_FPEMON" in os.environ:
         kwargs["trackFpes"] = False
 
