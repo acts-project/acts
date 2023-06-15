@@ -90,27 +90,22 @@ void ActsExamples::ResPlotTool::book(
 
 void ActsExamples::ResPlotTool::clear(ResPlotCache& resPlotCache) const {
   ACTS_DEBUG("Delete the hists.");
-  auto maybeDelete = [](TH1* h) {
-    if (h != nullptr) {
-      delete h;
-    }
-  };
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
-    maybeDelete(resPlotCache.res.at(parName));
-    maybeDelete(resPlotCache.res_vs_eta.at(parName));
-    maybeDelete(resPlotCache.resMean_vs_eta.at(parName));
-    maybeDelete(resPlotCache.resWidth_vs_eta.at(parName));
-    maybeDelete(resPlotCache.res_vs_pT.at(parName));
-    maybeDelete(resPlotCache.resMean_vs_pT.at(parName));
-    maybeDelete(resPlotCache.resWidth_vs_pT.at(parName));
-    maybeDelete(resPlotCache.pull.at(parName));
-    maybeDelete(resPlotCache.pull_vs_eta.at(parName));
-    maybeDelete(resPlotCache.pullMean_vs_eta.at(parName));
-    maybeDelete(resPlotCache.pullWidth_vs_eta.at(parName));
-    maybeDelete(resPlotCache.pull_vs_pT.at(parName));
-    maybeDelete(resPlotCache.pullMean_vs_pT.at(parName));
-    maybeDelete(resPlotCache.pullWidth_vs_pT.at(parName));
+    delete resPlotCache.res.at(parName);
+    delete resPlotCache.res_vs_eta.at(parName);
+    delete resPlotCache.resMean_vs_eta.at(parName);
+    delete resPlotCache.resWidth_vs_eta.at(parName);
+    delete resPlotCache.res_vs_pT.at(parName);
+    delete resPlotCache.resMean_vs_pT.at(parName);
+    delete resPlotCache.resWidth_vs_pT.at(parName);
+    delete resPlotCache.pull.at(parName);
+    delete resPlotCache.pull_vs_eta.at(parName);
+    delete resPlotCache.pullMean_vs_eta.at(parName);
+    delete resPlotCache.pullWidth_vs_eta.at(parName);
+    delete resPlotCache.pull_vs_pT.at(parName);
+    delete resPlotCache.pullMean_vs_pT.at(parName);
+    delete resPlotCache.pullWidth_vs_pT.at(parName);
   }
 }
 
