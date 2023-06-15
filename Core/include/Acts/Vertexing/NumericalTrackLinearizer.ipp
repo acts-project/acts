@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 template <typename propagator_t, typename propagator_options_t>
@@ -60,8 +61,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // -) (x, y, z, t) is the global 4D position of the PCA
   // -) phi and theta are the global angles of the momentum at the PCA
   // -) q/p is the charge divided by the total momentum at the PCA
-  const unsigned int nParams = 7;
-  Acts::ActsVector<nParams> paramVec;
+  Acts::ActsVector<eLinSize> paramVec;
 
   // 4D PCA and the momentum of the track at the PCA
   // These quantities will be used in the computation of the constant term in
@@ -83,20 +83,20 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   }
 
   // Complete Jacobian (consists of positionJacobian and momentumJacobian)
-  ActsMatrix<eBoundSize, nParams> completeJacobian;
+  ActsMatrix<eBoundSize, eLinSize> completeJacobian;
   completeJacobian.setZero();
 
   // Perigee parameters wrt linPoint after wiggling
   BoundVector newPerigeeParams;
 
   // Check if wiggled angle theta are within definition range [0, pi]
-  assert(paramVec(5) + m_cfg.delta < M_PI &&
+  assert(paramVec(eLinTheta) + m_cfg.delta < M_PI &&
          "Wiggled theta outside range, choose a smaller wiggle (i.e., delta)!"
          "You might need to decrease targetTolerance as well.");
   // Wiggling each of the parameters at the PCA and computing the Perigee
   // parametrization of the resulting new track. This allows us to approximate
   // the numerical derivatives.
-  for (unsigned int i = 0; i < nParams; i++) {
+  for (unsigned int i = 0; i < eLinSize; i++) {
     // Wiggle
     paramVec(i) += m_cfg.delta;
 
@@ -104,9 +104,9 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // the propagation. Note that we work without covariance since we don't need
     // it to compute the derivative.
     Vector3 wiggledDir =
-        makeDirectionUnitFromPhiTheta(paramVec(4), paramVec(5));
+        makeDirectionUnitFromPhiTheta(paramVec(eLinPhi), paramVec(eLinTheta));
     CurvilinearTrackParameters wiggledCurvilinearParams(
-        paramVec.head(4), wiggledDir, paramVec(6));
+        paramVec.head(4), wiggledDir, paramVec(eLinQOverP));
 
     // Obtain propagation direction
     intersection =
@@ -138,10 +138,10 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   }
 
   // Extracting positionJacobian and momentumJacobian from the complete Jacobian
-  ActsMatrix<eBoundSize, 4> positionJacobian =
-      completeJacobian.block<eBoundSize, 4>(0, 0);
-  ActsMatrix<eBoundSize, 3> momentumJacobian =
-      completeJacobian.block<eBoundSize, 3>(0, 4);
+  ActsMatrix<eBoundSize, eLinPosSize> positionJacobian =
+      completeJacobian.block<eBoundSize, eLinPosSize>(0, 0);
+  ActsMatrix<eBoundSize, eLinMomSize> momentumJacobian =
+      completeJacobian.block<eBoundSize, eLinMomSize>(0, eLinPosSize);
 
   // Constant term of Taylor expansion (Eq. 5.38 in Ref. (1))
   BoundVector constTerm =
