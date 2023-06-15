@@ -14,6 +14,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -87,21 +88,34 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("truthY", &m_truthY);
     m_outputTree->Branch("truthZ", &m_truthZ);
     m_outputTree->Branch("truthT", &m_truthT);
+    m_outputTree->Branch("truthPhi", &m_truthPhi);
+    m_outputTree->Branch("truthTheta", &m_truthTheta);
+    m_outputTree->Branch("truthQOverP", &m_truthQOverP);
 
     m_outputTree->Branch("recoX", &m_recoX);
     m_outputTree->Branch("recoY", &m_recoY);
     m_outputTree->Branch("recoZ", &m_recoZ);
     m_outputTree->Branch("recoT", &m_recoT);
+    m_outputTree->Branch("recoPhi", &m_recoPhi);
+    m_outputTree->Branch("recoTheta", &m_recoTheta);
+    m_outputTree->Branch("recoQOverP", &m_recoQOverP);
 
     m_outputTree->Branch("resX", &m_resX);
     m_outputTree->Branch("resY", &m_resY);
     m_outputTree->Branch("resZ", &m_resZ);
     m_outputTree->Branch("resT", &m_resT);
+    m_outputTree->Branch("resPhi", &m_resPhi);
+    m_outputTree->Branch("resTheta", &m_resTheta);
+    m_outputTree->Branch("resQOverP", &m_resQOverP);
+    m_outputTree->Branch("momOverlap", &m_momOverlap);
 
     m_outputTree->Branch("pullX", &m_pullX);
     m_outputTree->Branch("pullY", &m_pullY);
     m_outputTree->Branch("pullZ", &m_pullZ);
     m_outputTree->Branch("pullT", &m_pullT);
+    m_outputTree->Branch("pullPhi", &m_pullPhi);
+    m_outputTree->Branch("pullTheta", &m_pullTheta);
+    m_outputTree->Branch("pullQOverP", &m_pullQOverP);
 
     m_outputTree->Branch("covXX", &m_covXX);
     m_outputTree->Branch("covYY", &m_covYY);
@@ -336,9 +350,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       // `associatedTruthParticles` align
       for (std::size_t i = 0; i < trackParameters.size(); ++i) {
         const auto& particle = associatedTruthParticles[i];
-        const auto& trackParameter = trackParameters[i].parameters();
+        const auto& params = trackParameters[i].parameters();
 
-        if (origTrack.parameters() == trackParameter) {
+        if (origTrack.parameters() == params) {
           int priVtxId = particle.particleId().vertexPrimary();
 
           particleAtVtx.insert(particle);
@@ -375,7 +389,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     double trackVtxMatchFraction =
         (double)fmap[maxOccurrenceId] / tracks.size();
     if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
-      for (const auto& particle : associatedTruthParticles) {
+      int count = 0;
+      for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
+        const auto& particle = associatedTruthParticles[j];
         int priVtxId = particle.particleId().vertexPrimary();
         int secVtxId = particle.particleId().vertexSecondary();
 
@@ -383,77 +399,110 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // truthparticle from secondary vtx
           continue;
         }
-
         if (priVtxId == maxOccurrenceId) {
           // Vertex found, fill varibles
           const auto& truePos = particle.fourPosition();
 
-          m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
-          m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
-          m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
-          m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
+          //
+          auto pull = [&](int i, const auto& covariance, const auto& recoVec, const auto& trueVec) {
+              double var = covariance(i, i);
+              if (var < 0) {
+                ACTS_WARNING("var(" << i << ") = " << var << " < 0");
+                return std::numeric_limits<double>::quiet_NaN();
+              }
+              double std = std::sqrt(var);
+              if (std == 0) {
+                ACTS_WARNING("std(" << i << ") = 0");
+                return std::numeric_limits<double>::quiet_NaN();
+              }
+              return (recoVec[i] - trueVec[i]) / std;
+            };
 
-          m_recoX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0]);
-          m_recoY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1]);
-          m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
-          m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
+          //Save reconstructed/true vertex position only in the first iteration to avoid duplicates
+          if (count == 0){
+            m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);
+            m_truthY.push_back(truePos[Acts::FreeIndices::eFreePos1]);
+            m_truthZ.push_back(truePos[Acts::FreeIndices::eFreePos2]);
+            m_truthT.push_back(truePos[Acts::FreeIndices::eFreeTime]);
 
-          m_resX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0] -
-                           truePos[Acts::FreeIndices::eFreePos0]);
-          m_resY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1] -
-                           truePos[Acts::FreeIndices::eFreePos1]);
-          m_resZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2] -
-                           truePos[Acts::FreeIndices::eFreePos2]);
-          m_resT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime] -
-                           truePos[Acts::FreeIndices::eFreeTime]);
+            m_recoX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0]);
+            m_recoY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1]);
+            m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
+            m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
 
-          auto pull = [&](int i) {
-            double var = vtx.fullCovariance()(i, i);
-            if (var < 0) {
-              ACTS_WARNING("var(" << i << ") = " << var << " < 0");
-              return std::numeric_limits<double>::quiet_NaN();
+            m_resX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0] -
+                            truePos[Acts::FreeIndices::eFreePos0]);
+            m_resY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1] -
+                            truePos[Acts::FreeIndices::eFreePos1]);
+            m_resZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2] -
+                            truePos[Acts::FreeIndices::eFreePos2]);
+            m_resT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime] -
+                            truePos[Acts::FreeIndices::eFreeTime]);
+
+            m_pullX.push_back(pull(Acts::FreeIndices::eFreePos0, vtx.fullCovariance(), vtx.fullPosition(), truePos));
+            m_pullY.push_back(pull(Acts::FreeIndices::eFreePos1, vtx.fullCovariance(), vtx.fullPosition(), truePos));
+            m_pullZ.push_back(pull(Acts::FreeIndices::eFreePos2, vtx.fullCovariance(), vtx.fullPosition(), truePos));
+            m_pullT.push_back(pull(Acts::FreeIndices::eFreeTime, vtx.fullCovariance(), vtx.fullPosition(), truePos));
+
+            m_covXX.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
+                                                  Acts::FreeIndices::eFreePos0));
+            m_covYY.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
+                                                  Acts::FreeIndices::eFreePos1));
+            m_covZZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
+                                                  Acts::FreeIndices::eFreePos2));
+            m_covTT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreeTime,
+                                                  Acts::FreeIndices::eFreeTime));
+            m_covXY.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
+                                                  Acts::FreeIndices::eFreePos1));
+            m_covXZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
+                                                  Acts::FreeIndices::eFreePos2));
+            m_covXT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
+                                                  Acts::FreeIndices::eFreeTime));
+            m_covYZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
+                                                  Acts::FreeIndices::eFreePos2));
+            m_covYT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
+                                                  Acts::FreeIndices::eFreeTime));
+            m_covZT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
+                                                  Acts::FreeIndices::eFreeTime));
+
+            m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
+            m_nTracksOnRecoVertex.push_back(tracks.size());
+
+            m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
+          }
+
+          // save reconstructed momenta and corresponding truth momenta
+          const auto& params = trackParameters[j].parameters();
+          for (const auto& trk : tracks) {
+            if (trk.originalParams->parameters() == params) {
+              const auto& trueUnitDir = particle.unitDirection();
+              Acts::ActsVector<3> trueMom;
+              trueMom.head(2) = Acts::makePhiThetaFromDirectionUnit(trueUnitDir);
+              trueMom[2] = particle.qop();
+              m_truthPhi.push_back(trueMom[0]);
+              m_truthTheta.push_back(trueMom[1]);
+              m_truthQOverP.push_back(trueMom[2]);
+
+              Acts::ActsVector<3> recoMom = trk.fittedParams.parameters().segment(Acts::eBoundPhi, 3);
+              m_recoPhi.push_back(recoMom[0]);
+              m_recoTheta.push_back(recoMom[1]);
+              m_recoQOverP.push_back(recoMom[2]);
+
+              m_resPhi.push_back(recoMom[0] - trueMom[0]);
+              m_resTheta.push_back(recoMom[1] - trueMom[1]);
+              m_resQOverP.push_back(recoMom[2] - trueMom[2]);
+
+              const Acts::ActsMatrix<3, 3>& momCov = trk.fittedParams.covariance()->block<3, 3>(Acts::eBoundPhi, Acts::eBoundPhi);
+              m_pullPhi.push_back(pull(0, momCov, recoMom, trueMom));
+              m_pullTheta.push_back(pull(1, momCov, recoMom, trueMom));
+              m_pullQOverP.push_back(pull(2, momCov, recoMom, trueMom));
+              
+              const auto& recoUnitDir = trk.fittedParams.unitDirection();
+              double overlap = trueUnitDir.dot(recoUnitDir);
+              m_momOverlap.push_back(overlap);
             }
-            double std = std::sqrt(var);
-            if (std == 0) {
-              ACTS_WARNING("std(" << i << ") = 0");
-              return std::numeric_limits<double>::quiet_NaN();
-            }
-            return (vtx.fullPosition()[i] - truePos[i]) / std;
-          };
-
-          m_pullX.push_back(pull(Acts::FreeIndices::eFreePos0));
-          m_pullY.push_back(pull(Acts::FreeIndices::eFreePos1));
-          m_pullZ.push_back(pull(Acts::FreeIndices::eFreePos2));
-          m_pullT.push_back(pull(Acts::FreeIndices::eFreeTime));
-
-          m_covXX.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                                 Acts::FreeIndices::eFreePos0));
-          m_covYY.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
-                                                 Acts::FreeIndices::eFreePos1));
-          m_covZZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
-                                                 Acts::FreeIndices::eFreePos2));
-          m_covTT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreeTime,
-                                                 Acts::FreeIndices::eFreeTime));
-          m_covXY.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                                 Acts::FreeIndices::eFreePos1));
-          m_covXZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                                 Acts::FreeIndices::eFreePos2));
-          m_covXT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos0,
-                                                 Acts::FreeIndices::eFreeTime));
-          m_covYZ.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
-                                                 Acts::FreeIndices::eFreePos2));
-          m_covYT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos1,
-                                                 Acts::FreeIndices::eFreeTime));
-          m_covZT.push_back(vtx.fullCovariance()(Acts::FreeIndices::eFreePos2,
-                                                 Acts::FreeIndices::eFreeTime));
-
-          m_nTracksOnTruthVertex.push_back(nTracksOnTruthVertex);
-          m_nTracksOnRecoVertex.push_back(tracks.size());
-
-          m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
-
-          // Next vertex now
-          break;
+          }    
+          count ++;
         }
       }
     }
@@ -466,18 +515,31 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_truthY.clear();
   m_truthZ.clear();
   m_truthT.clear();
+  m_truthPhi.clear();
+  m_truthTheta.clear();
+  m_truthQOverP.clear();
   m_recoX.clear();
   m_recoY.clear();
   m_recoZ.clear();
   m_recoT.clear();
+  m_recoPhi.clear();
+  m_recoTheta.clear();
+  m_recoQOverP.clear();
   m_resX.clear();
   m_resY.clear();
   m_resZ.clear();
   m_resT.clear();
+  m_resPhi.clear();
+  m_resTheta.clear();
+  m_resQOverP.clear();
+  m_momOverlap.clear();
   m_pullX.clear();
   m_pullY.clear();
   m_pullZ.clear();
   m_pullT.clear();
+  m_pullPhi.clear();
+  m_pullTheta.clear();
+  m_pullQOverP.clear();
   m_covXX.clear();
   m_covYY.clear();
   m_covZZ.clear();

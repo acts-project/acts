@@ -97,22 +97,35 @@ class VertexPerformanceWriter final
   std::vector<float> m_truthY;
   std::vector<float> m_truthZ;
   std::vector<float> m_truthT;
+  std::vector<float> m_truthPhi;
+  std::vector<float> m_truthTheta;
+  std::vector<float> m_truthQOverP;
 
   std::vector<float> m_recoX;
   std::vector<float> m_recoY;
   std::vector<float> m_recoZ;
   std::vector<float> m_recoT;
+  std::vector<float> m_recoPhi;
+  std::vector<float> m_recoTheta;
+  std::vector<float> m_recoQOverP;
 
   /// Difference in x positon between reco and true vtx
   std::vector<float> m_resX;
   std::vector<float> m_resY;
   std::vector<float> m_resZ;
   std::vector<float> m_resT;
+  std::vector<float> m_resPhi;
+  std::vector<float> m_resTheta;
+  std::vector<float> m_resQOverP;
+  std::vector<float> m_momOverlap;
 
   std::vector<float> m_pullX;
   std::vector<float> m_pullY;
   std::vector<float> m_pullZ;
   std::vector<float> m_pullT;
+  std::vector<float> m_pullPhi;
+  std::vector<float> m_pullTheta;
+  std::vector<float> m_pullQOverP;
 
   std::vector<float> m_covXX;
   std::vector<float> m_covYY;
