@@ -1,6 +1,6 @@
 variables:
   CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
-  CCACHE_MAXSIZE: 1G
+  CCACHE_MAXSIZE: 2G
   CCACHE_KEY_SUFFIX: r1
 
 clang_tidy:
@@ -210,6 +210,7 @@ linux_physmon:
     - docker
 
   artifacts:
+    when: always
     paths:
       - physmon
 
