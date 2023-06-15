@@ -143,10 +143,6 @@ inline bool xyzCoordinateCheck(
     const double* spacepointPosition, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
-  bool hasValueStored = spacePointData.hasDynamicVariable();
-  if (not hasValueStored) {
-    return false;
-  }
 
   using namespace Acts::HashedStringLiteral;
   const Acts::Vector3& topStripVector = sp.template component<Acts::Vector3>("TopStripVector"_hash);

@@ -44,7 +44,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
+    std::make_shared<Acts::SeedFilter<typename Acts::SpacePointContainer<
+					ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+					Acts::detail::RefHolder>::ConstSpacePointProxyType>>(m_cfg.seedFilterConfig);
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();

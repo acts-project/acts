@@ -87,7 +87,7 @@ inline void SpacePointData::setDeltaR(const std::size_t& idx, const float& value
 }
 
 inline bool SpacePointData::hasDynamicVariable() const {
-  return not m_topHalfStripLength.empty();
+  return not m_topStripVector.empty();
 }
 
 inline std::any SpacePointData::component(Acts::HashedString key,
@@ -107,26 +107,26 @@ inline std::any SpacePointData::component(Acts::HashedString key,
   }
 }
 
-void SpacePointData::setTopStripVector(std::size_t idx, 
-				       const Acts::Vector3& value) 
+inline void SpacePointData::setTopStripVector(std::size_t idx, 
+					      const Acts::Vector3& value) 
 {
   m_topStripVector[idx] = value;
 }
 
-void SpacePointData::setBottomStripVector(std::size_t idx, 
-					  const Acts::Vector3& value)
+inline void SpacePointData::setBottomStripVector(std::size_t idx, 
+						 const Acts::Vector3& value)
 {
   m_bottomStripVector[idx] = value;
 }
 
-void SpacePointData::setStripCenterDistance(std::size_t idx, 
-					    const Acts::Vector3& value)
+inline void SpacePointData::setStripCenterDistance(std::size_t idx, 
+						   const Acts::Vector3& value)
 {
   m_stripCenterDistance[idx] = value;
 }
 
-void SpacePointData::setTopStripCenterPosition(std::size_t idx, 
-					       const Acts::Vector3& value)
+inline void SpacePointData::setTopStripCenterPosition(std::size_t idx, 
+						      const Acts::Vector3& value)
 { 
   m_topStripCenterPosition[idx] = value;
 }

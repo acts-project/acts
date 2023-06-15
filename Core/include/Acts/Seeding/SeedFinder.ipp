@@ -135,7 +135,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     // Iterate over middle-top dublets
     getCompatibleDoublets<Acts::SpacePointCandidateType::eTop>(
-        options, grid, state.topNeighbours, *spM.get(),
+        options, grid, state.topNeighbours, *spM,
         state.linCircleTop, state.compatTopSP, m_config.deltaRMinTopSP,
         m_config.deltaRMaxTopSP, uIP, uIP2, cosPhiM, sinPhiM);
 
@@ -168,7 +168,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     // Iterate over middle-bottom dublets
     getCompatibleDoublets<Acts::SpacePointCandidateType::eBottom>(
-        options, grid, state.bottomNeighbours, *spM.get(),
+        options, grid, state.bottomNeighbours, *spM,
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
         m_config.deltaRMaxBottomSP, uIP, uIP2, cosPhiM, sinPhiM);
 
@@ -338,9 +338,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         // fill output vectors
         linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                   yNewFrame);
-        spacePointData.setDeltaR(otherSP->index(),
-                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-        outVec.push_back(otherSP.get());
+        otherSP->setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+        outVec.push_back(otherSP);
         continue;
       }
 
@@ -379,9 +378,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         // fill output vectors
         linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                   yNewFrame);
-        spacePointData.setDeltaR(otherSP->index(),
-                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-        outVec.emplace_back(otherSP.get());
+	otherSP->setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+        outVec.emplace_back(otherSP);
         continue;
       }
 
@@ -420,9 +418,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // fill output vectors
       linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT, xNewFrame,
                                 yNewFrame);
-      spacePointData.setDeltaR(otherSP->index(),
-                               std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-      outVec.emplace_back(otherSP.get());
+      otherSP->setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+      outVec.emplace_back(otherSP);
     }
   }
 }

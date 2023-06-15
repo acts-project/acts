@@ -17,7 +17,6 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/EventData/SpacePointContainer.hpp"
-#include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/EventData/Track.hpp"
