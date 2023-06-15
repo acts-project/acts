@@ -88,8 +88,8 @@ def evaluate_version_bump(
         try:
             message = commit_parser(commit.message)
             changes.append(message.bump)
-        except UnknownCommitMessageStyleError as err:
-            pass
+        except UnknownCommitMessageStyleError:
+            print("Unknown commit message style!")
 
     if changes:
         level = max(changes)
@@ -126,8 +126,8 @@ def generate_changelog(commits, commit_parser=_default_parser) -> dict:
                     (commit.sha, message.descriptions[0], commit.author)
                 )
 
-        except UnknownCommitMessageStyleError as err:
-            pass
+        except UnknownCommitMessageStyleError:
+            print("Unknown commit message style!")
 
     return changes
 
@@ -193,7 +193,7 @@ async def get_parsed_commit_range(
             try:
                 _default_parser(commit_message)
                 # if this succeeds, do nothing
-            except UnknownCommitMessageStyleError as err:
+            except UnknownCommitMessageStyleError:
                 print("Unknown commit message style!")
                 if not commit_message.startswith("Merge"):
                     invalid_message = True
@@ -291,7 +291,7 @@ async def make_release(
                     await gh.getitem(url)
                     commit_ok = True
                     break
-                except InvalidField as e:
+                except InvalidField:
                     print("Commit", target_hash[:8], "not received yet")
                     pass  # this is what we want
                 await asyncio.sleep(RETRY_INTERVAL)
