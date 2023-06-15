@@ -8,26 +8,39 @@
 
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <ios>
 #include <limits>
+#include <memory>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>
+
+namespace ActsExamples {
+class IndexSourceLink;
+}  // namespace ActsExamples
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;

@@ -8,18 +8,17 @@
 
 #include "ActsExamples/Io/Csv/CsvTrackParameterReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <fstream>
-#include <ios>
+#include <algorithm>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 

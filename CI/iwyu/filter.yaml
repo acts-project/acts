@@ -10,6 +10,8 @@ remove_lines:
   - "^(- )?#include <boost/"
   # don remove ipp
   - "^- #include [<\"].*\\.ipp"
+  # ignore pybind11
+  - "^(- )?#include <pybind11/"
 
 replace_lines:
   - "^#include <assert\\.h>": "#include <cassert>"

@@ -8,6 +8,8 @@
 
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 
+#include <cmath>
+
 namespace ActsExamples {
 
 namespace Generic {

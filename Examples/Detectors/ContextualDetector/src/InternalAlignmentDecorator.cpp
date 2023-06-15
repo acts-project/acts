@@ -8,10 +8,15 @@
 
 #include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 
-#include <Acts/Geometry/TrackingGeometry.hpp>
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 
-#include <random>
+#include <ostream>
 #include <thread>
+#include <utility>
 
 ActsExamples::Contextual::InternalAlignmentDecorator::
     InternalAlignmentDecorator(const Config& cfg,

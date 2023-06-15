@@ -10,20 +10,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
-#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
-#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Utilities/detail/Grid.hpp"
 
-#include <limits>
-#include <random>
+#include <array>
+#include <cstddef>
 #include <vector>
 
 namespace bdata = boost::unit_test::data;

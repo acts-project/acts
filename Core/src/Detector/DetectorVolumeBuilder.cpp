@@ -9,8 +9,17 @@
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 
 #include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
+#include <iterator>
+#include <map>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 Acts::Experimental::DetectorVolumeBuilder::DetectorVolumeBuilder(
     const Acts::Experimental::DetectorVolumeBuilder::Config& cfg,

@@ -8,14 +8,15 @@
 
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 
-#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <cmath>
 #include <cstdint>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 ActsExamples::TrackParameterSelector::TrackParameterSelector(

@@ -16,6 +16,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <vector>

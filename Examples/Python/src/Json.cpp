@@ -6,20 +6,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
-#include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 
 #include <fstream>
+#include <initializer_list>
 #include <memory>
 #include <string>
+#include <tuple>
+#include <vector>
 
+#include <nlohmann/json.hpp>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
+namespace ActsExamples {
+class IMaterialWriter;
+class IWriter;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;

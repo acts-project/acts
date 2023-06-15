@@ -11,21 +11,43 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicBVHTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <cstddef>
+#include <iostream>
+#include <map>
 #include <memory>
+#include <string>
+#include <system_error>
+#include <tuple>
+#include <utility>
+
+namespace Acts {
+class Layer;
+struct FreeToBoundCorrection;
+}  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

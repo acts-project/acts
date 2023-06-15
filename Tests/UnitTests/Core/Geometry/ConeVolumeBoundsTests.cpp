@@ -11,9 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
+
+#include <cmath>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace tt = boost::test_tools;
 

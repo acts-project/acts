@@ -8,18 +8,32 @@
 
 #include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 
+#include "Acts/Geometry/AbstractVolume.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/ITrackingVolumeHelper.hpp"
+#include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 
-#include <functional>
+#include <cstddef>
+#include <optional>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 
 Acts::KDTreeTrackingGeometryBuilder::KDTreeTrackingGeometryBuilder(
     const Acts::KDTreeTrackingGeometryBuilder::Config& cfg,

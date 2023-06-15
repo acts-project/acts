@@ -8,23 +8,23 @@
 
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <cstddef>
 #include <ios>
-#include <optional>
 #include <stdexcept>
+#include <utility>
+#include <variant>
 
 #include <TFile.h>
-#include <TString.h>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
     const ActsExamples::RootMeasurementWriter::Config& config,

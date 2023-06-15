@@ -11,10 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
 #include <fstream>
 #include <mutex>
 #include <random>
+#include <stdexcept>
+#include <string>
+#include <tuple>
 
 #include <boost/container/static_vector.hpp>
 
