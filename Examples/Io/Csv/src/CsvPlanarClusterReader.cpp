@@ -123,10 +123,10 @@ std::vector<ActsExamples::HitData> readHitsByGeometryId(
   return hits;
 }
 
-std::vector<ActsExamples::CellData> readCellsByHitId(
+std::vector<ActsExamples::CellDataLegacy> readCellsByHitId(
     const std::string& inputDir, size_t event) {
   // timestamp is an optional element
-  auto cells = readEverything<ActsExamples::CellData>(inputDir, "cells.csv",
+  auto cells = readEverything<ActsExamples::CellDataLegacy>(inputDir, "cells.csv",
                                                       {"timestamp"}, event);
   // sort for fast hit id look up
   std::sort(cells.begin(), cells.end(), CompareHitId{});

@@ -107,16 +107,6 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
   return measurements;
 }
 
-std::vector<ActsExamples::CellData> readCellsByHitId(
-    const std::string& inputDir, size_t event) {
-  // timestamp is an optional element
-  auto cells = readEverything<ActsExamples::CellData>(inputDir, "cells.csv",
-                                                      {"timestamp"}, event);
-  // sort for fast hit id look up
-  std::sort(cells.begin(), cells.end(), CompareHitId{});
-  return cells;
-}
-
 }  // namespace
 
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
@@ -133,7 +123,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   std::vector<ActsExamples::CellData> cellData = {};
   if (not m_cfg.outputClusters.empty()) {
-    cellData = readCellsByHitId(m_cfg.inputDir, ctx.eventNumber);
+    cellData = readEverything<ActsExamples::CellData>(
+        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
   }
 
   // Prepare containers for the hit data using the framework event data types
@@ -194,8 +185,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
     // The measurement container is unordered and the index under which
     // the measurement will be stored is known before adding it.
-    Index hitIdx = orderedMeasurements.size();
-    IndexSourceLink& sourceLink = sourceLinkStorage.emplace_back(geoId, hitIdx);
+    const Index index = orderedMeasurements.size();
+    IndexSourceLink& sourceLink = sourceLinkStorage.emplace_back(geoId, index);
     auto measurement = createMeasurement(dParameters, sourceLink);
 
     // Due to the previous sorting of the raw hit data by geometry id, new
@@ -210,6 +201,41 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     }
 
     sourceLinks.insert(sourceLinks.end(), std::cref(sourceLink));
+
+    // Get all cell data for this measurment
+    std::vector<ActsExamples::CellData> thisCellData;
+    std::copy_if(cellData.begin(), cellData.end(), thisCellData.begin(),
+                 [&](const auto& cd) { return cd.measurement_id == index; });
+
+    // Fill the channels
+    Cluster cluster;
+    cluster.channels.reserve(thisCellData.size());
+    for (const auto& cd : thisCellData) {
+      ActsFatras::Channelizer::Segment2D dummySegment;
+      ActsFatras::Channelizer::Bin2D bin{
+          static_cast<unsigned int>(cd.channel0),
+          static_cast<unsigned int>(cd.channel1)};
+      cluster.channels.emplace_back(bin, dummySegment, cd.value);
+    }
+
+    // Compute cluster size
+    if (not cluster.channels.empty()) {
+      auto compareX = [](const auto& a, const auto& b) {
+        return a.bin[0] < b.bin[0];
+      };
+      auto compareY = [](const auto& a, const auto& b) {
+        return a.bin[1] < b.bin[1];
+      };
+
+      auto [minX, maxX] = std::minmax_element(cluster.channels.begin(),
+                                              cluster.channels.end(), compareX);
+      auto [minY, maxY] = std::minmax_element(cluster.channels.begin(),
+                                              cluster.channels.end(), compareY);
+      cluster.sizeLoc0 = maxX->bin[0] - minX->bin[0];
+      cluster.sizeLoc1 = maxY->bin[1] - minY->bin[1];
+    }
+
+    clusters.push_back(cluster);
   }
 
   MeasurementContainer measurements;
