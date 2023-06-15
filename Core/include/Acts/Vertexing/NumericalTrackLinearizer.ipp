@@ -83,8 +83,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   }
 
   // Complete Jacobian (consists of positionJacobian and momentumJacobian)
-  ActsMatrix<eBoundSize, nParams> completeJacobian;
-  completeJacobian.setZero();
+  auto completeJacobian = ActsMatrix<eBoundSize, nParams>::Zero();
 
   // Perigee parameters wrt linPoint after wiggling
   BoundVector newPerigeeParams;
