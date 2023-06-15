@@ -307,6 +307,14 @@ class TrackStateProxy {
     return component<IndexType, hashString("previous")>();
   }
 
+  /// Return a mutable reference to the index of the track state 'previous' in
+  /// the track sequence
+  /// @return The index of the previous track state.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  IndexType& previous() {
+    return component<IndexType, hashString("previous")>();
+  }
+
   /// Return whather this track state has a previous (parent) track state.
   /// @return Boolean indicating whether a previous track state exists
   bool hasPrevious() const {
