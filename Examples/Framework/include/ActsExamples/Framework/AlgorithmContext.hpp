@@ -13,7 +13,6 @@
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 #include <Acts/Utilities/CalibrationContext.hpp>
 
-#include <functional>
 #include <memory>
 
 namespace ActsExamples {

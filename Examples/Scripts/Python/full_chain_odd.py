@@ -64,7 +64,6 @@ detector, trackingGeometry, decorators = getOpenDataDetector(
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-# TODO Geant4 currently crashes with FPE monitoring
 s = acts.examples.Sequencer(
     events=args["events"],
     numThreads=1,
