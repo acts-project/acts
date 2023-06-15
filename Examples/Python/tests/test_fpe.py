@@ -232,7 +232,12 @@ def test_fpe_masking_single(fpe_type):
 
 def test_masking_load_yaml(fpe_type, tmp_path, monkeypatch):
     def eq(self, other):
-        return self.loc == other.loc and self.type == other.type and self.count == other.count
+        return (
+            self.loc == other.loc
+            and self.type == other.type
+            and self.count == other.count
+        )
+
     monkeypatch.setattr(acts.examples.Sequencer.FpeMask, "__eq__", eq)
 
     import yaml
@@ -247,6 +252,7 @@ def test_masking_load_yaml(fpe_type, tmp_path, monkeypatch):
     masks2 = acts.examples.Sequencer.FpeMask.fromFile(file)
 
     assert masks2 == masks
+
 
 def test_fpe_context(fpe_type):
     trigger = getattr(acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
