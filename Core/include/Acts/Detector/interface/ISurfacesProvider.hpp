@@ -21,7 +21,7 @@ namespace Experimental {
 
 /// @brief This is the interface for providing surfaces
 /// to the detector building process. These surfaces manly
-/// describe the sensistive detector surfaces, but also passive
+/// describe the sensitive detector surfaces, but also passive
 /// (i.e. material carrying) surfaces are considered.
 ///
 /// These could be prefilled, or created on demand when
@@ -30,7 +30,7 @@ class ISurfacesProvider {
  public:
   virtual ~ISurfacesProvider() = default;
 
-  /// The virtual interface definition for detetor surface providers
+  /// The virtual interface definition for detector surface providers
   ///
   /// @param gctx the geometry context at the creation of the internal structure
   ///

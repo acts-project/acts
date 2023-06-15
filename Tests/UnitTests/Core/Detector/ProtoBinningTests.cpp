@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,16 +16,16 @@ using namespace Acts::Experimental;
 BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(ProtoBinningEquidistant) {
-  // An invalid binning
+  // An invalid binning, 0 bins given
   BOOST_CHECK_THROW(
       ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, 15., 20.,
                    0),
       std::invalid_argument);
 
-  // Another invalid binning
+  // Another invalid binning, min/max swapped
   BOOST_CHECK_THROW(
       ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, 150., 20.,
-                   0),
+                   10),
       std::invalid_argument);
 
   // A valid binning
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(ProtoBinningEquidistant) {
 }
 
 BOOST_AUTO_TEST_CASE(ProtoBinningVariable) {
-  // An invalid binning
+  // An invalid binning, edge size < 2u
   BOOST_CHECK_THROW(
       ProtoBinning(Acts::binX, Acts::detail::AxisBoundaryType::Bound, {12.}),
       std::invalid_argument);

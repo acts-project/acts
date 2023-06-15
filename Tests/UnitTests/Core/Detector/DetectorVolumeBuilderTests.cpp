@@ -56,7 +56,7 @@ class ExternalsBuilder : public IExternalStructureBuilder {
 
 /// @brief  Mockup internal surface builder
 /// @tparam surface_type the surface type to be constructed
-/// @tparam bounds_type the bounds type that is contructed
+/// @tparam bounds_type the bounds type that is constructed
 template <typename surface_type, typename bounds_type>
 class InternalSurfaceBuilder : public IInternalStructureBuilder {
  public:
@@ -79,7 +79,7 @@ class InternalSurfaceBuilder : public IInternalStructureBuilder {
 
 /// @brief  Mockup internal surface builder
 /// @tparam surface_type the surface type to be constructed
-/// @tparam bounds_type the bounds type that is contructed
+/// @tparam bounds_type the bounds type that is constructed
 template <typename bounds_type>
 class InternalVolumeBuilder : public IInternalStructureBuilder {
  public:

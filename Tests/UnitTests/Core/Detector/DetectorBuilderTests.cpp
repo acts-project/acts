@@ -28,7 +28,7 @@ class CompBuilder : public Acts::Experimental::IDetectorComponentBuilder {
   Acts::Experimental::DetectorComponent construct(
       const Acts::GeometryContext& gctx) const final {
     auto bounds = std::make_unique<Acts::CuboidVolumeBounds>(10., 10., 10.);
-    // Contruct the DetectorVolume
+    // Construct the DetectorVolume
     auto dVolume = Acts::Experimental::DetectorVolumeFactory::construct(
         Acts::Experimental::defaultPortalGenerator(), gctx, "TestVolume",
         Acts::Transform3::Identity(), std::move(bounds),

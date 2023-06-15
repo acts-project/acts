@@ -18,8 +18,8 @@
 namespace Acts {
 namespace Experimental {
 
-/// @brief Standard generaic Detector builer that calls
-/// the top level component buiilder and transfers the
+/// @brief Standard generic Detector builder that calls
+/// the top level component builder and transfers the
 /// result into a detector object
 ///
 /// @note This is the last builder in the chain and the

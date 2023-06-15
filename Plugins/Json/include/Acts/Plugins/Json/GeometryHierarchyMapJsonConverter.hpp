@@ -65,7 +65,7 @@ class GeometryHierarchyMapJsonConverter {
   Container fromJson(const nlohmann::json& encoded) const;
 
   /// Encode the geometry identifier
-  /// @param id is the geometry identifier that fill be encoded
+  /// @param id is the geometry identifier that will be encoded
   static nlohmann::json encodeIdentifier(const GeometryIdentifier& id) {
     nlohmann::json encoded;
     // only store non-zero identifiers
@@ -91,7 +91,7 @@ class GeometryHierarchyMapJsonConverter {
   }
 
   /// @brief  Decode a geometry identifier from a json object
-  /// @param encoded is the json objected that carries the encoded identifier
+  /// @param encoded is the json object that carries the encoded identifier
   /// @return a valid geometry Identifier
   static GeometryIdentifier decodeIdentifier(const nlohmann::json& encoded) {
     return GeometryIdentifier()
