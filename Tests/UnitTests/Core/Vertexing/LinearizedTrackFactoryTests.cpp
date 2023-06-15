@@ -70,16 +70,16 @@ std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 /// @brief Test HelicalTrackLinearizer by comparing it to NumericalTrackLinearizer.
 ///
 /// @note While HelicalTrackLinearizer computes the Jacobians using analytically derived formulae,
-/// NumericalTrackLinearizer uses numerical differentiation: f'(x) ~ (f(x+dx) -
-/// f(x)) / dx).
+/// NumericalTrackLinearizer uses numerical differentiation:
+/// f'(x) ~ (f(x+dx) - f(x)) / dx).
 ///
 BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Number of tracks to linearize
-  unsigned int nTracks{100};
+  unsigned int nTracks = 100;
 
   // Set up RNG
-  int mySeed{31415};
-  std::mt19937 gen(mySeed);
+  int seed = 31415;
+  std::mt19937 gen(seed);
 
   // Constant B-Field and 0 B-field
   auto constField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 2_T});
