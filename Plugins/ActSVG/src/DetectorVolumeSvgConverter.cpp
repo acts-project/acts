@@ -11,7 +11,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Plugins/ActSVG/SurfaceGridSvgConverter.hpp"
+#include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -58,14 +58,7 @@ Acts::Svg::ProtoVolume Acts::Svg::DetectorVolumeConverter::convert(
     pVolume._portals.push_back(pPortal);
   }
 
-  SurfaceGridConverter::Options sgOptions;
-  auto [surfaces, grid, associations] =
-      SurfaceGridConverter::convert(gctx, dVolume, sgOptions);
-  pVolume._surfaces = surfaces;
-  pVolume._surface_grid = grid;
-  pVolume._grid_associations = associations;
-
-  // Adding the surfaces
+  // Adding the surfaces to the volume 
   std::vector<ProtoSurface> pSurfaces;
   for (auto [is, s] : enumerate(dVolume.surfaces())) {
     auto pSurface =
@@ -75,10 +68,17 @@ Acts::Svg::ProtoVolume Acts::Svg::DetectorVolumeConverter::convert(
   }
   pVolume._v_surfaces = pSurfaces;
 
+  // Make dedicated surface grid sheets
+  const auto& internalNavigationDelegate = dVolume.surfaceCandidatesUpdator();
+  IndexedSurfacesConverter::Options isOptions;
+  auto protoSurfaceGrid = IndexedSurfacesConverter::convert(
+      gctx, dVolume.surfaces(), internalNavigationDelegate, isOptions);
+
   return pVolume;
 }
 
-std::array<actsvg::svg::object, 2u> Acts::Svg::View::layer(const ProtoVolume& volume) {
+std::array<actsvg::svg::object, 2u> Acts::Svg::View::layer(
+    const ProtoVolume& volume) {
   // The sheets
   actsvg::svg::object module_sheet;
   actsvg::svg::object grid_sheet;
