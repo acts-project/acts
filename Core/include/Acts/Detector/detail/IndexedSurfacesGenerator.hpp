@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <algorithm>
@@ -59,7 +59,7 @@ struct IndexedSurfacesGenerator {
   /// @param rGenerator the reference generataor
   ///
   /// @return a SurfaceCandidateUpdator delegate
-  template <typename axis_generator, typename reference_generator>
+  template <typename axis_generator, typename reference_generator, template<typename> class IndexedGridSurfacesUpdator>
   SurfaceCandidatesUpdator operator()(
       const GeometryContext& gctx, const axis_generator& aGenerator,
       const reference_generator& rGenerator) const {
@@ -70,22 +70,26 @@ struct IndexedSurfacesGenerator {
         typename axis_generator::template grid_type<std::vector<std::size_t>>;
     GridType grid(std::move(aGenerator()));
 
+
     std::array<BinningValue, decltype(grid)::DIM> bvArray = {};
     for (auto [ibv, bv] : enumerate(bValues)) {
       bvArray[ibv] = bv;
     }
 
     // The indexed surfaces delegate
-    IndexedSurfacesImpl<GridType> indexedSurfaces(std::move(grid), bvArray,
-                                                  transform);
+    //IndexedSurfacesImpl<GridType> indexedSurfaces(std::move(grid), bvArray,
+                                                  //transform);
+    IndexedGridSurfacesUpdator<GridType> indexedSurfaces(std::move(grid), bvArray, 
+                                                         transform);
 
     // Fill the bin indicies
     IndexedGridFiller filler{binExpansion};
     filler.oLogger = oLogger->cloneWithSuffix("_filler");
     filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
 
-    // The portal delegate
+     // The portal delegate
     AllPortalsImpl allPortals;
+
 
     // The chained delegate: indexed surfaces and all portals
     using DelegateType = IndexedSurfacesAllPortalsImpl<decltype(grid)>;
