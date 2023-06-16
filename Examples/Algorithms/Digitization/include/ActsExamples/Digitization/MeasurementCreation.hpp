@@ -44,7 +44,7 @@ struct DigitizedParameters {
 Measurement createMeasurement(const DigitizedParameters& dParams,
                               const IndexSourceLink& isl) noexcept(false);
 
-/// Contruct the constituents of a measurement.
+/// Construct the constituents of a measurement.
 ///
 /// @tparam kMeasDIM the full dimension of the measurement
 ///
