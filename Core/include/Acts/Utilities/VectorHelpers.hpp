@@ -19,7 +19,7 @@
 #include "Eigen/Dense"
 
 namespace Acts {
-namespace VectorHelpersModified {
+namespace VectorHelpers {
 
 namespace detail {
 template <class T>
