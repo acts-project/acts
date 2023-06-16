@@ -18,7 +18,8 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/SurfaceCandidatesDelegates.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <stdexcept>
@@ -30,9 +31,11 @@ class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
     auto bounds = std::make_unique<Acts::CuboidVolumeBounds>(10., 10., 10.);
     // Construct the DetectorVolume
     auto dVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-        Acts::Experimental::defaultPortalGenerator(), gctx, "TestVolume",
-        Acts::Transform3::Identity(), std::move(bounds),
-        Acts::Experimental::tryAllPortals());
+        Acts::Experimental::makePortalGenerator<
+            const Acts::Experimental::DefaultPortalGenerator>(),
+        gctx, "TestVolume", Acts::Transform3::Identity(), std::move(bounds),
+        Acts::Experimental::makeSurfaceCandidatesDelegate<
+            const Acts::Experimental::AllPortals>());
 
     // Fill the portal container
     Acts::Experimental::DetectorComponent::PortalContainer portalContainer;
@@ -43,7 +46,9 @@ class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
     return Acts::Experimental::DetectorComponent{
         {dVolume},
         portalContainer,
-        {{dVolume}, Acts::Experimental::tryRootVolumes()}};
+        {{dVolume},
+         Acts::Experimental::makeDetectorVolumeFinder<
+             const Acts::Experimental::RootVolumeFinder>()}};
   }
 };
 

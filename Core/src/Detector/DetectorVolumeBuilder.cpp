@@ -89,5 +89,5 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
       {dVolume},
       portalContainer,
       RootDetectorVolumes{rootVolumes,
-                          makeDetectorVolumeFinder<RootVolumeFinder>()}};
+                          makeDetectorVolumeFinder<const RootVolumeFinder>()}};
 }

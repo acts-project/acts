@@ -82,7 +82,8 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
     return DetectorComponent{
         {volume},
         dContainer,
-        RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
+        RootDetectorVolumes{
+            rootVolumes, makeDetectorVolumeFinder<const RootVolumeFinder>()}};
   }
 
  private:

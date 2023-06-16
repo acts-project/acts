@@ -110,7 +110,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
   /// Update the volume finder
   ///
-  /// @param detectorVolumeUpdator the new volume finder
+  /// @param detectorVolumeFinder the new volume finder
   void updateDetectorVolumeFinder(DetectorVolumeFinder detectorVolumeFinder);
 
   /// Const access to the volume finder

@@ -11,6 +11,7 @@
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 
 #include <algorithm>
 #include <ostream>
@@ -154,5 +155,8 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   }
   // Return the container
   return Acts::Experimental::DetectorComponent{
-      {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
+      {},
+      rContainer,
+      RootDetectorVolumes{rootVolumes,
+                          makeDetectorVolumeFinder<const RootVolumeFinder>()}};
 }

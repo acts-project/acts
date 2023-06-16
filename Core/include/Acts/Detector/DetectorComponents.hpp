@@ -38,7 +38,7 @@ struct RootDetectorVolumes {
   /// The list of root volumes
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// The Root volumes finder
-  DetectorVolumeUpdator volumeFinder;
+  DetectorVolumeFinder volumeFinder;
 };
 
 /// @brief The currently built detector components

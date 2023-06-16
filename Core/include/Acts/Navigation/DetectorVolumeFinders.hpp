@@ -108,7 +108,7 @@ struct SingleDetectorVolume final : public IDetectorVolumeFinder {
       : dVolume(sVolume) {
     if (sVolume == nullptr) {
       throw std::invalid_argument(
-          "DetectorVolumeUpdators: nullptr provided, use EndOfWorld instead.");
+          "DetectorVolumeFinders: nullptr provided, use EndOfWorld instead.");
     }
   }
 
@@ -152,7 +152,7 @@ struct BoundVolumesGrid1 final : public IDetectorVolumeFinder {
 
     if (gBoundaries.size() != cVolumes.size() + 1u) {
       throw std::invalid_argument(
-          "DetectorVolumeUpdators: mismatching boundaries and volume numbers");
+          "DetectorVolumeFinders: mismatching boundaries and volume numbers");
     }
     // Initialize the grid entries
     for (std::size_t ib = 1u; ib < gBoundaries.size(); ++ib) {

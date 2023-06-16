@@ -37,15 +37,15 @@ using PortalReplacement =
 namespace detail {
 namespace PortalHelper {
 
-/// @brief Create and attach the multi link updator, the portal will get
-/// a volume updator attached, that points to the different sub volumes
+/// @brief Create and attach the multi link finder, the portal will get
+/// a volume finder attached, that points to the different sub volumes
 /// depending on the global position and binning
 ///
 /// @param gctx the geometry context
 /// @param volumes are the volumes that are pointed to
 /// @param pReplacements are the portal replacements that are newly connected
 ///
-void attachDetectorVolumeUpdators(
+void attachDetectorVolumeFinders(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     std::vector<PortalReplacement>& pReplacements);

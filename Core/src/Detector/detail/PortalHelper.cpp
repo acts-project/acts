@@ -18,7 +18,7 @@
 #include <stdexcept>
 #include <utility>
 
-void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
+void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeFinders(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     std::vector<PortalReplacement>& pReplacements) {
