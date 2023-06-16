@@ -31,13 +31,12 @@ namespace Test {
 using Covariance = BoundSymMatrix;
 // We will compare analytical and numerical computations in the case of a
 // (non-zero) constant B-field and a zero B-field.
-using AnalyticalLinearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
-using AnalyticalLinearizerStraightLine =
-    HelicalTrackLinearizer<Propagator<StraightLineStepper>>;
-using NumericalLinearizer =
-    NumericalTrackLinearizer<Propagator<EigenStepper<>>>;
-using NumericalLinearizerStraightLine =
-    NumericalTrackLinearizer<Propagator<StraightLineStepper>>;
+using HelicalPropagator = Propagator<EigenStepper<>>;
+using StraightPropagator = Propagator<StraightLineStepper>;
+using AnalyticalLinearizer = HelicalTrackLinearizer<HelicalPropagator>;
+using StraightAnalyticalLinearizer = HelicalTrackLinearizer<StraightPropagator>;
+using NumericalLinearizer = NumericalTrackLinearizer<HelicalPropagator>;
+using StraightNumericalLinearizer = NumericalTrackLinearizer<StraightPropagator>;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -87,12 +86,11 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Set up stepper and propagator for constant B-field
   EigenStepper<> stepper(constField);
-  auto propagator = std::make_shared<Propagator<EigenStepper<>>>(stepper);
+  auto propagator = std::make_shared<HelicalPropagator>(stepper);
 
   // Set up stepper and propagator for 0 B-field
   StraightLineStepper straightStepper;
-  auto straightPropagator =
-      std::make_shared<Propagator<StraightLineStepper>>(straightStepper);
+  auto straightPropagator = std::make_shared<StraightPropagator>(straightStepper);
 
   // Create perigee surface, initial track parameters will be relative to it
   std::shared_ptr<PerigeeSurface> perigeeSurface{
@@ -153,16 +151,16 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
       constField->makeCache(magFieldContext));
 
   // Linearizer for 0 field and corresponding state
-  AnalyticalLinearizerStraightLine::Config straightLinConfig(
+  StraightAnalyticalLinearizer::Config straightLinConfig(
       straightPropagator);
-  AnalyticalLinearizerStraightLine straightLinFactory(straightLinConfig);
-  AnalyticalLinearizerStraightLine::State straightLinState(
+  StraightAnalyticalLinearizer straightLinFactory(straightLinConfig);
+  StraightAnalyticalLinearizer::State straightLinState(
       zeroField->makeCache(magFieldContext));
 
-  NumericalLinearizerStraightLine::Config numStraightLinConfig(
+  StraightNumericalLinearizer::Config numStraightLinConfig(
       straightPropagator);
-  NumericalLinearizerStraightLine numStraightLinFactory(numStraightLinConfig);
-  NumericalLinearizerStraightLine::State numStraightLinState(
+  StraightNumericalLinearizer numStraightLinFactory(numStraightLinConfig);
+  StraightNumericalLinearizer::State numStraightLinState(
       zeroField->makeCache(magFieldContext));
 
   // Lambda for comparing outputs of the two linearization methods
