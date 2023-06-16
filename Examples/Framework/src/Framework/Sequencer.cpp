@@ -117,6 +117,14 @@ Sequencer::Sequencer(const Sequencer::Config& cfg)
     ACTS_INFO("Create Sequencer with " << m_cfg.numThreads << " threads");
   }
 #endif
+
+  const char* envvar = std::getenv("ACTS_SEQUENCER_DISABLE_FPEMON");
+  if (envvar != nullptr) {
+    ACTS_INFO(
+        "Overriding FPE tracking Sequencer based on environment variable "
+        "ACTS_SEQUENCER_DISABLE_FPEMON");
+    m_cfg.trackFpes = false;
+  }
 }
 
 void Sequencer::addContextDecorator(
