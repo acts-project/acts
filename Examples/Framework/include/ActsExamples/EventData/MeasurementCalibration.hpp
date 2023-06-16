@@ -11,11 +11,16 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include <ActsExamples/EventData/Measurement.hpp>
 
 #include <cassert>
+
+namespace Acts {
+class VectorMultiTrajectory;
+}  // namespace Acts
 
 namespace ActsExamples {
 

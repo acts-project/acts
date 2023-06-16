@@ -9,10 +9,12 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
+
+#include <algorithm>
+#include <stdexcept>
 
 auto ActsExamples::Telescope::TelescopeDetector::finalize(
     const Config& cfg, const std::shared_ptr<const Acts::IMaterialDecorator>&

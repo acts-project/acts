@@ -7,17 +7,34 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <pybind11/functional.h>
+#include <array>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -81,17 +98,18 @@ void addUnits(Context& ctx);
 void addLogging(Context& ctx);
 void addPdgParticle(Context& ctx);
 void addAlgebra(Context& ctx);
+void addBinning(Context& ctx);
 
 void addPropagation(Context& ctx);
 
 void addGeometry(Context& ctx);
+void addExperimentalGeometry(Context& ctx);
 
 void addMagneticField(Context& ctx);
 
 void addMaterial(Context& ctx);
 void addOutput(Context& ctx);
 void addDetector(Context& ctx);
-void addDetectorInspectors(Context& ctx);
 void addExampleAlgorithms(Context& ctx);
 void addInput(Context& ctx);
 void addGenerators(Context& ctx);
@@ -147,7 +165,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
            py::arg("level"), py::arg("name") = "WhiteBoard")
       .def("exists", &WhiteBoard::exists);
 
-  py::class_<Acts::GeometryContext>(m, "GeometryContext");
+  py::class_<Acts::GeometryContext>(m, "GeometryContext").def(py::init<>());
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<size_t, size_t, WhiteBoard&>())
@@ -258,14 +276,16 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addLogging(ctx);
   addPdgParticle(ctx);
   addAlgebra(ctx);
+  addBinning(ctx);
 
   addPropagation(ctx);
   addGeometry(ctx);
+  addExperimentalGeometry(ctx);
+
   addMagneticField(ctx);
   addMaterial(ctx);
   addOutput(ctx);
   addDetector(ctx);
-  addDetectorInspectors(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);
   addGenerators(ctx);

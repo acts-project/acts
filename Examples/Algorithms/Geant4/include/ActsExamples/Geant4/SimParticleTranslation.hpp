@@ -12,6 +12,7 @@
 #include "ActsExamples/Geant4/EventStore.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 
 #include <G4VUserPrimaryGeneratorAction.hh>

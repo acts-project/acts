@@ -8,8 +8,12 @@
 
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
@@ -23,14 +27,34 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4/SteppingActionList.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
+#include <cassert>
+#include <cstddef>
+#include <iostream>
+#include <map>
 #include <stdexcept>
+#include <utility>
 
 #include <G4FieldManager.hh>
 #include <G4RunManager.hh>
+<<<<<<< HEAD
+=======
+#include <G4TransportationManager.hh>
+#include <G4UniformMagField.hh>
+#include <G4UserEventAction.hh>
+#include <G4UserLimits.hh>
+#include <G4UserRunAction.hh>
+#include <G4UserSteppingAction.hh>
+#include <G4UserTrackingAction.hh>
+#include <G4VUserDetectorConstruction.hh>
+#include <G4VUserPhysicsList.hh>
+#include <G4Version.hh>
+#include <Randomize.hh>
+    >>>>>>> 1e58c70963a546efcddfe52ac16dc6ac74b6923c
 
-ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
-    const Config& cfg, std::string name, Acts::Logging::Level level)
+    ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
+        const Config& cfg, std::string name, Acts::Logging::Level level)
     : IAlgorithm(std::move(name), level) {
   if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");

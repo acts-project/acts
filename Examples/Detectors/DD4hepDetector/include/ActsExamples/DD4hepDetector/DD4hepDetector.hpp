@@ -11,7 +11,12 @@
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
 #include <memory>
+#include <utility>
 #include <vector>
+
+namespace dd4hep {
+class Detector;
+}  // namespace dd4hep
 
 namespace Acts {
 class TrackingGeometry;

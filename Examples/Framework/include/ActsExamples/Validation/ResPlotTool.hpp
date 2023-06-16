@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Utilities/Helpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -16,6 +17,13 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
+
+class TH1F;
+class TH2F;
+namespace ActsFatras {
+class Particle;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
 

@@ -8,9 +8,11 @@
 
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 
-#include <memory>
+#include <utility>
 
 #include <G4GDMLParser.hh>
+
+class G4VPhysicalVolume;
 
 using namespace ActsExamples;
 

@@ -13,11 +13,14 @@
 #include <memory>
 #include <stdexcept>
 
+#include <DD4hep/DetElement.h>
 #include <DD4hep/Detector.h>
-#include <DD4hep/Plugins.h>
-#include <DD4hep/Printout.h>
 #include <DDG4/Geant4Converter.h>
 #include <DDG4/Geant4GeometryInfo.h>
+#include <DDG4/Geant4Mapping.h>
+#include <Parsers/Printout.h>
+
+class G4VPhysicalVolume;
 
 ActsExamples::DDG4DetectorConstruction::DDG4DetectorConstruction(
     std::shared_ptr<DD4hep::DD4hepDetector> detector)

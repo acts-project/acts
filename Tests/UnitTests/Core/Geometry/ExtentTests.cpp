@@ -14,8 +14,12 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <iostream>
+#include <array>
+#include <cmath>
+#include <string>
+#include <vector>
 
 namespace Acts {
 

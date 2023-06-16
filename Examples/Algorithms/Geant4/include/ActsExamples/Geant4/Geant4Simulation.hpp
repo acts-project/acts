@@ -17,8 +17,10 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 class G4RunManager;
 class G4VUserPrimaryGeneratorAction;
@@ -36,6 +38,8 @@ class TrackingGeometry;
 class MagneticFieldProvider;
 class Volume;
 }  // namespace Acts
+
+class G4VUserDetectorConstruction;
 
 namespace ActsExamples {
 

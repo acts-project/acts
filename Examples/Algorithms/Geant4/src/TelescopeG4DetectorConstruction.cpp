@@ -8,11 +8,16 @@
 
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstddef>
 #include <memory>
+#include <string>
+#include <vector>
 
 #include "G4Box.hh"
 #include "G4Cons.hh"
@@ -24,7 +29,6 @@
 #include "G4Sphere.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4Trd.hh"
-#include "globals.hh"
 
 ActsExamples::Telescope::TelescopeG4DetectorConstruction::
     TelescopeG4DetectorConstruction(const TelescopeDetector::Config& cfg)

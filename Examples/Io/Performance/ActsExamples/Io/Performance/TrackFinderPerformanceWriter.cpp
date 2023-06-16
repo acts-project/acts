@@ -9,20 +9,25 @@
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <mutex>
+#include <stdexcept>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include <RtypesCore.h>
 #include <TFile.h>
 #include <TTree.h>
 

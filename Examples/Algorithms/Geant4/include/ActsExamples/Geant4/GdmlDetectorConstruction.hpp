@@ -10,7 +10,11 @@
 
 #include "ActsExamples/Geant4/DetectorConstructionFactory.hpp"
 
+#include <string>
+
 #include <G4VUserDetectorConstruction.hh>
+
+class G4VPhysicalVolume;
 
 namespace ActsExamples {
 

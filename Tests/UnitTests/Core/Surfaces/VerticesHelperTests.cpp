@@ -12,10 +12,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
-#include <limits>
+#include <vector>
 
 #include <Eigen/Geometry>
 

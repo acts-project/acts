@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -16,8 +17,8 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <cmath>
-#include <iomanip>
-#include <iostream>
+#include <cstddef>
+#include <utility>
 
 Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(double minhalex,
                                                    double maxhalex,

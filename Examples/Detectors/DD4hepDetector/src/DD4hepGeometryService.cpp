@@ -8,19 +8,20 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
-#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
-#include "Acts/Geometry/CylinderVolumeHelper.hpp"
-#include "Acts/Geometry/LayerArrayCreator.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <stdexcept>
+#include <utility>
 
-#include "DD4hep/Printout.h"
+#include <DD4hep/Detector.h>
+#include <DD4hep/Handle.h>
+#include <DD4hep/Volumes.h>
+#include <Parsers/Printout.h>
+
+class TGeoNode;
 
 ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
     const ActsExamples::DD4hep::DD4hepGeometryService::Config& cfg)
