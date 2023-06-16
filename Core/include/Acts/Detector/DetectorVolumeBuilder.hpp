@@ -67,7 +67,7 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   /// configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// logging instance

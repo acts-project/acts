@@ -26,7 +26,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   ///
   /// @param extent The test extent for finding the cluster
   ///
-  /// @return the referece of the SurfaceCluster for insertion
+  /// @return the reference of the SurfaceCluster for insertion
   auto findCluster = [&](const Extent& extent) -> SurfaceCluster& {
     for (auto& cluster : clusteredSurfaces) {
       if (cluster.first.intersects(extent, sorting.first)) {
@@ -70,7 +70,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
       auto pLayers = protoLayers(gctx, ssurfaces, sorting);
       ACTS_VERBOSE("-> Resulted in " << pLayers.size() << " ProtoLayers.");
       for (const auto& pLayer : pLayers) {
-        ACTS_VERBOSE("--> ProtoLayer containes " << pLayer.surfaces().size()
+        ACTS_VERBOSE("--> ProtoLayer contains " << pLayer.surfaces().size()
                                                  << " surfaces.");
         subSurfaces.push_back(pLayer.surfaces());
       }

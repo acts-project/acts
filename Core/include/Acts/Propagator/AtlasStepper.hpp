@@ -49,7 +49,7 @@ class AtlasStepper {
     ///
     /// @tparam Type of TrackParameters
     ///
-    /// @param [in] gctx The geometry contex tof this call
+    /// @param [in] gctx The geometry context tof this call
     /// @param [in] fieldCacheIn The magnetic field cache for this call
     /// @param [in] pars Input parameters
     /// @param [in] ndir The navigation direction w.r.t. parameters
@@ -217,7 +217,7 @@ class AtlasStepper {
           Bz2 = (Bz2 - B[2] * B2) * Bn;
           Bz3 = (Bz3 - B[2] * B3) * Bn;
 
-          //  /dPhi      |     /dThe       |
+          //  /dPhi      |     /the       |
           pVector[24] = Bx2 * Vp[0];
           pVector[32] = Bx3 * Vp[0];  // dX/
           pVector[25] = By2 * Vp[0];
@@ -245,7 +245,7 @@ class AtlasStepper {
     std::array<double, 60> pVector{};
 
     /// Storage pattern of pVector
-    ///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
+    ///                   /dL0    /dL1    /dPhi   /the   /dCM   /dT
     /// X  ->P[0]  dX /   P[ 8]   P[16]   P[24]   P[32]   P[40]  P[48]
     /// Y  ->P[1]  dY /   P[ 9]   P[17]   P[25]   P[33]   P[41]  P[49]
     /// Z  ->P[2]  dZ /   P[10]   P[18]   P[26]   P[34]   P[42]  P[50]
@@ -400,7 +400,7 @@ class AtlasStepper {
     detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] stepSize The step size value
@@ -683,7 +683,7 @@ class AtlasStepper {
       Bz2 = (Bz2 - B[2] * B2) * Bn;
       Bz3 = (Bz3 - B[2] * B3) * Bn;
 
-      //  /dPhi      |     /dThe       |
+      //  /dPhi      |     /the       |
       state.pVector[24] = Bx2 * boundParams[eBoundLoc0];
       state.pVector[32] = Bx3 * boundParams[eBoundLoc0];  // dX/
       state.pVector[25] = By2 * boundParams[eBoundLoc0];
@@ -821,7 +821,7 @@ class AtlasStepper {
     state.jacobian[0] = Ax[0] * P[8] + Ax[1] * P[9];    // dL0/dL0
     state.jacobian[1] = Ax[0] * P[16] + Ax[1] * P[17];  // dL0/dL1
     state.jacobian[2] = Ax[0] * P[24] + Ax[1] * P[25];  // dL0/dPhi
-    state.jacobian[3] = Ax[0] * P[32] + Ax[1] * P[33];  // dL0/dThe
+    state.jacobian[3] = Ax[0] * P[32] + Ax[1] * P[33];  // dL0/the
     state.jacobian[4] = Ax[0] * P[40] + Ax[1] * P[41];  // dL0/dCM
     state.jacobian[5] = 0.;                             // dL0/dT
 
@@ -831,7 +831,7 @@ class AtlasStepper {
     state.jacobian[8] =
         Ay[0] * P[24] + Ay[1] * P[25] + Ay[2] * P[26];  // dL1/dPhi
     state.jacobian[9] =
-        Ay[0] * P[32] + Ay[1] * P[33] + Ay[2] * P[34];  // dL1/dThe
+        Ay[0] * P[32] + Ay[1] * P[33] + Ay[2] * P[34];  // dL1/the
     state.jacobian[10] =
         Ay[0] * P[40] + Ay[1] * P[41] + Ay[2] * P[42];  // dL1/dCM
     state.jacobian[11] = 0.;                            // dL1/dT

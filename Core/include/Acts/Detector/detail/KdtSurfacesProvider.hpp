@@ -114,7 +114,7 @@ class KdtSurfaces {
   /// Cast values that turn a global position to lookup position
   std::array<BinningValue, kDIM> m_casts = {};
 
-  /// Helper to generate refernce points for filling
+  /// Helper to generate reference points for filling
   reference_generator m_rGenerator;
 
   /// Unroll the cast loop

@@ -94,10 +94,10 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
           "CylindricalContainerBuilder: 2D binning only supports wrapping in "
           "z-r.");
     } else if (m_cfg.builders.size() != 2u) {
-      // Wrapping needs exacly one inner (volume or container) and one outer
+      // Wrapping needs exactly one inner (volume or container) and one outer
       // volume
       throw std::invalid_argument(
-          "CylindricalContainerBuilder: 2D wrapping in z-r requires exaclty "
+          "CylindricalContainerBuilder: 2D wrapping in z-r requires exactly "
           "two builders.");
     }
   }

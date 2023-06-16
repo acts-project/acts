@@ -69,7 +69,7 @@ class RootMaterialTrackWriter
   /// Virtual destructor
   ~RootMaterialTrackWriter() override;
 
-  /// Framework intialize method
+  /// Framework initialize method
   ActsExamples::ProcessCode finalize() override;
 
   /// Readonly access to the config

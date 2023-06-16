@@ -79,7 +79,7 @@ class AccumulatedSurfaceMaterial {
   /// Return the BinUtility
   const BinUtility& binUtility() const;
 
-  /// Assign a material properites object
+  /// Assign a material properties object
   ///
   /// @param lp local position for the bin assignment
   /// @param mp material properties to be assigned
@@ -89,7 +89,7 @@ class AccumulatedSurfaceMaterial {
   std::array<size_t, 3> accumulate(const Vector2& lp, const MaterialSlab& mp,
                                    double pathCorrection = 1.);
 
-  /// Assign a material properites object
+  /// Assign a material properties object
   ///
   /// @param gp global position for the bin assignment
   /// @param mp material properties to be assigned

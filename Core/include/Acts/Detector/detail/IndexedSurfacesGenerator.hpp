@@ -79,7 +79,7 @@ struct IndexedSurfacesGenerator {
     IndexedSurfacesImpl<GridType> indexedSurfaces(std::move(grid), bvArray,
                                                   transform);
 
-    // Fill the bin indicies
+    // Fill the bin indices
     IndexedGridFiller filler{binExpansion};
     filler.oLogger = oLogger->cloneWithSuffix("_filler");
     filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);

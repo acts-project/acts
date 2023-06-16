@@ -144,7 +144,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // present)
   // --------------------------------------------------------------------------
   //
-  // possbile configurations are (so far only synchronised):
+  // possible configurations are (so far only synchronised):
   //
   // | Negative Endcap | Barrel | Positive Endcap | -  all layers present
   //                   | Barrel |                   -  barrel present

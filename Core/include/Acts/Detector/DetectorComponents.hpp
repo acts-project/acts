@@ -37,7 +37,7 @@ class Portal;
 /// component.
 struct DetectorComponent {
   using PortalContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
-  /// The vector of construced volume(s)
+  /// The vector of constructed volume(s)
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// The current map of outside portals
   PortalContainer portals;

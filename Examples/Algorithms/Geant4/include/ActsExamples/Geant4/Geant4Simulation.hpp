@@ -44,7 +44,7 @@ class SensitiveSurfaceMapper;
 /// - (b) detector construction and magnetic field
 /// - (c) the user actions
 ///
-/// In order to run within the ACTS framework, acces to the
+/// In order to run within the ACTS framework, access to the
 /// EventData is provided by a EventStoreRegistry which provides
 /// individual slots for the event containers and the store.
 ///

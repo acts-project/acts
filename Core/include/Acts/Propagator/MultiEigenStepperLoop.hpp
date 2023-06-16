@@ -752,7 +752,7 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
@@ -770,7 +770,7 @@ class MultiEigenStepperLoop
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
-  /// @note This returns the smalles step size of all components. It uses
+  /// @note This returns the smallest step size of all components. It uses
   /// std::abs for comparison to handle backward propagation and negative
   /// step sizes correctly.
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
@@ -819,7 +819,7 @@ class MultiEigenStepperLoop
   /// be guaranteed by the propagator.
   /// @note This is done by combining the gaussian mixture on the specified
   /// surface. If the conversion to bound states of some components
-  /// failes, these components are ignored unless all components fail. In this
+  /// fails, these components are ignored unless all components fail. In this
   /// case an error code is returned.
   ///
   /// @param [in] state State that will be presented as @c BoundState

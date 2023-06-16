@@ -58,7 +58,7 @@ struct PointwiseMaterialInteraction {
   /// The momentum after the interaction
   double nextP = 0.;
 
-  /// @brief Contructor
+  /// @brief Constructor
   ///
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
@@ -119,9 +119,9 @@ struct PointwiseMaterialInteraction {
 
   /// @brief This function evaluate the material effects
   ///
-  /// @param [in] multipleScattering Boolean to indiciate the application of
+  /// @param [in] multipleScattering Boolean to indicate the application of
   /// multiple scattering
-  /// @param [in] energyLoss Boolean to indiciate the application of energy loss
+  /// @param [in] energyLoss Boolean to indicate the application of energy loss
   void evaluatePointwiseMaterialInteraction(bool multipleScattering,
                                             bool energyLoss);
 
@@ -162,9 +162,9 @@ struct PointwiseMaterialInteraction {
  private:
   /// @brief Evaluates the contributions to the covariance matrix
   ///
-  /// @param [in] multipleScattering Boolean to indiciate the application of
+  /// @param [in] multipleScattering Boolean to indicate the application of
   /// multiple scattering
-  /// @param [in] energyLoss Boolean to indiciate the application of energy loss
+  /// @param [in] energyLoss Boolean to indicate the application of energy loss
   void covarianceContributions(bool multipleScattering, bool energyLoss);
 
   /// @brief Convenience method for better readability

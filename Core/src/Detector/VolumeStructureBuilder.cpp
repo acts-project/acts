@@ -83,7 +83,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
       } else if (boundValues.size() < 3u) {
         throw std::runtime_error(
             "VolumeStructureBuilder: parameters for cuboid volume bounds need "
-            "to be fully provided, it needs exaclty 3 parameters, while " +
+            "to be fully provided, it needs exactly 3 parameters, while " +
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =
@@ -97,7 +97,7 @@ Acts::Experimental::VolumeStructureBuilder::construct(
         throw std::runtime_error(
             "VolumeStructureBuilder: parameters for cutout cylinder volume "
             "bounds need to be fully provided, they can not be estimated from "
-            "an Extent object. It needs exaclty 3 parameters, while " +
+            "an Extent object. It needs exactly 3 parameters, while " +
             std::to_string(boundValues.size()) + " where given");
       }
       auto bArray =

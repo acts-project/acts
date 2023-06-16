@@ -20,7 +20,7 @@ namespace detail {
 /// @returns Material slab with the combined thickness and average parameters
 ///
 /// The averaged material slab has the combined thickness of the two input slabs
-/// and assumes the two input materials are homogeneously and continously mixed
+/// and assumes the two input materials are homogeneously and continuously mixed
 /// throughout the slab.
 MaterialSlab combineSlabs(const MaterialSlab& slab1, const MaterialSlab& slab2);
 

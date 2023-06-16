@@ -66,7 +66,7 @@ enum LayerType { navigation = -1, passive = 0, active = 1 };
 /// subSurfaces.
 /// A pointer to the TrackingVolume (can only be set by such)
 /// An active/passive code :
-/// 0      - activ
+/// 0      - active
 /// 1      - passive
 /// [....] - other
 ///
@@ -126,7 +126,7 @@ class Layer : public virtual GeometryObject {
   /// @note using isOnSurface() with Layer specific tolerance
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the gobal position to be checked
+  /// @param position is the global position to be checked
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
@@ -275,7 +275,7 @@ class Layer : public virtual GeometryObject {
   /// Private helper method to close the geometry
   /// - it will assign material to the surfaces if needed
   /// - it will set the layer geometry ID for a unique identification
-  /// - it will also register the internal sub strucutre
+  /// - it will also register the internal sub structure
   ///
   /// @param materialDecorator is a decorator that assigns
   ///        optionally the surface material to where they belong

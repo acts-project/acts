@@ -113,7 +113,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
       }
     }
 
-    // Skip if tranlation failed
+    // Skip if translation failed
     if (particleDefinition == nullptr) {
       ACTS_DEBUG(
           "Could not translate particle with PDG code : " << particlePdgCode);

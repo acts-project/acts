@@ -62,7 +62,7 @@ struct SurfaceIndexing {
         KDT(Acts::GeometryContext(), surfaces, m_binningValues));
   }
 
-  /// pyton: axis binning value, axis option, axis type, nbins, boundaries,
+  /// python: axis binning value, axis option, axis type, nbins, boundaries,
   /// expansion
   using Binning = std::tuple<std::string, std::string, std::string,
                              unsigned int, std::vector<float>, unsigned int>;
@@ -79,7 +79,7 @@ struct SurfaceIndexing {
   using LayerSupport =
       typename Acts::Experimental::LayerStructureBuilder::Support;
 
-  /// Inspect the layer - written for an easy python binidng
+  /// Inspect the layer - written for an easy python binding
   ///
   /// @param name of the layer structure
   /// @param qRange is the query range for the Surfaces
@@ -234,7 +234,7 @@ class CylindricalDetectorIndexing : public SurfaceIndexing<2u> {
   /// Constructor with @param fname filename
   CylindricalDetectorIndexing(const std::string& fname);
 
-  /// Inspect the layer - written for an easy python binidng
+  /// Inspect the layer - written for an easy python binding
   ///
   /// @param name of the layer structure
   /// @param qRange is the query range for the Surfaces

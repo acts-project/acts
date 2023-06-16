@@ -42,7 +42,7 @@ namespace Experimental {
 ///
 class LayerStructureBuilder : public IInternalStructureBuilder {
  public:
-  /// @brief Support parameter defintions
+  /// @brief Support parameter definitions
   struct Support {
     /// Define whether you want to build support structures
     std::array<ActsScalar, 5u> values = {};
@@ -80,7 +80,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
     /// Extra information, mainly for screen output
-    std::string auxilliary = "";
+    std::string auxiliary = "";
   };
 
   /// Constructor
@@ -102,7 +102,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   /// configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// logging instance

@@ -138,7 +138,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
 
   const auto particleId = eventData.trackIdMapping.at(track->GetTrackID());
 
-  ACTS_VERBOSE("Step of " << particleId << " in senstive volume " << geoId);
+  ACTS_VERBOSE("Step of " << particleId << " in sensitive volume " << geoId);
 
   // Get PreStepPoint and PostStepPoint
   const G4StepPoint* preStepPoint = step->GetPreStepPoint();

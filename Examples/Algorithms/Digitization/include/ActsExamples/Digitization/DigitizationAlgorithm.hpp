@@ -120,7 +120,7 @@ class DigitizationAlgorithm final : public IAlgorithm {
 
   /// Construct a fixed-size smearer from a configuration.
   ///
-  /// It's templated on the smearing dimention given by @tparam kSmearDIM
+  /// It's templated on the smearing dimension given by @tparam kSmearDIM
   ///
   /// @param cfg Is the digitization configuration input
   ///

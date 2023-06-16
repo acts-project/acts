@@ -144,8 +144,8 @@ Acts::Experimental::LayerStructureBuilder::construct(
   std::vector<std::shared_ptr<DetectorVolume>> internalVolumes = {};
   DetectorVolumeUpdator internalVolumeUpdator = tryNoVolumes();
 
-  if (not m_cfg.auxilliary.empty()) {
-    ACTS_DEBUG(m_cfg.auxilliary);
+  if (not m_cfg.auxiliary.empty()) {
+    ACTS_DEBUG(m_cfg.auxiliary);
   }
 
   // Retrieve the layer surfaces
@@ -161,7 +161,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     ACTS_DEBUG("Adding " << m_cfg.supports.size() << " support structures.")
     // The surface candidate updator
     for (const auto& support : m_cfg.supports) {
-      // Throw an excpetion is misconfigured
+      // Throw an exception is misconfigured
       if (support.type == Surface::SurfaceType::Other) {
         throw std::invalid_argument(
             "LayerStructureBuilder: support surface type not specified.");

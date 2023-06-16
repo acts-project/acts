@@ -27,7 +27,7 @@ class WhiteBoard;
 /// A registry for event data and the event store (per event)
 ///
 /// The access is static, however, there is an individual instance
-/// per event and hence the retrival/writing is parallel event/save
+/// per event and hence the retrieval/writing is parallel event/save
 ///
 /// @note multiple threads within an event could lead to conflicts
 class EventStoreRegistry {
@@ -50,7 +50,7 @@ class EventStoreRegistry {
     /// The hits in sensitive detectors
     SimHitContainer::sequence_type hits;
 
-    /// Hit buffer for step merging (multiple steps in senstive volume)
+    /// Hit buffer for step merging (multiple steps in sensitive volume)
     std::vector<ActsFatras::Hit> hitBuffer;
 
     /// Some statistics for the step merging

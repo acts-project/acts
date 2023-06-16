@@ -115,7 +115,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     ACTS_INFO("Setting ACTS configured field to Geant4.");
     // Get the g4World cache
     G4VPhysicalVolume* g4World = m_cfg.detectorConstruction->Construct();
-    /// Set the field ot the G4Field manager
+    /// Set the field of the G4Field manager
     G4FieldManager* fieldMgr = new G4FieldManager();
     fieldMgr->SetDetectorField(m_cfg.magneticField);
     fieldMgr->CreateChordFinder(m_cfg.magneticField);

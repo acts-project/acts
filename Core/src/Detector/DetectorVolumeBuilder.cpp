@@ -43,7 +43,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
   // If there are no internals, the volume is fully defined
   if (m_cfg.internalsBuilder == nullptr) {
     ACTS_VERBOSE("No internal structure present.")
-    // Contruct the DetectorVolume
+    // Construct the DetectorVolume
     dVolume = DetectorVolumeFactory::construct(
         portalGenerator, gctx, m_cfg.name, transform, std::move(bounds),
         tryAllPortals());
@@ -59,7 +59,7 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
         roots.volumes.push_back(v);
       }
     }
-    // Contruct the DetectorVolume
+    // Construct the DetectorVolume
     dVolume = DetectorVolumeFactory::construct(
         portalGenerator, gctx, m_cfg.name, transform, std::move(bounds),
         surfaces, volumes, std::move(surfacesUpdator),
