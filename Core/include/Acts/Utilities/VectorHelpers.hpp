@@ -15,7 +15,6 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
-
 #include <array>
 
 #include "Eigen/Dense"
@@ -214,34 +213,46 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
 }
 
 // Computes the signed angle \in [-pi, pi] between a 2D vector vec and a 2D reference vector refVec
-// @note: the vectors should lie in the same plane 
+// @note: the vectors should lie in the same plane
 // @note: for an explanation of why this computation works see https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
 // @note: in future Eigen releases, the nominator can be replaced by refVec.cross(vec), see https://gitlab.com/libeigen/eigen/-/merge_requests/1098
 template <typename Derived>
-inline typename Derived::Scalar signedAngle(const Eigen::MatrixBase<Derived>& vec, const Eigen::MatrixBase<Derived>& refVec) {
-  return (refVec[0]*vec[1] - refVec[1]*vec[0])/refVec.dot(vec);
+inline typename Derived::Scalar signedAngle(
+    const Eigen::MatrixBase<Derived>& vec,
+    const Eigen::MatrixBase<Derived>& refVec) {
+  return (refVec[0] * vec[1] - refVec[1] * vec[0]) / refVec.dot(vec);
 }
 
-// Decomposes a 3D vector into a transverse and a longitudinal component with respect to the z-direction
+// Decomposes a 3D vector into a transverse and a longitudinal component with
+// respect to the z-direction
 template <typename Derived>
-inline Eigen::Matrix<typename Derived::Scalar, 2, 1> decomposeTransverseZ (const Eigen::MatrixBase<Derived>& vec) {
-  Eigen::Matrix<typename Derived::Scalar, 2, 1> decomposedVec {perp(vec.head(2)), vec[2]};
+inline Eigen::Matrix<typename Derived::Scalar, 2, 1> decomposeTransverseZ(
+    const Eigen::MatrixBase<Derived>& vec) {
+  Eigen::Matrix<typename Derived::Scalar, 2, 1> decomposedVec{perp(vec.head(2)),
+                                                              vec[2]};
   return decomposedVec;
 }
 
-// Subtracts phi and theta 
-// minPhiTheta and subPhiTheta should be 2D vectors containing phi in the 0th entry and theta in the first entry
+// Subtracts phi and theta
+// minPhiTheta and subPhiTheta should be 2D vectors containing phi in the 0th
+// entry and theta in the first entry
 // @note: the prefix "min" stands for minuend and the prefix "sub" for subtrahend
 // @note: Simply subtracting phis is problematic due to the periodicity of phi
 // @note: Simply subtracting thetas is problematic around the poles of the unit sphere (i.e., at theta close to 0 or pi)
 template <typename Derived>
-inline Eigen::Matrix<typename Derived::Scalar, 2, 1> subtractPhiTheta(const Eigen::MatrixBase<Derived>& minPhiTheta, const Eigen::MatrixBase<Derived>& subPhiTheta) {
-  auto minUnitVec = makeDirectionUnitFromPhiTheta(minPhiTheta[0], minPhiTheta[1]);
-  auto subUnitVec = makeDirectionUnitFromPhiTheta(subPhiTheta[0], subPhiTheta[1]);
+inline Eigen::Matrix<typename Derived::Scalar, 2, 1> subtractPhiTheta(
+    const Eigen::MatrixBase<Derived>& minPhiTheta,
+    const Eigen::MatrixBase<Derived>& subPhiTheta) {
+  auto minUnitVec =
+      makeDirectionUnitFromPhiTheta(minPhiTheta[0], minPhiTheta[1]);
+  auto subUnitVec =
+      makeDirectionUnitFromPhiTheta(subPhiTheta[0], subPhiTheta[1]);
   auto diffPhi = signedAngle(minUnitVec.head(2), subUnitVec.head(2));
   // We need the minus because theta is defined wrt the z-axis
-  auto diffTheta = -signedAngle(decomposeTransverseZ(minUnitVec), decomposeTransverseZ(subUnitVec));
-  Eigen::Matrix<typename Derived::Scalar, 2, 1> diffPhiTheta {diffPhi, diffTheta};
+  auto diffTheta = -signedAngle(decomposeTransverseZ(minUnitVec),
+                                decomposeTransverseZ(subUnitVec));
+  Eigen::Matrix<typename Derived::Scalar, 2, 1> diffPhiTheta{diffPhi,
+                                                             diffTheta};
   return diffPhiTheta;
 }
 }  // namespace VectorHelpers

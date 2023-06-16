@@ -53,7 +53,8 @@ using StraightPropagator = Propagator<StraightLineStepper>;
 using AnalyticalLinearizer = HelicalTrackLinearizer<HelicalPropagator>;
 using StraightAnalyticalLinearizer = HelicalTrackLinearizer<StraightPropagator>;
 using NumericalLinearizer = NumericalTrackLinearizer<HelicalPropagator>;
-using StraightNumericalLinearizer = NumericalTrackLinearizer<StraightPropagator>;
+using StraightNumericalLinearizer =
+    NumericalTrackLinearizer<StraightPropagator>;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -107,7 +108,8 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Set up stepper and propagator for 0 B-field
   StraightLineStepper straightStepper;
-  auto straightPropagator = std::make_shared<StraightPropagator>(straightStepper);
+  auto straightPropagator =
+      std::make_shared<StraightPropagator>(straightStepper);
 
   // Create perigee surface, initial track parameters will be relative to it
   std::shared_ptr<PerigeeSurface> perigeeSurface{
@@ -168,14 +170,12 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
       constField->makeCache(magFieldContext));
 
   // Linearizer for 0 field and corresponding state
-  StraightAnalyticalLinearizer::Config straightLinConfig(
-      straightPropagator);
+  StraightAnalyticalLinearizer::Config straightLinConfig(straightPropagator);
   StraightAnalyticalLinearizer straightLinFactory(straightLinConfig);
   StraightAnalyticalLinearizer::State straightLinState(
       zeroField->makeCache(magFieldContext));
 
-  StraightNumericalLinearizer::Config numStraightLinConfig(
-      straightPropagator);
+  StraightNumericalLinearizer::Config numStraightLinConfig(straightPropagator);
   StraightNumericalLinearizer numStraightLinFactory(numStraightLinConfig);
   StraightNumericalLinearizer::State numStraightLinState(
       zeroField->makeCache(magFieldContext));

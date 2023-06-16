@@ -12,15 +12,16 @@ namespace Acts {
 
 /// Enum to access the components of a track parameter vector.
 ///
-/// Here, we parametrize the track via a 4D point on the track, the momentum angles of the
-/// particle at that point, and q/p or 1/p.
+/// Here, we parametrize the track via a 4D point on the track, the momentum
+/// angles of the particle at that point, and q/p or 1/p.
 ///
 /// @note It would make sense to rename these parameters if they are used outside of track linearization.
 /// @note This must be a regular `enum` and not a scoped `enum class` to allow
 /// implicit conversion to an integer. The enum value are thus visible directly
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
 enum LinIndices : unsigned int {
-  // Global spatial position of a point on the track, must be stored as one continous block.
+  // Global spatial position of a point on the track, must be stored as one
+  // continous block.
   eLinPos0 = 0u,
   eLinPos1 = eLinPos0 + 1u,
   eLinPos2 = eLinPos0 + 2u,
