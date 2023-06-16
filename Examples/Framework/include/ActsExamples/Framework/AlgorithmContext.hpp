@@ -20,7 +20,7 @@ class WhiteBoard;
 
 /// Aggregated information to run one algorithm over one event.
 struct AlgorithmContext {
-  /// @brief contructor with arguments
+  /// @brief constructor with arguments
   ///
   /// @param alg is the algorithm/service/writer number
   /// @param event ist the event number
