@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -18,7 +19,11 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <cstddef>
+#include <iterator>
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 

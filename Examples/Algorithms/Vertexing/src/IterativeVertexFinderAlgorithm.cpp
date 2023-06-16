@@ -9,30 +9,19 @@
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
-#include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "Acts/Vertexing/VertexFinderConcept.hpp"
-#include "Acts/Vertexing/VertexingOptions.hpp"
-#include "Acts/Vertexing/ZScanVertexFinder.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <chrono>
+#include <ostream>
+#include <stdexcept>
+#include <system_error>
 
 #include "VertexingHelpers.hpp"
 

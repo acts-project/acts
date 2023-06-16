@@ -8,8 +8,13 @@
 
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialGridHelper.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 #include <Acts/Material/HomogeneousSurfaceMaterial.hpp>
@@ -17,20 +22,30 @@
 #include <Acts/Utilities/BinUtility.hpp>
 #include <Acts/Utilities/BinningType.hpp>
 
+#include <algorithm>
 #include <cstdio>
+#include <functional>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
+#include <vector>
 
 #include <TFile.h>
-#include <TH2F.h>
+#include <TH1.h>
+#include <TH2.h>
 #include <TIterator.h>
 #include <TKey.h>
 #include <TList.h>
+#include <TObject.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/finder.hpp>
 #include <boost/algorithm/string/iter_find.hpp>
+
+namespace Acts {
+class ISurfaceMaterial;
+class IVolumeMaterial;
+}  // namespace Acts
 
 ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     const ActsExamples::RootMaterialDecorator::Config& config,

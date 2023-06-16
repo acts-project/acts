@@ -6,9 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
@@ -16,10 +21,20 @@
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
+namespace ActsExamples {
+class IAlgorithm;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 

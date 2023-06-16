@@ -8,15 +8,30 @@
 
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include <ios>
-#include <iostream>
+#include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
+
+namespace ActsExamples {
+class IndexSourceLink;
+}  // namespace ActsExamples
 
 using namespace ActsExamples;
 

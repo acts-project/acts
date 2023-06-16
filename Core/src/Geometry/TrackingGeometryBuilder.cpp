@@ -9,9 +9,10 @@
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 
 #include <functional>
+#include <stdexcept>
+#include <utility>
 
 Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig,

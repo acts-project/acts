@@ -8,15 +8,17 @@
 
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
-#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
+
+#include <ostream>
+#include <stdexcept>
 
 #include "G4VPhysicalVolume.hh"
 

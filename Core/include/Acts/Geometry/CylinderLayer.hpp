@@ -17,8 +17,10 @@
 
 #include <algorithm>
 #include <memory>
+#include <utility>
 
 namespace Acts {
+class CylinderBounds;
 
 /// @class CylinderLayer
 ///

@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
              ->m_detector;
     for (auto& lstore : alignedDetector->detectorStore()) {
       for (auto& ldet : lstore) {
-        // get the detetor surface
+        // get the detector surface
         const auto& surface = &ldet->surface();
         auto geoID = surface->geometryId();
         auto it = std::find(geometrySelection.begin(), geometrySelection.end(),

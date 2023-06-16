@@ -8,12 +8,17 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+
+#include <algorithm>
+#include <cmath>
 
 namespace Acts {
 namespace detail {
@@ -58,7 +63,7 @@ struct PointwiseMaterialInteraction {
   /// The momentum after the interaction
   double nextP = 0.;
 
-  /// @brief Contructor
+  /// @brief Constructor
   ///
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper

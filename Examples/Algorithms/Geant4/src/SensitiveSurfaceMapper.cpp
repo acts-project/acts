@@ -9,16 +9,21 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
+#include <algorithm>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 #include <G4LogicalVolume.hh>
 #include <G4Material.hh>
 #include <G4VPhysicalVolume.hh>
-#include <globals.hh>
 
 ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -105,7 +110,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
     // contains the GeometryID/
     if (mappedSurface != nullptr) {
       ++sCounter;
-      std::string mappedVolumeName = SensitiveSurfaceMapper::mappingPrefix;
+      std::string mappedVolumeName(SensitiveSurfaceMapper::mappingPrefix);
       mappedVolumeName += std::to_string(mappedSurface->geometryId().value());
       ACTS_VERBOSE("Found matching surface " << mappedSurface->geometryId()
                                              << " at position "

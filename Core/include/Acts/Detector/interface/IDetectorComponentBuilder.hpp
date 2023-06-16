@@ -25,12 +25,10 @@ class IDetectorComponentBuilder {
   /// The interface method to be implemented by all detector
   /// component builder
   ///
-  /// @param roots [in, out] the collection of root volumes
   /// @param gctx The geometry context for this call
   ///
   /// @return an outgoing detector component
-  virtual DetectorComponent construct(RootDetectorVolumes& roots,
-                                      const GeometryContext& gctx) const = 0;
+  virtual DetectorComponent construct(const GeometryContext& gctx) const = 0;
 };
 
 }  // namespace Experimental

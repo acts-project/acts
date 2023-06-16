@@ -8,16 +8,16 @@
 
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Definitions/Units.hpp>
 
+#include <array>
 #include <fstream>
-#include <ios>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include <boost/container/static_vector.hpp>
 #include <dfe/dfe_io_dsv.hpp>

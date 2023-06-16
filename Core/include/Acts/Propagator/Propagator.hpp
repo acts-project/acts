@@ -108,7 +108,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   using action_list_type = action_list_t;
   using aborter_list_type = aborter_list_t;
 
-  /// Delete default contructor
+  /// Delete default constructor
   PropagatorOptions() = delete;
 
   /// PropagatorOptions copy constructor

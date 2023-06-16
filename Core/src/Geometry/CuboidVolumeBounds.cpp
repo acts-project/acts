@@ -8,12 +8,14 @@
 
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 
-#include <iostream>
+#include <type_traits>
+#include <utility>
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds(double halex, double haley,
                                              double halez)

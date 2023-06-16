@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -14,6 +15,7 @@
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Geant4/ActsSteppingActionList.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
@@ -23,14 +25,23 @@
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
 #include "ActsExamples/Geant4/ParticleKillAction.hpp"
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
+#include "ActsExamples/Geant4/PhysicsListFactory.hpp"
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/MuonSpectrometerMockupDetector/MockupSectorBuilder.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
+#include <array>
 #include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <FTFP_BERT.hh>
 #include <G4MagneticField.hh>
@@ -44,6 +55,17 @@
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+class G4UserSteppingAction;
+class G4VUserPhysicsList;
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+class Volume;
+}  // namespace Acts
+namespace ActsExamples {
+class RandomNumbers;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;
@@ -154,13 +176,14 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           const std::vector<std::string>& volumeMappings,
           const std::vector<std::string>& materialMappings,
           std::shared_ptr<const Acts::Volume> killVolume, double killAfterTime,
-          bool recordHitsOfSecondaries, bool keepParticlesWithoutHits) {
+          bool recordHitsOfSecondaries, bool keepParticlesWithoutHits,
+          std::string physicsList) {
         auto logger = Acts::getDefaultLogger("Geant4", level);
 
-        auto physicsList = new FTFP_BERT();
         auto g4Cfg =
             makeGeant4Config(*logger, std::move(randomNumbers), detector,
-                             physicsList, SimParticleTranslation::Config{});
+                             PhysicsListFactory().factorize(physicsList),
+                             SimParticleTranslation::Config{});
         g4Cfg.inputParticles = inputParticles;
 
         // Particle action
@@ -221,7 +244,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("killVolume") = nullptr,
       py::arg("killAfterTime") = std::numeric_limits<double>::infinity(),
       py::arg("recordHitsOfSecondaries") = true,
-      py::arg("keepParticlesWithoutHits") = true);
+      py::arg("keepParticlesWithoutHits") = true,
+      py::arg("physicsList") = "FTFP_BERT");
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;

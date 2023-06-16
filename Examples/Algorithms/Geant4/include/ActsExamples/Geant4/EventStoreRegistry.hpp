@@ -9,11 +9,15 @@
 #pragma once
 
 #include "Acts/Material/MaterialInteraction.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <set>
 #include <unordered_map>
 #include <vector>
@@ -23,6 +27,8 @@
 namespace ActsExamples {
 
 class WhiteBoard;
+template <typename T>
+class ReadDataHandle;
 
 /// A registry for event data and the event store (per event)
 ///
@@ -49,6 +55,13 @@ class EventStoreRegistry {
 
     /// The hits in sensitive detectors
     SimHitContainer::sequence_type hits;
+
+    /// Hit buffer for step merging (multiple steps in senstive volume)
+    std::vector<ActsFatras::Hit> hitBuffer;
+
+    /// Some statistics for the step merging
+    std::size_t numberGeantSteps = 0;
+    std::size_t maxStepsForHit = 0;
 
     /// Tracks recorded in material mapping
     std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;

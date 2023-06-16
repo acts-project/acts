@@ -16,6 +16,8 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 
 
+#include <array>
+
 #include "Eigen/Dense"
 
 namespace Acts {

@@ -13,11 +13,28 @@
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Detector/detail/SupportHelper.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
+#include <cmath>
+#include <cstddef>
+#include <ostream>
+#include <set>
 #include <stdexcept>
+#include <utility>
+
+namespace Acts {
+namespace Experimental {
+class DetectorVolume;
+}  // namespace Experimental
+}  // namespace Acts
 
 namespace {
 
@@ -36,24 +53,22 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
     const std::vector<size_t>& assignToAll,
-    const Acts::Experimental::LayerStructureBuilder::Binning& binning) {
+    const Acts::Experimental::ProtoBinning& binning) {
   // The surface candidate updator & a generator for polyhedrons
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<decltype(lSurfaces)> isg{
-      lSurfaces, assignToAll, {binning.data.binvalue}, {binning.expansion}};
-  if (binning.data.type == Acts::equidistant) {
+      lSurfaces, assignToAll, {binning.binValue}, {binning.expansion}};
+  if (binning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant
     Acts::Experimental::detail::GridAxisGenerators::Eq<aType> aGenerator{
-        {-M_PI, M_PI}, binning.data.bins()};
+        {binning.edges.front(), binning.edges.back()}, binning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else {
-    std::vector<Acts::ActsScalar> edges = {binning.data.boundaries().begin(),
-                                           binning.data.boundaries().end()};
     // Variable
     Acts::Experimental::detail::GridAxisGenerators::Var<aType> aGenerator{
-        edges};
+        binning.edges};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   }
   return sfCandidates;
@@ -77,8 +92,8 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
     const std::vector<size_t>& assignToAll,
-    const Acts::Experimental::LayerStructureBuilder::Binning& aBinning,
-    const Acts::Experimental::LayerStructureBuilder::Binning& bBinning) {
+    const Acts::Experimental::ProtoBinning& aBinning,
+    const Acts::Experimental::ProtoBinning& bBinning) {
   // The surface candidate updator & a generator for polyhedrons
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
@@ -86,47 +101,39 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
   Acts::Experimental::detail::IndexedSurfacesGenerator<decltype(lSurfaces)> isg{
       lSurfaces,
       assignToAll,
-      {aBinning.data.binvalue, bBinning.data.binvalue},
+      {aBinning.binValue, bBinning.binValue},
       {aBinning.expansion, bBinning.expansion}};
   // Run through the cases
-  if (aBinning.data.type == Acts::equidistant and
-      bBinning.data.type == Acts::equidistant) {
+  if (aBinning.axisType == Acts::detail::AxisType::Equidistant and
+      bBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant-Equidistant
     Acts::Experimental::detail::GridAxisGenerators::EqEq<aType, bType>
-        aGenerator{{aBinning.data.min, aBinning.data.max},
-                   aBinning.data.bins(),
-                   {bBinning.data.min, bBinning.data.max},
-                   bBinning.data.bins()};
+        aGenerator{{aBinning.edges.front(), aBinning.edges.back()},
+                   aBinning.bins(),
+                   {bBinning.edges.front(), bBinning.edges.back()},
+                   bBinning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
-  } else if (bBinning.data.type == Acts::equidistant) {
+  } else if (bBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Variable-Equidistant
-    std::vector<Acts::ActsScalar> edges0 = {bBinning.data.boundaries().begin(),
-                                            bBinning.data.boundaries().end()};
     Acts::Experimental::detail::GridAxisGenerators::VarEq<aType, bType>
-        aGenerator{edges0,
-                   {bBinning.data.min, bBinning.data.max},
-                   bBinning.data.bins()};
+        aGenerator{aBinning.edges,
+                   {bBinning.edges.front(), bBinning.edges.back()},
+                   bBinning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
-  } else if (aBinning.data.type == Acts::equidistant) {
+  } else if (aBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant-Variable
-    std::vector<Acts::ActsScalar> edges1 = {bBinning.data.boundaries().begin(),
-                                            bBinning.data.boundaries().end()};
     Acts::Experimental::detail::GridAxisGenerators::EqVar<aType, bType>
-        aGenerator{{aBinning.data.min, aBinning.data.max},
-                   aBinning.data.bins(),
-                   edges1};
+        aGenerator{{aBinning.edges.front(), aBinning.edges.back()},
+                   aBinning.bins(),
+                   bBinning.edges};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else {
     // Variable-Variable
-    std::vector<Acts::ActsScalar> edges0 = {aBinning.data.boundaries().begin(),
-                                            aBinning.data.boundaries().end()};
-    std::vector<Acts::ActsScalar> edges1 = {bBinning.data.boundaries().begin(),
-                                            bBinning.data.boundaries().end()};
     Acts::Experimental::detail::GridAxisGenerators::VarVar<aType, bType>
-        aGenerator{edges0, edges1};
+        aGenerator{aBinning.edges, bBinning.edges};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   }
-  // return the candidates
+  // Return the candidates
   return sfCandidates;
 }
 
@@ -135,7 +142,12 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
 Acts::Experimental::LayerStructureBuilder::LayerStructureBuilder(
     const Acts::Experimental::LayerStructureBuilder::Config& cfg,
     std::unique_ptr<const Acts::Logger> logger)
-    : IInternalStructureBuilder(), m_cfg(cfg), m_logger(std::move(logger)) {}
+    : IInternalStructureBuilder(), m_cfg(cfg), m_logger(std::move(logger)) {
+  if (m_cfg.surfacesProvider == nullptr) {
+    throw std::invalid_argument(
+        "LayerStructureBuilder: surfaces provider is nullptr.");
+  }
+}
 
 Acts::Experimental::InternalStructure
 Acts::Experimental::LayerStructureBuilder::construct(
@@ -144,13 +156,14 @@ Acts::Experimental::LayerStructureBuilder::construct(
   std::vector<std::shared_ptr<DetectorVolume>> internalVolumes = {};
   DetectorVolumeUpdator internalVolumeUpdator = tryNoVolumes();
 
+  // Print the auxilliary information
   if (not m_cfg.auxilliary.empty()) {
     ACTS_DEBUG(m_cfg.auxilliary);
   }
 
   // Retrieve the layer surfaces
   SurfaceCandidatesUpdator internalCandidatesUpdator;
-  auto internalSurfaces = m_cfg.surfaces();
+  auto internalSurfaces = m_cfg.surfacesProvider->surfaces(gctx);
   ACTS_DEBUG("Building internal layer structure from "
              << internalSurfaces.size() << " provided surfaces.");
 
@@ -190,7 +203,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
     ACTS_DEBUG("- 1-dimensional surface binning detected.");
     // Capture the binning
     auto binning = m_cfg.binnings[0u];
-    if (binning.data.option == closed) {
+    if (binning.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Closed>(
               gctx, internalSurfaces, assignToAll, binning);
@@ -205,12 +218,13 @@ Acts::Experimental::LayerStructureBuilder::construct(
     const auto& binning0 = m_cfg.binnings[0u];
     const auto& binning1 = m_cfg.binnings[1u];
 
-    if (binning0.data.option == closed) {
+    if (binning0.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Closed,
                         Acts::detail::AxisBoundaryType::Bound>(
               gctx, internalSurfaces, assignToAll, binning0, binning1);
-    } else if (binning1.data.option == closed) {
+    } else if (binning1.boundaryType ==
+               Acts::detail::AxisBoundaryType::Closed) {
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound,
                         Acts::detail::AxisBoundaryType::Closed>(

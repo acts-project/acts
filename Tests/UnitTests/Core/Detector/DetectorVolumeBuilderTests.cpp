@@ -10,15 +10,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -26,6 +25,9 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
 #include <vector>
 
 using namespace Acts;
@@ -56,7 +58,7 @@ class ExternalsBuilder : public IExternalStructureBuilder {
 
 /// @brief  Mockup internal surface builder
 /// @tparam surface_type the surface type to be constructed
-/// @tparam bounds_type the bounds type that is contructed
+/// @tparam bounds_type the bounds type that is constructed
 template <typename surface_type, typename bounds_type>
 class InternalSurfaceBuilder : public IInternalStructureBuilder {
  public:
@@ -79,7 +81,7 @@ class InternalSurfaceBuilder : public IInternalStructureBuilder {
 
 /// @brief  Mockup internal surface builder
 /// @tparam surface_type the surface type to be constructed
-/// @tparam bounds_type the bounds type that is contructed
+/// @tparam bounds_type the bounds type that is constructed
 template <typename bounds_type>
 class InternalVolumeBuilder : public IInternalStructureBuilder {
  public:
@@ -131,16 +133,16 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_EmptyVolume) {
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto dvComponents = dvBuilder->construct(roots, tContext);
+  auto [volumes, portals, roots] = dvBuilder->construct(tContext);
+
+  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK(volumes.front()->surfaces().empty());
+  BOOST_CHECK(volumes.front()->volumes().empty());
+
+  BOOST_CHECK(portals.size() == 4u);
 
   BOOST_CHECK(roots.volumes.size() == 1u);
-  BOOST_CHECK(dvComponents.portals.size() == 4u);
-
-  // Get the volume and check it is empty
-  auto volume = roots.volumes.front();
-  BOOST_CHECK(volume->surfaces().empty());
-  BOOST_CHECK(volume->volumes().empty());
+  BOOST_CHECK(roots.volumeFinder.connected());
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
@@ -162,16 +164,16 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto dvComponents = dvBuilder->construct(roots, tContext);
+  auto [volumes, portals, roots] = dvBuilder->construct(tContext);
+
+  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK(volumes.front()->surfaces().size() == 1u);
+  BOOST_CHECK(volumes.front()->volumes().empty());
+
+  BOOST_CHECK(portals.size() == 4u);
 
   BOOST_CHECK(roots.volumes.size() == 1u);
-  BOOST_CHECK(dvComponents.portals.size() == 4u);
-
-  // Get the volume and check it is empty
-  auto volume = roots.volumes.front();
-  BOOST_CHECK(volume->surfaces().size() == 1u);
-  BOOST_CHECK(volume->volumes().empty());
+  BOOST_CHECK(roots.volumeFinder.connected());
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolume) {
@@ -188,17 +190,16 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolume) {
   dvCfg.name = "CylinderWithVolume";
   dvCfg.externalsBuilder = cBuilder;
   dvCfg.internalsBuilder = iBuilder;
-  dvCfg.addToRoot = false;
   dvCfg.addInternalsToRoot = false;
 
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto dvComponents = dvBuilder->construct(roots, tContext);
+  auto [volumes, portals, roots] = dvBuilder->construct(tContext);
 
-  BOOST_CHECK(roots.volumes.empty());
-  BOOST_CHECK(dvComponents.portals.size() == 4u);
+  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK(portals.size() == 4u);
+  BOOST_CHECK(roots.volumes.size() == 1u);
 }
 
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
@@ -216,16 +217,21 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
   dvCfg.name = "CylinderWithVolume";
   dvCfg.externalsBuilder = cBuilder;
   dvCfg.internalsBuilder = iBuilder;
-  dvCfg.addToRoot = true;
   dvCfg.addInternalsToRoot = true;
 
   auto dvBuilder = std::make_shared<DetectorVolumeBuilder>(
       dvCfg, getDefaultLogger("DetectorVolumeBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto dvComponents = dvBuilder->construct(roots, tContext);
+  auto [volumes, portals, roots] = dvBuilder->construct(tContext);
+
+  BOOST_CHECK(volumes.size() == 1u);
+  BOOST_CHECK(volumes.front()->surfaces().empty());
+  BOOST_CHECK(volumes.front()->volumes().size() == 1u);
+
+  BOOST_CHECK(portals.size() == 4u);
 
   BOOST_CHECK(roots.volumes.size() == 2u);
+  BOOST_CHECK(roots.volumeFinder.connected());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

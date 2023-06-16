@@ -9,12 +9,23 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/ISurfacesProvider.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cstddef>
 #include <functional>
+#include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace Acts {
 namespace Experimental {
@@ -42,6 +53,25 @@ namespace Experimental {
 ///
 class LayerStructureBuilder : public IInternalStructureBuilder {
  public:
+  /// @brief A holder struct for surfaces
+  class SurfacesHolder final : public ISurfacesProvider {
+   public:
+    /// Constructor with predefined surfaces
+    /// @param isurfaces is the vector of surfaces
+    SurfacesHolder(std::vector<std::shared_ptr<Surface>> isurfaces)
+        : m_surfaces(std::move(isurfaces)) {}
+
+    /// Return the surfaces from the holder
+    /// @param gctx is the geometry context
+    std::vector<std::shared_ptr<Surface>> surfaces(
+        [[maybe_unused]] const GeometryContext& gctx) const final {
+      return m_surfaces;
+    }
+
+   private:
+    std::vector<std::shared_ptr<Surface>> m_surfaces = {};
+  };
+
   /// @brief Support parameter defintions
   struct Support {
     /// Define whether you want to build support structures
@@ -56,14 +86,6 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::optional<Transform3> transform = std::nullopt;
   };
 
-  /// @brief The surface binning definition
-  struct Binning {
-    /// Define the binning of the surfaces
-    BinningData data;
-    /// An expansion for the filling (in bins)
-    size_t expansion = 0u;
-  };
-
   /// @brief Configuration struct for the LayerStructureBuilder
   ///
   /// It contain:
@@ -72,11 +94,11 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
   /// - a definition of supports to be built
   struct Config {
     /// Connection point for a function to provide surfaces
-    std::function<std::vector<std::shared_ptr<Surface>>()> surfaces;
+    std::shared_ptr<ISurfacesProvider> surfacesProvider = nullptr;
     /// Definition of Supports
     std::vector<Support> supports = {};
     /// Definition of Binnings
-    std::vector<Binning> binnings = {};
+    std::vector<ProtoBinning> binnings = {};
     /// Polyhedron approximations
     unsigned int nSegments = 1u;
     /// Extra information, mainly for screen output

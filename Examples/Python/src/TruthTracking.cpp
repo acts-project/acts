@@ -7,6 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
@@ -16,11 +18,18 @@
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
+#include <array>
+#include <cstddef>
 #include <memory>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace ActsExamples {
+class IAlgorithm;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -111,6 +120,8 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(etaMax);
     ACTS_PYTHON_MEMBER(absEtaMin);
     ACTS_PYTHON_MEMBER(absEtaMax);
+    ACTS_PYTHON_MEMBER(mMin);
+    ACTS_PYTHON_MEMBER(mMax);
     ACTS_PYTHON_MEMBER(ptMin);
     ACTS_PYTHON_MEMBER(ptMax);
     ACTS_PYTHON_MEMBER(removeCharged);
@@ -123,6 +134,7 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "phi", &Config::phiMin, &Config::phiMax);
     pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
     pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
+    pythonRangeProperty(c, "m", &Config::mMin, &Config::mMax);
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
   }
 

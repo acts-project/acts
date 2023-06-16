@@ -9,6 +9,9 @@
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <TEfficiency.h>
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
