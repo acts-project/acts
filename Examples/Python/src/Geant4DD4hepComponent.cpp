@@ -21,7 +21,6 @@ namespace py = pybind11;
 
 using namespace ActsExamples;
 using namespace Acts;
-using namespace Acts::Python;
 
 PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
   py::module_::import("acts.ActsPythonBindingsGeant4");
