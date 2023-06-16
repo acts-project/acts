@@ -32,9 +32,6 @@ ActsExamples::MaterialSteppingAction::~MaterialSteppingAction() = default;
 
 void ActsExamples::MaterialSteppingAction::UserSteppingAction(
     const G4Step* step) {
-  // Get the event data
-  auto& eventData = *m_cfg.eventStore;
-
   // Get the material & check if it is present
   G4Material* material = step->GetPreStepPoint()->GetMaterial();
   if (material == nullptr) {
@@ -99,7 +96,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
 
   G4Track* g4Track = step->GetTrack();
   size_t trackID = g4Track->GetTrackID();
-  auto& materialTracks = eventData.materialTracks;
+  auto& materialTracks = eventStore().materialTracks;
   if (materialTracks.find(trackID - 1) == materialTracks.end()) {
     Acts::RecordedMaterialTrack rmTrack;
     const auto& g4Vertex = g4Track->GetVertexPosition();

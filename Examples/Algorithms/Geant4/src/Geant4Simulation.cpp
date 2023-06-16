@@ -38,8 +38,6 @@
 
 #include <G4FieldManager.hh>
 #include <G4RunManager.hh>
-<<<<<<< HEAD
-=======
 #include <G4TransportationManager.hh>
 #include <G4UniformMagField.hh>
 #include <G4UserEventAction.hh>
@@ -51,10 +49,9 @@
 #include <G4VUserPhysicsList.hh>
 #include <G4Version.hh>
 #include <Randomize.hh>
-    >>>>>>> 1e58c70963a546efcddfe52ac16dc6ac74b6923c
 
-    ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
-        const Config& cfg, std::string name, Acts::Logging::Level level)
+ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
+    const Config& cfg, std::string name, Acts::Logging::Level level)
     : IAlgorithm(std::move(name), level) {
   if (cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input particle collection");
@@ -71,11 +68,9 @@
   m_eventStore = std::make_shared<EventStore>();
 
   // tweek logging
-  {
-    // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
-    // 3 would be also possible, but that produces infinite amount of output.
-    m_geant4Level = logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
-  }
+  // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
+  // 3 would be also possible, but that produces infinite amount of output.
+  m_geant4Level = logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
 }
 
 ActsExamples::Geant4SimulationBase::~Geant4SimulationBase() = default;
@@ -132,12 +127,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   runManager->BeamOn(1);
 
   // Since these are std::set, this ensures that each particle is in both sets
-  if (eventData.particlesInitial.size() != eventData.particlesFinal.size()) {
-    ACTS_WARNING(
-        "initial and final particle collections does not have the same size: "
-        << eventData.particlesInitial.size() << " vs "
-        << eventData.particlesFinal.size());
-  }
+  throw_assert(
+      eventData.particlesInitial.size() == eventData.particlesFinal.size(),
+      "initial and final particle collections does not have the same size: "
+          << eventData.particlesInitial.size() << " vs "
+          << eventData.particlesFinal.size());
 
   // Print out warnings about possible particle collision if happened
   if (eventData.particleIdCollisionsInitial > 0 or
@@ -163,7 +157,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
                                                  Acts::Logging::Level level)
     : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
   m_gean4Instance = m_cfg.geant4Handle ? m_cfg.geant4Handle
-                                       : Geant4Manager::instance().create(
+                                       : Geant4Manager::instance().createHandle(
                                              m_geant4Level, m_cfg.physicsList);
   if (m_gean4Instance->physicsListName != m_cfg.physicsList) {
     throw std::runtime_error("inconsistent physics list");
@@ -316,7 +310,7 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
   m_gean4Instance =
       m_cfg.geant4Handle
           ? m_cfg.geant4Handle
-          : Geant4Manager::instance().create(
+          : Geant4Manager::instance().createHandle(
                 m_geant4Level,
                 std::make_unique<MaterialPhysicsList>(
                     m_logger->cloneWithSuffix("MaterialPhysicsList")),

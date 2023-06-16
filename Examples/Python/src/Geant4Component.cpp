@@ -71,14 +71,11 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod, "Geant4Handle");
 
   {
-    using Algorithm = Geant4Simulation;
+    using Algorithm = Geant4SimulationBase;
     using Config = Algorithm::Config;
     auto alg =
-        py::class_<Algorithm, ActsExamples::IAlgorithm,
-                   std::shared_ptr<Algorithm>>(mod, "Geant4Simulation")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Algorithm::config)
+        py::class_<Algorithm, IAlgorithm, std::shared_ptr<Algorithm>>(
+            mod, "Geant4Simulation")
             .def_property_readonly("geant4Handle", &Algorithm::geant4Handle);
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
@@ -88,6 +85,23 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(randomNumbers);
     ACTS_PYTHON_MEMBER(detectorConstructionFactory);
     ACTS_PYTHON_MEMBER(geant4Handle);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Algorithm = Geant4Simulation;
+    using Config = Algorithm::Config;
+    auto alg =
+        py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
+            mod, "Geant4Simulation")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Algorithm::config);
+
+    auto c1 = py::class_<Config, Geant4SimulationBase::Config,
+                         std::shared_ptr<Config>>(alg, "Config")
+                  .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c1, Config);
     ACTS_PYTHON_MEMBER(outputSimHits);
     ACTS_PYTHON_MEMBER(outputParticlesInitial);
     ACTS_PYTHON_MEMBER(outputParticlesFinal);
@@ -107,19 +121,16 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     using Algorithm = Geant4MaterialRecording;
     using Config = Algorithm::Config;
     auto alg =
-        py::class_<Algorithm, ActsExamples::IAlgorithm,
-                   std::shared_ptr<Algorithm>>(mod, "Geant4MaterialRecording")
+        py::class_<Algorithm, Geant4SimulationBase, std::shared_ptr<Algorithm>>(
+            mod, "Geant4MaterialRecording")
             .def(py::init<const Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
             .def_property_readonly("config", &Algorithm::config);
 
-    auto c = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
+    auto c = py::class_<Config, Geant4SimulationBase::Config,
+                        std::shared_ptr<Config>>(alg, "Config")
                  .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(detectorConstructionFactory);
-    ACTS_PYTHON_MEMBER(geant4Handle);
     ACTS_PYTHON_MEMBER(outputMaterialTracks);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -167,7 +178,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                std::shared_ptr<Acts::Geant4DetectorElement>>(
         mod, "Geant4DetectorElement");
 
-    using Geant4Detector = ActsExamples::Geant4::Geant4Detector;
+    using Geant4Detector = Geant4::Geant4Detector;
 
     auto g =
         py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
@@ -202,9 +213,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
 
   {
-    using MockupSectorBuilder = ActsExamples::MockupSectorBuilder;
-    using Config = ActsExamples::MockupSectorBuilder::Config;
-    using ChamberConfig = ActsExamples::MockupSectorBuilder::ChamberConfig;
+    using MockupSectorBuilder = MockupSectorBuilder;
+    using Config = MockupSectorBuilder::Config;
+    using ChamberConfig = MockupSectorBuilder::ChamberConfig;
 
     auto ms =
         py::class_<MockupSectorBuilder, std::shared_ptr<MockupSectorBuilder>>(

@@ -50,23 +50,23 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
   ACTS_DEBUG("Primary Generator Action for Event: " << eventID);
 
-  auto& eventData = *m_cfg.eventStore;
-  WhiteBoard* eventStore = eventData.store;
-  if (eventStore == nullptr) {
-    ACTS_WARNING("No EventStore instance could be found for this event!");
+  if (eventStore().store == nullptr) {
+    ACTS_WARNING("No WhiteBoard instance could be found for this event!");
     return;
   }
 
-  if (eventData.inputParticles == nullptr) {
+  if (eventStore().inputParticles == nullptr) {
     ACTS_WARNING("No input particle handle found");
     return;
   }
 
   // Get the number of input particles
-  const auto inputParticles = (*eventData.inputParticles)(*eventStore);
+  const auto inputParticles =
+      (*eventStore().inputParticles)(*eventStore().store);
 
   // Reserve hopefully enough hit space
-  eventData.hits.reserve(inputParticles.size() * m_cfg.reserveHitsPerParticle);
+  eventStore().hits.reserve(inputParticles.size() *
+                            m_cfg.reserveHitsPerParticle);
 
   // Default particle kinematic
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
@@ -149,7 +149,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
 
-    eventData.trackIdMapping[particle->GetTrackID()] = part.particleId();
+    eventStore().trackIdMapping[particle->GetTrackID()] = part.particleId();
 
     ++pCounter;
   }

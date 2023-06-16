@@ -59,6 +59,9 @@ class SensitiveSteppingAction : public G4UserSteppingAction {
   /// Private access method to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }
 
+  /// Private access method to the event store
+  EventStore& eventStore() const { return *m_cfg.eventStore; }
+
   /// The looging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 };

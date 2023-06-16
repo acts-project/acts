@@ -77,12 +77,12 @@ void Geant4Manager::tweekLogging(G4RunManager& runManager, int level) {
 #endif
 }
 
-std::shared_ptr<Geant4Handle> Geant4Manager::create(int logLevel,
-                                                    std::string physicsList) {
-  return create(logLevel, createPhysicsList(physicsList), physicsList);
+std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
+    int logLevel, std::string physicsList) {
+  return createHandle(logLevel, createPhysicsList(physicsList), physicsList);
 }
 
-std::shared_ptr<Geant4Handle> Geant4Manager::create(
+std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
     int logLevel, std::unique_ptr<G4VUserPhysicsList> physicsList,
     std::string physicsListName) {
   if (!m_handle.expired()) {

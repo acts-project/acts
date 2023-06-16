@@ -64,10 +64,11 @@ class Geant4Manager {
   static void tweekLogging(G4RunManager &runManager, int level);
 
   /// This can only be called once due to Geant4 limitations
-  std::shared_ptr<Geant4Handle> create(int logLevel, std::string physicsList);
+  std::shared_ptr<Geant4Handle> createHandle(int logLevel,
+                                             std::string physicsList);
 
   /// This can only be called once due to Geant4 limitations
-  std::shared_ptr<Geant4Handle> create(
+  std::shared_ptr<Geant4Handle> createHandle(
       int logLevel, std::unique_ptr<G4VUserPhysicsList> physicsList,
       std::string physicsListName);
 
