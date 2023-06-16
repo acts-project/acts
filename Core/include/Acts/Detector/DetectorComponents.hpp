@@ -26,6 +26,21 @@ namespace Experimental {
 class DetectorVolume;
 class Portal;
 
+/// @brief Container to collect root volumes for the
+/// construction of a Detector
+///
+/// @note each root volume is expected to contain a full
+/// search tree for eventually contained sub volumes
+///
+/// This struct collects all root volumes that will then
+/// be provided to the Detector object
+struct RootDetectorVolumes {
+  /// The list of root volumes
+  std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
+  /// The Root volumes finder
+  DetectorVolumeUpdator volumeFinder;
+};
+
 /// @brief The currently built detector components
 /// including the constructed volumes and the current
 /// shell/coating, i.e. portals ordered in a map
@@ -35,11 +50,14 @@ class Portal;
 /// VolumeBounds derivative that is described by the given
 /// component.
 struct DetectorComponent {
+  /// Define a portal container
   using PortalContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
   /// The vector of construced volume(s)
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// The current map of outside portals
-  PortalContainer portals;
+  PortalContainer portals = {};
+  /// The root volumes finder
+  RootDetectorVolumes rootVolumes = {};
 };
 
 /// @brief Holder struct for the external structure components
@@ -66,18 +84,6 @@ struct InternalStructure {
   SurfaceCandidatesDelegate surfacesDelegate;
   // Navigation delegate for volumes
   DetectorVolumeFinder volumeFinder;
-};
-
-/// @brief Container to collect root volumes for the
-/// construction of a Detector
-///
-/// @note each root volume is expected to contain a full
-/// search tree for eventually contained sub volumes
-///
-/// This struct collects all root volumes that will then
-/// be provided to the Detector object
-struct RootDetectorVolumes {
-  std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
 };
 
 }  // namespace Experimental

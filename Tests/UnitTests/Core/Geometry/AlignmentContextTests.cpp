@@ -38,7 +38,7 @@ struct AlignmentContext {
   /// Context index
   unsigned int alignmentIndex{0};
 
-  /// Default contructor
+  /// Default constructor
   AlignmentContext() = default;
 
   /// Constructor with Store and context index

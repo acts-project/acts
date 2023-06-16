@@ -98,17 +98,18 @@ void addUnits(Context& ctx);
 void addLogging(Context& ctx);
 void addPdgParticle(Context& ctx);
 void addAlgebra(Context& ctx);
+void addBinning(Context& ctx);
 
 void addPropagation(Context& ctx);
 
 void addGeometry(Context& ctx);
+void addExperimentalGeometry(Context& ctx);
 
 void addMagneticField(Context& ctx);
 
 void addMaterial(Context& ctx);
 void addOutput(Context& ctx);
 void addDetector(Context& ctx);
-void addDetectorInspectors(Context& ctx);
 void addExampleAlgorithms(Context& ctx);
 void addInput(Context& ctx);
 void addGenerators(Context& ctx);
@@ -164,7 +165,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
            py::arg("level"), py::arg("name") = "WhiteBoard")
       .def("exists", &WhiteBoard::exists);
 
-  py::class_<Acts::GeometryContext>(m, "GeometryContext");
+  py::class_<Acts::GeometryContext>(m, "GeometryContext").def(py::init<>());
 
   py::class_<AlgorithmContext>(mex, "AlgorithmContext")
       .def(py::init<size_t, size_t, WhiteBoard&>())
@@ -275,14 +276,16 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addLogging(ctx);
   addPdgParticle(ctx);
   addAlgebra(ctx);
+  addBinning(ctx);
 
   addPropagation(ctx);
   addGeometry(ctx);
+  addExperimentalGeometry(ctx);
+
   addMagneticField(ctx);
   addMaterial(ctx);
   addOutput(ctx);
   addDetector(ctx);
-  addDetectorInspectors(ctx);
   addExampleAlgorithms(ctx);
   addInput(ctx);
   addGenerators(ctx);
