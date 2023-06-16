@@ -214,8 +214,10 @@ inline auto makeVector4(const Eigen::MatrixBase<vector3_t>& vec3,
 
 // Computes the signed angle \in [-pi, pi] between a 2D vector vec and a 2D reference vector refVec
 // @note: the vectors should lie in the same plane
-// @note: for an explanation of why this computation works see https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
-// @note: in future Eigen releases, the nominator can be replaced by refVec.cross(vec), see https://gitlab.com/libeigen/eigen/-/merge_requests/1098
+// @note: for an explanation of why this computation works see
+//      https://stackoverflow.com/questions/5188561/
+// @note: in future Eigen releases, the nominator can be replaced by refVec.cross(vec), see
+//      https://gitlab.com/libeigen/eigen/-/merge_requests/1098
 template <typename Derived>
 inline typename Derived::Scalar signedAngle(
     const Eigen::MatrixBase<Derived>& vec,
