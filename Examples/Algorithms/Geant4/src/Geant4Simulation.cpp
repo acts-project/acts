@@ -221,6 +221,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
         stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
     steppingCfg.actions.push_back(std::make_unique<ParticleKillAction>(
         particleKillCfg, m_logger->cloneWithSuffix("Killer")));
+
     // G4RunManager will take care of deletion
     auto steppingAction = new SteppingActionList(steppingCfg);
     // Clear stepping action if it exists
@@ -324,17 +325,36 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
 
   // Set the primarty generator
   {
-    MaterialSteppingAction::Config mStepCfg;
-    mStepCfg.excludeMaterials = m_cfg.excludeMaterials;
+    SimParticleTranslation::Config prCfg;
+    prCfg.eventStore = m_eventStore;
+    prCfg.forcedPdgCode = 0;
+    prCfg.forcedCharge = 0.;
+    prCfg.forcedMass = 0.;
+
     // G4RunManager will take care of deletion
-    auto primaryGeneratorAction = new MaterialSteppingAction(
-        mStepCfg, m_logger->cloneWithSuffix("MaterialSteppingAction"));
+    auto primaryGeneratorAction = new SimParticleTranslation(
+        prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
     // Clear primary generation action if it exists
     if (runManager->GetUserPrimaryGeneratorAction() != nullptr) {
       delete runManager->GetUserPrimaryGeneratorAction();
     }
     // Set the primary generator action
     runManager->SetUserAction(primaryGeneratorAction);
+  }
+
+  // Stepping action
+  {
+    MaterialSteppingAction::Config steppingCfg;
+    steppingCfg.eventStore = m_eventStore;
+    steppingCfg.excludeMaterials = m_cfg.excludeMaterials;
+    // G4RunManager will take care of deletion
+    auto steppingAction = new MaterialSteppingAction(
+        steppingCfg, m_logger->cloneWithSuffix("MaterialSteppingAction"));
+    // Clear stepping action if it exists
+    if (runManager->GetUserSteppingAction() != nullptr) {
+      delete runManager->GetUserSteppingAction();
+    }
+    runManager->SetUserAction(steppingAction);
   }
 
   m_inputParticles.initialize(cfg.inputParticles);

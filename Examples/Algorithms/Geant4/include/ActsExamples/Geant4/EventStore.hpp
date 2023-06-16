@@ -52,7 +52,7 @@ struct EventStore {
   std::size_t maxStepsForHit = 0;
 
   /// Tracks recorded in material mapping
-  std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;
+  std::unordered_map<std::size_t, Acts::RecordedMaterialTrack> materialTracks;
 
   /// Particle hit count (for hit indexing)
   std::unordered_map<SimBarcode, std::size_t> particleHitCount;

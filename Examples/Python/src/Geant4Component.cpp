@@ -75,7 +75,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     using Config = Algorithm::Config;
     auto alg =
         py::class_<Algorithm, IAlgorithm, std::shared_ptr<Algorithm>>(
-            mod, "Geant4Simulation")
+            mod, "Geant4SimulationBase")
             .def_property_readonly("geant4Handle", &Algorithm::geant4Handle);
 
     auto c1 = py::class_<Config, std::shared_ptr<Config>>(alg, "Config")
