@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack>
@@ -83,16 +84,16 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   }
 
   // Complete Jacobian (consists of positionJacobian and momentumJacobian)
-  ActsMatrix<eBoundSize, eLinSize> completeJacobian;
-  completeJacobian.setZero();
+  ActsMatrix<eBoundSize, eLinSize> completeJacobian = ActsMatrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
 
   // Perigee parameters wrt linPoint after wiggling
   BoundVector newPerigeeParams;
 
   // Check if wiggled angle theta are within definition range [0, pi]
-  assert(paramVec(eLinTheta) + m_cfg.delta < M_PI &&
-         "Wiggled theta outside range, choose a smaller wiggle (i.e., delta)!"
-         "You might need to decrease targetTolerance as well.");
+  if(paramVec(eLinTheta) + m_cfg.delta > M_PI) {
+    ACTS_ERROR("Wiggled theta outside range, choose a smaller wiggle (i.e., delta)! You might need to decrease targetTolerance as well.")
+  }
+
   // Wiggling each of the parameters at the PCA and computing the Perigee
   // parametrization of the resulting new track. This allows us to approximate
   // the numerical derivatives.
@@ -123,18 +124,11 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     newPerigeeParams = (*newResult->endParameters).parameters();
 
     // Computing the numerical derivatives and filling the Jacobian
-    // d_0 and z_0
-    completeJacobian.block<2, 1>(0, i) =
-        (newPerigeeParams.head(2) - perigeeParams.head(2)) / m_cfg.delta;
-    // We need to account for the periodicity of phi (see documentiation of
-    // difference_periodic)
-    completeJacobian(2, i) =
-        Acts::detail::difference_periodic(newPerigeeParams(2), perigeeParams(2),
-                                          2 * M_PI) /
-        m_cfg.delta;
-    // theta, q/p, and t
-    completeJacobian.block<3, 1>(3, i) =
-        (newPerigeeParams.tail(3) - perigeeParams.tail(3)) / m_cfg.delta;
+     completeJacobian.array().col(i) = (newPerigeeParams - perigeeParams) / m_cfg.delta;
+    // We need to account for the periodicity of phi and the poles of theta 
+    // The values are overwritten for better readability
+    Vector2 diffPhiTheta = VectorHelpers::subtractPhiTheta(newPerigeeParams.segment(2, 2), perigeeParams.segment(2, 2));
+    completeJacobian.block<2, 1>(2, i) = diffPhiTheta / m_cfg.delta;
   }
 
   // Extracting positionJacobian and momentumJacobian from the complete Jacobian
