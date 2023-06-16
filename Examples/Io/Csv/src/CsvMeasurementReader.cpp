@@ -204,14 +204,16 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
     // Get all cell data for this measurment
     std::vector<ActsExamples::CellData> thisCellData;
-    std::copy_if(cellData.begin(), cellData.end(), thisCellData.begin(),
+    std::copy_if(cellData.begin(), cellData.end(),
+                 std::back_inserter(thisCellData),
                  [&](const auto& cd) { return cd.measurement_id == index; });
 
     // Fill the channels
     Cluster cluster;
     cluster.channels.reserve(thisCellData.size());
     for (const auto& cd : thisCellData) {
-      ActsFatras::Channelizer::Segment2D dummySegment;
+      ActsFatras::Channelizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
+                                                         Acts::Vector2::Zero()};
       ActsFatras::Channelizer::Bin2D bin{
           static_cast<unsigned int>(cd.channel0),
           static_cast<unsigned int>(cd.channel1)};
@@ -231,8 +233,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
                                               cluster.channels.end(), compareX);
       auto [minY, maxY] = std::minmax_element(cluster.channels.begin(),
                                               cluster.channels.end(), compareY);
-      cluster.sizeLoc0 = maxX->bin[0] - minX->bin[0];
-      cluster.sizeLoc1 = maxY->bin[1] - minY->bin[1];
+      cluster.sizeLoc0 = 1 + maxX->bin[0] - minX->bin[0];
+      cluster.sizeLoc1 = 1 + maxY->bin[1] - minY->bin[1];
     }
 
     clusters.push_back(cluster);

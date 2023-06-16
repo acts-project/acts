@@ -56,7 +56,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
 
   dfe::NamedTupleCsvWriter<HitData> writerHits(pathHits, m_cfg.outputPrecision);
   dfe::NamedTupleCsvWriter<CellDataLegacy> writerCells(pathCells,
-                                                 m_cfg.outputPrecision);
+                                                       m_cfg.outputPrecision);
   dfe::NamedTupleCsvWriter<TruthHitData> writerTruth(pathTruth,
                                                      m_cfg.outputPrecision);
 

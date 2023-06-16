@@ -154,7 +154,6 @@ struct CellData {
                  timestamp, value);
 };
 
-
 // uses hit id
 struct CellDataLegacy {
   /// Hit surface identifier.
@@ -173,7 +172,6 @@ struct CellDataLegacy {
   DFE_NAMEDTUPLE(CellDataLegacy, geometry_id, hit_id, channel0, channel1,
                  timestamp, value);
 };
-
 
 struct SurfaceData {
   /// Surface identifier. Not available in the TrackML datasets.
