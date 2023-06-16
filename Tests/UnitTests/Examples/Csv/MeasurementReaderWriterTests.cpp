@@ -1,9 +1,9 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distiributed with this
+// License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/unit_test.hpp>
@@ -89,7 +89,8 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
 
     clusterOriginal.push_back(cl);
 
-    mapOriginal.insert({i, disti(gen)});
+    // Just generate some random hitid
+    mapOriginal.insert(std::pair<Index, Index>{i, disti(gen)});
   }
 
   //////////////////
