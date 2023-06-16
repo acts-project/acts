@@ -103,7 +103,7 @@ void addBinning(Context& ctx);
 void addPropagation(Context& ctx);
 
 void addGeometry(Context& ctx);
-void addExperimentaGeometry(Context& ctx);
+void addExperimentalGeometry(Context& ctx);
 
 void addMagneticField(Context& ctx);
 
@@ -280,7 +280,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
 
   addPropagation(ctx);
   addGeometry(ctx);
-  addExperimentaGeometry(ctx);
+  addExperimentalGeometry(ctx);
 
   addMagneticField(ctx);
   addMaterial(ctx);

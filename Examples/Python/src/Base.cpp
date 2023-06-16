@@ -273,7 +273,7 @@ void addBinning(Context& ctx) {
   auto& m = ctx.get("main");
   auto binning = m.def_submodule("Binning", "");
 
-  auto binningValue = py::enum_<Acts::BinningValue>(binning, "AxisValue")
+  auto binningValue = py::enum_<Acts::BinningValue>(binning, "BinningValue")
                           .value("x", Acts::BinningValue::binX)
                           .value("y", Acts::BinningValue::binY)
                           .value("z", Acts::BinningValue::binZ)
@@ -282,7 +282,7 @@ void addBinning(Context& ctx) {
                           .export_values();
 
   auto boundaryType =
-      py::enum_<Acts::detail::AxisBoundaryType>(binning, "AxisBoundary")
+      py::enum_<Acts::detail::AxisBoundaryType>(binning, "AxisBoundaryType")
           .value("bound", Acts::detail::AxisBoundaryType::Bound)
           .value("closed", Acts::detail::AxisBoundaryType::Closed)
           .value("open", Acts::detail::AxisBoundaryType::Open)

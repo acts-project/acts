@@ -79,7 +79,7 @@ void addGeometry(Context& ctx) {
   }
 
   {
-    py::enum_<Acts::VolumeBounds::BoundsType>(m, "VolumeType")
+    py::enum_<Acts::VolumeBounds::BoundsType>(m, "VolumeBoundsType")
         .value("Cone", Acts::VolumeBounds::BoundsType::eCone)
         .value("Cuboid", Acts::VolumeBounds::BoundsType::eCuboid)
         .value("CutoutCylinder",
@@ -124,7 +124,7 @@ void addGeometry(Context& ctx) {
   }
 }
 
-void addExperimentaGeometry(Context& ctx) {
+void addExperimentalGeometry(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   using namespace Acts::Experimental;
@@ -202,9 +202,7 @@ void addExperimentaGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(nSegments);
     ACTS_PYTHON_MEMBER(auxilliary);
     ACTS_PYTHON_STRUCT_END();
-  }
 
-  {
     // The internal layer structure builder
     py::class_<Acts::Experimental::ISurfacesProvider,
                std::shared_ptr<Acts::Experimental::ISurfacesProvider>>(
@@ -213,7 +211,7 @@ void addExperimentaGeometry(Context& ctx) {
     py::class_<LayerStructureBuilder::SurfacesHolder,
                Acts::Experimental::ISurfacesProvider,
                std::shared_ptr<LayerStructureBuilder::SurfacesHolder>>(
-        m, "SurfacesHolder")
+        lsBuilder, "SurfacesHolder")
         .def(py::init<std::vector<std::shared_ptr<Surface>>>());
   }
 
