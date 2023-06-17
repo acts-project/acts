@@ -123,7 +123,7 @@ $ cmake --build build
 
 A set of container images is available through the [Acts container
 registry][acts_containers]. The following containers are used as part of the
-continous integration setup and come with all dependencies pre-installed.
+continuous integration setup and come with all dependencies pre-installed.
 
 -   `centos7-lcg97apython3-gcc9`: based on CentOS 7 with HEP-specific software from
     LCG 97apython3 using the GCC 9 compiler
@@ -178,7 +178,7 @@ container $ cmake --build build
 
 ### On your local machine
 
-Building and running Acts on your local machine is not offically supported.
+Building and running Acts on your local machine is not officially supported.
 However, if you have the necessary prerequisites installed it is possible to use
 it locally. Acts developers regularly use different Linux distributions
 and macOS to build and develop Acts.
@@ -190,7 +190,7 @@ The documentation uses [Doxygen][doxygen] to extract the source code
 documentation and [Sphinx][sphinx] with the [Breathe][breathe] extension to
 generate the documentation website. To build the documentation locally, you
 need to have [Doxygen][doxygen] version `1.9.5` or newer installed.
-[Sphinx][sphinx] and a few other depencencies can be installed using the Python
+[Sphinx][sphinx] and a few other dependencies can be installed using the Python
 package manager `pip`:
 
 ```console

@@ -44,7 +44,7 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
   // x=2000 with 0 B-Field
   Acts::Vector3 dir = Acts::Vector3{1.0_m, 0.3_m, 0.0_m};
 
-  // Start a bit in the volume 2, so we do not have any bondary checking for
+  // Start a bit in the volume 2, so we do not have any boundary checking for
   // the volume transition in the log
   Acts::CurvilinearTrackParameters start(
       Acts::Vector4(0.01, 0, 0, 0), dir.normalized(), 1_GeV, 1_e, std::nullopt);

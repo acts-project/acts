@@ -202,7 +202,7 @@ struct SurfaceIndexing {
 
     // Configure the layer structure builder
     Acts::Experimental::LayerStructureBuilder::Config lsConfig;
-    lsConfig.auxilliary =
+    lsConfig.auxiliary =
         std::string("*** Building ") + name + std::string(" ***");
     lsConfig.surfaces = selectedSurfaces;
     lsConfig.binnings = lBinnings;

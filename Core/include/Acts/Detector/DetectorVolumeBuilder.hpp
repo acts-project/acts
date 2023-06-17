@@ -41,8 +41,8 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     bool addToRoot = true;
     /// Add eventual internal volume to root
     bool addInternalsToRoot = false;
-    /// Auxilliary information
-    std::string auxilliary = "";
+    /// Auxiliary information
+    std::string auxiliary = "";
   };
 
   /// Constructor with configuration arguments

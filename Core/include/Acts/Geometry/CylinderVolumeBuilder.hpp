@@ -272,13 +272,13 @@ struct WrappingConfig {
           nVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
           wCondition = Attaching;
-          wConditionScreen = "[n attched]";
+          wConditionScreen = "[n attached]";
         }
         if (pVolumeConfig && pVolumeConfig.zMin > existingVolumeConfig.zMax) {
           pVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
           wCondition = Attaching;
-          wConditionScreen = "[p attched]";
+          wConditionScreen = "[p attached]";
         }
         // see if inner glue volumes are needed
         if (containerVolumeConfig.rMin > existingVolumeConfig.rMin) {

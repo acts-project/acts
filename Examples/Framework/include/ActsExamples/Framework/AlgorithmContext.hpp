@@ -43,7 +43,7 @@ struct AlgorithmContext {
   Acts::GeometryContext geoContext;  ///< Per-event geometry context
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
-  Acts::CalibrationContext calibContext;  ///< Per-event calbiration context
+  Acts::CalibrationContext calibContext;  ///< Per-event calibration context
 };
 
 }  // namespace ActsExamples

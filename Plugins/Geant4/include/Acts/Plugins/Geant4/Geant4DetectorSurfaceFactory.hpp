@@ -33,7 +33,7 @@ class Geant4DetectorSurfaceFactory {
   /// global lifetime configuration
   struct Config {};
 
-  // Collect the senstive surfaces
+  // Collect the sensitive surfaces
   using Geant4SensitiveSurface =
       std::tuple<std::shared_ptr<Geant4DetectorElement>,
                  std::shared_ptr<Surface>>;
@@ -55,7 +55,7 @@ class Geant4DetectorSurfaceFactory {
     std::size_t convertedMaterials = 0;
   };
 
-  /// Nested option struct that allows per call changable configuration
+  /// Nested option struct that allows per call changeable configuration
   struct Options {
     /// Convert the length scale
     ActsScalar scaleConversion = 1.;

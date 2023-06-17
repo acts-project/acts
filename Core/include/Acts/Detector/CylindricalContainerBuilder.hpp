@@ -39,8 +39,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
-    /// Auxilliary information, mainly for screen output
-    std::string auxilliary = "";
+    /// Auxiliary information, mainly for screen output
+    std::string auxiliary = "";
   };
 
   /// Constructor with configuration arguments
