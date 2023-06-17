@@ -559,7 +559,7 @@ def addSimWriters(
         )
 
 
-def getG4DetectorContruction(
+def getG4DetectorConstruction(
     detector: Any,
 ) -> Any:
     try:
@@ -649,7 +649,7 @@ def addGeant4(
     if g4detectorConstruction is None:
         if detector is None:
             raise AttributeError("detector not given")
-        g4detectorConstruction = getG4DetectorContruction(detector)
+        g4detectorConstruction = getG4DetectorConstruction(detector)
 
     g4conf = makeGeant4SimulationConfig(
         level=customLogLevel(),

@@ -222,4 +222,5 @@ void addDetector(Context& ctx) {
     patchKwargsConstructor(c);
   }
 }
+
 }  // namespace Acts::Python

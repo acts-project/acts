@@ -103,7 +103,7 @@ class GenericCuboidVolumeBounds : public VolumeBounds {
   std::array<Vector3, 8> m_vertices;
   std::array<Vector3, 6> m_normals;
 
-  /// Private helper method to contruct the Volume bounds
+  /// Private helper method to construct the Volume bounds
   /// to be called by the constructors, from the ordered input vertices
   void construct() noexcept(false);
 };

@@ -84,7 +84,8 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
       continue;
     }
     auto destProxy = filteredTracks.getTrack(filteredTracks.addTrack());
-    destProxy.copyFrom(track);
+    destProxy.copyFrom(track, false);
+    destProxy.tipIndex() = track.tipIndex();
   }
 
   ACTS_VERBOSE(
