@@ -46,4 +46,3 @@ if "__main__" == __name__:
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
     runGeant4(detector, trackingGeometry, field, Path.cwd()).run()
-    runGeant4(detector, trackingGeometry, field, Path.cwd()).run()

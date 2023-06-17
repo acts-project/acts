@@ -89,6 +89,8 @@ class Geant4SimulationBase : public IAlgorithm {
  protected:
   void commonInitialization();
 
+  EventStore& eventStore() const;
+
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::shared_ptr<EventStore> m_eventStore;
@@ -126,9 +128,9 @@ class Geant4Simulation final : public Geant4SimulationBase {
     /// If a physics list has to be instantiated this one is chosen.
     std::string physicsList = "FTFP_BERT";
 
-    std::vector<std::string> volumeMappings = {"Silicon"};
+    std::vector<std::string> volumeMappings;
 
-    std::vector<std::string> materialMappings;
+    std::vector<std::string> materialMappings = {"Silicon"};
 
     std::shared_ptr<const Acts::Volume> killVolume;
 

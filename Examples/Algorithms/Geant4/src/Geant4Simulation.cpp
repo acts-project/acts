@@ -93,6 +93,11 @@ void ActsExamples::Geant4SimulationBase::commonInitialization() {
   }
 }
 
+ActsExamples::EventStore& ActsExamples::Geant4SimulationBase::eventStore()
+    const {
+  return *m_eventStore;
+}
+
 ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::initialize() {
   auto runManager = m_gean4Instance->runManager.get();
 
@@ -112,15 +117,14 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   G4Random::setTheSeed(config().randomNumbers->generateSeed(ctx));
 
   // Get and reset event registry state
-  auto& eventData = *m_eventStore;
-  eventData = EventStore{};
+  eventStore() = EventStore{};
 
   // Register the current event store to the registry
   // this will allow access from the User*Actions
-  eventData.store = &(ctx.eventStore);
+  eventStore().store = &(ctx.eventStore);
 
   // Register the input particle read handle
-  eventData.inputParticles = &m_inputParticles;
+  eventStore().inputParticles = &m_inputParticles;
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
@@ -128,21 +132,23 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
 
   // Since these are std::set, this ensures that each particle is in both sets
   throw_assert(
-      eventData.particlesInitial.size() == eventData.particlesFinal.size(),
+      eventStore().particlesInitial.size() ==
+          eventStore().particlesFinal.size(),
       "initial and final particle collections does not have the same size: "
-          << eventData.particlesInitial.size() << " vs "
-          << eventData.particlesFinal.size());
+          << eventStore().particlesInitial.size() << " vs "
+          << eventStore().particlesFinal.size());
 
   // Print out warnings about possible particle collision if happened
-  if (eventData.particleIdCollisionsInitial > 0 or
-      eventData.particleIdCollisionsFinal > 0 or
-      eventData.parentIdNotFound > 0) {
+  if (eventStore().particleIdCollisionsInitial > 0 or
+      eventStore().particleIdCollisionsFinal > 0 or
+      eventStore().parentIdNotFound > 0) {
     ACTS_WARNING(
         "Particle ID collisions detected, don't trust the particle "
         "identification!");
-    ACTS_WARNING("- initial states: " << eventData.particleIdCollisionsInitial);
-    ACTS_WARNING("- final states: " << eventData.particleIdCollisionsFinal);
-    ACTS_WARNING("- parent ID not found: " << eventData.parentIdNotFound);
+    ACTS_WARNING(
+        "- initial states: " << eventStore().particleIdCollisionsInitial);
+    ACTS_WARNING("- final states: " << eventStore().particleIdCollisionsFinal);
+    ACTS_WARNING("- parent ID not found: " << eventStore().parentIdNotFound);
   }
 
   return ActsExamples::ProcessCode::SUCCESS;
@@ -280,25 +286,23 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   Geant4SimulationBase::execute(ctx);
 
-  auto& eventData = *m_eventStore;
-
   // Output handling: Simulation
   m_outputParticlesInitial(
-      ctx, SimParticleContainer(eventData.particlesInitial.begin(),
-                                eventData.particlesInitial.end()));
-  m_outputParticlesFinal(ctx,
-                         SimParticleContainer(eventData.particlesFinal.begin(),
-                                              eventData.particlesFinal.end()));
+      ctx, SimParticleContainer(eventStore().particlesInitial.begin(),
+                                eventStore().particlesInitial.end()));
+  m_outputParticlesFinal(
+      ctx, SimParticleContainer(eventStore().particlesFinal.begin(),
+                                eventStore().particlesFinal.end()));
 
 #if BOOST_VERSION < 107800
   SimHitContainer container;
-  for (const auto& hit : eventData.hits) {
+  for (const auto& hit : eventStore().hits) {
     container.insert(hit);
   }
   m_outputSimHits(ctx, std::move(container));
 #else
   m_outputSimHits(
-      ctx, SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
+      ctx, SimHitContainer(eventStore().hits.begin(), eventStore().hits.end()));
 #endif
 
   return ActsExamples::ProcessCode::SUCCESS;
@@ -367,11 +371,9 @@ ActsExamples::ProcessCode ActsExamples::Geant4MaterialRecording::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   Geant4SimulationBase::execute(ctx);
 
-  auto& eventData = *m_eventStore;
-
   // Output handling: Material tracks
   m_outputMaterialTracks(
-      ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
+      ctx, decltype(eventStore().materialTracks)(eventStore().materialTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
