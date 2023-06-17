@@ -87,9 +87,8 @@ void ActsExamples::Geant4SimulationBase::commonInitialization() {
     // G4RunManager will take care of deletion
     m_detectorConstruction =
         config().detectorConstructionFactory->factorize().release();
+    m_detectorConstruction->Construct();
     runManager->SetUserInitialization(m_detectorConstruction);
-    runManager->ReinitializeGeometry(true, true);
-    runManager->InitializeGeometry();
   }
 }
 
@@ -174,15 +173,15 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   // Set the primarty generator
   {
+    // Clear primary generation action if it exists
+    if (runManager->GetUserPrimaryGeneratorAction() != nullptr) {
+      delete runManager->GetUserPrimaryGeneratorAction();
+    }
     SimParticleTranslation::Config prCfg;
     prCfg.eventStore = m_eventStore;
     // G4RunManager will take care of deletion
     auto primaryGeneratorAction = new SimParticleTranslation(
         prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
-    // Clear primary generation action if it exists
-    if (runManager->GetUserPrimaryGeneratorAction() != nullptr) {
-      delete runManager->GetUserPrimaryGeneratorAction();
-    }
     // Set the primary generator action
     runManager->SetUserAction(primaryGeneratorAction);
   }
@@ -196,21 +195,26 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
   // Particle action
   {
+    // Clear tracking action if it exists
+    if (runManager->GetUserTrackingAction() != nullptr) {
+      delete runManager->GetUserTrackingAction();
+    }
     ParticleTrackingAction::Config trackingCfg;
     trackingCfg.eventStore = m_eventStore;
     trackingCfg.keepParticlesWithoutHits = cfg.keepParticlesWithoutHits;
     // G4RunManager will take care of deletion
     auto trackingAction = new ParticleTrackingAction(
         trackingCfg, m_logger->cloneWithSuffix("ParticleTracking"));
-    // Clear tracking action if it exists
-    if (runManager->GetUserTrackingAction() != nullptr) {
-      delete runManager->GetUserTrackingAction();
-    }
     runManager->SetUserAction(trackingAction);
   }
 
   // Stepping actions
   {
+    // Clear stepping action if it exists
+    if (runManager->GetUserSteppingAction() != nullptr) {
+      delete runManager->GetUserSteppingAction();
+    }
+
     SensitiveSteppingAction::Config stepCfg;
     stepCfg.eventStore = m_eventStore;
     stepCfg.charged = true;
@@ -230,10 +234,6 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
     // G4RunManager will take care of deletion
     auto steppingAction = new SteppingActionList(steppingCfg);
-    // Clear stepping action if it exists
-    if (runManager->GetUserSteppingAction() != nullptr) {
-      delete runManager->GetUserSteppingAction();
-    }
     runManager->SetUserAction(steppingAction);
   }
 
@@ -329,6 +329,11 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
 
   // Set the primarty generator
   {
+    // Clear primary generation action if it exists
+    if (runManager->GetUserPrimaryGeneratorAction() != nullptr) {
+      delete runManager->GetUserPrimaryGeneratorAction();
+    }
+
     SimParticleTranslation::Config prCfg;
     prCfg.eventStore = m_eventStore;
     prCfg.forcedPdgCode = 0;
@@ -338,26 +343,22 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
     // G4RunManager will take care of deletion
     auto primaryGeneratorAction = new SimParticleTranslation(
         prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
-    // Clear primary generation action if it exists
-    if (runManager->GetUserPrimaryGeneratorAction() != nullptr) {
-      delete runManager->GetUserPrimaryGeneratorAction();
-    }
     // Set the primary generator action
     runManager->SetUserAction(primaryGeneratorAction);
   }
 
   // Stepping action
   {
+    // Clear stepping action if it exists
+    if (runManager->GetUserSteppingAction() != nullptr) {
+      delete runManager->GetUserSteppingAction();
+    }
     MaterialSteppingAction::Config steppingCfg;
     steppingCfg.eventStore = m_eventStore;
     steppingCfg.excludeMaterials = m_cfg.excludeMaterials;
     // G4RunManager will take care of deletion
     auto steppingAction = new MaterialSteppingAction(
         steppingCfg, m_logger->cloneWithSuffix("MaterialSteppingAction"));
-    // Clear stepping action if it exists
-    if (runManager->GetUserSteppingAction() != nullptr) {
-      delete runManager->GetUserSteppingAction();
-    }
     runManager->SetUserAction(steppingAction);
   }
 
