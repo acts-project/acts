@@ -89,6 +89,8 @@ class Geant4SimulationBase : public IAlgorithm {
  protected:
   void commonInitialization();
 
+  G4RunManager& runManager() const;
+
   EventStore& eventStore() const;
 
   std::unique_ptr<const Acts::Logger> m_logger;
@@ -97,7 +99,7 @@ class Geant4SimulationBase : public IAlgorithm {
 
   int m_geant4Level{};
 
-  std::shared_ptr<Geant4Handle> m_gean4Instance;
+  std::shared_ptr<Geant4Handle> m_geant4Instance;
 
   /// Detector construction object.
   /// G4RunManager will take care of deletion

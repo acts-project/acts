@@ -81,11 +81,10 @@ class DD4hepGeometryService {
     std::function<void(std::vector<dd4hep::DetElement>& detectors)>
         sortDetectors = sortFCChhDetElements;
     /// Material decorator
-    std::shared_ptr<const Acts::IMaterialDecorator> matDecorator = nullptr;
+    std::shared_ptr<const Acts::IMaterialDecorator> matDecorator;
 
     /// Optional geometry identifier hook to be used during closure
-    std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
-        std::make_shared<Acts::GeometryIdentifierHook>();
+    std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook;
   };
 
   DD4hepGeometryService(const Config& cfg);
@@ -105,7 +104,7 @@ class DD4hepGeometryService {
   /// Interface method to access the ACTS TrackingGeometry
   ///
   /// @param gctx is the geometry context object
-  std::unique_ptr<const Acts::TrackingGeometry> trackingGeometry(
+  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry(
       const Acts::GeometryContext& gctx);
 
  private:
@@ -123,7 +122,7 @@ class DD4hepGeometryService {
   /// The world DD4hep DetElement
   dd4hep::DetElement m_geometry;
   /// The ACTS TrackingGeometry
-  std::unique_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
+  std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
 
   const Acts::Logger& logger() const { return *m_logger; }
 

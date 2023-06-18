@@ -24,22 +24,27 @@ class G4VPhysicalVolume;
 
 ActsExamples::DDG4DetectorConstruction::DDG4DetectorConstruction(
     std::shared_ptr<DD4hep::DD4hepDetector> detector)
-    : G4VUserDetectorConstruction(), m_detector(detector.get()) {}
+    : G4VUserDetectorConstruction(), m_detector(std::move(detector)) {}
 
 ActsExamples::DDG4DetectorConstruction::~DDG4DetectorConstruction() = default;
+
+dd4hep::Detector& ActsExamples::DDG4DetectorConstruction::dd4hepDetector()
+    const {
+  return m_detector->geometryService->detector();
+}
 
 // See DD4hep::Simulation::Geant4DetectorConstruction::Construct()
 G4VPhysicalVolume* ActsExamples::DDG4DetectorConstruction::Construct() {
   if (m_world == nullptr) {
     dd4hep::sim::Geant4Mapping& g4map = dd4hep::sim::Geant4Mapping::instance();
-    dd4hep::Detector& detector = m_detector->geometryService->detector();
-    dd4hep::DetElement world = detector.world();
-    dd4hep::sim::Geant4Converter conv(detector, dd4hep::PrintLevel::VERBOSE);
+    dd4hep::DetElement world = dd4hepDetector().world();
+    dd4hep::sim::Geant4Converter conv(dd4hepDetector(),
+                                      dd4hep::PrintLevel::VERBOSE);
     dd4hep::sim::Geant4GeometryInfo* geo_info = conv.create(world).detach();
     g4map.attach(geo_info);
     // All volumes are deleted in ~G4PhysicalVolumeStore()
     m_world = geo_info->world();
-    detector.apply("DD4hepVolumeManager", 0, nullptr);
+    dd4hepDetector().apply("DD4hepVolumeManager", 0, nullptr);
     // Create Geant4 volume manager
     g4map.volumeManager();
   }

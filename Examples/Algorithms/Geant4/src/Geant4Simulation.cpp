@@ -76,20 +76,22 @@ ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
 ActsExamples::Geant4SimulationBase::~Geant4SimulationBase() = default;
 
 void ActsExamples::Geant4SimulationBase::commonInitialization() {
-  auto runManager = m_gean4Instance->runManager.get();
-
   // Set the detector construction
   {
     // Clear detector construction if it exists
-    if (runManager->GetUserDetectorConstruction() != nullptr) {
-      delete runManager->GetUserDetectorConstruction();
+    if (runManager().GetUserDetectorConstruction() != nullptr) {
+      delete runManager().GetUserDetectorConstruction();
     }
     // G4RunManager will take care of deletion
     m_detectorConstruction =
         config().detectorConstructionFactory->factorize().release();
-    m_detectorConstruction->Construct();
-    runManager->SetUserInitialization(m_detectorConstruction);
+    runManager().SetUserInitialization(m_detectorConstruction);
+    runManager().InitializeGeometry();
   }
+}
+
+G4RunManager& ActsExamples::Geant4SimulationBase::runManager() const {
+  return *m_geant4Instance->runManager.get();
 }
 
 ActsExamples::EventStore& ActsExamples::Geant4SimulationBase::eventStore()
@@ -98,10 +100,8 @@ ActsExamples::EventStore& ActsExamples::Geant4SimulationBase::eventStore()
 }
 
 ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::initialize() {
-  auto runManager = m_gean4Instance->runManager.get();
-
   // Initialize the Geant4 run manager
-  runManager->Initialize();
+  runManager().Initialize();
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
@@ -109,8 +109,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::initialize() {
 ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Ensure exclusive access to the Geant4 run manager
-  std::lock_guard<std::mutex> guard(m_gean4Instance->mutex);
-  auto runManager = m_gean4Instance->runManager.get();
+  std::lock_guard<std::mutex> guard(m_geant4Instance->mutex);
 
   // Set the seed new per event, so that we get reproducible results
   G4Random::setTheSeed(config().randomNumbers->generateSeed(ctx));
@@ -127,7 +126,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
-  runManager->BeamOn(1);
+  runManager().BeamOn(1);
 
   // Since these are std::set, this ensures that each particle is in both sets
   throw_assert(
@@ -155,27 +154,27 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
 
 std::shared_ptr<ActsExamples::Geant4Handle>
 ActsExamples::Geant4SimulationBase::geant4Handle() const {
-  return m_gean4Instance;
+  return m_geant4Instance;
 }
 
 ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
                                                  Acts::Logging::Level level)
     : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
-  m_gean4Instance = m_cfg.geant4Handle ? m_cfg.geant4Handle
-                                       : Geant4Manager::instance().createHandle(
-                                             m_geant4Level, m_cfg.physicsList);
-  if (m_gean4Instance->physicsListName != m_cfg.physicsList) {
+  m_geant4Instance = m_cfg.geant4Handle
+                         ? m_cfg.geant4Handle
+                         : Geant4Manager::instance().createHandle(
+                               m_geant4Level, m_cfg.physicsList);
+  if (m_geant4Instance->physicsListName != m_cfg.physicsList) {
     throw std::runtime_error("inconsistent physics list");
   }
-  auto runManager = m_gean4Instance->runManager.get();
 
   commonInitialization();
 
   // Set the primarty generator
   {
     // Clear primary generation action if it exists
-    if (runManager->GetUserPrimaryGeneratorAction() != nullptr) {
-      delete runManager->GetUserPrimaryGeneratorAction();
+    if (runManager().GetUserPrimaryGeneratorAction() != nullptr) {
+      delete runManager().GetUserPrimaryGeneratorAction();
     }
     SimParticleTranslation::Config prCfg;
     prCfg.eventStore = m_eventStore;
@@ -183,21 +182,18 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     auto primaryGeneratorAction = new SimParticleTranslation(
         prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
     // Set the primary generator action
-    runManager->SetUserAction(primaryGeneratorAction);
+    runManager().SetUserAction(primaryGeneratorAction);
   }
 
   // Please note:
   // The following two blocks rely on the fact that the Acts
   // detector constructions cache the world volume
 
-  // Get the g4World cache
-  G4VPhysicalVolume* g4World = m_detectorConstruction->Construct();
-
   // Particle action
   {
     // Clear tracking action if it exists
-    if (runManager->GetUserTrackingAction() != nullptr) {
-      delete runManager->GetUserTrackingAction();
+    if (runManager().GetUserTrackingAction() != nullptr) {
+      delete runManager().GetUserTrackingAction();
     }
     ParticleTrackingAction::Config trackingCfg;
     trackingCfg.eventStore = m_eventStore;
@@ -205,14 +201,14 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     // G4RunManager will take care of deletion
     auto trackingAction = new ParticleTrackingAction(
         trackingCfg, m_logger->cloneWithSuffix("ParticleTracking"));
-    runManager->SetUserAction(trackingAction);
+    runManager().SetUserAction(trackingAction);
   }
 
   // Stepping actions
   {
     // Clear stepping action if it exists
-    if (runManager->GetUserSteppingAction() != nullptr) {
-      delete runManager->GetUserSteppingAction();
+    if (runManager().GetUserSteppingAction() != nullptr) {
+      delete runManager().GetUserSteppingAction();
     }
 
     SensitiveSteppingAction::Config stepCfg;
@@ -234,8 +230,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
 
     // G4RunManager will take care of deletion
     auto steppingAction = new SteppingActionList(steppingCfg);
-    runManager->SetUserAction(steppingAction);
+    runManager().SetUserAction(steppingAction);
   }
+
+  // Get the g4World cache
+  G4VPhysicalVolume* g4World = m_detectorConstruction->Construct();
 
   // Set the magnetic field
   if (cfg.magneticField) {
@@ -312,7 +311,7 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
     const Config& cfg, Acts::Logging::Level level)
     : Geant4SimulationBase(cfg, "Geant4Simulation", level), m_cfg(cfg) {
   auto physicsListName = "MaterialPhysicsList";
-  m_gean4Instance =
+  m_geant4Instance =
       m_cfg.geant4Handle
           ? m_cfg.geant4Handle
           : Geant4Manager::instance().createHandle(
@@ -320,18 +319,17 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
                 std::make_unique<MaterialPhysicsList>(
                     m_logger->cloneWithSuffix("MaterialPhysicsList")),
                 physicsListName);
-  if (m_gean4Instance->physicsListName != physicsListName) {
+  if (m_geant4Instance->physicsListName != physicsListName) {
     throw std::runtime_error("inconsistent physics list");
   }
-  auto runManager = m_gean4Instance->runManager.get();
 
   commonInitialization();
 
   // Set the primarty generator
   {
     // Clear primary generation action if it exists
-    if (runManager->GetUserPrimaryGeneratorAction() != nullptr) {
-      delete runManager->GetUserPrimaryGeneratorAction();
+    if (runManager().GetUserPrimaryGeneratorAction() != nullptr) {
+      delete runManager().GetUserPrimaryGeneratorAction();
     }
 
     SimParticleTranslation::Config prCfg;
@@ -344,14 +342,14 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
     auto primaryGeneratorAction = new SimParticleTranslation(
         prCfg, m_logger->cloneWithSuffix("SimParticleTranslation"));
     // Set the primary generator action
-    runManager->SetUserAction(primaryGeneratorAction);
+    runManager().SetUserAction(primaryGeneratorAction);
   }
 
   // Stepping action
   {
     // Clear stepping action if it exists
-    if (runManager->GetUserSteppingAction() != nullptr) {
-      delete runManager->GetUserSteppingAction();
+    if (runManager().GetUserSteppingAction() != nullptr) {
+      delete runManager().GetUserSteppingAction();
     }
     MaterialSteppingAction::Config steppingCfg;
     steppingCfg.eventStore = m_eventStore;
@@ -359,8 +357,10 @@ ActsExamples::Geant4MaterialRecording::Geant4MaterialRecording(
     // G4RunManager will take care of deletion
     auto steppingAction = new MaterialSteppingAction(
         steppingCfg, m_logger->cloneWithSuffix("MaterialSteppingAction"));
-    runManager->SetUserAction(steppingAction);
+    runManager().SetUserAction(steppingAction);
   }
+
+  runManager().Initialize();
 
   m_inputParticles.initialize(cfg.inputParticles);
   m_outputMaterialTracks.initialize(cfg.outputMaterialTracks);

@@ -42,10 +42,8 @@ int main(int argc, char* argv[]) {
   auto geometrySvc = std::make_shared<DD4hep::DD4hepGeometryService>(dd4hepCfg);
   auto detector = std::make_shared<DD4hep::DD4hepDetector>(geometrySvc);
   auto magneticField = ActsExamples::Options::readMagneticField(vars);
-  auto uniqueTrackingGeometry =
+  auto trackingGeometry =
       geometrySvc->trackingGeometry(Acts::GeometryContext());
-  auto trackingGeometry = std::shared_ptr<const Acts::TrackingGeometry>(
-      uniqueTrackingGeometry.release());
 
   return runGeant4Simulation(
       vars, std::make_unique<DDG4DetectorConstructionFactory>(detector),

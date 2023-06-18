@@ -41,10 +41,13 @@ class DDG4DetectorConstruction final : public G4VUserDetectorConstruction {
   G4VPhysicalVolume* Construct() final;
 
  private:
-  /// The Acts DD4hep detector instrance
-  DD4hep::DD4hepDetector* m_detector;
+  /// The Acts DD4hep detector instance
+  std::shared_ptr<DD4hep::DD4hepDetector> m_detector;
   /// The world volume
   G4VPhysicalVolume* m_world = nullptr;
+
+  /// The DD4hep detector instance
+  dd4hep::Detector& dd4hepDetector() const;
 };
 
 class DDG4DetectorConstructionFactory final
@@ -57,7 +60,7 @@ class DDG4DetectorConstructionFactory final
   std::unique_ptr<G4VUserDetectorConstruction> factorize() const override;
 
  private:
-  /// The Acts DD4hep detector instrance
+  /// The Acts DD4hep detector instance
   std::shared_ptr<DD4hep::DD4hepDetector> m_detector;
 };
 

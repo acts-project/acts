@@ -13,6 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
+#include <memory>
 #include <stdexcept>
 #include <utility>
 
@@ -109,13 +110,13 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::unique_ptr<const Acts::TrackingGeometry>
+std::shared_ptr<const Acts::TrackingGeometry>
 ActsExamples::DD4hep::DD4hepGeometryService::trackingGeometry(
     const Acts::GeometryContext& gctx) {
   if (!m_trackingGeometry) {
     buildTrackingGeometry(gctx);
   }
-  return std::move(m_trackingGeometry);
+  return m_trackingGeometry;
 }
 
 void ActsExamples::DD4hep::sortFCChhDetElements(
