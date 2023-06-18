@@ -26,6 +26,8 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     addCKFTracks,
     TrackSelectorConfig,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
 )
 
 from physmon_common import makeArgparser, makeSetup
@@ -99,7 +101,7 @@ def run_single_particles(particle, pT, simulation, label):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
-            seedingAlgorithm=SeedingAlgorithm.TruthSmeared,  # TODO SeedingAlgorithm.Default
+            seedingAlgorithm=SeedingAlgorithm.Default,
             initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=setup.geoSel,
             outputDirRoot=tp,
@@ -113,6 +115,14 @@ def run_single_particles(particle, pT, simulation, label):
                 pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
+            ),
+            outputDirRoot=tp,
+        )
+
+        addAmbiguityResolution(
+            s,
+            AmbiguityResolutionConfig(
+                maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
             ),
             outputDirRoot=tp,
         )

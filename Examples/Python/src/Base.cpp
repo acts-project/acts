@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/StringHelpers.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <memory>
 
