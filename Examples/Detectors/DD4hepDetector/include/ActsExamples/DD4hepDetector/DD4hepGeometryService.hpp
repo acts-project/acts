@@ -84,7 +84,8 @@ class DD4hepGeometryService {
     std::shared_ptr<const Acts::IMaterialDecorator> matDecorator;
 
     /// Optional geometry identifier hook to be used during closure
-    std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook;
+    std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
+        std::make_shared<const Acts::GeometryIdentifierHook>();
   };
 
   DD4hepGeometryService(const Config& cfg);
