@@ -65,7 +65,7 @@ class Geant4Manager {
 
   /// This can only be called once due to Geant4 limitations
   std::shared_ptr<Geant4Handle> createHandle(int logLevel,
-                                             std::string physicsList);
+                                             const std::string &physicsList);
 
   /// This can only be called once due to Geant4 limitations
   std::shared_ptr<Geant4Handle> createHandle(
@@ -75,7 +75,7 @@ class Geant4Manager {
   /// Registers a named physics list factory to the manager for easy
   /// instantiation when needed.
   void registerPhysicsListFactory(
-      std::string name, std::shared_ptr<PhysicsListFactory> physicsListFactroy);
+      std::string name, std::shared_ptr<PhysicsListFactory> physicsListFactory);
   std::unique_ptr<G4VUserPhysicsList> createPhysicsList(
       const std::string &name) const;
 

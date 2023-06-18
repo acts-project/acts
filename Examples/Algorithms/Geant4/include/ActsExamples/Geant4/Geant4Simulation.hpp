@@ -147,7 +147,7 @@ class Geant4Simulation final : public Geant4SimulationBase {
   ///
   /// @param config is the configuration struct
   /// @param level is the logging level to be used
-  Geant4Simulation(const Config& config,
+  Geant4Simulation(const Config& cfg,
                    Acts::Logging::Level level = Acts::Logging::INFO);
 
   ~Geant4Simulation() override;
@@ -189,7 +189,7 @@ class Geant4MaterialRecording final : public Geant4SimulationBase {
   ///
   /// @param config is the configuration struct
   /// @param level is the logging level to be used
-  Geant4MaterialRecording(const Config& config,
+  Geant4MaterialRecording(const Config& cfg,
                           Acts::Logging::Level level = Acts::Logging::INFO);
 
   ~Geant4MaterialRecording() override;

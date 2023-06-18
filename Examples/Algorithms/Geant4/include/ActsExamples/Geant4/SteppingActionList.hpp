@@ -31,7 +31,7 @@ class SteppingActionList : public G4UserSteppingAction {
   SteppingActionList(const Config &cfg) : m_cfg(cfg) {}
 
   void UserSteppingAction(const G4Step *step) override {
-    for (auto action : m_cfg.actions) {
+    for (const auto &action : m_cfg.actions) {
       if (action) {
         action->UserSteppingAction(step);
       }
