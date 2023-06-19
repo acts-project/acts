@@ -15,6 +15,16 @@ namespace ActsExamples {
 
 ProtoTrack seedToPrototrack(const SimSeed &seed);
 
-ProtoTrackContainer seedsToPrototracks(const SimSeedContainer &seeds);
+std::optional<SimSpacePoint> findSpacePointForIndex(
+    Index index, const SimSpacePointContainer &spacepoints);
+
+class ProtoTrackToSeed {
+  const SimSpacePointContainer &m_spacePoints;
+
+ public:
+  ProtoTrackToSeed(const SimSpacePointContainer &spacepoints)
+      : m_spacePoints(spacepoints) {}
+  SimSeed operator()(const ProtoTrack &track) const;
+};
 
 }  // namespace ActsExamples
