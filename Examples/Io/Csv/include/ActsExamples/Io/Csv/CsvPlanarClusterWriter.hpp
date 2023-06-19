@@ -10,16 +10,25 @@
 
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstddef>
 #include <limits>
 #include <memory>
 #include <string>
 
+namespace Acts {
+class PlanarModuleCluster;
+class TrackingGeometry;
+}  // namespace Acts
+
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out a planar cluster collection in comma-separated-value format.
 ///

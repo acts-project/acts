@@ -8,15 +8,20 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -24,6 +29,8 @@ class TrackingGeometry;
 class Layer;
 class LayerCreator;
 class Surface;
+class ITrackingVolumeHelper;
+class TrackingVolume;
 
 /// A Tracking Geometry builder restricted to cylindrical geometries
 ///

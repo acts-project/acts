@@ -13,6 +13,12 @@
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <utility>
+#include <vector>
+
 using boost::test_tools::output_test_stream;
 
 namespace Acts {

@@ -8,17 +8,26 @@
 
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Plugins/TGeo/ITGeoDetectorElementSplitter.hpp"
+#include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <stdio.h>
+#include <ostream>
+#include <stdexcept>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+
+namespace Acts {
+class ISurfaceMaterial;
+}  // namespace Acts
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config,

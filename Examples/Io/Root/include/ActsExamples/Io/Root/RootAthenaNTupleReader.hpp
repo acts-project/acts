@@ -18,12 +18,18 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class RootAthenaNTupleReader : public ActsExamples::IReader {
  public:

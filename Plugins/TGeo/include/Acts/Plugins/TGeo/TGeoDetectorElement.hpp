@@ -7,11 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
 
 #include <iostream>
+#include <memory>
+#include <string>
 
 #include "TGeoManager.h"
 
@@ -22,6 +26,7 @@ class SurfaceBounds;
 class PlanarBounds;
 class DiscBounds;
 class DigitizationModule;
+class Surface;
 
 /// @class TGeoDetectorElement
 ///

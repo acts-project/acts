@@ -8,12 +8,23 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
-#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
+#include <cmath>
+#include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 using namespace Acts;
@@ -38,13 +49,6 @@ std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
   return uSurfaces;
 }
 
-/// @brief  Simple helper struct acting as a surface provider
-struct SurfaceProvider {
-  std::vector<std::shared_ptr<Acts::Surface>> surfaces;
-
-  std::vector<std::shared_ptr<Acts::Surface>> operator()() { return surfaces; }
-};
-
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(Detector)
@@ -56,16 +60,15 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., -800, 2., 22u);
 
-  SurfaceProvider endcap{unpackSurfaces(rSurfaces)};
-
-  using LayerBinning = Acts::Experimental::LayerStructureBuilder::Binning;
-
+  auto endcapSurfaces = std::make_shared<LayerStructureBuilder::SurfacesHolder>(
+      unpackSurfaces(rSurfaces));
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxilliary = "*** Endcap with 22 surfaces ***";
-  lsConfig.surfaces = endcap;
-  lsConfig.binnings = {LayerBinning{
-      Acts::BinningData(Acts::closed, Acts::binPhi, 22u, -M_PI, M_PI), 1u}};
+  lsConfig.surfacesProvider = endcapSurfaces;
+  lsConfig.binnings = {ProtoBinning(Acts::binPhi,
+                                    Acts::detail::AxisBoundaryType::Closed,
+                                    -M_PI, M_PI, 22u, 1u)};
 
   auto endcapBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("EndcapBuilder", Logging::VERBOSE));
@@ -115,24 +118,24 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
 }
 
 // Test the creation of a cylindrical structure
-BOOST_AUTO_TEST_CASE(LayerStructureKDT_creationCylinder) {
+BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   CylindricalTrackingGeometry::DetectorStore dStore;
   auto cSurfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145, 72,
                                               3., 2., {32u, 14u});
 
-  SurfaceProvider barrel{unpackSurfaces(cSurfaces)};
-
-  using LayerBinning = Acts::Experimental::LayerStructureBuilder::Binning;
+  auto barrelSurfaces = std::make_shared<LayerStructureBuilder::SurfacesHolder>(
+      unpackSurfaces(cSurfaces));
 
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
   lsConfig.auxilliary = "*** Barrel with 448 surfaces ***";
-  lsConfig.surfaces = barrel;
-  lsConfig.binnings = {
-      LayerBinning{Acts::BinningData(Acts::open, Acts::binZ, 14u, -480., 480.),
-                   1u},
-      LayerBinning{
-          Acts::BinningData(Acts::closed, Acts::binPhi, 32u, -M_PI, M_PI), 1u}};
+  lsConfig.surfacesProvider = barrelSurfaces;
+  lsConfig.binnings = {Acts::Experimental::ProtoBinning{
+                           Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
+                           -480., 480., 14u, 1u},
+                       Acts::Experimental::ProtoBinning(
+                           Acts::binPhi, Acts::detail::AxisBoundaryType::Closed,
+                           -M_PI, M_PI, 32u, 1u)};
 
   auto barrelBuilder = Acts::Experimental::LayerStructureBuilder(
       lsConfig, Acts::getDefaultLogger("BarrelBuilder", Logging::VERBOSE));

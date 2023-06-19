@@ -8,7 +8,20 @@
 
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 
-#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <optional>
+#include <ostream>
+
+#include <TH1.h>
+#include <TH2.h>
+#include <TString.h>
 
 ActsExamples::ResPlotTool::ResPlotTool(
     const ActsExamples::ResPlotTool::Config& cfg, Acts::Logging::Level lvl)
