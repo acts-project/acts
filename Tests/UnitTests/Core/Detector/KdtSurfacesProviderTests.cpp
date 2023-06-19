@@ -8,12 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/detail/KdtSurfacesProvider.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/KdtSurfacesProvider.hpp"
+#include "Acts/Detector/detail/GridAxisGenerators.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <iterator>
 #include <memory>
+#include <utility>
 #include <vector>
 
 using namespace Acts;
@@ -72,6 +82,14 @@ std::vector<std::shared_ptr<Acts::Surface>> pixelSurfaces(
 BOOST_AUTO_TEST_SUITE(Detector)
 
 // Test only the KDT infrastructure
+BOOST_AUTO_TEST_CASE(KdtSurfacesProvider_misconfigured) {
+  Acts::Extent region;
+  BOOST_CHECK_THROW(
+      Acts::Experimental::KdtSurfacesProvider<> end3(nullptr, region),
+      std::invalid_argument);
+}
+
+// Test only the KDT infrastructure
 BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
   // Detector store
   CylindricalTrackingGeometry::DetectorStore dStore;
@@ -80,23 +98,26 @@ BOOST_AUTO_TEST_CASE(KdtSurfacesProvider) {
   size_t refNumber = 6u * 22u + 14u * (16u + 32u + 52u + 78u);
   BOOST_CHECK(pSurfaces.size() == refNumber);
 
-  using KDTS = Acts::Experimental::detail::KdtSurfaces<>;
+  using KDTS = Acts::Experimental::KdtSurfaces<>;
   auto skdt = std::make_shared<KDTS>(KDTS(tContext, pSurfaces, {binZ, binR}));
 
   // query: Negative disc 3, it should yield 22 surfaces
-  Acts::Experimental::detail::KdtSurfacesProvider<> end3;
-  end3.kdt = skdt;
-  end3.region.set(binZ, -820, -780);
-  end3.region.set(binR, 0., 200.);
-  auto nd3 = end3();
+  Acts::Extent regionND3;
+  regionND3.set(binZ, -820, -780);
+  regionND3.set(binR, 0., 200.);
+  Acts::Experimental::KdtSurfacesProvider<> end3(skdt, regionND3);
+
+  auto nd3 = end3.surfaces(tContext);
   BOOST_CHECK(nd3.size() == 22u);
 
   // query: 2nd Pixel barrel
-  Acts::Experimental::detail::KdtSurfacesProvider<> ba1;
-  ba1.kdt = skdt;
-  ba1.region.set(binZ, -580, 580);
-  ba1.region.set(binR, 60., 80.);
-  auto b1 = ba1();
+  Acts::Extent regionB1;
+  regionB1.set(binZ, -580, 580);
+  regionB1.set(binR, 60., 80.);
+
+  Acts::Experimental::KdtSurfacesProvider<> ba1(skdt, regionB1);
+
+  auto b1 = ba1.surfaces(tContext);
   refNumber = 32u * 14u;
   BOOST_CHECK(b1.size() == refNumber);
 }

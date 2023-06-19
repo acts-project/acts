@@ -11,6 +11,8 @@
 
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <type_traits>
+
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 

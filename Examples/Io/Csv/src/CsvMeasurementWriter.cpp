@@ -8,21 +8,22 @@
 
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Intersection.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
 
-#include <ios>
+#include <array>
 #include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <variant>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 

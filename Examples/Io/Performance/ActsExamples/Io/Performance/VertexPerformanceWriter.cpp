@@ -8,27 +8,39 @@
 
 #include "ActsExamples/Io/Performance/VertexPerformanceWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <ios>
+#include <limits>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <set>
 #include <stdexcept>
+#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;

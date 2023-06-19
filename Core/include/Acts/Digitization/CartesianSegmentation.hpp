@@ -15,7 +15,10 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 

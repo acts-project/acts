@@ -11,8 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <sstream>
 
 ActsExamples::TGeoITkModuleSplitter::TGeoITkModuleSplitter(
     const ActsExamples::TGeoITkModuleSplitter::Config& cfg,

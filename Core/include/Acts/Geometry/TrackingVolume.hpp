@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -18,16 +20,22 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Frustum.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Ray.hpp"
 
+#include <cstddef>
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -35,9 +43,15 @@ namespace Acts {
 
 class GlueVolumesDescriptor;
 class VolumeBounds;
-
 template <typename object_t>
 struct NavigationOptions;
+class GeometryIdentifier;
+class IMaterialDecorator;
+class ISurfaceMaterial;
+class IVolumeMaterial;
+class Surface;
+class TrackingVolume;
+struct GeometryIdentifierHook;
 
 // master typedefs
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;

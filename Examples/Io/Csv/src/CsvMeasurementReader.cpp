@@ -8,21 +8,26 @@
 
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <iterator>
 #include <list>
+#include <stdexcept>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 

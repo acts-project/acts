@@ -10,14 +10,31 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
+#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <set>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using namespace Acts;
 using namespace Acts::Test;

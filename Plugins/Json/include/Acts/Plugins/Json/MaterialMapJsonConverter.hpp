@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -21,8 +23,21 @@
 
 #include <map>
 #include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 namespace Acts {
+class ISurfaceMaterial;
+class ITrackingGeometryJsonDecorator;
+class IVolumeMaterial;
+class IVolumeMaterialJsonDecorator;
+class Surface;
+class TrackingGeometry;
+class TrackingVolume;
 
 using SurfaceAndMaterialWithContext =
     std::tuple<std::shared_ptr<const Acts::Surface>,

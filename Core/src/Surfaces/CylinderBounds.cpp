@@ -8,11 +8,15 @@
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

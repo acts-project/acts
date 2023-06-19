@@ -11,6 +11,8 @@
 #include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 
+#include <string>
+
 #include "Dataset.hpp"
 
 namespace {

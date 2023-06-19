@@ -40,9 +40,9 @@ namespace detail {
 /// @note for closed binning a span over half the bins flips direction
 ///
 /// @return a vector of bins to be filled
-std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
-                                     std::size_t expand, std::size_t nBins,
-                                     Acts::detail::AxisBoundaryType type) {
+static inline std::vector<std::size_t> binSequence(
+    std::array<std::size_t, 2u> minMaxBins, std::size_t expand,
+    std::size_t nBins, Acts::detail::AxisBoundaryType type) {
   // Return vector for iterations
   std::vector<std::size_t> rBins;
   /// Helper method to fill a range

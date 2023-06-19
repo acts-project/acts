@@ -8,29 +8,44 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
-#include "Acts/Geometry/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/BinnedArrayXD.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <iterator>
+#include <map>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 
 #include <boost/algorithm/string.hpp>
 
-#include "DD4hep/Detector.h"
+#include "DD4hep/Alignments.h"
+#include "DD4hep/DetElement.h"
+#include "DD4hep/Volumes.h"
 #include "DDRec/DetectorData.h"
+#include "RtypesCore.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 

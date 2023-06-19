@@ -9,9 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -21,6 +24,9 @@ class IMaterialDecorator;
 
 namespace ActsExamples {
 class IContextDecorator;
+namespace Generic {
+class GenericDetectorElement;
+}  // namespace Generic
 }  // namespace ActsExamples
 
 namespace ActsExamples::Contextual {

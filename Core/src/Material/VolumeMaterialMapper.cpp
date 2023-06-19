@@ -8,6 +8,8 @@
 
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
@@ -24,20 +26,27 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <iosfwd>
+#include <ostream>
 #include <stdexcept>
+#include <string>
 #include <tuple>
+#include <type_traits>
+#include <vector>
+
+namespace Acts {
+struct EndOfWorldReached;
+}  // namespace Acts
 
 Acts::VolumeMaterialMapper::VolumeMaterialMapper(
     const Config& cfg, StraightLinePropagator propagator,

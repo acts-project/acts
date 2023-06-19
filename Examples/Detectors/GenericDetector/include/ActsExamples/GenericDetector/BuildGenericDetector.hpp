@@ -12,6 +12,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
@@ -21,22 +23,31 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/LayerBuilderT.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 #include <list>
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts {
 class TrackingGeometry;
-}
+class HomogeneousSurfaceMaterial;
+class IMaterialDecorator;
+class ISurfaceMaterial;
+class ProtoSurfaceMaterial;
+}  // namespace Acts
 
 namespace ActsExamples {
 namespace Generic {

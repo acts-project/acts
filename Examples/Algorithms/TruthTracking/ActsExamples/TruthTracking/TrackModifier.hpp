@@ -8,15 +8,18 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <limits>
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Select tracks by applying some selection cuts.
 class TrackModifier final : public IAlgorithm {

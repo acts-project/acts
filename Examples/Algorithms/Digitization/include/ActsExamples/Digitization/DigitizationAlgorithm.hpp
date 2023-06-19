@@ -10,19 +10,27 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceMask.hpp"
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <tuple>
@@ -30,12 +38,17 @@
 #include <variant>
 #include <vector>
 
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
+
 namespace Acts {
 class Surface;
 class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
 class DigitizationAlgorithm final : public IAlgorithm {

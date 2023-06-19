@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 
 #include <array>
+#include <cstddef>
 #include <memory>
 #include <vector>
 

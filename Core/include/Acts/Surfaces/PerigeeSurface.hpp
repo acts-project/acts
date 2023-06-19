@@ -8,8 +8,15 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <cstddef>
+#include <iosfwd>
+#include <string>
 
 namespace Acts {
 

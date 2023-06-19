@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -23,6 +22,14 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <iterator>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"

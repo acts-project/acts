@@ -8,11 +8,19 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
+#include <memory>
+#include <string>
+
 namespace ActsExamples {
+class TrackFitterFunction;
+struct AlgorithmContext;
 
 class RefittingAlgorithm final : public IAlgorithm {
  public:

@@ -11,10 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <vector>
 

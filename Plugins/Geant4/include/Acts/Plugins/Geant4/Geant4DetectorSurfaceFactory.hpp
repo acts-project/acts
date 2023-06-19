@@ -13,6 +13,8 @@
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <cstddef>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -23,6 +25,8 @@ class G4VPhysicalVolume;
 namespace Acts {
 
 class Geant4DetectorElement;
+class IGeant4PhysicalVolumeSelector;
+class Surface;
 
 /// A factory to convert Geant4 physical volumes
 /// into Geant4 detector elements

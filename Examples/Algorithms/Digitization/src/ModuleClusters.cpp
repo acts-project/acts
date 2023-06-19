@@ -9,6 +9,16 @@
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
+
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <stdexcept>
+#include <type_traits>
 
 namespace ActsExamples {
 

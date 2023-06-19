@@ -8,6 +8,8 @@
 
 #include "Acts/Propagator/MultiStepperError.hpp"
 
+#include <string>
+
 namespace {
 
 class MultiStepperErrorCategory : public std::error_category {

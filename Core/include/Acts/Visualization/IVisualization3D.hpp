@@ -12,6 +12,7 @@
 #include "Acts/Visualization/ViewConfig.hpp"
 
 #include <array>
+#include <cstddef>
 #include <fstream>
 #include <string>
 #include <vector>

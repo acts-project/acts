@@ -9,10 +9,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
 #include <limits>
+#include <utility>
 
 namespace {
 

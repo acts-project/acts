@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
+#include <cmath>
+
 namespace Acts {
 
 /// Additional derived relativistic quantities.

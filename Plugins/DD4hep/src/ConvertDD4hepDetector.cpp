@@ -8,31 +8,45 @@
 
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 
+#include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ITrackingVolumeArrayCreator.hpp"
+#include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cmath>
 #include <list>
+#include <map>
 #include <regex>
+#include <sstream>
 #include <stdexcept>
+#include <string>
+#include <utility>
 
 #include "DD4hep/DetType.h"
 #include "DDRec/DetectorData.h"
 #include "TGeoManager.h"
 
 namespace Acts {
+class IMaterialDecorator;
+class ISurfaceMaterial;
+class TrackingGeometry;
+class TrackingVolume;
 
 namespace {
 struct DebugVisitor {

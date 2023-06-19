@@ -12,6 +12,7 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
+#include <cstddef>
 #include <iosfwd>
 
 namespace Acts {

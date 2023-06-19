@@ -8,15 +8,25 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
+#include <cstdint>
 #include <mutex>
+#include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
+
 class TFile;
 class TTree;
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 namespace Acts {
 // Using some short hands for Recorded Material

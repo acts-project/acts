@@ -13,9 +13,17 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <memory>
+#include <string>
+#include <vector>
+
 #include "DD4hep/DetElement.h"
 
 class TrackingVolume;
+namespace Acts {
+class Logger;
+}  // namespace Acts
+
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 

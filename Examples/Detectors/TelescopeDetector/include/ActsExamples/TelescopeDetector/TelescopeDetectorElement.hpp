@@ -8,7 +8,15 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 class Surface;

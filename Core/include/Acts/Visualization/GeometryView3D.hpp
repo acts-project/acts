@@ -14,6 +14,8 @@
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
+#include <string>
+
 namespace Acts {
 
 class Layer;
@@ -21,6 +23,8 @@ class Surface;
 class SurfaceArray;
 class TrackingVolume;
 struct Polyhedron;
+class AbstractVolume;
+class IVisualization3D;
 
 namespace Experimental {
 class DetectorVolume;

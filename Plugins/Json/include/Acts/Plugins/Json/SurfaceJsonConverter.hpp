@@ -8,18 +8,25 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <memory>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {
+class ISurfaceMaterial;
 
 using SurfaceAndMaterialWithContext =
     std::tuple<std::shared_ptr<const Acts::Surface>,

@@ -8,19 +8,21 @@
 
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 
-#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
-#include "Acts/Geometry/CylinderVolumeHelper.hpp"
-#include "Acts/Geometry/LayerArrayCreator.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
-#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
+#include <memory>
 #include <stdexcept>
+#include <utility>
 
-#include "DD4hep/Printout.h"
+#include <DD4hep/Detector.h>
+#include <DD4hep/Handle.h>
+#include <DD4hep/Volumes.h>
+#include <Parsers/Printout.h>
+
+class TGeoNode;
 
 ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
     const ActsExamples::DD4hep::DD4hepGeometryService::Config& cfg)
@@ -32,8 +34,8 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
 }
 
 ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
-  if (m_lcdd != nullptr) {
-    m_lcdd->destroyInstance();
+  if (m_detector != nullptr) {
+    m_detector->destroyInstance();
   }
 }
 
@@ -62,38 +64,37 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
       dd4hep::setPrintLevel(dd4hep::PrintLevel::ALWAYS);
       break;
   }
-  m_lcdd = &(dd4hep::Detector::getInstance());
+  m_detector = &dd4hep::Detector::getInstance();
   for (auto& file : m_cfg.xmlFileNames) {
-    m_lcdd->fromCompact(file.c_str());
+    m_detector->fromCompact(file.c_str());
   }
-  m_lcdd->volumeManager();
-  m_lcdd->apply("DD4hepVolumeManager", 0, nullptr);
-  m_dd4hepGeometry = m_lcdd->world();
+  m_detector->volumeManager();
+  m_detector->apply("DD4hepVolumeManager", 0, nullptr);
+  m_geometry = m_detector->world();
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-dd4hep::DetElement
-ActsExamples::DD4hep::DD4hepGeometryService::dd4hepGeometry() {
-  if (!m_dd4hepGeometry) {
+dd4hep::Detector&
+ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService::detector() {
+  if (m_detector == nullptr) {
     buildDD4hepGeometry();
   }
-  return m_dd4hepGeometry;
+  return *m_detector;
 }
 
-dd4hep::Detector*
-ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService::lcdd() {
-  if (m_lcdd == nullptr) {
+dd4hep::DetElement& ActsExamples::DD4hep::DD4hepGeometryService::geometry() {
+  if (!m_geometry) {
     buildDD4hepGeometry();
   }
-  return m_lcdd;
+  return m_geometry;
 }
 
-TGeoNode* ActsExamples::DD4hep::DD4hepGeometryService::tgeoGeometry() {
-  if (!m_dd4hepGeometry) {
+TGeoNode& ActsExamples::DD4hep::DD4hepGeometryService::tgeoGeometry() {
+  if (!m_geometry) {
     buildDD4hepGeometry();
   }
-  return m_dd4hepGeometry.placement().ptr();
+  return *m_geometry.placement().ptr();
 }
 
 ActsExamples::ProcessCode
@@ -102,20 +103,20 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
   // Set the tracking geometry
   auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
   m_trackingGeometry = Acts::convertDD4hepDetector(
-      dd4hepGeometry(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
+      geometry(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
       m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
       m_cfg.sortDetectors, gctx, m_cfg.matDecorator,
       m_cfg.geometryIdentifierHook);
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-std::unique_ptr<const Acts::TrackingGeometry>
+std::shared_ptr<const Acts::TrackingGeometry>
 ActsExamples::DD4hep::DD4hepGeometryService::trackingGeometry(
     const Acts::GeometryContext& gctx) {
   if (!m_trackingGeometry) {
     buildTrackingGeometry(gctx);
   }
-  return std::move(m_trackingGeometry);
+  return m_trackingGeometry;
 }
 
 void ActsExamples::DD4hep::sortFCChhDetElements(

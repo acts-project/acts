@@ -12,10 +12,12 @@
 #include "Acts/Digitization/Segmentation.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
 class Surface;
+
 using SurfacePtr = std::shared_ptr<const Surface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
 

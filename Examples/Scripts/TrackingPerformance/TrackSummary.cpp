@@ -8,27 +8,36 @@
 
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <algorithm>
+#include <array>
+#include <bitset>
+#include <cmath>
 #include <exception>
 #include <iostream>
+#include <limits>
+#include <optional>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include <TApplication.h>
 #include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
 
 #define BOOST_AVAILABLE 1
 #if ((BOOST_VERSION / 100) % 1000) <= 71
 // Boost <=1.71 and lower do not have progress_display.hpp as a replacement yet
 #include <boost/progress.hpp>
+
 using progress_display = boost::progress_display;
 #else
 // Boost >=1.72 can use this as a replacement
 #include <boost/timer/progress_display.hpp>
+
 using progress_display = boost::timer::progress_display;
 #endif
 
 #define NLOHMANN_AVAILABLE 1
-#include <nlohmann/json.hpp>
-
 #include "trackSummaryAnalysis.C"
 
 using namespace boost::program_options;

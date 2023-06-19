@@ -10,12 +10,17 @@
 
 #include <Acts/Utilities/Logger.hpp>
 
+#include <algorithm>
+#include <cstddef>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ActsExamples {

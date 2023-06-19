@@ -13,6 +13,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
+#include <cstddef>
 #include <iosfwd>
 
 namespace Acts {

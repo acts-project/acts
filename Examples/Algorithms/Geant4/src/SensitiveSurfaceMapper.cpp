@@ -9,16 +9,21 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 
+#include <algorithm>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 #include <G4LogicalVolume.hh>
 #include <G4Material.hh>
 #include <G4VPhysicalVolume.hh>
-#include <globals.hh>
 
 ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -31,12 +36,10 @@ ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(
 void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
     G4VPhysicalVolume* g4PhysicalVolume,
     const Acts::Transform3& motherTransform, int& sCounter) const {
+  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
+
   auto g4LogicalVolume = g4PhysicalVolume->GetLogicalVolume();
   auto g4SensitiveDetector = g4LogicalVolume->GetSensitiveDetector();
-
-  G4int nDaughters = g4LogicalVolume->GetNoDaughters();
-
-  constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
   // Get the transform of the G4 object
   auto g4Translation = g4PhysicalVolume->GetTranslation();
@@ -57,7 +60,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
   }
   Acts::Vector3 g4AbsPosition = transform * Acts::Vector3::Zero();
 
-  if (nDaughters > 0) {
+  if (G4int nDaughters = g4LogicalVolume->GetNoDaughters(); nDaughters > 0) {
     // Step down to all daughters
     for (G4int id = 0; id < nDaughters; ++id) {
       remapSensitiveNames(g4LogicalVolume->GetDaughter(id), transform,
@@ -68,7 +71,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
 
   std::string volumeName = g4LogicalVolume->GetName();
   std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
-  if (g4SensitiveDetector != nullptr or
+  if (g4SensitiveDetector == nullptr or
       std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
                 volumeMaterialName) != m_cfg.materialMappings.end() or
       std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),

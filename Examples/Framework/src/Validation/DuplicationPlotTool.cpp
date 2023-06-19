@@ -8,6 +8,13 @@
 
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <TEfficiency.h>
+#include <TProfile.h>
+
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;

@@ -12,7 +12,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "TGeoMatrix.h"

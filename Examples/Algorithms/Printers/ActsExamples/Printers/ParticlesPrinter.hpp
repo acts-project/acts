@@ -8,13 +8,16 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Print all particles.
 class ParticlesPrinter : public IAlgorithm {

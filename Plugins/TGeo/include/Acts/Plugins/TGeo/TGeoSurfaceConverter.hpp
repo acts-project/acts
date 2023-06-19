@@ -10,7 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <cmath>
 #include <memory>
+#include <string>
+#include <tuple>
 
 #include "RtypesCore.h"
 

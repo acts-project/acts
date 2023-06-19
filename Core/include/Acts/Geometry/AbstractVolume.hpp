@@ -18,10 +18,14 @@
 namespace Acts {
 
 class AbstractVolume;
+template <class volume_t>
+class BoundarySurfaceT;
+
 using BoundarySurfacePtr =
     std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>;
 
 class VolumeBounds;
+
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class AbstractVolume

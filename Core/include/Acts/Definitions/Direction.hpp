@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 
+#include <cassert>
+#include <cstddef>
 #include <iosfwd>
 #include <string>
 

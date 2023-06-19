@@ -11,21 +11,27 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace Acts {
 class Surface;
 }
 
 namespace ActsExamples {
+class IndexSourceLink;
+struct AlgorithmContext;
 
 /// Read in a measurement cluster collection in comma-separated-value format.
 ///

@@ -10,7 +10,6 @@
 
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 
 #include <utility>
 

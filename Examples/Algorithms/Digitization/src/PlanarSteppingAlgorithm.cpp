@@ -8,27 +8,37 @@
 
 #include "ActsExamples/Digitization/PlanarSteppingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <cmath>
+#include <cstddef>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(

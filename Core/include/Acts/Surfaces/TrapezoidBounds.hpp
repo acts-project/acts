@@ -9,10 +9,17 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <iosfwd>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts {
 

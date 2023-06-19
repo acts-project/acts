@@ -9,9 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {

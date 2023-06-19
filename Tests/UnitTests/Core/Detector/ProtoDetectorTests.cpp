@@ -9,12 +9,20 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <cmath>
-#include <sstream>
+#include <iostream>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <vector>
 
 namespace {
 

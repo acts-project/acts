@@ -9,10 +9,16 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <array>
+#include <exception>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include <pybind11/eval.h>
 #include <pybind11/pybind11.h>
@@ -261,6 +267,31 @@ void addAlgebra(Acts::Python::Context& ctx) {
       }))
       .def("__getitem__",
            [](const Acts::Vector4& self, Eigen::Index i) { return self[i]; });
+}
+
+void addBinning(Context& ctx) {
+  auto& m = ctx.get("main");
+  auto binning = m.def_submodule("Binning", "");
+
+  auto binningValue = py::enum_<Acts::BinningValue>(binning, "BinningValue")
+                          .value("x", Acts::BinningValue::binX)
+                          .value("y", Acts::BinningValue::binY)
+                          .value("z", Acts::BinningValue::binZ)
+                          .value("r", Acts::BinningValue::binR)
+                          .value("phi", Acts::BinningValue::binPhi)
+                          .export_values();
+
+  auto boundaryType =
+      py::enum_<Acts::detail::AxisBoundaryType>(binning, "AxisBoundaryType")
+          .value("bound", Acts::detail::AxisBoundaryType::Bound)
+          .value("closed", Acts::detail::AxisBoundaryType::Closed)
+          .value("open", Acts::detail::AxisBoundaryType::Open)
+          .export_values();
+
+  auto axisType = py::enum_<Acts::detail::AxisType>(binning, "AxisType")
+                      .value("equidistant", Acts::detail::AxisType::Equidistant)
+                      .value("variable", Acts::detail::AxisType::Variable)
+                      .export_values();
 }
 
 }  // namespace Acts::Python

@@ -9,10 +9,16 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cmath>
+#include <cstdlib>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {

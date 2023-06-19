@@ -8,8 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/SupportHelper.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <vector>
 
 Acts::GeometryContext tContext;
 

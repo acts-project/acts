@@ -15,12 +15,20 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceBinningMatcher.hpp"
+#include "Acts/Plugins/Identification/Identifier.hpp"
 #include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
+#include <array>
 #include <climits>
+#include <functional>
+#include <memory>
+#include <string>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 class TGeoMatrix;
 class TGeoVolume;
@@ -31,6 +39,10 @@ namespace Acts {
 class TGeoDetectorElement;
 class ITGeoDetectorElementSplitter;
 class Surface;
+class ISurfaceMaterial;
+class ITGeoIdentifierProvider;
+class LayerCreator;
+class ProtoLayerHelper;
 
 /// @class TGeoLayerBuilder
 ///

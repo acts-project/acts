@@ -13,8 +13,14 @@
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "TGeoManager.h"
 

@@ -13,8 +13,10 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <cmath>
 #include <limits>
 #include <tuple>
+#include <utility>
 
 using Acts::detail::difference_periodic;
 using Acts::detail::normalizePhiTheta;

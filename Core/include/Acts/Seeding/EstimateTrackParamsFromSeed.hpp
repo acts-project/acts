@@ -236,8 +236,9 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // frame
   ActsScalar rn = local2.x() * local2.x() + local2.y() * local2.y();
   // The (1/tanTheta) of momentum in the new frame,
+  static constexpr ActsScalar G = static_cast<ActsScalar>(1. / 24.);
   ActsScalar invTanTheta =
-      local2.z() * std::sqrt(1. / rn) / (1. + rho * rho * rn);
+      local2.z() * std::sqrt(1. / rn) / (1. + G * rho * rho * rn);
   // The momentum direction in the new frame (the center of the circle has the
   // coordinate (-1.*A/(2*B), 1./(2*B)))
   Vector3 transDirection(1., A, std::hypot(1, A) * invTanTheta);

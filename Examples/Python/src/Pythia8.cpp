@@ -7,10 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
 #include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

@@ -13,13 +13,12 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 
 #include <memory>
 
 namespace Acts {
-
-class Surface;
 
 /// @class BoundarySurfaceT
 ///

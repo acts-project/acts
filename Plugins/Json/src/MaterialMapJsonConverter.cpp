@@ -8,17 +8,33 @@
 
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Geometry/ApproachDescriptor.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
+#include "Acts/Plugins/Json/ITrackingGeometryJsonDecorator.hpp"
+#include "Acts/Plugins/Json/IVolumeMaterialJsonDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include <Acts/Surfaces/AnnulusBounds.hpp>
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
@@ -26,7 +42,10 @@
 #include <Acts/Surfaces/TrapezoidBounds.hpp>
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <map>
+#include <stdexcept>
 
 namespace Acts {
 // specialisations of decoration helper function

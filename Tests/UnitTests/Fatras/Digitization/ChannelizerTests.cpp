@@ -11,22 +11,23 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
 
-#include <array>
+#include <cmath>
 #include <fstream>
-#include <functional>
+#include <memory>
+#include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "DigitizationCsvOutput.hpp"

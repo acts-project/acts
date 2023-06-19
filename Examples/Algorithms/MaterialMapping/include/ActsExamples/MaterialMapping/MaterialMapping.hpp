@@ -8,18 +8,34 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <climits>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
+#include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace ActsExamples {
+class IMaterialWriter;
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 namespace Acts {
 

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
@@ -18,18 +19,27 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iterator>
+#include <map>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+namespace Experimental {
+class Portal;
+}  // namespace Experimental
+}  // namespace Acts
 
 using namespace Acts::Experimental;
 using namespace Acts::Experimental::detail;

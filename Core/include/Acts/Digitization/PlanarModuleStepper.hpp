@@ -14,11 +14,13 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace Acts {
 
 class DigitizationModule;
+struct DigitizationStep;
 
 /// @class PlanarModuleStepper
 ///

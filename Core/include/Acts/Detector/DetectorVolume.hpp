@@ -13,6 +13,7 @@
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
@@ -22,14 +23,19 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts {
 
 class Surface;
+class IVolumeMaterial;
+class VolumeBounds;
 
 namespace Experimental {
 

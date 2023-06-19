@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <algorithm>
 #include <optional>
 #include <tuple>
 #include <variant>

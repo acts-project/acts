@@ -10,6 +10,10 @@
 
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
+#include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <utility>
 
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"

@@ -8,15 +8,19 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 
+#include <algorithm>
+#include <cstdint>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include <TH1F.h>
-#include <TVectorF.h>
+#include <TVectorFfwd.h>
 
 namespace ActsExamples {
 namespace detail {
