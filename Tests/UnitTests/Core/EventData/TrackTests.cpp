@@ -587,9 +587,15 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
 
   for (size_t i = 0; i < 10; i++) {
     auto t = tc.getTrack(tc.addTrack());
-    t.appendTrackState().predicted() = BoundVector::Ones();
-    t.appendTrackState().predicted() = BoundVector::Ones() * 2;
-    t.appendTrackState().predicted() = BoundVector::Ones() * 3;
+    auto ts = t.appendTrackState();
+    ts.predicted() = BoundVector::Ones();
+    ts = t.appendTrackState();
+    ts.predicted().setOnes();
+    ts.predicted() *= 2;
+
+    ts = t.appendTrackState();
+    ts.predicted().setOnes();
+    ts.predicted() *= 3;
 
     t.template component<size_t>("counter") = i;
     t.template component<bool>("odd") = i % 2 == 0;
@@ -636,8 +642,11 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     BOOST_CHECK(t5.nTrackStates() > 0);
     BOOST_REQUIRE_EQUAL(t4.nTrackStates(), t5.nTrackStates());
 
-    for (auto [tsa, tsb] : zip(t4.trackStates(), t5.trackStates())) {
-      BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
+    auto ita = t4.trackStates().begin();
+    auto itb = t5.trackStates().begin();
+    for (; ita != t4.trackStates().end() && itb != t5.trackStates().end();
+         ++ita, ++itb) {
+      BOOST_CHECK((*ita).predicted() == (*itb).predicted());
     }
 
     BOOST_CHECK_EQUAL(t4.template component<size_t>("counter"),
