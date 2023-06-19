@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 #include <Acts/Utilities/CalibrationContext.hpp>
@@ -44,6 +45,8 @@ struct AlgorithmContext {
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
   Acts::CalibrationContext calibContext;  ///< Per-event calbiration context
+
+  Acts::FpeMonitor* fpeMonitor = nullptr;
 };
 
 }  // namespace ActsExamples
