@@ -4,3 +4,4 @@ uproot
 awkward
 pytest-rerunfailures
 pytest-xdist
+pyyaml
