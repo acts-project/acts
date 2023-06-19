@@ -15,7 +15,10 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -49,7 +52,7 @@ class CartesianSegmentation : public Segmentation {
   CartesianSegmentation(const std::shared_ptr<const PlanarBounds>& mBounds,
                         size_t numCellsX, size_t numCellsY = 1);
 
-  /// @todo contructor from BinUtilities for more complex readouts
+  /// @todo constructor from BinUtilities for more complex readouts
   ///
   /// @param bUtility is the bin Utility,
   //  it will define the RectangleBounds if none are provided

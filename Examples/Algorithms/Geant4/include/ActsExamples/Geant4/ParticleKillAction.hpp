@@ -16,6 +16,11 @@
 
 #include <G4UserSteppingAction.hh>
 
+class G4Step;
+namespace Acts {
+class Volume;
+}  // namespace Acts
+
 namespace ActsExamples {
 
 /// A G4SteppingAction that is called for every step in
@@ -28,6 +33,7 @@ class ParticleKillAction : public G4UserSteppingAction {
   /// Configuration of the Stepping action
   struct Config {
     std::shared_ptr<const Acts::Volume> volume;
+    double maxTime = std::numeric_limits<double>::infinity();
   };
 
   /// Construct the stepping action

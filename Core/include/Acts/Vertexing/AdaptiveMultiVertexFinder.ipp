@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename vfitter_t, typename sfinder_t>
@@ -530,11 +531,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     } else {
       // Use full 3d information for significance
       SymMatrix4 sumCov = candidateCov + otherCov;
-      SymMatrix4 sumCovInverse;
-      bool invertible = false;
-      sumCov.computeInverseWithCheck(sumCovInverse, invertible);
-      if (invertible) {
-        significance = std::sqrt(deltaPos.dot(sumCovInverse * deltaPos));
+      if (auto sumCovInverse = safeInverse(sumCov); sumCovInverse) {
+        significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       } else {
         return true;
       }

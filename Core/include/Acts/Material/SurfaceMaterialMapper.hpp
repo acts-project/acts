@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -27,8 +28,10 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
+#include <functional>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace Acts {
 

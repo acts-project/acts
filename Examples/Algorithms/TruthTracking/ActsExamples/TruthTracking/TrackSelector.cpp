@@ -8,17 +8,20 @@
 
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <cmath>
-#include <cstdint>
+#include <memory>
 #include <stdexcept>
-#include <vector>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::TrackSelector::TrackSelector(const Config& config,
                                            Acts::Logging::Level level)
@@ -38,6 +41,7 @@ ActsExamples::TrackSelector::TrackSelector(const Config& config,
 ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // helper functions to select tracks
+  auto checkMin = [](auto x, auto min) { return min <= x; };
   auto within = [](double x, double min, double max) {
     return (min <= x) and (x < max);
   };
@@ -50,7 +54,8 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
            within(trk.phi(), m_cfg.phiMin, m_cfg.phiMax) and
            within(trk.loc0(), m_cfg.loc0Min, m_cfg.loc0Max) and
            within(trk.loc1(), m_cfg.loc1Min, m_cfg.loc1Max) and
-           within(trk.time(), m_cfg.timeMin, m_cfg.timeMax);
+           within(trk.time(), m_cfg.timeMin, m_cfg.timeMax) and
+           checkMin(trk.nMeasurements(), m_cfg.minMeasurements);
   };
 
   ACTS_VERBOSE("Reading tracks from: " << m_cfg.inputTracks);
@@ -79,7 +84,8 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
       continue;
     }
     auto destProxy = filteredTracks.getTrack(filteredTracks.addTrack());
-    destProxy.copyFrom(track);
+    destProxy.copyFrom(track, false);
+    destProxy.tipIndex() = track.tipIndex();
   }
 
   ACTS_VERBOSE(

@@ -8,14 +8,34 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <functional>
 #include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
 
 namespace tt = boost::test_tools;
 using Acts::VectorHelpers::makeVector4;
@@ -88,7 +108,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
                                         1 / absMom);
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, navDir,
                                         stepSize, tolerance);
-  BOOST_CHECK_EQUAL(slsState.q, 0.);
+  BOOST_CHECK_EQUAL(slsState.absCharge, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
@@ -163,7 +183,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   Vector3 newPos(2., 4., 8.);
   Vector3 newMom(3., 9., 27.);
   double newTime(321.);
-  sls.update(slsState, newPos, newMom.normalized(), newMom.norm(), newTime);
+  sls.update(slsState, newPos, newMom.normalized(), charge / newMom.norm(),
+             newTime);
   CHECK_CLOSE_ABS(sls.position(slsState), newPos, 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsState), newMom.normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsState), newMom.norm(), 1e-6);
@@ -241,7 +262,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreeDir0).normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
@@ -267,7 +288,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreeDir0), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
@@ -294,7 +315,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreeDir0).normalized(), 1e-6);
   CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
-  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), sls.charge(ps.stepping), 1e-6);
+  CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, Direction::Forward);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);

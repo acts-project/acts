@@ -9,32 +9,67 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
-#include <fstream>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <limits>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class ISurfaceMaterial;
+class Logger;
+}  // namespace Acts
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -259,7 +294,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   Vector3 newPos(2., 4., 8.);
   Vector3 newMom(3., 9., 27.);
   double newTime(321.);
-  es.update(esState, newPos, newMom.normalized(), newMom.norm(), newTime);
+  es.update(esState, newPos, newMom.normalized(), charge / newMom.norm(),
+            newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
   BOOST_CHECK_EQUAL(es.direction(esState), newMom.normalized());
   BOOST_CHECK_EQUAL(es.momentum(esState), newMom.norm());
@@ -318,7 +354,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
                                        cp, navDir, stepSize, tolerance);
     copy.pars = state.pars;
-    copy.q = state.q;
+    copy.absCharge = state.absCharge;
     copy.covTransport = state.covTransport;
     copy.cov = state.cov;
     copy.navDir = state.navDir;
@@ -361,7 +397,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -386,7 +422,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -412,7 +448,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreeDir0).normalized());
   BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
-  BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
+  BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, Direction::Forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
@@ -484,8 +520,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
   CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
-  // update does not change the particle hypothesis
-  BOOST_CHECK_EQUAL(es.charge(esState), 1. * charge);
+  BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
 

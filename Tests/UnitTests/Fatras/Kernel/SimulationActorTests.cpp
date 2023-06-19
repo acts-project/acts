@@ -8,20 +8,33 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Kernel/detail/SimulationActor.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
 
 #include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <memory>
 #include <random>
+#include <utility>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsFatras;
@@ -84,9 +97,9 @@ struct MockStepperState {
   using Scalar = Acts::ActsScalar;
   using Vector3 = Acts::ActsVector<3>;
 
-  Vector3 pos;
+  Vector3 pos = Vector3::Zero();
   Scalar time = 0;
-  Vector3 dir;
+  Vector3 dir = Vector3::Zero();
   Scalar p = 0;
 };
 
@@ -99,12 +112,12 @@ struct MockStepper {
   auto time(const State &state) const { return state.time; }
   auto direction(const State &state) const { return state.dir; }
   auto momentum(const State &state) const { return state.p; }
-  void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar p,
+  void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar qop,
               Scalar time) {
     state.pos = pos;
     state.time = time;
     state.dir = dir;
-    state.p = p;
+    state.p = 1 / qop;
   }
   void setStepSize(State & /*state*/, double /*stepSize*/,
                    Acts::ConstrainedStep::Type /*stype*/) const {}
@@ -291,7 +304,8 @@ BOOST_AUTO_TEST_CASE(HitsOnMaterialSurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  CHECK_CLOSE_REL(f.state.stepping.p, f.result.particle.absoluteMomentum(),
+                  tol);
 
   // call.actor again: one more hit, one more secondary
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());
@@ -415,7 +429,8 @@ BOOST_AUTO_TEST_CASE(NoHitsMaterialSurface) {
   BOOST_CHECK_EQUAL(f.state.stepping.pos, f.result.particle.position());
   BOOST_CHECK_EQUAL(f.state.stepping.time, f.result.particle.time());
   BOOST_CHECK_EQUAL(f.state.stepping.dir, f.result.particle.unitDirection());
-  BOOST_CHECK_EQUAL(f.state.stepping.p, f.result.particle.absoluteMomentum());
+  CHECK_CLOSE_REL(f.state.stepping.p, f.result.particle.absoluteMomentum(),
+                  tol);
 
   // call.actor again: still no hit, one more secondary
   f.actor(f.state, f.stepper, f.navigator, f.result, Acts::getDummyLogger());

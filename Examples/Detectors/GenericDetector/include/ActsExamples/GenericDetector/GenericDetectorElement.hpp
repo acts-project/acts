@@ -13,6 +13,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <memory>
 
 namespace Acts {
 class Surface;

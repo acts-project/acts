@@ -6,19 +6,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
+#include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/EventData/ScalingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class MagneticFieldProvider;
+class TrackingGeometry;
+}  // namespace Acts
+namespace ActsExamples {
+class IAlgorithm;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 
@@ -74,6 +90,13 @@ void addTrackFitting(Context& ctx) {
             []() -> std::shared_ptr<MeasurementCalibrator> {
               return std::make_shared<PassThroughCalibrator>();
             });
+
+    mex.def(
+        "makeScalingCalibrator",
+        [](const char* path) -> std::shared_ptr<MeasurementCalibrator> {
+          return std::make_shared<ActsExamples::ScalingCalibrator>(path);
+        },
+        py::arg("path"));
 
     py::enum_<Acts::MixtureReductionMethod>(mex, "FinalReductionMethod")
         .value("mean", Acts::MixtureReductionMethod::eMean)

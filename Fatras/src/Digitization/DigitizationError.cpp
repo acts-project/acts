@@ -8,6 +8,8 @@
 
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 
+#include <string>
+
 namespace {
 
 /// Custom error category for digitization errors.

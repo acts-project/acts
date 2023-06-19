@@ -10,14 +10,20 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 #include <array>
 #include <memory>
+#include <utility>
+
+namespace Acts {
+class PlanarBounds;
+}  // namespace Acts
 
 using namespace Acts::UnitLiterals;
 
@@ -32,7 +38,7 @@ struct AlignmentContext {
   /// Context index
   unsigned int alignmentIndex{0};
 
-  /// Default contructor
+  /// Default constructor
   AlignmentContext() = default;
 
   /// Constructor with Store and context index
@@ -117,7 +123,7 @@ inline double AlignableDetectorElement::thickness() const {
 
 /// Unit test for creating compliant/non-compliant Surface object
 BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
-  // The nominal and alingments
+  // The nominal and alignments
   Vector3 nominalCenter(0., 0., 0.);
   Vector3 negativeCenter(0., 0., -1.);
   Vector3 positiveCenter(0., 0., 1.);
@@ -130,7 +136,7 @@ BOOST_AUTO_TEST_CASE(AlignmentContextTests) {
   // Local position
   Vector2 localPosition(3., 3.);
 
-  // A position place holder and dymmy momentum
+  // A position placeholder and dummy momentum
   Vector3 globalPosition(100_cm, 100_cm, 100_cm);
   Vector3 dummyMomentum(4., 4., 4.);
 

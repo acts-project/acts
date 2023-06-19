@@ -17,6 +17,14 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 
+#include <cstddef>
+#include <ostream>
+#include <utility>
+
+namespace Acts {
+class DiscBounds;
+}  // namespace Acts
+
 Acts::PassiveLayerBuilder::PassiveLayerBuilder(
     const PassiveLayerBuilder::Config& plConfig,
     std::unique_ptr<const Logger> logger)

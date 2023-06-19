@@ -9,15 +9,19 @@
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
 
-#include <fstream>
-#include <ios>
+#include <array>
+#include <cmath>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 

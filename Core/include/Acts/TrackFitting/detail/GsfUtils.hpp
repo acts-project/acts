@@ -8,13 +8,23 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <iomanip>
 #include <map>
 #include <numeric>
+#include <ostream>
+#include <tuple>
+#include <vector>
 
 namespace Acts {
 
@@ -152,10 +162,9 @@ ActsScalar calculateDeterminant(
 /// with non-Gaussian noise"`. See also the implementation in Athena at
 /// PosteriorWeightsCalculator.cxx
 /// @note The weights are not renormalized!
-template <typename D>
+template <typename traj_t>
 void computePosteriorWeights(
-    const MultiTrajectory<D> &mt,
-    const std::vector<MultiTrajectoryTraits::IndexType> &tips,
+    const traj_t &mt, const std::vector<MultiTrajectoryTraits::IndexType> &tips,
     std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
   // Helper Function to compute detR
 
@@ -209,7 +218,7 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 /// and for now a std::map for the weights
 template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
-  const MultiTrajectory<traj_t> &mt;
+  const traj_t &mt;
   const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
 
   auto operator()(MultiTrajectoryTraits::IndexType idx) const {

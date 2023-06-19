@@ -8,9 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+
 #include <limits>
 
 namespace Acts {
+
 /// @brief contains parameters for  seed confirmation
 struct SeedConfirmationRangeConfig {
   // z minimum and maximum of middle component of the seed used to define the
@@ -38,4 +41,5 @@ struct SeedConfirmationRangeConfig {
   // minimum impact parameter for seed confirmation
   float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
 };
+
 }  // namespace Acts

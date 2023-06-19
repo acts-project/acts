@@ -10,14 +10,32 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 
+#include <any>
+#include <cassert>
+#include <cstddef>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <boost/histogram.hpp>
 
 namespace Acts {
+class Surface;
+template <typename T>
+struct IsReadOnlyMultiTrajectory;
 
 namespace detail_vmt {
 
@@ -151,7 +169,9 @@ class VectorMultiTrajectoryBase {
         m_params{other.m_params},
         m_cov{other.m_cov},
         m_meas{other.m_meas},
+        m_measOffset{other.m_measOffset},
         m_measCov{other.m_measCov},
+        m_measCovOffset{other.m_measCovOffset},
         m_jac{other.m_jac},
         m_sourceLinks{other.m_sourceLinks},
         m_projectors{other.m_projectors},
@@ -307,6 +327,7 @@ class VectorMultiTrajectoryBase {
 }  // namespace detail_vmt
 
 class VectorMultiTrajectory;
+
 template <>
 struct IsReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
 
@@ -388,6 +409,8 @@ class VectorMultiTrajectory final
       TrackStatePropMask mask = TrackStatePropMask::All,
       IndexType iprevious = kInvalid);
 
+  void reserve(std::size_t n);
+
   void shareFrom_impl(IndexType iself, IndexType iother,
                       TrackStatePropMask shareSource,
                       TrackStatePropMask shareTarget);
@@ -452,7 +475,10 @@ class VectorMultiTrajectory final
   // END INTERFACE
 };
 
+ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend, VectorMultiTrajectory);
+
 class ConstVectorMultiTrajectory;
+
 template <>
 struct IsReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
 };
@@ -531,5 +557,8 @@ class ConstVectorMultiTrajectory final
 
   // END INTERFACE
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ConstMultiTrajectoryBackend,
+                          ConstVectorMultiTrajectory);
 
 }  // namespace Acts

@@ -13,7 +13,16 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
+#include <cstddef>
+#include <memory>
 #include <optional>
+#include <string>
+#include <type_traits>
+
+namespace Acts {
+class InterpolatedMagneticField;
+class MagneticFieldProvider;
+}  // namespace Acts
 
 namespace ActsExamples {
 /// @brief Writer for B-fields that outputs field data in CSV format.

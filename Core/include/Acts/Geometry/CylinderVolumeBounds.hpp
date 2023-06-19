@@ -12,7 +12,6 @@
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
@@ -20,7 +19,9 @@
 #include <iomanip>
 #include <iosfwd>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <vector>
 
 namespace Acts {
 

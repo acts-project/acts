@@ -62,7 +62,7 @@ IndexedSurfacesConverter::Options generateDrawOptions() {
 
   isOptions.gridOptions = gridOptions;
   return isOptions;
-};
+}
 
 auto drawOptions = generateDrawOptions();
 

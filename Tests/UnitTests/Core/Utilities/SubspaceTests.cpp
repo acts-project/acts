@@ -12,9 +12,12 @@
 #include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <algorithm>
-#include <iterator>
+#include <array>
+#include <cstddef>
 #include <numeric>
+#include <ostream>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace {

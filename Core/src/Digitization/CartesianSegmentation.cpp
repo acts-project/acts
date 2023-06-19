@@ -14,8 +14,11 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <utility>
 
 Acts::CartesianSegmentation::CartesianSegmentation(

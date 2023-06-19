@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -18,6 +20,8 @@
 
 namespace Acts {
 namespace Experimental {
+class IExternalStructureBuilder;
+class IInternalStructureBuilder;
 
 /// @brief A generic detector volume builder that uses
 /// an external builder for shape and portals and an internal
@@ -37,8 +41,6 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     std::shared_ptr<const IExternalStructureBuilder> externalsBuilder = nullptr;
     /// An internal builder
     std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
-    /// Add to the root volumes: the current volume
-    bool addToRoot = true;
     /// Add eventual internal volume to root
     bool addInternalsToRoot = false;
     /// Auxilliary information
@@ -48,20 +50,19 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
   /// Constructor with configuration arguments
   ///
   /// @param cfg is the configuration struct
-  /// @param logger logging instance for screen output
+  /// @param mlogger logging instance for screen output
   DetectorVolumeBuilder(const Config& cfg,
-                        std::unique_ptr<const Logger> logger = getDefaultLogger(
-                            "DetectorVolumeBuilder", Logging::INFO));
+                        std::unique_ptr<const Logger> mlogger =
+                            getDefaultLogger("DetectorVolumeBuilder",
+                                             Logging::INFO));
 
   /// Final implementation of a volume builder that is purely defined
   /// by an internal and external structure builder
   ///
-  /// @param roots [in,out] the detector root volumes
   /// @param gctx The geometry context for this call
   ///
   /// @return an outgoing detector component
-  DetectorComponent construct(RootDetectorVolumes& roots,
-                              const GeometryContext& gctx) const final;
+  DetectorComponent construct(const GeometryContext& gctx) const final;
 
  private:
   /// configuration object

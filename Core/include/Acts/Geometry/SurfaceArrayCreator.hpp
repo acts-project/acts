@@ -15,16 +15,19 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts {

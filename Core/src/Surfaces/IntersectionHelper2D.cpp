@@ -9,12 +9,10 @@
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 #include <cmath>
-#include <iostream>
-#include <tuple>
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
     const Vector2& s0, const Vector2& s1, const Vector2& origin,
