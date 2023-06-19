@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -26,6 +27,8 @@
 #include <utility>
 #include <vector>
 
+#include <tbb/enumerable_thread_specific.h>
+
 namespace ActsExamples {
 class DataHandleBase;
 class IAlgorithm;
@@ -35,6 +38,11 @@ class IWriter;
 class SequenceElement;
 
 using IterationCallback = void (*)();
+
+/// Custom exception class so FPE failures can be caught
+class FpeFailure : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
 
 class SequenceConfigurationException : public std::runtime_error {
  public:
@@ -49,6 +57,12 @@ class SequenceConfigurationException : public std::runtime_error {
 /// back to a file.
 class Sequencer {
  public:
+  struct FpeMask {
+    std::string loc;
+    Acts::FpeType type;
+    std::size_t count;
+  };
+
   struct Config {
     /// number of events to skip at the beginning
     size_t skip = 0;
@@ -69,6 +83,11 @@ class Sequencer {
     /// Run data flow consistency checks
     /// Defaults to false right now until all components are migrated
     bool runDataFlowChecks = true;
+
+    bool trackFpes = true;
+    std::vector<FpeMask> fpeMasks{};
+    bool failOnFirstFpe = false;
+    std::size_t fpeStackTraceLength = 8;
   };
 
   Sequencer(const Config &cfg);
@@ -101,6 +120,8 @@ class Sequencer {
   /// Add an alias to the whiteboard.
   void addWhiteboardAlias(const std::string &aliasName,
                           const std::string &objectName);
+
+  Acts::FpeMonitor::Result fpeResult() const;
 
   /// Run the event loop.
   ///
@@ -139,18 +160,35 @@ class Sequencer {
   /// Determine range of (requested) events; [SIZE_MAX, SIZE_MAX) for error.
   std::pair<size_t, size_t> determineEventsRange() const;
 
+  std::pair<std::string, std::size_t> fpeMaskCount(
+      const boost::stacktrace::stacktrace &st, Acts::FpeType type) const;
+
+  void fpeReport() const;
+
+  struct SequenceElementWithFpeResult {
+    std::shared_ptr<SequenceElement> sequenceElement;
+    tbb::enumerable_thread_specific<Acts::FpeMonitor::Result> fpeResult{};
+  };
+
   Config m_cfg;
   tbbWrap::task_arena m_taskArena;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
-  std::vector<std::shared_ptr<SequenceElement>> m_sequenceElements;
+  std::vector<SequenceElementWithFpeResult> m_sequenceElements;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
 
   std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
+  std::atomic<std::size_t> m_nUnmaskedFpe = 0;
+
   const Acts::Logger &logger() const { return *m_logger; }
 };
+
+inline std::ostream &operator<<(std::ostream &os, const Sequencer::FpeMask &m) {
+  os << "FpeMask(" << m.loc << ", " << m.type << " <= " << m.count << ")";
+  return os;
+}
 
 }  // namespace ActsExamples
