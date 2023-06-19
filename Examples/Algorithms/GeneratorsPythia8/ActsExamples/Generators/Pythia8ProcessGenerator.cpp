@@ -65,7 +65,10 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
   // use per-thread random engine also in pythia
   FrameworkRndmEngine rndmEngine(rng);
   m_pythia8->rndm.rndmEnginePtr(&rndmEngine);
-  m_pythia8->next();
+  {
+    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Pythia8
+    m_pythia8->next();
+  }
 
   if (m_cfg.printShortEventListing) {
     m_pythia8->process.list();
