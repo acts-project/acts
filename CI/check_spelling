@@ -6,7 +6,7 @@ RETVAL=$?
 
 if [[ $RETVAL -ne 0 ]]; then
     echo ""
-    echo "codespell detected incorrect spelling. You have to options how to deal with this:"
+    echo "codespell detected incorrect spelling. You have two options how to deal with this:"
     echo ""
     echo "1) Apply one suggestion of codespell"
     echo "2) If this is a false-positive, add the word to './CI/codespell_ignore.txt'"

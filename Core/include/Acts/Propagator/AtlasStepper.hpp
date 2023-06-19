@@ -217,7 +217,7 @@ class AtlasStepper {
           Bz2 = (Bz2 - B[2] * B2) * Bn;
           Bz3 = (Bz3 - B[2] * B3) * Bn;
 
-          //  /dPhi      |     /the       |
+          //  /dPhi      |     /dThe       |
           pVector[24] = Bx2 * Vp[0];
           pVector[32] = Bx3 * Vp[0];  // dX/
           pVector[25] = By2 * Vp[0];
@@ -683,7 +683,7 @@ class AtlasStepper {
       Bz2 = (Bz2 - B[2] * B2) * Bn;
       Bz3 = (Bz3 - B[2] * B3) * Bn;
 
-      //  /dPhi      |     /the       |
+      //  /dPhi      |     /dThe       |
       state.pVector[24] = Bx2 * boundParams[eBoundLoc0];
       state.pVector[32] = Bx3 * boundParams[eBoundLoc0];  // dX/
       state.pVector[25] = By2 * boundParams[eBoundLoc0];
@@ -821,7 +821,7 @@ class AtlasStepper {
     state.jacobian[0] = Ax[0] * P[8] + Ax[1] * P[9];    // dL0/dL0
     state.jacobian[1] = Ax[0] * P[16] + Ax[1] * P[17];  // dL0/dL1
     state.jacobian[2] = Ax[0] * P[24] + Ax[1] * P[25];  // dL0/dPhi
-    state.jacobian[3] = Ax[0] * P[32] + Ax[1] * P[33];  // dL0/the
+    state.jacobian[3] = Ax[0] * P[32] + Ax[1] * P[33];  // dL0/dThe
     state.jacobian[4] = Ax[0] * P[40] + Ax[1] * P[41];  // dL0/dCM
     state.jacobian[5] = 0.;                             // dL0/dT
 
@@ -831,7 +831,7 @@ class AtlasStepper {
     state.jacobian[8] =
         Ay[0] * P[24] + Ay[1] * P[25] + Ay[2] * P[26];  // dL1/dPhi
     state.jacobian[9] =
-        Ay[0] * P[32] + Ay[1] * P[33] + Ay[2] * P[34];  // dL1/the
+        Ay[0] * P[32] + Ay[1] * P[33] + Ay[2] * P[34];  // dL1/dThe
     state.jacobian[10] =
         Ay[0] * P[40] + Ay[1] * P[41] + Ay[2] * P[42];  // dL1/dCM
     state.jacobian[11] = 0.;                            // dL1/dT

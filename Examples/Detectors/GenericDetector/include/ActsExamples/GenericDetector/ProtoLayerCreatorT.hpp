@@ -366,7 +366,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
                                  m_cfg.approachSurfaceEnvelope};
       pl.envelope[Acts::binZ] = {layerEnvelopeCoverZ, layerEnvelopeCoverZ};
 
-      // Record the proto layer anb the surfaces for the later layer building
+      // Record the proto layer and the surfaces for the later layer building
       ProtoLayerSurfaces pls{std::move(pl), sVector, phiBins, zBins};
       cpLayers.push_back(std::move(pls));
       // fill the detector store
