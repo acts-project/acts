@@ -13,6 +13,9 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
@@ -24,7 +27,6 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
-
 #include <ios>
 #include <stdexcept>
 
@@ -97,25 +99,35 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("recoZ", &m_recoZ);
     m_outputTree->Branch("recoT", &m_recoT);
     m_outputTree->Branch("recoPhi", &m_recoPhi);
+    m_outputTree->Branch("recoPhiFitted", &m_recoPhiFitted);
     m_outputTree->Branch("recoTheta", &m_recoTheta);
+    m_outputTree->Branch("recoThetaFitted", &m_recoThetaFitted);
     m_outputTree->Branch("recoQOverP", &m_recoQOverP);
+    m_outputTree->Branch("recoQOverPFitted", &m_recoQOverPFitted);
 
     m_outputTree->Branch("resX", &m_resX);
     m_outputTree->Branch("resY", &m_resY);
     m_outputTree->Branch("resZ", &m_resZ);
     m_outputTree->Branch("resT", &m_resT);
     m_outputTree->Branch("resPhi", &m_resPhi);
+    m_outputTree->Branch("resPhiFitted", &m_resPhiFitted);
     m_outputTree->Branch("resTheta", &m_resTheta);
+    m_outputTree->Branch("resThetaFitted", &m_resThetaFitted);
     m_outputTree->Branch("resQOverP", &m_resQOverP);
+    m_outputTree->Branch("resQOverPFitted", &m_resQOverPFitted);
     m_outputTree->Branch("momOverlap", &m_momOverlap);
+    m_outputTree->Branch("momOverlapFitted", &m_momOverlapFitted);
 
     m_outputTree->Branch("pullX", &m_pullX);
     m_outputTree->Branch("pullY", &m_pullY);
     m_outputTree->Branch("pullZ", &m_pullZ);
     m_outputTree->Branch("pullT", &m_pullT);
     m_outputTree->Branch("pullPhi", &m_pullPhi);
+    m_outputTree->Branch("pullPhiFitted", &m_pullPhiFitted);
     m_outputTree->Branch("pullTheta", &m_pullTheta);
+    m_outputTree->Branch("pullThetaFitted", &m_pullThetaFitted);
     m_outputTree->Branch("pullQOverP", &m_pullQOverP);
+    m_outputTree->Branch("pullQOverPFitted", &m_pullQOverPFitted);
 
     m_outputTree->Branch("covXX", &m_covXX);
     m_outputTree->Branch("covYY", &m_covYY);
@@ -335,6 +347,13 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // Loop over all reco vertices and find associated truth particles
   std::vector<SimParticleContainer> truthParticlesAtVtxContainer;
 
+  // Set up EigenStepper
+  Acts::EigenStepper<> stepper(m_cfg.bField);
+
+  // Set up the propagator
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  auto propagator = std::make_shared<Propagator>(stepper);
+
   for (const auto& vtx : vertices) {
     const auto tracks = vtx.tracks();
 
@@ -472,6 +491,20 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           }
 
           // save reconstructed momenta and corresponding truth momenta
+          const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
+                Acts::Surface::makeShared<Acts::PerigeeSurface>(truePos.head(3));
+          // Create propagator options
+              Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
+          auto momentumAtVtx = [&](const auto& paramsElsewhere) {
+              auto intersection = perigeeSurface->intersect(ctx.geoContext, paramsElsewhere.position(ctx.geoContext),
+                                                              paramsElsewhere.unitDirection(), false);
+              pOptions.direction =
+                  Acts::Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+
+              auto result = propagator->propagate(paramsElsewhere, *perigeeSurface, pOptions);//not checking if result is ok - is that a problem?
+              auto& paramsAtVtx = *result->endParameters;
+              return paramsAtVtx;
+          };
           const auto& params = trackParameters[j].parameters();
           for (const auto& trk : tracks) {
             if (trk.originalParams->parameters() == params) {
@@ -483,7 +516,10 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               m_truthTheta.push_back(trueMom[1]);
               m_truthQOverP.push_back(trueMom[2]);
 
-              Acts::ActsVector<3> recoMom = trk.fittedParams.parameters().segment(Acts::eBoundPhi, 3);
+              // Track parameters before the vertex fit
+              auto paramsAtVtx = momentumAtVtx(*(trk.originalParams));
+              Acts::ActsVector<3> recoMom = paramsAtVtx.parameters().segment(Acts::eBoundPhi, 3);
+              const Acts::ActsMatrix<3, 3>& momCov = paramsAtVtx.covariance()->block<3, 3>(Acts::eBoundPhi, Acts::eBoundPhi);
               m_recoPhi.push_back(recoMom[0]);
               m_recoTheta.push_back(recoMom[1]);
               m_recoQOverP.push_back(recoMom[2]);
@@ -492,14 +528,33 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               m_resTheta.push_back(recoMom[1] - trueMom[1]);
               m_resQOverP.push_back(recoMom[2] - trueMom[2]);
 
-              const Acts::ActsMatrix<3, 3>& momCov = trk.fittedParams.covariance()->block<3, 3>(Acts::eBoundPhi, Acts::eBoundPhi);
               m_pullPhi.push_back(pull(0, momCov, recoMom, trueMom));
               m_pullTheta.push_back(pull(1, momCov, recoMom, trueMom));
               m_pullQOverP.push_back(pull(2, momCov, recoMom, trueMom));
-              
-              const auto& recoUnitDir = trk.fittedParams.unitDirection();
+
+              const auto& recoUnitDir = paramsAtVtx.unitDirection();
               double overlap = trueUnitDir.dot(recoUnitDir);
               m_momOverlap.push_back(overlap);
+
+              // Track parameters after the vertex fit
+              auto fittedParamsAtVtx = momentumAtVtx(trk.fittedParams);
+              Acts::ActsVector<3> recoMomFitted = fittedParamsAtVtx.parameters().segment(Acts::eBoundPhi, 3);
+              const Acts::ActsMatrix<3, 3>& momCovFitted = fittedParamsAtVtx.covariance()->block<3, 3>(Acts::eBoundPhi, Acts::eBoundPhi);
+              m_recoPhiFitted.push_back(recoMomFitted[0]);
+              m_recoThetaFitted.push_back(recoMomFitted[1]);
+              m_recoQOverPFitted.push_back(recoMomFitted[2]);
+
+              m_resPhiFitted.push_back(recoMomFitted[0] - trueMom[0]);
+              m_resThetaFitted.push_back(recoMomFitted[1] - trueMom[1]);
+              m_resQOverPFitted.push_back(recoMomFitted[2] - trueMom[2]);
+
+              m_pullPhiFitted.push_back(pull(0, momCovFitted, recoMomFitted, trueMom));
+              m_pullThetaFitted.push_back(pull(1, momCovFitted, recoMomFitted, trueMom));
+              m_pullQOverPFitted.push_back(pull(2, momCovFitted, recoMomFitted, trueMom));
+              
+              const auto& recoUnitDirFitted = fittedParamsAtVtx.unitDirection();
+              double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
+              m_momOverlapFitted.push_back(overlapFitted);
             }
           }    
           count ++;
@@ -523,23 +578,33 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_recoZ.clear();
   m_recoT.clear();
   m_recoPhi.clear();
+  m_recoPhiFitted.clear();
   m_recoTheta.clear();
+  m_recoThetaFitted.clear();
   m_recoQOverP.clear();
+  m_recoQOverPFitted.clear();
   m_resX.clear();
   m_resY.clear();
   m_resZ.clear();
   m_resT.clear();
   m_resPhi.clear();
+  m_resPhiFitted.clear();
   m_resTheta.clear();
+  m_resThetaFitted.clear();
   m_resQOverP.clear();
+  m_resQOverPFitted.clear();
   m_momOverlap.clear();
+  m_momOverlapFitted.clear();
   m_pullX.clear();
   m_pullY.clear();
   m_pullZ.clear();
   m_pullT.clear();
   m_pullPhi.clear();
+  m_pullPhiFitted.clear();
   m_pullTheta.clear();
+  m_pullThetaFitted.clear();
   m_pullQOverP.clear();
+  m_pullQOverPFitted.clear();
   m_covXX.clear();
   m_covYY.clear();
   m_covZZ.clear();

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -51,6 +52,8 @@ class VertexPerformanceWriter final
     std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
     std::string inputVertices;
+    /// Magnetic field
+    std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Output filename.
     std::string filePath = "vertexingperformance.root";
     /// Name of the output tree.
@@ -106,26 +109,35 @@ class VertexPerformanceWriter final
   std::vector<float> m_recoZ;
   std::vector<float> m_recoT;
   std::vector<float> m_recoPhi;
+  std::vector<float> m_recoPhiFitted;
   std::vector<float> m_recoTheta;
+  std::vector<float> m_recoThetaFitted;
   std::vector<float> m_recoQOverP;
+  std::vector<float> m_recoQOverPFitted;
 
-  /// Difference in x positon between reco and true vtx
   std::vector<float> m_resX;
   std::vector<float> m_resY;
   std::vector<float> m_resZ;
   std::vector<float> m_resT;
   std::vector<float> m_resPhi;
+  std::vector<float> m_resPhiFitted;
   std::vector<float> m_resTheta;
+  std::vector<float> m_resThetaFitted;
   std::vector<float> m_resQOverP;
+  std::vector<float> m_resQOverPFitted;
   std::vector<float> m_momOverlap;
+  std::vector<float> m_momOverlapFitted;
 
   std::vector<float> m_pullX;
   std::vector<float> m_pullY;
   std::vector<float> m_pullZ;
   std::vector<float> m_pullT;
   std::vector<float> m_pullPhi;
+  std::vector<float> m_pullPhiFitted;
   std::vector<float> m_pullTheta;
+  std::vector<float> m_pullThetaFitted;
   std::vector<float> m_pullQOverP;
+  std::vector<float> m_pullQOverPFitted;
 
   std::vector<float> m_covXX;
   std::vector<float> m_covYY;

@@ -55,7 +55,6 @@ def run_vertex_fitting(mu, events):
             ),
             multiplicity=mu,
             rnd=rnd,
-            printParticles=True,
         )
         # Dummy particle selection to put "particles_selected" on the whiteboard
         addParticleSelection(
@@ -95,10 +94,10 @@ def run_vertex_fitting(mu, events):
 
 
 with acts.FpeMonitor():
-    mu = 1
+    mu = 200
     start = datetime.datetime.now()
 
-    events = 1
+    events = 5
     run_vertex_fitting(mu, events)
 
     delta = datetime.datetime.now() - start
