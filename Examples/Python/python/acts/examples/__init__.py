@@ -331,75 +331,57 @@ def defaultLogging(
     return customLogLevel
 
 
-def _fpeMaskFromYaml(file: Path) -> ActsPythonBindings._examples.Sequencer.FpeMask:
-    import yaml
+class Sequencer(ActsPythonBindings._examples._Sequencer):
+    def __init__(self, *args, **kwargs):
+        if "fpeMasks" in kwargs:
+            m = kwargs["fpeMasks"]
+            if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
+                n = []
+                for loc, fpe, count in m:
+                    t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
+                    n.append(self.FpeMask(loc, t, count))
+                kwargs["fpeMasks"] = n
+        super().__init__(*args, **kwargs)
 
-    with file.open() as fh:
-        d = yaml.safe_load(fh)
+    class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
+        @classmethod
+        def fromFile(cls, file: Union[str, Path]) -> List["FpeMask"]:
+            if isinstance(file, str):
+                file = Path(file)
 
-    return _fpeMaskFromDict(d)
+            if file.suffix in (".yml", ".yaml"):
+                try:
+                    return cls.fromYaml(file)
+                except ImportError:
+                    print("FPE mask input file is YAML, but PyYAML is not installed")
+                    raise
 
+        @classmethod
+        def fromYaml(cls, file: Union[str, Path]) -> List["FpeMask"]:
+            import yaml
 
-def _fpeMaskFromFile(
-    file: Union[str, Path]
-) -> ActsPythonBindings._examples.Sequencer.FpeMask:
-    if isinstance(file, str):
-        file = Path(file)
+            with file.open() as fh:
+                d = yaml.safe_load(fh)
 
-    if file.suffix in (".yml", ".yaml"):
-        try:
-            return _fpeMaskFromYaml(file)
-        except ImportError:
-            print("FPE mask input file is YAML, but PyYAML is not installed")
-            raise
+            return cls.fromDict(d)
 
+        _fpe_types_to_enum = {v.name: v for v in acts.FpeType.values}
 
-ActsPythonBindings._examples.Sequencer.FpeMask.fromFile = _fpeMaskFromFile
+        @staticmethod
+        def toDict(
+            masks: List["FpeMask"],
+        ) -> Dict[str, Dict[str, int]]:
+            out = {}
+            for mask in masks:
+                out.setdefault(mask.loc, {})
+                out[mask.loc][mask.type.name] = mask.count
 
+                return out
 
-def _fpeMaskToDict(
-    masks: List[ActsPythonBindings._examples.Sequencer.FpeMask],
-) -> Dict[str, Dict[str, int]]:
-    out = {}
-    for mask in masks:
-        out.setdefault(mask.loc, {})
-        out[mask.loc][mask.type.name] = mask.count
-
-    return out
-
-
-_fpe_types_to_enum = {v.name: v for v in acts.FpeType.values}
-
-
-def _fpeMaskFromDict(
-    d: Dict[str, Dict[str, int]]
-) -> List[ActsPythonBindings._examples.Sequencer.FpeMask]:
-    out = []
-    for loc, types in d.items():
-        for fpe, count in types.items():
-            out.append(
-                ActsPythonBindings._examples.Sequencer.FpeMask(
-                    loc, _fpe_types_to_enum[fpe], count
-                )
-            )
-    return out
-
-
-ActsPythonBindings._examples.Sequencer.FpeMask.toDict = _fpeMaskToDict
-
-_origSequencerInit = ActsPythonBindings._examples.Sequencer.__init__
-
-
-def _sequencerInit(self, *args, **kwargs):
-    if "fpeMasks" in kwargs:
-        m = kwargs["fpeMasks"]
-        if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
-            n = []
-            for loc, fpe, count in m:
-                t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
-                n.append(ActsPythonBindings._examples.Sequencer.FpeMask(loc, t, count))
-            kwargs["fpeMasks"] = n
-    _origSequencerInit(self, *args, **kwargs)
-
-
-ActsPythonBindings._examples.Sequencer.__init__ = _sequencerInit
+        @classmethod
+        def fromDict(cls, d: Dict[str, Dict[str, int]]) -> List["FpeMask"]:
+            out = []
+            for loc, types in d.items():
+                for fpe, count in types.items():
+                    out.append(cls(loc, cls._fpe_types_to_enum[fpe], count))
+            return out
