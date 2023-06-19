@@ -82,9 +82,7 @@ if not ttbar:
         ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         ),
         multiplicity=50,
         rnd=rnd,
@@ -96,9 +94,7 @@ else:
         npileup=50,
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         ),
         rnd=rnd,
         outputDirRoot=outputDir,
