@@ -1479,7 +1479,7 @@ class MultiTrajectory {
   }
 
   /// Share a shareable component from between track state.
-  /// @param itself The track state index to share "into"
+  /// @param iself The track state index to share "into"
   /// @param iother The track state index to share from
   /// @param shareSource Which component to share from
   /// @param shareTarget Which component to share as. This doesn't have to be the same
