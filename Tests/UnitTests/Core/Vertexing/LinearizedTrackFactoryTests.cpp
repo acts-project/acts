@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   // Vertex position and corresponding d0 and z0
   Vector4 vtxPos;
   double d0v {};
-  double z0v;
+  double z0v {};
   {
     double x = vXYDist(gen);
     double y = vXYDist(gen);
