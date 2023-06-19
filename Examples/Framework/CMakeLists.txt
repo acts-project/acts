@@ -25,7 +25,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesFramework
-  PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
+  PUBLIC ActsCore ActsFatras ActsPluginFpeMonitoring Boost::boost ROOT::Core ROOT::Hist
   PRIVATE std::filesystem)
 acts_target_link_libraries_system(
   ActsExamplesFramework

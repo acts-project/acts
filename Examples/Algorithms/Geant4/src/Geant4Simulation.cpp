@@ -9,6 +9,7 @@
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -125,8 +126,11 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   eventStore().inputParticles = &m_inputParticles;
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
-  // Start simulation. each track is simulated as a separate Geant4 event.
-  runManager().BeamOn(1);
+  {
+    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
+    // Start simulation. each track is simulated as a separate Geant4 event.
+    runManager().BeamOn(1);
+  }
 
   // Since these are std::set, this ensures that each particle is in both sets
   throw_assert(
@@ -147,6 +151,16 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
         "- initial states: " << eventStore().particleIdCollisionsInitial);
     ACTS_WARNING("- final states: " << eventStore().particleIdCollisionsFinal);
     ACTS_WARNING("- parent ID not found: " << eventStore().parentIdNotFound);
+  }
+
+  if (eventStore().hits.empty()) {
+    ACTS_INFO("Step merging: No steps recorded");
+  } else {
+    ACTS_INFO("Step merging: mean hits per hit: "
+              << static_cast<double>(eventStore().numberGeantSteps) /
+                     eventStore().hits.size());
+    ACTS_INFO(
+        "Step merging: max hits per hit: " << eventStore().maxStepsForHit);
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

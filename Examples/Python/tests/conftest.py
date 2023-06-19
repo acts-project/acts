@@ -404,11 +404,3 @@ def material_recording(material_recording_session: Path, tmp_path: Path):
     target = tmp_path / material_recording_session.name
     shutil.copytree(material_recording_session, target)
     yield target
-
-
-@pytest.fixture(autouse=True)
-def fpe_monitoring():
-    print("Enabling FPE monitoring")
-    with acts.FpeMonitor():
-        yield
-    print("Disabling FPE monitoring")
