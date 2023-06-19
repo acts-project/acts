@@ -129,7 +129,7 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   {
     Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Geant4
     // Start simulation. each track is simulated as a separate Geant4 event.
-    m_cfg.runManager->BeamOn(1);
+    runManager().BeamOn(1);
   }
 
   // Since these are std::set, this ensures that each particle is in both sets
@@ -152,14 +152,15 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
     ACTS_WARNING("- final states: " << eventStore().particleIdCollisionsFinal);
     ACTS_WARNING("- parent ID not found: " << eventStore().parentIdNotFound);
   }
-  
+
   if (eventStore().hits.empty()) {
     ACTS_INFO("Step merging: No steps recorded");
   } else {
     ACTS_INFO("Step merging: mean hits per hit: "
               << static_cast<double>(eventStore().numberGeantSteps) /
                      eventStore().hits.size());
-    ACTS_INFO("Step merging: max hits per hit: " << eventStore().maxStepsForHit);
+    ACTS_INFO(
+        "Step merging: max hits per hit: " << eventStore().maxStepsForHit);
   }
 
   return ActsExamples::ProcessCode::SUCCESS;
