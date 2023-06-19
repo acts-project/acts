@@ -43,8 +43,8 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 /// the Acts::VolumeBounds that carry a decompose method.
 ///
 /// Boundary surfaces can be shared between AbstractVolumes to enhance automatic
-/// navigation between AbstractVolumes, therefore they are reference counted by a
-/// std::shared_ptr holder class.
+/// navigation between AbstractVolumes, therefore they are reference counted by
+/// a std::shared_ptr holder class.
 
 class AbstractVolume : public Volume {
  public:

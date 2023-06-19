@@ -74,7 +74,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
       ACTS_VERBOSE("-> Resulted in " << pLayers.size() << " ProtoLayers.");
       for (const auto& pLayer : pLayers) {
         ACTS_VERBOSE("--> ProtoLayer contains " << pLayer.surfaces().size()
-                                                 << " surfaces.");
+                                                << " surfaces.");
         subSurfaces.push_back(pLayer.surfaces());
       }
     }
