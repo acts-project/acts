@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
       unpackSurfaces(rSurfaces));
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
-  lsConfig.auxilliary = "*** Endcap with 22 surfaces ***";
+  lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {ProtoBinning(Acts::binPhi,
                                     Acts::detail::AxisBoundaryType::Closed,
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
 
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
-  lsConfig.auxilliary = "*** Barrel with 448 surfaces ***";
+  lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {Acts::Experimental::ProtoBinning{
                            Acts::binZ, Acts::detail::AxisBoundaryType::Bound,

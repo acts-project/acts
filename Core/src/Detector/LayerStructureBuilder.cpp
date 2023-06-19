@@ -156,9 +156,9 @@ Acts::Experimental::LayerStructureBuilder::construct(
   std::vector<std::shared_ptr<DetectorVolume>> internalVolumes = {};
   DetectorVolumeUpdator internalVolumeUpdator = tryNoVolumes();
 
-  // Print the auxilliary information
-  if (not m_cfg.auxilliary.empty()) {
-    ACTS_DEBUG(m_cfg.auxilliary);
+  // Print the auxiliary information
+  if (not m_cfg.auxiliary.empty()) {
+    ACTS_DEBUG(m_cfg.auxiliary);
   }
 
   // Retrieve the layer surfaces

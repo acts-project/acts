@@ -129,7 +129,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   std::vector<std::shared_ptr<DetectorVolume>> volumes;
   std::vector<DetectorComponent::PortalContainer> containers;
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
-  // Run throuth the builders
+  // Run through the builders
   std::for_each(
       m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
         auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);

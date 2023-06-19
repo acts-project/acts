@@ -72,7 +72,7 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     std::vector<std::shared_ptr<Surface>> m_surfaces = {};
   };
 
-  /// @brief Support parameter defintions
+  /// @brief Support parameter definitions
   struct Support {
     /// Define whether you want to build support structures
     std::array<ActsScalar, 5u> values = {};

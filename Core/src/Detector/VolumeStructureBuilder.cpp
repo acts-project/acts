@@ -37,9 +37,9 @@ Acts::Experimental::VolumeStructureBuilder::VolumeStructureBuilder(
 Acts::Experimental::ExternalStructure
 Acts::Experimental::VolumeStructureBuilder::construct(
     [[maybe_unused]] const Acts::GeometryContext& gctx) const {
-  // Print out the auxilliary information
-  if (not m_cfg.auxilliary.empty()) {
-    ACTS_DEBUG(m_cfg.auxilliary);
+  // Print out the auxiliary information
+  if (not m_cfg.auxiliary.empty()) {
+    ACTS_DEBUG(m_cfg.auxiliary);
   }
 
   // The volume bounds to be constructed

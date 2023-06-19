@@ -315,7 +315,7 @@ class TrackStateProxy {
     return component<IndexType, hashString("previous")>();
   }
 
-  /// Return whather this track state has a previous (parent) track state.
+  /// Return whether this track state has a previous (parent) track state.
   /// @return Boolean indicating whether a previous track state exists
   bool hasPrevious() const {
     return component<IndexType, hashString("previous")>() != kInvalid;
