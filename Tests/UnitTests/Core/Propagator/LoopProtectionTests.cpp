@@ -11,17 +11,34 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <random>
+#include <string>
+#include <tuple>
+#include <utility>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

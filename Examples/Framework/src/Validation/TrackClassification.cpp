@@ -8,10 +8,14 @@
 
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
+#include <utility>
 
 namespace {
 

@@ -8,6 +8,8 @@
 
 #include "Acts/EventData/VectorTrackContainer.hpp"
 
+#include <iterator>
+
 namespace Acts {
 
 namespace detail_vtc {

@@ -8,8 +8,6 @@
 
 #include "ActsExamples/Framework/SequenceElement.hpp"
 
-#include "ActsExamples/Framework/DataHandle.hpp"
-
 namespace ActsExamples {
 
 void SequenceElement::registerWriteHandle(const DataHandleBase& handle) {

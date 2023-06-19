@@ -14,6 +14,7 @@
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
 
+#include <cstdint>
 #include <limits>
 #include <random>
 

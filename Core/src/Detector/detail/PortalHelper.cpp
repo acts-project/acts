@@ -10,9 +10,13 @@
 
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <stdexcept>
+#include <utility>
 
 void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     const GeometryContext& gctx,
@@ -20,7 +24,7 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     std::vector<PortalReplacement>& pReplacements) {
   // Unpack to navigation bare points
   auto cVolumes = unpack_shared_const_vector(volumes);
-  // Set to the contructed portals (p), at index (i), in direction (d)
+  // Set to the constructed portals (p), at index (i), in direction (d)
   // using boundaries and binning
   for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
     // Check if the boundaries need a transform

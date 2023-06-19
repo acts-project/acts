@@ -11,11 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include <array>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 // A test context

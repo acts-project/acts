@@ -10,9 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
 
 namespace tt = boost::test_tools;
 

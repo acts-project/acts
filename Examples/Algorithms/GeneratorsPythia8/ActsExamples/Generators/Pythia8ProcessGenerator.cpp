@@ -8,9 +8,15 @@
 
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
 #include <algorithm>
+#include <cmath>
 #include <iterator>
+#include <ostream>
 #include <random>
+#include <utility>
 
 #include <Pythia8/Pythia.h>
 

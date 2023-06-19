@@ -8,11 +8,16 @@
 
 #include "Acts/Geometry/Layer.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+
+#include <algorithm>
+#include <functional>
+#include <iterator>
+#include <vector>
 
 Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
                    std::unique_ptr<ApproachDescriptor> ades, LayerType laytyp)

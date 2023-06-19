@@ -386,7 +386,8 @@ def addFatras(
     rnd: acts.examples.RandomNumbers,
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
-    enableInteractions=False,
+    enableInteractions: bool = False,
+    pMin: Optional[float] = None,
     inputParticles: str = "particles_input",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -409,6 +410,7 @@ def addFatras(
     postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
         Similar to preSelectParticles but applied after simulation to "particles_initial", therefore also filters secondaries.
     enableInteractions : Enable the particle interactions in the simulation
+    pMin : Minimum monmentum of particles simulated by FATRAS
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
@@ -431,19 +433,22 @@ def addFatras(
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
-        level=customLogLevel(),
-        inputParticles=particles_selected,
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
-        outputSimHits="simhits",
-        randomNumbers=rnd,
-        trackingGeometry=trackingGeometry,
-        magneticField=field,
-        generateHitsOnSensitive=True,
-        emScattering=enableInteractions,
-        emEnergyLossIonisation=enableInteractions,
-        emEnergyLossRadiation=enableInteractions,
-        emPhotonConversion=enableInteractions,
+        **acts.examples.defaultKWArgs(
+            level=customLogLevel(),
+            inputParticles=particles_selected,
+            outputParticlesInitial="particles_initial",
+            outputParticlesFinal="particles_final",
+            outputSimHits="simhits",
+            randomNumbers=rnd,
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
+            generateHitsOnSensitive=True,
+            emScattering=enableInteractions,
+            emEnergyLossIonisation=enableInteractions,
+            emEnergyLossRadiation=enableInteractions,
+            emPhotonConversion=enableInteractions,
+            pMin=pMin,
+        )
     )
 
     # Sequencer
@@ -554,28 +559,32 @@ def addSimWriters(
         )
 
 
-def getG4DetectorContruction(
+def getG4DetectorConstructionFactory(
     detector: Any,
 ) -> Any:
     try:
         from acts.examples import TelescopeDetector
-        from acts.examples.geant4 import TelescopeG4DetectorConstruction
+        from acts.examples.geant4 import TelescopeG4DetectorConstructionFactory
 
         if type(detector) is TelescopeDetector:
-            return TelescopeG4DetectorConstruction(detector)
+            return TelescopeG4DetectorConstructionFactory(detector)
     except Exception as e:
         print(e)
 
     try:
         from acts.examples.dd4hep import DD4hepDetector
-        from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
+        from acts.examples.geant4.dd4hep import DDG4DetectorConstructionFactory
 
         if type(detector) is DD4hepDetector:
-            return DDG4DetectorConstruction(detector)
+            return DDG4DetectorConstructionFactory(detector)
     except Exception as e:
         print(e)
 
     raise AttributeError(f"cannot find a suitable detector construction for {detector}")
+
+
+# holds the Geant4Handle for potential reuse
+__geant4Handle = None
 
 
 def addGeant4(
@@ -584,7 +593,7 @@ def addGeant4(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
-    g4detectorConstruction: Optional[Any] = None,
+    g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
     materialMappings: List[str] = [],
     inputParticles: str = "particles_input",
@@ -625,7 +634,7 @@ def addGeant4(
         if given, particle are killed after the global time since event creation exceeds the given value
     """
 
-    from acts.examples.geant4 import Geant4Simulation, makeGeant4SimulationConfig
+    from acts.examples.geant4 import Geant4Simulation
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -641,35 +650,35 @@ def addGeant4(
     else:
         particles_selected = inputParticles
 
-    if g4detectorConstruction is None:
+    if g4DetectorConstructionFactory is None:
         if detector is None:
             raise AttributeError("detector not given")
-        g4detectorConstruction = getG4DetectorContruction(detector)
+        g4DetectorConstructionFactory = getG4DetectorConstructionFactory(detector)
 
-    g4conf = makeGeant4SimulationConfig(
+    global __geant4Handle
+
+    # Simulation
+    alg = Geant4Simulation(
         level=customLogLevel(),
-        detector=g4detectorConstruction,
+        geant4Handle=__geant4Handle,
+        detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=particles_selected,
+        outputSimHits="simhits",
+        outputParticlesInitial="particles_initial",
+        outputParticlesFinal="particles_final",
         trackingGeometry=trackingGeometry,
         magneticField=field,
+        physicsList=physicsList,
         volumeMappings=volumeMappings,
         materialMappings=materialMappings,
         killVolume=killVolume,
         killAfterTime=killAfterTime,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
-        physicsList=physicsList,
     )
-    g4conf.outputSimHits = "simhits"
-    g4conf.outputParticlesInitial = "particles_initial"
-    g4conf.outputParticlesFinal = "particles_final"
 
-    # Simulation
-    alg = Geant4Simulation(
-        level=customLogLevel(),
-        config=g4conf,
-    )
+    __geant4Handle = alg.geant4Handle
 
     # Sequencer
     s.addAlgorithm(alg)
@@ -680,7 +689,7 @@ def addGeant4(
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=g4conf.outputParticlesInitial,
+            inputParticles=alg.config.outputParticlesInitial,
             outputParticles=particlesInitial,
         )
 
@@ -688,7 +697,7 @@ def addGeant4(
         addParticleSelection(
             s,
             postSelectParticles,
-            inputParticles=g4conf.outputParticlesFinal,
+            inputParticles=alg.config.outputParticlesFinal,
             outputParticles=particlesFinal,
         )
     else:

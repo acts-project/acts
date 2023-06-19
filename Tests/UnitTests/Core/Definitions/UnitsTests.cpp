@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include <cmath>
 #include <limits>
 
 using namespace Acts::UnitLiterals;

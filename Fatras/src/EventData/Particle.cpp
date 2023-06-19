@@ -8,7 +8,10 @@
 
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
+
+#include <ostream>
 
 ActsFatras::Particle::Particle(Barcode particleId, Acts::PdgParticle pdg)
     : Particle(particleId, pdg, findCharge(pdg), findMass(pdg)) {}

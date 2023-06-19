@@ -9,12 +9,20 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 
-#include <chrono>
-#include <iostream>
-#include <memory>
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class AssertionFailureException;
+}  // namespace Acts
 
 using vec2 = Acts::Vector2;
 template <int N>

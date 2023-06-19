@@ -13,20 +13,25 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ILayerArrayCreator.hpp"
+#include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
-#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
-#include "Acts/Geometry/SurfaceArrayCreator.hpp"
-#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/ProtoSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <utility>
 
 std::unique_ptr<const Acts::TrackingGeometry>
 ActsExamples::Telescope::buildDetector(
