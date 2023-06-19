@@ -8,10 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/detail/AverageMaterials.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 
+#include <cmath>
 #include <limits>
 
 namespace {

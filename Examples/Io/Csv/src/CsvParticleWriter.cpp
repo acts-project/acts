@@ -8,12 +8,14 @@
 
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 #include <Acts/Definitions/Units.hpp>
 
-#include <map>
 #include <stdexcept>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 

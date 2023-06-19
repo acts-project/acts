@@ -8,13 +8,23 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstddef>
+#include <iomanip>
 #include <map>
 #include <numeric>
+#include <ostream>
+#include <tuple>
+#include <vector>
 
 namespace Acts {
 

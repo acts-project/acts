@@ -35,7 +35,6 @@ class VolumeBounds;
 class TrackingVolume;
 class ApproachDescriptor;
 class IMaterialDecorator;
-
 template <typename T>
 struct NavigationOptions;
 
@@ -44,6 +43,7 @@ using SurfaceIntersection = ObjectIntersection<Surface>;
 
 // master typedef
 class Layer;
+
 using LayerPtr = std::shared_ptr<const Layer>;
 using MutableLayerPtr = std::shared_ptr<Layer>;
 using NextLayers = std::pair<const Layer*, const Layer*>;

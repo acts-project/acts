@@ -8,6 +8,8 @@
 
 #include "Acts/MagneticField/MagneticFieldError.hpp"
 
+#include <string>
+
 namespace {
 
 class MagneticFieldErrorCategory : public std::error_category {

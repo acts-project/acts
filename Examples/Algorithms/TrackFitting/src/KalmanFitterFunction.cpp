@@ -6,21 +6,42 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <functional>
+#include <memory>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class MagneticFieldProvider;
+class SourceLink;
+class Surface;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace {
 

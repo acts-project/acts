@@ -16,6 +16,11 @@
 
 #include <G4UserSteppingAction.hh>
 
+class G4Step;
+namespace Acts {
+class Volume;
+}  // namespace Acts
+
 namespace ActsExamples {
 
 /// A G4SteppingAction that is called for every step in

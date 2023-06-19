@@ -73,7 +73,7 @@ void createSeedsForGroupSycl(
   vecmem::vector<uint32_t> sumBotTopCombPrefix(&resource);
   sumBotTopCombPrefix.push_back(0);
 
-  // After completing the duplet search, we'll have successfully contructed
+  // After completing the duplet search, we'll have successfully constructed
   // two bipartite graphs for bottom-middle and top-middle space points.
   // We store the indices of the middle space points of the corresponding
   // edges.

@@ -9,9 +9,17 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -21,15 +29,23 @@
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestSpacePoint.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
-#include <cmath>
-#include <limits>
-#include <variant>
+#include <algorithm>
+#include <iostream>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <optional>
+#include <random>
+#include <utility>
+#include <vector>
+
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 

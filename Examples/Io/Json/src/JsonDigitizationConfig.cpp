@@ -8,12 +8,20 @@
 
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
+#include <cstddef>
 #include <fstream>
-#include <functional>
+#include <initializer_list>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace ActsExamples {
 namespace {
