@@ -8,7 +8,19 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <memory>
+#include <numeric>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;

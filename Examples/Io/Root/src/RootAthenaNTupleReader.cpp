@@ -8,19 +8,22 @@
 
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <cstdint>
 #include <iostream>
+#include <optional>
+#include <stdexcept>
 
 #include <TChain.h>
-#include <TFile.h>
-#include <TMath.h>
+#include <TMathBase.h>
 
 ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
     const ActsExamples::RootAthenaNTupleReader::Config& config,

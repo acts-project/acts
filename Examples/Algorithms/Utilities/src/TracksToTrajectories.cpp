@@ -8,13 +8,21 @@
 
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+
+#include <optional>
+#include <utility>
+#include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 TracksToTrajectories::TracksToTrajectories(Config cfg, Acts::Logging::Level lvl)
     : IAlgorithm("TracksToTrajectories", lvl), m_cfg(std::move(cfg)) {

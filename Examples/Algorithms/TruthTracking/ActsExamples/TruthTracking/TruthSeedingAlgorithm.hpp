@@ -10,22 +10,31 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <functional>
 #include <memory>
 #include <string>
 #include <vector>
 
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
+
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Construct track seeds from particles.
 class TruthSeedingAlgorithm final : public IAlgorithm {

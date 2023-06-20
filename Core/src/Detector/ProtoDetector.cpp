@@ -8,10 +8,11 @@
 
 #include "Acts/Detector/ProtoDetector.hpp"
 
-#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
-#include <exception>
+#include <cstddef>
 #include <sstream>
+#include <stdexcept>
 
 void Acts::ProtoVolume::extendUp(Acts::ProtoVolume& ptVolume) {
   ptVolume.extent.extend(extent);

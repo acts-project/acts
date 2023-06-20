@@ -14,14 +14,22 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <array>
+#include <cstddef>
 #include <ios>
+#include <memory>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include <TFile.h>
 #include <TTree.h>
 #include <boost/optional.hpp>
+
+namespace Acts {
+class InterpolatedMagneticField;
+}  // namespace Acts
 
 namespace ActsExamples {
 

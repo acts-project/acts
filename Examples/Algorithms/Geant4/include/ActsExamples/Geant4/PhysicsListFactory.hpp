@@ -8,15 +8,32 @@
 
 #pragma once
 
-#include <string>
+#include <functional>
+#include <memory>
 
-class G4VModularPhysicsList;
+class G4VUserPhysicsList;
 
 namespace ActsExamples {
 
+/// A factory around G4VUserPhysicsList which allows on demand instantiation.
 class PhysicsListFactory {
  public:
-  G4VModularPhysicsList *factorize(const std::string &list) const;
+  virtual ~PhysicsListFactory() = default;
+
+  virtual std::unique_ptr<G4VUserPhysicsList> factorize() const = 0;
+};
+
+/// Convenience implementation of PhysicsListFactory from std::function
+class PhysicsListFactoryFunction final : public PhysicsListFactory {
+ public:
+  using Function = std::function<std::unique_ptr<G4VUserPhysicsList>()>;
+
+  PhysicsListFactoryFunction(Function function);
+
+  std::unique_ptr<G4VUserPhysicsList> factorize() const final;
+
+ private:
+  Function m_function;
 };
 
 }  // namespace ActsExamples

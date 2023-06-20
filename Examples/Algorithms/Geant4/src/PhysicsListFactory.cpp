@@ -8,22 +8,16 @@
 
 #include "ActsExamples/Geant4/PhysicsListFactory.hpp"
 
-#include <stdexcept>
-
-#include <FTFP_BERT.hh>
-#include <FTFP_BERT_ATL.hh>
+#include <G4VUserPhysicsList.hh>
 
 namespace ActsExamples {
 
-G4VModularPhysicsList* PhysicsListFactory::factorize(
-    const std::string& list) const {
-  if (list == "FTFP_BERT") {
-    return new FTFP_BERT();
-  } else if (list == "FTFP_BERT_ATL") {
-    return new FTFP_BERT_ATL();
-  }
+PhysicsListFactoryFunction::PhysicsListFactoryFunction(Function function)
+    : m_function(std::move(function)) {}
 
-  throw std::invalid_argument("unhandled list");
+std::unique_ptr<G4VUserPhysicsList> PhysicsListFactoryFunction::factorize()
+    const {
+  return m_function();
 }
 
 }  // namespace ActsExamples

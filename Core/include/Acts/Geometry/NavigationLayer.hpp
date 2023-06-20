@@ -15,7 +15,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
 #include <memory>
+#include <utility>
 
 namespace Acts {
 

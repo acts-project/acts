@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/FpeMonitoring/FpeMonitor.hpp"
 #include <Acts/Geometry/GeometryContext.hpp>
 #include <Acts/MagneticField/MagneticFieldContext.hpp>
 #include <Acts/Utilities/CalibrationContext.hpp>
@@ -20,7 +21,7 @@ class WhiteBoard;
 
 /// Aggregated information to run one algorithm over one event.
 struct AlgorithmContext {
-  /// @brief contructor with arguments
+  /// @brief constructor with arguments
   ///
   /// @param alg is the algorithm/service/writer number
   /// @param event ist the event number
@@ -44,6 +45,8 @@ struct AlgorithmContext {
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
   Acts::CalibrationContext calibContext;  ///< Per-event calbiration context
+
+  Acts::FpeMonitor* fpeMonitor = nullptr;
 };
 
 }  // namespace ActsExamples

@@ -9,10 +9,15 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
 #include <cassert>
+#include <iosfwd>
+#include <limits>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {

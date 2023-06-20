@@ -8,17 +8,24 @@
 
 #include "SeedingPerformanceWriter.hpp"
 
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstddef>
+#include <ostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <TFile.h>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
     ActsExamples::SeedingPerformanceWriter::Config config,

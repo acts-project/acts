@@ -9,7 +9,7 @@
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -25,9 +25,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
-#include <iosfwd>
 #include <iterator>
 #include <vector>
 

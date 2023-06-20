@@ -41,7 +41,12 @@ setup = makeSetup()
 def run_vertexing(fitter, mu, events):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=events, numThreads=-1, logLevel=acts.logging.INFO
+            events=events,
+            numThreads=-1,
+            logLevel=acts.logging.INFO,
+            fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
+                Path(__file__).parent.parent / "fpe_masks.yml"
+            ),
         )
 
         tp = Path(temp)
@@ -136,18 +141,17 @@ def run_vertexing(fitter, mu, events):
         )
 
 
-with acts.FpeMonitor():
-    for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
-        for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
-            start = datetime.datetime.now()
+for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
+    for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
+        start = datetime.datetime.now()
 
-            events = 5
-            run_vertexing(fitter, mu, events)
+        events = 5
+        run_vertexing(fitter, mu, events)
 
-            delta = datetime.datetime.now() - start
+        delta = datetime.datetime.now() - start
 
-            duration = delta.total_seconds() / events
+        duration = delta.total_seconds() / events
 
-            (
-                setup.outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
-            ).write_text(str(duration))
+        (
+            setup.outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
+        ).write_text(str(duration))

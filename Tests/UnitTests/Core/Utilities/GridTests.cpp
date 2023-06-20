@@ -8,12 +8,21 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
-#include <chrono>
-#include <random>
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <set>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
