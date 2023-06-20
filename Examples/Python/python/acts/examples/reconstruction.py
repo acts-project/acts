@@ -377,6 +377,7 @@ def addSeedingTruthSelection(
     )
     s.addAlgorithm(selAlg)
 
+
 def addParticleSmearing(
     sequence: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
@@ -384,7 +385,7 @@ def addParticleSmearing(
     outputTrackParameters: str,
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: List[float] = None,
-    logLevel: Optional [acts.logging.Level] = None,     
+    logLevel: Optional[acts.logging.Level] = None,
 ):
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     rnd = rnd or acts.examples.RandomNumbers(seed=42)
@@ -410,6 +411,7 @@ def addParticleSmearing(
         ),
     )
     sequence.addAlgorithm(ptclSmear)
+
 
 def addTruthSmearedSeeding(
     sequence: acts.examples.Sequencer,

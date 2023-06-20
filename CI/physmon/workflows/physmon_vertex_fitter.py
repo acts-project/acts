@@ -21,6 +21,7 @@ from acts.examples.reconstruction import (
 )
 
 import sys
+
 sys.path.append("/home/frusso/hep/acts/CI/physmon/")
 sys.path.append("/home/frusso/hep/acts/Examples/Scripts/Python/")
 from physmon_common import makeSetup
@@ -47,7 +48,7 @@ def run_vertex_fitting(mu, events):
             s,
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
             EtaConfig(-3.0, 3.0),
-            #PhiConfig(-u.pi, u.pi-1e-8),
+            # PhiConfig(-u.pi, u.pi-1e-8),
             ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
@@ -79,18 +80,17 @@ def run_vertex_fitting(mu, events):
             vertexFinder=VertexFinder.Truth,
             outputDirRoot=tp,
         )
-        
+
         s.run()
 
         del s
-        
+
         perf_file = tp / f"performance_vertexing.root"
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(
             perf_file,
             setup.outdir / f"performance_vertex_fitting_mu{mu}.root",
         )
-        
 
 
 with acts.FpeMonitor():
@@ -104,6 +104,6 @@ with acts.FpeMonitor():
 
     duration = delta.total_seconds() / events
 
-    (
-        setup.outdir / f"performance_vertex_fitting_mu{mu}_time.txt"
-    ).write_text(str(duration))
+    (setup.outdir / f"performance_vertex_fitting_mu{mu}_time.txt").write_text(
+        str(duration)
+    )
