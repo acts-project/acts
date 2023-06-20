@@ -9,27 +9,37 @@
 #pragma once
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/Chi2Fitter.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace Acts {
 class TrackingGeometry;
-}
+class MagneticFieldProvider;
+class SourceLink;
+class Surface;
+class VectorMultiTrajectory;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 class TrackFittingChi2Algorithm final : public IAlgorithm {
  public:

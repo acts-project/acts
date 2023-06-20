@@ -14,6 +14,7 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
+
 namespace Acts {
 
 /// Convert a geometry hierarchy map to/from Json.
@@ -64,16 +65,9 @@ class GeometryHierarchyMapJsonConverter {
   /// @throw std::invalid_argument in case of format errors
   Container fromJson(const nlohmann::json& encoded) const;
 
- private:
-  static constexpr const char* kHeaderKey = "acts-geometry-hierarchy-map";
-  static constexpr const char* kEntriesKey = "entries";
-  /// The version of the encoded Json container format. This must be increased
-  /// manually everytime the container format changes.
-  static constexpr int kFormatVersion = 0;
-
-  std::string m_valueIdentifier;
-
-  static nlohmann::json encodeIdentifier(GeometryIdentifier id) {
+  /// Encode the geometry identifier
+  /// @param id is the geometry identifier that will be encoded
+  static nlohmann::json encodeIdentifier(const GeometryIdentifier& id) {
     nlohmann::json encoded;
     // only store non-zero identifiers
     if (id.volume() != 0u) {
@@ -96,6 +90,10 @@ class GeometryHierarchyMapJsonConverter {
     }
     return encoded;
   }
+
+  /// @brief  Decode a geometry identifier from a json object
+  /// @param encoded is the json object that carries the encoded identifier
+  /// @return a valid geometry Identifier
   static GeometryIdentifier decodeIdentifier(const nlohmann::json& encoded) {
     return GeometryIdentifier()
         .setVolume(encoded.value("volume", GeometryIdentifier::Value(0u)))
@@ -105,6 +103,15 @@ class GeometryHierarchyMapJsonConverter {
         .setSensitive(encoded.value("sensitive", GeometryIdentifier::Value(0u)))
         .setExtra(encoded.value("extra", GeometryIdentifier::Value(0u)));
   }
+
+ private:
+  static constexpr const char* kHeaderKey = "acts-geometry-hierarchy-map";
+  static constexpr const char* kEntriesKey = "entries";
+  /// The version of the encoded Json container format. This must be increased
+  /// manually everytime the container format changes.
+  static constexpr int kFormatVersion = 0;
+
+  std::string m_valueIdentifier;
 };
 
 // implementations

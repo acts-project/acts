@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/Kernel/ContinuousProcess.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheBloch.hpp"
@@ -18,6 +19,10 @@
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 
 namespace ActsFatras {
+namespace Casts {
+struct P;
+}  // namespace Casts
+
 namespace detail {
 
 /// Select electrons and positrons only.

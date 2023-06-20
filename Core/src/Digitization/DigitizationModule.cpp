@@ -12,6 +12,8 @@
 
 #include "Acts/Digitization/DigitizationModule.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <utility>
 
 Acts::DigitizationModule::DigitizationModule(

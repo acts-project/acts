@@ -19,11 +19,15 @@
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts {

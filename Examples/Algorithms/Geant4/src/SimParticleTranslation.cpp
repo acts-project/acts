@@ -8,12 +8,20 @@
 
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <ostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 #include <G4ChargedGeantino.hh>
 #include <G4Event.hh>
@@ -23,7 +31,10 @@
 #include <G4PrimaryParticle.hh>
 #include <G4PrimaryVertex.hh>
 #include <G4UnitsTable.hh>
-#include <globals.hh>
+
+namespace ActsExamples {
+class WhiteBoard;
+}  // namespace ActsExamples
 
 ActsExamples::SimParticleTranslation::SimParticleTranslation(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
@@ -39,23 +50,23 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
 
   ACTS_DEBUG("Primary Generator Action for Event: " << eventID);
 
-  auto& eventData = EventStoreRegistry::eventData();
-  WhiteBoard* eventStore = eventData.store;
-  if (eventStore == nullptr) {
-    ACTS_WARNING("No EventStore instance could be found for this event!");
+  if (eventStore().store == nullptr) {
+    ACTS_WARNING("No WhiteBoard instance could be found for this event!");
     return;
   }
 
-  if (eventData.inputParticles == nullptr) {
+  if (eventStore().inputParticles == nullptr) {
     ACTS_WARNING("No input particle handle found");
     return;
   }
 
   // Get the number of input particles
-  const auto inputParticles = (*eventData.inputParticles)(*eventStore);
+  const auto inputParticles =
+      (*eventStore().inputParticles)(*eventStore().store);
 
   // Reserve hopefully enough hit space
-  eventData.hits.reserve(inputParticles.size() * m_cfg.reserveHitsPerParticle);
+  eventStore().hits.reserve(inputParticles.size() *
+                            m_cfg.reserveHitsPerParticle);
 
   // Default particle kinematic
   G4ParticleTable* particleTable = G4ParticleTable::GetParticleTable();
@@ -127,6 +138,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     ACTS_VERBOSE(" -> charge: " << particleCharge);
     ACTS_VERBOSE(" -> momentum: " << mom4.transpose());
 
+    // G4 will delete this
     G4PrimaryParticle* particle = new G4PrimaryParticle(particleDefinition);
 
     particle->SetMass(particleMass);
@@ -137,7 +149,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
 
-    eventData.trackIdMapping[particle->GetTrackID()] = part.particleId();
+    eventStore().trackIdMapping[particle->GetTrackID()] = part.particleId();
 
     ++pCounter;
   }

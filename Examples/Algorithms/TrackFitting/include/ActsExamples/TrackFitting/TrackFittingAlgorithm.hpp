@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -15,13 +16,20 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
+
+#include <memory>
+#include <string>
 
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
+class MeasurementCalibrator;
+class TrackFitterFunction;
+struct AlgorithmContext;
 
 class TrackFittingAlgorithm final : public IAlgorithm {
  public:

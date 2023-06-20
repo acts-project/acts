@@ -10,8 +10,9 @@
 
 #include "Acts/Utilities/MultiIndex.hpp"
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
-#include <type_traits>
 #include <unordered_set>
 
 #include <boost/mpl/list.hpp>

@@ -8,12 +8,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <climits>
+#include <utility>
 
 namespace Acts {
 

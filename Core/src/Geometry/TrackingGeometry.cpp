@@ -9,9 +9,14 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <vector>
 
 Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,

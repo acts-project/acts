@@ -9,10 +9,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "ActsFatras/Digitization/ChannelMerger.hpp"
-#include "ActsFatras/Digitization/DigitizationError.hpp"
+#include "ActsFatras/Digitization/DigitizationData.hpp"
+
+#include <array>
+#include <map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 BOOST_AUTO_TEST_SUITE(Digitization)
 

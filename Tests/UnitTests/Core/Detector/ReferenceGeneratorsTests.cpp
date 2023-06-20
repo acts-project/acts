@@ -10,10 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/ReferenceGenerators.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <memory>
+#include <utility>
+#include <vector>
 
 using namespace Acts::Experimental::detail;
 
