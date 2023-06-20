@@ -78,7 +78,7 @@ struct GenericReadWriteTool {
 
     add(add, std::integral_constant<std::size_t, 0>{});
 
-    writer_t writer(cfg, Acts::Logging::Level::FATAL);
+    writer_t writer(cfg, Acts::Logging::Level::WARNING);
     writer.internalExecute(ctx);
     writer.finalize();
   }
@@ -88,7 +88,7 @@ struct GenericReadWriteTool {
     ActsExamples::WhiteBoard board;
     ActsExamples::AlgorithmContext ctx(0, 0, board);
 
-    reader_t reader(cfg, Acts::Logging::Level::FATAL);
+    reader_t reader(cfg, Acts::Logging::Level::WARNING);
     reader.internalExecute(ctx);
     reader.finalize();
 
