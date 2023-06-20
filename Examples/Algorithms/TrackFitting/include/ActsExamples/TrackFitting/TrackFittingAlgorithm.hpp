@@ -56,7 +56,7 @@ class TrackFittingAlgorithm final : public IAlgorithm {
 
   /// Constructor of the fitting algorithm
   ///
-  /// @param config is the config struct to configure the algorihtm
+  /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
   TrackFittingAlgorithm(Config config, Acts::Logging::Level level);
 

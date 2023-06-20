@@ -38,7 +38,7 @@ struct TGeoSurfaceConverter {
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///
-  /// @return tuple of DiscBounds, Trasnform, thickness
+  /// @return tuple of DiscBounds, Transform, thickness
   static std::tuple<std::shared_ptr<const CylinderBounds>, const Transform3,
                     double>
   cylinderComponents(const TGeoShape& tgShape, const Double_t* rotation,
@@ -53,7 +53,7 @@ struct TGeoSurfaceConverter {
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///
-  /// @return tuple of DiscBounds, Trasnform, thickness
+  /// @return tuple of DiscBounds, Transform, thickness
   static std::tuple<std::shared_ptr<const DiscBounds>, const Transform3, double>
   discComponents(const TGeoShape& tgShape, const Double_t* rotation,
                  const Double_t* translation, const std::string& axes,
@@ -67,7 +67,7 @@ struct TGeoSurfaceConverter {
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///
-  /// @return tuple of PlanarBounds, Trasnform, thickness
+  /// @return tuple of PlanarBounds, Transform, thickness
   static std::tuple<std::shared_ptr<const PlanarBounds>, const Transform3,
                     double>
   planeComponents(const TGeoShape& tgShape, const Double_t* rotation,
@@ -86,7 +86,7 @@ struct TGeoSurfaceConverter {
       const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
       const std::string& axes, double scalor = 10.) noexcept(false);
 
-  /// Transalte TGeo degree [0, 360) to radian
+  /// Translate TGeo degree [0, 360) to radian
   /// * will correct to [-pi,pi)
   /// @param degree The input in degree
   /// @return angle in radians

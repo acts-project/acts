@@ -35,8 +35,8 @@ struct AlgorithmContext;
 /// investigating performance of CombinatorialKalmanFilter (CKF), we might be
 /// interested in its performance for only truth particles with pT and number of
 /// recorded hits (on sensitive detectors) safistying provided criteria (input
-/// measurments of CKF are still recorded hits from all possible particles).
-/// Then we could use particles only satistying provided criteria as the 'seeds'
+/// measurements of CKF are still recorded hits from all possible particles).
+/// Then we could use particles only satisfying provided criteria as the 'seeds'
 /// of CKF instead of handling all the truth particles.
 //
 class TruthSeedSelector final : public IAlgorithm {

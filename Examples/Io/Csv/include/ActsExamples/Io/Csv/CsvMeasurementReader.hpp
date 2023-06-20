@@ -48,7 +48,7 @@ struct AlgorithmContext;
 ///
 /// and each line in the file corresponds to one hit/cluster.
 ///
-/// One file per fevent: thread-safe for parallel event porcessing.
+/// One file per fevent: thread-safe for parallel event processing.
 class CsvMeasurementReader final : public IReader {
  public:
   struct Config {

@@ -209,7 +209,7 @@ class CylinderVolumeBounds : public VolumeBounds {
   void buildSurfaceBounds();
 
   /// Templated dumpT method
-  /// @tparam stream_t The type fo the dump stream
+  /// @tparam stream_t The type for the dump stream
   /// @param dt The dump stream object
   template <class stream_t>
   stream_t& dumpT(stream_t& dt) const;

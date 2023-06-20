@@ -66,7 +66,7 @@ class WriterT : public IWriter {
   /// this method is implemented in the user implementation
   /// @param [in] context is the algorithm context that guarantees event
   ///        consistency
-  /// @tparam [in] is the templeted collection to be written
+  /// @tparam [in] is the templated collection to be written
   virtual ProcessCode writeT(const AlgorithmContext& context,
                              const write_data_t& t) = 0;
 

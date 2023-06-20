@@ -126,7 +126,7 @@ class DD4hepLayerBuilder : public ILayerBuilder {
   void setLogger(std::unique_ptr<const Logger> logger);
 
  private:
-  /// configruation object
+  /// configuration object
   Config m_cfg;
 
   /// logging instance

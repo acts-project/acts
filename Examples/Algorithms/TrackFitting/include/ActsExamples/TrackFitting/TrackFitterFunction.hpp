@@ -80,7 +80,7 @@ using BetheHeitlerApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
 /// @param magneticField the magnetic field for the propagator
 /// @param betheHeitlerApprox The object that encapsulates the approximation.
 /// @param maxComponents number of maximum components in the track state
-/// @param abortOnError wether to call std::abort on an error
+/// @param abortOnError whether to call std::abort on an error
 /// @param disableAllMaterialHandling run the GSF like a KF (no energy loss,
 /// always 1 component, ...)
 /// @param logger a logger instance

@@ -72,7 +72,7 @@ std::vector<const T*> unpack_shared_const_vector(
 
 /// This can be abandoned with C++20 to use the std::to_array method
 ///
-/// @note only the first kDIM elments will obviously be filled, if the
+/// @note only the first kDIM elements will obviously be filled, if the
 /// vector tends to be longer, it is truncated
 ///
 /// @param vecvals the vector of bound values to be converted
@@ -92,7 +92,7 @@ std::array<value_type, kDIM> to_array(const std::vector<value_type>& vecvals) {
 /// value at compile time.
 ///
 /// This function allows to write a templated functor, which accepts a @c size_t
-/// like paramater at compile time. It is then possible to make a call to the
+/// like parameter at compile time. It is then possible to make a call to the
 /// corresponding instance of the functor based on a runtime value. To achieve
 /// this, the function essentially created a if cascade between @c N and @c
 /// NMAX, attempting to find the right instance. Because the cascade is visible

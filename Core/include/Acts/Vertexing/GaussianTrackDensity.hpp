@@ -73,7 +73,7 @@ class GaussianTrackDensity {
     double d0MaxSignificance;
     // Maximum z0 impact parameter significance to use a track
     double z0MaxSignificance;
-    // Correspondig cut values
+    // Corresponding cut values
     double d0SignificanceCut;
     double z0SignificanceCut;
   };

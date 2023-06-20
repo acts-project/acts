@@ -24,7 +24,7 @@ struct AlgorithmContext {
   /// @brief constructor with arguments
   ///
   /// @param alg is the algorithm/service/writer number
-  /// @param event ist the event number
+  /// @param event is the event number
   /// @param store is the event-wise event store
   ///
   /// @note the event dependent contexts are to be added by the
@@ -44,7 +44,7 @@ struct AlgorithmContext {
   Acts::GeometryContext geoContext;  ///< Per-event geometry context
   Acts::MagneticFieldContext
       magFieldContext;                    ///< Per-event magnetic Field context
-  Acts::CalibrationContext calibContext;  ///< Per-event calbiration context
+  Acts::CalibrationContext calibContext;  ///< Per-event calibration context
 
   Acts::FpeMonitor* fpeMonitor = nullptr;
 };

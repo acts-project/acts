@@ -417,7 +417,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
 
   // Write the PDG id production distribution
   ACTS_DEBUG(
-      "Starting calulcation of transition probabilities betweend PDG IDs");
+      "Starting calulcation of transition probabilities between PDG IDs");
   const auto pdgIdMap =
       Parametrisation::cumulativePDGprobability(m_eventFractionCollection);
   std::vector<int> branchingPdgIds;
@@ -435,7 +435,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
   gDirectory->WriteObject(&targetPdgIds, "TargetPdgIds");
   gDirectory->WriteObject(&targetPdgProbability, "TargetPdgProbability");
   ACTS_DEBUG(
-      "Calulcation of transition probabilities betweend PDG IDs finished");
+      "Calulcation of transition probabilities between PDG IDs finished");
 
   // Write the multiplicity and kinematics distribution
   ACTS_DEBUG("Starting parametrisation of multiplicity probabilities");

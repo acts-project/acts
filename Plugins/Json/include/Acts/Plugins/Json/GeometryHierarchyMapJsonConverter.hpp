@@ -108,7 +108,7 @@ class GeometryHierarchyMapJsonConverter {
   static constexpr const char* kHeaderKey = "acts-geometry-hierarchy-map";
   static constexpr const char* kEntriesKey = "entries";
   /// The version of the encoded Json container format. This must be increased
-  /// manually everytime the container format changes.
+  /// manually every time the container format changes.
   static constexpr int kFormatVersion = 0;
 
   std::string m_valueIdentifier;

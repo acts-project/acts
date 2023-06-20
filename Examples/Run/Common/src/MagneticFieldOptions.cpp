@@ -66,7 +66,7 @@ void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
       "Optional field value scale modifier for the field map value. This "
       "option only needs to be set if the field value unit in the field map "
       "file is not `Tesla`. The value must scale from the stored unit to the "
-      "equvalent value in `Tesla`.");
+      "equivalent value in `Tesla`.");
   opt("bf-solenoid-mag-tesla", value<double>()->default_value(0.),
       "The magnitude of a solenoid magnetic field in the center in `Tesla`. "
       "Only used "

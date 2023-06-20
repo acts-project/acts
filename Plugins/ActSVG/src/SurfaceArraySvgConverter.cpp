@@ -51,7 +51,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
       return svgEdges;
     };
 
-    // Walk throuth the binning and translate
+    // Walk through the binning and translate
     if (binning[0] == binPhi and binning[1] == binZ) {
       vType = cylinder;
       //  flip to fit with actsvg convention
@@ -82,7 +82,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
     pGrid._edges_1 = convertGridEdges(edges1);
   }
 
-  // Find the template surfaces & prepare tempalte objects to be assinged
+  // Find the template surfaces & prepare template objects to be assigned
   std::vector<actsvg::svg::object> templateObjects;
   std::vector<const SurfaceBounds*> templateBounds;
 
@@ -157,7 +157,7 @@ Acts::Svg::SurfaceArrayConverter::convert(
         cSurface._template_object = templateObjects[tObject];
       }
     }
-    // Correct view transfrom for disc/planar layers
+    // Correct view transform for disc/planar layers
     if (vType == planar or vType == polar) {
       // Get the transform and estimate the rotation of phi
       // Assumes x/y view
