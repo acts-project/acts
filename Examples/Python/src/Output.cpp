@@ -293,7 +293,7 @@ void addOutput(Context& ctx) {
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",
       inputAllTruthParticles, inputSelectedTruthParticles, inputTrackParameters,
       inputAssociatedTruthParticles, inputTrackParameters, inputTrajectories,
-      inputMeasurementParticlesMap, inputVertices, bField, filePath, treeName, 
+      inputMeasurementParticlesMap, inputVertices, bField, filePath, treeName,
       fileMode, minTrackVtxMatchFraction, truthMatchProbMin);
 
   // CSV WRITERS
