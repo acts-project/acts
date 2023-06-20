@@ -1205,7 +1205,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     )
     assert script.exists()
     env = os.environ.copy()
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "ERROR"
     try:
         stdout = subprocess.check_output(
             [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
