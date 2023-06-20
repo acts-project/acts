@@ -19,7 +19,7 @@ struct DummySequenceElement : public ActsExamples::SequenceElement {
   ActsExamples::ProcessCode initialize() override { return {}; };
   ActsExamples::ProcessCode finalize() override { return {}; };
   ActsExamples::ProcessCode internalExecute(
-      const ActsExamples::AlgorithmContext &) override {
+      const ActsExamples::AlgorithmContext &/*context*/) override {
     return {};
   };
   std::string name() const override { return {}; };
