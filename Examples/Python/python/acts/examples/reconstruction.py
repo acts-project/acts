@@ -1206,7 +1206,7 @@ def addExaTrkX(
         "knnVal": 500,
     }
 
-    filterConfig = {"cut": 0.21}
+    filterConfig = {"cut": 0.01}
 
     gnnConfig = {
         "cut": 0.5,
