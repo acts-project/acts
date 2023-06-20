@@ -23,6 +23,7 @@ namespace Experimental {
 ///
 /// @param gctx is the Geometry context of this call
 /// @param nState [in,out] is the navigation state to be updated
+/// @param candidates the surface candidates to be updated
 ///
 /// @todo for surfaces skip the non-reached ones, while keep for portals
 inline static void updateCandidates(

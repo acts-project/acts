@@ -28,6 +28,7 @@ namespace Experimental {
 ///
 /// @param nState the navigation state
 /// @param surfaces the surfaces that are filled in
+/// @param candidates the surface candidates to be updated
 inline static void fillSurfaceCandidates(
     const NavigationState& nState, const std::vector<const Surface*>& surfaces,
     NavigationState::SurfaceCandidates& candidates) {
@@ -43,6 +44,7 @@ inline static void fillSurfaceCandidates(
 ///
 /// @param nState the navigation state
 /// @param portals the portals that are filled in
+/// @param candidates the surface candidates to be filled
 inline static void fillSurfaceCandidates(
     const NavigationState& /*nState*/,
     const std::vector<const Portal*>& portals,
@@ -71,6 +73,7 @@ class ChainedSurfaceCandidatesDelegate final
   ///
   /// @param gctx is the Geometry context of this call
   /// @param nState the navigation state to which the objects are attached
+  /// @param candidates the candidate surfaces to be filled
   void update(const GeometryContext& gctx, const NavigationState& nState,
               NavigationState::SurfaceCandidates& candidates) const final {
     // Unfold the tuple and add the attachers

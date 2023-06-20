@@ -119,7 +119,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param name the volume name
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
-  /// @param surfaceCandidateUpdator the navigation state updator for surfaces/portals
+  /// @param surfaceCandidatesDelegate the navigation delegate for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
@@ -268,12 +268,11 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// Const access to the detector volume updator
   const DetectorVolumeFinder& detectorVolumeFinder() const;
 
-  /// This method allows to udate the navigation state updator
-  /// module.
+  /// This method allows to udate the navigation delegate.
   ///
-  /// @param surfaceCandidateUpdator the new navigation state updator for surfaces
-  /// @param surfaces the surfaces the new navigation state updator points to
-  /// @param volumes the volumes the new navigation state updator points to
+  /// @param surfaceCandidatesDelegate the new navigation delegate for surfaces
+  /// @param surfaces the surfaces the new navigation delegate points to
+  /// @param volumes the volumes the new navigation delegate points to
   ///
   void assignSurfaceCandidatesUpdator(
       SurfaceCandidatesDelegate surfaceCandidatesDelegate,

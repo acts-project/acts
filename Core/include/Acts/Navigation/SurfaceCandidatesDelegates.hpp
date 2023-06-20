@@ -32,6 +32,7 @@ struct AllPortals final : public ISurfaceCandidatesDelegate {
   ///
   /// @param gctx is the Geometry context of this call
   /// @param nState is the navigation state to be updated
+  /// @param candidates the candidate surfaces to be filled
   ///
   /// @note that the intersections are ordered, such that the
   /// smallest intersection pathlength >= overstep tolerance is the lowest
@@ -61,6 +62,7 @@ struct AllPortalsAndSurfaces final : public ISurfaceCandidatesDelegate {
   ///
   /// @param gctx is the Geometry context of this call
   /// @param nState is the navigation state to be updated
+  /// @param candidates the candidate surfaces to be filled
   ///
   /// @note that the intersections are ordered, such that the
   /// smallest intersection pathlength >= overstep tolerance is the lowest
@@ -98,7 +100,7 @@ struct AdditionalSurfaces final : public ISurfaceCandidatesDelegate {
   ///
   /// @param gctx the geometry contextfor this extraction call (ignored)
   /// @param nState is the navigation state
-  ///
+  /// @param candidates are the candidate surfaces to be filled
   inline void update(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
@@ -109,9 +111,12 @@ struct AdditionalSurfaces final : public ISurfaceCandidatesDelegate {
 
 template <typename indexed_lookup_t>
 struct GenericIndexedSurfaces : public ISurfaceCandidatesDelegate {
-  indexed_lookup_t indexedLookup;
+  using indexed_lookup = indexed_lookup_t;
+  using grid_type = typename indexed_lookup::grid_type;
 
-  GenericIndexedSurfaces(indexed_lookup_t _indexedLookup)
+  indexed_lookup indexedLookup;
+
+  GenericIndexedSurfaces(indexed_lookup _indexedLookup)
       : indexedLookup(std::move(_indexedLookup)) {}
 
   void update(const GeometryContext& gctx, const NavigationState& nState,

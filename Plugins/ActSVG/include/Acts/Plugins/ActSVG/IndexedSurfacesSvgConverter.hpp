@@ -14,7 +14,6 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Plugins/ActSVG/GridSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
@@ -89,6 +88,10 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
                                     const surface_container& surfaces,
                                     const index_grid& indexGrid,
                                     const Options& cOptions) {
+  using grid_type = typename index_grid::grid_type;
+  constexpr unsigned int grid_dim = grid_type::DIM;
+  auto& indexedLookup = indexGrid.indexedLookup;
+
   // The return surfaces
   std::vector<ProtoSurface> pSurfaces;
   pSurfaces.reserve(surfaces.size());
@@ -101,10 +104,9 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   // Estimate the radial extension
   // - for 1D phi
   // - for 2D z-phi or phi-z
-  bool estimateR =
-      (index_grid::grid_type::DIM == 1 and indexGrid.casts[0u] == binPhi) or
-      (index_grid::grid_type::DIM == 2 and
-       (indexGrid.casts[0u] == binPhi or indexGrid.casts[1u] == binPhi));
+  bool estimateR = (grid_dim == 1 and indexedLookup.casts[0u] == binPhi) or
+                   (grid_dim == 2 and (indexedLookup.casts[0u] == binPhi or
+                                       indexedLookup.casts[1u] == binPhi));
 
   for (auto [is, s] : enumerate(surfaces)) {
     // Create the surface converter options
@@ -118,7 +120,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
     // Run the r estimation
     if (estimateR) {
       auto sExtent = s->polyhedronRepresentation(gctx, 4u).extent();
-      if constexpr (index_grid::grid_type::DIM == 2u) {
+      if constexpr (grid_dim == 2u) {
         pSurface._radii[0u] = sExtent.medium(binR);
       }
       constrain.extend(sExtent, {binR});
@@ -127,8 +129,8 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   }
 
   // Adjust the grid options
-  if constexpr (index_grid::grid_type::DIM == 1u) {
-    if (indexGrid.casts[0u] == binPhi) {
+  if constexpr (grid_dim == 1u) {
+    if (indexedLookup.casts[0u] == binPhi) {
       auto estRangeR = constrain.range(binR);
       std::array<ActsScalar, 2u> rRange = {estRangeR.min(), estRangeR.max()};
       gridOptions.optionalBound = {rRange, binR};
@@ -136,33 +138,33 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
   }
 
   // Create the grid
-  ProtoGrid pGrid =
-      GridConverter::convert(indexGrid.grid, indexGrid.casts, gridOptions);
+  ProtoGrid pGrid = GridConverter::convert(indexedLookup.grid,
+                                           indexedLookup.casts, gridOptions);
 
-  auto axes = indexGrid.grid.axes();
+  auto axes = indexedLookup.grid.axes();
 
   // Specify the highlight indices
   std::vector<std::vector<std::size_t>> highlightIndices;
 
   // 1D connections
-  if constexpr (index_grid::grid_type::DIM == 1u) {
+  if constexpr (grid_dim == 1u) {
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
       typename index_grid::grid_type::index_t lbin;
       lbin[0u] = ib0;
-      highlightIndices.push_back(indexGrid.grid.atLocalBins(lbin));
+      highlightIndices.push_back(indexedLookup.grid.atLocalBins(lbin));
       // Register the bin naming
       pGrid._bin_ids.push_back(std::string("- bin : [") + std::to_string(ib0) +
                                std::string("]"));
     }
   }
   // 2D connections
-  if constexpr (index_grid::grid_type::DIM == 2u) {
+  if constexpr (grid_dim == 2u) {
     for (unsigned int ib0 = 1u; ib0 <= axes[0u]->getNBins(); ++ib0) {
       for (unsigned int ib1 = 1u; ib1 <= axes[1u]->getNBins(); ++ib1) {
         typename index_grid::grid_type::index_t lbin;
         lbin[0u] = ib0;
         lbin[1u] = ib1;
-        highlightIndices.push_back(indexGrid.grid.atLocalBins(lbin));
+        highlightIndices.push_back(indexedLookup.grid.atLocalBins(lbin));
         // Register the bin naming
         pGrid._bin_ids.push_back(std::string("- bin : [") +
                                  std::to_string(ib0) + std::string(", ") +
@@ -192,13 +194,13 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 template <typename surface_container, typename instance_type>
 void convert(const GeometryContext& gctx, const surface_container& surfaces,
              const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
-             const Experimental::SurfaceCandidatesUpdator& delegate,
+             const Experimental::SurfaceCandidatesDelegate& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<GridType>;
-  using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
+  using DelegateType = Experimental::IndexedSurfacesAllPortals<GridType>;
+  using SubDelegateType = Experimental::IndexedSurfaces<GridType>;
   // Get the instance
   const auto* instance = delegate.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -220,7 +222,7 @@ template <typename surface_container, typename tuple_type, std::size_t... I>
 void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
-                   const Experimental::SurfaceCandidatesUpdator& delegate,
+                   const Experimental::SurfaceCandidatesDelegate& delegate,
                    const tuple_type& axesTuple, std::index_sequence<I...>) {
   (convert(gctx, surfaces, cOptions, sgi, delegate, std::get<I>(axesTuple)),
    ...);
@@ -240,7 +242,7 @@ void unrollConvert(const GeometryContext& gctx,
 template <typename surface_container>
 ProtoIndexedSurfaceGrid convert(
     const GeometryContext& gctx, const surface_container& surfaces,
-    const Experimental::SurfaceCandidatesUpdator& delegate,
+    const Experimental::SurfaceCandidatesDelegate& delegate,
     const Options& cOptions) {
   // Prep work what is to be filled
   std::vector<ProtoSurface> pSurfaces;

@@ -120,7 +120,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// Update the volume link
   ///
   /// @param dir the direction of the link
-  /// @param dVolumeUpdator is the mangaged volume updator delegate
+  /// @param detectorVolumeFinder is the volume finder delegate
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
