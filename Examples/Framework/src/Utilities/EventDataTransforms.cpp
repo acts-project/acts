@@ -39,12 +39,11 @@ std::optional<ActsExamples::SimSpacePoint> ActsExamples::findSpacePointForIndex(
   return *found;
 }
 
-ActsExamples::SimSeed ActsExamples::ProtoTrackToSeed::operator()(
-    const ActsExamples::ProtoTrack& track) const {
-  // Match a spacepoint to the source-link index if one of the at most two
-  // source-links in the spacepoint has a matching index
+ActsExamples::SimSeed ActsExamples::prototrackToSeed(
+    const ActsExamples::ProtoTrack& track,
+    const ActsExamples::SimSpacePointContainer& spacepoints) {
   auto findSpacePoint = [&](ActsExamples::Index index) {
-    auto found = findSpacePointForIndex(index, m_spacePoints);
+    auto found = findSpacePointForIndex(index, spacepoints);
     if (not found) {
       throw std::runtime_error("No spacepoint found for source-link index " +
                                std::to_string(index));
