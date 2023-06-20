@@ -97,18 +97,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       //output of function needed for seed
 
   //no output to this function, input is vector of simspacepoints  
-  finder.loadSpacePoints(spacePoints); 
-  //this createseeds function is defined in SeedFInderFTF in core 
-  SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
-                                              spacePoints, create_coordinates);
 
-                             
 
-  // //debug statement
-  
-  // ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
-  // ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
-  m_outputSeeds(ctx, std::move(seeds));
+
+
 
 //create map from csv 
   map<std::pair<int, int>,int> ACTS_FTF;
@@ -138,7 +130,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       ACTS_FTF.insert({{ACTS_vol,ACTS_lay},FTF}) ; 
   }
 
-
+  
+  //make FTF_SP vector, keeping same const pointer type as before 
+  //reserve space here 
+  std::vector<FTF_SP<SimSpacePoint>> FTF_spacePoints; //vector to the objects not pointers 
+  //defined input to LSP std::vector<const FTF_SP<external_spacepoint_t>*>
+  FTF_spacePoints.reserve(m_inputSpacePoints.size()); //not sure if this is enough, each one has several sp 
 
 
    //loop over space points, call on map 
@@ -179,12 +176,31 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       }
  
 
-
-      // spacePoint.set_FTF_id(FTF_id) ; 
-      
+      //fill FTF vector with current sapce point and ID 
+      //when it fills spacePoints it uses & before   
+      FTF_spacePoints.emplace_back(&spacePoint,FTF_id); 
+      // FTF_spacePoints.emplace_back(const FTF_SP<SimSpacePoint>(&spacePoint,FTF_id));
     }
   }
   ACTS_VERBOSE("Space points successfully assigned FTF ID") ; 
+
+
+
+
+  finder.loadSpacePoints(FTF_spacePoints); 
+  //this createseeds function is defined in SeedFInderFTF in core 
+  SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
+                                              spacePoints, create_coordinates);
+
+                             
+
+  // //debug statement
+  
+  // ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
+  // ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
+  m_outputSeeds(ctx, std::move(seeds));
+
+
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

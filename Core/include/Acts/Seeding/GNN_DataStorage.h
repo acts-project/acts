@@ -76,14 +76,23 @@ class TrigFTF_GNN_EtaBin {
   std::vector<std::pair<float, unsigned int> > m_vPhiNodes;
 
 };
+   //trying to make new sp struct  
+template <typename space_point_t>  
+struct FTF_SP { 
+  const space_point_t* SP; //want inside to have pointer 
+  int FTF_ID ; 
+  FTF_SP(const space_point_t* sp, int id): SP(sp), FTF_ID(id) {} ; 
+ 
+}; 
 
 template <typename space_point_t>  
+//trying that this will have the input FTF SP, so if want normal have to do .sp 
 class TrigFTF_GNN_DataStorage {
   public:
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& );
   ~TrigFTF_GNN_DataStorage();
  
-  int addSpacePoint(const space_point_t*, bool); //used to be & 
+  int addSpacePoint(const FTF_SP<space_point_t>, bool); 
 
   unsigned int numberOfNodes() const;
   void getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t>*>&);

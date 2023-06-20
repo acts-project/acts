@@ -79,14 +79,16 @@ template <typename space_point_t>
 TrigFTF_GNN_DataStorage<space_point_t>::~TrigFTF_GNN_DataStorage() {
 
 }
-
+//input will be FTF SP so need to call sim for other funcitons 
 template <typename space_point_t>  
-int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const space_point_t* sp, bool useML = false) { //used to be & after spacepoint
+int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const FTF_SP sp, bool useML = false) { //used to be & after spacepoint
   //make new layer directly from int? 
-  const TrigFTF_GNN_Layer<space_point_t>* pL = m_geo.getTrigFTF_GNN_LayerByIndex<space_point_t>(sp.layer()); //want ftf layer 
+  // const TrigFTF_GNN_Layer<space_point_t.SP>* pL = m_geo.getTrigFTF_GNN_LayerByIndex<space_point_t.SP>(sp.layer()); //want ftf layer 
+  const TrigFTF_GNN_Layer<space_point_t>* pL = m_geo.getTrigFTF_GNN_LayerByIndex<space_point_t>(sp.FTF_ID); //want ftf layer 
+
   if(pL==nullptr) return -1;
 
-  int binIndex = pL->getEtaBin(sp.z(), sp.r());
+  int binIndex = pL->getEtaBin(sp.SP.z(), sp.SP.r());
 
   if(binIndex == -1) {
     return -2;
@@ -107,7 +109,7 @@ int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const space_point_t* 
   //   //   min_tau = 6.7*(cluster_width - 0.2);
   //   //   max_tau = 1.6 + 0.15/(cluster_width + 0.2) + 6.1*(cluster_width - 0.2);
   //   // }
-    m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node(sp, min_tau, max_tau));
+    m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node(sp.SP, min_tau, max_tau));
   // }
   else {
   //   // if (useML) {
@@ -116,7 +118,7 @@ int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const space_point_t* 
   //   //   float cluster_width = pCL->width().widthPhiRZ().y();
   //   //   if(cluster_width > 0.2) return -3;
   //   // }
-    m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node(sp)); //add template here? 
+    m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node(sp.SP)); //add template here? 
   }
 
   return 0;

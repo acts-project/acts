@@ -26,25 +26,28 @@
 
 
 namespace Acts {
-    //classes from load space point 
-// class TrigSiSpacePointBase; 
-// class TrigInDetTriplet;
-// class TrigFTF_GNN_DataStorage;
-// class IRoiDescriptor;
+
 
 template <typename external_spacepoint_t>
 class SeedFinderFTF { 
  public: 
  //define memebers 
   //since update 
+
+  // //trying to make new sp struct 
+                
+  // struct FTF_SP { 
+  //   external_spacepoint_t SP; 
+  //   int FTF_ID ; 
+  //       //bool is pixel? 
+  // }; 
+
+
   static constexpr std::size_t NDims = 3;
 
   using seed_t = Seed<external_spacepoint_t>; 
   using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
   using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
-
-
-
 
  //constructors 
 
@@ -64,8 +67,8 @@ class SeedFinderFTF {
  //know eventually will have vector of simspacepoints, here need generic space point type 
 
   //void loadSpacePoints(const std::vector<external_spacepoint_t>&); 
-  void loadSpacePoints(std::vector<const external_spacepoint_t*>); //trying to match type to input in examples 
-
+//   void loadSpacePoints(std::vector<const external_spacepoint_t*>); //trying to match type to input in examples 
+  void loadSpacePoints(std::vector<FTF_SP<external_spacepoint_t>>);
  //create seeeds function 
 
   template <typename input_container_t, typename output_container_t,
