@@ -34,7 +34,7 @@ using RandomEngine = std::mt19937;  ///< Mersenne Twister
 /// single-threaded and multi-threaded test framework runs.
 ///
 /// The role of the RandomNumbers is only to spawn local random number
-/// generators. It does not, in and of itself, accomodate requests for specific
+/// generators. It does not, in and of itself, accommodate requests for specific
 /// random number distributions (uniform, gaussian, etc). For this purpose,
 /// clients should spawn their own local distribution objects
 /// as needed, following the C++11 STL design.

@@ -31,7 +31,7 @@ namespace Contextual {
 /// it simply implements the base class.
 ///
 /// The AlignedDetectorElement demonstrates how a GeometryContext
-/// can be used if it carries an intervall of validity concept
+/// can be used if it carries an interval of validity concept
 ///
 /// The nominal transform is only used to once create the alignment
 /// store and then in a contextual call the actual detector element
@@ -66,7 +66,7 @@ class InternallyAlignedDetectorElement
   /// Return local to global transform associated with this identifier
   ///
   /// @param alignedTransform is a new transform
-  /// @oaram iov is the batch for which it is meant
+  /// @param iov is the batch for which it is meant
   void addAlignedTransform(const Acts::Transform3& alignedTransform,
                            unsigned int iov);
 

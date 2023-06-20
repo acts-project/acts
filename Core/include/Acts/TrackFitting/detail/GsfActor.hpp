@@ -102,7 +102,7 @@ struct GsfActor {
     /// The extensions
     Experimental::GsfExtensions<traj_t> extensions;
 
-    /// Wether we are in the reverse pass or not. This is more reliable than
+    /// Whether we are in the reverse pass or not. This is more reliable than
     /// checking the navigation direction, because in principle the fitter can
     /// be started backwards in the first pass
     bool inReversePass = false;
@@ -625,7 +625,7 @@ struct GsfActor {
         MultiComponentBoundTrackParameters<SinglyCharged>(
             surface.getSharedPtr(), std::move(v));
 
-    // Return sucess
+    // Return success
     return Acts::Result<void>::success();
   }
 
@@ -680,7 +680,7 @@ struct GsfActor {
     return Result<void>::success();
   }
 
-  /// Apply the multipe scattering to the state
+  /// Apply the multiple scattering to the state
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void applyMultipleScattering(propagator_state_t& state,

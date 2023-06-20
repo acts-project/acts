@@ -60,7 +60,7 @@ static auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 1_T});
 ///
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
-/// @param angleU Roation around the original U axis
+/// @param angleU Rotation around the original U axis
 Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
                                     double angleY) {
   Transform3 ctransform;
@@ -77,7 +77,7 @@ Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
 ///
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
-/// @param angleU Roation around the original U axis
+/// @param angleU Rotation around the original U axis
 Transform3 createPlanarTransform(const Vector3& nposition,
                                  const Vector3& nnormal, double angleT,
                                  double angleU) {

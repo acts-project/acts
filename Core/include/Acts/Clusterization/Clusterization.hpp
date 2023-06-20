@@ -84,7 +84,7 @@ template <typename CellCollection, typename ClusterCollection, size_t GridDim>
 ClusterCollection mergeClusters(CellCollection& /*cells*/);
 
 /// @brief createClusters
-/// Conveniance function which runs both labelClusters and createClusters.
+/// Convenience function which runs both labelClusters and createClusters.
 template <typename CellCollection, typename ClusterCollection,
           size_t GridDim = 2,
           typename Connect =

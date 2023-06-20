@@ -191,7 +191,7 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
 
 Acts::Vector3 Acts::CylinderSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
-  // fast access via tranform matrix (and not rotation())
+  // fast access via transform matrix (and not rotation())
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
@@ -263,7 +263,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
                 ? status
                 : Intersection3D::Status::missed);
   };
-  // Check first solution for boundary compatiblity
+  // Check first solution for boundary compatibility
   status1 = boundaryCheck(solution1, status1);
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
@@ -276,7 +276,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
-  // Check first solution for boundary compatiblity
+  // Check first solution for boundary compatibility
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);
   // Check one if its valid or neither is valid
@@ -352,7 +352,7 @@ Acts::CylinderSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);

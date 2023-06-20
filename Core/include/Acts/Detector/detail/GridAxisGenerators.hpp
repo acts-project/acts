@@ -24,7 +24,7 @@ namespace detail {
 ///
 /// The call operator() API allows to plug axis generators into
 /// dedicated code snippets and create fitting axis types on the fly
-/// which then turn into conrete Grid types.
+/// which then turn into concrete Grid types.
 ///
 namespace GridAxisGenerators {
 
@@ -58,7 +58,7 @@ using EqBound = Eq<Acts::detail::AxisBoundaryType::Bound>;
 using EqOpen = Eq<Acts::detail::AxisBoundaryType::Open>;
 using EqClosed = Eq<Acts::detail::AxisBoundaryType::Closed>;
 
-/// @brief  Templated base generator for vairable axis as a tuple - 1D
+/// @brief  Templated base generator for variable axis as a tuple - 1D
 ///
 /// @tparam aType the type of the axis (Bound, Closed, Open)
 template <Acts::detail::AxisBoundaryType aType>

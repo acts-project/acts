@@ -185,7 +185,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 ///
 /// @param gctx The Geometry context of this operation
 /// @param surfaces The surfaces to be converted
-/// @param cOptions the covnersion options
+/// @param cOptions the conversion options
 /// @param sgi [in,out] the proto indexed grid to be converted
 /// @param delegate the delegate to be translated
 /// @param refInstance the reference input type from the reference Axes
@@ -296,7 +296,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
   xyIndexedGrid.add_objects(sObs);
 
   auto xmax = xyIndexedGrid._x_range[1u];
-  // The assoication info boxes
+  // The association info boxes
   for (auto [ig, gTile] : enumerate(gOb._sub_objects)) {
     // Target surface text
     std::vector<std::string> binText;
@@ -325,7 +325,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
 /// @param identification is the to be translated id_ for actsvg
 ///
 /// @note this works, because the actual display at the end is 2D
-/// in an x-y plane and the parameters are appropriatly defined
+/// in an x-y plane and the parameters are appropriately defined
 ///
 /// @return an svg object that can be written out directly
 static inline actsvg::svg::object zphi(

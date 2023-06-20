@@ -383,7 +383,7 @@ BOOST_AUTO_TEST_CASE(Navigator_status_methods) {
                                            nullptr, nullptr, nullptr, nullptr,
                                            nullptr, nullptr, nullptr));
 
-    // b) Beacause of no target surface
+    // b) Because of no target surface
     state.navigation.targetReached = false;
     state.navigation.targetSurface = nullptr;
     navigator.postStep(state, stepper);
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   state.stepping.pos4 = position4;
   state.stepping.dir = momentum.normalized();
 
-  // foward navigation ----------------------------------------------
+  // forward navigation ----------------------------------------------
   if (debug) {
     std::cout << "<<<<<<<<<<<<<<<<<<<<< FORWARD NAVIGATION >>>>>>>>>>>>>>>>>>"
               << std::endl;

@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_SUITE(Detector)
 BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_Misconfigured) {
   // Internal and external structure builder is empty
   DetectorVolumeBuilder::Config dvCfg;
-  dvCfg.auxilliary = "*** Test X * Misconfigued ***";
+  dvCfg.auxiliary = "*** Test X * Misconfigued ***";
   dvCfg.name = "EmptyCylinder";
   dvCfg.externalsBuilder = nullptr;
   dvCfg.internalsBuilder = nullptr;
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_EmptyVolume) {
       Transform3::Identity(), cBounds);
 
   DetectorVolumeBuilder::Config dvCfg;
-  dvCfg.auxilliary = "*** Test 0 - Empty Cylinder ***";
+  dvCfg.auxiliary = "*** Test 0 - Empty Cylinder ***";
   dvCfg.name = "EmptyCylinder";
   dvCfg.externalsBuilder = cBuilder;
   dvCfg.internalsBuilder = nullptr;
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithSurface) {
           Transform3::Identity(), csBounds);
 
   DetectorVolumeBuilder::Config dvCfg;
-  dvCfg.auxilliary = "*** Test 1 - Cylinder with internal Surface ***";
+  dvCfg.auxiliary = "*** Test 1 - Cylinder with internal Surface ***";
   dvCfg.name = "CylinderWithSurface";
   dvCfg.externalsBuilder = cBuilder;
   dvCfg.internalsBuilder = sBuilder;
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolume) {
       Transform3::Identity(), ciBounds);
 
   DetectorVolumeBuilder::Config dvCfg;
-  dvCfg.auxilliary = "*** Test 2 - Cylinder with internal Volume ***";
+  dvCfg.auxiliary = "*** Test 2 - Cylinder with internal Volume ***";
   dvCfg.name = "CylinderWithVolume";
   dvCfg.externalsBuilder = cBuilder;
   dvCfg.internalsBuilder = iBuilder;
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(DetectorVolumeBuilder_VolumeWithVolumeToRoot) {
       Transform3::Identity(), ciBounds);
 
   DetectorVolumeBuilder::Config dvCfg;
-  dvCfg.auxilliary =
+  dvCfg.auxiliary =
       "*** Test 3 - Cylinder with internal Volume, adding to root ***";
   dvCfg.name = "CylinderWithVolume";
   dvCfg.externalsBuilder = cBuilder;

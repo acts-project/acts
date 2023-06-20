@@ -30,7 +30,7 @@ A struct {class}`Acts::Experimental::NavigationState` holds the current navigati
 
 * the current {class}`Acts::Experimental::DetectorVolume` in associated with the position within the detector, called `currentVolume`
 * a list of portal candidates to leave the `currentVolume`
-* a list of surface canidates to be tested within the `currentVolume`
+* a list of surface candidates to be tested within the `currentVolume`
 * a current position, direction, momentum, charge and magnetic field
 
 Several navigation delegates built upon the {class}`Acts::Delegate` template class are defined and can be adapted and specialized for dedicated detector layouts.

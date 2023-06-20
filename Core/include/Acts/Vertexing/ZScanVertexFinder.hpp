@@ -27,8 +27,8 @@ namespace Acts {
 ///
 /// @brief Implements a vertex finder based on the mode of z0 values:
 /// 1. Determines the mode value of all input track z0 values
-/// 2. If no contraint is given, returns (0,0, z0_mode) as vertex position
-/// 3. If vertex contraint is given with x=x_constr and y=y_constr,
+/// 2. If no constraint is given, returns (0,0, z0_mode) as vertex position
+/// 3. If vertex constraint is given with x=x_constr and y=y_constr,
 ///    the returned vertex position will be (x_constr, y_constr, z0_mode).
 template <typename vfitter_t>
 class ZScanVertexFinder {
