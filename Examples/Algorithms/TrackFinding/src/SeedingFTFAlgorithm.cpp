@@ -180,6 +180,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
  
 
 
+      // spacePoint.set_FTF_id(FTF_id) ; 
       
     }
   }

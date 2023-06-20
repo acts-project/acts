@@ -93,6 +93,7 @@ class SimSpacePoint {
   constexpr Scalar r() const { return m_rho; }
   constexpr Scalar varianceR() const { return m_varianceRho; }
   constexpr Scalar varianceZ() const { return m_varianceZ; }
+  
 
   const boost::container::static_vector<Acts::SourceLink, 2>& sourceLinks()
       const {
@@ -112,6 +113,19 @@ class SimSpacePoint {
   constexpr bool validDoubleMeasurementDetails() const {
     return m_validDoubleMeasurementDetails;
   }
+
+
+  // trying to define function that says if pixel
+  // says later pixels have 1 SL 
+  bool isPixel() const {
+    if (m_sourceLinks.size() == 1) {
+      return true ;
+    }
+    else {
+      return false ; 
+    }
+  }
+
 
  private:
   // Global position
@@ -139,6 +153,8 @@ class SimSpacePoint {
   // position of the center of the bottom strip
   Acts::Vector3 m_topStripCenterPosition = {0, 0, 0};
   bool m_validDoubleMeasurementDetails = false;
+
+
 };
 
 inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
@@ -156,6 +172,8 @@ inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
           (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and
           (lhs.varianceZ() == rhs.varianceZ()));
 }
+
+
 
 /// Container of space points.
 using SimSpacePointContainer = std::vector<SimSpacePoint>;

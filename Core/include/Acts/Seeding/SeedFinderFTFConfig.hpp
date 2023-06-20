@@ -110,6 +110,7 @@ struct SeedFinderFTFConfig {
   float m_phiSliceWidth ; 
   float m_nMaxPhiSlice ; 
   bool m_useTrigSeedML = false ; 
+  std::string fastrack_input_file ; 
 
 
 ////

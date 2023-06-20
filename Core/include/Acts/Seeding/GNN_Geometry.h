@@ -53,7 +53,8 @@ class TrigFTF_GNN_Layer {
 template <typename space_point_t>  
 class TrigFTF_GNN_Geometry {
  public:
-  TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>&, const FASTRACK_CONNECTOR*);
+  TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>&, const FasTrackConnector*);
+  TrigFTF_GNN_Geometry();
   ~TrigFTF_GNN_Geometry();
   
   const TrigFTF_GNN_Layer<space_point_t>* getTrigFTF_GNN_LayerByKey(unsigned int) const;

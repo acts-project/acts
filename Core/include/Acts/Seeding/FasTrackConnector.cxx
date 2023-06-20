@@ -28,7 +28,7 @@ FasTrackConnector::FasTrackConnector(std::ifstream& inFile) {
 
     inFile >> lIdx >> stage >> src >> dst >> height >> width >> nEntries;
     
-    FASTRACK_CONNECTION* pC = new FASTRACK_CONNECTION(src, dst);
+    FasTrackConnection* pC = new FasTrackConnection(src, dst);
     
     int dummy;
 
@@ -50,18 +50,18 @@ FasTrackConnector::FasTrackConnector(std::ifstream& inFile) {
       continue;
     }
 
-    std::map<int, std::vector<FASTRACK_CONNECTION*> >::iterator it = m_connMap.find(stage);
+    std::map<int, std::vector<FasTrackConnection*> >::iterator it = m_connMap.find(stage);
     
     if(it == m_connMap.end()) {
-      std::vector<FASTRACK_CONNECTION*> v(1, pC);
+      std::vector<FasTrackConnection*> v(1, pC);
       m_connMap.insert(std::make_pair(stage, v));
     } else (*it).second.push_back(pC);
   }
 }
 
 FasTrackConnector::~FasTrackConnector() {
-  for(std::map<int, std::vector<FASTRACK_CONNECTION*> >::iterator it = m_connMap.begin();it!=m_connMap.end();++it) {
-    for(std::vector<FASTRACK_CONNECTION*>::iterator cIt=(*it).second.begin();cIt!=(*it).second.end();++cIt) {
+  for(std::map<int, std::vector<FasTrackConnection*> >::iterator it = m_connMap.begin();it!=m_connMap.end();++it) {
+    for(std::vector<FasTrackConnection*>::iterator cIt=(*it).second.begin();cIt!=(*it).second.end();++cIt) {
       delete (*cIt);
     }
     (*it).second.clear();

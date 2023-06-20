@@ -39,28 +39,20 @@ class SeedFinderFTF {
   //since update 
   static constexpr std::size_t NDims = 3;
 
-  // TrigFTF_GNN_Geometry<SpacePoint> mGNNgeo ; 
-  //mstorage 
-  // Acts::SeedFilter<SpacePoint> mstorage;   
-  //think the functions wont work if a mmeber about doesnt wokr 
-  //so think need uuse constructor as brackets, 2 inputs 
-  // TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>&, const FASTRACK_CONNECTOR*);
-//   const std::vector<TrigInDetSiLayer>& rosievector ; 
-//   const FASTRACK_CONNECTOR* rosiefast ; //this might need a constructor 
-//   TrigFTF_GNN_Geometry<external_spacepoint_t>& rosietest(rosievector, rosiefast); 
-
-//   TrigFTF_GNN_Geometry<SpacePoint>& rosietest; 
-
   using seed_t = Seed<external_spacepoint_t>; 
   using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
   using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
+
+
+
 
  //constructors 
 
   SeedFinderFTF(
       const Acts::SeedFinderFTFConfig<external_spacepoint_t> &config);
 
-  ~SeedFinderFTF() = default;
+//   ~SeedFinderFTF() = default;
+  ~SeedFinderFTF(); //!!! is it dangerous not to use default? got def in ipp 
   SeedFinderFTF() = default;
   SeedFinderFTF(const SeedFinderFTF<external_spacepoint_t> &) =
       delete;
@@ -72,7 +64,7 @@ class SeedFinderFTF {
  //know eventually will have vector of simspacepoints, here need generic space point type 
 
   //void loadSpacePoints(const std::vector<external_spacepoint_t>&); 
-    void loadSpacePoints(std::vector<const external_spacepoint_t*>); //trying to match type to input in examples 
+  void loadSpacePoints(std::vector<const external_spacepoint_t*>); //trying to match type to input in examples 
 
  //create seeeds function 
 
@@ -87,8 +79,6 @@ class SeedFinderFTF {
   std::vector<seed_t> createSeeds(const Acts::SeedFinderOptions &options,
                                   const input_container_t &spacePoints,
                                   callable_t &&extract_coordinates) const; 
-
-
 
  
  
@@ -105,10 +95,10 @@ class SeedFinderFTF {
 
  //config object  
   Acts::SeedFinderFTFConfig<external_spacepoint_t> m_config;
+  
 
-
-
-
+  //needs to be memeber of class so can accessed by all memeber functions 
+  TrigFTF_GNN_DataStorage<external_spacepoint_t>* m_storage;
 
 }; 
 

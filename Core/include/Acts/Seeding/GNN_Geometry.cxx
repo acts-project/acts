@@ -220,55 +220,60 @@ TrigFTF_GNN_Layer<space_point_t>::~TrigFTF_GNN_Layer() {
 }
 
 template <typename space_point_t> 
-TrigFTF_GNN_Geometry<space_point_t>::TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>& layers, const FASTRACK_CONNECTOR* conn) : m_nEtaBins(0) {
+TrigFTF_GNN_Geometry<space_point_t>::TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>& layers, const FasTrackConnector* conn) : m_nEtaBins(0) {
 
-//   const float min_z0 = -168.0;
-//   const float max_z0 =  168.0;
+  const float min_z0 = -168.0;
+  const float max_z0 =  168.0;
 
-//   m_etaBinWidth = conn->m_etaBin;
+  m_etaBinWidth = conn->m_etaBin;
 
-//   for(const auto& layer : layers) {
-//     const TrigFTF_GNN_Layer* pL = addNewLayer(layer, m_nEtaBins);
-//     m_nEtaBins += pL->num_bins();
-//   }
+  for(const auto& layer : layers) {
+    const TrigFTF_GNN_Layer* pL = addNewLayer(layer, m_nEtaBins);
+    m_nEtaBins += pL->num_bins();
+  }
  
-//   //calculating bin tables in the connector...
+  //calculating bin tables in the connector...
 
-//   for(std::map<int, std::vector<FASTRACK_CONNECTION*> >::const_iterator it = conn->m_connMap.begin();it!=conn->m_connMap.end();++it) {
+  for(std::map<int, std::vector<FASTRACK_CONNECTION*> >::const_iterator it = conn->m_connMap.begin();it!=conn->m_connMap.end();++it) {
 
-//     const std::vector<FASTRACK_CONNECTION*>& vConn = (*it).second;
+    const std::vector<FASTRACK_CONNECTION*>& vConn = (*it).second;
 
-//     for(std::vector<FASTRACK_CONNECTION*>::const_iterator cIt=vConn.begin();cIt!=vConn.end();++cIt) {
+    for(std::vector<FASTRACK_CONNECTION*>::const_iterator cIt=vConn.begin();cIt!=vConn.end();++cIt) {
       
-//       unsigned int src = (*cIt)->m_src;//n2 : the new connectors
-//       unsigned int dst = (*cIt)->m_dst;//n1
+      unsigned int src = (*cIt)->m_src;//n2 : the new connectors
+      unsigned int dst = (*cIt)->m_dst;//n1
       
-//       const TrigFTF_GNN_Layer* pL1 = getTrigFTF_GNN_LayerByKey(dst);
-//       const TrigFTF_GNN_Layer* pL2 = getTrigFTF_GNN_LayerByKey(src);
+      const TrigFTF_GNN_Layer* pL1 = getTrigFTF_GNN_LayerByKey(dst);
+      const TrigFTF_GNN_Layer* pL2 = getTrigFTF_GNN_LayerByKey(src);
       
-//       if (pL1==nullptr) {
-// 	std::cout << " skipping invalid dst layer " << dst << std::endl; 
-// 	  continue; 
-//       }
-//       if (pL2==nullptr) {
-// 	std::cout << " skipping invalid src layer " << src << std::endl; 
-// 	  continue; 
-//       }
-//       int nSrcBins = pL2->m_bins.size();
-//       int nDstBins = pL1->m_bins.size();
+      if (pL1==nullptr) {
+	std::cout << " skipping invalid dst layer " << dst << std::endl; 
+	  continue; 
+      }
+      if (pL2==nullptr) {
+	std::cout << " skipping invalid src layer " << src << std::endl; 
+	  continue; 
+      }
+      int nSrcBins = pL2->m_bins.size();
+      int nDstBins = pL1->m_bins.size();
       
-//       (*cIt)->m_binTable.resize(nSrcBins*nDstBins, 0);
+      (*cIt)->m_binTable.resize(nSrcBins*nDstBins, 0);
 
-//       for(int b1=0;b1<nDstBins;b1++) {//loop over bins in Layer 1
-// 	for(int b2=0;b2<nSrcBins;b2++) {//loop over bins in Layer 2
-// 	  if(!pL1->verifyBin(pL2, b1, b2, min_z0, max_z0)) continue;
-// 	  int address = b1 + b2*nDstBins;
-// 	  (*cIt)->m_binTable.at(address) = 1;
-// 	}
-//       }
-//     }
-//   }
+      for(int b1=0;b1<nDstBins;b1++) {//loop over bins in Layer 1
+	for(int b2=0;b2<nSrcBins;b2++) {//loop over bins in Layer 2
+	  if(!pL1->verifyBin(pL2, b1, b2, min_z0, max_z0)) continue;
+	  int address = b1 + b2*nDstBins;
+	  (*cIt)->m_binTable.at(address) = 1;
+	}
+      }
+    }
+  }
 }
+
+//trying to make default constructor 
+template <typename space_point_t> 
+TrigFTF_GNN_Geometry<space_point_t>::TrigFTF_GNN_Geometry() : m_nEtaBins(0) {
+} 
 
 template <typename space_point_t> 
 TrigFTF_GNN_Geometry<space_point_t>::~TrigFTF_GNN_Geometry() {
