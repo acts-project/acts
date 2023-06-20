@@ -62,7 +62,7 @@ else()
         if(${backtrace_header} STREQUAL "backtrcae_header-NOTFOUND")
           message(STATUS "Could not find backtrace header file")
         else()
-          set(backtrace_include "-DBOOST_STACKTRACE_BACKTRACE_INCLUDE_FILE=\"/usr/lib/gcc/x86_64-linux-gnu/11/include/backtrace.h\"")
+          set(backtrace_include "-DBOOST_STACKTRACE_BACKTRACE_INCLUDE_FILE=\"${backtrace_header}\"")
 
 
           file(WRITE
