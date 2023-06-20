@@ -79,7 +79,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& config,
                                      Acts::Logging::Level level);
-  /// Find vertices using the adapative multi vertex finder algorithm.
+  /// Find vertices using the adaptive multi vertex finder algorithm.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure

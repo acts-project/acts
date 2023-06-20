@@ -34,7 +34,7 @@ static std::vector<std::string> boundTypes = {
 
 void to_json(nlohmann::json& j, const SurfaceBounds& bounds);
 
-/// Converstion to surfaceBounds from json
+/// Conversion to surfaceBounds from json
 ///
 /// The type is given as a template argument in order to be able
 /// to construct the correct fitting types for surfaces.

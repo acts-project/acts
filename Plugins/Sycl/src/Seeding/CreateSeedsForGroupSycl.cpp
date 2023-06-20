@@ -206,7 +206,7 @@ void createSeedsForGroupSycl(
     }
 
     if (edgesBottom > 0 && edgesTop > 0) {
-      // Calcualte global and local range of execution for edgesBottom number of
+      // Calculate global and local range of execution for edgesBottom number of
       // threads. Local range is the same as block size in CUDA.
       cl::sycl::nd_range<1> edgesBotNdRange =
           calculate1DimNDRange(edgesBottom, maxWorkGroupSize);
@@ -215,7 +215,7 @@ void createSeedsForGroupSycl(
       cl::sycl::nd_range<1> edgesTopNdRange =
           calculate1DimNDRange(edgesTop, maxWorkGroupSize);
 
-      // EXPLANATION OF INDEXING (fisrt part)
+      // EXPLANATION OF INDEXING (first part)
       /*
         (for bottom-middle duplets, but it is the same for middle-tops)
         In case we have 4 middle SP and 5 bottom SP, our temporary array of

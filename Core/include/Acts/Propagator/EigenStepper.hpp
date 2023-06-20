@@ -45,7 +45,7 @@ template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
-  /// Jacobian, Covariance and State defintions
+  /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
@@ -270,7 +270,7 @@ class EigenStepper {
     detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value

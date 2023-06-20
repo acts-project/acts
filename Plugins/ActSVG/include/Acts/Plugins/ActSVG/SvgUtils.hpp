@@ -66,7 +66,7 @@ struct Style {
 /// @param objects are the individual objects to be grouped
 /// @param name is the name of the group
 ///
-/// @return a signle svg object as a group
+/// @return a single svg object as a group
 inline static actsvg::svg::object group(
     const std::vector<actsvg::svg::object>& objects, const std::string& name) {
   actsvg::svg::object gr;

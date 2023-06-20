@@ -54,7 +54,7 @@ class PlaneSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transform is the additional transfrom applied after copying
+  /// @param transform is the additional transform applied after copying
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
                const Transform3& transform);
 
@@ -100,7 +100,7 @@ class PlaneSurface : public Surface {
   /// Normal vector return without argument
   using Surface::normal;
 
-  /// The binning position is the position calcualted
+  /// The binning position is the position calculated
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -117,7 +117,7 @@ class PlaneSurface : public Surface {
   const SurfaceBounds& bounds() const override;
 
   /// Local to global transformation
-  /// For planar surfaces the momentum is ignroed in the local to global
+  /// For planar surfaces the momentum is ignored in the local to global
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -129,7 +129,7 @@ class PlaneSurface : public Surface {
                         const Vector3& momentum) const override;
 
   /// Global to local transformation
-  /// For planar surfaces the momentum is ignroed in the global to local
+  /// For planar surfaces the momentum is ignored in the global to local
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -162,7 +162,7 @@ class PlaneSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The start position of the intersection attempt
-  /// @param direction The direction of the interesection attempt,
+  /// @param direction The direction of the intersection attempt,
   /// (@note expected to be normalized)
   /// @param bcheck The boundary check directive
   /// @param tolerance the tolerance used for the intersection
@@ -208,7 +208,7 @@ class PlaneSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates

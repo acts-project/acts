@@ -224,7 +224,7 @@ stripSideVolumes(
     Acts::Logging::Level logLevel = Acts::Logging::INFO) {
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("::stripSideVolumes", logLevel));
 
-  // Thes are the stripped off outside volumes
+  // These are the stripped off outside volumes
   std::map<unsigned int,
            std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
       sideVolumes;
@@ -288,7 +288,7 @@ void checkAlignment(
   }
 }
 
-/// @brief Helper method to check the volumes in general and throw and excpetion if failes
+/// @brief Helper method to check the volumes in general and throw and exception if fails
 ///
 /// @param gctx the geometry context
 /// @param volumes the input volumes to be checked
@@ -418,7 +418,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   // Fuse the cylinders - portals can be reused for this operation
   for (unsigned int iv = 1; iv < volumes.size(); ++iv) {
     refValues = volumes[iv]->volumeBounds().values();
-    // Keep on collecting the outside maximum r for the overal r boundaries
+    // Keep on collecting the outside maximum r for the overall r boundaries
     rBoundaries.push_back(refValues[CylinderVolumeBounds::BoundValues::eMaxR]);
     // Only connect if configured to do so
     if (connectR) {
@@ -426,7 +426,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
                                       << volumes[iv]->name() << "'.");
 
       // When fusing volumes at a cylinder boundary, we *keep* one
-      // portal and tranfer the portal link information from the other
+      // portal and transfer the portal link information from the other
       //
       // In this case the outer cylinder portal of the inner volume is kept,
       // the inner cylinder of the outer portal goes to waste
@@ -456,7 +456,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInR(
   // direction, the binning and bins
   std::vector<PortalReplacement> pReplacements = {};
 
-  // Disc assignments are forwad for negative disc, backward for positive
+  // Disc assignments are forward for negative disc, backward for positive
   std::vector<Acts::Direction> discDirs = {Acts::Direction::Forward,
                                            Acts::Direction::Backward};
   for (const auto [iu, idir] : enumerate(discDirs)) {
@@ -586,7 +586,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
       ACTS_VERBOSE("Connect volume '" << volumes[iv - 1]->name() << "' to "
                                       << volumes[iv]->name() << "'.");
       // When fusing, one portal survives (keep) and gets the
-      // portal linking from the waste tranfered
+      // portal linking from the waste transferred
       //
       // In this case we keep the disc at positive z of the volume
       // at lower relative z, and trash the disc at negative z of the
@@ -658,7 +658,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::connectInZ(
   // direction, the binning and bins
   std::vector<PortalReplacement> pReplacements = {};
 
-  // Disc assignments are forwad for negative disc, backward for positive
+  // Disc assignments are forward for negative disc, backward for positive
   std::vector<Acts::Direction> cylinderDirs = {Acts::Direction::Backward};
   // Cylinder radii
   std::vector<Acts::ActsScalar> cylinderR = {maxR};
@@ -1078,7 +1078,7 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
     Acts::Logging::Level logLevel) {
   if (containers.size() != 2u) {
     throw std::invalid_argument(
-        "CylindricalDetectorHelper: wrapping must take exaclty two "
+        "CylindricalDetectorHelper: wrapping must take exactly two "
         "containers.");
   }
 

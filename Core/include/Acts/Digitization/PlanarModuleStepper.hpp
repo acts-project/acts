@@ -32,7 +32,7 @@ class PlanarModuleStepper {
  public:
   /// Constructor
   ///
-  /// @param mlogger is the logging istance
+  /// @param mlogger is the logging instance
   PlanarModuleStepper(std::unique_ptr<const Logger> mlogger = getDefaultLogger(
                           "PlanarModuleStepper", Logging::INFO));
 
@@ -44,7 +44,7 @@ class PlanarModuleStepper {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param dmodule is the digitization module
   /// @param startPoint is the starting position of the stepping
-  /// @param endPoint is the end postion of the stepping
+  /// @param endPoint is the end position of the stepping
   ///
   /// @return is the vector of digitization steps
   std::vector<DigitizationStep> cellSteps(const GeometryContext& gctx,
@@ -57,7 +57,7 @@ class PlanarModuleStepper {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param dmodule is the digitization module
   /// @param moduleIntersection is the 2d intersection at the module surface
-  /// @param trackDirection is the track direction at the instersection
+  /// @param trackDirection is the track direction at the intersection
   ///
   /// @return is the vector of digitization steps
   std::vector<DigitizationStep> cellSteps(const GeometryContext& gctx,

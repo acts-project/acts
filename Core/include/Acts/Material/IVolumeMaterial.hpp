@@ -19,7 +19,7 @@ class Material;
 ///
 /// Virtual base class of volume material description
 //
-/// Material associated with a Volume (homogenous, binned, interpolated)
+/// Material associated with a Volume (homogeneous, binned, interpolated)
 class IVolumeMaterial {
  public:
   /// Virtual Destructor

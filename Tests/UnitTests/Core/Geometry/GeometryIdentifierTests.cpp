@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_order) {
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setSensitive(64u), vol2);
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setSensitive(64u), vol2);
   BOOST_CHECK_LT(vol2, GeometryIdentifier(vol1).setVolume(3u));
-  // other components are hierachical
+  // other components are hierarchical
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setVolume(1u).setBoundary(2u),
                  GeometryIdentifier(vol1).setVolume(2u).setBoundary(1u));
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setBoundary(1u).setLayer(2u),

@@ -44,7 +44,7 @@ struct EventStore {
   /// The hits in sensitive detectors
   SimHitContainer::sequence_type hits;
 
-  /// Hit buffer for step merging (multiple steps in senstive volume)
+  /// Hit buffer for step merging (multiple steps in sensitive volume)
   std::vector<ActsFatras::Hit> hitBuffer;
 
   /// Some statistics for the step merging

@@ -79,7 +79,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::array<ActsScalar, 2u> envelopeY{0, 0};
     // Envelope in Z
     std::array<ActsScalar, 2u> envelopeZ{0, 0};
-    // An optional rotation fo this
+    // An optional rotation for this
     std::optional<RotationMatrix3> rotation{std::nullopt};
   };
 
@@ -137,7 +137,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   std::shared_ptr<const Surface> buildSurface(const GeometryContext& gctx,
                                               const SurfaceConfig& cfg) const;
 
-  /// @brief This function creates a layer with a surface encaspulated with a
+  /// @brief This function creates a layer with a surface encapsulated with a
   /// given configuration. The surface gets a detector element attached if the
   /// template parameter is non-void.
   ///

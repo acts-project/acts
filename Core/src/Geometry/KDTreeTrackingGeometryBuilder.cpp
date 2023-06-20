@@ -103,7 +103,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
     // Container information must be present
     if (cts.constituentVolumes.empty()) {
       throw std::invalid_argument(
-          "KDTreeTrackingGeometryBuilder: no consituents given.");
+          "KDTreeTrackingGeometryBuilder: no constituents given.");
     }
 
     // This volume is a volume container

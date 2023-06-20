@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
 
   // Constraint for vertex fit
   Vertex<BoundTrackParameters> myConstraint;
-  // Some abitrary values
+  // Some arbitrary values
   SymMatrix4 myCovMat = SymMatrix4::Zero();
   myCovMat(0, 0) = 30.;
   myCovMat(1, 1) = 30.;
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     VertexFitter::State state(bField->makeCache(magFieldContext));
     // Constraint for vertex fit
     Vertex<BoundTrackParameters> myConstraint;
-    // Some abitrary values
+    // Some arbitrary values
     SymMatrix4 myCovMat = SymMatrix4::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
@@ -302,7 +302,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
 
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;
-    // Some abitrary values
+    // Some arbitrary values
     SymMatrix4 myCovMat = SymMatrix4::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;

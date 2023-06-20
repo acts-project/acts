@@ -27,7 +27,7 @@ class DetectorVolume;
 /// navigation state to nullptr, usually indicates the end of
 /// the known world, hence the name
 struct EndOfWorldImpl : public INavigationDelegate {
-  /// @brief a null volume link - explicitely
+  /// @brief a null volume link - explicitly
   ///
   /// @note the method parameters are ignored
   inline void update(const GeometryContext& /*ignored*/,
@@ -54,7 +54,7 @@ struct SingleDetectorVolumeImpl : public INavigationDelegate {
 
   SingleDetectorVolumeImpl() = delete;
 
-  /// @brief a null volume link - explicitely
+  /// @brief a null volume link - explicitly
   ///
   /// @note the method parameters are ignored
   ///

@@ -93,7 +93,7 @@ class EllipseBounds : public PlanarBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line, here it refers to the full 2PI Ellipse
   ///
-  /// @note the number of segements to may be altered by also providing
+  /// @note the number of segments to may be altered by also providing
   /// the extremas in all direction
   ///
   /// @return vector for vertices in 2D

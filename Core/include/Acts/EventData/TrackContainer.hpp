@@ -31,7 +31,7 @@ template <typename T>
 struct IsReadOnlyTrackContainer;
 
 /// Track container interface class. This type represents a collections of
-/// tracks. It uses a backend to store bothe the actual tracks and the
+/// tracks. It uses a backend to store both the actual tracks and the
 /// associated track states.
 /// @tparam track_container_t the track container backend
 /// @tparam traj_t the track state container backend
@@ -130,7 +130,7 @@ class TrackContainer {
 
   /// Remove a track at index @p itrack from the container
   /// @note This invalidates all track proxies!
-  /// @param itrack The index of the track to remmove
+  /// @param itrack The index of the track to remove
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void removeTrack(IndexType itrack) {
     m_container->removeTrack_impl(itrack);

@@ -20,7 +20,7 @@ class RectangleBounds;
 /// @class PlanarBounds
 ///
 /// common base class for all bounds that are in a local x/y cartesian frame
-///  - simply introduced to avoid wrong bound assigments to surfaces
+///  - simply introduced to avoid wrong bound assignments to surfaces
 ///
 class PlanarBounds : public SurfaceBounds {
  public:

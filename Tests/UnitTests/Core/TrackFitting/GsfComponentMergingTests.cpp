@@ -145,7 +145,7 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
   return mean;
 }
 
-// This general boundCovariance estimator can be equiped with a custom
+// This general boundCovariance estimator can be equipped with a custom
 // subtraction object to enable circular behaviour
 template <int D, typename subtract_t = std::minus<ActsVector<D>>>
 auto boundCov(const std::vector<ActsVector<D>> &samples,

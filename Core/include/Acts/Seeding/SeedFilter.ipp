@@ -252,7 +252,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
   // retrieve all candidates
-  // this collection is alredy sorted
+  // this collection is already sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
   filterSeeds_1SpFixed(spacePointData, extended_collection, numQualitySeeds,
