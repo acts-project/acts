@@ -46,7 +46,7 @@ inline static void fillSurfaceCandidates(
 /// @param portals the portals that are filled in
 /// @param candidates the surface candidates to be filled
 inline static void fillSurfaceCandidates(
-    const NavigationState& /*nState*/,
+    [[maybe_unused]] const NavigationState& nState,
     const std::vector<const Portal*>& portals,
     NavigationState::SurfaceCandidates& candidates) {
   for (const auto& portal : portals) {

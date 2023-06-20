@@ -39,7 +39,8 @@ struct AllPortals final : public ISurfaceCandidatesDelegate {
   ///
   /// @return an ordered list of portal candidates
   inline void update(
-      const GeometryContext& /*gctx*/, const NavigationState& nState,
+      [[maybe_unused]] const GeometryContext& gctx,
+      const NavigationState& nState,
       NavigationState::SurfaceCandidates& candidates) const final {
     auto currentVolume = nState.currentVolume;
 
@@ -69,7 +70,8 @@ struct AllPortalsAndSurfaces final : public ISurfaceCandidatesDelegate {
   ///
   /// @return an ordered list of portal and surface candidates
   inline void update(
-      const GeometryContext& /*gctx*/, const NavigationState& nState,
+      [[maybe_unused]] const GeometryContext& gctx,
+      const NavigationState& nState,
       NavigationState::SurfaceCandidates& candidates) const final {
     auto currentVolume = nState.currentVolume;
 
