@@ -76,7 +76,7 @@ std::function<double(Acts::Vector3)> globalToLocalFromBin(
     Acts::BinningValue& type);
 
 /// @brief Create a 2DGrid using a BinUtility.
-/// Also determine the coresponding global to local transform and grid mapping
+/// Also determine the corresponding global to local transform and grid mapping
 /// function
 ///
 /// @param [in] bins BinUtility of the volume to be mapped
@@ -88,7 +88,7 @@ Grid2D createGrid2D(
     std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal);
 
 /// @brief Create a 3DGrid using a BinUtility.
-/// Also determine the coresponding global to local transform and grid mapping
+/// Also determine the corresponding global to local transform and grid mapping
 /// function
 ///
 /// @param [in] bins BinUtility of the volume to be mapped

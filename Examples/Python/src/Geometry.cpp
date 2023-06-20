@@ -137,7 +137,7 @@ void addExperimentalGeometry(Context& ctx) {
                                                               "DetectorVolume");
 
   {
-    // The surface hiearchy map
+    // The surface hierarchy map
     using SurfaceHierarchyMap =
         Acts::GeometryHierarchyMap<std::shared_ptr<Surface>>;
 
@@ -200,7 +200,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(supports);
     ACTS_PYTHON_MEMBER(binnings);
     ACTS_PYTHON_MEMBER(nSegments);
-    ACTS_PYTHON_MEMBER(auxilliary);
+    ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
 
     // The internal layer structure builder
@@ -240,7 +240,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(vsConfig, VolumeStructureBuilder::Config);
     ACTS_PYTHON_MEMBER(boundsType);
     ACTS_PYTHON_MEMBER(boundValues);
-    ACTS_PYTHON_MEMBER(auxilliary);
+    ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -271,7 +271,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(internalsBuilder);
     ACTS_PYTHON_MEMBER(externalsBuilder);
-    ACTS_PYTHON_MEMBER(auxilliary);
+    ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -297,7 +297,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CylindricalContainerBuilder::Config);
     ACTS_PYTHON_MEMBER(builders);
     ACTS_PYTHON_MEMBER(binning);
-    ACTS_PYTHON_MEMBER(auxilliary);
+    ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -320,7 +320,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(dConfig, DetectorBuilder::Config);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(builder);
-    ACTS_PYTHON_MEMBER(auxilliary);
+    ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
 }

@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(TGeoParser_Pixel) {
   }
 }
 
-/// @brief Unit test Parsing a TGeo geometrys
+/// @brief Unit test Parsing a TGeo geometries
 BOOST_AUTO_TEST_CASE(TGeoParser_Pixel_SelectInnermost) {
   if (gGeoManager != nullptr) {
     std::string volumeName = "*";

@@ -21,7 +21,7 @@ static constexpr ActsScalar s_epsilon =
 /// Tolerance for being on Surface
 ///
 /// @note This is intentionally given w/o an explicit unit to avoid having
-///       to include the units header unneccessarily. With the native length
+///       to include the units header unnecessarily. With the native length
 ///       unit of mm this corresponds to 0.1um.
 static constexpr ActsScalar s_onSurfaceTolerance = 1e-4;
 

@@ -308,7 +308,7 @@ void Acts::TrackingVolume::synchronizeLayers(double envelope) const {
     // layers." << endreq;
     for (auto& clayIter : m_confinedLayers->arrayObjects()) {
       if (clayIter) {
-        // @todo implement syncrhonize layer
+        // @todo implement synchronize layer
         //  if (clayIter->surfaceRepresentation().type() == Surface::Cylinder &&
         //  !(center().isApprox(clayIter->surfaceRepresentation().center())) )
         //      clayIter->resizeAndRepositionLayer(volumeBounds(),center(),envelope);
@@ -394,14 +394,14 @@ void Acts::TrackingVolume::closeGeometry(
   GeometryIdentifier::Value iboundary = 0;
   // loop over the boundary surfaces
   for (auto& bSurfIter : boundarySurfaces()) {
-    // get the intersection soltuion
+    // get the intersection solution
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
     auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
-    // Assigne material if you have a decorator
+    // Assign material if you have a decorator
     if (materialDecorator != nullptr) {
       materialDecorator->decorate(mutableBSurface);
     }
@@ -638,7 +638,7 @@ Acts::TrackingVolume::compatibleLayers(
             tLayer->surfaceOnApproach(gctx, position, direction, options);
         auto path = atIntersection.intersection.pathLength;
         bool withinLimit = std::abs(path) <= std::abs(options.pathLimit);
-        // Intersection is ok - take it (move to surface on appraoch)
+        // Intersection is ok - take it (move to surface on approach)
         if (atIntersection &&
             (atIntersection.object != options.targetSurface) && withinLimit) {
           // create a layer intersection
@@ -673,7 +673,7 @@ std::vector<const Acts::Volume*> intersectSearchHierarchy(
     if (lnode->intersect(obj)) {
       if (lnode->hasEntity()) {
         // found primitive
-        // check obb to limit false positivies
+        // check obb to limit false positives
         const Acts::Volume* vol = lnode->entity();
         const auto& obb = vol->orientedBoundingBox();
         if (obb.intersect(obj.transformed(vol->itransform()))) {

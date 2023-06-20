@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   //
   // -> local segment must not be symmetric around (0,0)
   // -> segment exit at pos local z remains unchanged
-  // -> segment entry at neg local z changes in x, remains unchaged in y
+  // -> segment entry at neg local z changes in x, remains unchanged in y
   auto driftedSegment = psd.toReadout(geoCtx, *planeSurface, depletion,
                                       cPosition, particleDir, holeDrift);
 
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaceDrift) {
   //
   // -> local segment must not be symmetric around (0,0)
   // -> segment entry at neg local z remains unchanged
-  // -> segment exit at pos local z changes in x, remains unchaged in y
+  // -> segment exit at pos local z changes in x, remains unchanged in y
   driftedSegment = psd.toReadout(geoCtx, *planeSurface, depletion, cPosition,
                                  particleDir, chargeDrift);
 

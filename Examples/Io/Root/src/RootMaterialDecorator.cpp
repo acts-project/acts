@@ -203,7 +203,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
           double da = A->GetBinContent(1, 1);
           double dz = Z->GetBinContent(1, 1);
           double drho = rho->GetBinContent(1, 1);
-          // Create and set the homogenous surface material
+          // Create and set the homogeneous surface material
           const auto material =
               Acts::Material::fromMassDensity(dx0, dl0, da, dz, drho);
           sMaterial = std::make_shared<const Acts::HomogeneousSurfaceMaterial>(

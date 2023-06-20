@@ -81,7 +81,7 @@ class DD4hepVolumeBuilder : public IConfinedTrackingVolumeBuilder {
   void setLogger(std::unique_ptr<const Logger> logger);
 
  private:
-  /// Configruation object
+  /// Configuration object
   Config m_cfg;
 
   /// Logging instance

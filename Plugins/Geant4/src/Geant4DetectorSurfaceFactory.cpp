@@ -63,7 +63,7 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
       }
 
       if (sensitive) {
-        // empty gemetry context is fine as the transform was just passed down
+        // empty geometry context is fine as the transform was just passed down
         // without context before
         auto detectorElement = std::make_shared<Acts::Geant4DetectorElement>(
             surface, g4PhysVol, surface->transform({}), 0.1);

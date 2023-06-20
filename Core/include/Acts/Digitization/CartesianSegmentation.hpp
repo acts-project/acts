@@ -24,7 +24,7 @@ namespace Acts {
 
 /// @brief Segmentation Base class
 ///
-/// Segementation class for generic pixel, strixels and strip segmentations
+/// Segmentation class for generic pixel, strixels and strip segmentations
 /// in a cartesian frame, this uses a cartesian X/Y local surface definition
 ///
 /// The calculation can be done in full 3D, i.e. the segments of the path
@@ -32,7 +32,7 @@ namespace Acts {
 /// the planar module are calculated in a 3D model - or in 2D, when the entire
 /// calculation is done on the projective surface. When the 2D option is used,
 /// segmentation surfaces are not created. The 2D calculation is faster and uses
-/// less memory, however, effects witin the sensor volume can not be easily
+/// less memory, however, effects within the sensor volume can not be easily
 /// integrated
 ///
 /// Conventions:
@@ -60,7 +60,7 @@ class CartesianSegmentation : public Segmentation {
   /// optimisation
   ///
   /// @note if both RectangleBounds and BinUtility are provided, no check is
-  /// done for consitency
+  /// done for consistency
   CartesianSegmentation(std::shared_ptr<const BinUtility> bUtility,
                         std::shared_ptr<const PlanarBounds> mBounds = nullptr);
 

@@ -62,7 +62,7 @@ class MaterialMapJsonConverter {
   /// Configuration of the Converter
   class Config {
    public:
-    /// Default geometry context to extract surface tranforms
+    /// Default geometry context to extract surface transforms
     GeometryContext context = GeometryContext();
 
     /// Steering to handle sensitive data
@@ -114,7 +114,7 @@ class MaterialMapJsonConverter {
 
   /// Go through a volume to find subvolume, layers and surfaces.
   /// Store volumes and surfaces in two vector used to initialised the geometry
-  /// hierachy.
+  /// hierarchy.
   ///
   /// @param volumeHierarchy is a vector of volume to be filled
   /// @param surfaceHierarchy is a vector of surfaces to be filled

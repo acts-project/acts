@@ -16,7 +16,7 @@ Behind the scene
 
 All display actions rely on the `Polyhedron` representation of Surfaces, 
 i.e. each surface can be at least approximated by a list of vertices and a definition of faces connecting these vertices.
-As a special feature, the `Polyhedron` can be displayed as a triangulated mesh of surfaces, i.e. each surface is devided into triangles
+As a special feature, the `Polyhedron` can be displayed as a triangulated mesh of surfaces, i.e. each surface is divided into triangles
 that build up the object to display.
 
 

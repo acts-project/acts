@@ -19,7 +19,7 @@ namespace Acts {
 
 /// @class HomogeneousSurfaceMaterial
 ///
-/// It extends the ISurfaceMaterial virutal base class to describe
+/// It extends the ISurfaceMaterial virtual base class to describe
 /// a simple homogeneous material on a surface
 class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
  public:
@@ -88,7 +88,7 @@ class HomogeneousSurfaceMaterial : public ISurfaceMaterial {
   /// The inherited methods - for MaterialSlab access
   using ISurfaceMaterial::materialSlab;
 
-  /// The interited methods - for scale access
+  /// The inherited methods - for scale access
   using ISurfaceMaterial::factor;
 
   /// Output Method for std::ostream
