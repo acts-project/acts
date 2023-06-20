@@ -8,15 +8,32 @@
 
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 
+#include "Acts/Geometry/ApproachDescriptor.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Plugins/Json/GeometryHierarchyMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
+#include "Acts/Plugins/Json/VolumeJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <cstddef>
+#include <iomanip>
 #include <sstream>
+#include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 using namespace ActsExamples;
 

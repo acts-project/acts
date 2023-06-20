@@ -8,19 +8,26 @@
 
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilderOptions.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
-#include <cmath>
+#include <functional>
+#include <iterator>
+#include <ostream>
 #include <stdexcept>
 #include <utility>
+#include <variant>
 
 ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                                                Acts::Logging::Level lvl)

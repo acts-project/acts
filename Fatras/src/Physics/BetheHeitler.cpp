@@ -8,6 +8,16 @@
 
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/ProcessType.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
+
 ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
     const Particle &particle, Scalar gammaE, Scalar rndPsi, Scalar rndTheta1,
     Scalar rndTheta2, Scalar rndTheta3) const {

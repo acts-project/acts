@@ -10,8 +10,11 @@
 
 #include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <iomanip>
-#include <sstream>
+#include <limits>
 
 Acts::Extent::Extent(
     const std::array<std::array<ActsScalar, 2>, binValues>& envelope)

@@ -24,6 +24,12 @@
 
 #include <map>
 #include <memory>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 namespace ActsExamples {
 

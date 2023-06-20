@@ -10,9 +10,13 @@
 
 #include "Acts/Utilities/BinningData.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <memory>
 #include <stdexcept>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 Acts::Grid2D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
                               Acts::MaterialGridAxisData gridAxis2) {

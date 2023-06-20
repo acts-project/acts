@@ -12,8 +12,12 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
+#include <iterator>
 #include <stdexcept>
+#include <utility>
 
 std::vector<std::shared_ptr<Acts::Experimental::Portal>>
 Acts::Experimental::generatePortals(

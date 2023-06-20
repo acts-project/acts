@@ -10,9 +10,18 @@
 
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
-#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
+#include <algorithm>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
+
+namespace Acts {
+namespace Experimental {
+class DetectorVolume;
+}  // namespace Experimental
+}  // namespace Acts
 
 namespace {
 
@@ -105,9 +114,10 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
 
 Acts::Experimental::DetectorComponent
 Acts::Experimental::CylindricalContainerBuilder::construct(
-    RootDetectorVolumes& roots, const GeometryContext& gctx) const {
+    const GeometryContext& gctx) const {
   // Return container object
   DetectorComponent::PortalContainer rContainer;
+  bool atNavigationLevel = true;
 
   // Create the indivudal components, collect for both outcomes
   std::vector<DetectorComponent> components;
@@ -115,35 +125,34 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
                                         << " components.");
   // Check through the component volumes - if every builder only
   // built exactly one volume, you are at pure navigation level
-  bool atNavigationLevel = true;
-  components.reserve(m_cfg.builders.size());
+  // Collect the volumes
+  std::vector<std::shared_ptr<DetectorVolume>> volumes;
+  std::vector<DetectorComponent::PortalContainer> containers;
+  std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
+  // Run throuth the builders
   std::for_each(
       m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
-        auto cmp = builder->construct(roots, gctx);
-        atNavigationLevel = (atNavigationLevel and cmp.volumes.size() == 1u);
-        components.push_back(cmp);
+        auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);
+        atNavigationLevel = (atNavigationLevel and cVolumes.size() == 1u);
+        // Collect individual components, volumes, containers, roots
+        volumes.insert(volumes.end(), cVolumes.begin(), cVolumes.end());
+        containers.push_back(cContainer);
+        rootVolumes.insert(rootVolumes.end(), cRoots.volumes.begin(),
+                           cRoots.volumes.end());
       });
   // Navigation level detected, connect volumes (cleaner and faster than
   // connect containers)
   if (atNavigationLevel) {
     ACTS_VERBOSE(
         "Component volumes are at navigation level: connecting volumes.");
-    std::vector<std::shared_ptr<DetectorVolume>> volumes;
-    volumes.reserve(components.size());
-    std::for_each(components.begin(), components.end(), [&](const auto& cmp) {
-      volumes.push_back(cmp.volumes.front());
-    });
     // Connect volumes
     rContainer = connect(gctx, volumes, m_cfg.binning, logger().level());
   } else {
     ACTS_VERBOSE("Components contain sub containers: connect containers.");
-    std::vector<DetectorComponent::PortalContainer> containers;
-    containers.reserve(components.size());
-    std::for_each(components.begin(), components.end(),
-                  [&](const auto& cmp) { containers.push_back(cmp.portals); });
     // Connect containers
     rContainer = connect(gctx, containers, m_cfg.binning, logger().level());
   }
   // Return the container
-  return Acts::Experimental::DetectorComponent{{}, rContainer};
+  return Acts::Experimental::DetectorComponent{
+      {}, rContainer, RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
 }

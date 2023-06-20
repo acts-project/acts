@@ -8,9 +8,19 @@
 
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+
+#include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <utility>
 
 #include <G4RunManager.hh>
 #include <G4Step.hh>
@@ -18,6 +28,8 @@
 #include <G4Track.hh>
 #include <G4UnitsTable.hh>
 #include <G4VPhysicalVolume.hh>
+
+class G4PrimaryParticle;
 
 #if BOOST_VERSION >= 107800
 #include <boost/describe.hpp>
@@ -86,9 +98,6 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     const G4Step* step) {
   // Unit conversions G4->::ACTS
 
-  // Retrieve the event data registry
-  auto& eventData = EventStoreRegistry::eventData();
-
   // The particle after the step
   G4Track* track = step->GetTrack();
   G4PrimaryParticle* primaryParticle =
@@ -131,12 +140,12 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
       std::strtoul(volumeName.data(), &end, 10));
 
   // This is not the case if we have a particle-ID collision
-  if (eventData.trackIdMapping.find(track->GetTrackID()) ==
-      eventData.trackIdMapping.end()) {
+  if (eventStore().trackIdMapping.find(track->GetTrackID()) ==
+      eventStore().trackIdMapping.end()) {
     return;
   }
 
-  const auto particleId = eventData.trackIdMapping.at(track->GetTrackID());
+  const auto particleId = eventStore().trackIdMapping.at(track->GetTrackID());
 
   ACTS_VERBOSE("Step of " << particleId << " in senstive volume " << geoId);
 
@@ -145,9 +154,9 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   const G4StepPoint* postStepPoint = step->GetPostStepPoint();
 
   // Set particle hit count to zero, so we have this entry in the map later
-  if (eventData.particleHitCount.find(particleId) ==
-      eventData.particleHitCount.end()) {
-    eventData.particleHitCount[particleId] = 0;
+  if (eventStore().particleHitCount.find(particleId) ==
+      eventStore().particleHitCount.end()) {
+    eventStore().particleHitCount[particleId] = 0;
   }
 
   // Extract if we are at volume boundaries
@@ -182,13 +191,13 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   // Add hit to collection.
   if (preOnBoundary and postOnBoundary) {
     ACTS_VERBOSE("-> merge single step to hit");
-    ++eventData.particleHitCount[particleId];
-    eventData.hits.push_back(
+    ++eventStore().particleHitCount[particleId];
+    eventStore().hits.push_back(
         hitFromStep(preStepPoint, postStepPoint, particleId, geoId,
-                    eventData.particleHitCount.at(particleId) - 1));
+                    eventStore().particleHitCount.at(particleId) - 1));
 
-    eventData.numberGeantSteps += 1ul;
-    eventData.maxStepsForHit = std::max(eventData.maxStepsForHit, 1ul);
+    eventStore().numberGeantSteps += 1ul;
+    eventStore().maxStepsForHit = std::max(eventStore().maxStepsForHit, 1ul);
     return;
   }
 
@@ -196,18 +205,18 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   // then combine hit buffer
   if (postOnBoundary or particleStopped or particleDecayed) {
     ACTS_VERBOSE("-> merge buffer to hit");
-    auto& buffer = eventData.hitBuffer;
+    auto& buffer = eventStore().hitBuffer;
     buffer.push_back(
         hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));
 
     const auto pos4 =
         0.5 * (buffer.front().fourPosition() + buffer.back().fourPosition());
 
-    ++eventData.particleHitCount[particleId];
-    eventData.hits.emplace_back(geoId, particleId, pos4,
-                                buffer.front().momentum4Before(),
-                                buffer.back().momentum4After(),
-                                eventData.particleHitCount.at(particleId) - 1);
+    ++eventStore().particleHitCount[particleId];
+    eventStore().hits.emplace_back(
+        geoId, particleId, pos4, buffer.front().momentum4Before(),
+        buffer.back().momentum4After(),
+        eventStore().particleHitCount.at(particleId) - 1);
 
     assert(std::all_of(buffer.begin(), buffer.end(),
                        [&](const auto& h) { return h.geometryId() == geoId; }));
@@ -215,9 +224,9 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
       return h.particleId() == particleId;
     }));
 
-    eventData.numberGeantSteps += buffer.size();
-    eventData.maxStepsForHit =
-        std::max(eventData.maxStepsForHit, buffer.size());
+    eventStore().numberGeantSteps += buffer.size();
+    eventStore().maxStepsForHit =
+        std::max(eventStore().maxStepsForHit, buffer.size());
 
     buffer.clear();
     return;
@@ -227,7 +236,7 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   // hit buffer.
   if (not postOnBoundary) {
     // ACTS_VERBOSE("-> add hit to buffer");
-    eventData.hitBuffer.push_back(
+    eventStore().hitBuffer.push_back(
         hitFromStep(preStepPoint, postStepPoint, particleId, geoId, -1));
     return;
   }
