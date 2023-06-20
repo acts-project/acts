@@ -44,12 +44,17 @@ namespace Acts {
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     std::any nodes, std::any edges, std::any weights,
     std::vector<int>& spacepointIDs, const Logger& logger) {
-  const auto eLibInputTensor = std::any_cast<torch::Tensor>(nodes);
-  const auto edgesAfterF = std::any_cast<torch::Tensor>(edges);
-  const auto gOutput = std::any_cast<torch::Tensor>(weights);
+  const auto eLibInputTensor = std::any_cast<torch::Tensor>(nodes).to(torch::kCPU);
+  const auto edgesAfterF = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
+  const auto gOutput = std::any_cast<torch::Tensor>(weights).to(torch::kCPU);
 
   const auto numSpacepoints = spacepointIDs.size();
   const auto numEdgesAfterF = gOutput.size(0);
+
+  if( numEdgesAfterF == 0 ) {
+    ACTS_WARNING("No edges left for track building");
+    return {};
+  }
 
   using vertex_t = int32_t;
   std::vector<vertex_t> rowIndices;
@@ -76,10 +81,6 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
     return sorted.size();
   }());
-
-  if (trackLabels.size() == 0) {
-    return {};
-  }
 
   std::vector<std::vector<int>> trackCandidates;
 

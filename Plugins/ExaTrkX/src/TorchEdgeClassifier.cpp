@@ -36,8 +36,8 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     std::any inputNodes, std::any inputEdges, const Logger& logger) {
   const torch::Device device(m_deviceType);
 
-  const auto eLibInputTensor = std::any_cast<torch::Tensor>(inputNodes);
-  const auto edgeList = std::any_cast<torch::Tensor>(inputEdges);
+  const auto eLibInputTensor = std::any_cast<torch::Tensor>(inputNodes).to(device);
+  const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
 
   c10::InferenceMode guard(true);
 
