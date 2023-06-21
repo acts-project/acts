@@ -11,7 +11,6 @@ u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
     "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal HoughTransform FTF"
-
 )
 
 TruthSeedRanges = namedtuple(
