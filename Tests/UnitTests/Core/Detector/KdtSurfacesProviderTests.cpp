@@ -34,7 +34,7 @@ GeometryContext tContext;
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 namespace {
-/// Helper mehtod that allows to use the already existing testing
+/// Helper method that allows to use the already existing testing
 /// infrastructure with the new const-correct detector design
 ///
 std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(

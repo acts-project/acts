@@ -107,7 +107,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
     std::string configurationName = "undefined";
     /// Unit conversion
     double unit = 1 * UnitConstants::cm;
-    /// Create an indentifier from TGeoNode
+    /// Create an identifier from TGeoNode
     std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
     /// Split TGeoElement if a splitter is provided
     std::shared_ptr<const ITGeoDetectorElementSplitter>

@@ -30,7 +30,7 @@ void GreedyAmbiguityResolution::computeInitialState(
   // count and chi2 and fill the measurement map in order to relate tracks to
   // each other if they have shared hits.
   for (const auto& track : tracks) {
-    // Kick out tracks that do not fullfil our initial requirements
+    // Kick out tracks that do not fulfill our initial requirements
     if (track.nMeasurements() < m_cfg.nMeasurementsMin) {
       continue;
     }

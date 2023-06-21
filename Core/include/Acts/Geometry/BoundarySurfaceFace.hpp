@@ -16,13 +16,13 @@ namespace Acts {
 ///
 ///  Enum to describe the position of the BoundarySurface
 ///  respectively to the frame orientatin of the volume,
-///  this is mainly ment for code readability.
+///  this is mainly meant for code readability.
 ///
 ///  The different numeration sequences can be found in the
 ///  documentation of the actual VolumeBounds implementations.
 ///
 ///  The order of faces is chosen to follow - as much as
-///  possible - a cycular structure.
+///  possible - a circular structure.
 enum BoundarySurfaceFace {
   negativeFaceXY = 0,
   positiveFaceXY = 1,

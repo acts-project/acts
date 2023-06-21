@@ -24,7 +24,7 @@ namespace Acts {
 /// parameter. Using these deviations, the propagation is repeated multiple
 /// times and the final covariance matrix at a given target surface is
 /// afterwards evaluated by first order derivatives of the final state
-/// parameters wrt. the inital parameters. Therefore this evaluation represents
+/// parameters wrt. the initial parameters. Therefore this evaluation represents
 /// a first order approximation of the transport jacobian. Since performing
 /// multiple propagations and a numerical evaluation of the covariance requires
 /// more time than a single propagation towards a target + a common propagation
@@ -158,7 +158,7 @@ class RiddersPropagator {
   ///
   /// @param [in] derivatives Derivatives of a single parameter
   ///
-  /// @return Boolean result whether a phi jump occured
+  /// @return Boolean result whether a phi jump occurred
   static bool inconsistentDerivativesOnDisc(
       const std::vector<BoundVector>& derivatives);
 

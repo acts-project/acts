@@ -38,7 +38,7 @@ namespace Acts {
 ///
 /// CylinderBounds also supports beveled sides defined by an angle.
 /// Different angles can be defined on both sides of the cylinder.
-/// A postive angle is defined as "extruding" from the defined Zlength,
+/// A positive angle is defined as "extruding" from the defined Zlength,
 /// while a negative angle is "intruding" on the Zlength.
 /// +    -            -   +
 /// ________________________

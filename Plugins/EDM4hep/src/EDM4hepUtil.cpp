@@ -125,7 +125,7 @@ Parameters convertTrackParametersToEdm4hep(
   };
 
   // If the reference surface is a perigee surface, we use that. Otherwise
-  // we create a new perigee surface at the global positon of the track
+  // we create a new perigee surface at the global position of the track
   // parameters.
   if (dynamic_cast<const Acts::PerigeeSurface*>(refSurface.get()) == nullptr) {
     refSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(global);

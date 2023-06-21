@@ -28,7 +28,7 @@ namespace Acts {
 
 class ProtoVolumeMaterial : public IVolumeMaterial {
  public:
-  /// Constructor without BinUtility - homogenous material
+  /// Constructor without BinUtility - homogeneous material
   ProtoVolumeMaterial() = default;
 
   /// Constructor with BinUtility - multidimensional material
@@ -37,12 +37,12 @@ class ProtoVolumeMaterial : public IVolumeMaterial {
   ///        and binning of the material on the volume
   ProtoVolumeMaterial(const BinUtility& binUtility);
 
-  /// Copy constuctor
+  /// Copy constructor
   ///
   /// @param vmproxy The source proxy
   ProtoVolumeMaterial(const ProtoVolumeMaterial& vmproxy) = default;
 
-  /// Copy move constuctor
+  /// Copy move constructor
   ///
   /// @param vmproxy The source proxy
   ProtoVolumeMaterial(ProtoVolumeMaterial&& vmproxy) = default;

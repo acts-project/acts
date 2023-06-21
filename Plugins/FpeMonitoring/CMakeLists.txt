@@ -13,6 +13,8 @@ target_link_libraries(
 # Fpe flags
 set(_fpe_options "")
 
+include(CheckCXXSourceCompiles)
+
 find_library(dl_LIBRARY dl)
 find_package(Backtrace)
 find_program(addr2line_EXECUTABLE addr2line)
@@ -28,6 +30,67 @@ else()
     if(Backtrace_FOUND)
 
       # check if we need to link against bracktrace or not
+      set(backtrace_include "")
+
+
+      file(WRITE
+        "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+        "
+        #include <boost/stacktrace.hpp>
+        int main() {}
+        " )
+
+
+      message(CHECK_START "Does backtrace work with the default include")
+
+      try_compile(_backtrace_default_header "${CMAKE_BINARY_DIR}"
+          "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+          LINK_LIBRARIES ${dl_LIBRARY}
+          COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
+          OUTPUT_VARIABLE __OUTPUT)
+
+
+      if(_backtrace_default_header)
+        message(CHECK_PASS "yes")
+      else()
+        message(CHECK_FAIL "no")
+
+        file(GLOB hints "/usr/lib/gcc/*/*/include")
+        find_file(backtrace_header "backtrace.h"
+          HINTS ${hints})
+
+        if(${backtrace_header} STREQUAL "backtrcae_header-NOTFOUND")
+          message(STATUS "Could not find backtrace header file")
+        else()
+          set(backtrace_include "-DBOOST_STACKTRACE_BACKTRACE_INCLUDE_FILE=\"${backtrace_header}\"")
+
+
+          file(WRITE
+            "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+            "
+            #include <boost/stacktrace.hpp>
+            int main() {}
+            " )
+
+
+          message(CHECK_START "Does backtrace work with explicit include")
+
+          try_compile(_backtrace_explicit_header "${CMAKE_BINARY_DIR}"
+              "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
+              LINK_LIBRARIES ${dl_LIBRARY}
+              COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE ${backtrace_include}
+              OUTPUT_VARIABLE __OUTPUT)
+
+          if(_backtrace_explicit_header)
+            message(CHECK_PASS "yes")
+            list(APPEND _fpe_options "${backtrace_include}")
+          else()
+            message(CHECK_FAIL "no")
+          endif()
+        endif()
+
+      endif()
+
 
       file(WRITE
         "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
@@ -39,7 +102,7 @@ else()
       try_compile(_backtrace_nolink "${CMAKE_BINARY_DIR}"
           "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
           LINK_LIBRARIES ${dl_LIBRARY}
-          COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
+          COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE ${backtrace_include}
           OUTPUT_VARIABLE __OUTPUT)
 
       if(_backtrace_nolink)
@@ -58,7 +121,7 @@ else()
         try_compile(_backtrace_link "${CMAKE_BINARY_DIR}"
             "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/backtrace.cpp"
             LINK_LIBRARIES backtrace ${dl_LIBRARY}
-            COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE
+            COMPILE_DEFINITIONS -DBOOST_STACKTRACE_USE_BACKTRACE ${backtrace_include}
             OUTPUT_VARIABLE __OUTPUT)
 
         if(_backtrace_link)

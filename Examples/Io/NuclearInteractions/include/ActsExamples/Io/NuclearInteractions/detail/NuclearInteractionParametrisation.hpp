@@ -33,7 +33,7 @@ struct EventFraction {
 
   /// @brief Constructor
   ///
-  /// @param [in] event Tuple containing the inital particle, the particle
+  /// @param [in] event Tuple containing the initial particle, the particle
   /// before the interaction and all final state particles after the interaction
   EventFraction(const ActsExamples::ExtractedSimulationProcess& event)
       : initialParticle(event.initial),
@@ -44,7 +44,7 @@ struct EventFraction {
   ActsExamples::SimParticle initialParticle;
   /// The particle before the interaction
   ActsExamples::SimParticle interactingParticle;
-  /// All particles after the interaction occured
+  /// All particles after the interaction occurred
   std::vector<ActsExamples::SimParticle> finalParticles;
 
   /// Label whether it was a soft interaction or a hard one

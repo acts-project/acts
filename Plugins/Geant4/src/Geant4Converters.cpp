@@ -149,7 +149,7 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
       if (keepAxisOrder) {
         rAxes = {0, -2};  // flip for right-handed
       } else {
-        rAxes = {2, 0};  // cylcic positive
+        rAxes = {2, 0};  // cyclic positive
       }
     } break;
     case 2: {

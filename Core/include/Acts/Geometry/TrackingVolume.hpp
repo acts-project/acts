@@ -259,7 +259,7 @@ class TrackingVolume : public Volume {
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
   ///
-  /// If a context is needed for the vist, the vistitor has to provide this
+  /// If a context is needed for the visit, the vistitor has to provide this
   /// e.g. as a private member
   template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
@@ -324,7 +324,7 @@ class TrackingVolume : public Volume {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbor is the TrackingVolume to be glued
-  /// @param bsfNeighbor is the boudnary surface of the neighbor
+  /// @param bsfNeighbor is the boundary surface of the neighbor
   void glueTrackingVolume(const GeometryContext& gctx,
                           BoundarySurfaceFace bsfMine, TrackingVolume* neighbor,
                           BoundarySurfaceFace bsfNeighbor);
@@ -336,7 +336,7 @@ class TrackingVolume : public Volume {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbors are the TrackingVolumes to be glued
-  /// @param bsfNeighbor are the boudnary surface of the neighbors
+  /// @param bsfNeighbor are the boundary surface of the neighbors
   void glueTrackingVolumes(
       const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
       const std::shared_ptr<TrackingVolumeArray>& neighbors,
@@ -345,7 +345,7 @@ class TrackingVolume : public Volume {
   /// Provide a new BoundarySurface from the glueing
   ///
   /// @param bsf is the boundary face indicater where to glue
-  /// @param bs is the new boudnary surface
+  /// @param bs is the new boundary surface
   /// @param checkmaterial is a flag how to deal with material, if true:
   /// - if the old boundary surface had a material description
   ///   but the new one has not, keep the current one

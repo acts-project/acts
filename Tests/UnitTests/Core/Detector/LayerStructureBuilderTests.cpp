@@ -35,7 +35,7 @@ GeometryContext tContext;
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
 namespace {
-/// Helper mehtod that allows to use the already existing testing
+/// Helper method that allows to use the already existing testing
 /// infrastructure with the new const-correct detector design
 ///
 std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
       unpackSurfaces(rSurfaces));
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
-  lsConfig.auxilliary = "*** Endcap with 22 surfaces ***";
+  lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {ProtoBinning(Acts::binPhi,
                                     Acts::detail::AxisBoundaryType::Closed,
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
 
   using LayerSupport = Acts::Experimental::LayerStructureBuilder::Support;
 
-  lsConfig.auxilliary = "*** Endcap with 22 surfaces + 1 support disc ***";
+  lsConfig.auxiliary = "*** Endcap with 22 surfaces + 1 support disc ***";
   lsConfig.supports = {LayerSupport{
       {15., 10., 10., 0., 0.}, Acts::Surface::SurfaceType::Disc, {binZ, binR}}};
   endcapBuilder = Acts::Experimental::LayerStructureBuilder(
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationRing) {
   BOOST_CHECK(volumes1.empty());
   BOOST_CHECK(volumeUpdator1.connected());
 
-  lsConfig.auxilliary =
+  lsConfig.auxiliary =
       "*** Endcap with 22 surfaces + 1 support -> split into 11 planes ***";
   lsConfig.supports = {LayerSupport{{15., 10., 10., 0., 0.},
                                     Acts::Surface::SurfaceType::Disc,
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
 
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
-  lsConfig.auxilliary = "*** Barrel with 448 surfaces ***";
+  lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {Acts::Experimental::ProtoBinning{
                            Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
 
   using LayerSupport = Acts::Experimental::LayerStructureBuilder::Support;
 
-  lsConfig.auxilliary = "*** Barrel with 448 surfaces + 1 support cylinder ***";
+  lsConfig.auxiliary = "*** Barrel with 448 surfaces + 1 support cylinder ***";
   lsConfig.supports = {LayerSupport{{15., 10., 10., 0., 0.},
                                     Acts::Surface::SurfaceType::Cylinder,
                                     {binZ, binR}}};
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(LayerStructureBuilder_creationCylinder) {
   BOOST_CHECK(volumes1.empty());
   BOOST_CHECK(volumeUpdator1.connected());
 
-  lsConfig.auxilliary =
+  lsConfig.auxiliary =
       "*** Barrel with 448 surfaces + 1 support -> split into 32 planes ***";
   lsConfig.supports = {LayerSupport{{15., 10., 10., 0., 0.},
                                     Acts::Surface::SurfaceType::Cylinder,

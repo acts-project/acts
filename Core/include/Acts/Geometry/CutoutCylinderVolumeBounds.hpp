@@ -23,7 +23,7 @@ namespace Acts {
 class CylinderBounds;
 class DiscBounds;
 
-/// Class which implements a cutout cylinder. This shape is bascially a
+/// Class which implements a cutout cylinder. This shape is basically a
 /// cylinder, with another, smaller cylinder subtracted from the center.
 /// --------------------- rmax
 /// |                   |
