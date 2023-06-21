@@ -192,9 +192,9 @@ struct EventDataView3D {
       IVisualization3D& helper, const Vector2& lposition,
       const SymMatrix2& covariance, const Transform3& transform,
       const double locErrorScale = 1.,
-      const ViewConfig& viewConfig = s_viewMeasurement) {
+      const ViewConfig& measurementConfig = s_viewMeasurement) {
     drawCovarianceCartesian(helper, lposition, covariance, transform,
-                            locErrorScale, viewConfig);
+                            locErrorScale, measurementConfig);
   }
 
   /// Helper method to draw one trajectory stored in a MultiTrajectory object
