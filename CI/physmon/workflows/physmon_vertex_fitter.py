@@ -93,17 +93,16 @@ def run_vertex_fitting(mu, events):
         )
 
 
-with acts.FpeMonitor():
-    mu = 200
-    start = datetime.datetime.now()
+mu = 300
+start = datetime.datetime.now()
 
-    events = 5
-    run_vertex_fitting(mu, events)
+events = 5
+run_vertex_fitting(mu, events)
 
-    delta = datetime.datetime.now() - start
+delta = datetime.datetime.now() - start
 
-    duration = delta.total_seconds() / events
+duration = delta.total_seconds() / events
 
-    (setup.outdir / f"performance_vertex_fitting_mu{mu}_time.txt").write_text(
-        str(duration)
-    )
+(setup.outdir / f"performance_vertex_fitting_mu{mu}_time.txt").write_text(
+    str(duration)
+)
