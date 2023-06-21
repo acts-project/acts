@@ -1543,6 +1543,7 @@ def addVertexFitting(
                 inputTrajectories=trajectories,
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
+                bField=field,
                 inputVertices=outputVertices,
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
