@@ -52,7 +52,7 @@ class PerigeeSurface : public LineSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   PerigeeSurface(const GeometryContext& gctx, const PerigeeSurface& other,
                  const Transform3& shift);
 
@@ -79,7 +79,7 @@ class PerigeeSurface : public LineSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param sl is the ostream to be dumped into
   ///
-  /// @return ostreamn obect which was streamed into
+  /// @return ostreamn object which was streamed into
   std::ostream& toStream(const GeometryContext& gctx,
                          std::ostream& sl) const final;
 

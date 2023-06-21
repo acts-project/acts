@@ -63,7 +63,7 @@ class PassiveLayerBuilder : public ILayerBuilder {
 
   /// LayerBuilder interface method
   ///
-  /// @param gctx ist the geometry context under
+  /// @param gctx is the geometry context under
   /// which the geometry is built
   ///
   /// @return  the layers at negative side
@@ -71,7 +71,7 @@ class PassiveLayerBuilder : public ILayerBuilder {
 
   /// LayerBuilder interface method
   ///
-  /// @param gctx ist the geometry context under
+  /// @param gctx is the geometry context under
   /// which the geometry is built
   ///
   /// @return the layers at the central sector
@@ -79,7 +79,7 @@ class PassiveLayerBuilder : public ILayerBuilder {
 
   /// LayerBuilder interface method
   ///
-  /// @param gctx ist the geometry context under
+  /// @param gctx is the geometry context under
   /// which the geometry is built
   ///
   /// @return  the layers at positive side
@@ -111,7 +111,7 @@ class PassiveLayerBuilder : public ILayerBuilder {
  private:
   /// Helper interface method
   ///
-  /// @param gctx ist the geometry context under
+  /// @param gctx is the geometry context under
   /// which the geometry is built
   /// @param side is the side of the layer to be built
   ///

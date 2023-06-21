@@ -114,7 +114,7 @@ class ResPlotTool {
   /// @param resPlotCache the cache object for residual/pull histograms
   void write(const ResPlotCache& resPlotCache) const;
 
-  /// @brief delele the histograms
+  /// @brief delete the histograms
   ///
   /// @param resPlotCache the cache object for residual/pull histograms
   void clear(ResPlotCache& resPlotCache) const;

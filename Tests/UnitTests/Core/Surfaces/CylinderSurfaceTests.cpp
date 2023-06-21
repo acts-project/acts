@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   // test the normal vector
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45deg),
                   normal45deg, 1e-6 * rootHalf);
-  // thest that the normal vector is independent of z coordinate
+  // test that the normal vector is independent of z coordinate
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45degZ),
                   normal45deg, 1e-6 * rootHalf);
   //

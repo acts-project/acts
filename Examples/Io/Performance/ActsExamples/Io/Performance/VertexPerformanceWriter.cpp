@@ -450,7 +450,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           continue;
         }
         if (priVtxId == maxOccurrenceId) {
-          // Vertex found, fill varibles
+          // Vertex found, fill variables
           const auto& truePos = particle.fourPosition();
 
           auto pull = [&](int i, const auto& covariance, const auto& recoVec,

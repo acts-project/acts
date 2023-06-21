@@ -71,7 +71,7 @@ class StrawSurface : public LineSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   StrawSurface(const GeometryContext& gctx, const StrawSurface& other,
                const Transform3& shift);
 

@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_SUITE(Detector)
 BOOST_AUTO_TEST_CASE(DetectorBuilder_Misconfigured) {
   // Detector builder
   Acts::Experimental::DetectorBuilder::Config dCfg;
-  dCfg.auxilliary = "*** Test X * Misconfigued ***";
+  dCfg.auxiliary = "*** Test X * Misconfigued ***";
   dCfg.name = "EmptyCylinder";
   dCfg.builder = nullptr;
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(DetectorBuilder_test) {
 
   // Detector builder
   Acts::Experimental::DetectorBuilder::Config dCfg;
-  dCfg.auxilliary = "*** Test : Detector ***";
+  dCfg.auxiliary = "*** Test : Detector ***";
   dCfg.name = "TestDetector";
   dCfg.builder = std::make_shared<CompBuilder>();
 

@@ -31,9 +31,9 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
         state.onBranch or
         TGeoPrimitivesHelper::match(options.volumeNames, volumeName.c_str());
     // Loop over the daughters and collect them
-    auto daugthers = state.volume->GetNodes();
+    auto daughters = state.volume->GetNodes();
     // Daughter node iteration
-    TIter iObj(daugthers);
+    TIter iObj(daughters);
     while (TObject* obj = iObj()) {
       TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
       if (node != nullptr) {

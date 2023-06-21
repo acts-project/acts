@@ -143,7 +143,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
       surfaceSequence.push_back(cs.surface);
     }
 
-    // Action list for direct navigator with its initalizer
+    // Action list for direct navigator with its initializer
     using DirectActionList = ActionList<DirectNavigator::Initializer,
                                         MaterialInteractor, SurfaceCollector<>>;
 

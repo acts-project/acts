@@ -42,7 +42,7 @@ class GreedyAmbiguityResolution {
     /// Maximum number of iterations
     std::uint32_t maximumIterations = 1000;
 
-    /// Minumum number of measurement to form a track.
+    /// Minimum number of measurement to form a track.
     size_t nMeasurementsMin = 7;
   };
 
@@ -75,7 +75,7 @@ class GreedyAmbiguityResolution {
   ///
   /// @param tracks The input track container.
   /// @param state An empty state object which is expected to be default constructed.
-  /// @param sourceLinkHash A functor to aquire a hash from a given source link.
+  /// @param sourceLinkHash A functor to acquire a hash from a given source link.
   /// @param sourceLinkEquality A functor to check equality of two source links.
   template <typename track_container_t, typename traj_t,
             template <typename> class holder_t, typename source_link_hash_t,

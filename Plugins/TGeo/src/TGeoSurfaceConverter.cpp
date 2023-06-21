@@ -443,7 +443,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
         "'(x/X)(y/Y)(z/Z)'");
   }
 
-  // Create the normal vector & the transfrom
+  // Create the normal vector & the transform
   auto cz = cx.cross(cy);
   auto transform = TGeoPrimitivesHelper::makeTransform(cx, cy, cz, t);
 

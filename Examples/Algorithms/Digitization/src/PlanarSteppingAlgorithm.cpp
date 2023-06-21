@@ -195,7 +195,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
       const Acts::Segmentation& segmentation = dg.digitizer->segmentation();
       auto binUtility = segmentation.binUtility();
       Acts::Vector2 localPosition(localX, localY);
-      // @todo remove unneccesary conversion
+      // @todo remove unnecessary conversion
       // size_t bin0 = binUtility.bin(localPosition, 0);
       // size_t bin1 = binUtility.bin(localPosition, 1);
       // size_t binSerialized = binUtility.serialize({{bin0, bin1, 0}});

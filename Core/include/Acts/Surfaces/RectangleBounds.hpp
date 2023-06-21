@@ -25,7 +25,7 @@ namespace Acts {
 /// @class RectangleBounds
 ///
 /// Bounds for a rectangular, planar surface - it can be used to for
-/// rectangles that are symetrically centered around (0./0.) and for
+/// rectangles that are symmetrically centered around (0./0.) and for
 /// generic shifted rectangles
 class RectangleBounds : public PlanarBounds {
  public:
@@ -87,7 +87,7 @@ class RectangleBounds : public PlanarBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note the number of segements is ignored in this representation
+  /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
   std::vector<Vector2> vertices(unsigned int lseg = 1) const final;

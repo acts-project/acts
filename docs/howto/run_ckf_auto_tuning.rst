@@ -52,7 +52,7 @@ The list of track seeding parameters that are auto-tuned using these frameworks 
 * maxSeedsPerSpM: number of space-points in top and bottom layers considered for compatibility with middle space-point
 * cotThetaMax: maximum cotTheta between two space-points in a seed to be considered compatible
 
-The python scripts utilizing these optimization using Optuna and Orion frameworks are present in acts/Examples/Scrips/Optimization directory.
+The python scripts utilizing these optimization using Optuna and Orion frameworks are present in acts/Examples/Scripts/Optimization directory.
 
 Run auto-tuning using Optuna
 ----------------------------

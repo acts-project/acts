@@ -30,7 +30,7 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
   m_accumulatedMaterial = AccumulatedMatrix(bins1, accVec);
 }
 
-// Assign a material properites object
+// Assign a material properties object
 std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
     const Vector2& lp, const MaterialSlab& mp, double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
@@ -43,7 +43,7 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
   return {bin0, bin1, 0};
 }
 
-// Assign a material properites object
+// Assign a material properties object
 std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
     const Vector3& gp, const MaterialSlab& mp, double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
