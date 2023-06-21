@@ -124,10 +124,14 @@ class VertexPerformanceWriter final
   std::vector<float> m_recoQOverP;
   std::vector<float> m_recoQOverPFitted;
 
+  /// Difference of reconstructed and true vertex 4D position
   std::vector<float> m_resX;
   std::vector<float> m_resY;
   std::vector<float> m_resZ;
   std::vector<float> m_resT;
+  // Difference between reconstructed momenta at the PCA to the true vertex and
+  // the true momenta We consider reconstructed momenta before and after the
+  // vertex fit.
   std::vector<float> m_resPhi;
   std::vector<float> m_resPhiFitted;
   std::vector<float> m_resTheta;
@@ -137,6 +141,7 @@ class VertexPerformanceWriter final
   std::vector<float> m_momOverlap;
   std::vector<float> m_momOverlapFitted;
 
+  // pull(X) = (X_reco - X_true)/Var(X_reco)
   std::vector<float> m_pullX;
   std::vector<float> m_pullY;
   std::vector<float> m_pullZ;
@@ -159,6 +164,7 @@ class VertexPerformanceWriter final
   std::vector<float> m_covYT;
   std::vector<float> m_covZT;
 
+  // Number of tracks associated with truth/reconstructed vertex
   std::vector<int> m_nTracksOnTruthVertex;
   std::vector<int> m_nTracksOnRecoVertex;
 

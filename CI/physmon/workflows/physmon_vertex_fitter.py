@@ -103,6 +103,4 @@ delta = datetime.datetime.now() - start
 
 duration = delta.total_seconds() / events
 
-(setup.outdir / f"performance_vertex_fitting_mu{mu}_time.txt").write_text(
-    str(duration)
-)
+(setup.outdir / f"performance_vertex_fitting_mu{mu}_time.txt").write_text(str(duration))
