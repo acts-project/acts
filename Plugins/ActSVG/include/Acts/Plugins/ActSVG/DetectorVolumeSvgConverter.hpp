@@ -65,7 +65,7 @@ namespace View {
 ///
 /// @param volume is the DetectorVolume (proto representation)
 /// @param identification is the to be translated id_ for actsvg
-/// @param displayPortals is a directory whether portals should be displayd
+/// @param displayPortals is a directory whether portals should be displayed
 ///
 /// @return an svg object that can be written out directly to disc
 static inline actsvg::svg::object xy(const ProtoVolume& volume,

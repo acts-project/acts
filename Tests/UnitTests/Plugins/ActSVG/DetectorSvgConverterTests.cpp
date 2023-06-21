@@ -159,7 +159,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetector) {
 
   // Detector builder
   Acts::Experimental::DetectorBuilder::Config dCfg;
-  dCfg.auxilliary = "*** Test : Cylindrical Detector ***";
+  dCfg.auxiliary = "*** Test : Cylindrical Detector ***";
   dCfg.name = "CylindricalDetector";
   dCfg.builder = containerBuilder;
 

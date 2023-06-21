@@ -28,7 +28,7 @@
 #include <vector>
 
 namespace {
-/// Helper mehtod that allows to use the already existing testing
+/// Helper method that allows to use the already existing testing
 /// infrastructure with the new const-correct detector design
 ///
 std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
@@ -49,7 +49,7 @@ Acts::GeometryContext tContext;
 auto cGeometry = Acts::Test::CylindricalTrackingGeometry(tContext);
 auto nominal = Acts::Transform3::Identity();
 
-BOOST_AUTO_TEST_SUITE(DetectorVolumeSvgConverter)
+BOOST_AUTO_TEST_SUITE(ActSvg)
 
 BOOST_AUTO_TEST_CASE(TubeCylindricalDetectorVolume) {
   auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
       unpackSurfaces(rSurfaces));
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
-  lsConfig.auxilliary = "*** Endcap with 22 surfaces ***";
+  lsConfig.auxiliary = "*** Endcap with 22 surfaces ***";
   lsConfig.surfacesProvider = endcapSurfaces;
   lsConfig.binnings = {Acts::Experimental::ProtoBinning(
       Acts::binPhi, Acts::detail::AxisBoundaryType::Closed, -M_PI, M_PI, 22u,
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(EndcapVolumeWithSurfaces) {
           Acts::getDefaultLogger("EndcapShapeBuilder", Acts::Logging::VERBOSE));
 
   Acts::Experimental::DetectorVolumeBuilder::Config dvCfg;
-  dvCfg.auxilliary = "*** Test 1 - Cylinder with internal Surface ***";
+  dvCfg.auxiliary = "*** Test 1 - Cylinder with internal Surface ***";
   dvCfg.name = "CylinderWithSurface";
   dvCfg.externalsBuilder = shapeBuilder;
   dvCfg.internalsBuilder = layerBuilder;
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
 
   // Configure the layer structure builder
   Acts::Experimental::LayerStructureBuilder::Config lsConfig;
-  lsConfig.auxilliary = "*** Barrel with 448 surfaces ***";
+  lsConfig.auxiliary = "*** Barrel with 448 surfaces ***";
   lsConfig.surfacesProvider = barrelSurfaces;
   lsConfig.binnings = {Acts::Experimental::ProtoBinning{
                            Acts::binZ, Acts::detail::AxisBoundaryType::Bound,
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(BarrelVolumeWithSurfaces) {
           Acts::getDefaultLogger("BarrelShapeBuilder", Acts::Logging::VERBOSE));
 
   Acts::Experimental::DetectorVolumeBuilder::Config dvCfg;
-  dvCfg.auxilliary = "*** Test 1 - Cylinder with internal Surface ***";
+  dvCfg.auxiliary = "*** Test 1 - Cylinder with internal Surface ***";
   dvCfg.name = "CylinderWithSurface";
   dvCfg.externalsBuilder = shapeBuilder;
   dvCfg.internalsBuilder = barrelBuilder;

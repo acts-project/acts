@@ -15,9 +15,9 @@ namespace {
 
 /// Helper method to make a proto link implementation
 ///
-/// @param portalOptions are the options containin portal draw length and volume colour map
+/// @param portalOptions are the options containing portal draw length and volume colour map
 /// @param position is the start position of the link
-/// @param direciton is the direction of the link
+/// @param direction is the direction of the link
 /// @param dVolume the volume this link is directing to
 ///
 /// @return a protoLink
@@ -42,7 +42,7 @@ Acts::Svg::ProtoLink makeProtoLink(
 /// @param multiLink is the mulit link to be converted
 /// @param surface is the portal surface
 /// @param refPosition is the reference position which might be needed to decode
-/// @param portalOptions are the options containin portal draw length and volume colour map
+/// @param portalOptions are the options containing portal draw length and volume colour map
 /// @param sign with respect to the normal vector
 ///
 /// @return it will return the proto links

@@ -76,8 +76,6 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
         portalGenerator, gctx, m_cfg.name, transform, std::move(bounds),
         surfaces, volumes, std::move(volumeUpdator),
         std::move(surfacesUpdator));
-
-    const auto& rsU = dVolume->surfaceCandidatesUpdator();
   }
   // All portals are defined and build the current shell
   for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
