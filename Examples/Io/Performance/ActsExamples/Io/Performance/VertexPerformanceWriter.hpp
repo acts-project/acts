@@ -130,7 +130,7 @@ class VertexPerformanceWriter final
   std::vector<float> m_resZ;
   std::vector<float> m_resT;
   // Difference between reconstructed momenta at the PCA to the true vertex and
-  // the true momenta We consider reconstructed momenta before and after the
+  // the true momenta; we consider reconstructed momenta before and after the
   // vertex fit.
   std::vector<float> m_resPhi;
   std::vector<float> m_resPhiFitted;
