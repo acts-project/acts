@@ -28,7 +28,7 @@ namespace {
 
 /// @brief This method creates a world volume with
 /// some sub structure, this detector is not yet
-/// syncrhonized, it can then be typed into the
+/// synchronized, it can then be typed into the
 /// Detector or the TrackGeometry description
 ///
 /// @return a proto world volume
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   CHECK_CLOSE_ABS(detectorVolume.extent.max(Acts::binR), 200.,
                   std::numeric_limits<ActsScalar>::epsilon());
 
-  // The detector cotainer should have binning in R
+  // The detector container should have binning in R
   BOOST_CHECK(detectorVolume.container.has_value());
   BOOST_CHECK(not detectorVolume.internal.has_value());
 
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   auto& pixelContainer = cts.constituentVolumes[1u];
   BOOST_CHECK(pixelContainer.name == "pixel-container");
 
-  // Pixel contaienr should have fitting boundaries
+  // Pixel container should have fitting boundaries
   CHECK_CLOSE_ABS(pixelContainer.extent.min(Acts::binR), 35.,
                   std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(pixelContainer.extent.max(Acts::binR), 200.,

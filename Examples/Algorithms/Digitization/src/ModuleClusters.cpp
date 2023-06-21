@@ -306,7 +306,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
 
     clus.channels.push_back(std::move(ch));
 
-    // Will have the right value at last interation Do it here to
+    // Will have the right value at last iteration Do it here to
     // avoid having bogus values when there are no clusters
     clus.sizeLoc0 = b0max - b0min + 1;
     clus.sizeLoc1 = b1max - b1min + 1;

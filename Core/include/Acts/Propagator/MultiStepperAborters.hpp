@@ -35,7 +35,7 @@ struct MultiStepperSurfaceReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
-  /// @param [in] navigator Navigator used for the progation
+  /// @param [in] navigator Navigator used for the propagation
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
@@ -52,8 +52,8 @@ struct MultiStepperSurfaceReached {
   /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in,out] state The propagation state object
-  /// @param [in] stepper Stepper used for the progation
-  /// @param [in] navigator Navigator used for the progation
+  /// @param [in] stepper Stepper used for the propagation
+  /// @param [in] navigator Navigator used for the propagation
   /// @param [in] targetSurface The target surface
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,

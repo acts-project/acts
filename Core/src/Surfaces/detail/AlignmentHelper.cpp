@@ -14,7 +14,7 @@
 
 Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
     const RotationMatrix3& rotation) {
-  // Get Euler angles for rotation representated by rotZ * rotY * rotX, i.e.
+  // Get Euler angles for rotation represented by rotZ * rotY * rotX, i.e.
   // first rotation around x axis, then y axis, last z axis
   // The elements stored in rotAngles is (rotZ, rotY, rotX)
   const Vector3 rotAngles = rotation.eulerAngles(2, 1, 0);

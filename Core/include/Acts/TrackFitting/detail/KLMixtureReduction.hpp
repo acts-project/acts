@@ -202,7 +202,7 @@ void reduceWithKLDistance(std::vector<component_t> &cmpCache,
     remainingComponents--;
   }
 
-  // Remove all components which are labled with weight -1
+  // Remove all components which are labeled with weight -1
   std::sort(cmpCache.begin(), cmpCache.end(),
             [&](const auto &a, const auto &b) {
               return proj(a).weight < proj(b).weight;

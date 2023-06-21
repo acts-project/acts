@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(ChannelizerCartesian) {
   auto planeSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Transform3::Identity(), rectangleBounds);
 
-  // The segementation
+  // The segmentation
   Acts::BinUtility pixelated(20, -1., 1., Acts::open, Acts::binX);
   pixelated += Acts::BinUtility(20, -1., 1., Acts::open, Acts::binY);
 
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(ChannelizerPolarRadial) {
   auto radialDisc = Acts::Surface::makeShared<Acts::DiscSurface>(
       Acts::Transform3::Identity(), radialBounds);
 
-  // The segementation
+  // The segmentation
   Acts::BinUtility strips(2, 5., 10., Acts::open, Acts::binR);
   strips += Acts::BinUtility(250, -0.25, 0.25, Acts::open, Acts::binPhi);
 

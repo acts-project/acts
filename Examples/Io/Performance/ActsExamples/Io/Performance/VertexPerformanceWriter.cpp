@@ -397,7 +397,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         }
 
         if (priVtxId == maxOccurrenceId) {
-          // Vertex found, fill varibles
+          // Vertex found, fill variables
           const auto& truePos = particle.fourPosition();
 
           m_truthX.push_back(truePos[Acts::FreeIndices::eFreePos0]);

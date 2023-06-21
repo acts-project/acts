@@ -36,7 +36,7 @@ class IWriter : public SequenceElement {
     return write(context);
   }
 
-  /// Fullfil the algorithm interface
+  /// Fulfil the algorithm interface
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }
 };
 

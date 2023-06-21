@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
   BOOST_CHECK_THROW(auto c = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
-  // misconfiguration - 2D binning  in z, r, but not exaclty 2 builders
+  // misconfiguration - 2D binning  in z, r, but not exactly 2 builders
   misCfg.builders = {nullptr, nullptr, nullptr};
   misCfg.binning = {Acts::binZ, Acts::binR};
   BOOST_CHECK_THROW(auto d = CylindricalContainerBuilder(misCfg),
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
 
   // Create the container builder
   CylindricalContainerBuilder::Config tripleZCfg;
-  tripleZCfg.auxilliary = "*** Test 0 - Build triple in Z ***";
+  tripleZCfg.auxiliary = "*** Test 0 - Build triple in Z ***";
   tripleZCfg.builders = {negDisc, barrel, posDisc};
   tripleZCfg.binning = {binZ};
 
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
 
   // Create the container builder
   CylindricalContainerBuilder::Config barrelRCfg;
-  barrelRCfg.auxilliary = "*** Test 1 - Build multilayer barrel ***";
+  barrelRCfg.auxiliary = "*** Test 1 - Build multilayer barrel ***";
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
   barrelRCfg.binning = {binR};
 
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   // Create the container builder
   CylindricalContainerBuilder::Config barrelPhiCfg;
-  barrelPhiCfg.auxilliary = "*** Test 2 - Build segmented phi barrel ***";
+  barrelPhiCfg.auxiliary = "*** Test 2 - Build segmented phi barrel ***";
   barrelPhiCfg.binning = {binPhi};
 
   unsigned int phiSectors = 5;

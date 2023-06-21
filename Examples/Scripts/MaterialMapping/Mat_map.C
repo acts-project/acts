@@ -90,7 +90,7 @@ void Draw_ratio(TCanvas* c, TProfile* h1, TProfile* h2, TLegend* leg, std::strin
 
 }
 
-/// Compare two set of material tracks (for exemple one obtain with propagator and material map and one with geantino scan).
+/// Compare two set of material tracks (for example one obtain with propagator and material map and one with geantino scan).
 /// Draw the ammont of material (in X0) encounter by tracks as function of eta and phi.
 /// Plot the ratio between the two set to help identify inconsistency.
 

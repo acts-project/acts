@@ -46,7 +46,7 @@ class SingleBoundTrackParameters {
   /// @param q Particle charge
   /// @param cov Bound parameters covariance matrix
   ///
-  /// In principle, only the charge magnitude is needed her to allow unambigous
+  /// In principle, only the charge magnitude is needed her to allow unambiguous
   /// extraction of the absolute momentum. The particle charge is required as
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
@@ -160,7 +160,7 @@ class SingleBoundTrackParameters {
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
-  /// Access a single parameter value indentified by its index.
+  /// Access a single parameter value identified by its index.
   ///
   /// @tparam kIndex Track parameter index
   template <BoundIndices kIndex>
@@ -258,7 +258,7 @@ class SingleBoundTrackParameters {
   /// @note Comparing track parameters for bitwise equality is not a good
   /// idea.
   ///   Depending on the context you might want to compare only the
-  ///   parameter values, or compare them for compability instead of
+  ///   parameter values, or compare them for compatibility instead of
   ///   equality; you might also have different (floating point) thresholds
   ///   of equality in different contexts. None of that can be handled by
   ///   this operator. Users should think really hard if this is what they
