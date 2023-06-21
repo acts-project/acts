@@ -195,7 +195,7 @@ struct EventDataView3D {
     if (locErrorScale <= 0) {
       throw std::invalid_argument("locErrorScale must be > 0");
     }
-    if (viewConfig.visible) {
+    if (measurementConfig.visible) {
       drawCovarianceCartesian(helper, lposition, covariance, transform,
                               locErrorScale, measurementConfig);
     }
