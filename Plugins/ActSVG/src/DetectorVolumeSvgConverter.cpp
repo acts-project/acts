@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,14 +10,17 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <set>
+#include <utility>
 
-Acts::Svg::ProtoVolume Acts::Svg::DetectorVolumeConverter::convert(
+std::tuple<Acts::Svg::ProtoVolume, Acts::Svg::ProtoIndexedSurfaceGrid>
+Acts::Svg::DetectorVolumeConverter::convert(
     const GeometryContext& gctx, const Experimental::DetectorVolume& dVolume,
     const DetectorVolumeConverter::Options& volumeOptions) {
   // The local logger
@@ -58,7 +61,7 @@ Acts::Svg::ProtoVolume Acts::Svg::DetectorVolumeConverter::convert(
     pVolume._portals.push_back(pPortal);
   }
 
-  // Adding the surfaces to the volume 
+  // Adding the surfaces to the volume
   std::vector<ProtoSurface> pSurfaces;
   for (auto [is, s] : enumerate(dVolume.surfaces())) {
     auto pSurface =
@@ -70,35 +73,18 @@ Acts::Svg::ProtoVolume Acts::Svg::DetectorVolumeConverter::convert(
 
   // Make dedicated surface grid sheets
   const auto& internalNavigationDelegate = dVolume.surfaceCandidatesUpdator();
+
   IndexedSurfacesConverter::Options isOptions;
-  auto protoSurfaceGrid = IndexedSurfacesConverter::convert(
-      gctx, dVolume.surfaces(), internalNavigationDelegate, isOptions);
-
-  return pVolume;
-}
-
-std::array<actsvg::svg::object, 2u> Acts::Svg::View::layer(
-    const ProtoVolume& volume) {
-  // The sheets
-  actsvg::svg::object module_sheet;
-  actsvg::svg::object grid_sheet;
-
-  if (volume._surface_grid._type == ProtoGrid::e_z_phi) {
-    module_sheet = actsvg::display::barrel_sheet(
-        volume._name + "_modules", volume, {800, 800},
-        actsvg::display::e_module_info);
-    grid_sheet =
-        actsvg::display::barrel_sheet(volume._name + "_grid", volume,
-                                      {800, 800}, actsvg::display::e_grid_info);
-
-  } else if (volume._surface_grid._type == ProtoGrid::e_r_phi) {
-    module_sheet = actsvg::display::endcap_sheet(
-        volume._name + "_modules", volume, {800, 800},
-        actsvg::display::e_module_info);
-    grid_sheet =
-        actsvg::display::endcap_sheet(volume._name + "_grid", volume,
-                                      {800, 800}, actsvg::display::e_grid_info);
+  // Use or transfer the surface style
+  if (isOptions.surfaceStyles.empty()) {
+    std::pair<Acts::GeometryIdentifier, Acts::Svg::Style> style{
+        dVolume.geometryId(), volumeOptions.surfaceOptions.style};
+    isOptions.surfaceStyles =
+        Acts::GeometryHierarchyMap<Acts::Svg::Style>({style});
   }
 
-  return {module_sheet, grid_sheet};
+  auto pSurfacesGrid = IndexedSurfacesConverter::convert(
+      gctx, dVolume.surfaces(), internalNavigationDelegate, isOptions);
+
+  return {pVolume, pSurfacesGrid};
 }

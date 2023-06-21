@@ -204,10 +204,12 @@ Acts::Experimental::LayerStructureBuilder::construct(
     // Capture the binning
     auto binning = m_cfg.binnings[0u];
     if (binning.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+      ACTS_VERBOSE("-- closed binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Closed>(
               gctx, internalSurfaces, assignToAll, binning);
     } else {
+      ACTS_VERBOSE("-- closed binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound>(
               gctx, internalSurfaces, assignToAll, binning);
@@ -219,17 +221,20 @@ Acts::Experimental::LayerStructureBuilder::construct(
     const auto& binning1 = m_cfg.binnings[1u];
 
     if (binning0.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+      ACTS_VERBOSE("-- closed/bound binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Closed,
                         Acts::detail::AxisBoundaryType::Bound>(
               gctx, internalSurfaces, assignToAll, binning0, binning1);
     } else if (binning1.boundaryType ==
                Acts::detail::AxisBoundaryType::Closed) {
+      ACTS_VERBOSE("-- bound/closed binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound,
                         Acts::detail::AxisBoundaryType::Closed>(
               gctx, internalSurfaces, assignToAll, binning0, binning1);
     } else {
+      ACTS_VERBOSE("-- closed/closed binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound,
                         Acts::detail::AxisBoundaryType::Bound>(

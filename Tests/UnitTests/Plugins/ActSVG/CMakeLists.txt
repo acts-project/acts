@@ -1,5 +1,6 @@
 set(unittest_extra_libraries ActsPluginActSVG)
 add_unittest(GridSvgConverter GridSvgConverterTests.cpp)
+add_unittest(DetectorSvgConverter DetectorSvgConverterTests.cpp)
 add_unittest(DetectorVolumeSvgConverter DetectorVolumeSvgConverterTests.cpp)
 add_unittest(IndexedSurfacesSvgConverter IndexedSurfacesSvgConverterTests.cpp)
 add_unittest(PortalSvgConverter PortalSvgConverterTests.cpp)

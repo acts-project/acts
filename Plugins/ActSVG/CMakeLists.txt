@@ -1,6 +1,7 @@
 add_library(
   ActsPluginActSVG SHARED
   src/DetectorVolumeSvgConverter.cpp
+  src/DetectorSvgConverter.cpp
   src/EventDataSvgConverter.cpp
   src/LayerSvgConverter.cpp
   src/PortalSvgConverter.cpp

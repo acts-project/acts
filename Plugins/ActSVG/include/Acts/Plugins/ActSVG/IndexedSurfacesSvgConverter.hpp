@@ -199,6 +199,7 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
   // Defining a Delegate type
   using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<GridType>;
   using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
+
   // Get the instance
   const auto* instance = delegate.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
