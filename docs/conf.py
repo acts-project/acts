@@ -51,7 +51,11 @@ myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
 myst_heading_anchors = 3
 
 linkcheck_retries = 5
-linkcheck_ignore = [r"https://doi.org/.*", r"https://cernvm.cern.ch/.*"]
+linkcheck_ignore = [
+    r"https://doi.org/.*",
+    r"https://cernvm.cern.ch/.*",
+    r"https://tavianator.com/.*",
+]
 
 # -- Options for HTML output --------------------------------------------------
 
