@@ -191,7 +191,8 @@ struct EventDataView3D {
   static void drawMeasurement(
       IVisualization3D& helper, const Vector2& lposition,
       const SymMatrix2& covariance, const Transform3& transform,
-      const double locErrorScale = 1., const ViewConfig& measurementConfig = s_viewMeasurement) {
+      const double locErrorScale = 1.,
+      const ViewConfig& measurementConfig = s_viewMeasurement) {
     if (locErrorScale <= 0) {
       throw std::invalid_argument("locErrorScale must be > 0");
     }
