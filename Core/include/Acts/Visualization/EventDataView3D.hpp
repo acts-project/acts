@@ -191,10 +191,14 @@ struct EventDataView3D {
   static void drawMeasurement(
       IVisualization3D& helper, const Vector2& lposition,
       const SymMatrix2& covariance, const Transform3& transform,
-      const double locErrorScale = 1.,
-      const ViewConfig& measurementConfig = s_viewMeasurement) {
-    drawCovarianceCartesian(helper, lposition, covariance, transform,
-                            locErrorScale, measurementConfig);
+      const double locErrorScale = 1., const ViewConfig& measurementConfig = s_viewMeasurement) {
+    if (locErrorScale <= 0) {
+      throw std::invalid_argument("locErrorScale must be > 0");
+    }
+    if (viewConfig.visible) {
+      drawCovarianceCartesian(helper, lposition, covariance, transform,
+                              locErrorScale, measurementConfig);
+    }
   }
 
   /// Helper method to draw one trajectory stored in a MultiTrajectory object
@@ -250,8 +254,7 @@ struct EventDataView3D {
       // Second, if necessary and present, draw the calibrated measurement (only
       // draw 2D measurement here)
       // @Todo: how to draw 1D measurement?
-      if (measurementConfig.visible and state.hasCalibrated() and
-          state.calibratedSize() == 2) {
+      if (state.hasCalibrated() and state.calibratedSize() == 2) {
         const Vector2& lposition = state.template calibrated<2>();
         const SymMatrix2 covariance = state.template calibratedCovariance<2>();
         drawMeasurement(helper, lposition, covariance,
