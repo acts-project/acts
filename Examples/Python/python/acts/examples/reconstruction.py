@@ -771,15 +771,12 @@ def addFTFSeeding(
     layerMappingConfigFile: Union[Path, str] = None,
     fastrack_inputConfigFile: Union[Path, str] = None,
 ):  
-    """trying to make own seeding algorithm 
-    eventually will use FTF
+    """FTF seeding
     """
-    #just copied these from standard and ortho seeding, same input and outputs in both 
-    ##which are then inputs to the unique seeding alg (some extra in standard, used common ones)
+
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     layerMappingFile=str(layerMappingConfigFile) #turn path into string 
     fastrack_inputFile = str(fastrack_inputConfigFile)
-    #want to change to SFFTFconfig here 
     seedFinderConfig = acts.SeedFinderFTFConfig(
         **acts.examples.defaultKWArgs(
             rMin=seedFinderConfigArg.r[0],
@@ -857,7 +854,6 @@ def addFTFSeeding(
         )
     )
 
-    ##using ortho algorithm to check the python part works 
     seedingAlg = acts.examples.SeedingFTFAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],

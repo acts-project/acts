@@ -1,4 +1,4 @@
-//basijng on seeding ortho and rosie test 
+//basing on seeding ortho 
 #include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
 
 #include "Acts/Seeding/Seed.hpp"
@@ -24,14 +24,11 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
       m_cfg(std::move(cfg)) {
     //fill config struct
     m_cfg.layerMappingFile = m_cfg.layerMappingFile ; 
-    //now interal units error on SeedFilter so using on all 3 
 
     m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
- 
-    //got error "SeedFInderOrthoConfig not in ACTS internal units": 
+
     m_cfg.seedFinderConfig =
     m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
-    //because this is ortho type uses function in this class 
 
     m_cfg.seedFinderOptions =
       m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
@@ -50,62 +47,25 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     handle->initialize(spName);
   }
 
-
-    //throw statements for differnet cases 
     m_outputSeeds.initialize(m_cfg.outputSeeds);
 
-
-    //filling the memeber of class (not const) from member of const 
-    //at the ned of both 
     m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
     
     //this is now calling to a core algorithm 
     m_seedFinder = Acts::SeedFinderFTF<SimSpacePoint>(m_cfg.seedFinderConfig);
-      } //this is not FTF type because it is a meber of the algs config, which is of type FTF cofig  
+      } //this is not FTF config type because it is a meber of the algs config, which is of type FTF cofig  
+
 
 //exectute: 
-
 ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
     const AlgorithmContext& ctx) const {
 
-  //defining things need for seeds function, need to go through to understand
-  //try changing to type originally needed for loadsp?  
-  std::vector<const SimSpacePoint *> spacePoints;
 
-//for loop filling space points, seeing if can do without 
-  for (const auto &isp : m_inputSpacePoints) {
-    for (const auto &spacePoint : (*isp)(ctx)) {
-      spacePoints.push_back(&spacePoint);
-    }
-  } 
-
-  Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig); 
-  //this is now calling on a core algorithm 
-
-  //need this function as create_coords is needed for seeds 
-  std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-      const SimSpacePoint *sp)>
-      create_coordinates = [](const SimSpacePoint *sp) {
-        Acts::Vector3 position(sp->x(), sp->y(), sp->z());
-        Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
-        return std::make_pair(position, variance);
-      };  
-
-
-      //output of function needed for seed
-
-  //no output to this function, input is vector of simspacepoints  
-
-
-
-
-
-//create map from csv 
+  //create map from csv 
   map<std::pair<int, int>,int> ACTS_FTF;
-  //0 in this file refers to no FTF ID 
-  std::ifstream data(m_cfg.layerMappingFile);
+  std::ifstream data(m_cfg.layerMappingFile);  //0 in this file refers to no FTF ID 
   std::string line;
   std::vector<std::vector<std::string> > parsedCsv;
   while(std::getline(data,line))
@@ -130,18 +90,20 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       ACTS_FTF.insert({{ACTS_vol,ACTS_lay},FTF}) ; 
   }
 
-  
-  //make FTF_SP vector, keeping same const pointer type as before 
-  //reserve space here 
-  std::vector<FTF_SP<SimSpacePoint>> FTF_spacePoints; //vector to the objects not pointers 
-  //defined input to LSP std::vector<const FTF_SP<external_spacepoint_t>*>
+
+  //create space point vectors 
+  std::vector<const SimSpacePoint *> spacePoints;
+  std::vector<FTF_SP<SimSpacePoint>> FTF_spacePoints;  
   FTF_spacePoints.reserve(m_inputSpacePoints.size()); //not sure if this is enough, each one has several sp 
 
-
-   //loop over space points, call on map 
+//for loop filling space
   for (const auto &isp : m_inputSpacePoints) {
     for (const auto &spacePoint : (*isp)(ctx)) {
+      //fill originial space point vector 
+      spacePoints.push_back(&spacePoint);
 
+      //FTF space point vector 
+       //loop over space points, call on map 
       auto source_link = spacePoint.sourceLinks() ; 
       //warning if source link empty 
       if (source_link.empty()){
@@ -149,7 +111,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
         ACTS_WARNING("warning source link vector is empty");
         continue; 
       }
-
 
       int ACTS_vol_id = source_link.front().geometryId().volume() ;
       int ACTS_lay_id = source_link.front().geometryId().layer() ; 
@@ -177,27 +138,35 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
  
 
       //fill FTF vector with current sapce point and ID 
-      //when it fills spacePoints it uses & before   
       FTF_spacePoints.emplace_back(&spacePoint,FTF_id); 
-      // FTF_spacePoints.emplace_back(const FTF_SP<SimSpacePoint>(&spacePoint,FTF_id));
     }
   }
   ACTS_VERBOSE("Space points successfully assigned FTF ID") ; 
 
 
+  Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig); 
+  //this is now calling on a core algorithm 
 
+  //need this function as create_coords is needed for seeds 
+  std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+      const SimSpacePoint *sp)>
+      create_coordinates = [](const SimSpacePoint *sp) {
+        Acts::Vector3 position(sp->x(), sp->y(), sp->z());
+        Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
+        return std::make_pair(position, variance);
+      };  
+      //output of function needed for seed
+
+  
 
   finder.loadSpacePoints(FTF_spacePoints); 
-  //this createseeds function is defined in SeedFInderFTF in core 
+
+  //still to develop, input will be FTF_spacePoints 
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               spacePoints, create_coordinates);
 
                              
 
-  // //debug statement
-  
-  // ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
-  // ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
   m_outputSeeds(ctx, std::move(seeds));
 
 
@@ -205,4 +174,4 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-//defenitions of print functions, leaving for now 
+

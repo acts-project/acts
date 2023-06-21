@@ -1,6 +1,3 @@
-//needed for GNN_datastorage.cxx 
-
-
 #include<vector>
 #include<map>
 #include<algorithm>

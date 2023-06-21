@@ -1,10 +1,9 @@
-//basing off of SeedingOrtho and RosieTestFunc 
+//basing off of SeedingOrtho 
 
 #pragma once
 
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
-//change these to FTF when done
 #include "Acts/Seeding/SeedFinderFTF.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 //in core 
@@ -27,21 +26,15 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
     std::vector<std::string> inputSpacePoints;
 
-    //two parameters that will be returned in function: 
-    /// Output track seed collection.
     std::string outputSeeds;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    //change to FTF type
     Acts::SeedFinderFTFConfig<SimSpacePoint> seedFinderConfig;
     Acts::SeedFinderOptions seedFinderOptions;
 
     std::string layerMappingFile ; 
 
   }; 
-
-
-  //member functions of SFA class 
 
 
   //constructor: 
@@ -59,19 +52,13 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
 
  private: 
-  //private memebers of SFA class 
   Config m_cfg; 
   Acts::SeedFinderFTF<SimSpacePoint> m_seedFinder; 
-  //want to change to FTF version 
-
-  //new since update 
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-
-  //not copying print functions, think for debuging 
 };
 
 }  // namespace ActsExamples

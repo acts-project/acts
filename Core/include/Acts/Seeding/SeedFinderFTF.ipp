@@ -1,6 +1,4 @@
 //SeedFinderFTF.ipp
-//accidently based on ipp, not sure if I'll neded 
-
 //basing on ortho seed finder 
 
 #include "Acts/Geometry/Extent.hpp"
@@ -9,10 +7,6 @@
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-
-//for load space points 
-
-
 
 #include<fstream>
 #include<vector>
@@ -26,18 +20,12 @@
 
 namespace Acts {
 
-//valid tuple ortho range function RH and LH 
-//valid tuple funtion 
-
-
-//this is the definition of constructos 
-
 template <typename external_spacepoint_t>
 SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
     const SeedFinderFTFConfig<external_spacepoint_t> &config)
     : m_config(config) {
   
-  //schecks if internal units funciton used 
+  //checks if internal units funciton used 
   // if (not config.isInInternalUnits) {
   //   throw std::runtime_error(
   //       "SeedFinderOrthogonalConfig not in ACTS internal units in "
@@ -52,7 +40,7 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
  
 
 }
-//destructor too? deletes m_storage 
+
 template <typename external_spacepoint_t>
 SeedFinderFTF<external_spacepoint_t>::~SeedFinderFTF(){
   delete m_storage ; 
@@ -63,24 +51,16 @@ SeedFinderFTF<external_spacepoint_t>::~SeedFinderFTF(){
 //define loadspace points funciton 
  //when calling put input of vector<simspacepoints>, now can call space_point_t 
 template <typename external_spacepoint_t>
-// void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(std::vector<const external_spacepoint_t*> SP){
 void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(std::vector<FTF_SP<external_spacepoint_t>> SP){
 
-
   for(auto sp : SP) {
-    //could check if pixel as pixels only have 1 source link (strip have 2)
     bool is_Pixel = sp.SP->isPixel(); //FTF actual object then sim is pointer 
     if(!is_Pixel) continue;
-    // //think not using trigseedML for now 
-    // //when called input should be simspace point 
 
     m_storage->addSpacePoint((sp), (m_config.m_useTrigSeedML > 0)); //add is a funciton FTFtype 
 
-
     std::cout<<("in seed finder load space point function") ; 
   }
-
-
 
   m_config.m_phiSliceWidth = 2*m_config.phiMax/m_config.m_nMaxPhiSlice;
 
@@ -88,12 +68,9 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(std::vector<FTF_SP<ex
   m_storage->generatePhiIndexing(1.5*m_config.m_phiSliceWidth);
 
 }
-//filter canditates function 
-//fucntion processFromMiddleSP 
 
-//create tree function- called in seeds 
 
-//need create seeds function- at same level as TrigTrackSeedGenerator_itk  
+//still to be developed 
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t,
           typename callable_t>

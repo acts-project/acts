@@ -1,19 +1,15 @@
 //basing on ortho config
-// config struct and 2 functions that return a config instance for seed finder 
-
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
-// #include "Acts/Seeding/GNN_DataStorage.h"
-
 #include <memory> 
 
 //core algorithm so in acts namespace 
 namespace Acts { 
-//leaving out SeedFilter part, caused errors  
+
 template <typename T>
 class SeedFilter;
 
@@ -21,8 +17,7 @@ class SeedFilter;
 template <typename SpacePoint> 
 struct SeedFinderFTFConfig {
 
-//declare members, which are then inputs in reco 
-//going to try putting in order of the reco input, hopefully wont break things
+
 
 // limiting location of measurements  
   float rMin = 33 * Acts::UnitConstants::mm;

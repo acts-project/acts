@@ -1,6 +1,3 @@
-//5 classes geometry node, eta bin, data storage and edge 
-
-
 #include<vector>
 #include<map>
 #include<algorithm>
@@ -28,25 +25,25 @@ class TrigFTF_GNN_Node {
   
 
   inline void addIn(int i) {
-  //     if(m_in.size()<MAX_SEG_PER_NODE) {
- //       m_in.push_back(i);
- //     }
+      if(m_in.size()<MAX_SEG_PER_NODE) {
+       m_in.push_back(i);
+     }
   }
 
   inline void addOut(int i) {
-  //     if(m_out.size()<MAX_SEG_PER_NODE) {
-  //       m_out.push_back(i);
-  //     }
+      if(m_out.size()<MAX_SEG_PER_NODE) {
+        m_out.push_back(i);
+      }
   }
   
   inline bool isConnector() const {
-  //     if(m_in.empty() || m_out.empty()) return false;
-  //     return true;
+      if(m_in.empty() || m_out.empty()) return false;
+      return true;
   }
 
   inline bool isFull() const {
-  //     if(m_in.size()==MAX_SEG_PER_NODE && m_out.size()==MAX_SEG_PER_NODE) return true;
-  //     else return false;
+      if(m_in.size()==MAX_SEG_PER_NODE && m_out.size()==MAX_SEG_PER_NODE) return true;
+      else return false;
   }
 
   const std::vector<space_point_t>& m_sp;
@@ -67,7 +64,7 @@ class TrigFTF_GNN_EtaBin {
   hi();
 
   bool empty() const {
-  //   return m_vn.empty();
+    return m_vn.empty();
   }
   
   void generatePhiIndexing(float);
@@ -76,7 +73,7 @@ class TrigFTF_GNN_EtaBin {
   std::vector<std::pair<float, unsigned int> > m_vPhiNodes;
 
 };
-   //trying to make new sp struct  
+//new sp struct  
 template <typename space_point_t>  
 struct FTF_SP { 
   const space_point_t* SP; //want inside to have pointer 
@@ -86,7 +83,7 @@ struct FTF_SP {
 }; 
 
 template <typename space_point_t>  
-//trying that this will have the input FTF SP, so if want normal have to do .sp 
+//input FTF SP, so if want normal have to do .sp 
 class TrigFTF_GNN_DataStorage {
   public:
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& );
@@ -101,8 +98,8 @@ class TrigFTF_GNN_DataStorage {
 
 
   const TrigFTF_GNN_EtaBin<space_point_t>& getEtaBin(int idx) const {
-  //   if(idx >= static_cast<int>(m_etaBins.size())) idx = idx-1;
-  //   return m_etaBins.at(idx);
+    if(idx >= static_cast<int>(m_etaBins.size())) idx = idx-1;
+    return m_etaBins.at(idx);
   }
 
  protected:
@@ -118,10 +115,10 @@ class TrigFTF_GNN_Edge {
  public:
 
   struct CompareLevel {
-  // public:
-  //   bool operator()(const TrigFTF_GNN_Edge* pS1, const TrigFTF_GNN_Edge* pS2) {
-  //     return pS1->m_level > pS2->m_level;
-  //   }
+  public:
+    bool operator()(const TrigFTF_GNN_Edge* pS1, const TrigFTF_GNN_Edge* pS2) {
+      return pS1->m_level > pS2->m_level;
+    }
   };
 
  TrigFTF_GNN_Edge() : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0) {};
