@@ -159,7 +159,7 @@ class ConeVolumeBounds : public VolumeBounds {
   /// Create the surface bounds
   void buildSurfaceBounds();
 
-  /// Templated dump methos
+  /// Templated dump methods
   /// @tparam stream_t The type of the stream for dumping
   /// @param dt The stream object
   template <class stream_t>

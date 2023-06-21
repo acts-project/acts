@@ -40,14 +40,14 @@ struct FreeToBoundCorrection {
 
   /// Construct from boolean and UKF parameters (alpha, beta)
   ///
-  /// @param apply_ Wheter to apply correction
+  /// @param apply_ Whether to apply correction
   /// @param alpha_ The UKF tuning parameter alpha
   /// @param beta_ The UKF tuning parameter beta
   FreeToBoundCorrection(bool apply_, ActsScalar alpha_, ActsScalar beta_);
 
   /// Construct from boolean only
   ///
-  /// @param apply_ Wheter to apply correction
+  /// @param apply_ Whether to apply correction
   explicit FreeToBoundCorrection(bool apply_);
 
   /// Return boolean for applying correction or not

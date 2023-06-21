@@ -92,7 +92,7 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   }
 
   /// This is the call signature for the abort list, it broadcasts the call
-  /// to the tuple() memembers of the list
+  /// to the tuple() members of the list
   ///
   /// @tparam propagator_state_t is the state type of the propagator
   /// @tparam stepper_t Type of the stepper

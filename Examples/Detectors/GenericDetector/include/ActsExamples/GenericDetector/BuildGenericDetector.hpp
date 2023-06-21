@@ -67,7 +67,7 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
 /// @param radius is the ring radius
 /// @param phiStagger is the radial staggering along phi
 /// @param lOverlap is the overlap of the modules
-/// @parm nPhiBins is the number of bins in phi
+/// @param nPhiBins is the number of bins in phi
 std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
                                                double phiStagger,
                                                double phiSubStagger,
@@ -159,7 +159,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   std::vector<std::shared_ptr<const Acts::ITrackingVolumeBuilder>>
       volumeBuilders;
 
-  // Prepare the proto material - in case it's desinged to do so
+  // Prepare the proto material - in case it's designed to do so
   // - cylindrical
   Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::closed, Acts::binPhi);
   pCylinderUtility += Acts::BinUtility(10, -1, 1, Acts::open, Acts::binZ);
@@ -761,7 +761,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     for (size_t id = 0; id < lsplConfig.posnegLayerPositionsZ.size(); ++id) {
       lssbPosnegModulePositions.push_back(modulePositionsDisc(
           lsplConfig.posnegLayerPositionsZ[id],
-          8.0,  // staggering of rings, we put the disk strucutre in between
+          8.0,  // staggering of rings, we put the disk structure in between
           {3., 3.}, {0., 0.}, 750., 1020., lsplConfig.posnegModulePhiBins[id],
           lsplConfig.posnegModuleHalfY[id]));
     }
