@@ -41,10 +41,13 @@ setup = makeSetup(argparser=parser)
 
 
 def run_single_particles(particle, pT, simulation, label):
-    # disabled FPE monitoring for now because of G4
-    # TODO use acts.FpeMonitor()
     with contextlib.nullcontext(), tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=10000, numThreads=1)
+        s = acts.examples.Sequencer(
+            events=10000,
+            numThreads=1,
+            logLevel=acts.logging.INFO,
+            trackFpes=False,
+        )
 
         tp = Path(temp)
 
@@ -101,7 +104,7 @@ def run_single_particles(particle, pT, simulation, label):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
-            seedingAlgorithm=SeedingAlgorithm.Default,
+            seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
             initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=setup.geoSel,
             outputDirRoot=tp,

@@ -389,7 +389,7 @@ def addSimulation(
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     detector: Optional[Any] = None,
-    g4detectorConstruction: Optional[Any] = None,
+    g4DetectorConstructionFactory: Optional[Any] = None,
     volumeMappings: List[str] = [],
     materialMappings: List[str] = [],
     inputParticles: str = "particles_input",
@@ -419,13 +419,14 @@ def addSimulation(
             logLevel=logLevel,
         )
     elif algorithm == SimulationAlgorithm.Geant4:
+        print("addG")
         addGeant4(
             s,
             detector,
             trackingGeometry,
             field,
             rnd,
-            g4detectorConstruction=g4detectorConstruction,
+            g4DetectorConstructionFactory=g4DetectorConstructionFactory,
             volumeMappings=volumeMappings,
             materialMappings=materialMappings,
             inputParticles=inputParticles,
