@@ -191,10 +191,10 @@ struct EventDataView3D {
   static void drawMeasurement(
       IVisualization3D& helper, const Vector2& lposition,
       const SymMatrix2& covariance, const Transform3& transform,
-      const double locErrorScale = 1., const ViewConfig& viewConfig = s_viewMeasurement) {
-
-    drawCovarianceCartesian(helper, lposition, covariance,
-                            transform, locErrorScale, viewConfig);
+      const double locErrorScale = 1.,
+      const ViewConfig& viewConfig = s_viewMeasurement) {
+    drawCovarianceCartesian(helper, lposition, covariance, transform,
+                            locErrorScale, viewConfig);
   }
 
   /// Helper method to draw one trajectory stored in a MultiTrajectory object
@@ -254,9 +254,9 @@ struct EventDataView3D {
           state.calibratedSize() == 2) {
         const Vector2& lposition = state.template calibrated<2>();
         const SymMatrix2 covariance = state.template calibratedCovariance<2>();
-        drawMeasurement(helper, lposition,
-                        covariance, state.referenceSurface().transform(gctx),
-                        locErrorScale, measurementConfig);
+        drawMeasurement(helper, lposition, covariance,
+                        state.referenceSurface().transform(gctx), locErrorScale,
+                        measurementConfig);
       }
 
       // Last, if necessary and present, draw the track parameters
