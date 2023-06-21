@@ -37,7 +37,7 @@ static void printHeader(std::ostream& os, const Acts::MaterialSlab& slab,
   os << "# delta is the total energy loss\n";
   os << "# delta_ion is the energy loss due to ionisation and excitation\n";
   os << "# delta_rad is the energy loss due to radiative effects\n";
-  os << "# sigma is the width of the enery loss distribution\n";
+  os << "# sigma is the width of the energy loss distribution\n";
   // column names
   os << std::left;
   os << std::setw(width) << "momentum" << separator;

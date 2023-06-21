@@ -68,7 +68,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   }
   // loop over the approach surfaces
   if (m_approachDescriptor) {
-    // indicates the existance of approach surfaces
+    // indicates the existence of approach surfaces
     m_ssApproachSurfaces = 1;
     // loop through the approachSurfaces and assign unique GeomeryID
     GeometryIdentifier::Value iasurface = 0;
@@ -87,7 +87,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   }
   // check if you have sensitive surfaces
   if (m_surfaceArray) {
-    // indicates the existance of sensitive surfaces
+    // indicates the existence of sensitive surfaces
     m_ssSensitiveSurfaces = 1;
     // loop sensitive surfaces and assign unique GeometryIdentifier
     GeometryIdentifier::Value issurface = 0;
@@ -129,7 +129,7 @@ Acts::Layer::compatibleSurfaces(
   double overstepLimit = options.overstepLimit;
   if (options.endObject != nullptr) {
     // intersect the end surface
-    // - it is the final one don't use the bounday check at all
+    // - it is the final one don't use the boundary check at all
     SurfaceIntersection endInter = options.endObject->intersect(
         gctx, position, options.navDir * direction, BoundaryCheck(true));
     // non-valid intersection with the end surface provided at this layer
@@ -162,7 +162,7 @@ Acts::Layer::compatibleSurfaces(
     if (options.resolveMaterial && sf.surfaceMaterial() != nullptr) {
       return true;
     }
-    // last option: resovle all
+    // last option: resolve all
     return options.resolvePassive;
   };
 
@@ -218,7 +218,7 @@ Acts::Layer::compatibleSurfaces(
   // check the sensitive surfaces if you have some
   if (m_surfaceArray && (options.resolveMaterial || options.resolvePassive ||
                          options.resolveSensitive)) {
-    // get the canditates
+    // get the candidates
     const std::vector<const Surface*>& sensitiveSurfaces =
         m_surfaceArray->neighbors(position);
     // loop through and veto

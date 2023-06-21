@@ -48,7 +48,7 @@ class SensitiveSurfaceMapper;
 struct EventStore;
 struct Geant4Handle;
 
-/// Abtracts common Geant4 Acts algorithm behaviour.
+/// Abstracts common Geant4 Acts algorithm behaviour.
 class Geant4SimulationBase : public IAlgorithm {
  public:
   /// Nested configuration struct for the Geant4 simulation

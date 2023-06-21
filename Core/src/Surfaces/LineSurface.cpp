@@ -171,7 +171,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
                  : Intersection3D::Status::reachable;
     Vector3 result = (ma + u * ea);
     // Evaluate the boundary check if requested
-    // m_bounds == nullptr prevents unecessary calulations for PerigeeSurface
+    // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
     if (bcheck and m_bounds) {
       // At closest approach: check inside R or and inside Z
       const Vector3 vecLocal(result - mb);
@@ -305,7 +305,7 @@ Acts::ActsMatrix<2, 3> Acts::LineSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);

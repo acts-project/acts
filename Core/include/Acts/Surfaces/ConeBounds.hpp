@@ -95,7 +95,7 @@ class ConeBounds : public SurfaceBounds {
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostrea into which the dump is done
-  /// @return is the input obect
+  /// @return is the input object
   std::ostream& toStream(std::ostream& sl) const final;
 
   /// Return the radius at a specific z values
@@ -119,7 +119,7 @@ class ConeBounds : public SurfaceBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 
-  /// Private helper functin to shift a local 2D position
+  /// Private helper function to shift a local 2D position
   ///
   /// @param lposition The original local position
   Vector2 shifted(const Vector2& lposition) const;

@@ -1036,7 +1036,7 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection. This could be avoided when a seperate track
+                # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputSimHits="simhits",
@@ -1054,7 +1054,7 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection. This could be avoided when a seperate track
+                # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputMeasurementParticlesMap="measurement_particles_map",

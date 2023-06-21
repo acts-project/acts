@@ -212,13 +212,13 @@ inline bool xyzCoordinateCheck(
     return false;
   }
 
-  // if arive here spacepointPosition is compatible with strip directions and
+  // if arrive here spacepointPosition is compatible with strip directions and
   // detector elements
 
   const Acts::Vector3& topStripCenterPosition =
       spacePointData.getTopStripCenterPosition(index);
 
-  // spacepointPosition corected with respect to the top strip position and
+  // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips
   s0 = s0 / bd1;
   outputCoordinates[0] = topStripCenterPosition[0] + xTopStripVector * s0;

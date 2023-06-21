@@ -50,7 +50,7 @@ struct SpacePointParameters {
   double m = 0.;
   /// Parameter that determines the hit position on the second SDE
   double n = 0.;
-  /// Regular limit of the absolut values of SpacePointParameters::m and
+  /// Regular limit of the absolute values of SpacePointParameters::m and
   /// SpacePointParameters::n
   double limit = 1.;
   /// Limit of SpacePointParameters::m and SpacePointParameters::n in case of
@@ -106,7 +106,7 @@ class SpacePointUtility {
       const Vector3& globalPos, const double theta) const;
 
   /// @brief This function performs a straight forward calculation of a space
-  /// point and returns whether it was succesful or not.
+  /// point and returns whether it was successful or not.
   ///
   /// @param [in] stripEnds1 Top and bottom end of the first strip
   /// @param [in] stripEnds2 Top and bottom end of the second strip
@@ -115,7 +115,7 @@ class SpacePointUtility {
   /// @param [in] stripLengthTolerance Tolerance scaling factor on the strip
   /// detector element length
   ///
-  /// @return Result whether the space point calculation was succesful
+  /// @return Result whether the space point calculation was successful
   Result<void> calculateStripSPPosition(
       const std::pair<Vector3, Vector3>& stripEnds1,
       const std::pair<Vector3, Vector3>& stripEnds2, const Vector3& posVertex,
@@ -150,7 +150,7 @@ class SpacePointUtility {
       const double maxDistance, const double maxAngleTheta2,
       const double maxAnglePhi2) const;
 
-  /// @brief Calculates a space point whithout using the vertex
+  /// @brief Calculates a space point without using the vertex
   /// @note This is mostly to resolve space points from cosmic data
   /// @param stripEnds1 The ends of one strip
   /// @param stripEnds2 The ends of another strip

@@ -30,7 +30,7 @@ namespace Acts {
 /// given Jacobians. The required data is provided by the stepper object
 /// with some additional data. Since this is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
-/// As a consequence the methods can be located in a seperate file.
+/// As a consequence the methods can be located in a separate file.
 namespace detail {
 
 /// Create and return the bound state at the current position

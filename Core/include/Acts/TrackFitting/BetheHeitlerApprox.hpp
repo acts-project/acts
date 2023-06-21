@@ -132,8 +132,8 @@ class AtlasBetheHeitlerApprox {
   ///
   /// @param low_data data for the lower x/x0 range
   /// @param high_data data for the higher x/x0 range
-  /// @param low_transform wether the low data need to be transformed
-  /// @param high_transform wether the high data need to be transformed
+  /// @param low_transform whether the low data need to be transformed
+  /// @param high_transform whether the high data need to be transformed
   constexpr AtlasBetheHeitlerApprox(const Data &low_data, const Data &high_data,
                                     bool low_transform, bool high_transform)
       : m_low_data(low_data),

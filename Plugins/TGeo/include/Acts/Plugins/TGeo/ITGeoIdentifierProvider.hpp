@@ -17,7 +17,7 @@ namespace Acts {
 
 /// @brief ITGeoIdentierProvider
 ///
-/// Interface class that provides an Indentifier from a TGeoNode
+/// Interface class that provides an Identifier from a TGeoNode
 class ITGeoIdentifierProvider {
  public:
   /// Take a geometry context and a TGeoNode and provide an identifier
