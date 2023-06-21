@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 /// the DenseEnvironmentExtension. The focus of this tests lies in the
 /// choosing of the right extension for the individual use case. This is
 /// performed with three different detectors:
-/// a) Pure vaccuum -> DefaultExtension needs to act
+/// a) Pure vacuum -> DefaultExtension needs to act
 /// b) Pure Be -> DenseEnvironmentExtension needs to act
 /// c) Vacuum - Be - Vacuum -> Both should act and switch during the
 /// propagation
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Check that the propagation happend without interactions
+  // Check that the propagation happened without interactions
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Check that there occured interaction
+  // Check that there occurred interaction
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
@@ -802,7 +802,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const StepCollector::this_result& stepResultB =
       resultB.get<typename StepCollector::result_type>();
 
-  // Check that there occured interaction
+  // Check that there occurred interaction
   for (const auto& pos : stepResultB.position) {
     if (pos == stepResultB.position.front()) {
       CHECK_SMALL(pos, 1_um);
@@ -1128,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Test that momentum changes only occured at the right detector parts
+  // Test that momentum changes only occurred at the right detector parts
   double lastMomentum = stepResult.momentum[0].x();
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     // Test for changes

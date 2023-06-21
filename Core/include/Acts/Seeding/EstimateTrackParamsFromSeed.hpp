@@ -195,8 +195,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // Define a new coordinate frame with its origin at the bottom space point, z
   // axis long the magnetic field direction and y axis perpendicular to vector
   // from the bottom to middle space point. Hence, the projection of the middle
-  // space point on the tranverse plane will be located at the x axis of the new
-  // frame.
+  // space point on the transverse plane will be located at the x axis of the
+  // new frame.
   Vector3 relVec = spGlobalPositions[1] - spGlobalPositions[0];
   Vector3 newZAxis = bField.normalized();
   Vector3 newYAxis = newZAxis.cross(relVec).normalized();

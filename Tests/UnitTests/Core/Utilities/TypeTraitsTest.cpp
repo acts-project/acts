@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(TypeTraitsMethods) {
   // E does not have a foo method
   static_assert(!has_method<E, int, foo_method_t, const double&>, "failed");
 
-  // E2 doesnt have method like int bar()
+  // E2 doesn't have method like int bar()
   static_assert(!has_method<E2, int, bar_method_t>, "failed");
   // E2 does not have non-const method with signature int bar(const double&)
   // This means that a const method won't fulfill a non-const method

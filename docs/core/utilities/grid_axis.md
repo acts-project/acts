@@ -23,7 +23,7 @@ enum class AxisType { Equidistant, Variable };
 The axis boundaries and, if necessary, the bin boundaries are provided in the constructor.
 
 
-If at all possible, `Equidistant` is preferrable, since bin $b$ can then be calculated in constant time for given $x$ as
+If at all possible, `Equidistant` is preferable, since bin $b$ can then be calculated in constant time for given $x$ as
 
 $$b = \frac{\mathrm{floor}(x - x_\text{min})}{w} + 1$$
 

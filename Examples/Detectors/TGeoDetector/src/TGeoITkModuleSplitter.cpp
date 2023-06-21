@@ -31,7 +31,7 @@ void ActsExamples::TGeoITkModuleSplitter::initSplitCategories() {
   m_splitCategories.reserve(m_cfg.splitPatterns.size());
   for (const std::pair<const std::string, std::string>& pattern_split_category :
        m_cfg.splitPatterns) {
-    // mark pattern for disc or barrel modul splits:
+    // mark pattern for disc or barrel module splits:
     bool is_disk = false;
     if (m_cfg.discMap.find(pattern_split_category.second) !=
         m_cfg.discMap.end()) {
@@ -146,7 +146,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
     const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     const std::vector<ActsExamples::TGeoITkModuleSplitter::SplitRange>&
         splitRanges) const {
-  // Retrive the surface
+  // Retrieve the surface
   auto identifier = detElement->identifier();
   const Acts::Surface& surface = detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();

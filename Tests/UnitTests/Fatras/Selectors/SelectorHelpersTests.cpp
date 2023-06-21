@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Min) {
   BOOST_CHECK(not minEta(central));
   BOOST_CHECK(minEta(forward));
 
-  // require a mininum absolute eta value of 0.5
+  // require a minimum absolute eta value of 0.5
   ActsFatras::Min<ActsFatras::Casts::AbsEta> minAbsEta{0.5};
   BOOST_CHECK(minAbsEta(backward));
   BOOST_CHECK(not minAbsEta(central));

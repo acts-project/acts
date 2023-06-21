@@ -49,7 +49,7 @@ class AtlasStepper {
     ///
     /// @tparam Type of TrackParameters
     ///
-    /// @param [in] gctx The geometry contex tof this call
+    /// @param [in] gctx The geometry context tof this call
     /// @param [in] fieldCacheIn The magnetic field cache for this call
     /// @param [in] pars Input parameters
     /// @param [in] ndir The navigation direction w.r.t. parameters
@@ -245,7 +245,7 @@ class AtlasStepper {
     std::array<double, 60> pVector{};
 
     /// Storage pattern of pVector
-    ///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
+    ///                   /dL0    /dL1    /dPhi   /the   /dCM   /dT
     /// X  ->P[0]  dX /   P[ 8]   P[16]   P[24]   P[32]   P[40]  P[48]
     /// Y  ->P[1]  dY /   P[ 9]   P[17]   P[25]   P[33]   P[41]  P[49]
     /// Z  ->P[2]  dZ /   P[10]   P[18]   P[26]   P[34]   P[42]  P[50]
@@ -400,7 +400,7 @@ class AtlasStepper {
     detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] stepSize The step size value

@@ -47,7 +47,7 @@ struct MeasurementSelectorCuts {
 /// The selection criteria could be allowed maximum chi2
 /// and allowed maximum number of measurements on one surface
 ///
-/// If there is no compatible measurement, the measurement with the mininum
+/// If there is no compatible measurement, the measurement with the minimum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
 class MeasurementSelector {

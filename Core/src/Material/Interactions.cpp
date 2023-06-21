@@ -457,7 +457,7 @@ namespace {
 /// Multiple scattering theta0 for minimum ionizing particles.
 inline float theta0Highland(float xOverX0, float momentumInv,
                             float q2OverBeta2) {
-  // RPP2018 eq. 33.15 (treats beta and q² consistenly)
+  // RPP2018 eq. 33.15 (treats beta and q² consistently)
   const auto t = std::sqrt(xOverX0 * q2OverBeta2);
   // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
   //                          = 2 * log(sqrt(x/X0) * (q/beta))

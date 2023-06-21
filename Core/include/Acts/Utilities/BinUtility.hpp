@@ -177,7 +177,7 @@ class BinUtility {
     return bEval;
   }
 
-  /// Return the oder direction for fast interlinking
+  /// Return the other direction for fast interlinking
   ///
   /// @param position is the global position for the next search
   /// @param direction is the global position for the next search
@@ -244,7 +244,7 @@ class BinUtility {
   }
 
   /// First bin maximal value
-  /// @return the dimenstion of the binning data
+  /// @return the dimension of the binning data
   size_t dimensions() const { return m_binningData.size(); }
 
   /// First bin maximal value

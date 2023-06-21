@@ -43,14 +43,14 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 /// the Acts::VolumeBounds that carry a decompose method.
 ///
 /// Boundary surfaces can be shared between AbstractVolumes to enhance automatic
-/// navigation between AbstractVolumes, therefor they are reference counted by a
-/// std::shared_ptr holder class.
+/// navigation between AbstractVolumes, therefore they are reference counted by
+/// a std::shared_ptr holder class.
 
 class AbstractVolume : public Volume {
  public:
   /// Constructor with shared Transform3*, VolumeBounds*
   ///
-  /// @param transform is the gobal 3d transformation into the volume frame
+  /// @param transform is the global 3d transformation into the volume frame
   /// @param volbounds is the boundary definition
   AbstractVolume(const Transform3& transform, VolumeBoundsPtr volbounds);
 

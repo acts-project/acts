@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(ConeLayerConstruction) {
   double alpha(M_PI / 8.0);
   const bool symmetric(false);
   auto pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
-  // for some reason, this one doesnt exist
+  // for some reason, this one doesn't exist
   // auto         pConeLayer = ConeLayer::create(pTransform, pCone);
   // BOOST_CHECK_EQUAL(pConeLayer->layerType(), LayerType::passive);
   // next level: need an array of Surfaces;

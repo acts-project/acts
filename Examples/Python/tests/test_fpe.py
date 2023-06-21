@@ -11,7 +11,7 @@ import acts.examples
 pytestmark = [
     pytest.mark.skipif(
         sys.platform != "linux",
-        reason="FPE monitoring currently only suported on Linux",
+        reason="FPE monitoring currently only supported on Linux",
     ),
     pytest.mark.skipif(
         "ACTS_SEQUENCER_DISABLE_FPEMON" in os.environ,

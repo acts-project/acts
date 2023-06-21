@@ -167,7 +167,7 @@ struct GenericDefaultExtension {
     /// in the calculation. The matrix A from eq. 17 consists out of 3
     /// different parts. The first one is given by the upper left 3x3 matrix
     /// that are calculated by the derivatives dF/dT (called dFdT) and dG/dT
-    /// (calles dGdT). The second is given by the top 3 lines of the rightmost
+    /// (calls dGdT). The second is given by the top 3 lines of the rightmost
     /// column. This is calculated by dFdL and dGdL. The remaining non-zero term
     /// is calculated directly. The naming of the variables is explained in eq.
     /// 11 and are directly related to the initial problem in eq. 7.

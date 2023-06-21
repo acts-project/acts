@@ -110,7 +110,7 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
   /// @param cCache is a cache used to extract the built detector elements
   /// @param gctx is the current geometry context at building
   /// @param kdt is the pre-filled kdt tree for the surface query
-  /// @param plVolume the proto volume representaion a layer to be translated
+  /// @param plVolume the proto volume representation a layer to be translated
   /// @param indent is a screen output indentation
   ///
   /// @return a new tracking volume

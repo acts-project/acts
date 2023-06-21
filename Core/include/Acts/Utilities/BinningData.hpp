@@ -56,8 +56,8 @@ class BinningData {
   /// Constructor for 0D binning
   ///
   /// @param bValue is the binning value: binX, binY, etc.
-  /// @param bMin is the minum value
-  /// @param bMax is the maxmimum value
+  /// @param bMin is the minimum value
+  /// @param bMax is the maximum value
   BinningData(BinningValue bValue, float bMin, float bMax)
       : type(equidistant),
         option(open),
@@ -75,13 +75,13 @@ class BinningData {
 
   /// Constructor for equidistant binning
   /// and optional sub structure can be
-  /// mulitplicative or additive
+  /// multiplicative or additive
   ///
   /// @param bOption is the binning option : open, closed
   /// @param bValue is the binning value: binX, binY, etc.
   /// @param bBins is number of equidistant bins
-  /// @param bMin is the minum value
-  /// @param bMax is the maxmimum value
+  /// @param bMin is the minimum value
+  /// @param bMax is the maximum value
   /// @param sBinData is (optional) sub structure
   /// @param sBinAdditive is the prescription for the sub structure
   BinningData(BinningOption bOption, BinningValue bValue, size_t bBins,
@@ -239,7 +239,7 @@ class BinningData {
   ///
   /// @return float value according to the binning setup
   float value(const Vector2& lposition) const {
-    // ordered after occurence
+    // ordered after occurrence
     if (binvalue == binR || binvalue == binRPhi || binvalue == binX ||
         binvalue == binH) {
       return lposition[0];
@@ -259,7 +259,7 @@ class BinningData {
     using VectorHelpers::eta;
     using VectorHelpers::perp;
     using VectorHelpers::phi;
-    // ordered after occurence
+    // ordered after occurrence
     if (binvalue == binR || binvalue == binH) {
       return (perp(position));
     }
@@ -305,7 +305,7 @@ class BinningData {
   ///
   /// @param position is the search position in global coordinated
   ///
-  /// @return boolen if this is inside() method is true
+  /// @return boolean if this is inside() method is true
   bool inside(const Vector3& position) const {
     // closed one is always inside
     if (option == closed) {
@@ -321,7 +321,7 @@ class BinningData {
   ///
   /// @param lposition is the search position in global coordinated
   ///
-  /// @return boolen if this is inside() method is true
+  /// @return boolean if this is inside() method is true
   bool inside(const Vector2& lposition) const {
     // closed one is always inside
     if (option == closed) {
@@ -465,7 +465,7 @@ class BinningData {
           }
         }
       } else {  // (B) multiplicative sub structure
-        // every bin is just repaced by the sub binning structure
+        // every bin is just replaced by the sub binning structure
         m_totalBins = m_bins * subBinningData->bins();
         m_totalBoundaries.reserve(m_totalBins + 1);
         // get the sub bin boundaries if there are any
@@ -527,7 +527,7 @@ class BinningData {
   }
 
  public:
-  /// String screen output methd
+  /// String screen output method
   /// @param indent the current indentation
   /// @return a string containing the screen information
   std::string toString(const std::string& indent) const {

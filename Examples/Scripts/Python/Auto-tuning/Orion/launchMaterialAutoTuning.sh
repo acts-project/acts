@@ -6,7 +6,7 @@
 python3 ../Examples/Scripts/Python/material_mapping_optimisation.py  --numberOfJobs 40 --topNumberOfEvents 10000 --inputPath "MaterialMappingInputDir" --outputPath "MaterialMappingOutputDir" --doPloting  2>&1 | tee log/opti_log_init.txt
 mv MaterialMappingOutputDir/optimised-material-map_tracks.root MaterialMappingInputDir/optimised-material-map_tracks.root
 
-# In case of crash the databases might get corrupted. To prevent this we create a backup every 10 itteration of the optimisation script (rougly every 3 hours)
+# In case of crash the databases might get corrupted. To prevent this we create a backup every 10 iteration of the optimisation script (roughly every 3 hours)
 # In case of crash, it is then preferable to replace Mapping/Database by the last backup.
 for j in {0..4}
 do

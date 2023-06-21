@@ -81,7 +81,7 @@ class ConcretePropagator : public PropagatorInterface {
 
  private:
   /// Templated execute test method for
-  /// charged and netural particles
+  /// charged and neutral particles
   /// @param [in] context is the contextual data of this event
   /// @param [in] startParameters the start parameters
   /// @param [in] pathLength the maximal path length to go
