@@ -56,7 +56,7 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   const auto numEdges = static_cast<std::size_t>(edgeWeightTensor.size(0));
 
   if (numEdges == 0) {
-    ACTS_DEBUG("No edges remained after edge classification");
+    ACTS_WARNING("No edges remained after edge classification");
     return {};
   }
 
