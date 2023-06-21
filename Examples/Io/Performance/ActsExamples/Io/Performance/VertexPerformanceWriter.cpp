@@ -368,7 +368,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
   // We compare the reconstructed momenta to the true momenta at the vertex. For
   // this, we propagate the reconstructed tracks to the PCA of the true vertex
-  // position -> set up propagator.
+  // position. Setting up propagator:
   Acts::EigenStepper<> stepper(m_cfg.bField);
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   auto propagator = std::make_shared<Propagator>(stepper);
@@ -531,8 +531,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
           }
 
-          // Save truth momenta and reconstructed momenta at the PCA to the true
-          // vertex Perigee at the true vertex position
+          // Saving the reconstructed/truth momenta. The reconstructed momenta
+          // are taken at the PCA to the truth vertex position -> we need to
+          // perform a propagation.
+
+          // Perigee at the true vertex position
           const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
               Acts::Surface::makeShared<Acts::PerigeeSurface>(truePos.head(3));
           // Setting the geometry/magnetic field context context for the event
@@ -552,12 +555,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             auto& paramsAtVtx = *result->endParameters;
             return paramsAtVtx;
           };
-          // Get reconstructed track parameters corresponding to the particle
+          // Get the reconstructed track parameters corresponding to the
+          // particle
           const auto& params = trackParameters[j].parameters();
+          // Check if they correspond to a track that contributed to the vertex.
+          // We save the momenta if we find a match.
           for (const auto& trk : tracksAtVtx) {
-            // Identify particle by comparing track momenta at vertex with list
-            // of all track momenta
-            // TODO: FLOAT COMPARISON -> should be changed!
             if (trk.originalParams->parameters() == params) {
               const auto& trueUnitDir = particle.unitDirection();
               Acts::ActsVector<3> trueMom;
@@ -603,6 +606,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               m_recoThetaFitted.push_back(recoMomFitted[1]);
               m_recoQOverPFitted.push_back(recoMomFitted[2]);
 
+              // TODO: subtract angles correctly
               m_resPhiFitted.push_back(recoMomFitted[0] - trueMom[0]);
               m_resThetaFitted.push_back(recoMomFitted[1] - trueMom[1]);
               m_resQOverPFitted.push_back(recoMomFitted[2] - trueMom[2]);
