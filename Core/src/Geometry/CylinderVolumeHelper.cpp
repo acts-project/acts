@@ -216,7 +216,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
   ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
-  // assing min/max
+  // assign min/max
   double min = cylinder ? rMin : zMin;
   double max = cylinder ? rMax : zMax;
 
@@ -883,7 +883,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
     // Collect the material - might be ambiguous, first one wins
     std::shared_ptr<const ISurfaceMaterial> boundaryMaterial = nullptr;
 
-    ACTS_VERBOSE("New Boundary surface setting for countainers");
+    ACTS_VERBOSE("New Boundary surface setting for containers");
     ACTS_VERBOSE(" - at first volume: " << tvolOne->volumeName());
     // Update the volume with the boundary surface accordingly
     // it's safe to access directly, they can not be nullptr

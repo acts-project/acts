@@ -71,7 +71,7 @@ void Acts::Extent::extend(const Extent& rhs,
       }
       m_constrains.set(bValue);
     } else if (rhs.envelope()[bValue] != zeroEnvelope) {
-      // Only an envelope given, but value is not contraint -> apply envelope
+      // Only an envelope given, but value is not constraint -> apply envelope
       m_range[bValue].expand(m_range[bValue].min() - rhs.envelope()[bValue][0],
                              m_range[bValue].max() + rhs.envelope()[bValue][1]);
       m_constrains.set(bValue);

@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   SurfaceStub surface3(detElement2);  // 3 differs in thickness
   SurfaceStub surface4(detElement3);  // 4 has a different transform and id
   SurfaceStub surface5(detElement1);
-  surface5.assignSurfaceMaterial(pMaterial);  // 5 has non-null surface matrial
+  surface5.assignSurfaceMaterial(pMaterial);  // 5 has non-null surface material
   //
   BOOST_CHECK(surface1 == surface2);
   //

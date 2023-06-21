@@ -137,7 +137,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
             for (auto& c : cluster.channels) {
               cell.channel0 = c.bin[0];
               cell.channel1 = c.bin[1];
-              // TODO store digitial timestamp once added to the cell definition
+              // TODO store digital timestamp once added to the cell definition
               cell.timestamp = 0;
               cell.value = c.activation;
               writerCells->append(cell);

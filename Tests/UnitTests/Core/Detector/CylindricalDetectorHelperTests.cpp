@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(ConnectInR) {
 
   // This should work for full cylinder and sector openings
   for (auto [io, opening] : Acts::enumerate(testOpenings)) {
-    ACTS_INFO("    -> test  with phi openeing: " << opening);
+    ACTS_INFO("    -> test  with phi opening: " << opening);
     std::string opStr = "opening_" + std::to_string(io);
     std::vector<std::shared_ptr<DetectorVolume>> rVolumes = {};
     // Create the voluems
@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(ConnectInZ) {
   std::vector<Acts::ActsScalar> zValues = {-100., -20, 10., 100., 200.};
 
   for (auto [it, t] : Acts::enumerate(transforms)) {
-    ACTS_INFO("    -> test series with transfrom id " << it);
+    ACTS_INFO("    -> test series with transform id " << it);
 
     std::string trfStr = "_transform_" + std::to_string(it);
     for (auto [ir, r] : Acts::enumerate(radii)) {
@@ -330,7 +330,7 @@ BOOST_AUTO_TEST_CASE(ConnectInPhi) {
   Acts::ActsScalar phiHalfSector = M_PI / phiSectors;
 
   for (auto [it, t] : Acts::enumerate(transforms)) {
-    ACTS_INFO("    -> test series with transfrom id " << it);
+    ACTS_INFO("    -> test series with transform id " << it);
 
     std::vector<std::shared_ptr<DetectorVolume>> phiVolumes = {};
     for (unsigned int i = 0; i < phiSectors; ++i) {
@@ -385,7 +385,7 @@ BOOST_AUTO_TEST_CASE(WrapVolumeinRZ) {
 
   // Set up all the different tests
   for (auto [it, tf] : Acts::enumerate(transforms)) {
-    ACTS_INFO("    Test series with transfrom id " << it);
+    ACTS_INFO("    Test series with transform id " << it);
 
     std::string trfStr = "_transform_" + std::to_string(it);
     for (auto [ir, r] : Acts::enumerate(radii)) {
@@ -527,7 +527,7 @@ BOOST_AUTO_TEST_CASE(ProtoContainerZR) {
     auto overallContainer = connectInZ(
         tContext, {necContainer, centralContainer, pecContainer}, {}, logLevel);
 
-    //  Add them togeter
+    //  Add them together
     std::vector<std::shared_ptr<DetectorVolume>> dVolumes;
     dVolumes.push_back(innerPipe);
     dVolumes.push_back(necVolume);

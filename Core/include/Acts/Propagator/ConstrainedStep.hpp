@@ -30,7 +30,7 @@ namespace Acts {
 /// order to converge on a target.
 ///
 /// Because of the points mentioned above, the update function will always
-/// prefer step sizes that point opposite the nagivation direction. A side
+/// prefer step sizes that point opposite the navigation direction. A side
 /// effect of this is that we will propagate in the opposite direction if the
 /// target is "behind us".
 ///

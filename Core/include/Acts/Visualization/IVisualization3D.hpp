@@ -67,7 +67,7 @@ class IVisualization3D {
 
   /// Write the content of the helper to an outstream.
   /// @param path is the file system path for writing the file
-  /// @note wil change to std::filesystem::path once gcc9 is standard
+  /// @note will change to std::filesystem::path once gcc9 is standard
   virtual void write(const std::string& path) const = 0;
 
   /// Remove all contents of this helper

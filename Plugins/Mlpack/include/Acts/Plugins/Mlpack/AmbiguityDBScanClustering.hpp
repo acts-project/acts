@@ -39,7 +39,7 @@ std::unordered_map<int, std::vector<int>> dbscanTrackClustering(
   // different clusters.
   std::unordered_map<int, int> hitToTrack;
 
-  // DBSCAN algoritm from MLpack used in the track clustering
+  // DBSCAN algorithm from MLpack used in the track clustering
   mlpack::DBSCAN dbscan(epsilon, minPoints);
 
   arma::mat data(2, trackMap.size());

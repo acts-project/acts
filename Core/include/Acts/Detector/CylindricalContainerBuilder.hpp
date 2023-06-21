@@ -41,8 +41,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
-    /// Auxilliary information, mainly for screen output
-    std::string auxilliary = "";
+    /// Auxiliary information, mainly for screen output
+    std::string auxiliary = "";
   };
 
   /// Constructor with configuration arguments
@@ -65,7 +65,7 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   /// configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// logging instance

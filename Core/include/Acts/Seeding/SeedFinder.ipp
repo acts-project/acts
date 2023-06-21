@@ -272,7 +272,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         }
       }
 
-      // We update the iterator in the Neighbout object
+      // We update the iterator in the Neighbour object
       // that mean that we have changed the middle space point
       // and the lower bound has moved accordingly
       if (not found) {
@@ -314,7 +314,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
           continue;
         }
 
-        // transform SP cordinates to the u-v reference frame
+        // transform SP coordinates to the u-v reference frame
         const float deltaX = otherSP->x() - xM;
         const float deltaY = otherSP->y() - yM;
 
@@ -344,7 +344,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      // transform SP cordinates to the u-v reference frame
+      // transform SP coordinates to the u-v reference frame
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
 

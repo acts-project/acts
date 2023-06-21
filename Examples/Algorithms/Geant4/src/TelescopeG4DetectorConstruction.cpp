@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -162,4 +163,14 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
   }
 
   return m_world;
+}
+
+ActsExamples::Telescope::TelescopeG4DetectorConstructionFactory::
+    TelescopeG4DetectorConstructionFactory(const TelescopeDetector::Config& cfg)
+    : m_cfg(cfg) {}
+
+std::unique_ptr<G4VUserDetectorConstruction>
+ActsExamples::Telescope::TelescopeG4DetectorConstructionFactory::factorize()
+    const {
+  return std::make_unique<TelescopeG4DetectorConstruction>(m_cfg);
 }

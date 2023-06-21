@@ -30,7 +30,7 @@ namespace Test {
 ///
 /// Instead of storing a reference to a measurement or raw data, the measurement
 /// data is stored inline directly in the source link. Only 1d or 2d
-/// measurements are supported to limit the overhead. Additionaly, a source
+/// measurements are supported to limit the overhead. Additionally, a source
 /// identifier is stored that can be used to store additional information. How
 /// this is interpreted depends on the specific tests.
 struct TestSourceLink final {

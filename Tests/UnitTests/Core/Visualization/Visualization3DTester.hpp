@@ -33,7 +33,7 @@ namespace Test {
 /// * l is checked for integer > 0 entries only
 ///
 /// @param tString is the test string
-/// @param triMesh ist he test if only triangular surfaces exist
+/// @param triMesh is the test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testObjString(const std::string& tString,
@@ -117,7 +117,7 @@ struct PlyElement {
 ///
 ///
 /// @param tString is the test string
-/// @param triMesh ist he test if only triangular surfaces exist
+/// @param triMesh is the test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testPlyString(const std::string& tString,

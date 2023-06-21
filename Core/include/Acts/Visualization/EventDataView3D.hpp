@@ -59,7 +59,7 @@ struct EventDataView3D {
     return {lambda0, lambda1, theta};
   }
 
-  /// Helper mehod to draw the ellipse points
+  /// Helper method to draw the ellipse points
   ///
   /// @param lambda0 The Eigenvalue in 0
   /// @param lambda1 The Eigenvalue in 1

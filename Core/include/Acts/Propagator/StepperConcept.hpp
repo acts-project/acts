@@ -159,7 +159,7 @@ constexpr bool MultiStepperStateConcept= require<
     template <typename S, typename state = typename S::State>
       struct SingleStepperConcept {
         constexpr static bool common_stepper_concept_fullfilled = CommonStepperConcept<S, state>::value;
-        static_assert(common_stepper_concept_fullfilled, "Stepper does not fullfill common stepper concept");
+        static_assert(common_stepper_concept_fullfilled, "Stepper does not fulfill common stepper concept");
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundVector&, const BoundSymMatrix&, const Surface&>, has_method<const S, void, update_t, state&, const Vector3&, const Vector3&, double, double>>;
         // static_assert(update_method_exists, "update method not found");
         constexpr static bool get_field_exists = has_method<const S, Result<Vector3>, get_field_t, state&, const Vector3&>;
@@ -175,14 +175,14 @@ constexpr bool MultiStepperStateConcept= require<
     template <typename S, typename state = typename S::State>
       struct MultiStepperConcept {
         constexpr static bool common_stepper_concept_fullfilled = CommonStepperConcept<S, state>::value;
-        static_assert(common_stepper_concept_fullfilled, "Common stepper concept not fullfilled");
+        static_assert(common_stepper_concept_fullfilled, "Common stepper concept not fulfilled");
 
-        // TODO for now we do not check if the ComponentProxy does fullfill a concept
+        // TODO for now we do not check if the ComponentProxy does fulfill a concept
         template <typename T> using component_proxy_t = typename T::ComponentProxy;
         constexpr static bool component_proxy_exists = exists<component_proxy_t, S>;
         // static_assert(component_proxy_exists, "!component_proxy_exists");
 
-        // TODO for now we do not check if the ConstComponentProxy does fullfill a concept
+        // TODO for now we do not check if the ConstComponentProxy does fulfill a concept
         template <typename T> using const_component_proxy_t = typename T::ConstComponentProxy;
         constexpr static bool const_component_proxy_exists = exists<const_component_proxy_t, S>;
         // static_assert(const_component_proxy_exists, "!const_component_proxy_exists");

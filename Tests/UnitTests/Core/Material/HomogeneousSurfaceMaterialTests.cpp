@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
   BOOST_CHECK_EQUAL(hsm, hsmCopyMoved);
   // Assignment constructor
   HomogeneousSurfaceMaterial hsmAssigned = hsm;
-  // Test equality of the asignment
+  // Test equality of the assignment
   BOOST_CHECK_EQUAL(hsm, hsmAssigned);
   // Assignment move constructor
   HomogeneousSurfaceMaterial hsmAssignedMoved(std::move(hsmAssigned));

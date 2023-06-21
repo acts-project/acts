@@ -93,7 +93,7 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
 
 bool Acts::CylinderBounds::inside3D(const Vector3& position,
                                     const BoundaryCheck& bcheck) const {
-  // additional tolerance from the boundary check if configred
+  // additional tolerance from the boundary check if configured
   bool checkAbsolute = bcheck.m_type == BoundaryCheck::Type::eAbsolute;
 
   // this fast check only applies to closed cylindrical bounds

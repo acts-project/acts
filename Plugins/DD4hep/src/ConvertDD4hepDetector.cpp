@@ -170,7 +170,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     ACTS_VERBOSE("Subdetector : '" << subDetector.name()
                                    << "' has type compound ");
     ACTS_VERBOSE(
-        "handling as a compound volume (a hierachy of a "
+        "handling as a compound volume (a hierarchy of a "
         "barrel-endcap structure) and resolving the "
         "subvolumes...");
     // Now create the Layerbuilders and Volumebuilder
@@ -225,7 +225,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           if (nEndCap) {
             throw std::logic_error(
                 "Negative Endcap was already given for this "
-                "hierachy! Please create a new "
+                "hierarchy! Please create a new "
                 "DD4hep_SubDetectorAssembly for the next "
                 "hierarchy.");
           }
@@ -256,7 +256,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           if (pEndCap) {
             throw std::logic_error(
                 "Positive Endcap was already given for this "
-                "hierachy! Please create a new "
+                "hierarchy! Please create a new "
                 "DD4hep_SubDetectorAssembly for the next "
                 "hierarchy.");
           }
@@ -288,7 +288,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         if (barrel) {
           throw std::logic_error(
               "Barrel was already given for this "
-              "hierachy! Please create a new "
+              "hierarchy! Please create a new "
               "DD4hep_SubDetectorAssembly for the next "
               "hierarchy.");
         }
@@ -418,7 +418,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
 
     std::shared_ptr<Acts::ISurfaceMaterial> plMaterial = nullptr;
     if (getParamOr<bool>("layer_material", subDetector, false)) {
-      // get the possible material of the surounding volume
+      // get the possible material of the surrounding volume
       ACTS_VERBOSE("--> adding layer material at 'representing'");
       plMaterial = Acts::createProtoMaterial(
           getParams(subDetector), "layer_material_representing",

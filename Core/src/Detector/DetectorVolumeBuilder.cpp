@@ -37,9 +37,9 @@ Acts::Experimental::DetectorVolumeBuilder::construct(
     const GeometryContext& gctx) const {
   // The outgoing root volumes
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
-  // Screen printout of the auxilliary information
-  if (not m_cfg.auxilliary.empty()) {
-    ACTS_DEBUG(m_cfg.auxilliary);
+  // Screen printout of the auxiliary information
+  if (not m_cfg.auxiliary.empty()) {
+    ACTS_DEBUG(m_cfg.auxiliary);
   }
   ACTS_DEBUG("Building a volume with name " << m_cfg.name);
 

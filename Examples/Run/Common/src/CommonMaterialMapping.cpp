@@ -156,7 +156,7 @@ int runMaterialMapping(int argc, char* argv[],
     // The writer of the indexed material
     ActsExamples::RootMaterialWriter::Config rmwConfig;
     rmwConfig.filePath = materialFileName + ".root";
-    // Fullfill the IMaterialWriter interface
+    // Fulfill the IMaterialWriter interface
 
     auto rmw =
         std::make_shared<ActsExamples::RootMaterialWriter>(rmwConfig, logLevel);

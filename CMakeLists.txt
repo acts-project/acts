@@ -35,6 +35,7 @@ option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_FPEMON "Build FPE monitoring plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
@@ -144,6 +145,8 @@ set_option_if(
 set_option_if(ACTS_BUILD_PLUGIN_LEGACY ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_AUTODIFF ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
+set_option_if(ACTS_BUILD_PLUGIN_FPEMON 
+  ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
 
 # feature tests
 include(CheckCXXSourceCompiles)
