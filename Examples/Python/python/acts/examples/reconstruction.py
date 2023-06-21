@@ -1222,6 +1222,7 @@ def addExaTrkX(
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["nChunks"] = 10
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
+        gnnConfig["undirected"] = True
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
