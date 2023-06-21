@@ -14,6 +14,7 @@
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <utility>
 #include <vector>

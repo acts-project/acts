@@ -12,11 +12,17 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <string>
 
 namespace Acts {
 
 class DetectorElementBase;
 struct Polyhedron;
+class LineBounds;
 
 ///  @class StrawSurface
 ///
@@ -65,7 +71,7 @@ class StrawSurface : public LineSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   StrawSurface(const GeometryContext& gctx, const StrawSurface& other,
                const Transform3& shift);
 

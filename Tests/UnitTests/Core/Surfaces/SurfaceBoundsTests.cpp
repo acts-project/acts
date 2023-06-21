@@ -11,9 +11,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
+#include <cstddef>
 #include <numeric>
+#include <ostream>
+#include <vector>
 
 namespace Acts {
 

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -15,13 +16,20 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
+
+#include <memory>
+#include <string>
 
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
+class MeasurementCalibrator;
+class TrackFitterFunction;
+struct AlgorithmContext;
 
 class TrackFittingAlgorithm final : public IAlgorithm {
  public:
@@ -48,7 +56,7 @@ class TrackFittingAlgorithm final : public IAlgorithm {
 
   /// Constructor of the fitting algorithm
   ///
-  /// @param config is the config struct to configure the algorihtm
+  /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
   TrackFittingAlgorithm(Config config, Acts::Logging::Level level);
 

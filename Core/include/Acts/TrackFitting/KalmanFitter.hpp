@@ -48,15 +48,14 @@ namespace Acts {
 /// Extension struct which holeds delegates to customize the KF behavior
 template <typename traj_t>
 struct KalmanFitterExtensions {
-  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
-  using ConstTrackStateProxy =
-      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  using TrackStateProxy = typename traj_t::TrackStateProxy;
+  using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
-  using Smoother = Delegate<Result<void>(
-      const GeometryContext&, MultiTrajectory<traj_t>&, size_t, const Logger&)>;
+  using Smoother = Delegate<Result<void>(const GeometryContext&, traj_t&,
+                                         size_t, const Logger&)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         Direction, const Logger&)>;
@@ -179,7 +178,7 @@ struct KalmanFitterResult {
   traj_t* fittedStates{nullptr};
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
-  // This correspond to the last measurment state in the multitrajectory.
+  // This correspond to the last measurement state in the multitrajectory.
   // Since this KF only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
   size_t lastMeasurementIndex = SIZE_MAX;
@@ -198,7 +197,7 @@ struct KalmanFitterResult {
 
   // Counter for measurements holes
   // A hole correspond to a surface with an associated detector element with no
-  // associated measurment. Holes are only taken into account if they are
+  // associated measurement. Holes are only taken into account if they are
   // between the first and last measurements.
   size_t measurementHoles = 0;
 
@@ -308,7 +307,7 @@ class KalmanFitter {
     FreeToBoundCorrection freeToBoundCorrection;
 
     /// Input MultiTrajectory
-    std::shared_ptr<MultiTrajectory<traj_t>> outputStates;
+    std::shared_ptr<traj_t> outputStates;
 
     /// The logger instance
     const Logger* actorLogger{nullptr};
@@ -318,7 +317,7 @@ class KalmanFitter {
 
     KalmanFitterExtensions<traj_t> extensions;
 
-    /// The Surface beeing
+    /// The Surface being
     SurfaceReached targetReached;
 
     /// @brief Kalman actor operation
@@ -369,7 +368,7 @@ class KalmanFitter {
         // -> Create the predicted state
         // -> Check outlier behavior, if non-outlier:
         // -> Perform the kalman update
-        // -> Fill strack state information & update stepper information
+        // -> Fill track state information & update stepper information
 
         if (not result.smoothed and not result.reversed) {
           ACTS_VERBOSE("Perform " << direction << " filter step");
@@ -615,10 +614,10 @@ class KalmanFitter {
                            MaterialUpdateStage::PostUpdate);
         // We count the processed state
         ++result.processedStates;
-        // Update the number of holes count only when encoutering a
+        // Update the number of holes count only when encountering a
         // measurement
         result.measurementHoles = result.missedActiveSurfaces.size();
-        // Since we encountered a measurment update the lastMeasurementIndex to
+        // Since we encountered a measurement update the lastMeasurementIndex to
         // the lastTrackIndex.
         result.lastMeasurementIndex = result.lastTrackIndex;
 
@@ -1005,7 +1004,7 @@ class KalmanFitter {
   };
 
  public:
-  /// Fit implementation of the foward filter, calls the
+  /// Fit implementation of the forward filter, calls the
   /// the filter and smoother/reversed filter
   ///
   /// @tparam source_link_iterator_t Iterator type used to pass source links
@@ -1136,7 +1135,7 @@ class KalmanFitter {
     return track;
   }
 
-  /// Fit implementation of the foward filter, calls the
+  /// Fit implementation of the forward filter, calls the
   /// the filter and smoother/reversed filter
   ///
   /// @tparam source_link_iterator_t Iterator type used to pass source links

@@ -19,9 +19,12 @@
 #include <vector>
 
 namespace Acts {
+class Direction;
+
 namespace Experimental {
 
 class DetectorVolume;
+class Portal;
 
 /// @brief Definition of a portal replacement when building proto containers
 ///

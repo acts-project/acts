@@ -14,6 +14,8 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <array>
+
 #include "Eigen/Dense"
 
 namespace Acts {
@@ -49,7 +51,7 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
 }
 
 /// Calculate phi (transverse plane angle) from anything implementing a method
-/// like `phi()` returing anything convertible to `double`.
+/// like `phi()` returning anything convertible to `double`.
 /// @tparam T anything that has a phi method
 /// @param v Any type that implements a phi method
 /// @return The phi value

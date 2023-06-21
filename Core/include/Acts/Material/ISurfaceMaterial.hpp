@@ -27,7 +27,7 @@ enum MappingType { PreMapping = -1, Default = 0, PostMapping = 1, Sensor = 2 };
 /// Virtual base class of surface based material description
 ///
 /// MaterialSlab that are associated to a surface,
-/// extended by certain special representations (binned, homogenous)
+/// extended by certain special representations (binned, homogeneous)
 ///
 class ISurfaceMaterial {
  public:

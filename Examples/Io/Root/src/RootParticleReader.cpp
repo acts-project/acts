@@ -8,19 +8,19 @@
 
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
+#include <algorithm>
+#include <cstdint>
 #include <iostream>
+#include <stdexcept>
 
 #include <TChain.h>
-#include <TFile.h>
-#include <TMath.h>
+#include <TMathBase.h>
 
 ActsExamples::RootParticleReader::RootParticleReader(
     const ActsExamples::RootParticleReader::Config& config,

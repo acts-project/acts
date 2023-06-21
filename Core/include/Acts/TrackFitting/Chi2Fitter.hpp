@@ -51,9 +51,8 @@ namespace Experimental {
 /// Extension struct which holds delegates to customize the GX2F behavior
 template <typename traj_t>
 struct Chi2FitterExtensions {
-  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
-  using ConstTrackStateProxy =
-      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  using TrackStateProxy = typename traj_t::TrackStateProxy;
+  using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
@@ -470,7 +469,7 @@ class Chi2Fitter {
 
         // We count the processed states
         ++result.processedStates;
-        // Update the number of holes only when encoutering a measurement
+        // Update the number of holes only when encountering a measurement
         result.measurementHoles = result.missedActiveSurfaces.size();
         // Since we encountered a measurement update the lastMeasurementIndex to
         // the lastTrackIndex.

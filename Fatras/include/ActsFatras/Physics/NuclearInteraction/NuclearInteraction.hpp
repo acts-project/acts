@@ -8,10 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteractionParameters.hpp"
@@ -22,6 +25,7 @@
 #include <limits>
 #include <optional>
 #include <random>
+#include <utility>
 #include <vector>
 
 namespace ActsFatras {

@@ -16,6 +16,7 @@
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
+#include <tuple>
 #include <type_traits>
 
 #include <boost/hana.hpp>
@@ -31,6 +32,14 @@
 
 namespace hana = boost::hana;
 namespace Acts {
+namespace detail {
+template <bool ascending, bool strict, typename T, T... values>
+struct are_sorted;
+template <typename T, T MIN, T MAX, T... values>
+struct are_within;
+template <typename T, size_t index, T... values>
+struct at_index;
+}  // namespace detail
 
 namespace Test {
 

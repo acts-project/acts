@@ -8,16 +8,23 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
 #include <array>
+#include <cstddef>
+#include <memory>
+#include <string>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {
+class VolumeBounds;
 
 const static std::vector<std::string> volumeBoundTypes = {
     "Cone",     "Cuboid",        "CutoutCylinder",

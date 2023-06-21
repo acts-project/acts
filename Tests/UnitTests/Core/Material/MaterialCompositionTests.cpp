@@ -11,6 +11,8 @@
 #include "Acts/Material/MaterialComposition.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include <vector>
+
 namespace Acts {
 namespace Test {
 
