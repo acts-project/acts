@@ -378,22 +378,24 @@ def addSeedingTruthSelection(
     s.addAlgorithm(selAlg)
 
 
-def addParticleSmearing(
+def addTruthSmearedSeeding(
     sequence: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
-    inputParticles: str,
-    outputTrackParameters: str,
-    particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
-    initialVarInflation: List[float] = None,
-    logLevel: Optional[acts.logging.Level] = None,
+    selectedParticles: str,
+    particleSmearingSigmas: ParticleSmearingSigmas,
+    initialVarInflation: List[float],
+    logLevel: acts.logging.Level = None,
 ):
-    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    """adds algorithm that would mimic detector response uncertainties for truth seeding
+    For parameters description see addSeeding
+    """
+
     rnd = rnd or acts.examples.RandomNumbers(seed=42)
     # Run particle smearing
     ptclSmear = acts.examples.ParticleSmearing(
         level=logLevel,
-        inputParticles=inputParticles,
-        outputTrackParameters=outputTrackParameters,
+        inputParticles=selectedParticles,
+        outputTrackParameters="estimatedparameters",
         randomNumbers=rnd,
         # gaussian sigmas to smear particle parameters
         **acts.examples.defaultKWArgs(
@@ -411,28 +413,6 @@ def addParticleSmearing(
         ),
     )
     sequence.addAlgorithm(ptclSmear)
-
-
-def addTruthSmearedSeeding(
-    sequence: acts.examples.Sequencer,
-    rnd: Optional[acts.examples.RandomNumbers],
-    selectedParticles: str,
-    particleSmearingSigmas: ParticleSmearingSigmas,
-    initialVarInflation: List[float],
-    logLevel: acts.logging.Level = None,
-):
-    """adds algorithm that would mimic detector response uncertainties for truth seeding
-    For parameters description see addSeeding
-    """
-    addParticleSmearing(
-        sequence=sequence,
-        rnd=rnd,
-        inputParticles=selectedParticles,
-        outputTrackParameters="estimatedparameters",
-        particleSmearingSigmas=particleSmearingSigmas,
-        initialVarInflation=initialVarInflation,
-        logLevel=logLevel,
-    )
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=logLevel,
@@ -1483,6 +1463,7 @@ def addVertexFitting(
     trajectories = trajectories if trajectories is not None else ""
     trackParameters = trackParameters if trackParameters is not None else ""
     associatedParticles = associatedParticles if associatedParticles is not None else ""
+
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if trackSelectorConfig is not None:
@@ -1563,7 +1544,6 @@ def addVertexFitting(
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
-                bField=field,
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),

@@ -329,9 +329,9 @@ def addPythia8(
 
 def addParticleSelection(
     s: acts.examples.Sequencer,
-    config: ParticleSelectorConfig = ParticleSelectorConfig(),
-    inputParticles: str = "input_particles",
-    outputParticles: str = "particles_selected",
+    config: ParticleSelectorConfig,
+    inputParticles: str,
+    outputParticles: str,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
