@@ -262,7 +262,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   m_clusterWriteHandle(ctx, std::move(clusters));
   m_measurementParticlesMapWriteHandle(ctx, std::move(measurementParticlesMap));
   m_measurementSimHitsMapWriteHandle(ctx, std::move(measurementSimHitsMap));
-
   return ProcessCode::SUCCESS;
 }
 
