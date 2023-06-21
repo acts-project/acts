@@ -112,7 +112,7 @@ struct EventDataView3D {
   /// @param position Where the cone originates from
   /// @param direction The direction parameters
   /// @param covariance The 2x2 covariance matrix for phi/theta
-  /// @param directionScale The direction arror length
+  /// @param directionScale The direction arrow length
   /// @param angularErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
   static void drawCovarianceAngular(
