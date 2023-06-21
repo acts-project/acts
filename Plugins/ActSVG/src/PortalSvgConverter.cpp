@@ -34,7 +34,7 @@ Acts::Svg::ProtoLink makeProtoLink(
     pLink._link_index = linkIndexCandidate->second;
   }
   return pLink;
-};
+}
 
 /// Helper method to convert a multi link
 ///
@@ -105,7 +105,6 @@ Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
   Vector3 rDir(0., 0., 1);
   const auto& surface = portal.surface();
   const auto surfaceTransform = portal.surface().transform(gctx);
-  const auto surfaceRotation = surfaceTransform.rotation().eval();
   const auto surfaceTranslation = surfaceTransform.translation().eval();
   const auto surfaceType = surface.bounds().type();
   const auto& boundValues = surface.bounds().values();
