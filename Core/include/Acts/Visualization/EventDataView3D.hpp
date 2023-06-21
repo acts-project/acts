@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,7 +39,7 @@ static ViewConfig s_viewFiltered = ViewConfig({255, 255, 0});
 static ViewConfig s_viewSmoothed = ViewConfig({0, 102, 255});
 
 struct EventDataView3D {
-  /// Helper to find the egen values and corr angle
+  /// Helper to find the eigen values and corr angle
   ///
   /// @param covariance The covariance matrix
   static inline std::array<double, 3> decomposeCovariance(
@@ -178,6 +178,25 @@ struct EventDataView3D {
     }
   }
 
+  /// Helper method to draw a single measurement
+  ///
+  /// @param helper [in, out] The visualization helper
+  /// @param lposition calibrated measurement
+  /// @param covariance calibrated covariance
+  /// @param transform reference surface transformed with the geometry context
+  /// @param locErrorScale  The scale of the local error
+  /// @param measurementConfig The visualization options for the measurement
+  ///
+  /// TODO: Expand to 1D measurements
+  static void drawMeasurement(
+      IVisualization3D& helper, const Vector2& lposition,
+      const SymMatrix2& covariance, const Transform3& transform,
+      const double locErrorScale = 1., const ViewConfig& viewConfig = s_viewMeasurement) {
+
+    drawCovarianceCartesian(helper, lposition, covariance,
+                            transform, locErrorScale, viewConfig);
+  }
+
   /// Helper method to draw one trajectory stored in a MultiTrajectory object
   ///
   /// @param helper [in, out] The visualization helper
@@ -186,7 +205,7 @@ struct EventDataView3D {
   /// @param gctx The geometry context for which it is drawn
   /// @param momentumScale The scale of the momentum
   /// @param locErrorScale  The scale of the local error
-  /// @param angularErrorScale The sclae of the angular error
+  /// @param angularErrorScale The scale of the angular error
   /// @param surfaceConfig The visualization options for the surface
   /// @param measurementConfig The visualization options for the measurement
   /// @param predictedConfig The visualization options for the predicted
@@ -235,9 +254,9 @@ struct EventDataView3D {
           state.calibratedSize() == 2) {
         const Vector2& lposition = state.template calibrated<2>();
         const SymMatrix2 covariance = state.template calibratedCovariance<2>();
-        drawCovarianceCartesian(helper, lposition, covariance,
-                                state.referenceSurface().transform(gctx),
-                                locErrorScale, measurementConfig);
+        drawMeasurement(helper, lposition,
+                        covariance, state.referenceSurface().transform(gctx),
+                        locErrorScale, measurementConfig);
       }
 
       // Last, if necessary and present, draw the track parameters
