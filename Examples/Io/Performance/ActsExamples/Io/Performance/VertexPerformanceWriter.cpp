@@ -305,6 +305,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   // we check how many hits particles and tracks share. We match the particle
   // to the track if a fraction of more than truthMatchProbMin of hits that
   // contribute to the track come from the particle.
+  // Note that not all tracksatVertex have matching parameters in
+  // trackParameters in this case. Equivalently, one could say that not all
+  // tracksAtVertex will be assigned to a truth particle.
   else {
     // get active tips
     const auto& inputTrajectories = m_inputTrajectories(ctx);
@@ -392,21 +395,19 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
       for (std::size_t i = 0; i < trackParameters.size(); ++i) {
         const auto& params = trackParameters[i].parameters();
 
-        // FLOAT COMPARISON -> better solution should be implemented
         if (origTrack.parameters() == params) {
-          // We expect the i-th associated truth particle corresponds to the
-          // i-th track parameters
+          // We expect that the i-th associated truth particle corresponds to
+          // the i-th track parameters
           const auto& particle = associatedTruthParticles[i];
           particleAtVtx.insert(particle);
           int priVtxId = particle.particleId().vertexPrimary();
           contributingTruthVertices.push_back(priVtxId);
-
           foundMatchingParams = true;
           break;
         }
       }
       if (!foundMatchingParams) {
-        ACTS_WARNING("Float comparison of track parameters failed!");
+        ACTS_VERBOSE("Track has no matching truth particle.");
       }
     }  // end loop tracksAtVtx
 
