@@ -53,14 +53,16 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
 
   std::vector<at::Tensor> results;
   results.reserve(m_cfg.nChunks);
+  
+  auto edgeListTmp = m_cfg.undirected ? torch::cat({edgeList, edgeList.flip(0)}, 1) : edgeList;
 
   std::vector<torch::jit::IValue> inputTensors(2);
   inputTensors[0] = nodes;
 
-  const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.nChunks);
+  const auto chunks = at::chunk(at::arange(edgeListTmp.size(1)), m_cfg.nChunks);
   for (const auto& chunk : chunks) {
     ACTS_VERBOSE("Process chunk");
-    inputTensors[1] = edgeList.index({Slice(), chunk});
+    inputTensors[1] = edgeListTmp.index({Slice(), chunk});
 
     results.push_back(m_model->forward(inputTensors).toTensor());
     results.back().squeeze_();
@@ -68,6 +70,11 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   }
 
   auto output = torch::cat(results);
+  
+  if( m_cfg.undirected ) {
+    output = output.index({Slice(None, output.size(0) / 2)});
+  }
+  
   results.clear();
 
   ACTS_VERBOSE("Size after filtering network: " << output.size(0));
