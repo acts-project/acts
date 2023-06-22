@@ -15,27 +15,34 @@ namespace detail {
 template <typename Array>
 size_t fillChargeMatrix(Array& arr, const ActsExamples::Cluster& cluster,
                         size_t size0 = 7u, size_t size1 = 7u) {
-  // Compute the centroid index
+  // First, rescale the activations to sum to unity. This promotes
+  // numerical stability in the index computation
+  double totalAct = 0;
+  for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
+    totalAct += cell.activation;
+  }
+  std::vector<double> weights;
+  for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
+    weights.push_back(cell.activation / totalAct);
+  }
+
   double acc0 = 0;
   double acc1 = 0;
-  double norm = 0;
-  for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
-    acc0 += cell.bin[0] * cell.activation;
-    acc1 += cell.bin[1] * cell.activation;
-    norm += cell.activation;
+  for (size_t i = 0; i < cluster.channels.size(); i++) {
+    acc0 += cluster.channels.at(i).bin[0] * weights.at(i);
+    acc1 += cluster.channels.at(i).bin[1] * weights.at(i);
   }
-  int iCenter0 = (int)(acc0 / norm);
-  int iCenter1 = (int)(acc1 / norm);
 
-  // By convention, put centroid in center of matrix
-  // e.g. 3,3 for default matrix size of 7x7
-  int offset0 = iCenter0 - size0 / 2;
-  int offset1 = iCenter1 - size1 / 2;
+  // By convention, put the center pixel in the middle cell.
+  // Achieved by translating the cluster --> compute the offsets
+  int offset0 = static_cast<int>(acc0) - size0 / 2;
+  int offset1 = static_cast<int>(acc1) - size1 / 2;
 
   // Zero the charge matrix first, to guard against leftovers
   arr = Eigen::ArrayXXf::Zero(1, size0 * size1);
   // Fill the matrix
   for (const ActsExamples::Cluster::Cell& cell : cluster.channels) {
+    // Translate each pixel
     int iMat = cell.bin[0] - offset0;
     int jMat = cell.bin[1] - offset1;
     if (iMat >= 0 && iMat < (int)size0 && jMat >= 0 && jMat < (int)size1) {
