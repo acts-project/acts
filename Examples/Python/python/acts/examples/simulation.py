@@ -412,6 +412,7 @@ def addSimulation(
             **kwargs,
         )
     elif algorithm == SimulationAlgorithm.Geant4:
+        print("addG")
         addGeant4(
             s,
             detector,
