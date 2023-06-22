@@ -16,7 +16,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <memory>
 #include <vector>
 
 Acts::TrackingGeometry::TrackingGeometry(

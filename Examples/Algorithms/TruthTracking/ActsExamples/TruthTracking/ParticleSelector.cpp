@@ -65,9 +65,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     // define charge selection
     const bool validNeutral = not m_cfg.removeNeutral or (p.charge() != 0);
     const bool validCharged = not m_cfg.removeCharged or (p.charge() == 0);
-    const bool validCharge = validNeutral or validCharged;
     const bool validSecondary = not m_cfg.removeSecondaries or !p.isSecondary();
-    return validCharge and validSecondary and
+    return validNeutral and validCharged and validSecondary and
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
