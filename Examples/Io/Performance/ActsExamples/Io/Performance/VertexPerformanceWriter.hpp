@@ -141,7 +141,7 @@ class VertexPerformanceWriter final
   std::vector<float> m_momOverlap;
   std::vector<float> m_momOverlapFitted;
 
-  // pull(X) = (X_reco - X_true)/Var(X_reco)
+  // pull(X) = (X_reco - X_true)/Var(X_reco)^(1/2)
   std::vector<float> m_pullX;
   std::vector<float> m_pullY;
   std::vector<float> m_pullZ;

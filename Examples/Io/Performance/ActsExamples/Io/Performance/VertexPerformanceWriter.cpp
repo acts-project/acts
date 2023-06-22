@@ -452,23 +452,29 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         }
         if (priVtxId == maxOccurrenceId) {
           // Vertex found, fill variables
-          const auto& truePos = particle.fourPosition();
 
-          auto pull = [&](int i, const auto& covariance, const auto& recoVec,
-                          const auto& trueVec) {
-            double var = covariance(i, i);
-            if (var < 0) {
-              ACTS_WARNING("var(" << i << ") = " << var << " < 0");
+          // Helper function for computing the pull
+          auto pull = [&](const Acts::ActsScalar& diff,
+                          const Acts::ActsScalar& variance,
+                          const std::string& variableStr,
+                          const bool& afterFit = true) {
+            if (variance <= 0) {
+              std::string tempStr;
+              if (afterFit) {
+                tempStr = "after";
+              } else {
+                tempStr = "before";
+              }
+              ACTS_WARNING("Nonpositive variance "
+                           << tempStr << " vertex fit: Var(" << variableStr
+                           << ") = " << variance << " <= 0.");
               return std::numeric_limits<double>::quiet_NaN();
             }
-            double std = std::sqrt(var);
-            if (std == 0) {
-              ACTS_WARNING("std(" << i << ") = 0");
-              return std::numeric_limits<double>::quiet_NaN();
-            }
-            return (recoVec[i] - trueVec[i]) / std;
+            double std = std::sqrt(variance);
+            return diff / std;
           };
 
+          const Acts::ActsVector<4>& truePos = particle.fourPosition();
           // Save reconstructed/true vertex position only in the first iteration
           // to avoid duplicates
           if (count == 0) {
@@ -482,36 +488,33 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             m_recoZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2]);
             m_recoT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime]);
 
-            m_resX.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos0] -
-                             truePos[Acts::FreeIndices::eFreePos0]);
-            m_resY.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos1] -
-                             truePos[Acts::FreeIndices::eFreePos1]);
-            m_resZ.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreePos2] -
-                             truePos[Acts::FreeIndices::eFreePos2]);
-            m_resT.push_back(vtx.fullPosition()[Acts::FreeIndices::eFreeTime] -
-                             truePos[Acts::FreeIndices::eFreeTime]);
+            const Acts::ActsVector<4> diffPos = vtx.fullPosition() - truePos;
+            m_resX.push_back(diffPos[Acts::FreeIndices::eFreePos0]);
+            m_resY.push_back(diffPos[Acts::FreeIndices::eFreePos1]);
+            m_resZ.push_back(diffPos[Acts::FreeIndices::eFreePos2]);
+            m_resT.push_back(diffPos[Acts::FreeIndices::eFreeTime]);
 
-            m_pullX.push_back(pull(Acts::FreeIndices::eFreePos0,
-                                   vtx.fullCovariance(), vtx.fullPosition(),
-                                   truePos));
-            m_pullY.push_back(pull(Acts::FreeIndices::eFreePos1,
-                                   vtx.fullCovariance(), vtx.fullPosition(),
-                                   truePos));
-            m_pullZ.push_back(pull(Acts::FreeIndices::eFreePos2,
-                                   vtx.fullCovariance(), vtx.fullPosition(),
-                                   truePos));
-            m_pullT.push_back(pull(Acts::FreeIndices::eFreeTime,
-                                   vtx.fullCovariance(), vtx.fullPosition(),
-                                   truePos));
+            Acts::ActsScalar varX = vtx.fullCovariance()(
+                Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos0);
+            Acts::ActsScalar varY = vtx.fullCovariance()(
+                Acts::FreeIndices::eFreePos1, Acts::FreeIndices::eFreePos1);
+            Acts::ActsScalar varZ = vtx.fullCovariance()(
+                Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreePos2);
+            Acts::ActsScalar varT = vtx.fullCovariance()(
+                Acts::FreeIndices::eFreeTime, Acts::FreeIndices::eFreeTime);
+            m_pullX.push_back(
+                pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
+            m_pullY.push_back(
+                pull(diffPos[Acts::FreeIndices::eFreePos1], varY, "Y"));
+            m_pullZ.push_back(
+                pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
+            m_pullT.push_back(
+                pull(diffPos[Acts::FreeIndices::eFreeTime], varT, "T"));
 
-            m_covXX.push_back(vtx.fullCovariance()(
-                Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos0));
-            m_covYY.push_back(vtx.fullCovariance()(
-                Acts::FreeIndices::eFreePos1, Acts::FreeIndices::eFreePos1));
-            m_covZZ.push_back(vtx.fullCovariance()(
-                Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreePos2));
-            m_covTT.push_back(vtx.fullCovariance()(
-                Acts::FreeIndices::eFreeTime, Acts::FreeIndices::eFreeTime));
+            m_covXX.push_back(varX);
+            m_covYY.push_back(varY);
+            m_covZZ.push_back(varZ);
+            m_covTT.push_back(varT);
             m_covXY.push_back(vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos1));
             m_covXZ.push_back(vtx.fullCovariance()(
@@ -582,14 +585,20 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               m_recoTheta.push_back(recoMom[1]);
               m_recoQOverP.push_back(recoMom[2]);
 
-              // TODO: subtract angles correctly
-              m_resPhi.push_back(recoMom[0] - trueMom[0]);
-              m_resTheta.push_back(recoMom[1] - trueMom[1]);
-              m_resQOverP.push_back(recoMom[2] - trueMom[2]);
+              Acts::ActsVector<3> diffMom = recoMom - trueMom;
+              // Accounting for the periodicity of phi. We overwrite the
+              // previously computed value for better readability.
+              diffMom[0] = Acts::detail::difference_periodic(
+                  recoMom(0), trueMom(0), 2 * M_PI);
+              m_resPhi.push_back(diffMom[0]);
+              m_resTheta.push_back(diffMom[1]);
+              m_resQOverP.push_back(diffMom[2]);
 
-              m_pullPhi.push_back(pull(0, momCov, recoMom, trueMom));
-              m_pullTheta.push_back(pull(1, momCov, recoMom, trueMom));
-              m_pullQOverP.push_back(pull(2, momCov, recoMom, trueMom));
+              m_pullPhi.push_back(pull(diffMom[0], momCov(0, 0), "phi", false));
+              m_pullTheta.push_back(
+                  pull(diffMom[1], momCov(1, 1), "theta", false));
+              m_pullQOverP.push_back(
+                  pull(diffMom[2], momCov(2, 2), "q/p", false));
 
               const auto& recoUnitDir = paramsAtVtx.unitDirection();
               double overlap = trueUnitDir.dot(recoUnitDir);
@@ -606,17 +615,21 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               m_recoThetaFitted.push_back(recoMomFitted[1]);
               m_recoQOverPFitted.push_back(recoMomFitted[2]);
 
-              // TODO: subtract angles correctly
-              m_resPhiFitted.push_back(recoMomFitted[0] - trueMom[0]);
-              m_resThetaFitted.push_back(recoMomFitted[1] - trueMom[1]);
-              m_resQOverPFitted.push_back(recoMomFitted[2] - trueMom[2]);
+              Acts::ActsVector<3> diffMomFitted = recoMomFitted - trueMom;
+              // Accounting for the periodicity of phi. We overwrite the
+              // previously computed value for better readability.
+              diffMomFitted[0] = Acts::detail::difference_periodic(
+                  recoMomFitted(0), trueMom(0), 2 * M_PI);
+              m_resPhi.push_back(diffMomFitted[0]);
+              m_resTheta.push_back(diffMomFitted[1]);
+              m_resQOverP.push_back(diffMomFitted[2]);
 
-              m_pullPhiFitted.push_back(
-                  pull(0, momCovFitted, recoMomFitted, trueMom));
-              m_pullThetaFitted.push_back(
-                  pull(1, momCovFitted, recoMomFitted, trueMom));
-              m_pullQOverPFitted.push_back(
-                  pull(2, momCovFitted, recoMomFitted, trueMom));
+              m_pullPhi.push_back(
+                  pull(diffMomFitted[0], momCovFitted(0, 0), "phi"));
+              m_pullTheta.push_back(
+                  pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
+              m_pullQOverP.push_back(
+                  pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
               const auto& recoUnitDirFitted = paramsAtVtxFitted.unitDirection();
               double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
