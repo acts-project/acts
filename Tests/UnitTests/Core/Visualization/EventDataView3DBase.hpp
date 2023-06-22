@@ -157,7 +157,7 @@ void createDetector(GeometryContext& tgContext,
     }
   });
   std::cout << "There are " << surfaces.size() << " surfaces" << std::endl;
-};
+}
 
 /// Helper method to visualize all types of surfaces
 ///
