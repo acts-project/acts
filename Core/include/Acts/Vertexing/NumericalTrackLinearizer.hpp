@@ -128,9 +128,7 @@ class NumericalTrackLinearizer {
                                          const Vector4& linPoint,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::MagneticFieldContext& mctx,
-                                         State& state) const {
-    // Using "state" to suppress unused-parameter warning
-    (void)state;
+                                         State& /*state*/) const {
     // Call the function without state argument
     return linearizeTrack(params, linPoint, gctx, mctx);
   };
