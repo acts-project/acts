@@ -192,7 +192,6 @@ template <typename grid_type>
 using IndexedSurfacesImpl =
     IndexedUpdatorImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
 
-
 /// @brief An indexed surface implementaion with portal access
 ///
 ///@tparam inexed_updator is the updator for the indexed surfaces
