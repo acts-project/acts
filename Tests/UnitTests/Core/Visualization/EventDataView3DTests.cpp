@@ -12,6 +12,7 @@
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 #include "EventDataView3DBase.hpp"
@@ -30,7 +31,7 @@ BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationObj) {
   for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(objTest.length(), 28630);
+  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 1458);
 }
 
 BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationPly) {
@@ -41,7 +42,7 @@ BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationPly) {
   for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(plyTest.length(), 37136);
+  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 973);
 }
 
 BOOST_AUTO_TEST_CASE(MeasurementVisualizationObj) {
@@ -52,7 +53,7 @@ BOOST_AUTO_TEST_CASE(MeasurementVisualizationObj) {
   for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(objTest.length(), 11533);
+  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 520);
 }
 
 BOOST_AUTO_TEST_CASE(MeasurementVisualizationPly) {
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(MeasurementVisualizationPly) {
   for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(plyTest.length(), 19657);
+  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 536);
 }
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
@@ -74,7 +75,7 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
   for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(objTest.length(), 648023);
+  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 31010);
 }
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
@@ -85,7 +86,7 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
   for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
-  BOOST_CHECK_EQUAL(plyTest.length(), 803016);
+  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 20521);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
