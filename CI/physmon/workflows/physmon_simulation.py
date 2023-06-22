@@ -23,8 +23,8 @@ with tempfile.TemporaryDirectory() as temp:
     rnd = acts.examples.RandomNumbers(seed=42)
 
     s = acts.examples.Sequencer(
-        events=10000,
-        numThreads=-1,
+        events=1000,
+        numThreads=1,
         logLevel=acts.logging.INFO,
         fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
             Path(__file__).parent.parent / "fpe_masks.yml"
@@ -35,11 +35,11 @@ with tempfile.TemporaryDirectory() as temp:
         s.addContextDecorator(d)
 
     s.addReader(
-        acts.exampels.EventGenerator(
+        acts.examples.EventGenerator(
             level=acts.logging.INFO,
             generators=[
-                acts.exampels.EventGenerator.Generator(
-                    multiplicity=acts.exampels.FixedMultiplicityGenerator(n=1),
+                acts.examples.EventGenerator.Generator(
+                    multiplicity=acts.examples.FixedMultiplicityGenerator(n=1),
                     vertex=acts.examples.GaussianVertexGenerator(
                         mean=acts.Vector4(0, 0, 0, 0),
                         stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 1 * u.ns),
@@ -69,8 +69,9 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         rnd,
-        detector=setup.detector,
         enableInteractions=True,
+        preSelectParticles=None,
+        postSelectParticles=None,
         inputParticles="particles_input",
         outputParticlesInitial="particles_initial_fatras",
         outputParticlesFinal="particles_final_fatras",
@@ -80,10 +81,14 @@ with tempfile.TemporaryDirectory() as temp:
 
     addGeant4(
         s,
+        setup.detector,
         setup.trackingGeometry,
         setup.field,
         rnd,
-        detector=setup.detector,
+        preSelectParticles=None,
+        postSelectParticles=None,
+        killVolume=acts.Volume.makeCylinderVolume(r=1.1 * u.m, halfZ=3.0 * u.m),
+        killAfterTime=25 * u.ns,
         inputParticles="particles_input",
         outputParticlesInitial="particles_initial_geant4",
         outputParticlesFinal="particles_final_geant4",
@@ -99,4 +104,4 @@ with tempfile.TemporaryDirectory() as temp:
         (tp / "geant4" / "particles_final.root", "particles_final_geant4.root"),
     ]:
         assert file.exists(), "file not found"
-        shutil.copy(name, setup.outdir / name)
+        shutil.copy(file, setup.outdir / name)

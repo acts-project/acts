@@ -82,17 +82,17 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   /// Production process type, i.e. what generated the particle.
   std::vector<uint32_t> m_process;
   /// Production position components in mm.
-  std::vector<float> m_vx;
-  std::vector<float> m_vy;
-  std::vector<float> m_vz;
+  std::vector<double> m_vx;
+  std::vector<double> m_vy;
+  std::vector<double> m_vz;
   // Production time in ns.
-  std::vector<float> m_vt;
+  std::vector<double> m_vt;
   /// Total momentum in GeV
-  std::vector<float> m_p;
+  std::vector<double> m_p;
   /// Momentum components in GeV.
-  std::vector<float> m_px;
-  std::vector<float> m_py;
-  std::vector<float> m_pz;
+  std::vector<double> m_px;
+  std::vector<double> m_py;
+  std::vector<double> m_pz;
   /// Mass in GeV.
   std::vector<float> m_m;
   /// Charge in e.

@@ -102,7 +102,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
 ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
     const G4Track& aTrack, SimBarcode particleId) const {
   // Unit conversions G4->::ACTS
-  constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
+  constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
 

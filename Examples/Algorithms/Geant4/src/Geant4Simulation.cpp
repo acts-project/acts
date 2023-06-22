@@ -154,12 +154,12 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   }
 
   if (eventStore().hits.empty()) {
-    ACTS_INFO("Step merging: No steps recorded");
+    ACTS_DEBUG("Step merging: No steps recorded");
   } else {
-    ACTS_INFO("Step merging: mean hits per hit: "
-              << static_cast<double>(eventStore().numberGeantSteps) /
-                     eventStore().hits.size());
-    ACTS_INFO(
+    ACTS_DEBUG("Step merging: mean hits per hit: "
+               << static_cast<double>(eventStore().numberGeantSteps) /
+                      eventStore().hits.size());
+    ACTS_DEBUG(
         "Step merging: max hits per hit: " << eventStore().maxStepsForHit);
   }
 
