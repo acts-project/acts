@@ -17,8 +17,8 @@
 namespace Acts {
 
 struct ParticleData {
-  float charge;
-  float mass;
+  float charge{};
+  float mass{};
   std::string_view name;
 };
 
