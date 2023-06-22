@@ -110,7 +110,7 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   const G4ParticleDefinition* particleDef = aTrack.GetParticleDefinition();
   G4int pdg = particleDef->GetPDGEncoding();
   G4double charge = particleDef->GetPDGCharge();
-  G4double mass = particleDef->GetPDGMass();
+  G4double mass = convertEnergy * particleDef->GetPDGMass();
   G4ThreeVector pPosition = convertLength * aTrack.GetPosition();
   G4double pTime = convertTime * aTrack.GetGlobalTime();
   G4ThreeVector pDirection = aTrack.GetMomentumDirection();
