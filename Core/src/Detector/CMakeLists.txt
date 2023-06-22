@@ -4,6 +4,7 @@ target_sources(
     detail/CylindricalDetectorHelper.cpp
     detail/PortalHelper.cpp
     detail/SupportHelper.cpp
+    detail/IndexedGridFiller.cpp
     CylindricalContainerBuilder.cpp
     Detector.cpp
     DetectorBuilder.cpp
@@ -14,4 +15,5 @@ target_sources(
     PortalGenerators.cpp
     ProtoDetector.cpp
     VolumeStructureBuilder.cpp
+    
 )
