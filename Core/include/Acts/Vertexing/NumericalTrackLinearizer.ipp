@@ -8,7 +8,6 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
-#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
 template <typename propagator_t, typename propagator_options_t>
@@ -16,7 +15,8 @@ Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     linearizeTrack(const BoundTrackParameters& params, const Vector4& linPoint,
                    const Acts::GeometryContext& gctx,
-                   const Acts::MagneticFieldContext& mctx) const {
+                   const Acts::MagneticFieldContext& mctx,
+                   State& /*state*/) const {
   // Make Perigee surface at linPointPos, transverse plane of Perigee
   // corresponds the global x-y plane
   Vector3 linPointPos = VectorHelpers::position(linPoint);
@@ -101,25 +101,24 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // parametrization of the resulting new track. This allows us to approximate
   // the numerical derivatives.
   for (unsigned int i = 0; i < eLinSize; i++) {
+    Acts::ActsVector<eLinSize> paramVecCopy = paramVec;
     // Wiggle
-    paramVec(i) += m_cfg.delta;
+    paramVecCopy(i) += m_cfg.delta;
 
     // Create curvilinear track object from our parameters. This is needed for
     // the propagation. Note that we work without covariance since we don't need
     // it to compute the derivative.
-    Vector3 wiggledDir =
-        makeDirectionUnitFromPhiTheta(paramVec(eLinPhi), paramVec(eLinTheta));
+    Vector3 wiggledDir = makeDirectionUnitFromPhiTheta(paramVecCopy(eLinPhi),
+                                                       paramVecCopy(eLinTheta));
+    // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
-        paramVec.head(4), wiggledDir, paramVec(eLinQOverP));
+        paramVecCopy.head(eLinPosSize), wiggledDir, paramVecCopy(eLinQOverP));
 
     // Obtain propagation direction
-    intersection =
-        perigeeSurface->intersect(gctx, paramVec.head(3), wiggledDir, false);
+    intersection = perigeeSurface->intersect(
+        gctx, paramVecCopy.head(eLinPosSize - 1), wiggledDir, false);
     pOptions.direction = Direction::fromScalarZeroAsPositive(
         intersection.intersection.pathLength);
-
-    // Unwiggle
-    paramVec(i) -= m_cfg.delta;
 
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
@@ -129,11 +128,12 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // Computing the numerical derivatives and filling the Jacobian
     completeJacobian.array().col(i) =
         (newPerigeeParams - perigeeParams) / m_cfg.delta;
-    // We need to account for the periodicity of phi and the poles of theta
-    // The values are overwritten for better readability
-    Vector2 diffPhiTheta = VectorHelpers::subtractPhiTheta(
-        newPerigeeParams.segment(2, 2), perigeeParams.segment(2, 2));
-    completeJacobian.block<2, 1>(2, i) = diffPhiTheta / m_cfg.delta;
+    // We need to account for the periodicity of phi. We overwrite the
+    // previously computed value for better readability.
+    completeJacobian(eLinPhi, i) =
+        Acts::detail::difference_periodic(newPerigeeParams(eLinPhi),
+                                          perigeeParams(eLinPhi), 2 * M_PI) /
+        m_cfg.delta;
   }
 
   // Extracting positionJacobian and momentumJacobian from the complete Jacobian

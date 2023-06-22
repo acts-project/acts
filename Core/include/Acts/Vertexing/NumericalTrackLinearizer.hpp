@@ -94,12 +94,12 @@ class NumericalTrackLinearizer {
 
     std::shared_ptr<const Propagator_t> propagator;
 
-    // Tolerance determining how close we need to get to a surface to
-    // reach it during propagation
+    /// Tolerance determining how close we need to get to a surface to
+    /// reach it during propagation
     ActsScalar targetTolerance = 1e-12;
 
-    // Setting size of the perturbation delta for calculation of numerical
-    // derivatives (i.e., f'(x) ~ (f(x+delta) - f(x)) / delta)
+    /// Setting size of the perturbation delta for calculation of numerical
+    /// derivatives (i.e., f'(x) ~ (f(x+delta) - f(x)) / delta)
     ActsScalar delta = 1e-8;
   };
 
@@ -121,33 +121,13 @@ class NumericalTrackLinearizer {
   /// parallel to the global x-y plane
   /// @param gctx Geometry context
   /// @param mctx Magnetic field context
-  /// @param state Linearizer state object
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
                                          const Vector4& linPoint,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::MagneticFieldContext& mctx,
-                                         State& /*state*/) const {
-    // Call the function without state argument
-    return linearizeTrack(params, linPoint, gctx, mctx);
-  };
-
-  /// @brief Same function as above but without the "state" argument, which we don't need for numerical track linearization.
-  /// @note We don't discard the "state" argument above since we want the templating to work (it is needed in other linearizer classes)
-  ///
-  /// @param params Parameters to linearize
-  /// @param linPoint Point which defines the Perigee.
-  /// @note Transverse plane of the Perigee corresponding to @p linPoint is
-  /// parallel to the global x-y plane
-  /// @param gctx Geometry context
-  /// @param mctx Magnetic field context
-  ///
-  /// @return Linearized track
-  Result<LinearizedTrack> linearizeTrack(
-      const BoundTrackParameters& params, const Vector4& linPoint,
-      const Acts::GeometryContext& gctx,
-      const Acts::MagneticFieldContext& mctx) const;
+                                         State& /*state*/) const;
 
  private:
   const Config m_cfg;
