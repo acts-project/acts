@@ -28,6 +28,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/NumericalTrackLinearizer.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
@@ -110,28 +111,40 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 }
 
-// Vertex x/y position distribution
+// 4D vertex distributions
+// x-/y-position
 std::uniform_real_distribution<> vXYDist(-0.1_mm, 0.1_mm);
-// Vertex z position distribution
+// z-position
 std::uniform_real_distribution<> vZDist(-20_mm, 20_mm);
-// Track d0 distribution
+// time
+std::uniform_real_distribution<> vTDist(-1_ns, 1_ns);
+
+// Track parameter distributions
+// d0
 std::uniform_real_distribution<> d0Dist(-0.01_mm, 0.01_mm);
-// Track z0 distribution
+// z0
 std::uniform_real_distribution<> z0Dist(-0.2_mm, 0.2_mm);
-// Track pT distribution
+// pT
 std::uniform_real_distribution<> pTDist(0.4_GeV, 10_GeV);
-// Track phi distribution
+// phi
 std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
-// Track theta distribution
+// theta
 std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
-// Track charge helper distribution
+// charge helper
 std::uniform_real_distribution<> qDist(-1, 1);
-// Track IP resolution distribution
+// time
+std::uniform_real_distribution<> tDist(-0.002_ns, 0.002_ns);
+
+// Track parameter resolution distributions
+// impact parameters
 std::uniform_real_distribution<> resIPDist(0., 100_um);
-// Track angular distribution
+// angles
 std::uniform_real_distribution<> resAngDist(0., 0.1);
-// Track q/p resolution distribution
+// q/p
 std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
+// Track time resolution distribution
+std::uniform_real_distribution<> resTDist(0.1_ns, 0.2_ns);
+
 // Number of tracks distritbution
 std::uniform_int_distribution<> nTracksDist(3, 10);
 
@@ -140,9 +153,23 @@ std::uniform_int_distribution<> nTracksDist(3, 10);
 /// with default input track type (= BoundTrackParameters)
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
+  // save data?
+  bool saveTrue = false;
+  bool saveFitted = true;
+  std::ofstream osTrue;
+  std::ofstream osFitted;
+  if (saveTrue) {
+    osTrue.open("/home/frusso/hep/out/FullBilloirComparison/true_vertices.txt");
+  }
+  if (saveFitted) {
+    osFitted.open(
+        "/home/frusso/hep/out/FullBilloirComparison/"
+        "fitted_vertices_momenta_at_PCA.txt");
+  }
+
   // Set up RNG
-  int mySeed = 31415;
-  std::mt19937 gen(mySeed);
+  int seed = 31415;
+  std::mt19937 gen(seed);
   // Set up constant B-Field
   auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
 
@@ -155,7 +182,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   Linearizer linearizer(ltConfig);
 
   // Number of events
-  const int nEvents = 10;
+  const int nEvents = 1000;
   for (int eventIdx = 0; eventIdx < nEvents; ++eventIdx) {
     // Number of tracks
     unsigned int nTracks = nTracksDist(gen);
@@ -185,6 +212,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     double x = vXYDist(gen);
     double y = vXYDist(gen);
     double z = vZDist(gen);
+    double t = vTDist(gen);
 
     Vector3 vertexPosition(x, y, z);
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -205,7 +233,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       // Construct random track parameters
       BoundVector paramVec;
       paramVec << d0V + d0Dist(gen), z0V + z0Dist(gen), phiDist(gen),
-          thetaDist(gen), q / pTDist(gen), 0.;
+          thetaDist(gen), q / pTDist(gen), t + tDist(gen);
 
       // Resolutions
       double resD0 = resIPDist(gen);
@@ -213,13 +241,15 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       double resPh = resAngDist(gen);
       double resTh = resAngDist(gen);
       double resQp = resQoPDist(gen);
+      double resT = resTDist(gen);
 
       // Fill vector of track objects with simple covariance matrix
       Covariance covMat;
 
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
-          0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+          0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
+          resT * resT;
       tracks.push_back(
           BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
     }
@@ -243,11 +273,26 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
 
-    std::cout << "Fitting nTracks: " << nTracks << std::endl;
-    std::cout << "True Vertex: " << x << ", " << y << ", " << z << std::endl;
-    std::cout << "Fitted Vertex: " << fittedVertex.position() << std::endl;
-    std::cout << "Fitted constraint Vertex: "
-              << fittedVertexConstraint.position() << std::endl;
+    std::cout << "\nFitting " << nTracks << " tracks" << std::endl;
+    std::cout << "True Vertex:\n"
+              << x << "\n"
+              << y << "\n"
+              << z << "\n"
+              << t << std::endl;
+    std::cout << "Fitted Vertex:\n" << fittedVertex.fullPosition() << std::endl;
+
+    if (saveTrue) {
+      osTrue << x << " " << y << " " << z << " " << t << "\n";
+    }
+    if (saveFitted) {
+      osFitted << fittedVertex.fullPosition().transpose() << "\n";
+    }
+  }
+  if (saveTrue) {
+    osTrue.close();
+  }
+  if (saveFitted) {
+    osFitted.close();
   }
 }
 
@@ -269,8 +314,8 @@ struct InputTrack {
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
   // Set up RNG
-  int mySeed = 31415;
-  std::mt19937 gen(mySeed);
+  int seed = 31415;
+  std::mt19937 gen(seed);
 
   // Set up constant B-Field
   auto bField = std::make_shared<ConstantBField>(Vector3{0.0, 0.0, 1_T});
