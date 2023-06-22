@@ -51,7 +51,7 @@ class SeedFinderFTF {
 
 
 
-  void loadSpacePoints(std::vector<FTF_SP<external_spacepoint_t>>);
+  void loadSpacePoints(const std::vector<FTF_SP<external_spacepoint_t>>);
 
  //create seeeds function 
   template <typename input_container_t, typename output_container_t,

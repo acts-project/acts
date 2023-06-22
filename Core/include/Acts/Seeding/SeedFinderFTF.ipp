@@ -51,15 +51,14 @@ SeedFinderFTF<external_spacepoint_t>::~SeedFinderFTF(){
 //define loadspace points funciton 
  //when calling put input of vector<simspacepoints>, now can call space_point_t 
 template <typename external_spacepoint_t>
-void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(std::vector<FTF_SP<external_spacepoint_t>> SP){
+void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<FTF_SP<external_spacepoint_t>> SP){
 
-  for(auto sp : SP) {
+  for(auto& sp : SP) {
     bool is_Pixel = sp.SP->isPixel(); //FTF actual object then sim is pointer 
     if(!is_Pixel) continue;
 
     m_storage->addSpacePoint((sp), (m_config.m_useTrigSeedML > 0)); //add is a funciton FTFtype 
 
-    std::cout<<("in seed finder load space point function") ; 
   }
 
   m_config.m_phiSliceWidth = 2*m_config.phiMax/m_config.m_nMaxPhiSlice;

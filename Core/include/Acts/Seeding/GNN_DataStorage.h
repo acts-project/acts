@@ -46,7 +46,7 @@ class TrigFTF_GNN_Node {
       else return false;
   }
 
-  const std::vector<space_point_t>& m_sp;
+  const space_point_t& m_sp;
   
   std::vector<unsigned int> m_in;//indices of the edges in the edge storage
   std::vector<unsigned int> m_out;
