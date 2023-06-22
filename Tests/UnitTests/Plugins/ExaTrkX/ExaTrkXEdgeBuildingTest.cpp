@@ -30,11 +30,11 @@ float distance(const at::Tensor &a, const at::Tensor &b) {
   return std::sqrt(((a - b) * (a - b)).sum().item().to<float>());
 }
 
-struct CantorPair{
+struct CantorPair {
   int value;
-  
+
   CantorPair(int x, int y) : value(y + ((x + y) * (x + y + 1)) / 2) {}
-  
+
   std::pair<int, int> inverse() const {
     auto f = [](int w) -> int { return (w * (w + 1)) / 2; };
     auto q = [](int w) -> int {
@@ -109,15 +109,17 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
     const auto b = edges_test[1][i].template item<int>();
     edges_test_cantor.push_back(a < b ? CantorPair(a, b) : CantorPair(b, a));
   }
-  
+
   std::sort(edges_ref_cantor.begin(), edges_ref_cantor.end());
   std::sort(edges_test_cantor.begin(), edges_test_cantor.end());
-  
+
 #if PRINT
   std::cout << "test size " << edges_test_cantor.size() << std::endl;
   std::cout << "ref size " << edges_ref_cantor.size() << std::endl;
-  std::cout << "test: " << Acts::ContainerPrinter(edges_test_cantor, 10) << std::endl;
-  std::cout << "ref: " << Acts::ContainerPrinter(edges_ref_cantor, 10) << std::endl;
+  std::cout << "test: " << Acts::ContainerPrinter(edges_test_cantor, 10)
+            << std::endl;
+  std::cout << "ref: " << Acts::ContainerPrinter(edges_ref_cantor, 10)
+            << std::endl;
 #endif
 
   // Check
@@ -140,11 +142,11 @@ const float r = 1.5;
 const int knn = 50;
 const int seed = 42;
 
-BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_cuda, * boost::unit_test::precondition(haveCuda)) {
+BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_cuda,
+                     *boost::unit_test::precondition(haveCuda)) {
   torch::manual_seed(seed);
 
-  auto cudaEdgeBuilder = [](auto &features, auto radius,
-                            auto k) {
+  auto cudaEdgeBuilder = [](auto &features, auto radius, auto k) {
     auto features_cuda = features.to(torch::kCUDA);
     return Acts::detail::buildEdgesFRNN(features_cuda, radius, k);
   };
@@ -155,8 +157,7 @@ BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_cuda, * boost::unit_test::p
 BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_kdtree) {
   torch::manual_seed(seed);
 
-  auto cpuEdgeBuilder = [](auto &features, auto radius,
-                            auto k) {
+  auto cpuEdgeBuilder = [](auto &features, auto radius, auto k) {
     auto features_cpu = features.to(torch::kCPU);
     return Acts::detail::buildEdgesKDTree(features_cpu, radius, k);
   };

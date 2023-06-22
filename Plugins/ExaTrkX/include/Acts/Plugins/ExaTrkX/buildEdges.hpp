@@ -16,7 +16,7 @@ class Tensor;
 
 namespace Acts {
 namespace detail {
-    
+
 /// Edge building using FRNN and CUDA.
 /// Raises an exception if not built with CUDA
 at::Tensor buildEdgesFRNN(at::Tensor& embedFeatures, float rVal, int kVal,
@@ -25,9 +25,10 @@ at::Tensor buildEdgesFRNN(at::Tensor& embedFeatures, float rVal, int kVal,
 /// Edge building using the Acts KD-Tree implementation
 /// Note that this implementation has no maximum number of neighbours
 /// in the NN search. kVal is only a hint for reserving memory
-at::Tensor buildEdgesKDTree(at::Tensor &embedFeatures, float rVal, int kVal, bool flipDirections = false);
+at::Tensor buildEdgesKDTree(at::Tensor& embedFeatures, float rVal, int kVal,
+                            bool flipDirections = false);
 
-}
+}  // namespace detail
 
 /// Dispatches either to FRNN or KD-Tree based edge building
 ///
@@ -38,7 +39,5 @@ at::Tensor buildEdgesKDTree(at::Tensor &embedFeatures, float rVal, int kVal, boo
 /// edges after the edge building
 at::Tensor buildEdges(at::Tensor& embedFeatures, float rVal, int kVal,
                       bool flipDirections = false);
-
-
 
 }  // namespace Acts
