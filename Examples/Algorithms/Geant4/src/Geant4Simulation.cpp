@@ -235,6 +235,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     ParticleKillAction::Config particleKillCfg;
     particleKillCfg.volume = cfg.killVolume;
     particleKillCfg.maxTime = cfg.killAfterTime;
+    particleKillCfg.secondaries = cfg.killSecondaries;
 
     SteppingActionList::Config steppingCfg;
     steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(

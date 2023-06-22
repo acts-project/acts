@@ -42,8 +42,9 @@ ParticleSelectorConfig = namedtuple(
         "m",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
+        "removeSecondaries",  # bool
     ],
-    defaults=[(None, None)] * 8 + [None] * 2,
+    defaults=[(None, None)] * 8 + [None] * 3,
 )
 
 
@@ -371,6 +372,7 @@ def addParticleSelection(
                 mMax=config.m[1],
                 removeCharged=config.removeCharged,
                 removeNeutral=config.removeNeutral,
+                removeSecondaries=config.removeSecondaries,
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,
@@ -459,7 +461,7 @@ def addFatras(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "particles_initial_selected"
+        particlesInitial = "fatras_particles_initial_selected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -467,7 +469,7 @@ def addFatras(
             outputParticles=particlesInitial,
         )
 
-        particlesFinal = "particles_final_selected"
+        particlesFinal = "fatras_particles_final_selected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -612,6 +614,7 @@ def addGeant4(
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
+    killSecondaries: float = False,
     physicsList: str = "FTFP_BERT",
 ) -> None:
     """This function steers the detector simulation using Geant4
@@ -680,6 +683,7 @@ def addGeant4(
         materialMappings=materialMappings,
         killVolume=killVolume,
         killAfterTime=killAfterTime,
+        killSecondaries=killSecondaries,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
@@ -691,7 +695,7 @@ def addGeant4(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "particles_initial_selected"
+        particlesInitial = "geant4_particles_initial_selected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -699,7 +703,7 @@ def addGeant4(
             outputParticles=particlesInitial,
         )
 
-        particlesFinal = "particles_final_selected"
+        particlesFinal = "geant4_particles_final_selected"
         addParticleSelection(
             s,
             postSelectParticles,

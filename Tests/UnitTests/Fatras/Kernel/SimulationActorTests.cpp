@@ -76,7 +76,7 @@ struct MockInteractionList {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
     // break if particle is not alive anymore
-    return !particle;
+    return !particle.isAlive();
   }
 
   template <typename generator_t>

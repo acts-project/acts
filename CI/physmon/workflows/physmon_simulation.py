@@ -8,6 +8,7 @@ import acts
 from acts.examples.simulation import (
     addFatras,
     addGeant4,
+    ParticleSelectorConfig,
 )
 
 from physmon_common import makeSetup
@@ -71,7 +72,7 @@ with tempfile.TemporaryDirectory() as temp:
         rnd,
         enableInteractions=True,
         preSelectParticles=None,
-        postSelectParticles=None,
+        postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
         inputParticles="particles_input",
         outputParticlesInitial="particles_initial_fatras",
         outputParticlesFinal="particles_final_fatras",
@@ -86,9 +87,10 @@ with tempfile.TemporaryDirectory() as temp:
         setup.field,
         rnd,
         preSelectParticles=None,
-        postSelectParticles=None,
-        killVolume=acts.Volume.makeCylinderVolume(r=1.1 * u.m, halfZ=3.0 * u.m),
+        postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
+        killVolume=setup.trackingGeometry.worldVolume,
         killAfterTime=25 * u.ns,
+        killSecondaries=True,
         inputParticles="particles_input",
         outputParticlesInitial="particles_initial_geant4",
         outputParticlesFinal="particles_final_geant4",
@@ -100,7 +102,9 @@ with tempfile.TemporaryDirectory() as temp:
     del s
 
     for file, name in [
+        (tp / "fatras" / "particles_initial.root", "particles_initial_fatras.root"),
         (tp / "fatras" / "particles_final.root", "particles_final_fatras.root"),
+        (tp / "geant4" / "particles_initial.root", "particles_initial_geant4.root"),
         (tp / "geant4" / "particles_final.root", "particles_final_geant4.root"),
     ]:
         assert file.exists(), "file not found"
