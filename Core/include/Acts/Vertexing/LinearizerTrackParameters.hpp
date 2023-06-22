@@ -21,7 +21,7 @@ namespace Acts {
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
 enum LinIndices : unsigned int {
   // Global spatial position of a point on the track, must be stored as one
-  // continous block.
+  // continuous block.
   eLinPos0 = 0u,
   eLinPos1 = eLinPos0 + 1u,
   eLinPos2 = eLinPos0 + 2u,

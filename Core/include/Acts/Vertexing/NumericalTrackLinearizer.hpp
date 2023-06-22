@@ -50,7 +50,7 @@ namespace Acts {
 /// @note Connection to RiddersPropagator: The RiddersPropagator does a very
 /// similar thing to what this class does, but it wiggles BoundTrackParameters
 /// (FreeTrackParameters could also be used if Propagator.hpp and Propagator.ipp
-/// were adapted to accomodate them). Here, we wiggle neither
+/// were adapted to accommodate them). Here, we wiggle neither
 /// BoundTrackParameters nor FreeTrackParameters, but rather the parameters
 /// described above.
 ///
