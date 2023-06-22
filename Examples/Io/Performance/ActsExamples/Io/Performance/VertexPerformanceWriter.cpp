@@ -500,7 +500,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 Acts::FreeIndices::eFreePos1, Acts::FreeIndices::eFreePos1);
             Acts::ActsScalar varZ = vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos2, Acts::FreeIndices::eFreePos2);
-            Acts::ActsScalar varT = vtx.fullCovariance()(
+            Acts::ActsScalar varTime = vtx.fullCovariance()(
                 Acts::FreeIndices::eFreeTime, Acts::FreeIndices::eFreeTime);
             m_pullX.push_back(
                 pull(diffPos[Acts::FreeIndices::eFreePos0], varX, "X"));
@@ -509,12 +509,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             m_pullZ.push_back(
                 pull(diffPos[Acts::FreeIndices::eFreePos2], varZ, "Z"));
             m_pullT.push_back(
-                pull(diffPos[Acts::FreeIndices::eFreeTime], varT, "T"));
+                pull(diffPos[Acts::FreeIndices::eFreeTime], varTime, "T"));
 
             m_covXX.push_back(varX);
             m_covYY.push_back(varY);
             m_covZZ.push_back(varZ);
-            m_covTT.push_back(varT);
+            m_covTT.push_back(varTime);
             m_covXY.push_back(vtx.fullCovariance()(
                 Acts::FreeIndices::eFreePos0, Acts::FreeIndices::eFreePos1));
             m_covXZ.push_back(vtx.fullCovariance()(
