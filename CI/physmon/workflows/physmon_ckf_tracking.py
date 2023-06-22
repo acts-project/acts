@@ -91,11 +91,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             s,
             setup.trackingGeometry,
             setup.field,
-            TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
+            TruthSeedRanges(pt=(400 * u.MeV, None), eta=(-3.0, 3.0), nHits=(9, None)),
             ParticleSmearingSigmas(
                 pRel=0.01
             ),  # only used by SeedingAlgorithm.TruthSmeared
-            TruthSeedRanges(pt=(400 * u.MeV, None), eta=(-3.0, 3.0), nHits=(9, None)),
             SeedFinderConfigArg(
                 r=(33 * u.mm, 200 * u.mm),
                 deltaR=(1 * u.mm, 60 * u.mm),
