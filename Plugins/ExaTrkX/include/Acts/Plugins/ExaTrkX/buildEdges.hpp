@@ -15,22 +15,28 @@ class Tensor;
 }
 
 namespace Acts {
+namespace detail {
+    
+/// Edge building using FRNN and CUDA.
+/// Raises an exception if not built with CUDA
+at::Tensor buildEdgesFRNN(at::Tensor& embedFeatures, float rVal, int kVal,
+                          bool flipDirections = false);
 
-/// Edge building using FRNN and CUDA. If CUDA is not available,
-/// a brute-force CPU method is used
-/// TODO implement better CPU method (K-D-Tree, ...)
-/// TODO make parameters concise (the tensor should have the numSpacepoints, dim
-/// info)
+/// Edge building using the Acts KD-Tree implementation
+at::Tensor buildEdgesKDTree(at::Tensor &embedFeatures, float rVal, int kVal, bool flipDirections = false);
+
+}
+
+/// Dispatches either to FRNN or KD-Tree based edge building
 ///
 /// @param embedFeatures Tensor of shape (n_nodes, embedding_dim)
-/// @param numSpacepoints number of spacepoints
-/// @param dim embedding embedding dim
 /// @param rVal radius for NN search
 /// @param kVal max number of neighbours in NN search
 /// @param flipDirections if we want to randomly flip directions of the
 /// edges after the edge building
-at::Tensor buildEdges(at::Tensor& embedFeatures, int64_t numSpacepoints,
-                      int dim, float rVal, int kVal,
+at::Tensor buildEdges(at::Tensor& embedFeatures, float rVal, int kVal,
                       bool flipDirections = false);
+
+
 
 }  // namespace Acts
