@@ -23,6 +23,8 @@ at::Tensor buildEdgesFRNN(at::Tensor& embedFeatures, float rVal, int kVal,
                           bool flipDirections = false);
 
 /// Edge building using the Acts KD-Tree implementation
+/// Note that this implementation has no maximum number of neighbours
+/// in the NN search. kVal is only a hint for reserving memory
 at::Tensor buildEdgesKDTree(at::Tensor &embedFeatures, float rVal, int kVal, bool flipDirections = false);
 
 }

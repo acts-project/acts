@@ -14,12 +14,15 @@
 #include <cuda_runtime_api.h>
 #endif
 
+#include <torch/torch.h>
+
 #include <cstdint>
 
 namespace {
 
 inline void printCudaMemInfo(const Acts::Logger& logger) {
 #ifndef ACTS_EXATRKX_CPUONLY
+  if( torch::cuda::is_available() ) {
   constexpr float kb = 1024;
   constexpr float mb = kb * kb;
 
@@ -31,6 +34,9 @@ inline void printCudaMemInfo(const Acts::Logger& logger) {
   ACTS_VERBOSE("Current CUDA device: " << device);
   ACTS_VERBOSE("Memory (used / total) [in MB]: " << (total - free) / mb << " / "
                                                  << total / mb);
+  } else {
+  ACTS_VERBOSE("No memory info, CUDA disabled");
+  }
 #else
   ACTS_VERBOSE("No memory info, CUDA disabled");
 #endif

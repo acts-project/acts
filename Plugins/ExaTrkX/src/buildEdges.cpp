@@ -171,7 +171,7 @@ torch::Tensor Acts::detail::buildEdgesFRNN(at::Tensor &embedFeatures, float rVal
       torch::stack({repeatRange.index({positiveIndices}),
                     indices.index({positiveIndices})});
       
-  return postprocessEdgeTensor(std::move(stackedEdges), true, true, flipDirections);
+  return postprocessEdgeTensor(std::move(stackedEdges), false, true, flipDirections);
 #else
   throw std::runtime_error(
       "ACTS not compiled with CUDA, cannot run Acts::buildEdgesFRNN");
@@ -227,7 +227,7 @@ static at::Tensor invoke(at::Tensor &embedFeatures, float rVal, int kVal) {
   // Search tree //
   /////////////////
   std::vector<int32_t> edges;
-  edges.reserve(kVal * embedFeatures.size(0));
+  edges.reserve(2 * kVal * embedFeatures.size(0));
 
   for (int iself = 0; iself < embedFeatures.size(0); ++iself) {
     const Span<float, Dim> self{dataPtr + iself*Dim};
@@ -236,28 +236,27 @@ static at::Tensor invoke(at::Tensor &embedFeatures, float rVal, int kVal) {
     for (auto j = 0ul; j < Dim; ++j) {
       range[j] = Acts::Range1D(self[j] - rVal, self[j] + rVal);
     }
-    
-    int nFound = 0;
+
     tree.rangeSearchMapDiscard(
         range, [&](const Span<float, Dim> &other, const int &iother) {
-          if (dist(self, other) <= rVal && nFound < kVal) {
+          if (iself != iother && dist(self, other) <= rVal) {
             edges.push_back(iself);
             edges.push_back(iother);
-            nFound++;
           }
         });
   }
 
-  auto opts = torch::TensorOptions().dtype(torch::kInt32).device(torch::kCPU);
+  auto opts = torch::TensorOptions().dtype(torch::kInt32);
   return torch::from_blob(edges.data(),
-                          {static_cast<long>(edges.size() / 2), 2}, opts).transpose(0, 1);
+                          {static_cast<long>(edges.size() / 2), 2},
+                          opts).clone().transpose(0, 1);
 }
 };
 
 at::Tensor Acts::detail::buildEdgesKDTree(at::Tensor &embedFeatures, float rVal, int kVal, bool flipDirections) {
   auto tensor = Acts::template_switch<BuildEdgesKDTree, 1, 12>(embedFeatures.size(1), embedFeatures, rVal, kVal);
   
-  return postprocessEdgeTensor(tensor, false, true, flipDirections);
+  return postprocessEdgeTensor(tensor, true, true, flipDirections);
 }
 
 
