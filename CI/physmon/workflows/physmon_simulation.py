@@ -71,6 +71,11 @@ with tempfile.TemporaryDirectory() as temp:
         rnd,
         detector=setup.detector,
         enableInteractions=True,
+        inputParticles="particles_input",
+        outputParticlesInitial="particles_initial_fatras",
+        outputParticlesFinal="particles_final_fatras",
+        outputSimHits="simhits_fatras",
+        outputDirRoot=tp / "fatras",
     )
 
     addGeant4(
@@ -79,11 +84,19 @@ with tempfile.TemporaryDirectory() as temp:
         setup.field,
         rnd,
         detector=setup.detector,
+        inputParticles="particles_input",
+        outputParticlesInitial="particles_initial_geant4",
+        outputParticlesFinal="particles_final_geant4",
+        outputSimHits="simhits_geant4",
+        outputDirRoot=tp / "geant4",
     )
 
     s.run()
     del s
 
-    perf_file = tp / "performance_gsf.root"
-    assert perf_file.exists(), "Performance file not found"
-    shutil.copy(perf_file, setup.outdir / "performance_gsf.root")
+    for file, name in [
+        (tp / "fatras" / "particles_final.root", "particles_final_fatras.root"),
+        (tp / "geant4" / "particles_final.root", "particles_final_geant4.root"),
+    ]:
+        assert file.exists(), "file not found"
+        shutil.copy(name, setup.outdir / name)

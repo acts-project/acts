@@ -389,6 +389,9 @@ def addFatras(
     enableInteractions: bool = False,
     pMin: Optional[float] = None,
     inputParticles: str = "particles_input",
+    outputParticlesInitial: str = "particles_initial",
+    outputParticlesFinal: str = "particles_final",
+    outputSimHits: str = "simhits",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -436,9 +439,9 @@ def addFatras(
         **acts.examples.defaultKWArgs(
             level=customLogLevel(),
             inputParticles=particles_selected,
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
-            outputSimHits="simhits",
+            outputParticlesInitial=outputParticlesInitial,
+            outputParticlesFinal=outputParticlesFinal,
+            outputSimHits=outputSimHits,
             randomNumbers=rnd,
             trackingGeometry=trackingGeometry,
             magneticField=field,
@@ -539,14 +542,14 @@ def addSimWriters(
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles="particles_initial",
+                inputParticles=particlesInitial,
                 filePath=str(outputDirRoot / "particles_initial.root"),
             )
         )
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles="particles_final",
+                inputParticles=particlesFinal,
                 filePath=str(outputDirRoot / "particles_final.root"),
             )
         )
@@ -597,6 +600,9 @@ def addGeant4(
     volumeMappings: List[str] = [],
     materialMappings: List[str] = [],
     inputParticles: str = "particles_input",
+    outputParticlesInitial: str = "particles_initial",
+    outputParticlesFinal: str = "particles_final",
+    outputSimHits: str = "simhits",
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
     recordHitsOfSecondaries=True,
@@ -664,9 +670,9 @@ def addGeant4(
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=particles_selected,
-        outputSimHits="simhits",
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
+        outputSimHits=outputSimHits,
+        outputParticlesInitial=outputParticlesInitial,
+        outputParticlesFinal=outputParticlesFinal,
         trackingGeometry=trackingGeometry,
         magneticField=field,
         physicsList=physicsList,
