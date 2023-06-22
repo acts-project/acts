@@ -161,24 +161,25 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
   }
 
   // Linearizer for constant field and corresponding state
-  auto constFieldCache = constField->makeCache(magFieldContext);
   AnalyticalLinearizer::Config linConfig(constField, propagator);
   AnalyticalLinearizer linFactory(linConfig);
-  AnalyticalLinearizer::State linState(constFieldCache);
+  AnalyticalLinearizer::State linState(constField->makeCache(magFieldContext));
 
   NumericalLinearizer::Config numLinConfig(constField, propagator);
   NumericalLinearizer numLinFactory(numLinConfig);
-  NumericalLinearizer::State numLinState(constFieldCache);
+  NumericalLinearizer::State numLinState(
+      constField->makeCache(magFieldContext));
 
   // Linearizer for 0 field and corresponding state
-  auto zeroFieldCache = zeroField->makeCache(magFieldContext);
   StraightAnalyticalLinearizer::Config straightLinConfig(straightPropagator);
   StraightAnalyticalLinearizer straightLinFactory(straightLinConfig);
-  StraightAnalyticalLinearizer::State straightLinState(zeroFieldCache);
+  StraightAnalyticalLinearizer::State straightLinState(
+      zeroField->makeCache(magFieldContext));
 
   StraightNumericalLinearizer::Config numStraightLinConfig(straightPropagator);
   StraightNumericalLinearizer numStraightLinFactory(numStraightLinConfig);
-  StraightNumericalLinearizer::State numStraightLinState(zeroFieldCache);
+  StraightNumericalLinearizer::State numStraightLinState(
+      zeroField->makeCache(magFieldContext));
 
   // Lambda for comparing outputs of the two linearization methods
   // We compare the linearization result at the PCA to "linPoint"
