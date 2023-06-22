@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <array>
 #include <memory>
 #include <tuple>
 
@@ -136,7 +137,7 @@ struct Geant4ShapeConverter {
 };
 
 struct Geant4PhysicalVolumeConverter {
-  /// Optionally allow to foce a type, throws exception if not possbile
+  /// Optionally allow to foce a type, throws exception if not possible
   Surface::SurfaceType forcedType = Surface::SurfaceType::Other;
 
   /// @brief Convert a Geant4 phsyical volume to a surface
@@ -162,7 +163,7 @@ struct Geant4MaterialConverter {
 
   /// @brief Convert a Geant4 material to a surface material description
   ///
-  /// @param g4Material the geant4 material descrition
+  /// @param g4Material the geant4 material description
   /// @param original the original thickness
   /// @param compressed the compressed thickness
   ///

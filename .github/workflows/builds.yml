@@ -201,8 +201,9 @@ jobs:
       - name: Install
         run: cmake --build build --target install
 
+
       - name: Package build
-        run: tar czf build.tar.gz -C build . 
+        run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
       - uses: actions/upload-artifact@v3
         with:
@@ -228,6 +229,9 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     needs: [linux_ubuntu]
+    env:
+      ACTS_SEQUENCER_DISABLE_FPEMON: true
+
     steps:
       - name: Install git lfs
         run: apt-get update && apt-get install -y git-lfs
@@ -268,6 +272,8 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     needs: [linux_ubuntu]
+    env:
+      ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
       - name: Install git lfs

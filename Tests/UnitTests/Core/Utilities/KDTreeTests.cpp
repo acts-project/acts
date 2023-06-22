@@ -9,10 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/KDTree.hpp"
+#include "Acts/Utilities/Range1D.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <iterator>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {

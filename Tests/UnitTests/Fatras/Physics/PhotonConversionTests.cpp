@@ -9,15 +9,20 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
 
+#include <cmath>
 #include <limits>
+#include <memory>
 #include <random>
+#include <utility>
+#include <vector>
 
 #include "Dataset.hpp"
 

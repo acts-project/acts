@@ -8,7 +8,21 @@
 
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <cassert>
+#include <ios>
+#include <sstream>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+#include <TFile.h>
+#include <TTree.h>
 
 namespace ActsExamples {
 

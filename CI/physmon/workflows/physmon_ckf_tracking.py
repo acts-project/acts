@@ -40,7 +40,12 @@ setup = makeSetup()
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=500, numThreads=-1, logLevel=acts.logging.INFO
+            events=500,
+            numThreads=-1,
+            logLevel=acts.logging.INFO,
+            fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
+                Path(__file__).parent.parent / "fpe_masks.yml"
+            ),
         )
 
         tp = Path(temp)
@@ -52,12 +57,15 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
         addParticleGun(
             s,
-            EtaConfig(-4.0, 4.0),
-            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+            EtaConfig(-3.0, 3.0),
             PhiConfig(0.0, 360.0 * u.degree),
+            ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
-                stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
                 mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
             ),
             multiplicity=50,
             rnd=rnd,
@@ -180,11 +188,10 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
 
 
-with acts.FpeMonitor():
-    for truthSmearedSeeded, truthEstimatedSeeded, label in [
-        (True, False, "truth_smeared"),  # if first is true, second is ignored
-        (False, True, "truth_estimated"),
-        (False, False, "seeded"),
-        (False, False, "orthogonal"),
-    ]:
-        run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
+for truthSmearedSeeded, truthEstimatedSeeded, label in [
+    (True, False, "truth_smeared"),  # if first is true, second is ignored
+    (False, True, "truth_estimated"),
+    (False, False, "seeded"),
+    (False, False, "orthogonal"),
+]:
+    run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)

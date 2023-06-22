@@ -10,27 +10,24 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/AnnealingUtility.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
-#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
-#include "Acts/Vertexing/ImpactPointEstimator.hpp"
-#include "Acts/Vertexing/LinearizedTrack.hpp"
-#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
-#include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <memory>
+#include <optional>
+#include <ostream>
+#include <stdexcept>
+#include <system_error>
 
 #include "VertexingHelpers.hpp"
 

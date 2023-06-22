@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
   std::cout << "Preparing reader " << std::flush;
   HepMC3::ReaderAscii reader("test.hepmc3");
   if (simReader.status(reader)) {
-    std::cout << "succesful" << std::endl;
+    std::cout << "successful" << std::endl;
   } else {
     std::cout << "failed" << std::endl;
   }
@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
 
   std::cout << "Reading event " << std::flush;
   if (simReader.readEvent(reader, genevt)) {
-    std::cout << "succesful" << std::endl;
+    std::cout << "successful" << std::endl;
   } else {
     std::cout << "failed" << std::endl;
   }

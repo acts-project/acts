@@ -8,16 +8,37 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/GaussianMixtureReduction.hpp"
+#include "Acts/Utilities/Identity.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <functional>
+#include <initializer_list>
+#include <memory>
 #include <random>
+#include <stdexcept>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <Eigen/Eigenvalues>
 
@@ -124,7 +145,7 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
   return mean;
 }
 
-// This general boundCovariance estimator can be equiped with a custom
+// This general boundCovariance estimator can be equipped with a custom
 // subtraction object to enable circular behaviour
 template <int D, typename subtract_t = std::minus<ActsVector<D>>>
 auto boundCov(const std::vector<ActsVector<D>> &samples,

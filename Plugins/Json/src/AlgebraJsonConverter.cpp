@@ -8,6 +8,9 @@
 
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 
+#include <array>
+#include <stdexcept>
+
 void Acts::to_json(nlohmann::json& j, const Acts::Transform3& t) {
   auto translation = t.translation();
   if (translation != Acts::Vector3(0., 0., 0)) {

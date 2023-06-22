@@ -1,5 +1,7 @@
 import sys, inspect
-from typing import Optional, Protocol
+from pathlib import Path
+from typing import Optional, Protocol, Union, List, Dict
+import os
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -327,3 +329,59 @@ def defaultLogging(
         return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
 
     return customLogLevel
+
+
+class Sequencer(ActsPythonBindings._examples._Sequencer):
+    def __init__(self, *args, **kwargs):
+        if "fpeMasks" in kwargs:
+            m = kwargs["fpeMasks"]
+            if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
+                n = []
+                for loc, fpe, count in m:
+                    t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
+                    n.append(self.FpeMask(loc, t, count))
+                kwargs["fpeMasks"] = n
+        super().__init__(*args, **kwargs)
+
+    class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
+        @classmethod
+        def fromFile(cls, file: Union[str, Path]) -> List["FpeMask"]:
+            if isinstance(file, str):
+                file = Path(file)
+
+            if file.suffix in (".yml", ".yaml"):
+                try:
+                    return cls.fromYaml(file)
+                except ImportError:
+                    print("FPE mask input file is YAML, but PyYAML is not installed")
+                    raise
+
+        @classmethod
+        def fromYaml(cls, file: Union[str, Path]) -> List["FpeMask"]:
+            import yaml
+
+            with file.open() as fh:
+                d = yaml.safe_load(fh)
+
+            return cls.fromDict(d)
+
+        _fpe_types_to_enum = {v.name: v for v in acts.FpeType.values}
+
+        @staticmethod
+        def toDict(
+            masks: List["FpeMask"],
+        ) -> Dict[str, Dict[str, int]]:
+            out = {}
+            for mask in masks:
+                out.setdefault(mask.loc, {})
+                out[mask.loc][mask.type.name] = mask.count
+
+                return out
+
+        @classmethod
+        def fromDict(cls, d: Dict[str, Dict[str, int]]) -> List["FpeMask"]:
+            out = []
+            for loc, types in d.items():
+                for fpe, count in types.items():
+                    out.append(cls(loc, cls._fpe_types_to_enum[fpe], count))
+            return out

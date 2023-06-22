@@ -9,16 +9,53 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
+#include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Holders.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <algorithm>
+#include <array>
+#include <functional>
+#include <map>
 #include <memory>
+#include <optional>
 #include <random>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <vector>
 
 #include "FitterTestsCommon.hpp"
 

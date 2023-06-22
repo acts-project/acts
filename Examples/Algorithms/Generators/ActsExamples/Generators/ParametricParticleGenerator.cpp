@@ -8,10 +8,15 @@
 
 #include "ActsExamples/Generators/ParametricParticleGenerator.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <limits>
 #include <random>
+#include <utility>
 
 ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
     const Config& cfg)

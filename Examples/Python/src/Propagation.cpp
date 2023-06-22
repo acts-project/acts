@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Navigation/NextNavigator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
@@ -17,11 +19,22 @@
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
+#include <algorithm>
+#include <array>
+#include <map>
 #include <memory>
 #include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class MagneticFieldProvider;
+}  // namespace Acts
 
 namespace py = pybind11;
 

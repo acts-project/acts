@@ -9,11 +9,17 @@
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/MagneticField/BFieldMapUtils.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <iomanip>
+#include <ostream>
+#include <stdexcept>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 

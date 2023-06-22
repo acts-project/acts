@@ -6,19 +6,34 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
+#include <array>
+#include <map>
 #include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class TrackingGeometry;
+}  // namespace Acts
+namespace ActsExamples {
+class IAlgorithm;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;

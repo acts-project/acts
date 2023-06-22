@@ -242,7 +242,7 @@ geometry,
 Usually, a 3D detector model geometry exists, which is either native to the full
 detector simulation (Geant4) or is translated into it. This model, however, is
 in general too detailed for track reconstruction: navigating through the
-detailed detector geometry is generally costly and one can profit greatly from a simplication mechanism.
+detailed detector geometry is generally costly and one can profit greatly from a simplification mechanism.
 
 For most part of the track reconstruction, only a surface based description of
 the detector is needed, in order to allow (surface based) material integration
@@ -263,14 +263,14 @@ optimised, but used for templating:
 * `DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a `Surface`
 * `Geant4DetectorElement` connects a Geant4 volume to a `Surface`
 
-Further exensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`
+Further extensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`
 binding for the ATLAS experiment.
 
 ```{note}
 While `DD4hep` offers a descriptive language with a dedicated extension mechanism
 that can be used by Acts to interpret the underlying geometry hierarchy and and structure,
 there is no such guarantee when having the already as built `TGeo` geometry in hand.
-Therefor a dedicated Acts configuration file based on `json` can be provided that allows
+Therefore a dedicated Acts configuration file based on `json` can be provided that allows
 to specify parsing restrictions for sub detectors. 
 ```
 
@@ -285,7 +285,7 @@ layer are determined by parsing the provided surfaces. Additionally, an envelope
 covering the surfaces can be chosen.
 
 ```{note}
-There exist standard layer builders that are desinged to build cylindrical, disk like 
+There exist standard layer builders that are designed to build cylindrical, disk like 
 and planar layers and perform the ordering of the surfaces onto those layers. These
 builders are called from the top level translation entry points from either `TGeo` 
 or `DD4hep`.

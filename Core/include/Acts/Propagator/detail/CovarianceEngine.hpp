@@ -12,6 +12,7 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -20,6 +21,7 @@
 
 #include <cmath>
 #include <functional>
+#include <tuple>
 #include <variant>
 
 namespace Acts {
@@ -28,7 +30,7 @@ namespace Acts {
 /// given Jacobians. The required data is provided by the stepper object
 /// with some additional data. Since this is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
-/// As a consequence the methods can be located in a seperate file.
+/// As a consequence the methods can be located in a separate file.
 namespace detail {
 
 /// Create and return the bound state at the current position

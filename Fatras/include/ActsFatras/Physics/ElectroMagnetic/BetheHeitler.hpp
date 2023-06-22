@@ -13,6 +13,7 @@
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <array>
+#include <cmath>
 #include <random>
 
 namespace ActsFatras {

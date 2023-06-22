@@ -10,10 +10,24 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
+
+namespace Acts {
+class DetectorElementBase;
+}  // namespace Acts
 
 Acts::LineSurface::LineSurface(const Transform3& transform, double radius,
                                double halez)
@@ -157,7 +171,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
                  : Intersection3D::Status::reachable;
     Vector3 result = (ma + u * ea);
     // Evaluate the boundary check if requested
-    // m_bounds == nullptr prevents unecessary calulations for PerigeeSurface
+    // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
     if (bcheck and m_bounds) {
       // At closest approach: check inside R or and inside Z
       const Vector3 vecLocal(result - mb);
@@ -291,7 +305,7 @@ Acts::ActsMatrix<2, 3> Acts::LineSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);

@@ -8,14 +8,17 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Group particles into proto vertices using truth information.
 class TruthVertexFinder final : public IAlgorithm {

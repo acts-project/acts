@@ -8,14 +8,21 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 // A test context

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -18,7 +19,11 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <cstddef>
+#include <iterator>
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -42,7 +47,7 @@ struct MeasurementSelectorCuts {
 /// The selection criteria could be allowed maximum chi2
 /// and allowed maximum number of measurements on one surface
 ///
-/// If there is no compatible measurement, the measurement with the mininum
+/// If there is no compatible measurement, the measurement with the minimum
 /// chi2 will be selected and the status will be tagged as an outlier
 ///
 class MeasurementSelector {

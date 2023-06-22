@@ -263,6 +263,8 @@ struct SeedFinderOptions {
 
   template <typename Config>
   SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
+    using namespace Acts::UnitLiterals;
+
     if (!isInInternalUnits) {
       throw std::runtime_error(
           "Derived quantities in SeedFinderOptions can only be calculated from "
@@ -272,7 +274,7 @@ struct SeedFinderOptions {
     // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
     // millimeter
     // TODO: change using ACTS units
-    options.pTPerHelixRadius = 300. * options.bFieldInZ;
+    options.pTPerHelixRadius = 1_T * 1e6 * options.bFieldInZ;
     options.minHelixDiameter2 =
         std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2);
     options.pT2perRadius =

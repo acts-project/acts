@@ -1,4 +1,5 @@
 [
   { ref: "mapping-boost.imp" },
-  { ref: "mapping-eigen.imp" }
+  { ref: "mapping-eigen.imp" },
+  { ref: "mapping-pythia.imp" }
 ]

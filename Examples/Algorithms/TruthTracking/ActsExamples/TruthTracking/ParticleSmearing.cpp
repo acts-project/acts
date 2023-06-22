@@ -8,15 +8,26 @@
 
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
 #include <cmath>
-#include <vector>
+#include <ostream>
+#include <random>
+#include <stdexcept>
+#include <utility>
 
 ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
                                                  Acts::Logging::Level level)
@@ -46,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
   for (auto&& [vtxId, vtxParticles] : groupBySecondaryVertex(particles)) {
     // a group contains at least one particle by construction. assume that all
     // particles within the group originate from the same position and use it to
-    // as the refernce position for the perigee frame.
+    // as the reference position for the perigee frame.
     auto perigee = Acts::Surface::makeShared<Acts::PerigeeSurface>(
         vtxParticles.begin()->position());
 
