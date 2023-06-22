@@ -811,8 +811,8 @@ def addKalmanTracks(
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
-    calibrationConfigFile: str = None,
     clusters: str = None,
+    calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -835,11 +835,6 @@ def addKalmanTracks(
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
     }
-
-    if calibrationConfigFile is None:
-        calibrator = acts.examples.makePassThroughCalibrator()
-    else:
-        calibrator = acts.examples.makeScalingCalibrator(calibrationConfigFile)
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=customLogLevel(),
