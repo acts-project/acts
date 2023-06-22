@@ -93,6 +93,9 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
+  std::cout << "node tensor type " << inputTensor.scalar_type() << "\n";
+  std::cout << "edgeList tensor type " << edgeList.scalar_type() << "\n";
+
   return {inputTensor, edgeList};
 }
 }  // namespace Acts

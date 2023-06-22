@@ -50,6 +50,8 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
 
   const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
   const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
+  std::cout << "node tensor type " << nodes.scalar_type() << "\n";
+  std::cout << "edgeList tensor type " << edgeList.scalar_type() << "\n";
 
   std::vector<at::Tensor> results;
   results.reserve(m_cfg.nChunks);
