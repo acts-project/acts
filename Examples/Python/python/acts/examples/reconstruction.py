@@ -1204,12 +1204,12 @@ def addExaTrkX(
         "spacepointFeatures": 3,
         "embeddingDim": 8,
         "rVal": 1.6,
-        "knnVal": 500,
+        "knnVal": 100,
     }
 
     filterConfig = {
         "level": customLogLevel(),
-        "cut": 0.21,
+        "cut": 0.01,
     }
 
     gnnConfig = {
