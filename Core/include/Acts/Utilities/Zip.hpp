@@ -27,7 +27,7 @@ auto zip(R &&...r) {
     std::tuple<decltype(r.begin())...> iterators;
     static_assert(std::tuple_size_v<decltype(iterators)> > 0);
 
-    using reference = std::tuple<decltype(*std::begin(r))...>;
+    using reference = std::tuple<decltype(*r.begin())...>;
 
     auto operator++() {
       std::apply([](auto &...args) { (++args, ...); }, iterators);
@@ -51,9 +51,9 @@ auto zip(R &&...r) {
     auto end() { return e; }
   };
 
-  auto begin = std::make_tuple(std::begin(r)...);
-  auto end = std::make_tuple(std::end(r)...);
-  return Zip{begin, end};
+  auto begin = std::make_tuple(r.begin()...);
+  auto end = std::make_tuple(r.end()...);
+  return Zip{It{begin}, It{end}};
 }
 
 }  // namespace Acts
