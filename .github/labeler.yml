@@ -7,7 +7,7 @@
   - Tests/UnitTests/Core/**
 'Component - Examples':
   - Examples/**
-  - Tests/UnitTests/**
+  - Tests/UnitTests/Examples/**
 'Component - Fatras':
   - Fatras/**
   - Tests/UnitTests/Fatras/**
