@@ -63,10 +63,11 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     const auto phi = Acts::VectorHelpers::phi(p.unitDirection());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // define charge selection
-    const bool validNeutral = not m_cfg.removeNeutral or (p.charge() != 0);
-    const bool validCharged = not m_cfg.removeCharged or (p.charge() == 0);
+    const bool validNeutral = (p.charge() == 0) and not m_cfg.removeNeutral;
+    const bool validCharged = (p.charge() != 0) and not m_cfg.removeCharged;
+    const bool validCharge = validNeutral or validCharged;
     const bool validSecondary = not m_cfg.removeSecondaries or !p.isSecondary();
-    return validNeutral and validCharged and validSecondary and
+    return validCharge and validSecondary and
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
