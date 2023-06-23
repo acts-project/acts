@@ -17,7 +17,6 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -61,17 +60,16 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
       decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
-      isg{lSurfaces, assignToAll, {binning.data.binvalue}, {binning.expansion}};
-  if (binning.data.type == Acts::equidistant) {
+      isg{lSurfaces, assignToAll, {binning.binValue}, {binning.expansion}};
+  if (binning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant
     Acts::Experimental::detail::GridAxisGenerators::Eq<aType> aGenerator{
-        {-M_PI, M_PI}, binning.data.bins()};
+        {binning.edges.front(), binning.edges.back()}, binning.bins()};
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else {
     // Variable
     Acts::Experimental::detail::GridAxisGenerators::Var<aType> aGenerator{
         binning.edges};
-
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   }
   return sfCandidates;
@@ -101,12 +99,11 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
-
   Acts::Experimental::detail::IndexedSurfacesGenerator<
       decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
       isg{lSurfaces,
           assignToAll,
-          {aBinning.data.binvalue, bBinning.data.binvalue},
+          {aBinning.binValue, bBinning.binValue},
           {aBinning.expansion, bBinning.expansion}};
   // Run through the cases
   if (aBinning.axisType == Acts::detail::AxisType::Equidistant and
@@ -117,7 +114,6 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
                    aBinning.bins(),
                    {bBinning.edges.front(), bBinning.edges.back()},
                    bBinning.bins()};
-
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else if (bBinning.axisType == Acts::detail::AxisType::Equidistant) {
     // Variable-Equidistant
@@ -132,13 +128,11 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
         aGenerator{{aBinning.edges.front(), aBinning.edges.back()},
                    aBinning.bins(),
                    bBinning.edges};
-
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   } else {
     // Variable-Variable
     Acts::Experimental::detail::GridAxisGenerators::VarVar<aType, bType>
         aGenerator{aBinning.edges, bBinning.edges};
-
     sfCandidates = isg(gctx, aGenerator, rGenerator);
   }
   // Return the candidates
