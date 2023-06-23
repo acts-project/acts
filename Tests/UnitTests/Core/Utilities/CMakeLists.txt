@@ -42,3 +42,5 @@ endif()
 add_unittest(Any AnyTests.cpp)
 add_unittest(AnyDebug AnyTests.cpp)
 target_compile_definitions(ActsUnitTestAnyDebug PRIVATE _ACTS_ANY_ENABLE_VERBOSE _ACTS_ANY_ENABLE_DEBUG _ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
+
+add_unittest(Zip ZipTests.cpp)
