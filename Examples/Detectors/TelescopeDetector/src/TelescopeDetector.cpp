@@ -35,16 +35,23 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
         "The minR should be smaller than the maxR for disc surface bounds.");
   }
 
+  if (cfg.positions.size() != cfg.stereos.size()) {
+    throw std::invalid_argument(
+        "The size of provided positions must be the same as the size of "
+        "provided stereos.");
+  }
+
   config = cfg;
 
   // Sort the provided distances
   std::vector<double> positions = cfg.positions;
+  std::vector<double> stereos = cfg.stereos;
   std::sort(positions.begin(), positions.end());
 
   /// Return the telescope detector
   TrackingGeometryPtr gGeometry = ActsExamples::Telescope::buildDetector(
-      nominalContext, detectorStore, positions, cfg.offsets, cfg.bounds,
-      cfg.thickness,
+      nominalContext, detectorStore, positions, stereos, cfg.offsets,
+      cfg.bounds, cfg.thickness,
       static_cast<ActsExamples::Telescope::TelescopeSurfaceType>(
           cfg.surfaceType),
       static_cast<Acts::BinningValue>(cfg.binValue));
