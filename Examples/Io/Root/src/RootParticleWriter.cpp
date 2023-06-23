@@ -110,16 +110,21 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     // momentum
     const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
     m_p.push_back(Acts::clampValue<float>(p));
-    m_px.push_back(Acts::clampValue<float>(p * particle.unitDirection().x());
+    m_px.push_back(Acts::clampValue<float>(p * particle.unitDirection().x()));
     m_py.push_back(Acts::clampValue<float>(p * particle.unitDirection().y()));
     m_pz.push_back(Acts::clampValue<float>(p * particle.unitDirection().z()));
     // particle constants
-    m_m.push_back(Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
-    m_q.push_back(Acts::clampValue<float>(particle.charge() / Acts::UnitConstants::e));
+    m_m.push_back(
+        Acts::clampValue<float>(particle.mass() / Acts::UnitConstants::GeV));
+    m_q.push_back(
+        Acts::clampValue<float>(particle.charge() / Acts::UnitConstants::e));
     // derived kinematic quantities
-    m_eta.push_back(Acts::clampValue<float>(Acts::VectorHelpers::eta(particle.unitDirection())));
-    m_phi.push_back(Acts::clampValue<float>(Acts::VectorHelpers::phi(particle.unitDirection())));
-    m_pt.push_back(Acts::clampValue<float>(p * Acts::VectorHelpers::perp(particle.unitDirection())));
+    m_eta.push_back(Acts::clampValue<float>(
+        Acts::VectorHelpers::eta(particle.unitDirection())));
+    m_phi.push_back(Acts::clampValue<float>(
+        Acts::VectorHelpers::phi(particle.unitDirection())));
+    m_pt.push_back(Acts::clampValue<float>(
+        p * Acts::VectorHelpers::perp(particle.unitDirection())));
     // decoded barcode components
     m_vertexPrimary.push_back(particle.particleId().vertexPrimary());
     m_vertexSecondary.push_back(particle.particleId().vertexSecondary());
