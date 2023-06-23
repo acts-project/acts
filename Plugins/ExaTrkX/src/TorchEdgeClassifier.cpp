@@ -48,10 +48,8 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
-  const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
-  const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
-  std::cout << "node tensor type " << nodes.scalar_type() << "\n";
-  std::cout << "edgeList tensor type " << edgeList.scalar_type() << "\n";
+  auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
+  auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
 
   std::vector<at::Tensor> results;
   results.reserve(m_cfg.nChunks);
@@ -60,7 +58,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
       m_cfg.undirected ? torch::cat({edgeList, edgeList.flip(0)}, 1) : edgeList;
 
   std::vector<torch::jit::IValue> inputTensors(2);
-  inputTensors[0] = nodes;
+  inputTensors[0] = std::move(nodes);
 
   const auto chunks = at::chunk(at::arange(edgeListTmp.size(1)), m_cfg.nChunks);
   for (const auto& chunk : chunks) {
@@ -78,8 +76,6 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     output = output.index({Slice(None, output.size(0) / 2)});
   }
 
-  results.clear();
-
   ACTS_VERBOSE("Size after filtering network: " << output.size(0));
   ACTS_VERBOSE("Slice of filtered output:\n"
                << output.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
@@ -92,7 +88,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   ACTS_VERBOSE("Size after filter cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
 
-  return {nodes, edgesAfterCut, output.masked_select(mask)};
+  return {std::move(inputTensors[0]).toTensor(), std::move(edgesAfterCut), output.masked_select(mask)};
 }
 
 }  // namespace Acts

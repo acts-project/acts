@@ -63,7 +63,6 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // **********
 
   const int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
-  std::vector<torch::jit::IValue> inputTensors;
   auto opts = torch::TensorOptions().dtype(torch::kFloat32);
   torch::Tensor inputTensor =
       torch::from_blob(inputValues.data(),
@@ -75,9 +74,9 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   auto model = m_model->clone();
   model.to(device);
 
-  inputTensors.push_back(inputTensor);
+  std::vector<torch::jit::IValue> inputTensors;
+  inputTensors.emplace_back(std::move(inputTensor));
   auto output = model.forward(inputTensors).toTensor();
-  inputTensors.clear();
 
   ACTS_VERBOSE("Embedding space of the first SP:\n"
                << output.slice(/*dim=*/0, /*start=*/0, /*end=*/1));
@@ -93,9 +92,6 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
-  std::cout << "node tensor type " << inputTensor.scalar_type() << "\n";
-  std::cout << "edgeList tensor type " << edgeList.scalar_type() << "\n";
-
-  return {inputTensor, edgeList};
+  return {std::move(inputTensors[0]).toTensor(), std::move(edgeList)};
 }
 }  // namespace Acts
