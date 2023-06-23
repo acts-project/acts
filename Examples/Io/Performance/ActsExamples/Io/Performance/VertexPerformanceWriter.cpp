@@ -530,7 +530,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
           }
 
-          // Save truth momenta nd reconstructed momenta at the PCA to the true
+          // Save truth momenta and reconstructed momenta at the PCA to the true
           // vertex Perigee at the true vertex position
           const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface =
               Acts::Surface::makeShared<Acts::PerigeeSurface>(truePos.head(3));
