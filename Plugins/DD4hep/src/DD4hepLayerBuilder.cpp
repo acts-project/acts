@@ -158,7 +158,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           pl.envelope[Acts::binZ] = {0., 0.};
         } else {
           ACTS_VERBOSE(" Disc layer has " << layerSurfaces.size()
-                                          << " senstive surfaces.");
+                                          << " sensitive surfaces.");
           // set the values of the proto layer in case dimensions are given by
           // geometry
           pl.envelope[Acts::binZ] = {std::abs(zMin - pl.min(Acts::binZ)),

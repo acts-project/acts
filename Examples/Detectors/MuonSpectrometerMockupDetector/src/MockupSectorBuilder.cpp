@@ -226,7 +226,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
   const Acts::Vector3 pos = {0., 0., 0.};
 
-  // the transfom of the cylinder volume
+  // the transform of the cylinder volume
   Acts::AngleAxis3 rotZ(M_PI / 2, Acts::Vector3(0., 0., 1));
   auto transform = Acts::Transform3(Acts::Translation3(pos));
   transform *= rotZ;

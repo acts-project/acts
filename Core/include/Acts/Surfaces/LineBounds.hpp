@@ -31,7 +31,7 @@ class LineBounds : public SurfaceBounds {
   /// Constructor
   ///
   /// @param r is the radius of the cylinder, default = 0.
-  /// @param halfZ is the half length in z, defualt = 0.
+  /// @param halfZ is the half length in z, default = 0.
   LineBounds(double r, double halfZ) noexcept(false) : m_values({r, halfZ}) {
     checkConsistency();
   }

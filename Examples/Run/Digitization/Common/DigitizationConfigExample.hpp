@@ -14,7 +14,7 @@ class IBaseDetector;
 
 /// The Digitization example
 ///
-/// @param argc the number of argumetns of the call
+/// @param argc the number of arguments of the call
 /// @param argv the argument list
 /// @param detector The detector descriptor instance
 int runDigitizationConfigExample(

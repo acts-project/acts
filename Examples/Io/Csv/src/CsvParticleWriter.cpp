@@ -27,7 +27,7 @@ ActsExamples::CsvParticleWriter::CsvParticleWriter(
     : WriterT(cfg.inputParticles, "CsvParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
-    throw std::invalid_argument("Missing ouput filename stem");
+    throw std::invalid_argument("Missing output filename stem");
   }
 }
 

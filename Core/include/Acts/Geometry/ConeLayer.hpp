@@ -30,14 +30,14 @@ class ConeLayer : virtual public ConeSurface, public Layer {
  public:
   /// Factory for shared layer
   ///
-  /// @param transform is the 3D transform that poisitions the layer in 3D frame
+  /// @param transform is the 3D transform that positions the layer in 3D frame
   /// @param cbounds is the conical bound description
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness along the normal axis
   /// @param ad is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
-  /// @todo chage od and ad to unique_ptr
+  /// @todo change od and ad to unique_ptr
   ///
   /// @return is a shared pointer to a layer
   static MutableLayerPtr create(
@@ -64,14 +64,14 @@ class ConeLayer : virtual public ConeSurface, public Layer {
  protected:
   /// Private constructor with arguments
   ///
-  /// @param transform is the 3D transform that poisitions the layer in 3D frame
+  /// @param transform is the 3D transform that positions the layer in 3D frame
   /// @param cbounds is the conical bound description
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness along the normal axis
   /// @param ade is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
-  /// @todo chage od and ad to unique_ptr
+  /// @todo change od and ad to unique_ptr
   ConeLayer(const Transform3& transform,
             std::shared_ptr<const ConeBounds> cbounds,
             std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,

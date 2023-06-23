@@ -103,10 +103,10 @@ Acts::Experimental::CylindricalContainerBuilder::CylindricalContainerBuilder(
           "CylindricalContainerBuilder: 2D binning only supports wrapping in "
           "z-r.");
     } else if (m_cfg.builders.size() != 2u) {
-      // Wrapping needs exacly one inner (volume or container) and one outer
+      // Wrapping needs exactly one inner (volume or container) and one outer
       // volume
       throw std::invalid_argument(
-          "CylindricalContainerBuilder: 2D wrapping in z-r requires exaclty "
+          "CylindricalContainerBuilder: 2D wrapping in z-r requires exactly "
           "two builders.");
     }
   }
@@ -129,7 +129,7 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
   std::vector<std::shared_ptr<DetectorVolume>> volumes;
   std::vector<DetectorComponent::PortalContainer> containers;
   std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
-  // Run throuth the builders
+  // Run through the builders
   std::for_each(
       m_cfg.builders.begin(), m_cfg.builders.end(), [&](const auto& builder) {
         auto [cVolumes, cContainer, cRoots] = builder->construct(gctx);

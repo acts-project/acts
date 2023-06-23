@@ -115,7 +115,7 @@ class StraightLineStepper {
     /// The absolute charge as the free vector can be 1/p or q/p
     double absCharge = UnitConstants::e;
 
-    /// Boolean to indiciate if you need covariance transport
+    /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
@@ -259,7 +259,7 @@ class StraightLineStepper {
                                                       release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
@@ -332,7 +332,7 @@ class StraightLineStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] freeParams Free parameters that will be written into @p state
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
-  /// @param [in] covariance Covariance that willl be written into @p state
+  /// @param [in] covariance Covariance that will be written into @p state
   /// @param [in] surface The surface used to update the jacToGlobal
   void update(State& state, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,

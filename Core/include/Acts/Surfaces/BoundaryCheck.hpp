@@ -123,7 +123,7 @@ class BoundaryCheck {
 
  private:
   /// Return a new BoundaryCheck with updated covariance.
-  /// @param jacobian Tranform Jacobian for the covariance
+  /// @param jacobian Transform Jacobian for the covariance
   /// @warning This currently only transforms the covariance and does not work
   ///          for the tolerance based check.
   BoundaryCheck transformed(const ActsMatrix<2, 2>& jacobian) const;
@@ -151,7 +151,7 @@ class BoundaryCheck {
   Vector2 m_tolerance;
   Type m_type;
 
-  // To acces the m_type
+  // To access the m_type
   friend class CylinderBounds;
   friend class RectangleBounds;
   // To be able to use `transformed`

@@ -18,7 +18,7 @@
 namespace ActsExamples {
 
 /// Generic implementation of the machine learning ambiguity resolution
-/// Conatains method for data preparations
+/// Contains method for data preparations
 class AmbiguityResolutionML : public IAlgorithm {
  public:
   /// Construct the ambiguity resolution algorithm.
@@ -31,7 +31,7 @@ class AmbiguityResolutionML : public IAlgorithm {
   /// Associated measurements ID to Tracks ID
   ///
   /// @param tracks is the input track container
-  /// @param nMeasurementsMin minimum number of measurment per track
+  /// @param nMeasurementsMin minimum number of measurement per track
   /// @return an ordered list containing pairs of track ID and associated measurement ID
   std::multimap<int, std::pair<int, std::vector<int>>> mapTrackHits(
       const ConstTrackContainer& tracks, int nMeasurementsMin) const;
