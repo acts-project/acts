@@ -17,12 +17,12 @@
 
 namespace Acts {
 
-/// A set of (hierachical) indices bitpacked into a single value.
+/// A set of (hierarchical) indices bitpacked into a single value.
 ///
 /// The underlying value is split into blocks of bits with variable size.
-/// Each block is a level within the index hierachy and can be set and
+/// Each block is a level within the index hierarchy and can be set and
 /// retrieved separately. The encoded MultiIndex can be ordered and compared
-/// for equality. The ordering follows the hiearchy, i.e. indices are
+/// for equality. The ordering follows the hierarchy, i.e. indices are
 /// first ordered by the highest level, then within the highest level by the
 /// second level and so on.
 template <typename T, std::size_t... BitsPerLevel>
@@ -35,7 +35,7 @@ class MultiIndex {
   static_assert((sizeof(T) * CHAR_BIT) == (... + BitsPerLevel),
                 "The sum of bits per level must match the underlying storage");
 
-  /// The type of ther underlying storage value.
+  /// The type of their underlying storage value.
   using Value = T;
   enum : std::size_t {
     NumLevels = sizeof...(BitsPerLevel),

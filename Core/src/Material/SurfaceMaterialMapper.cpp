@@ -370,19 +370,19 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
             break;
           }
           default: {
-            ACTS_ERROR("Incorect mapping type for the next surface : "
+            ACTS_ERROR("Incorrect mapping type for the next surface : "
                        << (sfIter + 1)->surface->geometryId());
           }
         }
       } else {
-        ACTS_ERROR("Incorect mapping type for surface : "
+        ACTS_ERROR("Incorrect mapping type for surface : "
                    << sfIter->surface->geometryId());
       }
     }
 
     // get the current Surface ID
     currentID = sfIter->surface->geometryId();
-    // We have work to do: the assignemnt surface has changed
+    // We have work to do: the assignment surface has changed
     if (not(currentID == lastID)) {
       // Let's (re-)assess the information
       lastID = currentID;

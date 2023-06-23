@@ -32,7 +32,7 @@ class IPortalGenerator {
       const std::shared_ptr<DetectorVolume>& dVolume) const = 0;
 };
 
-/// The Portal genertor definition
+/// The Portal generator definition
 using PortalGenerator =
     OwningDelegate<std::vector<std::shared_ptr<Portal>>(
                        const Transform3&, const VolumeBounds&,
@@ -58,7 +58,7 @@ struct PortalAndSubPortalGenerator final : public IPortalGenerator {
   /// @brief Calls the portal generation and adds registration to sub portals
   ///
   /// This code is split off the PortalGenerator code in order to allow
-  /// unit testing of the portal generation wihtout detector volume construction
+  /// unit testing of the portal generation without detector volume construction
   ///
   /// @param dTransform a contextually resolved transform
   /// @param dBounds the detecor volume bounds

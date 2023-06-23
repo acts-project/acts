@@ -87,7 +87,7 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_wraps,
   BOOST_CHECK(!outerConfig4.wraps(innerConfig));
   // check if outside volume can not be wrapped around inside volume
   BOOST_CHECK(!innerConfig.wraps(outerConfig3));
-  // check if outside volume containes inside volume
+  // check if outside volume contains inside volume
   BOOST_CHECK(outerConfig5.wraps(innerConfig));
   // check if inside volume is not contained by outside volume
   BOOST_CHECK(!innerConfig.wraps(outerConfig5));
@@ -168,7 +168,7 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBuilder_containes,
   BOOST_CHECK(!outerConfig4.contains(innerConfig));
   // check if outside volume can not be wrapped around inside volume
   BOOST_CHECK(!innerConfig.contains(outerConfig3));
-  // check if outside volume containes inside volume
+  // check if outside volume contains inside volume
   BOOST_CHECK(outerConfig5.contains(innerConfig));
   // check if inside volume is not contained by outside volume
   BOOST_CHECK(!innerConfig.contains(outerConfig5));

@@ -449,7 +449,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         lastPositionEnd = volIter->position;
         currentBinning = mState.materialBin.find(currentID);
       }
-      // If the curent volume has a ProtoVolumeMaterial
+      // If the current volume has a ProtoVolumeMaterial
       // and the material hit has a non 0 thickness
       if (currentBinning != mState.materialBin.end() &&
           rmIter->materialSlab.thickness() > 0) {

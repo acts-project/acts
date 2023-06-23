@@ -51,10 +51,10 @@ class GenericApproachDescriptor : public ApproachDescriptor {
 
   /// @brief Register the Layer to the surfaces
   ///
-  /// @param lay is the layer to be registerd
+  /// @param lay is the layer to be registered
   void registerLayer(const Layer& lay) override;
 
-  /// Get the aproach surface to the layer
+  /// Get the approach surface to the layer
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position to start the approach from

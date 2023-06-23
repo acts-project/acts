@@ -33,7 +33,7 @@ class Surface;
 /// DetectorElement plugin for ROOT TGeo shapes. Added possibility to hand over
 /// transformation matrix.
 ///
-/// @todo what if shape conversion failes? add implementation of more than one
+/// @todo what if shape conversion fails? add implementation of more than one
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what if not used with DD4hep?
 ///

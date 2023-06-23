@@ -163,7 +163,7 @@ class NextNavigator {
 
   /// @brief Navigator pre step call
   ///
-  /// This will invalide the current surface and current portal in order
+  /// This will invalid the current surface and current portal in order
   /// to navigate to the next ones.
   ///
   /// @tparam propagator_state_t is the type of Propagatgor state

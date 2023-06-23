@@ -121,7 +121,7 @@ class AmbiguityTrackClassifier {
   }
 
  private:
-  // ONNX environement
+  // ONNX environment
   Ort::Env m_env;
   // ONNX model for the duplicate neural network
   Acts::OnnxRuntimeBase m_duplicateClassifier;

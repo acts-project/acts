@@ -120,7 +120,7 @@ class MaterialMapping : public ActsExamples::IAlgorithm {
   /// Return the parameters to optimised the material map for a given surface
   /// Those parameters are the variance and the number of track for each bin
   ///
-  /// @param surfaceID the ID of the surface of intrest
+  /// @param surfaceID the ID of the surface of interest
   std::vector<std::pair<double, int>> scoringParameters(uint64_t surfaceID);
 
   /// Readonly access to the config

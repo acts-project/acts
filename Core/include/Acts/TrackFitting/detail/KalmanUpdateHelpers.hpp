@@ -29,7 +29,7 @@ namespace detail {
 /// @param source_link The source-link used for the update
 /// @param fittedStates The Multitrajectory to that we add the state
 /// @param lastTrackIndex The parent index for the new state in the MT
-/// @param doCovTransport Wether to perform a covariance transport when
+/// @param doCovTransport Whether to perform a covariance transport when
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t,
@@ -118,7 +118,7 @@ auto kalmanHandleMeasurement(
 /// @param surface The current surface
 /// @param fittedStates The Multitrajectory to that we add the state
 /// @param lastTrackIndex The parent index for the new state in the MT
-/// @param doCovTransport Wether to perform a covariance transport when
+/// @param doCovTransport Whether to perform a covariance transport when
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t, typename traj_t>

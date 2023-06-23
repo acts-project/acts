@@ -88,8 +88,8 @@ struct NavigationState {
   /// An overstep tolerance
   ActsScalar overstepTolerance = -0.1;
 
-  /// Auxilliary attached information
-  std::any auxilliary;
+  /// Auxiliary attached information
+  std::any auxiliary;
 };
 
 }  // namespace Experimental

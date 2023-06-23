@@ -17,9 +17,9 @@
 
 #include <boost/mpl/list.hpp>
 
-// 32bit split into a three level hierachy.
+// 32bit split into a three level hierarchy.
 using Index32 = Acts::MultiIndex<uint32_t, 16, 8, 8>;
-// 64bit split into a four level hierachy
+// 64bit split into a four level hierarchy
 using Index64 = Acts::MultiIndex<uint64_t, 13, 17, 21, 13>;
 using Indices = boost::mpl::list<Index32, Index64>;
 

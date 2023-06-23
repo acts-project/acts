@@ -53,7 +53,7 @@ BinUtility adjustBinUtility(const BinUtility& bu, const RadialBounds& rBounds,
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
-      throw std::invalid_argument("Arbirary binning can not be adjusted.");
+      throw std::invalid_argument("Arbitrary binning can not be adjusted.");
     } else if (bval != binR and bval != binPhi) {
       throw std::invalid_argument("Disc binning must be: phi, r");
     }

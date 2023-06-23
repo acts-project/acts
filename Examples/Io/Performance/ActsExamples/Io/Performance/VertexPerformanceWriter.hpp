@@ -112,7 +112,7 @@ class VertexPerformanceWriter final
   std::vector<float> m_recoZ;
   std::vector<float> m_recoT;
 
-  /// Difference in x positon between reco and true vtx
+  /// Difference in x position between reco and true vtx
   std::vector<float> m_resX;
   std::vector<float> m_resY;
   std::vector<float> m_resZ;

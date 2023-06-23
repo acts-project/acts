@@ -57,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
   for (auto&& [vtxId, vtxParticles] : groupBySecondaryVertex(particles)) {
     // a group contains at least one particle by construction. assume that all
     // particles within the group originate from the same position and use it to
-    // as the refernce position for the perigee frame.
+    // as the reference position for the perigee frame.
     auto perigee = Acts::Surface::makeShared<Acts::PerigeeSurface>(
         vtxParticles.begin()->position());
 

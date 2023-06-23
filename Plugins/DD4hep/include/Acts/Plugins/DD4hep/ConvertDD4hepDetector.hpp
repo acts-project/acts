@@ -55,7 +55,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
 /// binned in a layer in phi direction.
 /// @note Possible binningtypes:
-/// 	- arbitrary   - of the sizes if the surfaces and the distance inbetween
+/// 	- arbitrary   - of the sizes if the surfaces and the distance in between
 /// 		vary. This mode finds out the bin boundaries by scanning through
 /// the 		surfaces.
 /// 	- equidistant - if the sensitive surfaces are placed equidistantly
@@ -85,7 +85,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///                              @c collectSubDetectors() ) from bottom to top to
 ///                              ensure correct wrapping of the volumes, which
 ///                              is needed for navigation. Therefore the
-///                              different hierachies need to be sorted
+///                              different hierarchies need to be sorted
 ///                              ascending. The default is sorting by ID.
 /// @param gctx The geometry context to use
 /// @param matDecorator is the material decorator that loads material maps
@@ -95,7 +95,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// @return std::unique_ptr to the full TrackingGeometry
 
 ///	* The Tracking geometry needs to be built from bottom to top to ensure
-/// Navigation. Therefore the different hierachies need to be sorted ascending.
+/// Navigation. Therefore the different hierarchies need to be sorted ascending.
 /// Per default the sub detectors are sorted by the id of their
 /// dd4hep::DetElement. In case another sorting needs to be applied, the users
 /// can provide their own function
@@ -125,7 +125,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
 /// binned in a layer in phi direction.
 /// @note Possible binningtypes:
-/// 	- arbitrary   - of the sizes if the surfaces and the distance inbetween
+/// 	- arbitrary   - of the sizes if the surfaces and the distance in between
 /// 		vary. This mode finds out the bin boundaries by scanning through
 /// the 		surfaces.
 /// 	- equidistant - if the sensitive surfaces are placed equidistantly

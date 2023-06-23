@@ -237,7 +237,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   using ActsExamples::Sequencer;
   using Config = Sequencer::Config;
   auto sequencer =
-      py::class_<Sequencer>(mex, "Sequencer")
+      py::class_<Sequencer>(mex, "_Sequencer")
           .def(py::init([](Config cfg) {
             cfg.iterationCallback = []() {
               py::gil_scoped_acquire gil;
@@ -278,7 +278,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   ACTS_PYTHON_MEMBER(fpeStackTraceLength);
   ACTS_PYTHON_STRUCT_END();
 
-  auto fpem = py::class_<Sequencer::FpeMask>(sequencer, "FpeMask")
+  auto fpem = py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
                   .def(py::init<>())
                   .def(py::init<std::string, Acts::FpeType, std::size_t>())
                   .def("__repr__", [](const Sequencer::FpeMask& self) {

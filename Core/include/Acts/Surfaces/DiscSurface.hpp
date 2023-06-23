@@ -104,7 +104,7 @@ class DiscSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
               const Transform3& shift);
 
@@ -112,7 +112,7 @@ class DiscSurface : public Surface {
   ~DiscSurface() override = default;
   DiscSurface() = delete;
 
-  /// Assignement operator
+  /// Assignment operator
   ///
   /// @param other The source sourface for the assignment
   DiscSurface& operator=(const DiscSurface& other);
@@ -132,7 +132,7 @@ class DiscSurface : public Surface {
   /// Normal vector return without argument
   using Surface::normal;
 
-  /// The binning position The position calcualted
+  /// The binning position The position calculated
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -146,7 +146,7 @@ class DiscSurface : public Surface {
   const SurfaceBounds& bounds() const final;
 
   /// Local to global transformation
-  /// For planar surfaces the momentum is ignroed in the local to global
+  /// For planar surfaces the momentum is ignored in the local to global
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -211,7 +211,7 @@ class DiscSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is a global cartesian 3D position
-  /// @param tol The absoltue tolerance parameter
+  /// @param tol The absolute tolerance parameter
   ///
   /// @return value is a local polar
   Vector2 globalToLocalCartesian(const GeometryContext& gctx,
@@ -307,7 +307,7 @@ class DiscSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates

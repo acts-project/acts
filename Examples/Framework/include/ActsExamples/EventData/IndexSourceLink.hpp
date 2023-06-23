@@ -24,7 +24,7 @@ namespace ActsExamples {
 /// Keeping it small and separate from the actual, potentially large,
 /// measurement data should result in better overall performance.
 /// Using an index instead of e.g. a pointer, means source link and
-/// measurement are decoupled and the measurement represenation can be
+/// measurement are decoupled and the measurement representation can be
 /// easily changed without having to also change the source link.
 class IndexSourceLink final {
  public:
