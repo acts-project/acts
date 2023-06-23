@@ -544,19 +544,23 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Setting the geometry/magnetic field context context for the event
           Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
           // Lambda for propagating the tracks to the PCA
-          auto propagateToVtx = [&](const auto& params) {
+          auto propagateToVtx = [&](const auto& params)
+              -> std::optional<
+                  Acts::SingleBoundTrackParameters<Acts::SinglyCharged>> {
             auto intersection = perigeeSurface->intersect(
                 ctx.geoContext, params.position(ctx.geoContext),
                 params.unitDirection(), false);
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
                 intersection.intersection.pathLength);
 
-            auto result = propagator->propagate(
-                params, *perigeeSurface,
-                pOptions);  // TODO: not checking if result is ok - is that a
-                            // problem?
+            auto result =
+                propagator->propagate(params, *perigeeSurface, pOptions);
+            if (not result.ok()) {
+              ACTS_ERROR("Propagation to true vertex position failed.");
+              return std::nullopt;
+            }
             auto& paramsAtVtx = *result->endParameters;
-            return paramsAtVtx;
+            return std::make_optional(paramsAtVtx);
           };
           // Get the reconstructed track parameters corresponding to the
           // particle
@@ -575,65 +579,71 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               m_truthQOverP.push_back(trueMom[2]);
 
               // Track parameters before the vertex fit
-              auto paramsAtVtx = propagateToVtx(*(trk.originalParams));
-              Acts::ActsVector<3> recoMom =
-                  paramsAtVtx.parameters().segment(Acts::eBoundPhi, 3);
-              const Acts::ActsMatrix<3, 3>& momCov =
-                  paramsAtVtx.covariance()->block<3, 3>(Acts::eBoundPhi,
-                                                        Acts::eBoundPhi);
-              m_recoPhi.push_back(recoMom[0]);
-              m_recoTheta.push_back(recoMom[1]);
-              m_recoQOverP.push_back(recoMom[2]);
+              const auto paramsAtVtx = propagateToVtx(*(trk.originalParams));
+              if (paramsAtVtx != std::nullopt) {
+                Acts::ActsVector<3> recoMom =
+                    paramsAtVtx->parameters().segment(Acts::eBoundPhi, 3);
+                const Acts::ActsMatrix<3, 3>& momCov =
+                    paramsAtVtx->covariance()->block<3, 3>(Acts::eBoundPhi,
+                                                           Acts::eBoundPhi);
+                m_recoPhi.push_back(recoMom[0]);
+                m_recoTheta.push_back(recoMom[1]);
+                m_recoQOverP.push_back(recoMom[2]);
 
-              Acts::ActsVector<3> diffMom = recoMom - trueMom;
-              // Accounting for the periodicity of phi. We overwrite the
-              // previously computed value for better readability.
-              diffMom[0] = Acts::detail::difference_periodic(
-                  recoMom(0), trueMom(0), 2 * M_PI);
-              m_resPhi.push_back(diffMom[0]);
-              m_resTheta.push_back(diffMom[1]);
-              m_resQOverP.push_back(diffMom[2]);
+                Acts::ActsVector<3> diffMom = recoMom - trueMom;
+                // Accounting for the periodicity of phi. We overwrite the
+                // previously computed value for better readability.
+                diffMom[0] = Acts::detail::difference_periodic(
+                    recoMom(0), trueMom(0), 2 * M_PI);
+                m_resPhi.push_back(diffMom[0]);
+                m_resTheta.push_back(diffMom[1]);
+                m_resQOverP.push_back(diffMom[2]);
 
-              m_pullPhi.push_back(pull(diffMom[0], momCov(0, 0), "phi", false));
-              m_pullTheta.push_back(
-                  pull(diffMom[1], momCov(1, 1), "theta", false));
-              m_pullQOverP.push_back(
-                  pull(diffMom[2], momCov(2, 2), "q/p", false));
+                m_pullPhi.push_back(
+                    pull(diffMom[0], momCov(0, 0), "phi", false));
+                m_pullTheta.push_back(
+                    pull(diffMom[1], momCov(1, 1), "theta", false));
+                m_pullQOverP.push_back(
+                    pull(diffMom[2], momCov(2, 2), "q/p", false));
 
-              const auto& recoUnitDir = paramsAtVtx.unitDirection();
-              double overlap = trueUnitDir.dot(recoUnitDir);
-              m_momOverlap.push_back(overlap);
+                const auto& recoUnitDir = paramsAtVtx->unitDirection();
+                double overlap = trueUnitDir.dot(recoUnitDir);
+                m_momOverlap.push_back(overlap);
+              }
 
               // Track parameters after the vertex fit
-              auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
-              Acts::ActsVector<3> recoMomFitted =
-                  paramsAtVtxFitted.parameters().segment(Acts::eBoundPhi, 3);
-              const Acts::ActsMatrix<3, 3>& momCovFitted =
-                  paramsAtVtxFitted.covariance()->block<3, 3>(Acts::eBoundPhi,
-                                                              Acts::eBoundPhi);
-              m_recoPhiFitted.push_back(recoMomFitted[0]);
-              m_recoThetaFitted.push_back(recoMomFitted[1]);
-              m_recoQOverPFitted.push_back(recoMomFitted[2]);
+              const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
+              if (paramsAtVtxFitted != std::nullopt) {
+                Acts::ActsVector<3> recoMomFitted =
+                    paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
+                const Acts::ActsMatrix<3, 3>& momCovFitted =
+                    paramsAtVtxFitted->covariance()->block<3, 3>(
+                        Acts::eBoundPhi, Acts::eBoundPhi);
+                m_recoPhiFitted.push_back(recoMomFitted[0]);
+                m_recoThetaFitted.push_back(recoMomFitted[1]);
+                m_recoQOverPFitted.push_back(recoMomFitted[2]);
 
-              Acts::ActsVector<3> diffMomFitted = recoMomFitted - trueMom;
-              // Accounting for the periodicity of phi. We overwrite the
-              // previously computed value for better readability.
-              diffMomFitted[0] = Acts::detail::difference_periodic(
-                  recoMomFitted(0), trueMom(0), 2 * M_PI);
-              m_resPhi.push_back(diffMomFitted[0]);
-              m_resTheta.push_back(diffMomFitted[1]);
-              m_resQOverP.push_back(diffMomFitted[2]);
+                Acts::ActsVector<3> diffMomFitted = recoMomFitted - trueMom;
+                // Accounting for the periodicity of phi. We overwrite the
+                // previously computed value for better readability.
+                diffMomFitted[0] = Acts::detail::difference_periodic(
+                    recoMomFitted(0), trueMom(0), 2 * M_PI);
+                m_resPhi.push_back(diffMomFitted[0]);
+                m_resTheta.push_back(diffMomFitted[1]);
+                m_resQOverP.push_back(diffMomFitted[2]);
 
-              m_pullPhi.push_back(
-                  pull(diffMomFitted[0], momCovFitted(0, 0), "phi"));
-              m_pullTheta.push_back(
-                  pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
-              m_pullQOverP.push_back(
-                  pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
+                m_pullPhi.push_back(
+                    pull(diffMomFitted[0], momCovFitted(0, 0), "phi"));
+                m_pullTheta.push_back(
+                    pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
+                m_pullQOverP.push_back(
+                    pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
-              const auto& recoUnitDirFitted = paramsAtVtxFitted.unitDirection();
-              double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
-              m_momOverlapFitted.push_back(overlapFitted);
+                const auto& recoUnitDirFitted =
+                    paramsAtVtxFitted->unitDirection();
+                double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
+                m_momOverlapFitted.push_back(overlapFitted);
+              }
             }
           }
           count++;
