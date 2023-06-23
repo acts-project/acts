@@ -166,41 +166,55 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
       m_eQOP;  ///< predicted/filtered/smoothed/unbiased parameter eQOP
   std::array<std::vector<float>, 4>
       m_eT;  ///< predicted/filtered/smoothed/unbiased parameter eT
-  std::array<std::vector<float>, 4> m_res_eLOC0;  ///< predicted/filtered/smoothed/unbiased
-                                                  ///< parameter eLOC0 residual
-  std::array<std::vector<float>, 4> m_res_eLOC1;  ///< predicted/filtered/smoothed/unbiased
-                                                  ///< parameter eLOC1 residual
-  std::array<std::vector<float>, 4> m_res_ePHI;  ///< predicted/filtered/smoothed/unbiased
-                                                 ///< parameter ePHI residual
+  std::array<std::vector<float>, 4>
+      m_res_eLOC0;  ///< predicted/filtered/smoothed/unbiased
+                    ///< parameter eLOC0 residual
+  std::array<std::vector<float>, 4>
+      m_res_eLOC1;  ///< predicted/filtered/smoothed/unbiased
+                    ///< parameter eLOC1 residual
+  std::array<std::vector<float>, 4>
+      m_res_ePHI;  ///< predicted/filtered/smoothed/unbiased
+                   ///< parameter ePHI residual
   std::array<std::vector<float>, 4>
       m_res_eTHETA;  ///< predicted/filtered/smoothed/unbiased parameter eTHETA
                      ///< residual
-  std::array<std::vector<float>, 4> m_res_eQOP;  ///< predicted/filtered/smoothed/unbiased
-                                                 ///< parameter eQOP residual
+  std::array<std::vector<float>, 4>
+      m_res_eQOP;  ///< predicted/filtered/smoothed/unbiased
+                   ///< parameter eQOP residual
   std::array<std::vector<float>, 4>
       m_res_eT;  ///< predicted/filtered/smoothed/unbiased parameter eT residual
-  std::array<std::vector<float>, 4> m_err_eLOC0;  ///< predicted/filtered/smoothed/unbiased
-                                                  ///< parameter eLOC0 error
-  std::array<std::vector<float>, 4> m_err_eLOC1;  ///< predicted/filtered/smoothed/unbiased
-                                                  ///< parameter eLOC1 error
-  std::array<std::vector<float>, 4> m_err_ePHI;  ///< predicted/filtered/smoothed/unbiased
-                                                 ///< parameter ePHI error
-  std::array<std::vector<float>, 4> m_err_eTHETA;  ///< predicted/filtered/smoothed/unbiased
-                                                   ///< parameter eTHETA error
-  std::array<std::vector<float>, 4> m_err_eQOP;  ///< predicted/filtered/smoothed/unbiased
-                                                 ///< parameter eQOP error
+  std::array<std::vector<float>, 4>
+      m_err_eLOC0;  ///< predicted/filtered/smoothed/unbiased
+                    ///< parameter eLOC0 error
+  std::array<std::vector<float>, 4>
+      m_err_eLOC1;  ///< predicted/filtered/smoothed/unbiased
+                    ///< parameter eLOC1 error
+  std::array<std::vector<float>, 4>
+      m_err_ePHI;  ///< predicted/filtered/smoothed/unbiased
+                   ///< parameter ePHI error
+  std::array<std::vector<float>, 4>
+      m_err_eTHETA;  ///< predicted/filtered/smoothed/unbiased
+                     ///< parameter eTHETA error
+  std::array<std::vector<float>, 4>
+      m_err_eQOP;  ///< predicted/filtered/smoothed/unbiased
+                   ///< parameter eQOP error
   std::array<std::vector<float>, 4>
       m_err_eT;  ///< predicted/filtered/smoothed/unbiased parameter eT error
-  std::array<std::vector<float>, 4> m_pull_eLOC0;  ///< predicted/filtered/smoothed/unbiased
-                                                   ///< parameter eLOC0 pull
-  std::array<std::vector<float>, 4> m_pull_eLOC1;  ///< predicted/filtered/smoothed/unbiased
-                                                   ///< parameter eLOC1 pull
-  std::array<std::vector<float>, 4> m_pull_ePHI;  ///< predicted/filtered/smoothed/unbiased
-                                                  ///< parameter ePHI pull
-  std::array<std::vector<float>, 4> m_pull_eTHETA;  ///< predicted/filtered/smoothed/unbiased
-                                                    ///< parameter eTHETA pull
-  std::array<std::vector<float>, 4> m_pull_eQOP;  ///< predicted/filtered/smoothed/unbiased
-                                                  ///< parameter eQOP pull
+  std::array<std::vector<float>, 4>
+      m_pull_eLOC0;  ///< predicted/filtered/smoothed/unbiased
+                     ///< parameter eLOC0 pull
+  std::array<std::vector<float>, 4>
+      m_pull_eLOC1;  ///< predicted/filtered/smoothed/unbiased
+                     ///< parameter eLOC1 pull
+  std::array<std::vector<float>, 4>
+      m_pull_ePHI;  ///< predicted/filtered/smoothed/unbiased
+                    ///< parameter ePHI pull
+  std::array<std::vector<float>, 4>
+      m_pull_eTHETA;  ///< predicted/filtered/smoothed/unbiased
+                      ///< parameter eTHETA pull
+  std::array<std::vector<float>, 4>
+      m_pull_eQOP;  ///< predicted/filtered/smoothed/unbiased
+                    ///< parameter eQOP pull
   std::array<std::vector<float>, 4>
       m_pull_eT;  ///< predicted/filtered/smoothed/unbiased parameter eT pull
   std::array<std::vector<float>, 4>
