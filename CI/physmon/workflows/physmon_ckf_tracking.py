@@ -91,7 +91,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             s,
             setup.trackingGeometry,
             setup.field,
-            TruthSeedRanges(pt=(400 * u.MeV, None), eta=(-3.0, 3.0), nHits=(9, None)),
+            TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
             ParticleSmearingSigmas(
                 pRel=0.01
             ),  # only used by SeedingAlgorithm.TruthSmeared
@@ -103,7 +103,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 maxSeedsPerSpM=1,
                 sigmaScattering=5,
                 radLengthPerSeed=0.1,
-                minPt=400 * u.MeV,
+                minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
