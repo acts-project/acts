@@ -78,10 +78,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   std::vector<size_t> reference = {10, 11, 12};
   GridType::point_t p = {0.05};
 
-  std::cout << "here ok" << std::endl;
   BOOST_CHECK(grid.atPosition(p) == reference);
-
-  std::cout << "here ok" << std::endl;
 
   // Check that surfaces 0, 1, 21 build the bins at phi == -M_PI + epsilon
   reference = {0, 1, 21};
