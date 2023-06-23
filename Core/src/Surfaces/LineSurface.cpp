@@ -98,10 +98,6 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
   // this with a 50% tolerance increase for now
   if ((localToGlobal(gctx, lposition, momentum) - position).norm() >
       tolerance * 1.5) {
-    std::cout << "!!! globalToLocal distance "
-              << (localToGlobal(gctx, lposition, momentum) - position).norm()
-              << " vs tolerance " << tolerance << std::endl;
-    throw std::runtime_error("hi");
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
 
