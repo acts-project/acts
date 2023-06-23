@@ -16,14 +16,15 @@ using namespace Acts;
 using namespace ActsFatras;
 using namespace ActsExamples;
 
-BOOST_AUTO_TEST_SUITE(DigitizationModuleClustersTests)
+namespace {
 
-BOOST_AUTO_TEST_CASE(merge) {
+auto testDigitizedParameters(bool merge) {
   BinUtility binUtility;
-  binUtility += BinningData(binX, -10.0f, 10.0f);
-  binUtility += BinningData(binY, -10.0f, 10.0f);
+  binUtility +=
+      BinningData(BinningOption::open, BinningValue::binX, 20, -10.0f, 10.0f);
+  binUtility +=
+      BinningData(BinningOption::open, BinningValue::binY, 20, -10.0f, 10.0f);
   std::vector<Acts::BoundIndices> boundIndices = {eBoundLoc0, eBoundLoc1};
-  bool merge = true;
   double nsigma = 1;
   bool commonCorner = true;
 
@@ -45,40 +46,18 @@ BOOST_AUTO_TEST_CASE(merge) {
   moduleClusters.add(params, 0);
   moduleClusters.add(params, 1);
 
-  auto result = moduleClusters.digitizedParameters();
-
-  BOOST_CHECK_EQUAL(result.size(), 1);
+  return moduleClusters.digitizedParameters();
 }
 
-BOOST_AUTO_TEST_CASE(nomerge) {
-  BinUtility binUtility;
-  binUtility += BinningData(binX, -10.0f, 10.0f);
-  binUtility += BinningData(binY, -10.0f, 10.0f);
-  std::vector<Acts::BoundIndices> boundIndices = {eBoundLoc0, eBoundLoc1};
-  bool merge = false;
-  double nsigma = 1;
-  bool commonCorner = true;
+}  // namespace
 
-  ModuleClusters moduleClusters(binUtility, boundIndices, merge, nsigma,
-                                commonCorner);
+BOOST_AUTO_TEST_SUITE(DigitizationModuleClustersTests)
 
-  Cluster cluster;
-  cluster.sizeLoc0 = 1;
-  cluster.sizeLoc1 = 1;
-  cluster.channels = {Cluster::Cell(
-      {0, 0}, Channelizer::Segment2D({Vector2(0, 0), Vector2(0, 0)}), 1)};
+BOOST_AUTO_TEST_CASE(digitizedParameters_merging) {
+  auto result = testDigitizedParameters(true);
+  BOOST_CHECK_EQUAL(result.size(), 1);
 
-  DigitizedParameters params;
-  params.indices = {eBoundLoc0, eBoundLoc1};
-  params.values = {0, 0};
-  params.variances = {1, 1};
-  params.cluster = {cluster};
-
-  moduleClusters.add(params, 0);
-  moduleClusters.add(params, 1);
-
-  auto result = moduleClusters.digitizedParameters();
-
+  result = testDigitizedParameters(false);
   BOOST_CHECK_EQUAL(result.size(), 2);
 }
 
