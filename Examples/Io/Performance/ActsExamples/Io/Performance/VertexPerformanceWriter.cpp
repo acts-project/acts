@@ -631,15 +631,15 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 // previously computed value for better readability.
                 diffMomFitted[0] = Acts::detail::difference_periodic(
                     recoMomFitted(0), trueMom(0), 2 * M_PI);
-                m_resPhi.push_back(diffMomFitted[0]);
-                m_resTheta.push_back(diffMomFitted[1]);
-                m_resQOverP.push_back(diffMomFitted[2]);
+                m_resPhiFitted.push_back(diffMomFitted[0]);
+                m_resThetaFitted.push_back(diffMomFitted[1]);
+                m_resQOverPFitted.push_back(diffMomFitted[2]);
 
-                m_pullPhi.push_back(
+                m_pullPhiFitted.push_back(
                     pull(diffMomFitted[0], momCovFitted(0, 0), "phi"));
-                m_pullTheta.push_back(
+                m_pullThetaFitted.push_back(
                     pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
-                m_pullQOverP.push_back(
+                m_pullQOverPFitted.push_back(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
                 const auto& recoUnitDirFitted =
