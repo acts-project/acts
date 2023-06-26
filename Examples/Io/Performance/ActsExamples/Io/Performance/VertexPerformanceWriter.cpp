@@ -331,7 +331,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
             trajectories.multiTrajectory(), tip);
 
-        if (nMajorityHits / trajState.nMeasurements < m_cfg.truthMatchProbMin) {
+        // Writing nMajorityHits / trajState.nMeasurements is not possible because both are integers
+        if (nMajorityHits * 1. / trajState.nMeasurements < m_cfg.truthMatchProbMin) {
           continue;
         }
 
