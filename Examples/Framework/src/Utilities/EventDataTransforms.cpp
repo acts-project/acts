@@ -27,7 +27,8 @@ ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
   return track;
 }
 
-std::optional<ActsExamples::SimSpacePoint> ActsExamples::findSpacePointForIndex(
+std::optional<const ActsExamples::SimSpacePoint*>
+ActsExamples::findSpacePointForIndex(
     ActsExamples::Index index, const SimSpacePointContainer& spacepoints) {
   auto match = [&](const SimSpacePoint& sp) {
     const auto& sls = sp.sourceLinks();
@@ -42,7 +43,7 @@ std::optional<ActsExamples::SimSpacePoint> ActsExamples::findSpacePointForIndex(
     return std::nullopt;
   }
 
-  return *found;
+  return &(*found);
 }
 
 ActsExamples::SimSeed ActsExamples::prototrackToSeed(
@@ -63,20 +64,20 @@ ActsExamples::SimSeed ActsExamples::prototrackToSeed(
         "Cannot convert track with less then 3 spacepoints to seed");
   }
 
-  std::vector<SimSpacePoint> ps;
+  std::vector<const SimSpacePoint*> ps;
   ps.reserve(track.size());
 
   std::transform(track.begin(), track.end(), std::back_inserter(ps),
                  findSpacePoint);
   std::sort(ps.begin(), ps.end(),
-            [](const auto& a, const auto& b) { return a.r() < b.r(); });
+            [](const auto& a, const auto& b) { return a->r() < b->r(); });
 
   // Simply use r = m*z + t and solve for r=0 to find z vertex position...
   // Probably not the textbook way to do
   const auto m =
-      (ps.back().r() - ps.front().r()) / (ps.back().z() - ps.front().z());
-  const auto t = ps.front().r() - m * ps.front().z();
+      (ps.back()->r() - ps.front()->r()) / (ps.back()->z() - ps.front()->z());
+  const auto t = ps.front()->r() - m * ps.front()->z();
   const auto z_vertex = -t / m;
 
-  return SimSeed(ps[0], ps[s / 2], ps[s - 1], z_vertex);
+  return SimSeed(*ps[0], *ps[s / 2], *ps[s - 1], z_vertex);
 }
