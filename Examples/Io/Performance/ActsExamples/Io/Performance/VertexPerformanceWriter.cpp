@@ -581,7 +581,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               m_truthTheta.push_back(trueMom[1]);
               m_truthQOverP.push_back(trueMom[2]);
 
-              // Track parameters before the vertex fit
+              // Save track parameters before the vertex fit
               const auto paramsAtVtx = propagateToVtx(*(trk.originalParams));
               if (paramsAtVtx != std::nullopt) {
                 Acts::ActsVector<3> recoMom =
@@ -614,7 +614,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 m_momOverlap.push_back(overlap);
               }
 
-              // Track parameters after the vertex fit
+              // Save track parameters after the vertex fit
               const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
               if (paramsAtVtxFitted != std::nullopt) {
                 Acts::ActsVector<3> recoMomFitted =
