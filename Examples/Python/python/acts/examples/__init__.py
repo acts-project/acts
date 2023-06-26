@@ -29,6 +29,17 @@ _patch_config(ActsPythonBindings._examples)
 
 _patch_detectors(ActsPythonBindings._examples)
 
+# Manually patch ExaTrkX constructors
+# Need to do it this way, since they are not always present
+for module in [
+    "TorchMetricLearning",
+    "OnnxMetricLearning",
+    "TorchEdgeClassifier",
+    "OnnxEdgeClassifier",
+]:
+    if hasattr(ActsPythonBindings._examples, module):
+        _patchKwargsConstructor(getattr(ActsPythonBindings._examples, module))
+
 
 def _makeLayerTriplet(*args, **kwargs):
 
