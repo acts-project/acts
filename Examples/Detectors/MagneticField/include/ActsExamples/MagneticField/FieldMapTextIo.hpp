@@ -12,6 +12,7 @@
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <array>
+#include <cstddef>
 #include <functional>
 #include <string>
 

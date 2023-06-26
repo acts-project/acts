@@ -9,11 +9,13 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 
 #include <fstream>
-#include <iostream>
+#include <string>
+#include <utility>
+
+#include <nlohmann/json.hpp>
 
 using namespace Acts;
 

@@ -30,6 +30,7 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
     int numFeatures = 3;
     float cut = 0.21;
     int nChunks = 1;  // NOTE for GNN use 1
+    bool undirected = false;
   };
 
   TorchEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);

@@ -9,6 +9,8 @@
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -21,7 +23,8 @@
 
 #include <memory>
 #include <ostream>
-#include <vector>
+#include <type_traits>
+#include <utility>
 
 bool Acts::CutoutCylinderVolumeBounds::inside(const Acts::Vector3& gpos,
                                               double tol) const {

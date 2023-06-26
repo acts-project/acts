@@ -9,12 +9,12 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
-#include <fstream>
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "SurfaceView3DBase.hpp"
 #include "Visualization3DTester.hpp"

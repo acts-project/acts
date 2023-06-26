@@ -12,6 +12,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
@@ -21,22 +23,31 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/LayerBuilderT.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
 
 #include <array>
 #include <cmath>
+#include <cstddef>
 #include <iostream>
 #include <list>
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts {
 class TrackingGeometry;
-}
+class HomogeneousSurfaceMaterial;
+class IMaterialDecorator;
+class ISurfaceMaterial;
+class ProtoSurfaceMaterial;
+}  // namespace Acts
 
 namespace ActsExamples {
 namespace Generic {
@@ -56,7 +67,7 @@ std::vector<Acts::Vector3> modulePositionsCylinder(
 /// @param radius is the ring radius
 /// @param phiStagger is the radial staggering along phi
 /// @param lOverlap is the overlap of the modules
-/// @parm nPhiBins is the number of bins in phi
+/// @param nPhiBins is the number of bins in phi
 std::vector<Acts::Vector3> modulePositionsRing(double z, double radius,
                                                double phiStagger,
                                                double phiSubStagger,
@@ -148,7 +159,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
   std::vector<std::shared_ptr<const Acts::ITrackingVolumeBuilder>>
       volumeBuilders;
 
-  // Prepare the proto material - in case it's desinged to do so
+  // Prepare the proto material - in case it's designed to do so
   // - cylindrical
   Acts::BinUtility pCylinderUtility(10, -1, 1, Acts::closed, Acts::binPhi);
   pCylinderUtility += Acts::BinUtility(10, -1, 1, Acts::open, Acts::binZ);
@@ -750,7 +761,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
     for (size_t id = 0; id < lsplConfig.posnegLayerPositionsZ.size(); ++id) {
       lssbPosnegModulePositions.push_back(modulePositionsDisc(
           lsplConfig.posnegLayerPositionsZ[id],
-          8.0,  // staggering of rings, we put the disk strucutre in between
+          8.0,  // staggering of rings, we put the disk structure in between
           {3., 3.}, {0., 0.}, 750., 1020., lsplConfig.posnegModulePhiBins[id],
           lsplConfig.posnegModuleHalfY[id]));
     }

@@ -10,12 +10,17 @@
 
 #include <Acts/Utilities/Logger.hpp>
 
+#include <algorithm>
+#include <cstddef>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace ActsExamples {
@@ -25,7 +30,7 @@ namespace ActsExamples {
 /// This is an append-only container that takes ownership of the objects
 /// added to it. Once an object has been added, it can only be read but not
 /// be modified. Trying to replace an existing object is considered an error.
-/// Its lifetime is bound to the liftime of the white board.
+/// Its lifetime is bound to the lifetime of the white board.
 class WhiteBoard {
  public:
   WhiteBoard(std::unique_ptr<const Acts::Logger> logger =

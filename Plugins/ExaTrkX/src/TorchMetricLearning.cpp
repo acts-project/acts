@@ -78,11 +78,10 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   inputTensors.push_back(
       m_cfg.numFeatures < numAllFeatures
           ? inputTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}})
-          : inputTensor);
+          : std::move(inputTensor));
 
 
   ACTS_DEBUG("embedding input tensor shape " << inputTensors[0].toTensor().size(0) << ", " << inputTensors[0].toTensor().size(1));
-
 
   auto output = model.forward(inputTensors).toTensor();
 
@@ -93,15 +92,13 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // ****************
   // Building Edges
   // ****************
-
-  auto edgeList = buildEdges(output, numSpacepoints, m_cfg.embeddingDim,
-                             m_cfg.rVal, m_cfg.knnVal);
+  auto edgeList = buildEdges(output, m_cfg.rVal, m_cfg.knnVal);
 
   ACTS_VERBOSE("Shape of built edges: (" << edgeList.size(0) << ", "
                                          << edgeList.size(1));
   ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
   printCudaMemInfo(logger());
 
-  return {inputTensor, edgeList};
+  return {std::move(inputTensors[0]).toTensor(), std::move(edgeList)};
 }
 }  // namespace Acts

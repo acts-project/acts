@@ -8,15 +8,22 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 #include <array>
+#include <cstddef>
+#include <memory>
+#include <string>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {
+class SurfaceBounds;
 
 static std::vector<std::string> boundTypes = {
     "ConeBounds",          "CylinderBounds",      "DiamondBounds",
@@ -27,7 +34,7 @@ static std::vector<std::string> boundTypes = {
 
 void to_json(nlohmann::json& j, const SurfaceBounds& bounds);
 
-/// Converstion to surfaceBounds from json
+/// Conversion to surfaceBounds from json
 ///
 /// The type is given as a template argument in order to be able
 /// to construct the correct fitting types for surfaces.

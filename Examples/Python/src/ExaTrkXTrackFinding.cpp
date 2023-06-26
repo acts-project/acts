@@ -91,6 +91,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(numFeatures);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(nChunks);
+    ACTS_PYTHON_MEMBER(undirected);
     ACTS_PYTHON_STRUCT_END();
   }
   {

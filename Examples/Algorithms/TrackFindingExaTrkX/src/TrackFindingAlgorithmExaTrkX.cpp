@@ -68,13 +68,13 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
   std::any edge_weights;
 
   for (auto edgeClassifier : m_cfg.edgeClassifiers) {
-    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(nodes, edges);
-    nodes = newNodes;
-    edges = newEdges;
-    edge_weights = newWeights;
+    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(std::move(nodes), std::move(edges));
+    nodes = std::move(newNodes);
+    edges = std::move(newEdges);
+    edge_weights = std::move(newWeights);
   }
 
-  return (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs);
+  return (*m_cfg.trackBuilder)(std::move(nodes), std::move(edges), std::move(edge_weights), spacepointIDs);
 }
 
 enum feat : std::size_t {

@@ -8,15 +8,24 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <array>
+#include <cmath>
 #include <fstream>
-#include <iostream>
+#include <iterator>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include "EqualityHelpers.hpp"
 

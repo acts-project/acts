@@ -10,9 +10,15 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/JacobianEngine.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
 
 namespace tt = boost::test_tools;
 
@@ -308,7 +314,7 @@ BOOST_AUTO_TEST_CASE(jacobian_engine_to_free) {
   FreeMatrix newFreeCovariance2 =
       c2fTransportJacobian * boundCovariance * c2fTransportJacobian.transpose();
   BOOST_CHECK(not newFreeCovariance2.isApprox(freeCovariance));
-  // But thos should be similar/equal
+  // But those should be similar/equal
   BOOST_CHECK(newFreeCovariance1.isApprox(newFreeCovariance2));
 }
 

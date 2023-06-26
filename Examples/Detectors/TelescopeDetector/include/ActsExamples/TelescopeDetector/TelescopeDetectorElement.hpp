@@ -8,7 +8,15 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 class Surface;
@@ -29,7 +37,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   /// @class ContextType
   /// convention: nested to the Detector element
   struct ContextType {
-    /// The current intervall of validity
+    /// The current interval of validity
     unsigned int iov = 0;
   };
 
@@ -86,7 +94,7 @@ class TelescopeDetectorElement : public Acts::DetectorElementBase {
   /// Return local to global transform associated with this identifier
   ///
   /// @param alignedTransform is a new transform
-  /// @oaram iov is the batch for which it is meant
+  /// @param iov is the batch for which it is meant
   void addAlignedTransform(std::unique_ptr<Acts::Transform3> alignedTransform,
                            unsigned int iov);
 

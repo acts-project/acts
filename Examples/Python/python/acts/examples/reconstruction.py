@@ -811,8 +811,8 @@ def addKalmanTracks(
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
-    calibrationConfigFile: str = None,
     clusters: str = None,
+    calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -835,11 +835,6 @@ def addKalmanTracks(
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
     }
-
-    if calibrationConfigFile is None:
-        calibrator = acts.examples.makePassThroughCalibrator()
-    else:
-        calibrator = acts.examples.makeScalingCalibrator(calibrationConfigFile)
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=customLogLevel(),
@@ -1036,7 +1031,7 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection. This could be avoided when a seperate track
+                # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputSimHits="simhits",
@@ -1054,7 +1049,7 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection. This could be avoided when a seperate track
+                # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputMeasurementParticlesMap="measurement_particles_map",
@@ -1204,13 +1199,13 @@ def addExaTrkX(
         "numFeatures": 3,
         "embeddingDim": 8,
         "rVal": 1.6,
-        "knnVal": 500,
+        "knnVal": 100,
     }
 
     filterConfig = {
         "level": customLogLevel(),
         "numFeatures": 3,
-        "cut": 0.21,
+        "cut": 0.01,
     }
 
     gnnConfig = {
@@ -1224,6 +1219,7 @@ def addExaTrkX(
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["nChunks"] = 10
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
+        gnnConfig["undirected"] = True
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [

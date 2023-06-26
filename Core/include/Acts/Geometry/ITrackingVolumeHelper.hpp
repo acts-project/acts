@@ -97,7 +97,7 @@ class ITrackingVolumeHelper {
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
-  /// @param materialLayers number of material layers (aequidistant binning)
+  /// @param materialLayers number of material layers (equidistant binning)
   /// @param cylinder type of layers
   /// @param volumeName  volume name to be given
   ///

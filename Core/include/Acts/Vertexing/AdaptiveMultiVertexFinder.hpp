@@ -137,7 +137,7 @@ class AdaptiveMultiVertexFinder {
     // Include also single track vertices
     bool addSingleTrackVertices = false;
 
-    // Use 3d information fo evaluating the vertex distance significance
+    // Use 3d information for evaluating the vertex distance significance
     // for vertex merging/splitting
     bool do3dSplitting = false;
 

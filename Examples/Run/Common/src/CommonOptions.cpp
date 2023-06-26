@@ -119,22 +119,22 @@ void ActsExamples::Options::addOutputOptions(
 
   if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Obj)) {
     opt.add_options()("output-obj", bool_switch(),
-                      "Switch on to write '.obj' ouput file(s).");
+                      "Switch on to write '.obj' output file(s).");
   }
 
   if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Json)) {
     opt.add_options()("output-json", bool_switch(),
-                      "Switch on to write '.json' ouput file(s).");
+                      "Switch on to write '.json' output file(s).");
   }
 
   if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Cbor)) {
     opt.add_options()("output-cbor", bool_switch(),
-                      "Switch on to write '.cbor' ouput file(s).");
+                      "Switch on to write '.cbor' output file(s).");
   }
 
   if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Txt)) {
     opt.add_options()("output-txt", bool_switch(),
-                      "Switch on to write '.txt' ouput file(s).");
+                      "Switch on to write '.txt' output file(s).");
   }
 }
 

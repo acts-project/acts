@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -18,7 +20,8 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 
 #include <cmath>
-#include <iostream>
+#include <type_traits>
+#include <utility>
 
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(
     const CylinderBounds& cBounds, double thickness) noexcept(false)

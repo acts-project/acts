@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
@@ -24,9 +26,13 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <array>
+#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <tuple>
+#include <utility>
 
 namespace Acts {
 
@@ -36,6 +42,7 @@ class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
 class IVisualization3D;
+class Surface;
 
 /// Typedef of the surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
@@ -87,7 +94,7 @@ class Surface : public virtual GeometryObject,
   /// @param other Source surface for copy.
   Surface(const Surface& other);
 
-  /// Constructor fromt DetectorElementBase: Element proxy
+  /// Constructor from DetectorElementBase: Element proxy
   ///
   /// @param detelement Detector element which is represented by this surface
   Surface(const DetectorElementBase& detelement);
@@ -312,7 +319,7 @@ class Surface : public virtual GeometryObject,
       const Vector3& momentum,
       double tolerance = s_onSurfaceTolerance) const = 0;
 
-  /// Return mehtod for the reference frame
+  /// Return method for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)
   ///
@@ -473,7 +480,7 @@ class Surface : public virtual GeometryObject,
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
@@ -492,11 +499,11 @@ class Surface : public virtual GeometryObject,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
 
-  /// The assoicated TrackingVolume - tracking volume in case the surface is a
+  /// The associated TrackingVolume - tracking volume in case the surface is a
   /// boundary surface, nullptr if not associated
   const TrackingVolume* m_associatedTrackingVolume{nullptr};
 
-  /// Possibility to attach a material descrption
+  /// Possibility to attach a material description
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
 
  private:

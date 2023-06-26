@@ -8,7 +8,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+
+#include <string>
 
 using namespace Acts;
 

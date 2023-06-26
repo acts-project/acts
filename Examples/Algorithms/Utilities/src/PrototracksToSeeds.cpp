@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,16 +29,20 @@ PrototracksToSeeds::PrototracksToSeeds(Config cfg, Acts::Logging::Level lvl)
 ProcessCode PrototracksToSeeds::execute(const AlgorithmContext& ctx) const {
   auto prototracks = m_inputProtoTracks(ctx);
 
+  const auto nBefore = prototracks.size();
   prototracks.erase(std::remove_if(prototracks.begin(), prototracks.end(),
                                    [](const auto& t) { return t.size() < 3; }),
                     prototracks.end());
+  ACTS_DEBUG("Discarded " << prototracks.size() - nBefore
+                          << " prototracks with less then 3 hits");
 
   SimSeedContainer seeds;
   seeds.reserve(prototracks.size());
 
-  const ProtoTrackToSeed prototrackToSeed{m_inputSpacePoints(ctx)};
+  const auto& sps = m_inputSpacePoints(ctx);
   std::transform(prototracks.begin(), prototracks.end(),
-                 std::back_inserter(seeds), prototrackToSeed);
+                 std::back_inserter(seeds),
+                 [&](const auto& pt) { return prototrackToSeed(pt, sps); });
 
   m_outputSeeds(ctx, std::move(seeds));
   m_outputProtoTracks(ctx, std::move(prototracks));

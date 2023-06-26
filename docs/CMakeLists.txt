@@ -13,7 +13,7 @@
 # `docs-with-api` target.
 #
 # WARNING: after you ran `docs-with-api` the regular `docs` target will
-#          accidentaly pick up the auto-generated api files. remove the
+#          accidentally pick up the auto-generated api files. remove the
 #          `_build` and the `api` directory manually to avoid this.
 
 # this should match the INPUT declaration in the Doxyfile

@@ -48,8 +48,8 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
-  const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
-  const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
+  auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
+  auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
 
   if( m_cfg.numFeatures > nodes.size(1) ) {
     throw std::runtime_error("requested more features then available");
@@ -58,13 +58,16 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   std::vector<at::Tensor> results;
   results.reserve(m_cfg.nChunks);
 
-  std::vector<torch::jit::IValue> inputTensors(2);
-  inputTensors[0] = m_cfg.numFeatures < nodes.size(1) ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}}) : nodes;
+  auto edgeListTmp =
+      m_cfg.undirected ? torch::cat({edgeList, edgeList.flip(0)}, 1) : edgeList;
 
-  const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.nChunks);
+  std::vector<torch::jit::IValue> inputTensors(2);
+  inputTensors[0] = m_cfg.numFeatures < nodes.size(1) ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}}) : std::move(nodes);
+
+  const auto chunks = at::chunk(at::arange(edgeListTmp.size(1)), m_cfg.nChunks);
   for (const auto& chunk : chunks) {
     ACTS_VERBOSE("Process chunk");
-    inputTensors[1] = edgeList.index({Slice(), chunk});
+    inputTensors[1] = edgeListTmp.index({Slice(), chunk});
 
     results.push_back(m_model->forward(inputTensors).toTensor());
     results.back().squeeze_();
@@ -72,7 +75,10 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   }
 
   auto output = torch::cat(results);
-  results.clear();
+
+  if (m_cfg.undirected) {
+    output = output.index({Slice(None, output.size(0) / 2)});
+  }
 
   ACTS_VERBOSE("Size after classifier: " << output.size(0));
   ACTS_VERBOSE("Slice of classified output:\n"
@@ -86,7 +92,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
 
-  return {nodes, edgesAfterCut, output.masked_select(mask)};
+  return {std::move(inputTensors[0]).toTensor(), std::move(edgesAfterCut), output.masked_select(mask)};
 }
 
 }  // namespace Acts

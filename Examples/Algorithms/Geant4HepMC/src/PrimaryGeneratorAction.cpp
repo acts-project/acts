@@ -49,7 +49,7 @@ PrimaryGeneratorAction::~PrimaryGeneratorAction() {
 }
 
 PrimaryGeneratorAction* PrimaryGeneratorAction::instance() {
-  // Static acces function via G4RunManager
+  // Static access function via G4RunManager
   return s_instance;
 }
 
