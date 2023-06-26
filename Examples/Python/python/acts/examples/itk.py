@@ -590,6 +590,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
     )
     spacePointGridConfigArg = SpacePointGridConfigArg(
         rMax=rMaxGridConfig,
+        deltaRMax=deltaRMax,
         zBinEdges=zBinEdges,
         phiBinDeflectionCoverage=phiBinDeflectionCoverage,
         phi=(phiMin, phiMax),

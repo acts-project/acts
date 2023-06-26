@@ -371,7 +371,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
         // cut on bottom SPs in a certain (r, eta) region of the detector for
         // fast seeding
-        if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+        if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
           if (m_config.fastTrackingCut and
               otherSP->radius() < m_config.fastTrackingRMin and
               (cotTheta > m_config.fastTrackingCotThetaMax or
@@ -420,7 +420,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // cut on bottom SPs in a certain (r, eta) region of the detector for
       // fast seeding
-      if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
         if (m_config.fastTrackingCut and
             otherSP->radius() < m_config.fastTrackingRMin and
             (cotTheta > m_config.fastTrackingCotThetaMax or

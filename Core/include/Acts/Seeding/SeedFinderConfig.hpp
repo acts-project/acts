@@ -219,6 +219,8 @@ struct SeedFinderConfig {
     config.rMin /= 1_mm;
     config.deltaZMax /= 1_mm;
 
+    config.fastTrackingRMin /= 1_mm;
+
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
 
