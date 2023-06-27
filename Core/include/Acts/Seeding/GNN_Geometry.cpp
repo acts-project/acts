@@ -1,4 +1,4 @@
-#include "Acts/Seeding/GNN_Geometry.h"
+#include "Acts/Seeding/GNN_Geometry.hpp"
 
 #include<cmath>
 #include<cstring>

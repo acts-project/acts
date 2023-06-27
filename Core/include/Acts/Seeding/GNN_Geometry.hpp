@@ -2,7 +2,7 @@
 #include<map>
 #include<algorithm>
 
-#include "FasTrackConnector.h" 
+#include "FasTrackConnector.hpp" 
 
 namespace Acts {
 class TrigInDetSiLayer {
