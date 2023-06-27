@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <atomic>
 #include <csignal>
 #include <cstddef>
