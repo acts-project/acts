@@ -152,7 +152,9 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }
   {
-    using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
+    using Config = Acts::SeedFinderOrthogonalConfig<typename Acts::SpacePointContainer<
+        ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+        Acts::detail::RefHolder>::ConstSpacePointProxyType>;
     auto c =
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
