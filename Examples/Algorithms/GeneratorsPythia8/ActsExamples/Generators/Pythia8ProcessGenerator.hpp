@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace Pythia8 {
@@ -35,6 +36,10 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
     double cmsEnergy = 14 * Acts::UnitConstants::TeV;
     /// Additional Pythia8 settings.
     std::vector<std::string> settings = {{"HardQCD:all = on"}};
+    /// Let pythia print summarized event info
+    bool printShortEventListing = false;
+    /// Let pythia print detailed event info
+    bool printLongEventListing = false;
   };
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);

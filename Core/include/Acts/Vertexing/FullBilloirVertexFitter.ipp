@@ -77,7 +77,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     ndf = 1;
   }
 
-  // Determine if we do contraint fit or not by checking if an
+  // Determine if we do constraint fit or not by checking if an
   // invertible non-zero constraint vertex covariance is given
   bool isConstraintFit = false;
   if (vertexingOptions.vertexConstraint.covariance().determinant() != 0) {

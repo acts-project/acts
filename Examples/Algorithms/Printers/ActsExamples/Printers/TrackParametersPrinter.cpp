@@ -8,9 +8,15 @@
 
 #include "TrackParametersPrinter.hpp"
 
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+
+#include <cstddef>
+#include <ostream>
+#include <stdexcept>
+#include <vector>
 
 ActsExamples::TrackParametersPrinter::TrackParametersPrinter(
     const Config& cfg, Acts::Logging::Level level)

@@ -9,16 +9,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Visualization/PlyVisualization3D.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 
-#include <fstream>
+#include <algorithm>
+#include <array>
 #include <iostream>
 #include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {

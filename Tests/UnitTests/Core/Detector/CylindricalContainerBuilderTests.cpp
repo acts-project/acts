@@ -15,16 +15,24 @@
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cmath>
+#include <iterator>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace Acts;
@@ -49,8 +57,10 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
         m_name(vName) {}
 
   DetectorComponent construct(
-      RootDetectorVolumes& roots,
       [[maybe_unused]] const GeometryContext& gctx) const final {
+    // The outgoing root volumes
+    std::vector<std::shared_ptr<DetectorVolume>> rootVolumes;
+
     // Ingredients
     auto surface = Surface::makeShared<surface_type>(
         (m_transform), std::make_shared<surface_bounds_type>(m_surfaceBounds));
@@ -62,13 +72,16 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
         {surface}, {}, tryNoVolumes(), tryAllPortalsAndSurfaces());
 
     // Add to the roots
-    roots.volumes.push_back(volume);
+    rootVolumes.push_back(volume);
 
     DetectorComponent::PortalContainer dContainer;
     for (auto [ip, p] : enumerate(volume->portalPtrs())) {
       dContainer[ip] = p;
     }
-    return DetectorComponent{{volume}, dContainer};
+    return DetectorComponent{
+        {volume},
+        dContainer,
+        RootDetectorVolumes{rootVolumes, tryRootVolumes()}};
   }
 
  private:
@@ -97,7 +110,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
   BOOST_CHECK_THROW(auto c = CylindricalContainerBuilder(misCfg),
                     std::invalid_argument);
 
-  // misconfiguration - 2D binning  in z, r, but not exaclty 2 builders
+  // misconfiguration - 2D binning  in z, r, but not exactly 2 builders
   misCfg.builders = {nullptr, nullptr, nullptr};
   misCfg.binning = {Acts::binZ, Acts::binR};
   BOOST_CHECK_THROW(auto d = CylindricalContainerBuilder(misCfg),
@@ -128,18 +141,17 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
 
   // Create the container builder
   CylindricalContainerBuilder::Config tripleZCfg;
-  tripleZCfg.auxilliary = "*** Test 0 - Build triple in Z ***";
+  tripleZCfg.auxiliary = "*** Test 0 - Build triple in Z ***";
   tripleZCfg.builders = {negDisc, barrel, posDisc};
   tripleZCfg.binning = {binZ};
 
   auto tripleZ = std::make_shared<CylindricalContainerBuilder>(
       tripleZCfg, getDefaultLogger("TripleBuilderZ", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto tz = tripleZ->construct(roots, tContext);
+  auto [volumes, portals, roots] = tripleZ->construct(tContext);
 
+  BOOST_CHECK(portals.size() == 4u);
   BOOST_CHECK(roots.volumes.size() == 3u);
-  BOOST_CHECK(tz.portals.size() == 4u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
@@ -163,24 +175,23 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
 
   // Create the container builder
   CylindricalContainerBuilder::Config barrelRCfg;
-  barrelRCfg.auxilliary = "*** Test 1 - Build multilayer barrel ***";
+  barrelRCfg.auxiliary = "*** Test 1 - Build multilayer barrel ***";
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
   barrelRCfg.binning = {binR};
 
   auto barrelR = std::make_shared<CylindricalContainerBuilder>(
       barrelRCfg, getDefaultLogger("BarrelBuilderR", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto br = barrelR->construct(roots, tContext);
+  auto [volumes, portals, roots] = barrelR->construct(tContext);
 
+  BOOST_CHECK(portals.size() == 4u);
   BOOST_CHECK(roots.volumes.size() == 3u);
-  BOOST_CHECK(br.portals.size() == 4u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   // Create the container builder
   CylindricalContainerBuilder::Config barrelPhiCfg;
-  barrelPhiCfg.auxilliary = "*** Test 2 - Build segmented phi barrel ***";
+  barrelPhiCfg.auxiliary = "*** Test 2 - Build segmented phi barrel ***";
   barrelPhiCfg.binning = {binPhi};
 
   unsigned int phiSectors = 5;
@@ -205,11 +216,10 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
   auto barrelPhi = std::make_shared<CylindricalContainerBuilder>(
       barrelPhiCfg, getDefaultLogger("BarrelBuilderPhi", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto bphi = barrelPhi->construct(roots, tContext);
+  auto [volumes, portals, roots] = barrelPhi->construct(tContext);
 
+  BOOST_CHECK(portals.size() == 4u);
   BOOST_CHECK(roots.volumes.size() == 5u);
-  BOOST_CHECK(bphi.portals.size() == 4u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
@@ -277,9 +287,8 @@ BOOST_AUTO_TEST_CASE(CylindricalContainerBuilderDetector) {
   auto detector = std::make_shared<CylindricalContainerBuilder>(
       detectorCfg, getDefaultLogger("DetectorBuilder", Logging::VERBOSE));
 
-  RootDetectorVolumes roots;
-  auto d = detector->construct(roots, tContext);
-  BOOST_CHECK(d.portals.size() == 3u);
+  auto [volumes, portals, roots] = detector->construct(tContext);
+  BOOST_CHECK(portals.size() == 3u);
   BOOST_CHECK(roots.volumes.size() == 6u);
 }
 

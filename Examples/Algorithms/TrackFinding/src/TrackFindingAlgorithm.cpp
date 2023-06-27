@@ -8,21 +8,31 @@
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <cmath>
+#include <functional>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
 
 #include <boost/histogram.hpp>
 

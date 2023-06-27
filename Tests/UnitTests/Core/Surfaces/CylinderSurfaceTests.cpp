@@ -11,13 +11,32 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <cmath>
+#include <initializer_list>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <utility>
+
+namespace Acts {
+class AssertionFailureException;
+}  // namespace Acts
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -123,7 +142,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   // test the normal vector
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45deg),
                   normal45deg, 1e-6 * rootHalf);
-  // thest that the normal vector is independent of z coordinate
+  // test that the normal vector is independent of z coordinate
   CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45degZ),
                   normal45deg, 1e-6 * rootHalf);
   //

@@ -589,6 +589,26 @@ class TrackProxy {
                                  other.m_index);
   }
 
+  /// Reverse the ordering of track states for this track
+  /// Afterwards, the previous endpoint of the track state sequence will be the
+  /// "innermost" track state
+  /// @note This is dangerous with branching track state sequences, as it will break them
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void reverseTrackStates() {
+    IndexType current = tipIndex();
+    IndexType next = kInvalid;
+    IndexType prev = kInvalid;
+
+    while (current != kInvalid) {
+      auto ts = m_container->trackStateContainer().getTrackState(current);
+      prev = ts.previous();
+      ts.previous() = next;
+      next = current;
+      tipIndex() = current;
+      current = prev;
+    }
+  }
+
   /// Return a reference to the track container backend, const version.
   /// @return reference to the track container backend
   const auto& container() const {

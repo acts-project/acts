@@ -28,16 +28,20 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
     float cut = 0.21;
   };
 
-  OnnxEdgeClassifier(const Config &cfg);
+  OnnxEdgeClassifier(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~OnnxEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any> operator()(
-      std::any nodes, std::any edges, const Logger &logger) override;
+  std::tuple<std::any, std::any, std::any> operator()(std::any nodes,
+                                                      std::any edges) override;
 
   Config config() const { return m_cfg; }
 
  private:
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const auto &logger() const { return *m_logger; }
+
   Config m_cfg;
+
   std::unique_ptr<Ort::Env> m_env;
   std::unique_ptr<Ort::Session> m_model;
 

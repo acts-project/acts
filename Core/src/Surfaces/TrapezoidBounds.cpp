@@ -8,7 +8,8 @@
 
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
-#include <cmath>
+#include "Acts/Definitions/TrackParametrization.hpp"
+
 #include <iomanip>
 #include <iostream>
 

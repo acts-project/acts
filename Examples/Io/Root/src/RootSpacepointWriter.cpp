@@ -9,10 +9,15 @@
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <ios>
+#include <ostream>
 #include <stdexcept>
+#include <vector>
 
 #include <TFile.h>
 #include <TTree.h>

@@ -61,7 +61,7 @@ struct MeasurementsCreator {
   // how far away from the measurements the outliers should be
   double distanceOutlier = 10 * Acts::UnitConstants::mm;
 
-  /// @brief Operater that is callable by an ActionList. The function
+  /// @brief Operator that is callable by an ActionList. The function
   /// collects the surfaces
   ///
   /// @tparam propagator_state_t Type of the propagator state

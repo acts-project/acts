@@ -105,7 +105,7 @@ struct CyclicParameterTraits {
 
 // Limit types for parameter traits.
 //
-// The functions names are chosen to be consisten w/ std::numeric_limits
+// The functions names are chosen to be consistent w/ std::numeric_limits
 struct PhiBoundParameterLimits {
   static constexpr double lowest() { return -M_PI; }
   static constexpr double max() { return M_PI; }
@@ -131,7 +131,7 @@ struct ParameterTraitsImpl<BoundIndices, BoundIndices::eBoundTheta> {
 };
 template <BoundIndices kIndex>
 struct ParameterTraitsImpl<BoundIndices, kIndex> {
-  // other bound parameters not explicitely specified above are unrestricted
+  // other bound parameters not explicitly specified above are unrestricted
   using Type = UnrestrictedParameterTraits;
 };
 template <FreeIndices kIndex>

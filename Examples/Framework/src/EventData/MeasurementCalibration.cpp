@@ -6,7 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SourceLink.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include <ActsExamples/EventData/MeasurementCalibration.hpp>
+
+#include <cassert>
+#include <variant>
+
+namespace Acts {
+class VectorMultiTrajectory;
+}  // namespace Acts
 
 void ActsExamples::PassThroughCalibrator::calibrate(
     const MeasurementContainer& measurements,

@@ -9,9 +9,15 @@
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+
+#include <array>
+#include <stdexcept>
 
 #include <dfe/dfe_io_dsv.hpp>
 

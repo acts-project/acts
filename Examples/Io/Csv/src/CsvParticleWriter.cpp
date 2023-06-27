@@ -8,12 +8,14 @@
 
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 #include <Acts/Definitions/Units.hpp>
 
-#include <map>
 #include <stdexcept>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -25,7 +27,7 @@ ActsExamples::CsvParticleWriter::CsvParticleWriter(
     : WriterT(cfg.inputParticles, "CsvParticleWriter", lvl), m_cfg(cfg) {
   // inputParticles is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
-    throw std::invalid_argument("Missing ouput filename stem");
+    throw std::invalid_argument("Missing output filename stem");
   }
 }
 

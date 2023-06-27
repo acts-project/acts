@@ -8,7 +8,8 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <cassert>
+#include <algorithm>
+#include <cstdlib>
 
 namespace Acts {
 

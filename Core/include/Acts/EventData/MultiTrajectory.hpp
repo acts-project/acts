@@ -54,6 +54,8 @@ class ConstTrackStateType;
 class TrackStateType {
  public:
   using raw_type = std::uint64_t;
+  static constexpr std::size_t kRawBits =
+      std::numeric_limits<std::make_unsigned<raw_type>::type>::digits;
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
   TrackStateType(raw_type& raw) : m_raw{&raw} {}
@@ -80,7 +82,7 @@ class TrackStateType {
   /// @return if the bit at @p pos is one or not
   bool test(std::size_t pos) const {
     assert(m_raw != nullptr);
-    std::bitset<sizeof(raw_type) * 8> bs{*m_raw};
+    std::bitset<kRawBits> bs{*m_raw};
     return bs.test(pos);
   }
 
@@ -89,7 +91,7 @@ class TrackStateType {
   /// @param value the value to change the bit to
   void set(std::size_t pos, bool value = true) {
     assert(m_raw != nullptr);
-    std::bitset<sizeof(raw_type) * 8> bs{*m_raw};
+    std::bitset<kRawBits> bs{*m_raw};
     bs.set(pos, value);
     *m_raw = bs.to_ullong();
   }
@@ -107,6 +109,8 @@ class TrackStateType {
 class ConstTrackStateType {
  public:
   using raw_type = std::uint64_t;
+  static constexpr std::size_t kRawBits =
+      std::numeric_limits<std::make_unsigned<raw_type>::type>::digits;
 
   /// Constructor from a reference to the underlying value container
   /// @param raw the value container
@@ -117,13 +121,13 @@ class ConstTrackStateType {
   /// @return if the bit at @p pos is one or not
   bool test(std::size_t pos) const {
     assert(m_raw != nullptr);
-    std::bitset<sizeof(raw_type) * 8> bs{*m_raw};
+    std::bitset<kRawBits> bs{*m_raw};
     return bs.test(pos);
   }
 
   friend std::ostream& operator<<(std::ostream& os, ConstTrackStateType t) {
     assert(t.m_raw != nullptr);
-    std::bitset<sizeof(raw_type) * 8> bs{*t.m_raw};
+    std::bitset<kRawBits> bs{*t.m_raw};
     std::bitset<TrackStateFlag::NumTrackStateFlags> trunc;
     for (size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
       trunc[i] = bs[i];
@@ -312,7 +316,7 @@ class TrackStateProxy {
     return component<IndexType, hashString("previous")>();
   }
 
-  /// Return whather this track state has a previous (parent) track state.
+  /// Return whether this track state has a previous (parent) track state.
   /// @return Boolean indicating whether a previous track state exists
   bool hasPrevious() const {
     return component<IndexType, hashString("previous")>() != kInvalid;
@@ -349,7 +353,7 @@ class TrackStateProxy {
     shareFrom(other, component, component);
   }
 
-  /// Share a shareable component from anothe track state
+  /// Share a shareable component from another track state
   /// @param shareSource Which component to share from
   /// @param shareTarget Which component to share as. This can be be different from
   ///                    as @p shareSource, e.g. predicted can be shared as filtered.

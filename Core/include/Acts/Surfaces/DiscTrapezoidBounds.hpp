@@ -9,11 +9,16 @@
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cmath>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -67,7 +72,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// @return this returns a copy of the internal values
   std::vector<double> values() const final;
 
-  ///  This method cheks if the radius given in the LocalPosition is inside
+  ///  This method checks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
   /// if only tol0 is given and additional in the phi sector is tol1 is given
   /// @param lposition is the local position to be checked (in polar
@@ -135,7 +140,7 @@ class DiscTrapezoidBounds : public DiscBounds {
   /// if consistency is not given
   void checkConsistency() noexcept(false);
 
-  /// Private helper method to convert a local postion
+  /// Private helper method to convert a local position
   /// into its Cartesian representation
   ///
   /// @param lposition The local position in polar coordinates

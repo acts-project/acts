@@ -10,7 +10,11 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ILayerArrayCreator.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
+#include <memory>
+#include <utility>
 
 namespace Acts {
 
@@ -45,7 +49,7 @@ class LayerArrayCreator : public ILayerArrayCreator {
 
   /// LayerArrayCreator interface method
   ///
-  /// @param gctx ist the geometry context for witch the array is built
+  /// @param gctx is the geometry context for witch the array is built
   /// @param layersInput are the layers to be moved into an array
   /// @param min is the minimum value for binning
   /// @param max is the maximum value for binning

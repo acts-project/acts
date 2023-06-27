@@ -8,7 +8,19 @@
 
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 
+#include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <ostream>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 Acts::FreeToBoundCorrection::FreeToBoundCorrection(bool apply_,
                                                    ActsScalar alpha_,

@@ -8,6 +8,8 @@
 
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 
+#include <string>
+
 namespace {
 
 class KalmanFitterErrorCategory : public std::error_category {
