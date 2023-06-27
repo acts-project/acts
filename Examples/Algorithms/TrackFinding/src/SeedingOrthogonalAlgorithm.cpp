@@ -92,17 +92,28 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
   ActsExamples::SpacePointContainer container(spacePoints);
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
     spContainer(spConfig, spOptions, container);
+
+  ACTS_INFO("About to process " << spContainer.size() << " space points ...");
   
   Acts::SeedFinderOrthogonal<proxy_type> finder(m_cfg.seedFinderConfig);
   std::vector<Acts::Seed<proxy_type>> seeds = finder.createSeeds(m_cfg.seedFinderOptions,
 						    spContainer);
 
 
-  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
+  ACTS_INFO("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
 
-  // need to convert here
+  // need to convert here from seed of proxies to seed of sps
   SimSeedContainer seedsToAdd;
+  seedsToAdd.reserve(seeds.size());
+  
+  for (const auto& seed : seeds) {
+    const auto& sps = seed.sp();
+    seedsToAdd.emplace_back(*sps[0]->sp(), *sps[1]->sp(),
+			    *sps[2]->sp(), seed.z(),
+			    seed.seedQuality());
+  }  
+
   m_outputSeeds(ctx, std::move(seedsToAdd));
 
   return ActsExamples::ProcessCode::SUCCESS;
