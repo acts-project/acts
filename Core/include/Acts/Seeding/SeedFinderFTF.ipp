@@ -10,6 +10,8 @@
 
 #include<fstream>
 #include<vector>
+#include<iostream>
+
 
 #include <cmath>
 #include <functional>
@@ -33,7 +35,7 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
 
 
   std::vector<TrigInDetSiLayer> input_vector ; 
-  std::ifstream input_ifstream(m_config.fastrack_input_file) ; 
+  std::ifstream input_ifstream(m_config.fastrack_input_file.c_str(), std::ifstream::in) ;
   FasTrackConnector input_fastrack(input_ifstream) ; 
   TrigFTF_GNN_Geometry<external_spacepoint_t> mGNNgeo(input_vector, &input_fastrack);
   m_storage = new TrigFTF_GNN_DataStorage(mGNNgeo);
@@ -51,13 +53,13 @@ SeedFinderFTF<external_spacepoint_t>::~SeedFinderFTF(){
 //define loadspace points funciton 
  //when calling put input of vector<simspacepoints>, now can call space_point_t 
 template <typename external_spacepoint_t>
-void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<FTF_SP<external_spacepoint_t>> SP){
+void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<FTF_SP<external_spacepoint_t>>& FTF_SP_vect){
 
-  for(auto& sp : SP) {
-    bool is_Pixel = sp.SP->isPixel(); //FTF actual object then sim is pointer 
+  for(auto& FTF_sp : FTF_SP_vect) {
+    bool is_Pixel = FTF_sp.SP->isPixel(); //FTF actual object then sim is pointer 
     if(!is_Pixel) continue;
 
-    m_storage->addSpacePoint((sp), (m_config.m_useTrigSeedML > 0)); //add is a funciton FTFtype 
+    m_storage->addSpacePoint(FTF_sp,(m_config.m_useTrigSeedML > 0) ); //add is a funciton FTFtype 
 
   }
 

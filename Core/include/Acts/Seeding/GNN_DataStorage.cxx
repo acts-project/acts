@@ -5,7 +5,7 @@
 #include<cstring>
 #include<algorithm>
 
-
+namespace Acts {
 template <typename space_point_t>  
 TrigFTF_GNN_Node<space_point_t>::TrigFTF_GNN_Node(const std::vector<space_point_t>& p, float minT = -100.0, float maxT = 100.0)  : m_sp(p), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
   m_in.clear();
@@ -64,7 +64,6 @@ void TrigFTF_GNN_EtaBin<space_point_t>::generatePhiIndexing(float dphi) {
 template <typename space_point_t>  
 TrigFTF_GNN_DataStorage<space_point_t>::TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& g) : m_geo(g) {
 
-
   for(int k=0;k<g.num_bins();k++) {
     m_etaBins.push_back(TrigFTF_GNN_EtaBin());
   }
@@ -76,7 +75,7 @@ TrigFTF_GNN_DataStorage<space_point_t>::~TrigFTF_GNN_DataStorage() {
 }
 //input will be FTF SP so need to call .SP for other funcitons 
 template <typename space_point_t>  
-int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const FTF_SP sp, bool useML = false) { 
+int TrigFTF_GNN_DataStorage<space_point_t>::addSpacePoint(const FTF_SP<space_point_t> sp, bool useML = false) { 
 
   const TrigFTF_GNN_Layer<space_point_t>* pL = m_geo.getTrigFTF_GNN_LayerByIndex<space_point_t>(sp.FTF_ID); //want ftf layer 
 
@@ -102,7 +101,7 @@ int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const FTF_SP sp, bool
   //   //   max_tau = 1.6 + 0.15/(cluster_width + 0.2) + 6.1*(cluster_width - 0.2);
   //   // }
     m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node(sp.SP, min_tau, max_tau));
-  // }
+  }
   else {
   //   // if (useML) {
   //   //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
@@ -115,7 +114,6 @@ int TrigFTF_GNN_DataStorage<space_point_t> ::addSpacePoint(const FTF_SP sp, bool
 
   return 0;
 }
-
 
 
 
@@ -153,3 +151,4 @@ void TrigFTF_GNN_DataStorage::getConnectingNodes(std::vector<const TrigFTF_GNN_N
     }
   }
 }
+} //end of ACTS namespace 

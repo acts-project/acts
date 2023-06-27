@@ -4,6 +4,7 @@
 #include<cstring>
 #include<algorithm>
 
+namespace Acts {
 template <typename space_point_t>  
 TrigFTF_GNN_Layer<space_point_t>::TrigFTF_GNN_Layer(const TrigInDetSiLayer& ls, float ew, int bin0) : m_layer(ls), m_etaBinWidth(ew) {
 
@@ -230,11 +231,11 @@ TrigFTF_GNN_Geometry<space_point_t>::TrigFTF_GNN_Geometry(const std::vector<Trig
  
   //calculating bin tables in the connector...
 
-  for(std::map<int, std::vector<FASTRACK_CONNECTION*> >::const_iterator it = conn->m_connMap.begin();it!=conn->m_connMap.end();++it) {
+  for(std::map<int, std::vector<FasTrackConnection*> >::const_iterator it = conn->m_connMap.begin();it!=conn->m_connMap.end();++it) {
 
-    const std::vector<FASTRACK_CONNECTION*>& vConn = (*it).second;
+    const std::vector<FasTrackConnection*>& vConn = (*it).second;
 
-    for(std::vector<FASTRACK_CONNECTION*>::const_iterator cIt=vConn.begin();cIt!=vConn.end();++cIt) {
+    for(std::vector<FasTrackConnection*>::const_iterator cIt=vConn.begin();cIt!=vConn.end();++cIt) {
       
       unsigned int src = (*cIt)->m_src;//n2 : the new connectors
       unsigned int dst = (*cIt)->m_dst;//n1
@@ -280,7 +281,7 @@ TrigFTF_GNN_Geometry<space_point_t>::~TrigFTF_GNN_Geometry() {
 }
 
 template <typename space_point_t> 
-const TrigFTF_GNN_Layer<space_point_t>* TrigFTF_GNN_Geometry<space_point_t>::getTrigFTF_GNN_LayerByKey(unsigned int key) const {
+const :TrigFTF_GNN_Layer<space_point_t>* TrigFTF_GNN_Geometry<space_point_t>::getTrigFTF_GNN_LayerByKey(unsigned int key) const {
   std::map<unsigned int, TrigFTF_GNN_Layer*>::const_iterator it = m_layMap.find(key);
   if(it == m_layMap.end()) {
     return nullptr;
@@ -307,4 +308,5 @@ const TrigFTF_GNN_Layer<space_point_t>* TrigFTF_GNN_Geometry<space_point_t>::add
   m_layMap.insert(std::pair<unsigned int, TrigFTF_GNN_Layer*>(layerKey, pHL));
   m_layArray.push_back(pHL);
   return pHL;
+}
 }

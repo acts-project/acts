@@ -7,7 +7,7 @@
 
 #include "Acts/Seeding/GNN_Geometry.h"
 
-
+namespace Acts {
 template <typename space_point_t>  
 class TrigFTF_GNN_Node {
  public:
@@ -82,14 +82,16 @@ struct FTF_SP {
  
 }; 
 
+
 template <typename space_point_t>  
-//input FTF SP, so if want normal have to do .sp 
 class TrigFTF_GNN_DataStorage {
   public:
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& );
-  ~TrigFTF_GNN_DataStorage();
+
+  // ~TrigFTF_GNN_DataStorage();
  
   int addSpacePoint(const FTF_SP<space_point_t>, bool); 
+
 
   unsigned int numberOfNodes() const;
   void getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t>*>&);
@@ -146,3 +148,4 @@ class TrigFTF_GNN_Edge {
 
 };
 
+} //end of ACTS namespace 

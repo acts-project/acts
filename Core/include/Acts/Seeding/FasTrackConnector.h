@@ -2,6 +2,10 @@
 #include<fstream>
 #include<vector>
 #include<map>
+#include<iostream>
+
+
+namespace Acts {
 
 struct FasTrackConnection {
 public:
@@ -17,12 +21,14 @@ public:
 class FasTrackConnector {
  public:
   FasTrackConnector(std::ifstream&);
+
   ~FasTrackConnector();
 
   float m_etaBin;
 
-  std::map<int, std::vector<FasTrackConnection*> > m_connMap;
+  std::map<int, std::vector<Acts::FasTrackConnection*> > m_connMap;
 
 } ;
 
 
+}

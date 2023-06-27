@@ -38,7 +38,7 @@ class SeedFinderFTF {
 
  //constructors 
   SeedFinderFTF(
-      const Acts::SeedFinderFTFConfig<external_spacepoint_t> &config);
+      const SeedFinderFTFConfig<external_spacepoint_t> &config);
 
 //   ~SeedFinderFTF() = default;
   ~SeedFinderFTF(); //!!! is it dangerous not to use default? got def in ipp 
@@ -51,7 +51,7 @@ class SeedFinderFTF {
 
 
 
-  void loadSpacePoints(const std::vector<FTF_SP<external_spacepoint_t>>);
+  void loadSpacePoints(const std::vector<FTF_SP<external_spacepoint_t>>&);
 
  //create seeeds function 
   template <typename input_container_t, typename output_container_t,
@@ -74,7 +74,7 @@ class SeedFinderFTF {
 
 
  //config object  
-  Acts::SeedFinderFTFConfig<external_spacepoint_t> m_config;
+  SeedFinderFTFConfig<external_spacepoint_t> m_config;
   
 
   //needs to be memeber of class so can accessed by all memeber functions 

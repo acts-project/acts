@@ -861,7 +861,6 @@ def addFTFSeeding(
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile, 
-        fastrack_inputFile = fastrack_inputFile, 
         
     )
 

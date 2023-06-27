@@ -213,7 +213,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
-  }
+  }  
 
 
   {

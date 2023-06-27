@@ -1,13 +1,16 @@
 #include "FasTrackConnector.h"
 #include<iostream>
 #include<cstring>
+#include<fstream>
 
+namespace Acts {
+  
 FasTrackConnection::FasTrackConnection(unsigned int s, unsigned int d) : m_src(s), m_dst(d) { 
 
 }
 
 FasTrackConnector::FasTrackConnector(std::ifstream& inFile) {
-
+  
   m_connMap.clear();
 
   int nLinks;
@@ -65,3 +68,4 @@ FasTrackConnector::~FasTrackConnector() {
   m_connMap.clear();
 
 }
+} 

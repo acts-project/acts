@@ -4,6 +4,7 @@
 
 #include "FasTrackConnector.h" 
 
+namespace Acts {
 class TrigInDetSiLayer {
  public:
   int m_subdet;//1 : Pixel, 2 : SCT
@@ -73,3 +74,4 @@ class TrigFTF_GNN_Geometry {
 };
 
 
+} 

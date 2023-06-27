@@ -93,7 +93,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   //create space point vectors 
   std::vector<const SimSpacePoint *> spacePoints;
-  std::vector<FTF_SP<SimSpacePoint>> FTF_spacePoints;  
+  std::vector<Acts::FTF_SP<SimSpacePoint>> FTF_spacePoints;  
   FTF_spacePoints.reserve(m_inputSpacePoints.size()); //not sure if this is enough, each one has several sp 
 
 //for loop filling space
