@@ -47,7 +47,7 @@ class SeedFinderOrthogonal {
    * scalar type for coordinates, stores its coordinates in std::arrays, and
    * has leaf size 4.
    */
-  using tree_t = KDTree<NDims, external_spacepoint_t *, ActsScalar, std::array, 4>;
+  using tree_t = KDTree<NDims, const external_spacepoint_t *, ActsScalar, std::array, 4>;
 
   /**
    * @brief Construct a new orthogonal seed finder.
@@ -190,7 +190,7 @@ class SeedFinderOrthogonal {
    *
    * @return A k-d tree containing the given spacepoints.
    */
-  tree_t createTree(const std::vector<external_spacepoint_t *> &spacePoints) const;
+  tree_t createTree(const std::vector<const external_spacepoint_t *> &spacePoints) const;
 
   /**
    * @brief Filter potential candidate pairs, and output seeds into an
@@ -203,7 +203,6 @@ class SeedFinderOrthogonal {
    * @param seedFilterState  holds quantities used in seed filter
    * @param candidates_collector The container to write the resulting
    * seed candidates to.
-   * @param spacePointData Auxiliary variables used by the seeding
    */
   void filterCandidates(
       const SeedFinderOptions &options, const external_spacepoint_t &middle,
@@ -211,8 +210,7 @@ class SeedFinderOrthogonal {
       const std::vector<const external_spacepoint_t *> &top,
       SeedFilterState seedFilterState,
       CandidatesForMiddleSp<const external_spacepoint_t>
-          &candidates_collector,
-      Acts::SpacePointData &spacePointData) const;
+      &candidates_collector) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.
@@ -223,14 +221,11 @@ class SeedFinderOrthogonal {
    *
    * @param tree The k-d tree to use for searching.
    * @param out_cont The container write output seeds to.
-   * @param middle_p The middle spacepoint to find seeds for.
-   * @param spacePointData Aux data for the spacepoints
    */
   template <typename output_container_t>
   void processFromMiddleSP(const SeedFinderOptions &options, const tree_t &tree,
                            output_container_t &out_cont,
-                           const typename tree_t::pair_t &middle_p,
-                           Acts::SpacePointData &spacePointData) const;
+                           const typename tree_t::pair_t &middle_p) const;
 
   /**
    * @brief The configuration for the seeding algorithm.
