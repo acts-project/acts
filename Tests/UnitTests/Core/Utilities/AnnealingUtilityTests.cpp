@@ -13,6 +13,7 @@
 #include "Acts/Utilities/AnnealingUtility.hpp"
 
 #include <iostream>
+#include <vector>
 
 namespace Acts {
 namespace Test {

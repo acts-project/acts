@@ -531,13 +531,28 @@ class TrackProxy {
   /// Copy the content of another track proxy into this one
   /// @tparam track_proxy_t the other track proxy's type
   /// @param other The the track proxy
+  /// @param copyTrackStates Copy the track state sequence from @p other
   template <typename track_proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  void copyFrom(const track_proxy_t& other) {
+  void copyFrom(const track_proxy_t& other, bool copyTrackStates = true) {
     // @TODO: Add constraint on which track proxies are allowed,
     // this is only implicit right now
 
-    tipIndex() = other.tipIndex();
+    if (copyTrackStates) {
+      // append track states (cheap), but they're in the wrong order
+      for (auto srcTrackState : other.trackStates()) {
+        auto destTrackState = appendTrackState(srcTrackState.getMask());
+        if (srcTrackState.hasCalibrated()) {
+          destTrackState.allocateCalibrated(srcTrackState.calibratedSize());
+        }
+        destTrackState.copyFrom(srcTrackState, Acts::TrackStatePropMask::All,
+                                true);
+      }
+
+      // reverse using standard linked list reversal algorithm
+      reverseTrackStates();
+    }
+
     parameters() = other.parameters();
     covariance() = other.covariance();
     if (other.hasReferenceSurface()) {
@@ -553,6 +568,26 @@ class TrackProxy {
     // This will only be valid if the backends match and support this operation
     m_container->copyDynamicFrom(m_index, other.m_container->container(),
                                  other.m_index);
+  }
+
+  /// Reverse the ordering of track states for this track
+  /// Afterwards, the previous endpoint of the track state sequence will be the
+  /// "innermost" track state
+  /// @note This is dangerous with branching track state sequences, as it will break them
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void reverseTrackStates() {
+    IndexType current = tipIndex();
+    IndexType next = kInvalid;
+    IndexType prev = kInvalid;
+
+    while (current != kInvalid) {
+      auto ts = m_container->trackStateContainer().getTrackState(current);
+      prev = ts.previous();
+      ts.previous() = next;
+      next = current;
+      tipIndex() = current;
+      current = prev;
+    }
   }
 
   /// Return a reference to the track container backend, const version.

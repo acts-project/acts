@@ -6,7 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Visualization/ViewConfig.hpp"
+#include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
@@ -34,16 +40,29 @@
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
+#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
-#include "ActsExamples/Validation/ResPlotTool.hpp"
 
+#include <array>
 #include <memory>
-#include <string_view>
+#include <string>
+#include <tuple>
+#include <vector>
 
-#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class TrackingGeometry;
+namespace detail {
+struct Step;
+}  // namespace detail
+}  // namespace Acts
+namespace ActsExamples {
+class IWriter;
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 namespace py = pybind11;
 using namespace pybind11::literals;

@@ -10,6 +10,8 @@
 
 #include "Acts/EventData/MeasurementHelpers.hpp"
 
+#include <cstddef>
+
 namespace Acts {
 namespace detail {
 

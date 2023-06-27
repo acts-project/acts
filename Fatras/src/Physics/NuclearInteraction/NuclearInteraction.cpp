@@ -8,7 +8,12 @@
 
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
+#include <memory>
+#include <type_traits>
 
 namespace ActsFatras {
 

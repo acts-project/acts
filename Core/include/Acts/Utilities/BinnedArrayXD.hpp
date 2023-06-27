@@ -50,7 +50,7 @@ class BinnedArrayXD : public BinnedArray<T> {
   }
 
   /// Constructor with std::vector and a BinUtility
-  /// - fills the internal data structur
+  /// - fills the internal data structure
   ///
   /// @param tapvector is a vector of object and binning position
   /// @param bu is the unique bin utility for this binned array
@@ -171,7 +171,7 @@ class BinnedArrayXD : public BinnedArray<T> {
     return object(position, bins);
   }
 
-  /// Return all unqiue object
+  /// Return all unique object
   /// @return vector of unique array objects
   const std::vector<T>& arrayObjects() const final { return m_arrayObjects; }
 

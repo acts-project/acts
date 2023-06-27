@@ -9,14 +9,19 @@
 #pragma once
 
 #include "Acts/AmbiguityResolution/GreedyAmbiguityResolution.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Evicts tracks that seem to be duplicated.
 ///
@@ -41,7 +46,7 @@ class GreedyAmbiguityResolutionAlgorithm final : public IAlgorithm {
     /// Maximum number of iterations
     std::uint32_t maximumIterations = 1000;
 
-    /// Minumum number of measurement to form a track.
+    /// Minimum number of measurement to form a track.
     size_t nMeasurementsMin = 7;
   };
 

@@ -11,12 +11,16 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Read particles in the TrackML comma-separated-value format.
 ///

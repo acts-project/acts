@@ -10,6 +10,10 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -21,7 +25,16 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <utility>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -47,7 +60,7 @@ static auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 1_T});
 ///
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
-/// @param angleU Roation around the original U axis
+/// @param angleU Rotation around the original U axis
 Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
                                     double angleY) {
   Transform3 ctransform;
@@ -64,7 +77,7 @@ Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
 ///
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
-/// @param angleU Roation around the original U axis
+/// @param angleU Rotation around the original U axis
 Transform3 createPlanarTransform(const Vector3& nposition,
                                  const Vector3& nnormal, double angleT,
                                  double angleU) {

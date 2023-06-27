@@ -42,10 +42,10 @@ class IReader : public SequenceElement {
     return read(context);
   }
 
-  /// Fullfil the algorithm interface
+  /// Fulfill the algorithm interface
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }
 
-  /// Fullfil the algorithm interface
+  /// Fulfill the algorithm interface
   ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 };
 

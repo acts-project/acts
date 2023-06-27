@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Utilities/Range1D.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <limits>

@@ -12,13 +12,17 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <limits>
+#include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Select particles by applying some selection cuts.
 class ParticleSelector final : public IAlgorithm {
@@ -28,7 +32,7 @@ class ParticleSelector final : public IAlgorithm {
     std::string inputParticles;
     /// The output particles collection.
     std::string outputParticles;
-    // Minimum/maximum distance from the origin in the tranverse plane.
+    // Minimum/maximum distance from the origin in the transverse plane.
     double rhoMin = 0;
     double rhoMax = std::numeric_limits<double>::infinity();
     // Minimum/maximum absolute distance from the origin along z.

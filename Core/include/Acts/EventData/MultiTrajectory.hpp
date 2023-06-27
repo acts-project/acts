@@ -307,7 +307,15 @@ class TrackStateProxy {
     return component<IndexType, hashString("previous")>();
   }
 
-  /// Return whather this track state has a previous (parent) track state.
+  /// Return a mutable reference to the index of the track state 'previous' in
+  /// the track sequence
+  /// @return The index of the previous track state.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  IndexType& previous() {
+    return component<IndexType, hashString("previous")>();
+  }
+
+  /// Return whether this track state has a previous (parent) track state.
   /// @return Boolean indicating whether a previous track state exists
   bool hasPrevious() const {
     return component<IndexType, hashString("previous")>() != kInvalid;
@@ -344,7 +352,7 @@ class TrackStateProxy {
     shareFrom(other, component, component);
   }
 
-  /// Share a shareable component from anothe track state
+  /// Share a shareable component from another track state
   /// @param shareSource Which component to share from
   /// @param shareTarget Which component to share as. This can be be different from
   ///                    as @p shareSource, e.g. predicted can be shared as filtered.

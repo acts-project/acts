@@ -9,13 +9,11 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/Track.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <ios>
 #include <optional>
 #include <stdexcept>
 

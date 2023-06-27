@@ -8,18 +8,25 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/SurfaceBoundsJsonConverter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <memory>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
+
+#include <nlohmann/json.hpp>
 
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {
+class ISurfaceMaterial;
 
 using SurfaceAndMaterialWithContext =
     std::tuple<std::shared_ptr<const Acts::Surface>,
@@ -59,14 +66,14 @@ void to_json(nlohmann::json& j, const std::shared_ptr<const Surface>& surface);
 void toJson(nlohmann::json& j, const std::shared_ptr<const Surface>& surface,
             const Acts::GeometryContext& gctx);
 
-/// Converstion to Surface from jsonn
+/// Conversion to Surface from jsonn
 ///
 /// @param j the read-in json object
 ///
 /// @return a shared_ptr to a surface object for type polymorphism
 std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json& j);
 
-/// Converstion to Surface from json in correct type
+/// Conversion to Surface from json in correct type
 ///
 /// The type is given as a template argument in order to be able
 /// to construct the correct fitting types for surfaces.

@@ -107,7 +107,7 @@ VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
  ```
 ### Deploying the vertex finder on the track collection
 
-Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The `find()` methods on ACTS vertex finders return an `Acts::Result` object that we can use to check if any errors occured and to retrieve the vertex collection:
+Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The `find()` methods on ACTS vertex finders return an `Acts::Result` object that we can use to check if any errors occurred and to retrieve the vertex collection:
 ```cpp
 // Find vertices
 auto res = finder.find(inputTrackPointers, finderOpts, state);

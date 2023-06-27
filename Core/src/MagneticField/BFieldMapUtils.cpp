@@ -8,13 +8,20 @@
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <initializer_list>
 #include <limits>
+#include <set>
 #include <tuple>
 
 using Acts::VectorHelpers::perp;

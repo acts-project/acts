@@ -42,29 +42,39 @@ void weaklyConnectedComponents(vertex_t numNodes,
 namespace Acts {
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
-    std::any nodes, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs, const Logger& logger) {
-  const auto eLibInputTensor = std::any_cast<torch::Tensor>(nodes);
-  const auto edgesAfterF = std::any_cast<torch::Tensor>(edges);
-  const auto gOutput = std::any_cast<torch::Tensor>(weights);
+    std::any, std::any edges, std::any weights,
+    std::vector<int>& spacepointIDs) {
+  ACTS_DEBUG("Start track building");
+  const auto edgeTensor = std::any_cast<torch::Tensor>(edges).to(torch::kCPU);
+  const auto edgeWeightTensor =
+      std::any_cast<torch::Tensor>(weights).to(torch::kCPU);
+
+  assert(edgeTensor.size(0) == 2);
+  assert(edgeTensor.size(1) == edgeWeightTensor.size(0));
 
   const auto numSpacepoints = spacepointIDs.size();
-  const auto numEdgesAfterF = gOutput.size(0);
+  const auto numEdges = static_cast<std::size_t>(edgeWeightTensor.size(0));
+
+  if (numEdges == 0) {
+    ACTS_WARNING("No edges remained after edge classification");
+    return {};
+  }
 
   using vertex_t = int32_t;
-  std::vector<vertex_t> rowIndices;
-  std::vector<vertex_t> colIndices;
-  std::vector<float> edgeWeights;
+  std::vector<vertex_t> rowIndices(numEdges);
+  std::copy(edgeTensor.data_ptr<int64_t>(),
+            edgeTensor.data_ptr<int64_t>() + numEdges, rowIndices.begin());
+
+  std::vector<vertex_t> colIndices(numEdges);
+  std::copy(edgeTensor.data_ptr<int64_t>() + numEdges,
+            edgeTensor.data_ptr<int64_t>() + numEdges + numEdges,
+            colIndices.begin());
+
+  std::vector<float> edgeWeights(numEdges);
+  std::copy(edgeWeightTensor.data_ptr<float>(),
+            edgeWeightTensor.data_ptr<float>() + numEdges, edgeWeights.begin());
+
   std::vector<vertex_t> trackLabels(numSpacepoints);
-  std::copy(edgesAfterF.data_ptr<int64_t>(),
-            edgesAfterF.data_ptr<int64_t>() + numEdgesAfterF,
-            std::back_insert_iterator(rowIndices));
-  std::copy(edgesAfterF.data_ptr<int64_t>() + numEdgesAfterF,
-            edgesAfterF.data_ptr<int64_t>() + numEdgesAfterF + numEdgesAfterF,
-            std::back_insert_iterator(colIndices));
-  std::copy(gOutput.data_ptr<float>(),
-            gOutput.data_ptr<float>() + numEdgesAfterF,
-            std::back_insert_iterator(edgeWeights));
 
   weaklyConnectedComponents<int32_t, int32_t, float>(
       numSpacepoints, rowIndices, colIndices, edgeWeights, trackLabels);

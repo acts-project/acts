@@ -1,6 +1,6 @@
 variables:
   CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
-  CCACHE_MAXSIZE: 10G
+  CCACHE_MAXSIZE: 2G
   CCACHE_KEY_SUFFIX: r1
 
 clang_tidy:
@@ -100,7 +100,7 @@ build_exatrkx:
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
-    - cmake --build build --
+    - cmake --build build -- -j3
 
 test_exatrkx:
   stage: test
@@ -137,6 +137,8 @@ build_linux_ubuntu:
     paths:
       - build/
     exclude:
+      - build/bin/ActsUnitTest*
+      - build/bin/ActsIntegrationTest*
       - build/**/*.o
 
   script:
@@ -154,7 +156,7 @@ build_linux_ubuntu:
       cmake -B build -S src
       -GNinja
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_BUILD_TYPE=RelWithDebInfo
       -DCMAKE_CXX_FLAGS=-Werror
       -DCMAKE_CXX_STANDARD=17
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
@@ -169,7 +171,7 @@ build_linux_ubuntu:
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
-    - cmake --build build --
+    - cmake --build build -- -j3
     - ccache -s
 
 linux_test_examples:
@@ -200,6 +202,40 @@ linux_test_examples:
     - pip3 install -r Examples/Python/tests/requirements.txt
     - pytest -rFsv -k "not exatrkx" -v -n auto
 
+linux_physmon:
+  stage: test
+  image: ghcr.io/acts-project/ubuntu2204:v41
+  needs: [build_linux_ubuntu]
+  tags:
+    - docker
+
+  artifacts:
+    when: always
+    paths:
+      - src/physmon
+
+  script:
+    - apt-get update && apt-get install -y git-lfs
+
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - git submodule init
+    - git submodule update
+    - cd ..
+
+    - git config --global safe.directory "$GITHUB_WORKSPACE"
+    - pip3 install histcmp==0.5.2
+    - pip3 install -r src/Examples/Scripts/requirements.txt
+    - /usr/local/bin/geant4-config --install-datasets
+    - "source /usr/local/bin/thisroot.sh || true"
+    - "source /usr/local/bin/thisdd4hep_only.sh || true"
+    - "source /usr/local/bin/geant4.sh || true"
+    - source build/python/setup.sh
+    - export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+    - cd src
+    - export PYTHONPATH="${PYTHONPATH}":"${PWD}/Examples/Scripts/Python"
+    - CI/physmon/phys_perf_mon.sh all physmon
 
 ###############################
 ### UBUNTU EXTRA JOB MATRIX ###
@@ -246,7 +282,7 @@ linux_test_examples:
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
-    - cmake --build build --
+    - cmake --build build -- -j3
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
@@ -363,7 +399,7 @@ linux_ubuntu_2204_clang:
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
 
     - ccache -z
-    - cmake --build build
+    - cmake --build build -- -j3
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)

@@ -8,16 +8,26 @@
 
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <ostream>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -98,7 +108,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       for (auto& c : cluster.digitizationCells()) {
         cell.channel0 = c.channel0;
         cell.channel1 = c.channel1;
-        // TODO store digitial timestamp once added to the cell definition
+        // TODO store digital timestamp once added to the cell definition
         cell.timestamp = 0;
         cell.value = c.data;
         writerCells.append(cell);
