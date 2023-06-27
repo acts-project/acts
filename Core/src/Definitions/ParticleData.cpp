@@ -23,7 +23,8 @@
 
 namespace {
 
-static inline std::optional<std::size_t> findIndexByPdg(std::int32_t pdg) {
+static constexpr inline std::optional<std::size_t> findIndexByPdg(
+    std::int32_t pdg) {
   auto beg = std::cbegin(kParticlesPdgNumber);
   auto end = std::cend(kParticlesPdgNumber);
   // assumes sorted container of pdg numbers
@@ -36,7 +37,8 @@ static inline std::optional<std::size_t> findIndexByPdg(std::int32_t pdg) {
 
 // Find an element within a data column using sorted pdg numbers as the index.
 template <typename ColumnContainer>
-static inline auto findByPdg(std::int32_t pdg, const ColumnContainer& column)
+static constexpr inline auto findByPdg(std::int32_t pdg,
+                                       const ColumnContainer& column)
     -> std::optional<std::decay_t<decltype(column[0])>> {
   // should be a static_assert, but that seems to fail on LLVM
   assert((std::size(column) == kParticlesCount) and "Inconsistent column size");
@@ -48,12 +50,12 @@ static inline auto findByPdg(std::int32_t pdg, const ColumnContainer& column)
   return column[*index];
 }
 
-static inline float extractCharge(float value) {
+static constexpr inline float extractCharge(float value) {
   // convert three charge to regular charge in native units
   return (value / 3.0f) * Acts::UnitConstants::e;
 }
 
-static inline float extractMass(float value) {
+static constexpr inline float extractMass(float value) {
   return value * Acts::UnitConstants::MeV;
 }
 

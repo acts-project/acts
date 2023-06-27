@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
