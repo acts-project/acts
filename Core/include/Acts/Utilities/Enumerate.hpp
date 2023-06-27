@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <utility>
+
 namespace Acts {
 /// Helper utility to allow indexed enumeration with structured binding
 ///

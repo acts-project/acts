@@ -13,6 +13,7 @@
 
 // System include(s).
 #include <cstddef>
+#include <cstdint>
 
 namespace Acts {
 struct SeedFilterConfig {

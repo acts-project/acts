@@ -13,6 +13,8 @@
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 
+#include <array>
+
 namespace Acts {
 
 /// @brief Container of extensions used in the stepper of the propagation. This

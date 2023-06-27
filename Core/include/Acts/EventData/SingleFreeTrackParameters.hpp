@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
