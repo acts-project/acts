@@ -94,7 +94,7 @@ std::shared_ptr<const Acts::DigitizationModule> trapezoidalDigiModuleXZ(
 /// @brief Retrieves the node component from a mother by the string names
 /// @param mother The Handle to the mother volume
 /// @param nodeName The name of the note
-/// @param attrName The name of the Atribute
+/// @param attrName The name of the Attribute
 /// @param attrValue The attribute value
 dd4hep::xml::Component getNodeByStrAttr(const dd4hep::xml::Handle_t& mother,
                                         const std::string& nodeName,

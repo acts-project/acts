@@ -31,7 +31,7 @@ ActsExamples::CsvSimHitWriter::CsvSimHitWriter(
     : WriterT(config.inputSimHits, "CsvSimHitWriter", level), m_cfg(config) {
   // inputSimHits is already checked by base constructor
   if (m_cfg.outputStem.empty()) {
-    throw std::invalid_argument("Missing ouput filename stem");
+    throw std::invalid_argument("Missing output filename stem");
   }
 }
 

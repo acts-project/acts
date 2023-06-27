@@ -45,7 +45,7 @@ void setHistStyle(hist_t* hist, short color = 1) {
 ///
 /// @tparam eff_t the efficiency histogram type
 ///
-/// @param eff the effiency histogram
+/// @param eff the efficiency histogram
 /// @param color the color to be set
 template <typename eff_t>
 void setEffStyle(eff_t* eff, short color = 1) {
@@ -56,7 +56,7 @@ void setEffStyle(eff_t* eff, short color = 1) {
   eff->SetMarkerColor(color);
 }
 
-/// Helper function: set color pallette
+/// Helper function: set color palette
 ///
 /// @tparam type of the histogram
 ///
@@ -92,7 +92,7 @@ void adaptColorPalette(hist_t* h, float rmin, float rmax, float rgood,
 /// @tparam eff_t the efficiency histogram type
 ///
 /// @param eff the efficiency histogram
-/// @param minScale the minum of the scale
+/// @param minScale the minimum of the scale
 /// @param maxScale the maximum of the scale
 template <typename eff_t>
 void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
@@ -111,7 +111,7 @@ void adaptEffRange(eff_t* eff, float minScale = 1, float maxScale = 1.1) {
 ///
 /// This struct allows to define accessors and
 /// cuts for residual and pull analysis in order
-/// to be able to acces them in an ROOT event loop
+/// to be able to access them in an ROOT event loop
 struct ResidualPullHandle {
   /// A tag name
   std::string tag = "";
@@ -247,7 +247,7 @@ template <typename primitive_t>
 struct DirectAccessor {
   std::vector<primitive_t>* value = nullptr;
 
-  /// Gives direct acces to the underlying parameter
+  /// Gives direct access to the underlying parameter
   ///
   /// @param entry the entry in the tree
   primitive_t operator()(ULong64_t entry) {
@@ -266,7 +266,7 @@ struct DivisionAccessor {
 
   std::vector<primitive_two_t>* two = nullptr;
 
-  /// Gives direct acces to the underlying parameter
+  /// Gives direct access to the underlying parameter
   ///
   /// @param entry the entry in the tree
   primitive_one_t operator()(ULong64_t entry) {
@@ -378,7 +378,7 @@ struct PtErrorAccessor {
 /// @param directory the writable directory
 /// @param tree the tree from which is drawn
 /// @param peakEntries the number of entries for the range peak
-/// @param hBarcode a temporary unqiue ROOT barcode for memory managements
+/// @param hBarcode a temporary unique ROOT barcode for memory managements
 template <typename dir_t, typename tree_t>
 void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory,
                            tree_t& tree, unsigned long peakEntries,
@@ -412,7 +412,7 @@ void estimateResiudalRange(ResidualPullHandle& handle, dir_t& directory,
 /// @param directory the writable directory
 /// @param tree the tree from which is drawn
 /// @param peakEntries the number of entries for the range peak
-/// @param hBarcode a temporary unqiue ROOT barcode for memory managements
+/// @param hBarcode a temporary unique ROOT barcode for memory managements
 template <typename dir_t, typename tree_t>
 void estimateIntegerRange(SingleHandle& handle, dir_t& directory, tree_t& tree,
                           unsigned long peakEntries, unsigned int startBins,
@@ -450,7 +450,7 @@ void estimateIntegerRange(SingleHandle& handle, dir_t& directory, tree_t& tree,
   handle.range = {-0.5, static_cast<float>(handle.bins - 0.5)};
 }
 
-/// Helper mehtod to book residual and pull histograms
+/// Helper method to book residual and pull histograms
 ///
 /// @param handle the residual/pull handle
 /// @param pullRange the symmetric pull range for plotting
@@ -486,7 +486,7 @@ void bookHistograms(ResidualPullHandle& handle, float pullRange,
 /// @tparam tree_t the type of the tree
 ///
 /// @param tree is the TTree/TChain in question
-/// @param configuredEntries is a configuraiton parameter
+/// @param configuredEntries is a configuration parameter
 ///
 /// @return the number of entries
 template <typename tree_t>

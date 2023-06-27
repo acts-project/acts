@@ -29,7 +29,7 @@ namespace Acts {
 
 class ProtoSurfaceMaterial : public ISurfaceMaterial {
  public:
-  /// Constructor without BinUtility - homogenous material
+  /// Constructor without BinUtility - homogeneous material
   ProtoSurfaceMaterial() = default;
 
   /// Constructor with BinUtility - multidimensional material
@@ -40,12 +40,12 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   ProtoSurfaceMaterial(const BinUtility& binUtility,
                        MappingType mappingType = MappingType::Default);
 
-  /// Copy constuctor
+  /// Copy constructor
   ///
   /// @param smproxy The source proxy
   ProtoSurfaceMaterial(const ProtoSurfaceMaterial& smproxy) = default;
 
-  /// Copy move constuctor
+  /// Copy move constructor
   ///
   /// @param smproxy The source proxy
   ProtoSurfaceMaterial(ProtoSurfaceMaterial&& smproxy) = default;
@@ -59,7 +59,7 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   ProtoSurfaceMaterial& operator=(const ProtoSurfaceMaterial& smproxy) =
       default;
 
-  /// Assigment move operator
+  /// Assignment move operator
   ///
   /// @param smproxy The source proxy
   ProtoSurfaceMaterial& operator=(ProtoSurfaceMaterial&& smproxy) = default;
@@ -91,7 +91,7 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   /// Direct access via bins to the MaterialSlab
   ///
   /// @param ib0 indicates the first bin
-  /// @param ib1 indicates the seconf bin
+  /// @param ib1 indicates the second bin
   ///
   /// @return will return dummy material
   const MaterialSlab& materialSlab(size_t ib0, size_t ib1) const final;

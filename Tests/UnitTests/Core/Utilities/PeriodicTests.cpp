@@ -29,7 +29,7 @@ constexpr auto tol = std::numeric_limits<double>::epsilon();
 }
 
 namespace {
-// Test dataset for periodic diffference calculation, each entry is
+// Test dataset for periodic difference calculation, each entry is
 //
 //     lhs, rhs, periodic range, expected difference
 //

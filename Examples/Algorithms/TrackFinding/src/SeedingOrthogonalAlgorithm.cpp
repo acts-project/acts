@@ -92,7 +92,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
   ActsExamples::SpacePointContainer container(spacePoints);
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
     spContainer(spConfig, spOptions, container);
-  /*
+  
   Acts::SeedFinderOrthogonal<proxy_type> finder(m_cfg.seedFinderConfig);
   std::vector<Acts::Seed<proxy_type>> seeds = finder.createSeeds(m_cfg.seedFinderOptions,
 						    spContainer);
@@ -100,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
-  */
+
   // need to convert here
   SimSeedContainer seedsToAdd;
   m_outputSeeds(ctx, std::move(seedsToAdd));

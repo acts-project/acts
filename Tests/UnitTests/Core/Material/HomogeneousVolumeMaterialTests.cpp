@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousVolumeMaterial_construction_test) {
   BOOST_CHECK_EQUAL(hsm, hsmCopyMoved);
   // Assignment constructor
   HomogeneousVolumeMaterial hsmAssigned = hsm;
-  // Test equality of the asignment
+  // Test equality of the assignment
   BOOST_CHECK_EQUAL(hsm, hsmAssigned);
   // Assignment move constructor
   HomogeneousVolumeMaterial hsmAssignedMoved(std::move(hsmAssigned));

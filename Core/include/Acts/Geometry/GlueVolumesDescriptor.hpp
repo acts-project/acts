@@ -42,7 +42,7 @@ class GlueVolumesDescriptor {
       const std::map<BoundarySurfaceFace,
                      std::shared_ptr<const TrackingVolumeArray>>& gvs);
 
-  /// Desctructor
+  /// Destructor
   ~GlueVolumesDescriptor() = default;
   /// Register the volumes
   ///

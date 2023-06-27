@@ -101,7 +101,7 @@ struct NavigationOptions {
 ///
 /// The current navigation stage is cached in the state struct and updated
 /// when necessary. If any surface in the extrapolation  flow is hit, it is
-/// set to the propagation satate, such that other actors can deal wit it.
+/// set to the propagation satate, such that other actors can deal with it.
 /// This navigation actor thus always needs to run first!
 /// It does two things: it figures out the order of volumes, layers and
 /// surfaces.
@@ -151,7 +151,7 @@ class Navigator {
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
 
-    /// Wether to perform boundary checks for layer resolving (improves
+    /// Whether to perform boundary checks for layer resolving (improves
     /// navigation for bended tracks)
     BoundaryCheck boundaryCheckLayerResolving = true;
   };
@@ -187,7 +187,7 @@ class Navigator {
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};
 
-    /// Navigation sate: the world volume
+    /// Navigation state: the world volume
     const TrackingVolume* worldVolume = nullptr;
 
     /// Navigation state: the start volume
@@ -563,7 +563,7 @@ class Navigator {
           return;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
-          // Forget the bounday information
+          // Forget the boundary information
           state.navigation.navBoundaries.clear();
           state.navigation.navBoundaryIndex =
               state.navigation.navBoundaries.size();
@@ -858,7 +858,7 @@ class Navigator {
         return true;
       }
     }
-    // loop over the available navigation layer candiates
+    // loop over the available navigation layer candidates
     while (state.navigation.navLayerIndex !=
            state.navigation.navLayers.size()) {
       // The layer surface

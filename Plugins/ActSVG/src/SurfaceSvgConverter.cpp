@@ -130,7 +130,7 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
   pSurface._fill._fc._hl_rgb = cOptions.style.highlightColor;
   pSurface._fill._fc._highlight = cOptions.style.highlights;
 
-  // Stroke sytle
+  // Stroke style
   pSurface._stroke._sc = actsvg::style::color{cOptions.style.strokeColor};
   pSurface._stroke._width = cOptions.style.strokeWidth;
 

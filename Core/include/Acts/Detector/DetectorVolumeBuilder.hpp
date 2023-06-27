@@ -41,37 +41,34 @@ class DetectorVolumeBuilder : public IDetectorComponentBuilder {
     std::shared_ptr<const IExternalStructureBuilder> externalsBuilder = nullptr;
     /// An internal builder
     std::shared_ptr<const IInternalStructureBuilder> internalsBuilder = nullptr;
-    /// Add to the root volumes: the current volume
-    bool addToRoot = true;
     /// Add eventual internal volume to root
     bool addInternalsToRoot = false;
-    /// Auxilliary information
-    std::string auxilliary = "";
+    /// Auxiliary information
+    std::string auxiliary = "";
   };
 
   /// Constructor with configuration arguments
   ///
   /// @param cfg is the configuration struct
-  /// @param logger logging instance for screen output
+  /// @param mlogger logging instance for screen output
   DetectorVolumeBuilder(const Config& cfg,
-                        std::unique_ptr<const Logger> logger = getDefaultLogger(
-                            "DetectorVolumeBuilder", Logging::INFO));
+                        std::unique_ptr<const Logger> mlogger =
+                            getDefaultLogger("DetectorVolumeBuilder",
+                                             Logging::INFO));
 
   /// Final implementation of a volume builder that is purely defined
   /// by an internal and external structure builder
   ///
-  /// @param roots [in,out] the detector root volumes
   /// @param gctx The geometry context for this call
   ///
   /// @return an outgoing detector component
-  DetectorComponent construct(RootDetectorVolumes& roots,
-                              const GeometryContext& gctx) const final;
+  DetectorComponent construct(const GeometryContext& gctx) const final;
 
  private:
   /// configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// logging instance

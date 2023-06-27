@@ -79,7 +79,7 @@ class NavigationLayer : public Layer {
   bool isOnLayer(const GeometryContext& gctx, const Vector3& gp,
                  const BoundaryCheck& bcheck = true) const final;
 
-  /// Accept layer according to the following colelction directives
+  /// Accept layer according to the following collection directives
   ///
   /// @param resolveSensitive is the prescription to find the sensitive surfaces
   /// @param resolveMaterial is the precription to find material surfaces

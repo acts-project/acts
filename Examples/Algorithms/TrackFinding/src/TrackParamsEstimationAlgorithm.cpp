@@ -96,7 +96,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
       ACTS_WARNING("surface with geoID "
-                   << geoId << " is not found in the tracking gemetry");
+                   << geoId << " is not found in the tracking geometry");
       continue;
     }
 

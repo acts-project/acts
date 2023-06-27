@@ -46,7 +46,7 @@ class GreedyAmbiguityResolutionAlgorithm final : public IAlgorithm {
     /// Maximum number of iterations
     std::uint32_t maximumIterations = 1000;
 
-    /// Minumum number of measurement to form a track.
+    /// Minimum number of measurement to form a track.
     size_t nMeasurementsMin = 7;
   };
 

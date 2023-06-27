@@ -58,7 +58,7 @@ struct CovarianceCache {
   ///
   /// @param gctx The current geometry context
   /// @param surface The surface of the bound representation
-  /// @param position The position of the representaiton
+  /// @param position The position of the representation
   /// @param boundParameters The bound parameters at the surface
   /// @param boundCovariance The bound covariance to be propagated
   ///

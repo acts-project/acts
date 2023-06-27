@@ -4,7 +4,7 @@ The OpenDataDatector (ODD) is fictitious silicon detector which resides in its o
 
 Our full chain ODD example is written in Python and can be found [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/full_chain_odd.py).
 
-The first step is to load the ODD detector description and to construct the detector. `getOpenDataDetectorDirectory` gives us the ODD folder within the `thirdparty` directory in Acts. We load our prefered material map and provide it to the detector construction `getOpenDataDetector`.
+The first step is to load the ODD detector description and to construct the detector. `getOpenDataDetectorDirectory` gives us the ODD folder within the `thirdparty` directory in Acts. We load our preferred material map and provide it to the detector construction `getOpenDataDetector`.
 
 ```python
 oddDir = getOpenDataDetectorDirectory()
@@ -18,13 +18,13 @@ detector, trackingGeometry, decorators = getOpenDataDetector(
 )
 ```
 
-In our simple example we assume a homogenous magnetic field along the beam axis with 2 T. The magnetic field is passed to all the different algorithms in our simulation and the reconstruction pipeline.
+In our simple example we assume a homogeneous magnetic field along the beam axis with 2 T. The magnetic field is passed to all the different algorithms in our simulation and the reconstruction pipeline.
 
 ```python
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 ```
 
-The simulation step involves random processes and in order to get the same results across different executions we provide our prefered random number generator with an arbitrary seed.
+The simulation step involves random processes and in order to get the same results across different executions we provide our preferred random number generator with an arbitrary seed.
 
 ```python
 rnd = acts.examples.RandomNumbers(seed=42)

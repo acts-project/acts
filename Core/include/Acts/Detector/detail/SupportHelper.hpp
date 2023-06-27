@@ -56,7 +56,7 @@ std::vector<std::shared_ptr<Surface>> discSupport(
 /// @param assignToAll [in, out] indices that are assigned to all bins in the indexing
 /// @param layerExtent the externally provided layer Extent
 /// @param layerRepresentation the shape of the layer
-/// @param layerSupportValues the support structue in numbers
+/// @param layerSupportValues the support structure in numbers
 /// @param layerTransform is an optional value of the layer transform
 /// @param supportSplits the number of splits if splitting is configured
 ///
