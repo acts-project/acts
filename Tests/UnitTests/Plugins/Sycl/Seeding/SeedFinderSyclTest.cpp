@@ -39,6 +39,7 @@
 #include "SpacePoint.hpp"
 #include "vecmem/memory/sycl/device_memory_resource.hpp"
 #include "vecmem/memory/sycl/host_memory_resource.hpp"
+#include "SpacePointContainer.hpp"
 
 using namespace Acts::UnitLiterals;
 
