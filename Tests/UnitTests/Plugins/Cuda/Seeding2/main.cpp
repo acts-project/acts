@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
                                                       cmdl.cudaDevice);
 
   // Set up the seedFinder configuration objects.
-  TestHostCuts hostCuts;
+  TestHostCuts<value_type> hostCuts;
   Acts::SeedFilterConfig filterConfig;
   filterConfig = filterConfig.toInternalUnits();
   sfConfig.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(

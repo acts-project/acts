@@ -106,13 +106,13 @@ inline float SpacePointContainer<collection_t>::z_impl(std::size_t idx) const {
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::varianceR_impl(
     std::size_t idx) const {
-  return storage()[idx]->varianceR;
+  return storage()[idx]->m_varianceR;
 }
 
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::varianceZ_impl(
     std::size_t idx) const {
-  return storage()[idx]->varianceZ;
+  return storage()[idx]->m_varianceZ;
 }
 
 template <typename collection_t>
