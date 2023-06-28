@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -20,7 +21,6 @@
 // Acts include(s).
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 
 // System include(s).
 #include <cstring>
@@ -94,26 +94,26 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   // Create more convenient vectors out of the space point containers.
   auto spVecMaker = [&grid](const sp_range_t& spRange) {
-    std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> result;
+    std::vector<const external_spacepoint_t*> result;
     for (std::size_t idx : spRange) {
       auto& collection = grid.at(idx);
-      for (auto& sp : collection) {
-        result.push_back(sp.get());
+      for (const auto& sp : collection) {
+        result.push_back(sp);
       }
     }
     return result;
   };
 
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottomSPVec(
+  std::vector<const external_spacepoint_t*> bottomSPVec(
       spVecMaker(bottomSPs));
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPVec(
+  std::vector<const external_spacepoint_t*> topSPVec(
       spVecMaker(topSPs));
 
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPVec;
+  std::vector<const external_spacepoint_t*> middleSPVec;
   {
     auto& collection = grid.at(middleSPs);
     for (auto& sp : collection) {
-      middleSPVec.push_back(sp.get());
+      middleSPVec.push_back(sp);
     }
   }
 
@@ -213,7 +213,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   auto triplet_end = tripletCandidates.end();
   for (; triplet_itr != triplet_end; ++triplet_itr, ++middleIndex) {
     std::vector<typename CandidatesForMiddleSp<
-        const InternalSpacePoint<external_spacepoint_t>>::value_type>
+        const external_spacepoint_t>::value_type>
         candidates;
 
     auto& middleSP = *(middleSPVec[middleIndex]);
@@ -227,11 +227,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     }
     std::sort(
         candidates.begin(), candidates.end(),
-        CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>::
+        CandidatesForMiddleSp<const external_spacepoint_t>::
             descendingByQuality);
     std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(
-        spacePointData, candidates, numQualitySeeds,
+        candidates, numQualitySeeds,
         std::back_inserter(outputVec));
   }
 
