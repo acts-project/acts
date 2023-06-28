@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
   std::vector<const value_type*> spView;
   spView.reserve(spacepoints.size());
   for (const auto& sp : spacepoints) {
-    spView.push_back(sp.get());
+    spView.push_back(sp);
   }
 
   int numPhiNeighbors = 1;

@@ -14,10 +14,10 @@ float TestHostCuts::seedWeight(
     const TestSpacePoint&,
     const TestSpacePoint& top) const {
   float weight = 0;
-  if (bottom.radius() > 150) {
+  if (bottom.r() > 150) {
     weight = 400;
   }
-  if (top.radius() < 150) {
+  if (top.r() < 150) {
     weight = 200;
   }
   return weight;
@@ -27,7 +27,7 @@ bool TestHostCuts::singleSeedCut(
     float weight, const TestSpacePoint& b,
     const TestSpacePoint&,
     const TestSpacePoint&) const {
-  return !(b.radius() > 150. && weight < 380.);
+  return !(b.r() > 150. && weight < 380.);
 }
 
 std::vector<typename Acts::CandidatesForMiddleSp<
@@ -49,7 +49,7 @@ TestHostCuts::cutPerMiddleSP(
   for (std::size_t i(1); i < itLength; i++) {
     float weight = seedCandidates[i].weight;
     const auto& bottom = seedCandidates[i].bottom;
-    if (weight > 200. or bottom->radius() > 43.) {
+    if (weight > 200. or bottom->r() > 43.) {
       newSeedsVector.push_back(std::move(seedCandidates[i]));
     }
   }
