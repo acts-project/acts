@@ -10,9 +10,9 @@
 #include "TestHostCuts.hpp"
 
 float TestHostCuts::seedWeight(
-    const Acts::InternalSpacePoint<TestSpacePoint>& bottom,
-    const Acts::InternalSpacePoint<TestSpacePoint>&,
-    const Acts::InternalSpacePoint<TestSpacePoint>& top) const {
+    const TestSpacePoint& bottom,
+    const TestSpacePoint&,
+    const TestSpacePoint& top) const {
   float weight = 0;
   if (bottom.radius() > 150) {
     weight = 400;
@@ -24,20 +24,20 @@ float TestHostCuts::seedWeight(
 }
 
 bool TestHostCuts::singleSeedCut(
-    float weight, const Acts::InternalSpacePoint<TestSpacePoint>& b,
-    const Acts::InternalSpacePoint<TestSpacePoint>&,
-    const Acts::InternalSpacePoint<TestSpacePoint>&) const {
+    float weight, const TestSpacePoint& b,
+    const TestSpacePoint&,
+    const TestSpacePoint&) const {
   return !(b.radius() > 150. && weight < 380.);
 }
 
 std::vector<typename Acts::CandidatesForMiddleSp<
-    const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+    const TestSpacePoint>::value_type>
 TestHostCuts::cutPerMiddleSP(
     std::vector<typename Acts::CandidatesForMiddleSp<
-        const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+        const TestSpacePoint>::value_type>
         seedCandidates) const {
   std::vector<typename Acts::CandidatesForMiddleSp<
-      const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+      const TestSpacePoint>::value_type>
       newSeedsVector;
   if (seedCandidates.size() <= 1) {
     return seedCandidates;
