@@ -18,7 +18,6 @@
 // Acts include(s).
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 
 // SYCL plugin include(s)
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
@@ -85,12 +84,12 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   for (std::size_t SPidx : bottomSPs) {
     auto& sp_collection = grid.at(SPidx);
-    for (auto& SP : sp_collection) {
-      bottomSPvec.push_back(SP.get());
+    for (const auto& SP : sp_collection) {
+      bottomSPvec.push_back(SP);
     }
   }
   deviceBottomSPs.reserve(bottomSPvec.size());
-  for (auto SP : bottomSPvec) {
+  for (const auto SP : bottomSPvec) {
     deviceBottomSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
                                SP->varianceR(), SP->varianceZ()});
   }
@@ -130,7 +129,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   // Iterate through seeds returned by the SYCL algorithm and perform the last
   // step of filtering for fixed middle SP.
   std::vector<typename CandidatesForMiddleSp<
-      const InternalSpacePoint<external_spacepoint_t>>::value_type>
+      const external_spacepoint_t>::value_type>
       candidates;
 
   for (size_t mi = 0; mi < seeds.size(); ++mi) {
@@ -145,7 +144,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     }
     std::sort(
         candidates.begin(), candidates.end(),
-        CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>::
+        CandidatesForMiddleSp<const external_spacepoint_t>::
             descendingByQuality);
     std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_config.seedFilter->filterSeeds_1SpFixed(candidates,
