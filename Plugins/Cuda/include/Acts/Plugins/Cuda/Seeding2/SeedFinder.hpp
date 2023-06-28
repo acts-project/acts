@@ -12,8 +12,8 @@
 #include "Acts/Plugins/Cuda/Seeding2/TripletFilterConfig.hpp"
 
 // Acts include(s).
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
