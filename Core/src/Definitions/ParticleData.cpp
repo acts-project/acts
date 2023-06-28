@@ -27,7 +27,7 @@ static inline std::optional<std::size_t> findIndexByPdg(std::int32_t pdg) {
   auto beg = std::cbegin(kParticlesPdgNumber);
   auto end = std::cend(kParticlesPdgNumber);
   // assumes sorted container of pdg numbers
-  auto pos = std::lower_bound(beg, end, pdg);
+  auto pos = std::find(beg, end, pdg);
   if (pos == end) {
     return std::nullopt;
   }
