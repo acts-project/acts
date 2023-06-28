@@ -256,7 +256,7 @@ int main(int argc, char** argv) {
   std::unique_ptr<Acts::SpacePointGrid<value_type>> grid =
       Acts::SpacePointGridCreator::createGrid<value_type>(gridConf, gridOpts);
   auto spGroup = Acts::BinnedSPGroup<value_type>(
-      spVec.begin(), spVec.end(), bottomBinFinder, topBinFinder,
+      spContainer.begin(), spContainer.end(), bottomBinFinder, topBinFinder,
       std::move(grid), rRangeSPExtent, config, options);
 
   auto end_pre = std::chrono::system_clock::now();
