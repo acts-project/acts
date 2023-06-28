@@ -88,7 +88,7 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
 template <typename external_spacepoint_t>
 auto setupSeedFinderConfiguration()
     -> Acts::SeedFinderConfig<external_spacepoint_t> {
-  Acts::SeedFinderConfig<SpacePoint> config;
+  Acts::SeedFinderConfig<external_spacepoint_t> config;
   // silicon detector max
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
