@@ -123,7 +123,7 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
   if (v[0] == 0. && v[1] == 0.) {
     return std::copysign(std::numeric_limits<double>::infinity(), v[2]);
   } else {
-    return std::asinh(v[2] / std::sqrt(v[0] * v[0] + v[1] * v[1]));
+    return std::asinh(v[2] / perp(v));
   }
 }
 
