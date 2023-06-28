@@ -68,8 +68,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   for (spacepoint_iterator_t it = spBegin; it != spEnd; ++it) {
     const auto& sp = *it;
 
-    ActsScalar x = sp.x();
-    ActsScalar y = sp.y();
+    ActsScalar x = sp->x();
+    ActsScalar y = sp->y();
     ActsScalar r2 = x * x + y * y;
     x2m += x * x;
     xm += x;
