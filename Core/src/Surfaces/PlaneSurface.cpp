@@ -8,18 +8,22 @@
 
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/PlanarHelper.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <numeric>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
     : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
@@ -139,7 +143,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
-      // are needed to descibe the mesh, @todo investigate merging flag
+      // are needed to describe the mesh, @todo investigate merging flag
       auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
@@ -153,7 +157,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
 
 Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
                                          const Vector2& /*lpos*/) const {
-  // fast access via tranform matrix (and not rotation())
+  // fast access via transform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }

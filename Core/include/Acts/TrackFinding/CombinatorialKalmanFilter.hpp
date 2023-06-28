@@ -215,7 +215,7 @@ struct CombinatorialKalmanFilterResult {
   std::vector<typename traj_t::TrackStateProxy> trackStateCandidates;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
-  // This correspond to the last measurment state in the multitrajectory.
+  // This correspond to the last measurement state in the multitrajectory.
   std::vector<MultiTrajectoryTraits::IndexType> lastMeasurementIndices;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
@@ -383,7 +383,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Reset propagation state:
-      // - When navigation breaks and there is stil active tip present after
+      // - When navigation breaks and there is still active tip present after
       // recording&removing track tips on current surface
       if (navigator.navigationBreak(state.navigation) and not result.filtered) {
         // Record the tips on current surface as trajectory entry indices
@@ -736,7 +736,7 @@ class CombinatorialKalmanFilter {
           tipState.nStates++;
           size_t currentTip = SIZE_MAX;
           if (isSensitive) {
-            // Incremet of number of holes
+            // Increment of number of holes
             tipState.nHoles++;
           }
 
@@ -1224,7 +1224,7 @@ class CombinatorialKalmanFilter {
 
     CombinatorialKalmanFilterExtensions<traj_t> m_extensions;
 
-    /// The source link accesor
+    /// The source link accessor
     source_link_accessor_t m_sourcelinkAccessor;
 
     /// The Surface being targeted

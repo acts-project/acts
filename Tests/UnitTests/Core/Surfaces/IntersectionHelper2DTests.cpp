@@ -14,8 +14,9 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
-#include <limits>
+#include <array>
 
 namespace Acts {
 

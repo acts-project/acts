@@ -16,6 +16,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
+#include <cstddef>
+#include <system_error>
+
 namespace Acts {
 
 /// Kalman trajectory smoother based on gain matrix formalism.

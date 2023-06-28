@@ -30,7 +30,7 @@ enum class AxisType { Equidistant, Variable };
 /// binning structures are supported.
 ///
 /// Bin intervals are defined such that the lower bound is closed and the
-/// uper bound is open.
+/// upper bound is open.
 ///
 /// @tparam equidistant flag whether binning is equidistant (@c true)
 ///                     or not (@c false)

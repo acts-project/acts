@@ -142,7 +142,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
     for (int layID = 1; layID <= layBins; ++layID) {
       if (h2_volID_layID->GetBinContent(volID, layID) != 0.) {
         if (volLayIds.find(volID) == volLayIds.end()) {
-          // First occurance of this layer, add -1 for volume plots
+          // First occurrence of this layer, add -1 for volume plots
           volLayIds[volID] = {-1, layID};
         } else {
           volLayIds[volID].push_back(layID);

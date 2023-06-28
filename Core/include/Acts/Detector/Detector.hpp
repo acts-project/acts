@@ -15,6 +15,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -23,6 +24,7 @@
 
 namespace Acts {
 namespace Experimental {
+struct NavigationState;
 
 class Detector : public std::enable_shared_from_this<Detector> {
  protected:
@@ -30,7 +32,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @param name the detecor name
   /// @param rootVolumes the volumes contained by this detector
-  /// @param detectorVolumeUpdator is a Delegate to find the assocaited volume
+  /// @param detectorVolumeUpdator is a Delegate to find the associated volume
   ///
   /// @note will throw an exception if volumes vector is empty
   /// @note will throw an exception if duplicate volume names exist

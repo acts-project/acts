@@ -12,11 +12,15 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace Acts {

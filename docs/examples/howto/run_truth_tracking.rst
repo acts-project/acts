@@ -46,7 +46,7 @@ Example plots to show the fitting efficiency versus eta and pT for ttbar sample 
 .. image:: ../../figures/performance/fitter/trackeff_vs_pT_ttbar_pu200.png
    :width: 300
 
-Example plots to show the average number of measurments and holes versus eta for ttbar sample generated above:
+Example plots to show the average number of measurements and holes versus eta for ttbar sample generated above:
 
 .. image:: ../../figures/performance/fitter/nMeasurements_vs_eta_ttbar_pu200.png
    :width: 300

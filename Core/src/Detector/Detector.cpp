@@ -8,12 +8,13 @@
 
 #include "Acts/Detector/Detector.hpp"
 
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+
+#include <iterator>
+#include <stdexcept>
+#include <utility>
 
 Acts::Experimental::Detector::Detector(
     const std::string& name,

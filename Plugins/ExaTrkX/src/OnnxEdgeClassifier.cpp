@@ -17,7 +17,9 @@ using namespace torch::indexing;
 
 namespace Acts {
 
-OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg) : m_cfg(cfg) {
+OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg,
+                                       std::unique_ptr<const Logger> logger)
+    : m_logger(std::move(logger)), m_cfg(cfg) {
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING,
                                      "ExaTrkX - edge classifier");
 
@@ -42,7 +44,7 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg) : m_cfg(cfg) {
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, const Logger &logger) {
+    std::any inputNodes, std::any inputEdges) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);

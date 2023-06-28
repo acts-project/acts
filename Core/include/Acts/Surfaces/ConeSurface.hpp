@@ -9,12 +9,22 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
+
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <string>
 
 namespace Acts {
 
@@ -49,7 +59,7 @@ class ConeSurface : public Surface {
   /// @param alpha is the opening angle of the cone
   /// @param zmin is the z range over which the cone spans
   /// @param zmax is the z range over which the cone spans
-  /// @param halfPhi is the openen angle for cone ssectors
+  /// @param halfPhi is the opening angle for cone ssectors
   ConeSurface(const Transform3& transform, double alpha, double zmin,
               double zmax, double halfPhi = M_PI);
 
@@ -69,7 +79,7 @@ class ConeSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
               const Transform3& shift);
 
@@ -218,7 +228,7 @@ class ConeSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates

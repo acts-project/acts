@@ -9,31 +9,67 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
-#include <fstream>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <limits>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class ISurfaceMaterial;
+class Logger;
+}  // namespace Acts
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -519,7 +555,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 /// the DenseEnvironmentExtension. The focus of this tests lies in the
 /// choosing of the right extension for the individual use case. This is
 /// performed with three different detectors:
-/// a) Pure vaccuum -> DefaultExtension needs to act
+/// a) Pure vacuum -> DefaultExtension needs to act
 /// b) Pure Be -> DenseEnvironmentExtension needs to act
 /// c) Vacuum - Be - Vacuum -> Both should act and switch during the
 /// propagation
@@ -587,7 +623,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Check that the propagation happend without interactions
+  // Check that the propagation happened without interactions
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
@@ -694,7 +730,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Check that there occured interaction
+  // Check that there occurred interaction
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
@@ -766,7 +802,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const StepCollector::this_result& stepResultB =
       resultB.get<typename StepCollector::result_type>();
 
-  // Check that there occured interaction
+  // Check that there occurred interaction
   for (const auto& pos : stepResultB.position) {
     if (pos == stepResultB.position.front()) {
       CHECK_SMALL(pos, 1_um);
@@ -1092,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Test that momentum changes only occured at the right detector parts
+  // Test that momentum changes only occurred at the right detector parts
   double lastMomentum = stepResult.momentum[0].x();
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     // Test for changes

@@ -36,6 +36,8 @@ pytest-rerunfailures==10.2
     # via -r Examples/Python/tests/requirements.in
 pytest-xdist==3.2.1
     # via -r Examples/Python/tests/requirements.in
+pyyaml==6.0
+    # via -r Examples/Python/tests/requirements.in
 tomli==2.0.1
     # via pytest
 uproot==4.1.9

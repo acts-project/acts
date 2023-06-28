@@ -35,5 +35,5 @@ void ActsExamples::Options::addTelescopeGeometryOptions(
       "1 - disc surface");
   opt("geo-tele-alignaxis", value<int>()->default_value(2),
       "Telescope detector Input: the detector is placed along which "
-      "axis: 0 - x axis, 1 - y axis, 2 - z aixs");
+      "axis: 0 - x axis, 1 - y axis, 2 - z axis");
 }

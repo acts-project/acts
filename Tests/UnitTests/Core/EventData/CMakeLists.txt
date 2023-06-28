@@ -10,6 +10,7 @@ add_unittest(TransformBoundToFree TransformBoundToFreeTests.cpp)
 add_unittest(TransformFreeToBound TransformFreeToBoundTests.cpp)
 add_unittest(CorrectedTransformFreeToBound CorrectedTransformFreeToBoundTests.cpp)
 add_unittest(Track TrackTests.cpp)
+target_sources(ActsUnitTestTrack PUBLIC TrackTestsExtra.cpp)
 add_unittest(SourceLink SourceLinkTests.cpp)
 
 add_unittest(TrackStatePropMask TrackStatePropMaskTests.cpp)

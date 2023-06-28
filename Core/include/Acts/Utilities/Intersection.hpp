@@ -130,7 +130,7 @@ class ObjectIntersection {
   ///
   /// @param sInter is the intersection
   /// @param sObject is the object to be instersected
-  /// @param sRepresentation is the object represenatation
+  /// @param sRepresentation is the object representation
   ObjectIntersection(const Intersection3D& sInter, const object_t* sObject,
                      const representation_t* sRepresentation)
       : intersection(sInter),

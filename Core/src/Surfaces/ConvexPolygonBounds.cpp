@@ -8,6 +8,9 @@
 
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 
+#include <algorithm>
+#include <ostream>
+
 std::ostream& Acts::ConvexPolygonBoundsBase::toStream(std::ostream& sl) const {
   std::vector<Vector2> vtxs = vertices();
   sl << "Acts::ConvexPolygonBounds<" << vtxs.size() << ">: vertices: [x, y]\n";
