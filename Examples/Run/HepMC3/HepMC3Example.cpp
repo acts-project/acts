@@ -96,13 +96,15 @@ int main(int argc, char** argv) {
     std::cout << std::endl;
     for (auto& vertex : vertices) {
       for (auto& particle : vertex->incoming) {
-        std::cout << Acts::findName(static_cast<Acts::PdgParticle>(pbeam.pdg()))
+        std::cout << Acts::findName(
+                         static_cast<Acts::PdgParticle>(particle.pdg()))
                          .value_or("invalid")
                   << " ";
       }
       std::cout << "-> ";
       for (auto& particle : vertex->outgoing) {
-        std::cout << Acts::findName(static_cast<Acts::PdgParticle>(pbeam.pdg()))
+        std::cout << Acts::findName(
+                         static_cast<Acts::PdgParticle>(particle.pdg()))
                          .value_or("invalid")
                   << " ";
       }
@@ -117,7 +119,7 @@ int main(int argc, char** argv) {
   std::vector<ActsExamples::SimParticle> particles =
       ActsExamples::HepMC3Event::particles(genevt);
   for (auto& particle : particles) {
-    std::cout << Acts::findName(static_cast<Acts::PdgParticle>(pbeam.pdg()))
+    std::cout << Acts::findName(static_cast<Acts::PdgParticle>(particle.pdg()))
                      .value_or("invalid")
               << "\tID:" << particle.particleId() << ", momentum: ("
               << particle.fourMomentum()(0) << ", "
@@ -135,7 +137,7 @@ int main(int argc, char** argv) {
   }
   std::cout << "-> ";
   for (auto& fs : fState) {
-    std::cout << Acts::findName(static_cast<Acts::PdgParticle>(pbeam.pdg()))
+    std::cout << Acts::findName(static_cast<Acts::PdgParticle>(fs.pdg()))
                      .value_or("invalid")
               << " ";
   }
