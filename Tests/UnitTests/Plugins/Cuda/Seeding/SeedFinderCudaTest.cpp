@@ -391,7 +391,9 @@ int main(int argc, char** argv) {
 
     for (auto seed : seeds_cpu) {
       for (auto other : seeds_cuda) {
-        if (seed[0] == other[0] && seed[1] == other[1] && seed[2] == other[2]) {
+        if (*seed[0].sp() == *other[0].sp() and
+	    *seed[1].sp() == *other[1].sp() and
+	    *seed[2].sp() == *other[2].sp()) {
           nMatch++;
           break;
         }
