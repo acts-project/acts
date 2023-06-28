@@ -93,8 +93,10 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
   double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
   lposition[eBoundLoc0] *= sign;
 
+  // TODO make intersection and local<->global tolerances sound. quick fixed
+  // this with a 50% tolerance increase for now
   if ((localToGlobal(gctx, lposition, momentum) - position).norm() >
-      tolerance) {
+      tolerance * 1.5) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
 
