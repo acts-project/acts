@@ -23,8 +23,7 @@
 
 namespace {
 
-static constexpr inline std::optional<std::size_t> findIndexByPdg(
-    std::int32_t pdg) {
+static inline std::optional<std::size_t> findIndexByPdg(std::int32_t pdg) {
   auto beg = std::cbegin(kParticlesPdgNumber);
   auto end = std::cend(kParticlesPdgNumber);
   // assumes sorted container of pdg numbers
@@ -37,8 +36,7 @@ static constexpr inline std::optional<std::size_t> findIndexByPdg(
 
 // Find an element within a data column using sorted pdg numbers as the index.
 template <typename ColumnContainer>
-static constexpr inline auto findByPdg(std::int32_t pdg,
-                                       const ColumnContainer& column)
+static inline auto findByPdg(std::int32_t pdg, const ColumnContainer& column)
     -> std::optional<std::decay_t<decltype(column[0])>> {
   // should be a static_assert, but that seems to fail on LLVM
   assert((std::size(column) == kParticlesCount) and "Inconsistent column size");
@@ -105,7 +103,7 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::PdgParticle pdg) {
   return os;
 }
 
-std::string_view Acts::pdgToShortAbsString(PdgParticle pdg) {
+std::optional<std::string_view> Acts::pdgToShortAbsString(PdgParticle pdg) {
   pdg = makeAbsolutePdgParticle(pdg);
   if (pdg == eElectron) {
     return "e";
@@ -134,6 +132,5 @@ std::string_view Acts::pdgToShortAbsString(PdgParticle pdg) {
   if (pdg == eLead) {
     return "lead";
   }
-  assert(false);
-  return "invalid";
+  return std::nullopt;
 }

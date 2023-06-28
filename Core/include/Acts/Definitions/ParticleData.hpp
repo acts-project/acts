@@ -45,6 +45,6 @@ std::optional<ParticleData> findParticleData(PdgParticle pdg);
 /// Print PDG particle numbers with a descriptive name.
 std::ostream& operator<<(std::ostream& os, PdgParticle pdg);
 
-std::string_view pdgToShortAbsString(PdgParticle pdg);
+std::optional<std::string_view> pdgToShortAbsString(PdgParticle pdg);
 
 }  // namespace Acts
