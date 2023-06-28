@@ -268,9 +268,9 @@ int main(int argc, char* argv[]) {
         // Try to find a matching seed that was found on the accelerator.
         for (const auto& device_seed : seeds_in_device_region) {
           assert(device_seed.sp().size() == 3);
-          if ((*(host_seed.sp()[0]) == *(device_seed.sp()[0])) &&
-              (*(host_seed.sp()[1]) == *(device_seed.sp()[1])) &&
-              (*(host_seed.sp()[2]) == *(device_seed.sp()[2]))) {
+          if ((*(host_seed.sp()[0]->sp()) == *(device_seed.sp()[0]->sp())) and
+              (*(host_seed.sp()[1]->sp()) == *(device_seed.sp()[1]->sp())) and
+              (*(host_seed.sp()[2]->sp()) == *(device_seed.sp()[2]->sp()))) {
             ++nMatch;
             break;
           }
