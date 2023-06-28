@@ -11,7 +11,6 @@
 #include "Acts/Plugins/Cuda/Cuda.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -57,7 +56,6 @@ class SeedFinder<external_spacepoint_t, Acts::Cuda> {
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(
-      Acts::SpacePointData& spacePointData,
       Acts::SpacePointGrid<external_spacepoint_t>& grid,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs) const;

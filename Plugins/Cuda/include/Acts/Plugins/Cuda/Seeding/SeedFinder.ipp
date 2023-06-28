@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -47,7 +48,6 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
-    Acts::SpacePointData& spacePointData,
     Acts::SpacePointGrid<external_spacepoint_t>& grid,
     const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs) const {
@@ -77,9 +77,9 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   // Algorithm 0. Matrix Flattening
   //---------------------------------
 
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottomSPvec;
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
+  std::vector<const external_spacepoint_t*> middleSPvec;
+  std::vector<const external_spacepoint_t*> bottomSPvec;
+  std::vector<const external_spacepoint_t*> topSPvec;
 
   // Get the size of spacepoints
   int nSpM(0);
@@ -88,23 +88,23 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
 
   {
     auto& sp_collection = grid.at(middleSPs);
-    for (auto& sp : sp_collection) {
+    for (const auto& sp : sp_collection) {
       nSpM++;
-      middleSPvec.push_back(sp.get());
+      middleSPvec.push_back(&sp);
     }
   }
   for (auto idx : bottomSPs) {
     auto& sp_collection = grid.at(idx);
-    for (auto& sp : sp_collection) {
+    for (const auto& sp : sp_collection) {
       nSpB++;
-      bottomSPvec.push_back(sp.get());
+      bottomSPvec.push_back(&sp);
     }
   }
   for (std::size_t idx : topSPs) {
     auto& sp_collection = grid.at(idx);
-    for (auto& sp : sp_collection) {
+    for (const auto& sp : sp_collection) {
       nSpT++;
-      topSPvec.push_back(sp.get());
+      topSPvec.push_back(&sp);
     }
   }
 
@@ -275,7 +275,7 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
     if (i_m > 0) {
       const auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();
       std::vector<typename CandidatesForMiddleSp<
-          const InternalSpacePoint<external_spacepoint_t>>::value_type>
+          const external_spacepoint_t>::value_type>
           candidates;
 
       for (int i = 0; i < *nTrplPerSpM_cpu.get(i_m - 1); i++) {
@@ -306,10 +306,9 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
       }
 
       std::sort(candidates.begin(), candidates.end(),
-                CandidatesForMiddleSp<const InternalSpacePoint<
-                    external_spacepoint_t>>::descendingByQuality);
+                CandidatesForMiddleSp<const external_spacepoint_t>::descendingByQuality);
       std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
-      m_config.seedFilter->filterSeeds_1SpFixed(spacePointData, candidates,
+      m_config.seedFilter->filterSeeds_1SpFixed(candidates,
                                                 numQualitySeeds,
                                                 std::back_inserter(outputVec));
     }
