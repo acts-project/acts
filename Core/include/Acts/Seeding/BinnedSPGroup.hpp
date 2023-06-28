@@ -85,7 +85,7 @@ class BinnedSPGroup {
   BinnedSPGroup() = delete;
 
   template <typename spacepoint_iterator_t>
-  BinnedSPGroup<external_spacepoint_t>(
+  BinnedSPGroup(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>>
           botBinFinder,
