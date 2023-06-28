@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -163,7 +162,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     float spY = sp.y();
     float spZ = sp.z();
     Acts::Vector3 spPosition{spX, spY, spZ};
- 
+
     // store x,y,z values in extent
     rRangeSPExtent.extend(spPosition);
 
@@ -171,7 +170,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     if (spZ > zMax || spZ < zMin) {
       continue;
     }
-    
+
     float spPhi = sp.phi();
     if (spPhi > phiMax || spPhi < phiMin) {
       continue;
@@ -187,8 +186,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 
     // fill rbins into grid
     Acts::Vector2 spLocation(spPhi, sp.z());
-    std::vector<const external_spacepoint_t*>&
-        rbin = grid->atPosition(spLocation);
+    std::vector<const external_spacepoint_t*>& rbin =
+        grid->atPosition(spLocation);
     rbin.push_back(&sp);
 
     // keep track of the bins we modify so that we can later sort the SPs in
@@ -200,12 +199,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 
   // sort SPs in R for each filled (z, phi) bin
   for (auto& binIndex : rBinsIndex) {
-    std::vector<const external_spacepoint_t*>&
-        rbin = grid->atPosition(binIndex);
+    std::vector<const external_spacepoint_t*>& rbin =
+        grid->atPosition(binIndex);
     std::sort(
         rbin.begin(), rbin.end(),
-        [](const external_spacepoint_t* a,
-           const external_spacepoint_t* b) {
+        [](const external_spacepoint_t* a, const external_spacepoint_t* b) {
           return a->radius() < b->radius();
         });
   }

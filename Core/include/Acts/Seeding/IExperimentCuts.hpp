@@ -28,8 +28,7 @@ class IExperimentCuts {
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
-  virtual float seedWeight(const SpacePoint& bottom,
-                           const SpacePoint& middle,
+  virtual float seedWeight(const SpacePoint& bottom, const SpacePoint& middle,
                            const SpacePoint& top) const = 0;
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
@@ -37,18 +36,17 @@ class IExperimentCuts {
   /// @param top top space point of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
-  virtual bool singleSeedCut(
-      float weight, const SpacePoint& bottom,
-      const SpacePoint& middle,
-      const SpacePoint& top) const = 0;
+  virtual bool singleSeedCut(float weight, const SpacePoint& bottom,
+                             const SpacePoint& middle,
+                             const SpacePoint& top) const = 0;
 
   /// @param seedCandidates contains collection of seed candidates created for one middle
   /// space point in a std::tuple format
   /// @return vector of seed candidates that pass the cut
-  virtual std::vector<typename CandidatesForMiddleSp<
-      const SpacePoint>::value_type>
-  cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp<
-                     const SpacePoint>::value_type>
-                     seedCandidates) const = 0;
+  virtual std::vector<
+      typename CandidatesForMiddleSp<const SpacePoint>::value_type>
+  cutPerMiddleSP(
+      std::vector<typename CandidatesForMiddleSp<const SpacePoint>::value_type>
+          seedCandidates) const = 0;
 };
 }  // namespace Acts

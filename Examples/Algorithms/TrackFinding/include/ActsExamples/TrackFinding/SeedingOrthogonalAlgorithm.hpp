@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -17,12 +18,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/EventData/SpacePointContainer.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-
-#include "Acts/EventData/SpacePointContainer.hpp"
-#include "ActsExamples/EventData/SpacePointContainer.hpp"
 
 #include <memory>
 #include <optional>

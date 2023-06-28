@@ -8,8 +8,8 @@
 
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 
-#include "Acts/EventData/Seed.hpp"
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
@@ -67,7 +67,7 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
 
   // construct seed filter
   m_cfg.seedFinderConfig.seedFilter =
-    std::make_unique<Acts::SeedFilter<proxy_type>>(m_cfg.seedFilterConfig);
+      std::make_unique<Acts::SeedFilter<proxy_type>>(m_cfg.seedFilterConfig);
 
   m_finder = Acts::SeedFinderOrthogonal<proxy_type>(m_cfg.seedFinderConfig);
 }
@@ -84,35 +84,33 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 
   // Config
   Acts::SpacePointContainerConfig spConfig;
-  
+
   // Options
   Acts::SpacePointContainerOptions spOptions;
   spOptions.beamPos = {0., 0.};
-  
+
   ActsExamples::SpacePointContainer container(spacePoints);
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-    spContainer(spConfig, spOptions, container);
+      spContainer(spConfig, spOptions, container);
 
   ACTS_INFO("About to process " << spContainer.size() << " space points ...");
-  
-  Acts::SeedFinderOrthogonal<proxy_type> finder(m_cfg.seedFinderConfig);
-  std::vector<Acts::Seed<proxy_type>> seeds = finder.createSeeds(m_cfg.seedFinderOptions,
-						    spContainer);
 
+  Acts::SeedFinderOrthogonal<proxy_type> finder(m_cfg.seedFinderConfig);
+  std::vector<Acts::Seed<proxy_type>> seeds =
+      finder.createSeeds(m_cfg.seedFinderOptions, spContainer);
 
   ACTS_INFO("Created " << seeds.size() << " track seeds from "
-                        << spacePoints.size() << " space points");
+                       << spacePoints.size() << " space points");
 
   // need to convert here from seed of proxies to seed of sps
   SimSeedContainer seedsToAdd;
   seedsToAdd.reserve(seeds.size());
-  
-  for (const auto& seed : seeds) {
-    const auto& sps = seed.sp();
-    seedsToAdd.emplace_back(*sps[0]->sp(), *sps[1]->sp(),
-			    *sps[2]->sp(), seed.z(),
-			    seed.seedQuality());
-  }  
+
+  for (const auto &seed : seeds) {
+    const auto &sps = seed.sp();
+    seedsToAdd.emplace_back(*sps[0]->sp(), *sps[1]->sp(), *sps[2]->sp(),
+                            seed.z(), seed.seedQuality());
+  }
 
   m_outputSeeds(ctx, std::move(seedsToAdd));
 

@@ -9,56 +9,58 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/SpacePointProxyIterator.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
 #include <vector>
+
 #include <math.h>
 
 namespace Acts {
-  struct SpacePointContainerConfig {
-    bool useDetailedDoubleMeasurementInfo = false;
-    bool isInInternalUnits = false;
+struct SpacePointContainerConfig {
+  bool useDetailedDoubleMeasurementInfo = false;
+  bool isInInternalUnits = false;
 
-    SpacePointContainerConfig toInternalUnits() const {
-      if (isInInternalUnits) {
-        throw std::runtime_error(
-                                 "Repeated conversion to internal units for SpacePointContainerConfig");
-      }
-      using namespace Acts::UnitLiterals;
-      SpacePointContainerConfig config = *this;
-      config.isInInternalUnits = true;
-      return config;
-    };
-  };
-
-  struct SpacePointContainerOptions {
-    // location of beam in x,y plane.
-    // used as offset for Space Points
-    Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
-      0 * Acts::UnitConstants::mm};
-    bool isInInternalUnits = false;
-    
-    SpacePointContainerOptions toInternalUnits() const {
-      if (isInInternalUnits) {
-	throw std::runtime_error(
-				 "Repeated conversion to internal units for SpacePointContainerOptions");
-      }
-      using namespace Acts::UnitLiterals;
-      SpacePointContainerOptions options = *this;
-      options.isInInternalUnits = true;
-      options.beamPos[0] /= 1_mm;
-      options.beamPos[1] /= 1_mm;      
-      return options;
+  SpacePointContainerConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for "
+          "SpacePointContainerConfig");
     }
+    using namespace Acts::UnitLiterals;
+    SpacePointContainerConfig config = *this;
+    config.isInInternalUnits = true;
+    return config;
   };
-  
-  
+};
+
+struct SpacePointContainerOptions {
+  // location of beam in x,y plane.
+  // used as offset for Space Points
+  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
+                        0 * Acts::UnitConstants::mm};
+  bool isInInternalUnits = false;
+
+  SpacePointContainerOptions toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for "
+          "SpacePointContainerOptions");
+    }
+    using namespace Acts::UnitLiterals;
+    SpacePointContainerOptions options = *this;
+    options.isInInternalUnits = true;
+    options.beamPos[0] /= 1_mm;
+    options.beamPos[1] /= 1_mm;
+    return options;
+  }
+};
+
 template <typename container_t, template <typename> class holder_t>
 class SpacePointContainer {
  public:
@@ -97,7 +99,7 @@ class SpacePointContainer {
       typename std::conditional<read_only, ConstSpacePointProxyType,
                                 SpacePointProxyType>::type;
   using value_type = ProxyType;
-  
+
  public:
   // Constructors
   // It makes sense to support both options of
@@ -108,9 +110,9 @@ class SpacePointContainer {
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::RefHolder>::value>>
-  SpacePointContainer(const Acts::SpacePointContainerConfig& confing,
-		      const Acts::SpacePointContainerOptions& options,
-		      container_t& container);
+  SpacePointContainer(const Acts::SpacePointContainerConfig& config,
+                      const Acts::SpacePointContainerOptions& options,
+                      container_t& container);
 
   // Take the ownership
   // Activate only if holder_t is ValueHolder
@@ -118,8 +120,8 @@ class SpacePointContainer {
             typename = std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::ValueHolder>::value>>
   SpacePointContainer(const Acts::SpacePointContainerConfig& config,
-		      const Acts::SpacePointContainerOptions& options,
-		      container_t&& container);
+                      const Acts::SpacePointContainerOptions& options,
+                      container_t&& container);
 
   // If we take ownership, forbid copy operations
   // Need to define copy operations only if holder_t is RefHolder !!!
@@ -174,7 +176,7 @@ class SpacePointContainer {
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   std::vector<ProxyType>& proxies();
-    
+
  private:
   const float& x(const std::size_t& n) const;
   const float& y(const std::size_t& n) const;
@@ -189,7 +191,7 @@ class SpacePointContainer {
 
   void setQuality(const std::size_t& n, const float& value) const;
   void setDeltaR(const std::size_t& n, const float& value) const;
-  
+
   // component methods for additional quantities
   template <typename T>
   const T& component(HashedString key, const std::size_t& n) const;

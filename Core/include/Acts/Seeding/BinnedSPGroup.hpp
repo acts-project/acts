@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Holders.hpp"

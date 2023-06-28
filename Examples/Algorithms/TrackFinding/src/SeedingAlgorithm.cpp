@@ -9,11 +9,11 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -22,6 +22,7 @@
 #include "Acts/Utilities/detail/Grid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <csignal>
 #include <cstddef>
@@ -29,7 +30,6 @@
 #include <limits>
 #include <ostream>
 #include <stdexcept>
-#include <chrono>
 
 using namespace Acts::HashedStringLiteral;
 
@@ -44,9 +44,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   // internal units
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig.seedFilter =
-    std::make_shared<Acts::SeedFilter<typename Acts::SpacePointContainer<
-					ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-					Acts::detail::RefHolder>::ConstSpacePointProxyType>>(m_cfg.seedFilterConfig);
+      std::make_shared<Acts::SeedFilter<typename Acts::SpacePointContainer<
+          ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+          Acts::detail::RefHolder>::ConstSpacePointProxyType>>(
+          m_cfg.seedFilterConfig);
 
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
@@ -218,7 +219,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto start_preparation = std::chrono::high_resolution_clock::now();
   // Config
   Acts::SpacePointContainerConfig spConfig;
-  spConfig.useDetailedDoubleMeasurementInfo = m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo;
+  spConfig.useDetailedDoubleMeasurementInfo =
+      m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo;
   // Options
   Acts::SpacePointContainerOptions spOptions;
   spOptions.beamPos = {0., 0.};
@@ -227,7 +229,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   ActsExamples::SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-    spContainer(spConfig, spOptions, container);
+      spContainer(spConfig, spOptions, container);
 
   std::cout << "nsp: " << spContainer.size() << std::endl;
 
@@ -260,7 +262,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
   auto stop_preparation = std::chrono::high_resolution_clock::now();
-  
+
   auto start = std::chrono::high_resolution_clock::now();
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
@@ -269,11 +271,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   }
   auto stop = std::chrono::high_resolution_clock::now();
 
-  auto duration_preparation = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_preparation - start_preparation).count();
-  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
-  std::cout <<"preparation time="<<duration_preparation<<"\n";
-  std::cout <<"seeding time="<<duration<<"\n";
-  
+  auto duration_preparation =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(stop_preparation -
+                                                           start_preparation)
+          .count();
+  auto duration =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start)
+          .count();
+  std::cout << "preparation time=" << duration_preparation << "\n";
+  std::cout << "seeding time=" << duration << "\n";
+
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 

@@ -56,10 +56,10 @@ class SpacePointProxy {
 
   const float& quality() const;
   const float& deltaR() const;
-  
+
   void setQuality(const float& value) const;
   void setDeltaR(const float& value) const;
-  
+
   // component methods for additional quantities
   template <typename T>
   const T& component(HashedString key) const;

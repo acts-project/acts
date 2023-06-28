@@ -33,7 +33,7 @@ class SpacePointContainer {
   SpacePointContainer(CollectionType& container) : m_storage(container) {}
   SpacePointContainer(CollectionType* container) : m_storage(container) {}
 
-  // No copy contructor or copy operation allowed
+  // No copy constructor or copy operation allowed
   SpacePointContainer(const SpacePointContainer<collection_t>&) = delete;
   SpacePointContainer<collection_t>& operator=(
       const SpacePointContainer<collection_t>&) = delete;

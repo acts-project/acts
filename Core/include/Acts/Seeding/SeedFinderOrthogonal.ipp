@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -247,8 +246,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     const std::vector<const external_spacepoint_t *> &bottom,
     const std::vector<const external_spacepoint_t *> &top,
     SeedFilterState seedFilterState,
-    CandidatesForMiddleSp<const external_spacepoint_t>
-    &candidates_collector) const {
+    CandidatesForMiddleSp<const external_spacepoint_t> &candidates_collector)
+    const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
@@ -476,8 +475,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     seedFilterState.zOrigin = middle.z() - rM * lb.cotTheta;
 
     m_config.seedFilter->filterSeeds_2SpFixed(
-        *bottom[b], middle, top_valid, curvatures,
-        impactParameters, seedFilterState, candidates_collector);
+        *bottom[b], middle, top_valid, curvatures, impactParameters,
+        seedFilterState, candidates_collector);
 
   }  // loop on bottoms
 }
@@ -486,7 +485,8 @@ template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     const SeedFinderOptions &options, const tree_t &tree,
-    output_container_t &out_cont, const typename tree_t::pair_t &middle_p) const {
+    output_container_t &out_cont,
+    const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
   const external_spacepoint_t &middle = *middle_p.second;
 
@@ -500,7 +500,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * increasing z track, and top_hl_v are the candidate top points for a
    * decreasing z track.
    */
-  std::vector<const external_spacepoint_t *> bottom_lh_v, bottom_hl_v, top_lh_v, top_hl_v;
+  std::vector<const external_spacepoint_t *> bottom_lh_v, bottom_hl_v, top_lh_v,
+      top_hl_v;
 
   /*
    * Storage for seed candidates
@@ -510,8 +511,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   std::size_t max_num_seeds_per_spm =
       m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
 
-  CandidatesForMiddleSp<const external_spacepoint_t>
-      candidates_collector;
+  CandidatesForMiddleSp<const external_spacepoint_t> candidates_collector;
   candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                       max_num_quality_seeds_per_spm);
 
@@ -653,14 +653,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(
-      candidates_collector, seedFilterState.numQualitySeeds,
-      std::back_inserter(out_cont));
+  m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
+                                            seedFilterState.numQualitySeeds,
+                                            std::back_inserter(out_cont));
 }
 
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
-    const std::vector<const external_spacepoint_t *> &spacePoints) const -> tree_t {
+    const std::vector<const external_spacepoint_t *> &spacePoints) const
+    -> tree_t {
   std::vector<typename tree_t::pair_t> points;
 
   /*
@@ -710,10 +711,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * point, and save it in a vector.
    */
   Acts::Extent rRangeSPExtent;
-  std::vector<const external_spacepoint_t*> internal_sps;
+  std::vector<const external_spacepoint_t *> internal_sps;
   internal_sps.reserve(spacePoints.size());
-  
-  for (const external_spacepoint_t& p : spacePoints) {
+
+  for (const external_spacepoint_t &p : spacePoints) {
     // store x,y,z values in extent
     rRangeSPExtent.extend({p.x(), p.y(), p.z()});
     internal_sps.push_back(&p);

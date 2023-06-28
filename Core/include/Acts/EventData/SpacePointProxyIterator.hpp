@@ -23,8 +23,8 @@ class SpacePointProxyIterator {
       typename container_t::SpacePointProxyType>::type;
 
   using iterator_category = std::random_access_iterator_tag;
-  using value_type = 
-    typename std::conditional<read_only, const ProxyType, ProxyType>::type;
+  using value_type =
+      typename std::conditional<read_only, const ProxyType, ProxyType>::type;
   using difference_type = std::ptrdiff_t;
   using pointer = value_type*;
   using reference = value_type&;
@@ -59,7 +59,7 @@ class SpacePointProxyIterator {
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   value_type& operator*();
-  
+
  private:
   Acts::detail::RefHolder<ContainerType> m_container;
   std::size_t m_index;

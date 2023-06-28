@@ -48,7 +48,7 @@ class SpacePointData {
   const float& phi(const std::size_t& idx) const;
   const float& varianceZ(const std::size_t& idx) const;
   const float& varianceR(const std::size_t& idx) const;
-  
+
   const float& quality(const std::size_t& idx) const;
   const float& deltaR(const std::size_t& idx) const;
 
@@ -60,7 +60,7 @@ class SpacePointData {
   void setPhi(const std::size_t& idx, const float& value);
   void setVarianceZ(const std::size_t& idx, const float& value);
   void setVarianceR(const std::size_t& idx, const float& value);
-  
+
   void setQuality(const std::size_t& idx, const float& value);
   void setDeltaR(const std::size_t& idx, const float& value);
 
@@ -80,7 +80,6 @@ class SpacePointData {
   void setStripCenterDistance(std::size_t idx, const Acts::Vector3& value);
   void setTopStripCenterPosition(std::size_t idx, const Acts::Vector3& value);
 
-
  private:
   /// base variables
   std::vector<float> m_x{};
@@ -90,7 +89,7 @@ class SpacePointData {
   std::vector<float> m_phi{};
   std::vector<float> m_varianceR{};
   std::vector<float> m_varianceZ{};
-  
+
   /// Mutable variables
   std::vector<float> m_quality{};
   std::vector<float> m_deltaR{};

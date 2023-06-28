@@ -57,8 +57,7 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
-void transformCoordinates(
-                          const std::vector<const external_spacepoint_t*>& vec,
+void transformCoordinates(const std::vector<const external_spacepoint_t*>& vec,
                           const external_spacepoint_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec);
 
@@ -74,8 +73,8 @@ void transformCoordinates(
 template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const external_spacepoint_t& sp,
-    const double* spacepointPosition, double* outputCoordinates);
+    const external_spacepoint_t& sp, const double* spacepointPosition,
+    double* outputCoordinates);
 
 }  // namespace Acts
 

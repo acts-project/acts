@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/EventData/Seed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
 
 #include <memory>
 

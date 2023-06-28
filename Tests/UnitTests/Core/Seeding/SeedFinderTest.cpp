@@ -9,6 +9,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Seed.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
@@ -19,8 +20,6 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Range1D.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
-#include "Acts/EventData/SpacePointContainer.hpp"
-#include "SpacePointContainer.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -37,6 +36,7 @@
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
+#include "SpacePointContainer.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -129,15 +129,15 @@ int main(int argc, char** argv) {
   // Options
   Acts::SpacePointContainerOptions spOptions;
   spOptions.beamPos = {-.5_mm, -.5_mm};
-  
+
   // Prepare interface SpacePoint backend-ACTS
   ActsExamples::SpacePointContainer container(spVec);
   // Prepare Acts API
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-    spContainer(spConfig, spOptions, container);
-  
-  std::cout << "read " << spContainer.size() << " SP from file " << file << " in "
-            << elapsed_read.count() << "s" << std::endl;
+      spContainer(spConfig, spOptions, container);
+
+  std::cout << "read " << spContainer.size() << " SP from file " << file
+            << " in " << elapsed_read.count() << "s" << std::endl;
 
   using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
@@ -236,11 +236,11 @@ int main(int argc, char** argv) {
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                   << ") ";
         sp = seed->sp()[1];
-        std::cout << sp->sp()->layer << " (" << sp->x() << ", " << sp->y() << ", "
-                  << sp->z() << ") ";
+        std::cout << sp->sp()->layer << " (" << sp->x() << ", " << sp->y()
+                  << ", " << sp->z() << ") ";
         sp = seed->sp()[2];
-        std::cout << sp->sp()->layer << " (" << sp->x() << ", " << sp->y() << ", "
-                  << sp->z() << ") ";
+        std::cout << sp->sp()->layer << " (" << sp->x() << ", " << sp->y()
+                  << ", " << sp->z() << ") ";
         std::cout << std::endl;
       }
     }

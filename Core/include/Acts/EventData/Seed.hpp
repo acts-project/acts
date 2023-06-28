@@ -8,18 +8,16 @@
 
 #pragma once
 
-#include <limits>
 #include <array>
+#include <limits>
 
 namespace Acts {
 
 template <typename external_spacePoint_t>
 class Seed {
  public:
-  Seed(const external_spacePoint_t& b,
-       const external_spacePoint_t& m,
-       const external_spacePoint_t& u,
-       float vertex,
+  Seed(const external_spacePoint_t& b, const external_spacePoint_t& m,
+       const external_spacePoint_t& u, float vertex,
        float seedQuality = -std::numeric_limits<float>::infinity());
 
   const std::array<const external_spacePoint_t*, 3>& sp() const;
@@ -28,10 +26,10 @@ class Seed {
 
  private:
   std::array<const external_spacePoint_t*, 3> m_spacepoints;
-  float m_zvertex {0.};
-  float m_seedQuality {-std::numeric_limits<float>::infinity()};
+  float m_zvertex{0.};
+  float m_seedQuality{-std::numeric_limits<float>::infinity()};
 };
-  
+
 }  // namespace Acts
 
 #include "Acts/EventData/Seed.ipp"

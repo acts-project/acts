@@ -47,7 +47,8 @@ class SeedFinderOrthogonal {
    * scalar type for coordinates, stores its coordinates in std::arrays, and
    * has leaf size 4.
    */
-  using tree_t = KDTree<NDims, const external_spacepoint_t *, ActsScalar, std::array, 4>;
+  using tree_t =
+      KDTree<NDims, const external_spacepoint_t *, ActsScalar, std::array, 4>;
 
   /**
    * @brief Construct a new orthogonal seed finder.
@@ -180,8 +181,10 @@ class SeedFinderOrthogonal {
    *
    * @return True if the two points form a valid pair, false otherwise.
    */
-  bool validTuple(const SeedFinderOptions &options, const external_spacepoint_t &low,
-                  const external_spacepoint_t &high, bool isMiddleInverted) const;
+  bool validTuple(const SeedFinderOptions &options,
+                  const external_spacepoint_t &low,
+                  const external_spacepoint_t &high,
+                  bool isMiddleInverted) const;
 
   /**
    * @brief Create a k-d tree from a set of spacepoints.
@@ -190,7 +193,8 @@ class SeedFinderOrthogonal {
    *
    * @return A k-d tree containing the given spacepoints.
    */
-  tree_t createTree(const std::vector<const external_spacepoint_t *> &spacePoints) const;
+  tree_t createTree(
+      const std::vector<const external_spacepoint_t *> &spacePoints) const;
 
   /**
    * @brief Filter potential candidate pairs, and output seeds into an
@@ -209,8 +213,8 @@ class SeedFinderOrthogonal {
       const std::vector<const external_spacepoint_t *> &bottom,
       const std::vector<const external_spacepoint_t *> &top,
       SeedFilterState seedFilterState,
-      CandidatesForMiddleSp<const external_spacepoint_t>
-      &candidates_collector) const;
+      CandidatesForMiddleSp<const external_spacepoint_t> &candidates_collector)
+      const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.

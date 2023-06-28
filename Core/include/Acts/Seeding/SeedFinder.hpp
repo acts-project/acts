@@ -55,8 +55,7 @@ class SeedFinder {
     std::vector<float> impactParameters;
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<const external_spacepoint_t>
-        candidates_collector;
+    CandidatesForMiddleSp<const external_spacepoint_t> candidates_collector;
 
     // managing doublet candidates
     boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
@@ -156,8 +155,7 @@ class SeedFinder {
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
-  void filterCandidates(
-                        const external_spacepoint_t& SpM,
+  void filterCandidates(const external_spacepoint_t& SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;
