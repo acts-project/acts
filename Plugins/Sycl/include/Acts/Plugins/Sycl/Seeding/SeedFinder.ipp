@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -78,9 +79,9 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   vecmem::vector<detail::DeviceSpacePoint> deviceMiddleSPs(m_resource);
   vecmem::vector<detail::DeviceSpacePoint> deviceTopSPs(m_resource);
 
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottomSPvec;
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
+  std::vector<const external_spacepoint_t*> bottomSPvec;
+  std::vector<const external_spacepoint_t*> middleSPvec;
+  std::vector<const external_spacepoint_t*> topSPvec;
 
   for (std::size_t SPidx : bottomSPs) {
     auto& sp_collection = grid.at(SPidx);
