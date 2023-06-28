@@ -64,15 +64,6 @@ int main(int argc, char* argv[]) {
   std::cout << "Read " << spContainer.size()
             << " spacepoints from file: " << cmdl.spFile << std::endl;
 
-  // Create a "view vector" on top of them. This is necessary to be able to pass
-  // the objects to the Acts code. While the return type of readSeedFile(...) is
-  // useful for simplified memory management...
-  std::vector<const value_type*> spView;
-  spView.reserve(spacepoints.size());
-  for (const auto& sp : spContainer) {
-    spView.push_back(&sp);
-  }
-
   int numPhiNeighbors = 1;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
@@ -136,7 +127,7 @@ int main(int argc, char* argv[]) {
   auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(
       gridConfig, gridOpts);
   auto spGroup = Acts::BinnedSPGroup<value_type>(
-      spView.begin(), spView.end(), bottomBinFinder, topBinFinder,
+      spContainer.begin(), spContainer.end(), bottomBinFinder, topBinFinder,
       std::move(grid), rRangeSPExtent, sfConfig, sfOptions);
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
