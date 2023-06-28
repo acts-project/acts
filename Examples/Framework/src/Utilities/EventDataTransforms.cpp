@@ -50,7 +50,7 @@ ActsExamples::SimSeed ActsExamples::prototrackToSeed(
     const ActsExamples::SimSpacePointContainer& spacepoints) {
   auto findSpacePoint = [&](ActsExamples::Index index) {
     auto found = findSpacePointForIndex(index, spacepoints);
-    if (not found) {
+    if (found == nullptr) {
       throw std::runtime_error("No spacepoint found for source-link index " +
                                std::to_string(index));
     }
