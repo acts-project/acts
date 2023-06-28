@@ -69,8 +69,8 @@ int main(int argc, char* argv[]) {
   // useful for simplified memory management...
   std::vector<const value_type*> spView;
   spView.reserve(spacepoints.size());
-  for (const auto& sp : spacepoints) {
-    spView.push_back(sp);
+  for (const auto& sp : spContainer) {
+    spView.push_back(&sp);
   }
 
   int numPhiNeighbors = 1;
