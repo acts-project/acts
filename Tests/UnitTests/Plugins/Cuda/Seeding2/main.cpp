@@ -12,6 +12,7 @@
 #include "TestDeviceCuts.hpp"
 #include "TestHostCuts.hpp"
 #include "TestSpacePoint.hpp"
+#include "SpacePointContainer.hpp"
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/SeedFinder.hpp"
@@ -19,6 +20,7 @@
 #include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
 
 // Acts include(s).
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
@@ -43,13 +45,29 @@ int main(int argc, char* argv[]) {
 
   // Read in the seeds from the input text file.
   auto spacepoints = readSeedFile(cmdl.spFile, cmdl.filterDuplicates);
-  std::cout << "Read " << spacepoints.size()
+
+  // Config
+  Acts::SpacePointContainerConfig spConfig;
+  // Options
+  Acts::SpacePointContainerOptions spOptions;
+  spOptions.beamPos = {-.5_mm, -.5_mm};
+
+  // Prepare interface SpacePoint backend-ACTS
+  ActsExamples::SpacePointContainer container(spacepoints);
+  // Prepare Acts API
+  Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
+      spContainer(spConfig, spOptions, container);
+
+  using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
+  using seed_type = Acts::Seed<value_type>;
+
+  std::cout << "Read " << spContainer.size()
             << " spacepoints from file: " << cmdl.spFile << std::endl;
 
   // Create a "view vector" on top of them. This is necessary to be able to pass
   // the objects to the Acts code. While the return type of readSeedFile(...) is
   // useful for simplified memory management...
-  std::vector<const TestSpacePoint*> spView;
+  std::vector<const value_type*> spView;
   spView.reserve(spacepoints.size());
   for (const auto& sp : spacepoints) {
     spView.push_back(sp.get());
@@ -61,13 +79,13 @@ int main(int argc, char* argv[]) {
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
   // Create binned groups of these spacepoints.
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
+  auto bottomBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
       zBinNeighborsBottom, numPhiNeighbors);
-  auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
+  auto topBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
       zBinNeighborsTop, numPhiNeighbors);
 
   // Set up the seedFinder configuration.
-  Acts::SeedFinderConfig<TestSpacePoint> sfConfig;
+  Acts::SeedFinderConfig<value_type> sfConfig;
   // silicon detector max
   sfConfig.rMax = 160._mm;
   sfConfig.deltaRMin = 5._mm;
@@ -108,14 +126,6 @@ int main(int argc, char* argv[]) {
   Acts::SpacePointGridOptions gridOpts;
   gridOpts.bFieldInZ = sfOptions.bFieldInZ;
 
-  // Covariance tool, sets covariances per spacepoint as required.
-  auto ct = [=](const TestSpacePoint& sp, float, float,
-                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
-    Acts::Vector3 position(sp.x(), sp.y(), sp.z());
-    Acts::Vector2 covariance(sp.m_varianceR, sp.m_varianceZ);
-    return std::make_pair(position, covariance);
-  };
-
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
@@ -123,10 +133,10 @@ int main(int argc, char* argv[]) {
 
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
-  auto grid = Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(
+  auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(
       gridConfig, gridOpts);
-  auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
-      spView.begin(), spView.end(), ct, bottomBinFinder, topBinFinder,
+  auto spGroup = Acts::BinnedSPGroup<value_type>(
+      spView.begin(), spView.end(), bottomBinFinder, topBinFinder,
       std::move(grid), rRangeSPExtent, sfConfig, sfOptions);
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
@@ -156,13 +166,13 @@ int main(int argc, char* argv[]) {
   TestHostCuts hostCuts;
   Acts::SeedFilterConfig filterConfig;
   filterConfig = filterConfig.toInternalUnits();
-  sfConfig.seedFilter = std::make_unique<Acts::SeedFilter<TestSpacePoint>>(
+  sfConfig.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
       filterConfig, &hostCuts);
   auto deviceCuts = testDeviceCuts();
 
   // Set up the seedFinder objects.
-  Acts::SeedFinder<TestSpacePoint> seedFinder_host(sfConfig);
-  Acts::Cuda::SeedFinder<TestSpacePoint> seedFinder_device(
+  Acts::SeedFinder<value_type> seedFinder_host(sfConfig);
+  Acts::Cuda::SeedFinder<value_type> seedFinder_device(
       sfConfig, sfOptions, filterConfig, deviceCuts, cmdl.cudaDevice);
 
   //
@@ -172,7 +182,7 @@ int main(int argc, char* argv[]) {
   // Record the start time.
   auto start_host = std::chrono::system_clock::now();
   // Create the result object.
-  std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
+  std::vector<std::vector<seed_type>> seeds_host;
 
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
@@ -208,9 +218,7 @@ int main(int argc, char* argv[]) {
   // Record the start time.
   auto start_device = std::chrono::system_clock::now();
   // Create the result object.
-  std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_device;
-  Acts::SpacePointData spacePointData;
-  spacePointData.resize(spView.size());
+  std::vector<std::vector<seed_type>> seeds_device;
 
   // Perform the seed finding.
   for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
@@ -220,7 +228,7 @@ int main(int argc, char* argv[]) {
     }
     auto [bottom, middle, top] = *spGroup_itr;
     seeds_device.push_back(seedFinder_device.createSeedsForGroup(
-        spacePointData, spGroup.grid(), bottom, middle, top));
+        spGroup.grid(), bottom, middle, top));
   }
 
   // Record the finish time.
