@@ -163,7 +163,7 @@ auto main(int argc, char** argv) -> int {
 
   using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
-  
+
   int numPhiNeighbors = 1;
 
   // extent used to store r range for middle spacepoint
