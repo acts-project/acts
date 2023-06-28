@@ -28,3 +28,12 @@ G4VPhysicalVolume* GdmlDetectorConstruction::Construct() {
   }
   return m_world;
 }
+
+GdmlDetectorConstructionFactory::GdmlDetectorConstructionFactory(
+    std::string path)
+    : m_path(std::move(path)) {}
+
+std::unique_ptr<G4VUserDetectorConstruction>
+GdmlDetectorConstructionFactory::factorize() const {
+  return std::make_unique<GdmlDetectorConstruction>(m_path);
+}

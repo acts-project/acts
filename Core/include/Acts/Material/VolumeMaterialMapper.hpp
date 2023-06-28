@@ -80,7 +80,7 @@ class VolumeMaterialMapper {
   ///
   /// Nested State struct which is used for the mapping prococess
   struct State {
-    /// Constructor of the Sate with contexts
+    /// Constructor of the State with contexts
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
 

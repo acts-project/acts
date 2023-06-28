@@ -18,7 +18,7 @@ namespace Acts {
 
 std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
     std::any, std::any edges, std::any edge_weights,
-    std::vector<int> &spacepointIDs, const Logger &logger) {
+    std::vector<int> &spacepointIDs) {
   auto numSpacepoints = spacepointIDs.size();
   auto edgesAfterFiltering = std::any_cast<std::vector<int64_t>>(edges);
   auto numEdgesAfterF = edgesAfterFiltering.size() / 2;
@@ -46,7 +46,7 @@ std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
 
   ACTS_VERBOSE("run weaklyConnectedComponents");
   weaklyConnectedComponents<int32_t, int32_t, float>(
-      rowIndices, colIndices, edgeWeights, trackLabels, logger);
+      rowIndices, colIndices, edgeWeights, trackLabels, logger());
 
   ACTS_DEBUG("size of components: " << trackLabels.size());
   if (trackLabels.size() == 0) {

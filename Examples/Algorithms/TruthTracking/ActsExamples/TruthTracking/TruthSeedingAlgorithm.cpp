@@ -157,8 +157,8 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
                        std::hypot(rhs->r(), rhs->z());
               });
 
-    // Loop over the found space points to find the seed with maxium deltaR
-    // betweent the bottom and top space point
+    // Loop over the found space points to find the seed with maximum deltaR
+    // between the bottom and top space point
     // @todo add the check of deltaZ
     bool seedFound = false;
     std::array<size_t, 3> bestSPIndices{};

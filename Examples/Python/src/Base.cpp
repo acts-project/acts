@@ -108,6 +108,7 @@ void addLogging(Acts::Python::Context& ctx) {
                        .value("WARNING", Acts::Logging::WARNING)
                        .value("ERROR", Acts::Logging::ERROR)
                        .value("FATAL", Acts::Logging::FATAL)
+                       .value("MAX", Acts::Logging::MAX)
                        .export_values();
 
   levelEnum

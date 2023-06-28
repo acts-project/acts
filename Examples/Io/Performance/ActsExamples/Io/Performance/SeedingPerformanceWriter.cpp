@@ -131,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::writeT(
 
   int nMatchedParticles = 0;
   int nDuplicatedParticles = 0;
-  // Fill the effeciency and fake rate plots
+  // Fill the efficiency and fake rate plots
   for (const auto& particle : particles) {
     const auto it1 = truthCount.find(particle.particleId());
     bool isMatched = false;

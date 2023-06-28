@@ -3,14 +3,16 @@
 # the common libraries which are linked to every unittest can be
 # extended by setting the `unittest_extra_libraries` variables before
 # calling the macro.
-macro(add_unittest _name)
+macro(add_unittest _name _source)
   # automatically prefix the target name
   set(_target "ActsUnitTest${_name}")
-  add_executable(${_target} ${ARGN})
+  add_executable(${_target} ${_source})
   # define required BOOST_TEST_... macros here to ensure consistent names
   target_compile_definitions(
     ${_target}
-    PRIVATE "-DBOOST_TEST_DYN_LINK" "-DBOOST_TEST_MODULE=${_target}")
+    PRIVATE "-DBOOST_TEST_DYN_LINK")
+  set_source_files_properties(${_source} PROPERTIES 
+    COMPILE_DEFINITIONS "BOOST_TEST_MODULE=${_target}")
   target_include_directories(
     ${_target}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

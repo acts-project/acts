@@ -25,7 +25,7 @@ struct AlgorithmContext;
 class RefittingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// The intput track collection
+    /// The input track collection
     std::string inputTracks;
     /// Output fitted tracks collection.
     std::string outputTracks;
@@ -37,7 +37,7 @@ class RefittingAlgorithm final : public IAlgorithm {
 
   /// Constructor of the fitting algorithm
   ///
-  /// @param config is the config struct to configure the algorihtm
+  /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
   RefittingAlgorithm(Config config, Acts::Logging::Level level);
 

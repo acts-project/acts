@@ -178,7 +178,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
-      // are needed to descibe the mesh, @todo investigate merging flag
+      // are needed to describe the mesh, @todo investigate merging flag
       auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
@@ -264,7 +264,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 pos_loc = transform(gctx).inverse() * position;
   const double lr = perp(pos_loc);
   const double lphi = phi(pos_loc);
@@ -273,7 +273,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   // rotate into the polar coorindates
   auto lx = rframeT.block<1, 3>(0, 0);
   auto ly = rframeT.block<1, 3>(1, 0);
-  // Initalize the jacobian from global to local
+  // Initialize the jacobian from global to local
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Local position component
   jacToLocal.block<1, 3>(eBoundLoc0, eFreePos0) = lcphi * lx + lsphi * ly;
@@ -327,7 +327,7 @@ Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);
@@ -341,7 +341,7 @@ Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
 
 Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
                                         const Vector2& /*lposition*/) const {
-  // fast access via tranform matrix (and not rotation())
+  // fast access via transform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }

@@ -158,7 +158,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   const auto& atPerigee = myTrack.parameters();
   const auto& atIp3d = trackAtIP3d.parameters();
 
-  // all parameters except the helix invariants theta, q/p shoud be changed
+  // all parameters except the helix invariants theta, q/p should be changed
   BOOST_CHECK_NE(atPerigee[eBoundLoc0], atIp3d[eBoundLoc0]);
   BOOST_CHECK_NE(atPerigee[eBoundLoc1], atIp3d[eBoundLoc1]);
   // BOOST_CHECK_NE(atPerigee[eBoundTime], atIp3d[eBoundTime]);

@@ -54,8 +54,8 @@ class BoundarySurfaceT {
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface The unqiue surface the boundary represents
-  /// @param inside The inside volume the bounday surface points to
+  /// @param surface The unique surface the boundary represents
+  /// @param inside The inside volume the boundary surface points to
   /// @param outside The outside volume the boundary surface points to
   BoundarySurfaceT(std::shared_ptr<const Surface> surface,
                    const volume_t* inside, const volume_t* outside)
@@ -68,8 +68,8 @@ class BoundarySurfaceT {
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface The unqiue surface the boundary represents
-  /// @param inside The inside volume the bounday surface points to
+  /// @param surface The unique surface the boundary represents
+  /// @param inside The inside volume the boundary surface points to
   /// @param outside The outside volume the boundary surface points to
   BoundarySurfaceT(std::shared_ptr<const Surface> surface, VolumePtr inside,
                    VolumePtr outside)
@@ -82,8 +82,8 @@ class BoundarySurfaceT {
   /// Constructor for a Boundary with exact multiple Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface The unqiue surface the boundary represents
-  /// @param insideArray The inside volume array the bounday surface points to
+  /// @param surface The unique surface the boundary represents
+  /// @param insideArray The inside volume array the boundary surface points to
   /// @param outsideArray The outside volume array the boundary surface
   /// points to
   BoundarySurfaceT(std::shared_ptr<const Surface> surface,
@@ -103,7 +103,7 @@ class BoundarySurfaceT {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos The global position on surface
   /// @param mom The direction on the surface
-  /// @param dir is an aditional direction corrective
+  /// @param dir is an additional direction corrective
   ///
   /// @return The attached volume at that position
   virtual const volume_t* attachedVolume(const GeometryContext& gctx,

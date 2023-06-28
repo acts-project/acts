@@ -102,7 +102,7 @@ class LineSurface : public Surface {
   /// Normal vector return without argument
   using Surface::normal;
 
-  /// The binning position is the position calcualted
+  /// The binning position is the position calculated
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -206,7 +206,7 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position as a starting point
   /// @param direction The global direction at the starting point
-  ///        @note exptected to be normalized
+  ///        @note expected to be normalized
   /// @param bcheck The boundary check directive for the estimate
   /// @param tolerance the tolerance used for the intersection
   ///
@@ -273,7 +273,7 @@ class LineSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates

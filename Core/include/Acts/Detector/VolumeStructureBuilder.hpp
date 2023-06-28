@@ -46,8 +46,8 @@ class VolumeStructureBuilder : public IExternalStructureBuilder {
     std::vector<ActsScalar> boundValues = {};
     /// The optional extent to feed into the values
     std::optional<Extent> extent = std::nullopt;
-    /// Some auxilliary information
-    std::string auxilliary = "";
+    /// Some auxiliary information
+    std::string auxiliary = "";
   };
 
   /// Constructor

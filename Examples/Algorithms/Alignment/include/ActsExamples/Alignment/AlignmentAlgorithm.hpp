@@ -68,7 +68,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
     std::string outputAlignmentParameters;
     /// Type erased fitter function.
     std::shared_ptr<AlignmentFunction> align;
-    /// The alignd transform updater
+    /// The aligned transform updater
     ActsAlignment::AlignedTransformUpdater alignedTransformUpdater;
     /// The surfaces (with detector elements) to be aligned
     std::vector<Acts::DetectorElementBase*> alignedDetElements;
@@ -86,7 +86,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
 
   /// Constructor of the alignment algorithm
   ///
-  /// @param cfg is the config struct to configure the algorihtm
+  /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
   AlignmentAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
