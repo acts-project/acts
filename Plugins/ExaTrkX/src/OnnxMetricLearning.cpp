@@ -17,7 +17,9 @@
 
 namespace Acts {
 
-OnnxMetricLearning::OnnxMetricLearning(const Config& cfg) : m_cfg(cfg) {
+OnnxMetricLearning::OnnxMetricLearning(const Config& cfg,
+                                       std::unique_ptr<const Logger> logger)
+    : m_logger(std::move(logger)), m_cfg(cfg) {
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING,
                                      "ExaTrkX - metric learning");
 
@@ -56,7 +58,7 @@ void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
 }
 
 std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
-    std::vector<float>& inputValues, const Logger& logger) {
+    std::vector<float>& inputValues) {
   Ort::AllocatorWithDefaultOptions allocator;
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
@@ -93,7 +95,7 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   // Building Edges
   // ************
   std::vector<int64_t> edgeList;
-  buildEdgesWrapper(eOutputData, edgeList, numSpacepoints, logger);
+  buildEdgesWrapper(eOutputData, edgeList, numSpacepoints, logger());
   int64_t numEdges = edgeList.size() / 2;
   ACTS_DEBUG("Graph construction: built " << numEdges << " edges.");
 

@@ -4,12 +4,16 @@
   - cmake/**
 'Component - Core':
   - Core/**
+  - Tests/UnitTests/Core/**
 'Component - Examples':
   - Examples/**
+  - Tests/UnitTests/Examples/**
 'Component - Fatras':
   - Fatras/**
+  - Tests/UnitTests/Fatras/**
 'Component - Plugins':
   - Plugins/**
+  - Tests/UnitTests/Plugins/**
 'Component - Documentation':
   - docs/**
 'Changes Performance':

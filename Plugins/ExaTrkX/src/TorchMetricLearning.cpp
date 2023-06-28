@@ -17,9 +17,19 @@
 
 namespace Acts {
 
-TorchMetricLearning::TorchMetricLearning(const Config &cfg) : m_cfg(cfg) {
+TorchMetricLearning::TorchMetricLearning(const Config &cfg,
+                                         std::unique_ptr<const Logger> _logger)
+    : m_logger(std::move(_logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+  ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
+                                    << TORCH_VERSION_MINOR << "."
+                                    << TORCH_VERSION_PATCH);
+#ifndef ACTS_EXATRKX_CPUONLY
+  if (not torch::cuda::is_available()) {
+    ACTS_INFO("CUDA not available, falling back to CPU");
+  }
+#endif
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
@@ -33,13 +43,10 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg) : m_cfg(cfg) {
 TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
-    std::vector<float> &inputValues, const Logger &logger) {
+    std::vector<float> &inputValues) {
+  ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
-
-  // Clone models (solve memory leak? members can be const...)
-  auto e_model = m_model->clone();
-  e_model.to(device);
 
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information [r, phi, z]: "
@@ -49,42 +56,45 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
                << *std::max_element(inputValues.begin(), inputValues.end())
                << ", "
                << *std::min_element(inputValues.begin(), inputValues.end()))
-  printCudaMemInfo(logger);
+  printCudaMemInfo(logger());
 
   // **********
   // Embedding
   // **********
 
-  int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
-  std::vector<torch::jit::IValue> eInputTensorJit;
-  auto e_opts = torch::TensorOptions().dtype(torch::kFloat32);
-  torch::Tensor eLibInputTensor =
+  const int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
+  std::vector<torch::jit::IValue> inputTensors;
+  auto opts = torch::TensorOptions().dtype(torch::kFloat32);
+  torch::Tensor inputTensor =
       torch::from_blob(inputValues.data(),
-                       {numSpacepoints, m_cfg.spacepointFeatures}, e_opts)
-          .to(torch::kFloat32);
+                       {numSpacepoints, m_cfg.spacepointFeatures}, opts)
+          .to(torch::kFloat32)
+          .to(device);
 
-  eInputTensorJit.push_back(eLibInputTensor.to(device));
-  std::optional<at::Tensor> eOutput =
-      e_model.forward(eInputTensorJit).toTensor();
-  eInputTensorJit.clear();
+  // Clone models (solve memory leak? members can be const...)
+  auto model = m_model->clone();
+  model.to(device);
+
+  inputTensors.push_back(inputTensor);
+  auto output = model.forward(inputTensors).toTensor();
+  inputTensors.clear();
 
   ACTS_VERBOSE("Embedding space of the first SP:\n"
-               << eOutput->slice(/*dim=*/0, /*start=*/0, /*end=*/1));
-  printCudaMemInfo(logger);
+               << output.slice(/*dim=*/0, /*start=*/0, /*end=*/1));
+  printCudaMemInfo(logger());
 
   // ****************
   // Building Edges
   // ****************
 
-  std::optional<torch::Tensor> edgeList = buildEdges(
-      *eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
-  eOutput.reset();
+  auto edgeList = buildEdges(output, numSpacepoints, m_cfg.embeddingDim,
+                             m_cfg.rVal, m_cfg.knnVal);
 
-  ACTS_VERBOSE("Shape of built edges: (" << edgeList->size(0) << ", "
-                                         << edgeList->size(1));
-  ACTS_VERBOSE("Slice of edgelist:\n" << edgeList->slice(1, 0, 5));
-  printCudaMemInfo(logger);
+  ACTS_VERBOSE("Shape of built edges: (" << edgeList.size(0) << ", "
+                                         << edgeList.size(1));
+  ACTS_VERBOSE("Slice of edgelist:\n" << edgeList.slice(1, 0, 5));
+  printCudaMemInfo(logger());
 
-  return {eLibInputTensor, *edgeList};
+  return {inputTensor, edgeList};
 }
 }  // namespace Acts
