@@ -96,24 +96,24 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   {
     auto& sp_collection = grid.at(middleSPs);
-    for (auto& SP : sp_collection) {
-      middleSPvec.push_back(SP.get());
+    for (const auto& SP : sp_collection) {
+      middleSPvec.push_back(SP);
     }
   }
   deviceMiddleSPs.reserve(middleSPvec.size());
-  for (auto SP : middleSPvec) {
+  for (const auto SP : middleSPvec) {
     deviceMiddleSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
                                SP->varianceR(), SP->varianceZ()});
   }
 
   for (auto SPidx : topSPs) {
     auto& sp_collection = grid.at(SPidx);
-    for (auto& SP : sp_collection) {
-      topSPvec.push_back(SP.get());
+    for (const auto& SP : sp_collection) {
+      topSPvec.push_back(SP);
     }
   }
   deviceTopSPs.reserve(topSPvec.size());
-  for (auto SP : topSPvec) {
+  for (const auto SP : topSPvec) {
     deviceTopSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
                             SP->varianceR(), SP->varianceZ()});
   }
