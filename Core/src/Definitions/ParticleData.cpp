@@ -23,6 +23,9 @@
 
 namespace {
 
+// TODO the following functions could be constexpr but we are currently limited
+// by `std::find`
+
 static inline std::optional<std::size_t> findIndexByPdg(std::int32_t pdg) {
   auto beg = std::cbegin(kParticlesPdgNumber);
   auto end = std::cend(kParticlesPdgNumber);
