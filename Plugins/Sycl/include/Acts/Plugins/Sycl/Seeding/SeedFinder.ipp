@@ -16,7 +16,6 @@
 
 // Acts include(s).
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
 
 // SYCL plugin include(s)
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"

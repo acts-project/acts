@@ -10,7 +10,6 @@
 
 #include "Acts/Plugins/Cuda/Cuda.hpp"
 #include "Acts/Plugins/Cuda/Seeding/Kernels.cuh"
-#include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"

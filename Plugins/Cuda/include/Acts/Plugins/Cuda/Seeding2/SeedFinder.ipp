@@ -19,7 +19,6 @@
 
 // Acts include(s).
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
 
 // System include(s).
 #include <cstring>
