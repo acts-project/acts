@@ -33,15 +33,18 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
     int knnVal = 500;
   };
 
-  TorchMetricLearning(const Config &cfg);
+  TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchMetricLearning();
 
-  std::tuple<std::any, std::any> operator()(std::vector<float> &inputValues,
-                                            const Logger &logger) override;
+  std::tuple<std::any, std::any> operator()(
+      std::vector<float> &inputValues) override;
 
   Config config() const { return m_cfg; }
 
  private:
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const auto &logger() const { return *m_logger; }
+
   Config m_cfg;
   c10::DeviceType m_deviceType;
   std::unique_ptr<torch::jit::Module> m_model;

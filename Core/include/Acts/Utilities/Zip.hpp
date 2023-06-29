@@ -12,35 +12,36 @@
 
 namespace Acts {
 
-/// Function that allows to zip two ranges to be used in a range-based for loop.
-/// This is a very basic implementation for two ranges, but could relatively
-/// easily be extended with variadic templates.
-/// @tparam RA The first range type
-/// @tparam RB The second range type
-/// @param ra The first range
-/// @param rb The second range
+/// Function that allows to zip some ranges to be used in a range-based for
+/// loop. When wanting to mutate the entries, the result must be captured by
+/// value:
+///
+/// for(auto [a, b, c] : zip(ra, rb, rc)) { a+=2; }
+///
+/// @tparam R The ranges type pack
+/// @param r The ranges parameter pack
 /// @note the behaviour is undefined if the ranges do not have equal range
-template <typename RA, typename RB>
-auto zip(RA &&ra, RB &&rb) {
-  using ItA = decltype(ra.begin());
-  using ItB = decltype(rb.begin());
-
+template <typename... R>
+auto zip(R &&...r) {
   struct It {
-    ItA a;
-    ItB b;
+    std::tuple<decltype(r.begin())...> iterators;
+    static_assert(std::tuple_size_v<decltype(iterators)> > 0);
 
-    using reference = std::tuple<decltype(*std::declval<ItA>()),
-                                 decltype(*std::declval<ItB>())>;
+    using reference = std::tuple<decltype(*r.begin())...>;
 
     auto operator++() {
-      ++a;
-      ++b;
+      std::apply([](auto &...args) { (++args, ...); }, iterators);
       return *this;
     }
 
-    auto operator!=(const It &other) const { return a != other.a; }
+    auto operator!=(const It &other) const {
+      return std::get<0>(iterators) != std::get<0>(other.iterators);
+    }
 
-    reference operator*() { return {*a, *b}; }
+    reference operator*() {
+      return std::apply([](auto &...args) { return reference{*args...}; },
+                        iterators);
+    }
   };
 
   struct Zip {
@@ -50,7 +51,9 @@ auto zip(RA &&ra, RB &&rb) {
     auto end() { return e; }
   };
 
-  return Zip{It{ra.begin(), rb.begin()}, It{ra.end(), rb.end()}};
+  auto begin = std::make_tuple(r.begin()...);
+  auto end = std::make_tuple(r.end()...);
+  return Zip{It{begin}, It{end}};
 }
 
 }  // namespace Acts
