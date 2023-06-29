@@ -12,7 +12,6 @@
 #include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 
 #include <memory>
@@ -50,7 +49,7 @@ class SeedFilter {
   SeedFilter() = delete;
   virtual ~SeedFilter() = default;
 
-  /// Create InternalSeeds for the all seeds with the same bottom and middle
+  /// Create Seeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
   /// @param spacePointData Auxiliary variables used by the seeding
   /// @param bottomSP fixed bottom space point

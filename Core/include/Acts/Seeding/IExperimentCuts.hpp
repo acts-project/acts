@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
 
 #include <memory>
 

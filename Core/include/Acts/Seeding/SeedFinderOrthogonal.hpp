@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/EventData/SpacePointData.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"

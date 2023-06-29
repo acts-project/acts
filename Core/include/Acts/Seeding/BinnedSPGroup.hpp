@@ -11,7 +11,6 @@
 #include "Acts/EventData/Seed.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -113,7 +112,7 @@ class BinnedSPGroup {
   }
 
  private:
-  // grid with ownership of all InternalSpacePoint
+  // grid with ownership of all SpacePoint
   std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid;
 
   // BinFinder must return std::vector<Acts::Seeding::Bin> with content of
