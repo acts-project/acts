@@ -20,15 +20,19 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
+  // Create propagator options
+  propagator_options_t pOptions(gctx, mctx);
+
+  // Length scale at which we consider to be sufficiently close to the Perigee
+  // surface to skip the propagation.
+  pOptions.targetTolerance = m_cfg.targetTolerance;
+
   // Get intersection of the track with the Perigee if the particle would
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
   auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
                                                 params.unitDirection(), false);
-
-  // Create propagator options
-  propagator_options_t pOptions(gctx, mctx);
 
   // Setting the propagation direction using the intersection length from
   // above
