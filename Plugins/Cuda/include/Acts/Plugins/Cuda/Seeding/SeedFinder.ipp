@@ -90,21 +90,21 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
     auto& sp_collection = grid.at(middleSPs);
     for (const auto& sp : sp_collection) {
       nSpM++;
-      middleSPvec.push_back(&sp);
+      middleSPvec.push_back(sp);
     }
   }
   for (auto idx : bottomSPs) {
     auto& sp_collection = grid.at(idx);
     for (const auto& sp : sp_collection) {
       nSpB++;
-      bottomSPvec.push_back(&sp);
+      bottomSPvec.push_back(sp);
     }
   }
   for (std::size_t idx : topSPs) {
     auto& sp_collection = grid.at(idx);
     for (const auto& sp : sp_collection) {
       nSpT++;
-      topSPvec.push_back(&sp);
+      topSPvec.push_back(sp);
     }
   }
 
