@@ -94,7 +94,6 @@ class SeedFinderOrthogonal {
    * @param options frequently changing configuration (like beam position)
    * @param spacePoints The input spacepoints from which to create seeds.
    * @param out_cont The output container to write seeds to.
-   * @param extract_coordinates User-defined function for extracting global position and
    * covariance of the external space point
    */
   template <typename input_container_t, typename output_container_t>
@@ -113,7 +112,6 @@ class SeedFinderOrthogonal {
    * @tparam input_container_t The type of the input spacepoint container.
    * @param options frequently changing configuration (like beam position)
    * @param spacePoints The input spacepoints from which to create seeds.
-   * @param extract_coordinates User-defined function for extracting global position and
    * covariance of the external space point
    *
    * @return A vector of seeds.
