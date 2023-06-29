@@ -1,5 +1,5 @@
 // #include "GNN_Geometry.h"
-#include "GNN_DataStorage.pp"
+#include "GNN_DataStorage.hpp"
 
 #include<cmath>
 #include<cstring>

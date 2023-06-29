@@ -1,8 +1,8 @@
 #include "Acts/Seeding/GNN_Geometry.hpp"
 
-#include<cmath>
-#include<cstring>
-#include<algorithm>
+#include <cmath>
+#include <cstring>
+#include <algorithm>
 
 namespace Acts {
 template <typename space_point_t>  

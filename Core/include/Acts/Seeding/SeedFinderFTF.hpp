@@ -9,7 +9,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Utilities/KDTree.hpp"
-#include "Acts/Seeding/GNN_DataStorage.h"
+#include "Acts/Seeding/GNN_DataStorage.hpp"
 
 
 #include <array>

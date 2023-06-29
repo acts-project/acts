@@ -5,7 +5,7 @@
 #define MAX_SEG_PER_NODE 1000 //was 30
 #define N_SEG_CONNS  6 //was 6
 
-#include "Acts/Seeding/GNN_Geometry.h"
+#include "Acts/Seeding/GNN_Geometry.hpp"
 
 namespace Acts {
 template <typename space_point_t>  

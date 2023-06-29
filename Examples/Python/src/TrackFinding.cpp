@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
+#include "Acts/Seeding/SeedFinderFTF.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
@@ -215,6 +216,18 @@ void addTrackFinding(Context& ctx) {
     patchKwargsConstructor(c);
   }  
 
+// {
+//     using Config = Acts::SeedFinderFTF<SimSpacePoint>;
+//     auto c =
+//         py::class_<Config>(m, "SeedFinderFTF").def(py::init<>());
+//     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+//     // ACTS_PYTHON_MEMBER(Dim);
+//     // ACTS_PYTHON_MEMBER(m_config);
+//     // ACTS_PYTHON_MEMBER(m_storage);
+//     ACTS_PYTHON_STRUCT_END();
+//     patchKwargsConstructor(c);
+//   }  
+
 
   {
     using seedConf = Acts::SeedConfirmationRangeConfig;
@@ -368,6 +381,9 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,
                                 "SeedsToPrototracks", inputSeeds,
                                 outputProtoTracks);
+
+  // ACTS_PYTHON_DECLARE_ALGORITHM(Acts::SeedFinderFTF<SimSpacePoint>, mex,
+  //                               "SeedFinderFTF", Dim);
 }
 
 }  // namespace Acts::Python
