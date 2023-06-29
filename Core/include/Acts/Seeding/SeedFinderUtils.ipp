@@ -7,22 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 namespace Acts {
-template <typename external_spacepoint_t>
-inline LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
-  auto extractFunction =
-      [](const InternalSpacePoint<external_spacepoint_t>& obj)
-      -> std::array<float, 6> {
-    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
-                                obj.radius(), obj.varianceR(), obj.varianceZ()};
-    return output;
-  };
-
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      sp, spM, bottom, std::move(extractFunction));
-}
-
 template <typename external_spacepoint_t, typename callable_t>
 inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
                                       const external_spacepoint_t& spM,

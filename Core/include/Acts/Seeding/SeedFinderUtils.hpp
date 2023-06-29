@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 
 namespace Acts {
@@ -26,20 +25,6 @@ struct LinCircle {
   float x{0.};
   float y{0.};
 };
-
-/// @brief Transform two spacepoints to a u-v space circle.
-///
-/// This function is a non-vectorized version of @a transformCoordinates.
-///
-/// @tparam external_spacepoint_t The external spacepoint type.
-///
-/// @param[in] sp The first spacepoint to use, either a bottom or top.
-/// @param[in] spM The middle spacepoint to use.
-/// @param[in] bottom Should be true if sp is a bottom SP.
-template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom);
 
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(const external_spacepoint_t& sp,
