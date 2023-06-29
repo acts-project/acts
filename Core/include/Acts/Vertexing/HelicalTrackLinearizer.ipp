@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Vertexing/LinearizerTrackParameters.hpp"
 
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
@@ -81,7 +82,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // Get mass hypothesis from propagator options
   ActsScalar m0 = pOptions.mass;
   // Assume unit charge
-  ActsScalar p = std::abs(1 / qOvP);
+  ActsScalar p = std::abs(1. / qOvP);
   // Speed in units of c
   ActsScalar beta = p / std::hypot(p, m0);
   // Transverse speed (i.e., speed in the x-y plane)
@@ -90,11 +91,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // Momentu at the PCA
   Vector3 momentumAtPCA(phi, theta, qOvP);
 
-  // Define Jacobians, which will be filled later
-  ActsMatrix<eBoundSize, 4> positionJacobian;
-  positionJacobian.setZero();
-  ActsMatrix<eBoundSize, 3> momentumJacobian;
-  momentumJacobian.setZero();
+  // Complete Jacobian (consists of positionJacobian and momentumJacobian)
+  ActsMatrix<eBoundSize, eLinSize> completeJacobian =
+      ActsMatrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
+
   // get the z-component of the B-field at the PCA
   auto field =
       m_cfg.bField->getField(VectorHelpers::position(pca), state.fieldCache);
@@ -106,36 +106,33 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // If there is no magnetic field the particle has a straight trajectory
   // If there is a constant magnetic field it has a helical trajectory
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
-    // Fill position Jacobian, i.e., matrix A from Eq. 5.39 in Ref(1)
-    // First row
-    positionJacobian(0, 0) = -sinPhi;
-    positionJacobian(0, 1) = cosPhi;
+    // Derivatives can be found in Eqs. 5.39 and 5.40 of Ref. (1).
+    // Since we propagated to the PCA (point P in Ref(1)), we evaluate the
+    // Jacobians there. One can show that, in this case, RTilde = 0 and QTilde =
+    // -d0. Derivatives of d0
+    completeJacobian(eBoundLoc0, eLinPos0) = -sinPhi;
+    completeJacobian(eBoundLoc0, eLinPos1) = cosPhi;
 
-    // Second row
-    positionJacobian(1, 0) = -cosPhi / tanTheta;
-    positionJacobian(1, 1) = -sinPhi / tanTheta;
-    positionJacobian(1, 2) = 1.;
+    // Derivatives of z0
+    completeJacobian(eBoundLoc1, eLinPos0) = -cosPhi / tanTheta;
+    completeJacobian(eBoundLoc1, eLinPos1) = -sinPhi / tanTheta;
+    completeJacobian(eBoundLoc1, eLinPos2) = 1.;
+    completeJacobian(eBoundLoc1, eLinPhi) = -d0 / tanTheta;
 
-    // Sixth row
-    positionJacobian(5, 0) = -cosPhi / betaT;
-    positionJacobian(5, 1) = -sinPhi / betaT;
-    positionJacobian(5, 3) = 1.;
+    // Derivatives of phi
+    completeJacobian(eBoundPhi, eLinPhi) = 1.;
 
-    // Fill momentum Jacobian, i.e., matrix B from Eq. 5.40 in Ref(1)
-    // Second row
-    momentumJacobian(1, 0) = -d0 / tanTheta;
+    // Derivatives of theta
+    completeJacobian(eBoundTheta, eLinTheta) = 1.;
 
-    // Third row
-    momentumJacobian(2, 0) = 1.;
+    // Derivatives of q/p
+    completeJacobian(eBoundQOverP, eLinQOverP) = 1.;
 
-    // Fourth row
-    momentumJacobian(3, 1) = 1.;
-
-    // Fifth row
-    momentumJacobian(4, 2) = 1.;
-
-    // Sixth row
-    momentumJacobian(5, 0) = -d0 / betaT;
+    // Derivatives of time
+    completeJacobian(eBoundTime, eLinPos0) = -cosPhi / betaT;
+    completeJacobian(eBoundTime, eLinPos1) = -sinPhi / betaT;
+    completeJacobian(eBoundTime, eLinTime) = 1.;
+    completeJacobian(eBoundTime, eLinPhi) = -d0 / betaT;
   } else {
     // Helix radius
     ActsScalar rho = sinTheta * (1. / qOvP) / Bz;
@@ -150,52 +147,52 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     // in the x-y plane
     ActsScalar S = std::sqrt(S2);
 
-    // Fill position Jacobian, i.e., matrix A from Eq. 5.36 in Ref(1)
-    // First row
-    positionJacobian(0, 0) = -h * X / S;
-    positionJacobian(0, 1) = -h * Y / S;
-
     ActsScalar XoverS2 = X / S2;
     ActsScalar YoverS2 = Y / S2;
     ActsScalar rhoCotTheta = rho / tanTheta;
     ActsScalar rhoOverBetaT = rho / betaT;
-
-    // Second row
-    positionJacobian(1, 0) = rhoCotTheta * YoverS2;
-    positionJacobian(1, 1) = -rhoCotTheta * XoverS2;
-    positionJacobian(1, 2) = 1.;
-
-    // Third row
-    positionJacobian(2, 0) = -YoverS2;
-    positionJacobian(2, 1) = XoverS2;
-
-    // Sixth row
-    positionJacobian(5, 0) = rhoOverBetaT * YoverS2;
-    positionJacobian(5, 1) = -rhoOverBetaT * XoverS2;
-    positionJacobian(5, 3) = 1.;
-
-    // Fill momentum Jacobian, i.e., B matrix from Eq. 5.36 in Ref(1).
-    // Since we propagated to the PCA (point P in Ref(1)), the points
-    // P and V coincide and we can choose deltaPhi = 0.
-    // One can show that if deltaPhi = 0 --> R = 0 and Q = h * S.
-    // As a consequence, many terms of the B matrix from Eq. 5.36 vanish.
-
     // Absolute value of rho over S
     ActsScalar absRhoOverS = h * rho / S;
 
-    // Second row
-    momentumJacobian(1, 0) = rhoCotTheta * (1. - absRhoOverS);
+    // Derivatives can be found in Eq. 5.36 in Ref. (1)
+    // Since we propagated to the PCA (point P in Ref(1)), the points
+    // P and V coincide, and thus deltaPhi = 0.
+    // One can show that if deltaPhi = 0 --> R = 0 and Q = h * S.
+    // As a consequence, many terms of the B matrix vanish.
 
-    // Third row
-    momentumJacobian(2, 0) = absRhoOverS;
+    // Derivatives of d0
+    completeJacobian(eBoundLoc0, eLinPos0) = -h * X / S;
+    completeJacobian(eBoundLoc0, eLinPos1) = -h * Y / S;
 
-    // Fourth and fifth row
-    momentumJacobian(3, 1) = 1.;
-    momentumJacobian(4, 2) = 1.;
+    // Derivatives of z0
+    completeJacobian(eBoundLoc1, eLinPos0) = rhoCotTheta * YoverS2;
+    completeJacobian(eBoundLoc1, eLinPos1) = -rhoCotTheta * XoverS2;
+    completeJacobian(eBoundLoc1, eLinPos2) = 1.;
+    completeJacobian(eBoundLoc1, eLinPhi) = rhoCotTheta * (1. - absRhoOverS);
 
-    // Sixth row
-    momentumJacobian(5, 0) = rhoOverBetaT * (1. - absRhoOverS);
+    // Derivatives of phi
+    completeJacobian(eBoundPhi, eLinPos0) = -YoverS2;
+    completeJacobian(eBoundPhi, eLinPos1) = XoverS2;
+    completeJacobian(eBoundPhi, eLinPhi) = absRhoOverS;
+
+    // Derivatives of theta
+    completeJacobian(eBoundTheta, eLinTheta) = 1.;
+
+    // Derivatives of q/p
+    completeJacobian(eBoundQOverP, eLinQOverP) = 1.;
+
+    // Derivatives of time
+    completeJacobian(eBoundTime, eLinPos0) = rhoOverBetaT * YoverS2;
+    completeJacobian(eBoundTime, eLinPos1) = -rhoOverBetaT * XoverS2;
+    completeJacobian(eBoundTime, eLinTime) = 1.;
+    completeJacobian(eBoundTime, eLinPhi) = rhoOverBetaT * (1. - absRhoOverS);
   }
+
+  // Extracting positionJacobian and momentumJacobian from the complete Jacobian
+  ActsMatrix<eBoundSize, eLinPosSize> positionJacobian =
+      completeJacobian.block<eBoundSize, eLinPosSize>(0, 0);
+  ActsMatrix<eBoundSize, eLinMomSize> momentumJacobian =
+      completeJacobian.block<eBoundSize, eLinMomSize>(0, eLinPosSize);
 
   // const term in Taylor expansion from Eq. 5.38 in Ref(1)
   BoundVector constTerm =
