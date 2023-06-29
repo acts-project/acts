@@ -224,6 +224,7 @@ class SeedFinderOrthogonal {
    *
    * @param tree The k-d tree to use for searching.
    * @param out_cont The container write output seeds to.
+   * @param middle_p The middle spacepoint to find seeds for.
    */
   template <typename output_container_t>
   void processFromMiddleSP(const SeedFinderOptions &options, const tree_t &tree,
