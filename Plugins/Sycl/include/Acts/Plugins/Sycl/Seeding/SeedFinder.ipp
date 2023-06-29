@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -128,8 +127,8 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   // Iterate through seeds returned by the SYCL algorithm and perform the last
   // step of filtering for fixed middle SP.
-  std::vector<typename CandidatesForMiddleSp<
-      const external_spacepoint_t>::value_type>
+  std::vector<
+      typename CandidatesForMiddleSp<const external_spacepoint_t>::value_type>
       candidates;
 
   for (size_t mi = 0; mi < seeds.size(); ++mi) {
@@ -142,13 +141,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
       candidates.emplace_back(bottomSP, middleSP, topSP, weight, 0, false);
     }
-    std::sort(
-        candidates.begin(), candidates.end(),
-        CandidatesForMiddleSp<const external_spacepoint_t>::
-            descendingByQuality);
+    std::sort(candidates.begin(), candidates.end(),
+              CandidatesForMiddleSp<
+                  const external_spacepoint_t>::descendingByQuality);
     std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
-    m_config.seedFilter->filterSeeds_1SpFixed(candidates,
-                                              numQualitySeeds,
+    m_config.seedFilter->filterSeeds_1SpFixed(candidates, numQualitySeeds,
                                               std::back_inserter(outputVec));
   }
   return outputVec;

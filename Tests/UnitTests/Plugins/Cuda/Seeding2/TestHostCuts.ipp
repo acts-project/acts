@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2020 CERN for the benefit of the Acts project
@@ -7,11 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template<typename SpacePoint>
-float TestHostCuts<SpacePoint>::seedWeight(
-    const SpacePoint& bottom,
-    const SpacePoint&,
-    const SpacePoint& top) const {
+template <typename SpacePoint>
+float TestHostCuts<SpacePoint>::seedWeight(const SpacePoint& bottom,
+                                           const SpacePoint&,
+                                           const SpacePoint& top) const {
   float weight = 0;
   if (bottom.radius() > 150) {
     weight = 400;
@@ -22,23 +20,21 @@ float TestHostCuts<SpacePoint>::seedWeight(
   return weight;
 }
 
-template<typename SpacePoint>
-bool TestHostCuts<SpacePoint>::singleSeedCut(
-    float weight, const SpacePoint& b,
-    const SpacePoint&,
-    const SpacePoint&) const {
+template <typename SpacePoint>
+bool TestHostCuts<SpacePoint>::singleSeedCut(float weight, const SpacePoint& b,
+                                             const SpacePoint&,
+                                             const SpacePoint&) const {
   return !(b.radius() > 150. && weight < 380.);
 }
 
-template<typename SpacePoint>
-std::vector<typename Acts::CandidatesForMiddleSp<
-    const SpacePoint>::value_type>
+template <typename SpacePoint>
+std::vector<typename Acts::CandidatesForMiddleSp<const SpacePoint>::value_type>
 TestHostCuts<SpacePoint>::cutPerMiddleSP(
-    std::vector<typename Acts::CandidatesForMiddleSp<
-        const SpacePoint>::value_type>
+    std::vector<
+        typename Acts::CandidatesForMiddleSp<const SpacePoint>::value_type>
         seedCandidates) const {
-  std::vector<typename Acts::CandidatesForMiddleSp<
-      const SpacePoint>::value_type>
+  std::vector<
+      typename Acts::CandidatesForMiddleSp<const SpacePoint>::value_type>
       newSeedsVector;
   if (seedCandidates.size() <= 1) {
     return seedCandidates;

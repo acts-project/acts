@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -306,10 +305,10 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
       }
 
       std::sort(candidates.begin(), candidates.end(),
-                CandidatesForMiddleSp<const external_spacepoint_t>::descendingByQuality);
+                CandidatesForMiddleSp<
+                    const external_spacepoint_t>::descendingByQuality);
       std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
-      m_config.seedFilter->filterSeeds_1SpFixed(candidates,
-                                                numQualitySeeds,
+      m_config.seedFilter->filterSeeds_1SpFixed(candidates, numQualitySeeds,
                                                 std::back_inserter(outputVec));
     }
   }

@@ -180,7 +180,8 @@ int main(int argc, char** argv) {
   using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
-  std::cout << "read " << spContainer.size() << " SP from file " << file << std::endl;
+  std::cout << "read " << spContainer.size() << " SP from file " << file
+            << std::endl;
 
   // Set seed finder configuration
   Acts::SeedFinderConfig<value_type> config;
@@ -312,7 +313,7 @@ int main(int argc, char** argv) {
   for (; groupIt != spGroup.end(); ++groupIt) {
     const auto [bottom, middle, top] = *groupIt;
     seedVector_cuda.push_back(seedFinder_cuda.createSeedsForGroup(
-								  spGroup.grid(), bottom, middle, top));
+        spGroup.grid(), bottom, middle, top));
     group_count++;
     if (allgroup == false) {
       if (group_count >= nGroupToIterate)
@@ -392,8 +393,8 @@ int main(int argc, char** argv) {
     for (auto seed : seeds_cpu) {
       for (auto other : seeds_cuda) {
         if (*seed[0].sp() == *other[0].sp() and
-	    *seed[1].sp() == *other[1].sp() and
-	    *seed[2].sp() == *other[2].sp()) {
+            *seed[1].sp() == *other[1].sp() and
+            *seed[2].sp() == *other[2].sp()) {
           nMatch++;
           break;
         }
@@ -418,11 +419,11 @@ int main(int argc, char** argv) {
           std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                     << ") ";
           sp = seed->sp()[1];
-          std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y() << ", "
-                    << sp->z() << ") ";
+          std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y()
+                    << ", " << sp->z() << ") ";
           sp = seed->sp()[2];
-          std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y() << ", "
-                    << sp->z() << ") ";
+          std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y()
+                    << ", " << sp->z() << ") ";
           std::cout << std::endl;
         }
       }
@@ -438,11 +439,11 @@ int main(int argc, char** argv) {
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                   << ") ";
         sp = seed->sp()[1];
-        std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y() << ", "
-                  << sp->z() << ") ";
+        std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y()
+                  << ", " << sp->z() << ") ";
         sp = seed->sp()[2];
-        std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y() << ", "
-                  << sp->z() << ") ";
+        std::cout << sp->sp()->surface << " (" << sp->x() << ", " << sp->y()
+                  << ", " << sp->z() << ") ";
         std::cout << std::endl;
       }
     }

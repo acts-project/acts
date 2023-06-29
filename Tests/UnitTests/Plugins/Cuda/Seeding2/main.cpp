@@ -9,10 +9,10 @@
 // Local include(s).
 #include "CommandLineArguments.hpp"
 #include "ReadSeedFile.hpp"
+#include "SpacePointContainer.hpp"
 #include "TestDeviceCuts.hpp"
 #include "TestHostCuts.hpp"
 #include "TestSpacePoint.hpp"
-#include "SpacePointContainer.hpp"
 
 // CUDA plugin include(s).
 #include "Acts/Plugins/Cuda/Seeding2/SeedFinder.hpp"
@@ -124,8 +124,8 @@ int main(int argc, char* argv[]) {
 
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
-  auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(
-      gridConfig, gridOpts);
+  auto grid =
+      Acts::SpacePointGridCreator::createGrid<value_type>(gridConfig, gridOpts);
   auto spGroup = Acts::BinnedSPGroup<value_type>(
       spContainer.begin(), spContainer.end(), bottomBinFinder, topBinFinder,
       std::move(grid), rRangeSPExtent, sfConfig, sfOptions);
@@ -157,8 +157,8 @@ int main(int argc, char* argv[]) {
   TestHostCuts<value_type> hostCuts;
   Acts::SeedFilterConfig filterConfig;
   filterConfig = filterConfig.toInternalUnits();
-  sfConfig.seedFilter = std::make_unique<Acts::SeedFilter<value_type>>(
-      filterConfig, &hostCuts);
+  sfConfig.seedFilter =
+      std::make_unique<Acts::SeedFilter<value_type>>(filterConfig, &hostCuts);
   auto deviceCuts = testDeviceCuts();
 
   // Set up the seedFinder objects.

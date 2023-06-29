@@ -37,9 +37,9 @@
 #include "ATLASCuts.hpp"
 #include "CommandLineArguments.h"
 #include "SpacePoint.hpp"
+#include "SpacePointContainer.hpp"
 #include "vecmem/memory/sycl/device_memory_resource.hpp"
 #include "vecmem/memory/sycl/host_memory_resource.hpp"
-#include "SpacePointContainer.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -319,7 +319,7 @@ auto main(int argc, char** argv) -> int {
       for (auto seed : seeds_cpu) {
         for (auto other : seeds_sycl) {
           if (*seed[0].sp() == *other[0].sp() and
-	      *seed[1].sp() == *other[1].sp() and
+              *seed[1].sp() == *other[1].sp() and
               *seed[2].sp() == *other[2].sp()) {
             nMatch++;
             break;

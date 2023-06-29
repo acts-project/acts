@@ -261,6 +261,12 @@ struct WrappingConfig {
     }
   }
 
+  static const Logger& logger() {
+    static std::unique_ptr<const Logger> logger =
+        getDefaultLogger("WrappingConfig", Logging::INFO);
+    return *logger;
+  }
+
   /// wrap, insert, attach
   void wrapInsertAttach() {
     // action is only needed if an existing volume
@@ -363,9 +369,13 @@ struct WrappingConfig {
                     existingVolumeConfig.rMin < containerVolumeConfig.rMax)) {
           // The volumes are overlapping this shouldn't be happening return an
           // error
-          throw std::invalid_argument(
+          ACTS_WARNING(
               "Volumes are overlapping, this shouldn't be happening. Please "
-              "check your geometry building.");
+              "check your geometry building."
+              << "\nexistingVolumeConfig, r = " << existingVolumeConfig.rMin
+              << " - " << existingVolumeConfig.rMax
+              << "\ncontainerVolumeConfig, r = " << containerVolumeConfig.rMin
+              << " - " << containerVolumeConfig.rMax);
         }
 
         // check if gaps are needed
