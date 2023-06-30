@@ -196,21 +196,21 @@ class StraightLineStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double qop(const State& state) const { return state.pars[eFreeQOverP]; }
+  double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
+  double absoluteMomentum(const State& state) const {
     auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qop(state));
+    return std::abs((q == 0 ? 1 : q) / qOverP(state));
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return std::copysign(state.absCharge, qop(state));
+    return std::copysign(state.absCharge, qOverP(state));
   }
 
   /// Time access
@@ -387,7 +387,7 @@ class StraightLineStepper {
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize.value();
-    const double p = momentum(state.stepping);
+    const double p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
     // Update the track parameters according to the equations of motion

@@ -94,8 +94,8 @@ struct AutodiffExtensionWrapper {
   // A fake stepper
   struct FakeStepper {
     auto charge(const FakeStepperState& s) const { return s.q; }
-    auto qop(const FakeStepperState& s) const { return s.pars(eFreeQOverP); }
-    auto momentum(const FakeStepperState& s) const {
+    auto qOverP(const FakeStepperState& s) const { return s.pars(eFreeQOverP); }
+    auto absoluteMomentum(const FakeStepperState& s) const {
       return s.q / s.pars(eFreeQOverP);
     }
     auto direction(const FakeStepperState& s) const {
@@ -128,7 +128,7 @@ struct AutodiffExtensionWrapper {
     initial_params.segment<3>(eFreeDir0) = stepper.direction(state.stepping);
     initial_params(eFreeQOverP) =
         (fstate.stepping.q != 0. ? fstate.stepping.q : 1.) /
-        stepper.momentum(state.stepping);
+        stepper.absoluteMomentum(state.stepping);
 
     const auto& sd = state.stepping.stepData;
 
