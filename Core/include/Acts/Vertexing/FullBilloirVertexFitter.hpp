@@ -30,9 +30,9 @@ namespace Acts {
 /// In: Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
 /// DOI 10.1016/0168-9002(92)90859-3
 ///
-/// Ref. (2) Pattern Recognition, Tracking and Vertex Reconstruction in Particle Detectors
-/// Author(s) Fruehwirth, R ; Strandli, A
-/// 
+/// Ref. (2) Pattern Recognition, Tracking and Vertex Reconstruction in Particle
+/// Detectors Author(s) Fruehwirth, R ; Strandli, A
+///
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
 template <typename input_track_t, typename linearizer_t>

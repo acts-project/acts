@@ -69,16 +69,17 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     return Vertex<input_track_t>(Vector3(0., 0., 0.));
   }
 
-  // Set number of degrees of freedom following Eq. 8.28 from Ref. (2): 
+  // Set number of degrees of freedom following Eq. 8.28 from Ref. (2):
   //
   // ndf = sum_i=1^nTracks rank(Wi^-1) - 3 * (nTracks + 1),
-  // 
+  //
   // where W_i denotes the weight matrix of the i-th track.
   // Assuming rank(W_i) = #(Perigee params) = 6 for all tracks, we have
   //
   // ndf = 3 * nTracks - 3.
   int ndf = 3 * nTracks - 3;
-  // TODO: this seems strange to me - can we even do a vertex fit if we only have one track?
+  // TODO: this seems strange to me - can we even do a vertex fit if we only
+  // have one track?
   if (nTracks < 2) {
     ndf = 1;
   }
@@ -88,7 +89,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
   bool isConstraintFit = false;
   if (vertexingOptions.vertexConstraint.covariance().determinant() != 0) {
     isConstraintFit = true;
-    ndf += 3; //TODO: find out where this comes from
+    ndf += 3;  // TODO: find out where this comes from
   }
 
   std::vector<BilloirTrack<input_track_t>> billoirTracks;
@@ -174,35 +175,35 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       billoirTracks.push_back(billoirTrack);
     }  // end loop tracks
 
-    // calculate delta (billoirFrameOrigin-position), might be changed by the
-    // beam constraint
-    // Vdel = T-sum{Bi*Ci^-1*Ui}
-    Vector4 Vdel = billoirVertex.T - billoirVertex.sumBCinvU;
-    SymMatrix4 invCovDeltaV =
-        billoirVertex.A -
-        billoirVertex.sumBCinvBt;  // invCovDeltaV = A-sum{Bi*Ci^-1*Bi^T}
+    // (Matrix-valued) factor contributing to the vertex estimate update (i.e.,
+    // to deltaV) deltaVFac = T-sum{Bi*Ci^-1*Ui}
+    Vector4 deltaVFac = billoirVertex.T - billoirVertex.sumBCinvU;
+
+    // Inverse of the covariance matrix of the 4D vertex position (note that
+    // Cov(V) = Cov(deltaV)) invCovV = A-sum{Bi*Ci^-1*Bi^T}
+    SymMatrix4 invCovV = billoirVertex.A - billoirVertex.sumBCinvBt;
     if (isConstraintFit) {
       // Position of vertex constraint in Billoir frame (i.e., in coordinate
-      // system with origin at linPoint) This will be 0 for first iteration but
-      // != 0 from second on since our first guess for the vertex position is
-      // the vertex constraint position
+      // system with origin at linPoint).
+      // This will be 0 for first iteration but != 0 from second on since our
+      // first guess for the vertex position is the vertex constraint position.
       Vector4 posInBilloirFrame =
           vertexingOptions.vertexConstraint.fullPosition() - linPoint;
 
       // For vertex contraint: T -> T + Cb^-1 (b - V0) where Cb is the
       // covariance matrix of the constraint, b is the constraint position, and
       // V0 is the vertex estimate (see Ref. (1))
-      Vdel += vertexingOptions.vertexConstraint.fullCovariance().inverse() *
-              posInBilloirFrame;
+      deltaVFac +=
+          vertexingOptions.vertexConstraint.fullCovariance().inverse() *
+          posInBilloirFrame;
       // For vertex constraint: A -> A + Cb^-1
-      invCovDeltaV +=
-          vertexingOptions.vertexConstraint.fullCovariance().inverse();
+      invCovV += vertexingOptions.vertexConstraint.fullCovariance().inverse();
     }
 
-    // cov(deltaV) = invCovDeltaV^-1
-    SymMatrix4 covDeltaV = invCovDeltaV.inverse();
-    // deltaV = cov_(deltaV) * Vdel;
-    Vector4 deltaV = covDeltaV * Vdel;
+    // covariance matrix of the 4D vertex position
+    SymMatrix4 covV = invCovV.inverse();
+    // Update of the vertex position
+    Vector4 deltaV = covV * deltaVFac;
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
@@ -223,9 +224,22 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       trackMomenta[iTrack][0] = correctedPhiTheta.first;
       trackMomenta[iTrack][1] = correctedPhiTheta.second;
 
+      // Calculate chi2 of the track...
+      billoirTrack.chi2 = ((billoirTrack.deltaQ - billoirTrack.D * deltaV -
+                            billoirTrack.E * deltaP)
+                               .transpose())
+                              .dot(billoirTrack.W * (billoirTrack.deltaQ -
+                                                     billoirTrack.D * deltaV -
+                                                     billoirTrack.E * deltaP));
+      // ... and add it to the total chi2 value
+      newChi2 += billoirTrack.chi2;
+
       // calculate the 6x6 cross-covariance matrix
       // coordinate transformation matrix, i.e.,
       // d(d0,z0,phi,theta,qOverP,t)/d(x,y,z,t,phi,theta,qOverP)
+      // This is not correct: the (x, y, z, t) in the derivatives in the D
+      // matrix is the global track position at the PCA We need the (x, y, z, t)
+      // of the vertex and dd0/dx is ill-defined because d0 = 0 in FullBilloir!
       ActsMatrix<eBoundSize, 7> transMat;
       transMat.setZero();
       transMat.block<2, 2>(0, 0) = billoirTrack.D.template block<2, 2>(0, 0);
@@ -237,15 +251,16 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
       // some intermediate calculations to get 5x5 matrix
       // cov(V,V), 4x4 matrix
-      SymMatrix4 covVV = covDeltaV;
+      SymMatrix4 covVV = covV;
 
       // cov(V,P)
+      // TODO: This is incorrect (see Ref. (2))
       ActsMatrix<4, 3> covVP = billoirTrack.B;
 
       // cov(P,P), 3x3 matrix
       ActsSymMatrix<3> covPP =
           billoirTrack.Cinv +
-          billoirTrack.BCinv.transpose() * covDeltaV * billoirTrack.BCinv;
+          billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
 
       ActsSymMatrix<7> cov;
       cov.setZero();
@@ -256,44 +271,35 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
       // covdelta_P calculation
       covDeltaP[iTrack] = transMat * cov * transMat.transpose();
-      // Calculate chi2 per track.
-      billoirTrack.chi2 = ((billoirTrack.deltaQ - billoirTrack.D * deltaV -
-                            billoirTrack.E * deltaP)
-                               .transpose())
-                              .dot(billoirTrack.W * (billoirTrack.deltaQ -
-                                                     billoirTrack.D * deltaV -
-                                                     billoirTrack.E * deltaP));
-      newChi2 += billoirTrack.chi2;
     }
 
-    if (isConstraintFit) {
-      // last term will also be 0 again but only in the first iteration
-      // = calc. vtx in billoir frame - (    isConstraintFit pos. in billoir
-      // frame )
+    // assign new linearization point (= new vertex position in global frame)
+    linPoint += deltaV;
 
-      Vector4 deltaTrk =
-          deltaV -
-          (vertexingOptions.vertexConstraint.fullPosition() - linPoint);
+    // Add an additional term to chi2 if there is a vertex constrain (see Ref.
+    // (1))
+    if (isConstraintFit) {
+      // Position of vertex constraint in Billoir frame (i.e., in coordinate
+      // system with origin at linPoint).
+      Vector4 posInBilloirFrame =
+          vertexingOptions.vertexConstraint.fullPosition() - linPoint;
 
       newChi2 +=
-          (deltaTrk.transpose())
+          (posInBilloirFrame.transpose())
               .dot(
                   vertexingOptions.vertexConstraint.fullCovariance().inverse() *
-                  deltaTrk);
+                  posInBilloirFrame);
     }
 
     if (!std::isnormal(newChi2)) {
       return VertexingError::NumericFailure;
     }
 
-    // assign new linearization point (= new vertex position in global frame)
-    linPoint += deltaV;
-
     if (newChi2 < chi2) {
       chi2 = newChi2;
 
       fittedVertex.setFullPosition(linPoint);
-      fittedVertex.setFullCovariance(covDeltaV);
+      fittedVertex.setFullCovariance(covV);
       fittedVertex.setFitQuality(chi2, ndf);
 
       std::vector<TrackAtVertex<input_track_t>> tracksAtVertex;
@@ -305,11 +311,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       for (std::size_t iTrack = 0; iTrack < billoirTracks.size(); ++iTrack) {
         const auto& billoirTrack = billoirTracks[iTrack];
 
-        // TODO we have to revisit this.
-        // TODO this section does not look correct. here we attach the track
-        // parameters to the vertex for the edm. but d0=z0=t=vertex does not
-        // look good. I am also not sure what kind of covariance is used here
-        // for the refitted params.
+        // TODO: d0 and z0 after the vertex fit are ill-defined - FullBilloir
+        // only outputs the updated track momenta!
 
         // new refitted trackparameters
         BoundVector paramVec = BoundVector::Zero();
