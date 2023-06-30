@@ -14,7 +14,7 @@
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
-#include "ActsExamples/Utilities/TrackSelector.hpp"
+#include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
 
 #include <vector>
 
@@ -53,14 +53,14 @@ void addExampleAlgorithms(Context& ctx) {
                                 "TrackParametersPrinter", inputTrackParameters);
 
   {
-    using Alg = ActsExamples::TrackSelector;
+    using Alg = ActsExamples::TrackSelectorAlgorithm;
     using Config = Alg::Config;
 
-    auto alg =
-        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(mex, "TrackSelector")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "TrackSelectorAlgorithm")
+                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
