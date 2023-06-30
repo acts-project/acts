@@ -69,9 +69,16 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     return Vertex<input_track_t>(Vector3(0., 0., 0.));
   }
 
-  // Set number of degrees of freedom
-  // ndf = (5-3) * nTracks - 3;
-  int ndf = 2 * nTracks - 3;
+  // Set number of degrees of freedom following Eq. 8.28 from Ref. (2): 
+  //
+  // ndf = sum_i=1^nTracks rank(Wi^-1) - 3 * (nTracks + 1),
+  // 
+  // where W_i denotes the weight matrix of the i-th track.
+  // Assuming rank(W_i) = #(Perigee params) = 6 for all tracks, we have
+  //
+  // ndf = 3 * nTracks - 3.
+  int ndf = 3 * nTracks - 3;
+  // TODO: this seems strange to me - can we even do a vertex fit if we only have one track?
   if (nTracks < 2) {
     ndf = 1;
   }
@@ -81,7 +88,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
   bool isConstraintFit = false;
   if (vertexingOptions.vertexConstraint.covariance().determinant() != 0) {
     isConstraintFit = true;
-    ndf += 3;
+    ndf += 3; //TODO: find out where this comes from
   }
 
   std::vector<BilloirTrack<input_track_t>> billoirTracks;
@@ -216,9 +223,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       trackMomenta[iTrack][0] = correctedPhiTheta.first;
       trackMomenta[iTrack][1] = correctedPhiTheta.second;
 
-      // calculate 5x5 covdelta_P matrix
+      // calculate the 6x6 cross-covariance matrix
       // coordinate transformation matrix, i.e.,
-      // d(d0,z0,phi,theta,qOverP,t)/d(x,y,z,phi,theta,qOverP,t)
+      // d(d0,z0,phi,theta,qOverP,t)/d(x,y,z,t,phi,theta,qOverP)
       ActsMatrix<eBoundSize, 7> transMat;
       transMat.setZero();
       transMat.block<2, 2>(0, 0) = billoirTrack.D.template block<2, 2>(0, 0);
