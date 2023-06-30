@@ -9,7 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
-#include "Acts/Seeding/SeedFinderFTF.hpp"
+// #include "Acts/Seeding/SeedFinderFTF.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
@@ -32,6 +32,7 @@ namespace py = pybind11;
 
 using namespace ActsExamples;
 using namespace Acts;
+
 
 namespace Acts::Python {
 
@@ -212,6 +213,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(fastrack_input_file);
+
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }  
@@ -382,8 +385,7 @@ void addTrackFinding(Context& ctx) {
                                 "SeedsToPrototracks", inputSeeds,
                                 outputProtoTracks);
 
-  // ACTS_PYTHON_DECLARE_ALGORITHM(Acts::SeedFinderFTF<SimSpacePoint>, mex,
-  //                               "SeedFinderFTF", Dim);
+
 }
 
 }  // namespace Acts::Python

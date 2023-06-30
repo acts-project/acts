@@ -16,6 +16,14 @@
 
 using namespace std;
 
+template class Acts::TrigFTF_GNN_Layer<ActsExamples::SimSpacePoint> ;
+template class Acts::TrigFTF_GNN_Geometry<ActsExamples::SimSpacePoint> ;
+template class Acts::TrigFTF_GNN_Node<ActsExamples::SimSpacePoint> ;
+template class Acts::TrigFTF_GNN_EtaBin<ActsExamples::SimSpacePoint> ;
+template class Acts::FTF_SP<ActsExamples::SimSpacePoint> ;
+template class Acts::TrigFTF_GNN_DataStorage<ActsExamples::SimSpacePoint> ;
+template class Acts::TrigFTF_GNN_Edge<ActsExamples::SimSpacePoint> ;
+
 //constructor: 
 ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     ActsExamples::SeedingFTFAlgorithm::Config cfg, 

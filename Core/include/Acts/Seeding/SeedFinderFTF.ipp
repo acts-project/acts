@@ -7,6 +7,7 @@
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Definitions/Algebra.hpp" //for M_PI 
 
 #include <fstream>
 #include <vector>
@@ -63,7 +64,7 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<FTF
 
   }
 
-  m_config.m_phiSliceWidth = 2*m_config.phiMax/m_config.m_nMaxPhiSlice;
+  m_config.m_phiSliceWidth = 2*M_PI/m_config.m_nMaxPhiSlice;
 
   m_storage->sortByPhi();
   m_storage->generatePhiIndexing(1.5*m_config.m_phiSliceWidth);

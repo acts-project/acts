@@ -124,6 +124,10 @@ class SimSpacePoint {
     }
   }
 
+  Scalar phi() const {
+    return std::atan(m_y/m_x)  ; 
+
+  }
  private:
   // Global position
   Scalar m_x;
