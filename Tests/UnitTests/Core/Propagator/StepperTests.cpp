@@ -175,7 +175,7 @@ struct StepCollector {
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
-    result.momentum.push_back(stepper.momentum(state.stepping) *
+    result.momentum.push_back(stepper.absoluteMomentum(state.stepping) *
                               stepper.direction(state.stepping));
   }
 };
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
   CHECK_CLOSE_ABS(es.direction(esState), dir, eps);
-  CHECK_CLOSE_ABS(es.momentum(esState), absMom, eps);
+  CHECK_CLOSE_ABS(es.absoluteMomentum(esState), absMom, eps);
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
             newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
   BOOST_CHECK_EQUAL(es.direction(esState), newMom.normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esState), newMom.norm());
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esState), newMom.norm());
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   BOOST_CHECK_EQUAL(es.time(esState), newTime);
 
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
             *plane);
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
-  CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
+  CHECK_CLOSE_REL(es.absoluteMomentum(esState), 2 * absMom, eps);
   BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);

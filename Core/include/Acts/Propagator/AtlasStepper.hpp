@@ -353,14 +353,16 @@ class AtlasStepper {
     return Vector3(state.pVector[4], state.pVector[5], state.pVector[6]);
   }
 
-  double qop(const State& state) const { return state.pVector[7]; }
+  double qOverP(const State& state) const { return state.pVector[7]; }
 
-  double momentum(const State& state) const {
-    return 1. / std::abs(qop(state));
+  double absoluteMomentum(const State& state) const {
+    return 1. / std::abs(qOverP(state));
   }
 
   /// Charge access
-  double charge(const State& state) const { return qop(state) > 0. ? 1. : -1.; }
+  double charge(const State& state) const {
+    return qOverP(state) > 0. ? 1. : -1.;
+  }
 
   /// Overstep limit
   double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
@@ -1248,7 +1250,7 @@ class AtlasStepper {
 
       // Evaluate the time propagation
       double dtds =
-          std::hypot(1, state.options.mass / momentum(state.stepping));
+          std::hypot(1, state.options.mass / absoluteMomentum(state.stepping));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
@@ -1257,7 +1259,7 @@ class AtlasStepper {
       if (Jac) {
         double dtdl = h * state.options.mass * state.options.mass *
                       charge(state.stepping) /
-                      (momentum(state.stepping) * dtds);
+                      (absoluteMomentum(state.stepping) * dtds);
         state.stepping.pVector[43] += dtdl;
 
         // Jacobian calculation
