@@ -1121,10 +1121,10 @@ def addTrackSelection(
     inputTracks: str,
     outputTracks: str,
     logLevel: Optional[acts.logging.Level] = None,
-) -> acts.examples.TrackSelector:
+) -> acts.examples.TrackSelectorAlgorithm:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    trackSelector = acts.examples.TrackSelector(
+    trackSelector = acts.examples.TrackSelectorAlgorithm(
         level=customLogLevel(),
         inputTracks=inputTracks,
         outputTracks=outputTracks,
