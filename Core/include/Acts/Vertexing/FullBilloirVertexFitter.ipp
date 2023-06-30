@@ -190,7 +190,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       Vector4 posInBilloirFrame =
           vertexingOptions.vertexConstraint.fullPosition() - linPoint;
 
-      // For vertex contraint: T -> T + Cb^-1 (b - V0) where Cb is the
+      // For vertex constraint: T -> T + Cb^-1 (b - V0) where Cb is the
       // covariance matrix of the constraint, b is the constraint position, and
       // V0 is the vertex estimate (see Ref. (1))
       deltaVFac +=
