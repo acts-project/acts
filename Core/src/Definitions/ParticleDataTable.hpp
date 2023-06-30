@@ -20,7 +20,8 @@
 // within all column arrays.
 
 static constexpr uint32_t kParticlesCount = 536u;
-static const int32_t kParticlesPdgNumber[kParticlesCount] = {
+
+static constexpr int32_t kParticlesPdgNumber[kParticlesCount] = {
     -9020213, -9010213, -9010211, -9000321, -9000311, -9000215, -9000213,
     -9000211, -204126,  -203338,  -203326,  -203322,  -203316,  -203312,
     -104324,  -104322,  -104314,  -104312,  -104122,  -103326,  -103316,
@@ -99,7 +100,8 @@ static const int32_t kParticlesPdgNumber[kParticlesCount] = {
     9010443,  9010553,  9020113,  9020213,  9020221,  9020443,  9030221,
     9050225,  9060225,  9080225,  9090225,
 };
-static const int8_t kParticlesThreeCharge[kParticlesCount] = {
+
+static constexpr int8_t kParticlesThreeCharge[kParticlesCount] = {
     -3, -3, -3, -3, 0,  -3, -3, -3, -3, 3,  0,  0,  3,  3,  -3, -3, 0,  0,  -3,
     0,  3,  -3, 0,  -3, -3, 0,  0,  -3, 0,  0,  -6, -3, -3, -3, 0,  0,  0,  3,
     -3, 0,  -3, -3, -3, 0,  0,  0,  0,  0,  3,  3,  -6, -6, -3, -3, -3, -3, 0,
@@ -130,7 +132,8 @@ static const int8_t kParticlesThreeCharge[kParticlesCount] = {
     3,  3,  0,  0,  3,  0,  0,  0,  0,  3,  3,  0,  0,  0,  0,  3,  0,  0,  0,
     0,  0,  0,  0,
 };
-static const float kParticlesMassMeV[kParticlesCount] = {
+
+static constexpr float kParticlesMassMeV[kParticlesCount] = {
     1655.0f,   1660.0f,       1810.0f,     824.0f,      824.0f,
     1700.0f,   1354.0f,       980.0f,      2881.63f,    2252.0f,
     2025.0f,   1690.0f,       2025.0f,     1690.0f,     2792.4f,
@@ -240,7 +243,8 @@ static const float kParticlesMassMeV[kParticlesCount] = {
     4421.0f,   1506.0f,       1936.0f,     2010.0f,     2297.0f,
     2350.0f,
 };
-static const char* const kParticlesName[kParticlesCount] = {
+
+static constexpr const char* kParticlesName[kParticlesCount] = {
     "a(1)(1640)-",
     "pi(1)(1600)-",
     "pi(1800)-",
