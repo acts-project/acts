@@ -209,7 +209,7 @@ class SingleBoundTrackParameters {
   }
   /// Absolute momentum.
   Scalar absoluteMomentum() const {
-    return m_chargeInterpreter.extractMomentum(m_params[eBoundQOverP]);
+    return m_chargeInterpreter.pFromQOP(m_params[eBoundQOverP]);
   }
   /// Transverse momentum.
   Scalar transverseMomentum() const {
@@ -220,7 +220,7 @@ class SingleBoundTrackParameters {
 
   /// Particle electric charge.
   Scalar charge() const {
-    return m_chargeInterpreter.extractCharge(get<eBoundQOverP>());
+    return m_chargeInterpreter.qFromQOP(get<eBoundQOverP>());
   }
 
   /// Reference surface onto which the parameters are bound.

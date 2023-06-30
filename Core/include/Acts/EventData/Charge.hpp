@@ -51,26 +51,36 @@ namespace Acts {
 
 /// Charge and momentum interpretation for neutral particles.
 struct Neutral {
+  static constexpr bool canHoldNeutral = true;
+  static constexpr bool canHoldSinglyCharged = false;
+  static constexpr bool canHoldMultiCharged = false;
+
   Neutral() = default;
   /// Construct and verify the input charge magnitude (in debug builds).
   ///
   /// This constructor is only provided to allow consistent construction.
-  template <typename T>
-  constexpr Neutral(T absQ) noexcept {
-    assert((absQ == static_cast<T>(0)) and "Input charge must be zero");
-    // suppress `unused variable` warning in non-debug builds
-    (void)(absQ);
+  constexpr Neutral(float absQ) noexcept {
+    assert((absQ == 0) and "Input charge must be zero");
+    (void)absQ;
   }
 
+  constexpr float absQ() const noexcept { return 0; }
+
   template <typename T>
-  constexpr T extractCharge(T /* pInv */) const noexcept {
-    return 0;
+  constexpr auto qFromQOP(T /*qOverP*/) const noexcept {
+    return 0.0f;
   }
   template <typename T>
-  constexpr T extractMomentum(T pInv) const noexcept {
-    // the abs is not strictly needed. it is added to protect against invalid,
-    // i.e. negative, 1/p values to ensure that the output is still correct.
-    return std::abs(1 / pInv);
+  constexpr auto pFromQOP(T qOverP) const noexcept {
+    assert(qOverP >= 0 && "qOverP cannot be negative");
+    return 1.0f / qOverP;
+  }
+
+  template <typename P, typename Q>
+  constexpr auto qopFromPQ(P p, Q q) const noexcept {
+    assert((q != 0) and "charge must be 0");
+    (void)q;
+    return 1.0f / p;
   }
 
   /// Compare for equality.
@@ -84,25 +94,39 @@ struct Neutral {
 
 /// Charge and momentum interpretation for particles with +-e charge.
 struct SinglyCharged {
+  static constexpr bool canHoldNeutral = false;
+  static constexpr bool canHoldSinglyCharged = true;
+  static constexpr bool canHoldMultiCharged = false;
+
   SinglyCharged() = default;
   /// Construct and verify the input charge magnitude (in debug builds).
   ///
   /// This constructor is only provided to allow consistent construction.
-  template <typename T>
-  constexpr SinglyCharged(T absQ) noexcept {
-    assert((absQ == static_cast<T>(UnitConstants::e)) and
-           "Input charge magnitude must be e");
-    // suppress `unused variable` warning in non-debug builds
-    (void)(absQ);
+  constexpr SinglyCharged(float absQ) noexcept {
+    assert((absQ == UnitConstants::e) and "Input charge magnitude must be e");
+    (void)absQ;
   }
 
+  constexpr float absQ() const noexcept { return UnitConstants::e; }
+
   template <typename T>
-  constexpr T extractCharge(T qOverP) const noexcept {
-    return std::copysign(static_cast<T>(UnitConstants::e), qOverP);
+  constexpr auto qFromQOP(T qOverP) const noexcept {
+    // using because of autodiff
+    using std::copysign;
+    return copysign(UnitConstants::e, qOverP);
   }
   template <typename T>
-  constexpr T extractMomentum(T qOverP) const noexcept {
-    return std::abs(static_cast<T>(UnitConstants::e) / qOverP);
+  constexpr auto pFromQOP(T qOverP) const noexcept {
+    // using because of autodiff
+    using std::abs;
+    return qFromQOP(qOverP) / qOverP;
+  }
+
+  template <typename P, typename Q>
+  constexpr auto qopFromPQ(P p, Q q) const noexcept {
+    using std::abs;
+    assert((abs(q) == UnitConstants::e) && "absolute charge must be e");
+    return q / p;
   }
 
   /// Compare for equality.
@@ -115,6 +139,54 @@ struct SinglyCharged {
   }
 };
 
+/// Charge and momentum interpretation for arbitrarily charged but not neutral
+/// particles.
+class NonNeutralCharge {
+ public:
+  static constexpr bool canHoldNeutral = false;
+  static constexpr bool canHoldSinglyCharged = true;
+  static constexpr bool canHoldMultiCharged = true;
+
+  /// Construct with the magnitude of the input charge.
+  constexpr NonNeutralCharge(float absQ) noexcept : m_absQ{absQ} {
+    assert((0 < absQ) and "Input charge magnitude must be positive");
+  }
+  constexpr NonNeutralCharge(SinglyCharged) noexcept
+      : m_absQ{UnitConstants::e} {}
+
+  constexpr float absQ() const noexcept { return m_absQ; }
+
+  template <typename T>
+  constexpr auto qFromQOP(T qOverP) const noexcept {
+    // using because of autodiff
+    using std::copysign;
+    return copysign(m_absQ, qOverP);
+  }
+  template <typename T>
+  constexpr auto pFromQOP(T qOverP) const noexcept {
+    // using because of autodiff
+    using std::abs;
+    return qFromQOP(qOverP) / qOverP;
+  }
+
+  template <typename P, typename Q>
+  constexpr auto qopFromPQ(P p, Q q) const noexcept {
+    // using because of autodiff
+    using std::abs;
+    assert(abs(q) == m_absQ && "inconsistent charge");
+    return q / p;
+  }
+
+  /// Compare for equality.
+  friend constexpr bool operator==(NonNeutralCharge lhs,
+                                   NonNeutralCharge rhs) noexcept {
+    return lhs.m_absQ == rhs.m_absQ;
+  }
+
+ private:
+  float m_absQ{};
+};
+
 /// Charge and momentum interpretation for arbitrarily charged particles.
 ///
 /// Only a charge magnitude identical to zero is interpreted as representing a
@@ -122,32 +194,47 @@ struct SinglyCharged {
 /// approximate comparison with an arbitrary epsilon.
 class AnyCharge {
  public:
-  /// Delete default constructor to ensure charge is always explicitly given.
-  AnyCharge() = delete;
+  static constexpr bool canHoldNeutral = true;
+  static constexpr bool canHoldSinglyCharged = true;
+  static constexpr bool canHoldMultiCharged = true;
+
   /// Construct with the magnitude of the input charge.
-  template <typename T>
-  constexpr AnyCharge(T absQ) noexcept : m_magnitude(std::abs(absQ)) {
+  constexpr AnyCharge(float absQ) noexcept : m_absQ{absQ} {
     assert((0 <= absQ) and "Input charge magnitude must be zero or positive");
   }
+  constexpr AnyCharge(SinglyCharged) noexcept : m_absQ{UnitConstants::e} {}
+  constexpr AnyCharge(Neutral) noexcept : m_absQ{0} {}
+
+  constexpr float absQ() const noexcept { return m_absQ; }
 
   template <typename T>
-  constexpr T extractCharge(T qOverP) const noexcept {
-    return std::copysign(static_cast<T>(m_magnitude), qOverP);
+  constexpr auto qFromQOP(T qOverP) const noexcept {
+    // using because of autodiff
+    using std::copysign;
+    return copysign(m_absQ, qOverP);
   }
   template <typename T>
-  constexpr T extractMomentum(T qOverP) const noexcept {
-    return (m_magnitude != 0.0f)
-               ? std::abs(static_cast<T>(m_magnitude) / qOverP)
-               : std::abs(1 / qOverP);
+  constexpr auto pFromQOP(T qOverP) const noexcept {
+    // using because of autodiff
+    using std::abs;
+    return (m_absQ != 0.0f) ? qFromQOP(qOverP) / qOverP : 1.0f / qOverP;
   }
 
- private:
-  float m_magnitude;
+  template <typename P, typename Q>
+  constexpr auto qopFromPQ(P p, Q q) const noexcept {
+    // using because of autodiff
+    using std::abs;
+    assert(abs(q) == m_absQ && "inconsistent charge");
+    return (m_absQ != 0.0f) ? q / p : 1.0f / p;
+  }
 
   /// Compare for equality.
   friend constexpr bool operator==(AnyCharge lhs, AnyCharge rhs) noexcept {
-    return lhs.m_magnitude == rhs.m_magnitude;
+    return lhs.m_absQ == rhs.m_absQ;
   }
+
+ private:
+  float m_absQ{};
 };
 
 /// @}
