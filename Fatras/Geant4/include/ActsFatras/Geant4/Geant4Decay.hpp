@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
 
