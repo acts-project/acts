@@ -126,8 +126,12 @@ struct PropagatorState {
     /// Momentum direction accessor
     Vector3 direction(const State& state) const { return state.dir; }
 
+    double qOverP(const State& state) const {
+      return (state.q == 0 ? 1 : state.q) / state.p;
+    }
+
     /// Momentum accessor
-    double momentum(const State& state) const { return state.p; }
+    double absoluteMomentum(const State& state) const { return state.p; }
 
     /// Charge access
     double charge(const State& state) const { return state.q; }
