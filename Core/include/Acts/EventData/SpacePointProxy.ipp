@@ -115,7 +115,7 @@ inline const Acts::Vector3&
 SpacePointProxy<container_t, read_only>::topStripCenterPosition() const {
   return container().topStripCenterPosition(m_index);
 }
-  
+
 template <typename container_t, bool read_only>
 inline typename SpacePointProxy<container_t, read_only>::ContainerType&
 SpacePointProxy<container_t, read_only>::container() const {

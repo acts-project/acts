@@ -93,22 +93,26 @@ inline bool SpacePointData::hasDynamicVariable() const {
   return not m_topStripVector.empty();
 }
 
-inline const Acts::Vector3& SpacePointData::topStripVector(const std::size_t& idx) const {
+inline const Acts::Vector3& SpacePointData::topStripVector(
+    const std::size_t& idx) const {
   return m_topStripVector[idx];
 }
 
-inline const Acts::Vector3& SpacePointData::bottomStripVector(const std::size_t& idx) const {
+inline const Acts::Vector3& SpacePointData::bottomStripVector(
+    const std::size_t& idx) const {
   return m_bottomStripVector[idx];
 }
 
-inline const Acts::Vector3& SpacePointData::stripCenterDistance(const std::size_t& idx) const {
+inline const Acts::Vector3& SpacePointData::stripCenterDistance(
+    const std::size_t& idx) const {
   return m_stripCenterDistance[idx];
 }
 
-inline const Acts::Vector3& SpacePointData::topStripCenterPosition(const std::size_t& idx) const {
+inline const Acts::Vector3& SpacePointData::topStripCenterPosition(
+    const std::size_t& idx) const {
   return m_topStripCenterPosition[idx];
 }
-  
+
 inline void SpacePointData::setTopStripVector(const std::size_t& idx,
                                               const Acts::Vector3& value) {
   m_topStripVector[idx] = value;

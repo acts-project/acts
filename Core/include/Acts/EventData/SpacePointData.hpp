@@ -77,11 +77,13 @@ class SpacePointData {
   const Acts::Vector3& bottomStripVector(const std::size_t& idx) const;
   const Acts::Vector3& stripCenterDistance(const std::size_t& idx) const;
   const Acts::Vector3& topStripCenterPosition(const std::size_t& idx) const;
-  
+
   void setTopStripVector(const std::size_t& idx, const Acts::Vector3& value);
   void setBottomStripVector(const std::size_t& idx, const Acts::Vector3& value);
-  void setStripCenterDistance(const std::size_t& idx, const Acts::Vector3& value);
-  void setTopStripCenterPosition(const std::size_t& idx, const Acts::Vector3& value);
+  void setStripCenterDistance(const std::size_t& idx,
+                              const Acts::Vector3& value);
+  void setTopStripCenterPosition(const std::size_t& idx,
+                                 const Acts::Vector3& value);
 
  private:
   /// base variables

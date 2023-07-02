@@ -97,25 +97,29 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
 
 template <typename container_t, template <typename> class holder_t>
 inline const Acts::Vector3&
-SpacePointContainer<container_t, holder_t>::topStripVector(const std::size_t& n) const {
+SpacePointContainer<container_t, holder_t>::topStripVector(
+    const std::size_t& n) const {
   return m_data.topStripVector(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const Acts::Vector3&
-SpacePointContainer<container_t, holder_t>::bottomStripVector(const std::size_t& n) const {
+SpacePointContainer<container_t, holder_t>::bottomStripVector(
+    const std::size_t& n) const {
   return m_data.bottomStripVector(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const Acts::Vector3&
-SpacePointContainer<container_t, holder_t>::stripCenterDistance(const std::size_t& n) const {
+SpacePointContainer<container_t, holder_t>::stripCenterDistance(
+    const std::size_t& n) const {
   return m_data.stripCenterDistance(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const Acts::Vector3&
-SpacePointContainer<container_t, holder_t>::topStripCenterPosition(const std::size_t& n) const {
+SpacePointContainer<container_t, holder_t>::topStripCenterPosition(
+    const std::size_t& n) const {
   return m_data.topStripCenterPosition(n);
 }
 

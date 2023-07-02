@@ -196,7 +196,7 @@ class SpacePointContainer {
   const Acts::Vector3& bottomStripVector(const std::size_t& n) const;
   const Acts::Vector3& stripCenterDistance(const std::size_t& n) const;
   const Acts::Vector3& topStripCenterPosition(const std::size_t& n) const;
-  
+
  private:
   Acts::SpacePointContainerConfig m_config;
   Acts::SpacePointContainerOptions m_options;
