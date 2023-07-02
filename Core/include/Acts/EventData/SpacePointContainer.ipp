@@ -96,19 +96,27 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
       m_container(std::exchange(other.m_container.ptr, nullptr)) {}
 
 template <typename container_t, template <typename> class holder_t>
-template <typename T>
-const T& SpacePointContainer<container_t, holder_t>::component(
-    HashedString key, const std::size_t& n) const {
-  using namespace Acts::HashedStringLiteral;
-  switch (key) {
-    case "TopStripVector"_hash:
-    case "BottomStripVector"_hash:
-    case "StripCenterDistance"_hash:
-    case "TopStripCenterPosition"_hash:
-      return *std::any_cast<const T*>(m_data.component(key, n));
-    default:
-      throw std::runtime_error("no such component " + std::to_string(key));
-  }
+inline const Acts::Vector3&
+SpacePointContainer<container_t, holder_t>::topStripVector(const std::size_t& n) const {
+  return m_data.topStripVector(n);
+}
+
+template <typename container_t, template <typename> class holder_t>
+inline const Acts::Vector3&
+SpacePointContainer<container_t, holder_t>::bottomStripVector(const std::size_t& n) const {
+  return m_data.bottomStripVector(n);
+}
+
+template <typename container_t, template <typename> class holder_t>
+inline const Acts::Vector3&
+SpacePointContainer<container_t, holder_t>::stripCenterDistance(const std::size_t& n) const {
+  return m_data.stripCenterDistance(n);
+}
+
+template <typename container_t, template <typename> class holder_t>
+inline const Acts::Vector3&
+SpacePointContainer<container_t, holder_t>::topStripCenterPosition(const std::size_t& n) const {
+  return m_data.topStripCenterPosition(n);
 }
 
 template <typename container_t, template <typename> class holder_t>

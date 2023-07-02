@@ -93,12 +93,29 @@ inline void SpacePointProxy<container_t, read_only>::setDeltaR(
 }
 
 template <typename container_t, bool read_only>
-template <typename T>
-inline const T& SpacePointProxy<container_t, read_only>::component(
-    HashedString key) const {
-  return container().template component<T>(key, m_index);
+inline const Acts::Vector3&
+SpacePointProxy<container_t, read_only>::topStripVector() const {
+  return container().topStripVector(m_index);
 }
 
+template <typename container_t, bool read_only>
+inline const Acts::Vector3&
+SpacePointProxy<container_t, read_only>::bottomStripVector() const {
+  return container().bottomStripVector(m_index);
+}
+
+template <typename container_t, bool read_only>
+inline const Acts::Vector3&
+SpacePointProxy<container_t, read_only>::stripCenterDistance() const {
+  return container().stripCenterDistance(m_index);
+}
+
+template <typename container_t, bool read_only>
+inline const Acts::Vector3&
+SpacePointProxy<container_t, read_only>::topStripCenterPosition() const {
+  return container().topStripCenterPosition(m_index);
+}
+  
 template <typename container_t, bool read_only>
 inline typename SpacePointProxy<container_t, read_only>::ContainerType&
 SpacePointProxy<container_t, read_only>::container() const {

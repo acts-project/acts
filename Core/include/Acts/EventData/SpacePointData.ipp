@@ -78,14 +78,14 @@ inline const float& SpacePointData::deltaR(const std::size_t& idx) const {
 }
 
 inline void SpacePointData::setQuality(const std::size_t& idx,
-                                       const float& value) {
+                                       const float& value) const {
   if (value > m_quality[idx]) {
     m_quality[idx] = value;
   }
 }
 
 inline void SpacePointData::setDeltaR(const std::size_t& idx,
-                                      const float& value) {
+                                      const float& value) const {
   m_deltaR[idx] = value;
 }
 
@@ -93,40 +93,39 @@ inline bool SpacePointData::hasDynamicVariable() const {
   return not m_topStripVector.empty();
 }
 
-inline std::any SpacePointData::component(Acts::HashedString key,
-                                          const std::size_t& n) const {
-  using namespace Acts::HashedStringLiteral;
-  switch (key) {
-    case "TopStripVector"_hash:
-      return &m_topStripVector[n];
-    case "BottomStripVector"_hash:
-      return &m_bottomStripVector[n];
-    case "StripCenterDistance"_hash:
-      return &m_stripCenterDistance[n];
-    case "TopStripCenterPosition"_hash:
-      return &m_topStripCenterPosition[n];
-    default:
-      throw std::runtime_error("no such component " + std::to_string(key));
-  }
+inline const Acts::Vector3& SpacePointData::topStripVector(const std::size_t& idx) const {
+  return m_topStripVector[idx];
 }
 
-inline void SpacePointData::setTopStripVector(std::size_t idx,
+inline const Acts::Vector3& SpacePointData::bottomStripVector(const std::size_t& idx) const {
+  return m_bottomStripVector[idx];
+}
+
+inline const Acts::Vector3& SpacePointData::stripCenterDistance(const std::size_t& idx) const {
+  return m_stripCenterDistance[idx];
+}
+
+inline const Acts::Vector3& SpacePointData::topStripCenterPosition(const std::size_t& idx) const {
+  return m_topStripCenterPosition[idx];
+}
+  
+inline void SpacePointData::setTopStripVector(const std::size_t& idx,
                                               const Acts::Vector3& value) {
   m_topStripVector[idx] = value;
 }
 
-inline void SpacePointData::setBottomStripVector(std::size_t idx,
+inline void SpacePointData::setBottomStripVector(const std::size_t& idx,
                                                  const Acts::Vector3& value) {
   m_bottomStripVector[idx] = value;
 }
 
-inline void SpacePointData::setStripCenterDistance(std::size_t idx,
+inline void SpacePointData::setStripCenterDistance(const std::size_t& idx,
                                                    const Acts::Vector3& value) {
   m_stripCenterDistance[idx] = value;
 }
 
 inline void SpacePointData::setTopStripCenterPosition(
-    std::size_t idx, const Acts::Vector3& value) {
+    const std::size_t& idx, const Acts::Vector3& value) {
   m_topStripCenterPosition[idx] = value;
 }
 
