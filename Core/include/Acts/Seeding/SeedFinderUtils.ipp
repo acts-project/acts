@@ -128,12 +128,9 @@ inline bool xyzCoordinateCheck(
   // Bottom-Middle direction with the strip measurement details
 
   using namespace Acts::HashedStringLiteral;
-  const Acts::Vector3& topStripVector =
-      sp.template component<Acts::Vector3>("TopStripVector"_hash);
-  const Acts::Vector3& bottomStripVector =
-      sp.template component<Acts::Vector3>("BottomStripVector"_hash);
-  const Acts::Vector3& stripCenterDistance =
-      sp.template component<Acts::Vector3>("StripCenterDistance"_hash);
+  const Acts::Vector3& topStripVector = sp.topStripVector();
+  const Acts::Vector3& bottomStripVector = sp.bottomStripVector();
+  const Acts::Vector3& stripCenterDistance = sp.stripCenterDistance();
 
   const double& xTopStripVector = topStripVector[0];
   const double& yTopStripVector = topStripVector[1];
@@ -181,8 +178,7 @@ inline bool xyzCoordinateCheck(
   // if arrive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Acts::Vector3& topStripCenterPosition =
-      sp.template component<Acts::Vector3>("TopStripCenterPosition"_hash);
+  const Acts::Vector3& topStripCenterPosition = sp.topStripCenterPosition();
 
   // spacepointPosition corrected with respect to the top strip position and
   // direction and the distance between the strips

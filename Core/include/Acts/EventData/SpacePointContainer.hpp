@@ -192,14 +192,15 @@ class SpacePointContainer {
   void setQuality(const std::size_t& n, const float& value) const;
   void setDeltaR(const std::size_t& n, const float& value) const;
 
-  // component methods for additional quantities
-  template <typename T>
-  const T& component(HashedString key, const std::size_t& n) const;
+  const Acts::Vector3& topStripVector(const std::size_t& n) const;
+  const Acts::Vector3& bottomStripVector(const std::size_t& n) const;
+  const Acts::Vector3& stripCenterDistance(const std::size_t& n) const;
+  const Acts::Vector3& topStripCenterPosition(const std::size_t& n) const;
 
  private:
   Acts::SpacePointContainerConfig m_config;
   Acts::SpacePointContainerOptions m_options;
-  mutable Acts::SpacePointData m_data;
+  Acts::SpacePointData m_data;
   holder_t<container_t> m_container;
   std::vector<ProxyType> m_proxies;
 };

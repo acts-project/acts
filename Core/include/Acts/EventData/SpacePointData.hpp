@@ -61,8 +61,8 @@ class SpacePointData {
   void setVarianceZ(const std::size_t& idx, const float& value);
   void setVarianceR(const std::size_t& idx, const float& value);
 
-  void setQuality(const std::size_t& idx, const float& value);
-  void setDeltaR(const std::size_t& idx, const float& value);
+  void setQuality(const std::size_t& idx, const float& value) const;
+  void setDeltaR(const std::size_t& idx, const float& value) const;
 
   /// @brief Resize vectors
   void resize(const std::size_t& n, bool resizeDynamic = false);
@@ -73,12 +73,17 @@ class SpacePointData {
   ///
   bool hasDynamicVariable() const;
 
-  std::any component(Acts::HashedString key, const std::size_t& n) const;
+  const Acts::Vector3& topStripVector(const std::size_t& idx) const;
+  const Acts::Vector3& bottomStripVector(const std::size_t& idx) const;
+  const Acts::Vector3& stripCenterDistance(const std::size_t& idx) const;
+  const Acts::Vector3& topStripCenterPosition(const std::size_t& idx) const;
 
-  void setTopStripVector(std::size_t idx, const Acts::Vector3& value);
-  void setBottomStripVector(std::size_t idx, const Acts::Vector3& value);
-  void setStripCenterDistance(std::size_t idx, const Acts::Vector3& value);
-  void setTopStripCenterPosition(std::size_t idx, const Acts::Vector3& value);
+  void setTopStripVector(const std::size_t& idx, const Acts::Vector3& value);
+  void setBottomStripVector(const std::size_t& idx, const Acts::Vector3& value);
+  void setStripCenterDistance(const std::size_t& idx,
+                              const Acts::Vector3& value);
+  void setTopStripCenterPosition(const std::size_t& idx,
+                                 const Acts::Vector3& value);
 
  private:
   /// base variables
@@ -91,8 +96,8 @@ class SpacePointData {
   std::vector<float> m_varianceZ{};
 
   /// Mutable variables
-  std::vector<float> m_quality{};
-  std::vector<float> m_deltaR{};
+  mutable std::vector<float> m_quality{};
+  mutable std::vector<float> m_deltaR{};
 
   /// dynamic variables
   std::vector<Acts::Vector3> m_topStripVector{};

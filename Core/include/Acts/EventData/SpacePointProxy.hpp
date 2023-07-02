@@ -60,9 +60,10 @@ class SpacePointProxy {
   void setQuality(const float& value) const;
   void setDeltaR(const float& value) const;
 
-  // component methods for additional quantities
-  template <typename T>
-  const T& component(HashedString key) const;
+  const Acts::Vector3& topStripVector() const;
+  const Acts::Vector3& bottomStripVector() const;
+  const Acts::Vector3& stripCenterDistance() const;
+  const Acts::Vector3& topStripCenterPosition() const;
 
  private:
   ContainerType& container() const;
