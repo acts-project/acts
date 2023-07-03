@@ -109,7 +109,9 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     // Derivatives can be found in Eqs. 5.39 and 5.40 of Ref. (1).
     // Since we propagated to the PCA (point P in Ref(1)), we evaluate the
     // Jacobians there. One can show that, in this case, RTilde = 0 and QTilde =
-    // -d0. Derivatives of d0
+    // -d0.
+
+    // Derivatives of d0
     completeJacobian(eBoundLoc0, eLinPos0) = -sinPhi;
     completeJacobian(eBoundLoc0, eLinPos1) = cosPhi;
 
