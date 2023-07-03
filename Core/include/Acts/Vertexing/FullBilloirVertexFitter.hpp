@@ -21,8 +21,9 @@ namespace Acts {
 ///
 /// @brief Vertex fitter class implementing the Billoir vertex fitter
 ///
-/// This class implements the Billoir vertex fitter from Ref. (1).
-/// It is also useful to have a look at Ref. (2)
+/// This class implements the Billoir vertex fitter from Ref. (1). It is also
+/// useful to have a look at Ref. (2). Note that the Billoir vertex fitter
+/// outputs one 4D vertex position and nTrack momenta at this very point.
 ///
 /// Ref. (1):
 /// Fast vertex fitting with a local parametrization of tracks
