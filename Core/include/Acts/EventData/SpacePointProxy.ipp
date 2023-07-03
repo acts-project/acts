@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -30,7 +29,8 @@ SpacePointProxy<container_t, read_only>::sp() const {
 }
 
 template <typename container_t, bool read_only>
-inline const std::size_t& SpacePointProxy<container_t, read_only>::index() const {
+inline const std::size_t& SpacePointProxy<container_t, read_only>::index()
+    const {
   return m_index;
 }
 
