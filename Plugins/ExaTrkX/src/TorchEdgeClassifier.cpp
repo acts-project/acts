@@ -17,9 +17,19 @@ using namespace torch::indexing;
 
 namespace Acts {
 
-TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg) : m_cfg(cfg) {
+TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg,
+                                         std::unique_ptr<const Logger> _logger)
+    : m_logger(std::move(_logger)), m_cfg(cfg) {
   c10::InferenceMode guard(true);
   m_deviceType = torch::cuda::is_available() ? torch::kCUDA : torch::kCPU;
+  ACTS_DEBUG("Using torch version " << TORCH_VERSION_MAJOR << "."
+                                    << TORCH_VERSION_MINOR << "."
+                                    << TORCH_VERSION_PATCH);
+#ifndef ACTS_EXATRKX_CPUONLY
+  if (not torch::cuda::is_available()) {
+    ACTS_INFO("CUDA not available, falling back to CPU");
+  }
+#endif
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
@@ -33,44 +43,54 @@ TorchEdgeClassifier::TorchEdgeClassifier(const Config& cfg) : m_cfg(cfg) {
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges, const Logger& logger) {
+    std::any inputNodes, std::any inputEdges) {
+  ACTS_DEBUG("Start edge classification");
+  c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
-  const auto eLibInputTensor = std::any_cast<torch::Tensor>(inputNodes);
-  const auto edgeList = std::any_cast<torch::Tensor>(inputEdges);
+  const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
+  const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
 
-  c10::InferenceMode guard(true);
-
-  const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.nChunks);
   std::vector<at::Tensor> results;
+  results.reserve(m_cfg.nChunks);
 
+  auto edgeListTmp =
+      m_cfg.undirected ? torch::cat({edgeList, edgeList.flip(0)}, 1) : edgeList;
+
+  std::vector<torch::jit::IValue> inputTensors(2);
+  inputTensors[0] = nodes;
+
+  const auto chunks = at::chunk(at::arange(edgeListTmp.size(1)), m_cfg.nChunks);
   for (const auto& chunk : chunks) {
-    std::vector<torch::jit::IValue> fInputTensorJit;
-    fInputTensorJit.push_back(eLibInputTensor.to(device));
-    fInputTensorJit.push_back(edgeList.index({Slice(), chunk}).to(device));
+    ACTS_VERBOSE("Process chunk");
+    inputTensors[1] = edgeListTmp.index({Slice(), chunk});
 
-    results.push_back(m_model->forward(fInputTensorJit).toTensor());
+    results.push_back(m_model->forward(inputTensors).toTensor());
     results.back().squeeze_();
     results.back().sigmoid_();
   }
 
-  auto fOutput = torch::cat(results);
+  auto output = torch::cat(results);
+
+  if (m_cfg.undirected) {
+    output = output.index({Slice(None, output.size(0) / 2)});
+  }
+
   results.clear();
 
-  ACTS_VERBOSE("Size after filtering network: " << fOutput.size(0));
+  ACTS_VERBOSE("Size after filtering network: " << output.size(0));
   ACTS_VERBOSE("Slice of filtered output:\n"
-               << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
-  printCudaMemInfo(logger);
+               << output.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
+  printCudaMemInfo(logger());
 
-  torch::Tensor filterMask = fOutput > m_cfg.cut;
-  torch::Tensor edgesAfterF = edgeList.index({Slice(), filterMask});
-  edgesAfterF = edgesAfterF.to(torch::kInt64);
-  const int64_t numEdgesAfterF = edgesAfterF.size(1);
+  torch::Tensor mask = output > m_cfg.cut;
+  torch::Tensor edgesAfterCut = edgeList.index({Slice(), mask});
+  edgesAfterCut = edgesAfterCut.to(torch::kInt64);
 
-  ACTS_VERBOSE("Size after filter cut: " << numEdgesAfterF);
-  printCudaMemInfo(logger);
+  ACTS_VERBOSE("Size after filter cut: " << edgesAfterCut.size(1));
+  printCudaMemInfo(logger());
 
-  return {eLibInputTensor, edgesAfterF, fOutput};
+  return {nodes, edgesAfterCut, output.masked_select(mask)};
 }
 
 }  // namespace Acts
