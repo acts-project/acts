@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -36,15 +37,16 @@ template <typename container_t, template <typename> class holder_t>
 void SpacePointContainer<container_t, holder_t>::initialize() {
   m_data.resize(this->size(), m_config.useDetailedDoubleMeasurementInfo);
   m_proxies.reserve(this->size());
+  const auto& external_container = this->container();
   for (std::size_t i(0); i < this->size(); ++i) {
-    m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
-    m_data.setY(i, this->container().y_impl(i) - m_options.beamPos[1]);
-    m_data.setZ(i, this->container().z_impl(i));
+    m_data.setX(i, external_container.x_impl(i) - m_options.beamPos[0]);
+    m_data.setY(i, external_container.y_impl(i) - m_options.beamPos[1]);
+    m_data.setZ(i, external_container.z_impl(i));
     m_data.setRadius(
         i, std::sqrt(m_data.x(i) * m_data.x(i) + m_data.y(i) * m_data.y(i)));
     m_data.setPhi(i, std::atan2f(m_data.y(i), m_data.x(i)));
-    m_data.setVarianceR(i, this->container().varianceR_impl(i));
-    m_data.setVarianceZ(i, this->container().varianceZ_impl(i));
+    m_data.setVarianceR(i, external_container.varianceR_impl(i));
+    m_data.setVarianceZ(i, external_container.varianceZ_impl(i));
 
     m_proxies.emplace_back(*this, i);
   }
@@ -55,15 +57,15 @@ void SpacePointContainer<container_t, holder_t>::initialize() {
     for (std::size_t i(0); i < this->size(); ++i) {
       m_data.setTopStripVector(
           i, std::any_cast<Acts::Vector3>(
-                 this->container().component_impl("TopStripVector"_hash, i)));
+                 external_container.component_impl("TopStripVector"_hash, i)));
       m_data.setBottomStripVector(
-          i, std::any_cast<Acts::Vector3>(this->container().component_impl(
+          i, std::any_cast<Acts::Vector3>(external_container.component_impl(
                  "BottomStripVector"_hash, i)));
       m_data.setStripCenterDistance(
-          i, std::any_cast<Acts::Vector3>(this->container().component_impl(
+          i, std::any_cast<Acts::Vector3>(external_container.component_impl(
                  "StripCenterDistance"_hash, i)));
       m_data.setTopStripCenterPosition(
-          i, std::any_cast<Acts::Vector3>(this->container().component_impl(
+          i, std::any_cast<Acts::Vector3>(external_container.component_impl(
                  "TopStripCenterPosition"_hash, i)));
     }
   }
