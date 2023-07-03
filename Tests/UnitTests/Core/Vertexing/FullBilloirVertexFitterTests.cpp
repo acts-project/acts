@@ -111,20 +111,6 @@ struct InputTrack {
 /// with default input track type (= BoundTrackParameters)
 ///
 BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
-  // save data?
-  bool saveTrue = false;
-  bool saveFitted = true;
-  std::ofstream osTrue;
-  std::ofstream osFitted;
-  if (saveTrue) {
-    osTrue.open("/home/frusso/hep/out/FullBilloirComparison/true_vertices.txt");
-  }
-  if (saveFitted) {
-    osFitted.open(
-        "/home/frusso/hep/out/FullBilloirComparison/"
-        "fitted_vertices_momenta_at_PCA.txt");
-  }
-
   // Set up RNG
   int seed = 31415;
   std::mt19937 gen(seed);
@@ -205,7 +191,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   }
 
   // Number of events
-  const int nEvents = 1;
+  const int nEvents = 100;
   for (int eventIdx = 0; eventIdx < nEvents; ++eventIdx) {
     // Number of tracks
     unsigned int nTracks = nTracksDist(gen);
@@ -276,10 +262,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         CHECK_CLOSE_ABS(fittedVertex.position(), trueVertex.head(3), 1_mm);
         auto tracksAtVtx = fittedVertex.tracks();
         auto trackAtVtx = tracksAtVtx[0];
-        std::cout << "\ntrack parameter covariance matrix before fit:\n"
-                  << trackAtVtx.originalParams->covariance().value() << "\n";
-        std::cout << "\ntrack parameter covariance matrix after fit:\n"
-                  << trackAtVtx.fittedParams.covariance().value() << "\n";
         CHECK_CLOSE_ABS(fittedVertex.time(), trueVertex[3], 1_ns);
       }
 
@@ -288,27 +270,27 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       std::cout << "Fitted Vertex:\n"
                 << fittedVertex.fullPosition() << std::endl;
     };
-    /*
-      if (saveTrue) {
-        osTrue << x << " " << y << " " << z << " " << t << "\n";
-      }
-      if (saveFitted) {
-        osFitted << fittedVertex.fullPosition().transpose() << "\n";
-      }
-      */
-    /*
-    if (saveTrue) {
-      osTrue.close();
+
+    BOOST_TEST_CONTEXT(
+        "Testing FullBilloirVertexFitter without vertex constraint.") {
+      fit(billoirFitter, tracksPtr, linearizer, vfOptions, state);
     }
-    if (saveFitted) {
-      osFitted.close();
+    BOOST_TEST_CONTEXT(
+        "Testing FullBilloirVertexFitter with vertex constraint.") {
+      fit(billoirFitter, tracksPtr, linearizer, vfOptionsConstr, state);
     }
-    */
-    fit(billoirFitter, tracksPtr, linearizer, vfOptions, state);
-    fit(billoirFitter, tracksPtr, linearizer, vfOptionsConstr, state);
-    // fit(customBilloirFitter, customTracksPtr, linearizer, customVfOptions,
-    // customState); fit(customBilloirFitter, customTracksPtr, linearizer,
-    // customVfOptionsConstr, customState);
+    BOOST_TEST_CONTEXT(
+        "Testing FullBilloirVertexFitter with custom tracks (no vertex "
+        "constraint).") {
+      fit(customBilloirFitter, customTracksPtr, linearizer, customVfOptions,
+          customState);
+    }
+    BOOST_TEST_CONTEXT(
+        "Testing FullBilloirVertexFitter with custom tracks (with vertex "
+        "constraint).") {
+      fit(customBilloirFitter, customTracksPtr, linearizer,
+          customVfOptionsConstr, customState);
+    }
   }
 }
 }  // namespace Test
