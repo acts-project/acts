@@ -105,54 +105,31 @@ class VertexPerformanceWriter final
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
 
+  // True 4D vertex position
   std::vector<float> m_truthX;
   std::vector<float> m_truthY;
   std::vector<float> m_truthZ;
   std::vector<float> m_truthT;
-  std::vector<float> m_truthPhi;
-  std::vector<float> m_truthTheta;
-  std::vector<float> m_truthQOverP;
 
+  // Reconstructed 4D vertex position
   std::vector<float> m_recoX;
   std::vector<float> m_recoY;
   std::vector<float> m_recoZ;
   std::vector<float> m_recoT;
-  std::vector<float> m_recoPhi;
-  std::vector<float> m_recoPhiFitted;
-  std::vector<float> m_recoTheta;
-  std::vector<float> m_recoThetaFitted;
-  std::vector<float> m_recoQOverP;
-  std::vector<float> m_recoQOverPFitted;
 
   /// Difference of reconstructed and true vertex 4D position
   std::vector<float> m_resX;
   std::vector<float> m_resY;
   std::vector<float> m_resZ;
   std::vector<float> m_resT;
-  // Difference between reconstructed momenta at the PCA to the true vertex and
-  // the true momenta; we consider reconstructed momenta before and after the
-  // vertex fit.
-  std::vector<float> m_resPhi;
-  std::vector<float> m_resPhiFitted;
-  std::vector<float> m_resTheta;
-  std::vector<float> m_resThetaFitted;
-  std::vector<float> m_resQOverP;
-  std::vector<float> m_resQOverPFitted;
-  std::vector<float> m_momOverlap;
-  std::vector<float> m_momOverlapFitted;
 
   // pull(X) = (X_reco - X_true)/Var(X_reco)^(1/2)
   std::vector<float> m_pullX;
   std::vector<float> m_pullY;
   std::vector<float> m_pullZ;
   std::vector<float> m_pullT;
-  std::vector<float> m_pullPhi;
-  std::vector<float> m_pullPhiFitted;
-  std::vector<float> m_pullTheta;
-  std::vector<float> m_pullThetaFitted;
-  std::vector<float> m_pullQOverP;
-  std::vector<float> m_pullQOverPFitted;
 
+  // Vertex covariance
   std::vector<float> m_covXX;
   std::vector<float> m_covYY;
   std::vector<float> m_covZZ;
@@ -163,6 +140,38 @@ class VertexPerformanceWriter final
   std::vector<float> m_covYZ;
   std::vector<float> m_covYT;
   std::vector<float> m_covZT;
+
+  //--------------------------------------------------------------
+  // True track momenta at the vertex
+  std::vector<float> m_truthPhi;
+  std::vector<float> m_truthTheta;
+  std::vector<float> m_truthQOverP;
+
+  // Reconstructed track momenta at the vertex before and after the vertex fit
+  std::vector<float> m_recoPhi;
+  std::vector<float> m_recoPhiFitted;
+  std::vector<float> m_recoTheta;
+  std::vector<float> m_recoThetaFitted;
+  std::vector<float> m_recoQOverP;
+  std::vector<float> m_recoQOverPFitted;
+
+  // Difference between reconstructed momenta and true momenta
+  std::vector<float> m_resPhi;
+  std::vector<float> m_resPhiFitted;
+  std::vector<float> m_resTheta;
+  std::vector<float> m_resThetaFitted;
+  std::vector<float> m_resQOverP;
+  std::vector<float> m_resQOverPFitted;
+  std::vector<float> m_momOverlap;
+  std::vector<float> m_momOverlapFitted;
+
+  // Pulls
+  std::vector<float> m_pullPhi;
+  std::vector<float> m_pullPhiFitted;
+  std::vector<float> m_pullTheta;
+  std::vector<float> m_pullThetaFitted;
+  std::vector<float> m_pullQOverP;
+  std::vector<float> m_pullQOverPFitted;
 
   // Number of tracks associated with truth/reconstructed vertex
   std::vector<int> m_nTracksOnTruthVertex;

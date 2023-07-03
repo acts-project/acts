@@ -98,49 +98,27 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   if (m_outputTree == nullptr) {
     throw std::bad_alloc();
   } else {
-    // I/O parameters
+    // I/O parameters.
+    // Branches related to the 4D vertex position
     m_outputTree->Branch("truthX", &m_truthX);
     m_outputTree->Branch("truthY", &m_truthY);
     m_outputTree->Branch("truthZ", &m_truthZ);
     m_outputTree->Branch("truthT", &m_truthT);
-    m_outputTree->Branch("truthPhi", &m_truthPhi);
-    m_outputTree->Branch("truthTheta", &m_truthTheta);
-    m_outputTree->Branch("truthQOverP", &m_truthQOverP);
 
     m_outputTree->Branch("recoX", &m_recoX);
     m_outputTree->Branch("recoY", &m_recoY);
     m_outputTree->Branch("recoZ", &m_recoZ);
     m_outputTree->Branch("recoT", &m_recoT);
-    m_outputTree->Branch("recoPhi", &m_recoPhi);
-    m_outputTree->Branch("recoPhiFitted", &m_recoPhiFitted);
-    m_outputTree->Branch("recoTheta", &m_recoTheta);
-    m_outputTree->Branch("recoThetaFitted", &m_recoThetaFitted);
-    m_outputTree->Branch("recoQOverP", &m_recoQOverP);
-    m_outputTree->Branch("recoQOverPFitted", &m_recoQOverPFitted);
 
     m_outputTree->Branch("resX", &m_resX);
     m_outputTree->Branch("resY", &m_resY);
     m_outputTree->Branch("resZ", &m_resZ);
     m_outputTree->Branch("resT", &m_resT);
-    m_outputTree->Branch("resPhi", &m_resPhi);
-    m_outputTree->Branch("resPhiFitted", &m_resPhiFitted);
-    m_outputTree->Branch("resTheta", &m_resTheta);
-    m_outputTree->Branch("resThetaFitted", &m_resThetaFitted);
-    m_outputTree->Branch("resQOverP", &m_resQOverP);
-    m_outputTree->Branch("resQOverPFitted", &m_resQOverPFitted);
-    m_outputTree->Branch("momOverlap", &m_momOverlap);
-    m_outputTree->Branch("momOverlapFitted", &m_momOverlapFitted);
 
     m_outputTree->Branch("pullX", &m_pullX);
     m_outputTree->Branch("pullY", &m_pullY);
     m_outputTree->Branch("pullZ", &m_pullZ);
     m_outputTree->Branch("pullT", &m_pullT);
-    m_outputTree->Branch("pullPhi", &m_pullPhi);
-    m_outputTree->Branch("pullPhiFitted", &m_pullPhiFitted);
-    m_outputTree->Branch("pullTheta", &m_pullTheta);
-    m_outputTree->Branch("pullThetaFitted", &m_pullThetaFitted);
-    m_outputTree->Branch("pullQOverP", &m_pullQOverP);
-    m_outputTree->Branch("pullQOverPFitted", &m_pullQOverPFitted);
 
     m_outputTree->Branch("covXX", &m_covXX);
     m_outputTree->Branch("covYY", &m_covYY);
@@ -152,6 +130,34 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("covYZ", &m_covYZ);
     m_outputTree->Branch("covYT", &m_covYT);
     m_outputTree->Branch("covZT", &m_covZT);
+
+    // Branches related to track momenta at vertex
+    m_outputTree->Branch("truthPhi", &m_truthPhi);
+    m_outputTree->Branch("truthTheta", &m_truthTheta);
+    m_outputTree->Branch("truthQOverP", &m_truthQOverP);
+
+    m_outputTree->Branch("recoPhi", &m_recoPhi);
+    m_outputTree->Branch("recoPhiFitted", &m_recoPhiFitted);
+    m_outputTree->Branch("recoTheta", &m_recoTheta);
+    m_outputTree->Branch("recoThetaFitted", &m_recoThetaFitted);
+    m_outputTree->Branch("recoQOverP", &m_recoQOverP);
+    m_outputTree->Branch("recoQOverPFitted", &m_recoQOverPFitted);
+
+    m_outputTree->Branch("resPhi", &m_resPhi);
+    m_outputTree->Branch("resPhiFitted", &m_resPhiFitted);
+    m_outputTree->Branch("resTheta", &m_resTheta);
+    m_outputTree->Branch("resThetaFitted", &m_resThetaFitted);
+    m_outputTree->Branch("resQOverP", &m_resQOverP);
+    m_outputTree->Branch("resQOverPFitted", &m_resQOverPFitted);
+    m_outputTree->Branch("momOverlap", &m_momOverlap);
+    m_outputTree->Branch("momOverlapFitted", &m_momOverlapFitted);
+
+    m_outputTree->Branch("pullPhi", &m_pullPhi);
+    m_outputTree->Branch("pullPhiFitted", &m_pullPhiFitted);
+    m_outputTree->Branch("pullTheta", &m_pullTheta);
+    m_outputTree->Branch("pullThetaFitted", &m_pullThetaFitted);
+    m_outputTree->Branch("pullQOverP", &m_pullQOverP);
+    m_outputTree->Branch("pullQOverPFitted", &m_pullQOverPFitted);
 
     m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
     m_outputTree->Branch("nTracksRecoVtx", &m_nTracksOnRecoVertex);
@@ -662,41 +668,18 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_truthY.clear();
   m_truthZ.clear();
   m_truthT.clear();
-  m_truthPhi.clear();
-  m_truthTheta.clear();
-  m_truthQOverP.clear();
   m_recoX.clear();
   m_recoY.clear();
   m_recoZ.clear();
   m_recoT.clear();
-  m_recoPhi.clear();
-  m_recoPhiFitted.clear();
-  m_recoTheta.clear();
-  m_recoThetaFitted.clear();
-  m_recoQOverP.clear();
-  m_recoQOverPFitted.clear();
   m_resX.clear();
   m_resY.clear();
   m_resZ.clear();
   m_resT.clear();
-  m_resPhi.clear();
-  m_resPhiFitted.clear();
-  m_resTheta.clear();
-  m_resThetaFitted.clear();
-  m_resQOverP.clear();
-  m_resQOverPFitted.clear();
-  m_momOverlap.clear();
-  m_momOverlapFitted.clear();
   m_pullX.clear();
   m_pullY.clear();
   m_pullZ.clear();
   m_pullT.clear();
-  m_pullPhi.clear();
-  m_pullPhiFitted.clear();
-  m_pullTheta.clear();
-  m_pullThetaFitted.clear();
-  m_pullQOverP.clear();
-  m_pullQOverPFitted.clear();
   m_covXX.clear();
   m_covYY.clear();
   m_covZZ.clear();
@@ -707,6 +690,29 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   m_covYZ.clear();
   m_covYT.clear();
   m_covZT.clear();
+  m_truthPhi.clear();
+  m_truthTheta.clear();
+  m_truthQOverP.clear();
+  m_recoPhi.clear();
+  m_recoPhiFitted.clear();
+  m_recoTheta.clear();
+  m_recoThetaFitted.clear();
+  m_recoQOverP.clear();
+  m_recoQOverPFitted.clear();
+  m_resPhi.clear();
+  m_resPhiFitted.clear();
+  m_resTheta.clear();
+  m_resThetaFitted.clear();
+  m_resQOverP.clear();
+  m_resQOverPFitted.clear();
+  m_momOverlap.clear();
+  m_momOverlapFitted.clear();
+  m_pullPhi.clear();
+  m_pullPhiFitted.clear();
+  m_pullTheta.clear();
+  m_pullThetaFitted.clear();
+  m_pullQOverP.clear();
+  m_pullQOverPFitted.clear();
 
   m_nTracksOnTruthVertex.clear();
   m_nTracksOnRecoVertex.clear();
