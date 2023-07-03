@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -29,42 +30,42 @@ SpacePointProxy<container_t, read_only>::sp() const {
 }
 
 template <typename container_t, bool read_only>
-inline std::size_t SpacePointProxy<container_t, read_only>::index() const {
+inline const std::size_t& SpacePointProxy<container_t, read_only>::index() const {
   return m_index;
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::x() const {
+inline const float& SpacePointProxy<container_t, read_only>::x() const {
   return container().x(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::y() const {
+inline const float& SpacePointProxy<container_t, read_only>::y() const {
   return container().y(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::z() const {
+inline const float& SpacePointProxy<container_t, read_only>::z() const {
   return container().z(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::phi() const {
+inline const float& SpacePointProxy<container_t, read_only>::phi() const {
   return container().phi(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::radius() const {
+inline const float& SpacePointProxy<container_t, read_only>::radius() const {
   return container().radius(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::varianceR() const {
+inline const float& SpacePointProxy<container_t, read_only>::varianceR() const {
   return container().varianceR(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::varianceZ() const {
+inline const float& SpacePointProxy<container_t, read_only>::varianceZ() const {
   return container().varianceZ(m_index);
 }
 

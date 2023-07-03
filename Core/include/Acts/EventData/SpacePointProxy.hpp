@@ -44,15 +44,15 @@ class SpacePointProxy {
 
   ValueType& sp() const;
 
-  std::size_t index() const;
+  const std::size_t& index() const;
 
-  float x() const;
-  float y() const;
-  float z() const;
-  float phi() const;
-  float radius() const;
-  float varianceR() const;
-  float varianceZ() const;
+  const float& x() const;
+  const float& y() const;
+  const float& z() const;
+  const float& phi() const;
+  const float& radius() const;
+  const float& varianceR() const;
+  const float& varianceZ() const;
 
   const float& quality() const;
   const float& deltaR() const;
