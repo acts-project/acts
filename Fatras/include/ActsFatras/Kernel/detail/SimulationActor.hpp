@@ -219,7 +219,7 @@ struct SimulationActor {
     return Particle(previous)
         .setPosition4(stepper.position(state), stepper.time(state))
         .setDirection(stepper.direction(state))
-        .setAbsoluteMomentum(stepper.momentum(state))
+        .setAbsoluteMomentum(stepper.absoluteMomentum(state))
         .setProperTime(properTime);
   }
 

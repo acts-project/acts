@@ -216,21 +216,21 @@ class EigenStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double qop(const State& state) const { return state.pars[eFreeQOverP]; }
+  double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
+  double absoluteMomentum(const State& state) const {
     auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qop(state));
+    return std::abs((q == 0 ? 1 : q) / qOverP(state));
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return std::copysign(state.absCharge, qop(state));
+    return std::copysign(state.absCharge, qOverP(state));
   }
 
   /// Time access
@@ -363,10 +363,10 @@ class EigenStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
-  /// @param [in] qop the updated qop value
+  /// @param [in] qOverP the updated qOverP value
   /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double qop, double time) const;
+              double qOverP, double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,
