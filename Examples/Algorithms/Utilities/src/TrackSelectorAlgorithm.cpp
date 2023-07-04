@@ -25,7 +25,9 @@ struct AlgorithmContext;
 
 ActsExamples::TrackSelectorAlgorithm::TrackSelectorAlgorithm(
     const Config& config, Acts::Logging::Level level)
-    : IAlgorithm("TrackSelector", level), m_cfg(config) {
+    : IAlgorithm("TrackSelector", level),
+      m_cfg(config),
+      m_selector(config.selectorConfig) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Input track collection is empty");
   }
@@ -40,24 +42,6 @@ ActsExamples::TrackSelectorAlgorithm::TrackSelectorAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackSelectorAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  // helper functions to select tracks
-  auto checkMin = [](auto x, auto min) { return min <= x; };
-  auto within = [](double x, double min, double max) {
-    return (min <= x) and (x < max);
-  };
-  auto isValidTrack = [&](const auto& trk) {
-    const auto theta = trk.theta();
-    const auto eta = -std::log(std::tan(theta / 2));
-    return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(eta, m_cfg.etaMin, m_cfg.etaMax) and
-           within(trk.phi(), m_cfg.phiMin, m_cfg.phiMax) and
-           within(trk.loc0(), m_cfg.loc0Min, m_cfg.loc0Max) and
-           within(trk.loc1(), m_cfg.loc1Min, m_cfg.loc1Max) and
-           within(trk.time(), m_cfg.timeMin, m_cfg.timeMax) and
-           checkMin(trk.nMeasurements(), m_cfg.minMeasurements);
-  };
-
   ACTS_VERBOSE("Reading tracks from: " << m_cfg.inputTracks);
 
   const auto& inputTracks = m_inputTrackContainer(ctx);
@@ -75,18 +59,9 @@ ActsExamples::ProcessCode ActsExamples::TrackSelectorAlgorithm::execute(
   TrackContainer filteredTracks{trackContainer, tempTrackStateContainer};
   filteredTracks.ensureDynamicColumns(inputTracks);
 
-  trackContainer->reserve(inputTracks.size());
-
   ACTS_DEBUG("Track container size before filtering: " << inputTracks.size());
 
-  for (auto track : inputTracks) {
-    if (!isValidTrack(track)) {
-      continue;
-    }
-    auto destProxy = filteredTracks.getTrack(filteredTracks.addTrack());
-    destProxy.copyFrom(track, false);
-    destProxy.tipIndex() = track.tipIndex();
-  }
+  m_selector.selectTracks(inputTracks, filteredTracks);
 
   ACTS_DEBUG("Track container size after filtering: " << filteredTracks.size());
 

@@ -1123,10 +1123,7 @@ def addTrackSelection(
 ) -> acts.examples.TrackSelectorAlgorithm:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    trackSelector = acts.examples.TrackSelectorAlgorithm(
-        level=customLogLevel(),
-        inputTracks=inputTracks,
-        outputTracks=outputTracks,
+    selectorConfig = acts.TrackSelector.Config(
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorConfig.loc0[0],
             loc0Max=trackSelectorConfig.loc0[1],
@@ -1143,7 +1140,14 @@ def addTrackSelection(
             ptMin=trackSelectorConfig.pt[0],
             ptMax=trackSelectorConfig.pt[1],
             minMeasurements=trackSelectorConfig.nMeasurementsMin,
-        ),
+        )
+    )
+
+    trackSelector = acts.examples.TrackSelectorAlgorithm(
+        level=customLogLevel(),
+        inputTracks=inputTracks,
+        outputTracks=outputTracks,
+        selectorConfig=selectorConfig,
     )
 
     s.addAlgorithm(trackSelector)
