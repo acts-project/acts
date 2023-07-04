@@ -38,16 +38,16 @@ namespace Acts {
 ///   for fitting the single vertex.
 /// 3.1 If the vertex is a 'good' vertex (i.e. meets requirements) and no
 ///   track reassignment after first fit is required, go to step 4. If vertex
-///   is not a good vertex, remove all tracks in perigeesToFit from seedTracks.
+///   is not a good vertex, remove all tracks in tracksToFit from seedTracks.
 /// 3.2 If vertex meets requirements and track reassignment after first fit
 ///   is required, iterate over all previously found vertices ("old vertex")
 ///   and over all their tracksAtVertex. Compare compatibility of each track
 ///   with old vertex and current vertex. If track is more compatible with
 ///   current vertex, remove track from old vertex, put track back to
-///   perigeesToFit and refit current vertex with additional track.
+///   tracksToFit and refit current vertex with additional track.
 /// 4. If good vertex, `removeUsedCompatibleTracks` method is called, which
 ///   removes all used tracks that are compatible with the fitted vertex
-///   from `perigeesToFit` and `seedTracks`. It also removes outliers tracks
+///   from `tracksToFit` and `seedTracks`. It also removes outliers tracks
 ///   from tracksAtVertex if not compatible.
 /// 5. Add vertex to vertexCollection
 /// 6. Repeat until no seedTracks are left or max. number of vertices found
@@ -189,11 +189,11 @@ class IterativeVertexFinder {
       const std::vector<const InputTrack_t*>& seedTracks,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
-  /// @brief Removes all tracks in perigeesToFit from seedTracks
+  /// @brief Removes all tracks in tracksToFit from seedTracks
   ///
-  /// @param perigeesToFit Tracks to be removed from seedTracks
+  /// @param tracksToFit Tracks to be removed from seedTracks
   /// @param seedTracks List to remove tracks from
-  void removeAllTracks(const std::vector<const InputTrack_t*>& perigeesToFit,
+  void removeTracks(const std::vector<const InputTrack_t*>& tracksToFit,
                        std::vector<const InputTrack_t*>& seedTracks) const;
 
   /// @brief Function for calculating how compatible
@@ -209,34 +209,34 @@ class IterativeVertexFinder {
       State& state) const;
 
   /// @brief Function that removes used tracks compatible with
-  /// current vertex (`myVertex`) from `perigeesToFit` and `seedTracks`
-  /// as well as outliers from myVertex.tracksAtVertex
+  /// current vertex (`vertex`) from `tracksToFit` and `seedTracks`
+  /// as well as outliers from vertex.tracksAtVertex
   ///
-  /// @param myVertex Current vertex
-  /// @param perigeesToFit Tracks used to fit `myVertex`
+  /// @param vertex Current vertex
+  /// @param tracksToFit Tracks used to fit `vertex`
   /// @param seedTracks Tracks used for vertex seeding
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<void> removeUsedCompatibleTracks(
-      Vertex<InputTrack_t>& myVertex,
-      std::vector<const InputTrack_t*>& perigeesToFit,
+      Vertex<InputTrack_t>& vertex,
+      std::vector<const InputTrack_t*>& tracksToFit,
       std::vector<const InputTrack_t*>& seedTracks,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
 
   /// @brief Function that fills vector with tracks compatible with seed vertex
   ///
-  /// @param perigeeList List of all available tracks used for seeding
+  /// @param seedTracks List of all available tracks used for seeding
   /// @param seedVertex Seed vertex
-  /// @param perigeesToFitOut Perigees to fit
-  /// @param perigeesToFitSplitVertexOut Perigees to fit split vertex
+  /// @param tracksToFitOut Tracks to fit
+  /// @param tracksToFitSplitVertexOut Tracks to fit split vertex
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
-  Result<void> fillPerigeesToFit(
-      const std::vector<const InputTrack_t*>& perigeeList,
+  Result<void> fillTracksToFit(
+      const std::vector<const InputTrack_t*>& seedTracks,
       const Vertex<InputTrack_t>& seedVertex,
-      std::vector<const InputTrack_t*>& perigeesToFitOut,
-      std::vector<const InputTrack_t*>& perigeesToFitSplitVertexOut,
+      std::vector<const InputTrack_t*>& tracksToFitOut,
+      std::vector<const InputTrack_t*>& tracksToFitSplitVertexOut,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
 
@@ -245,7 +245,7 @@ class IterativeVertexFinder {
   ///
   /// @param vertexCollection Collection of vertices
   /// @param currentVertex Current vertex to assign tracks to
-  /// @param perigeesToFit Perigees to fit vector
+  /// @param tracksToFit Tracks to fit vector
   /// @param seedTracks Seed tracks vector
   /// @param origTracks Vector of original track objects
   /// @param vertexingOptions Vertexing options
@@ -255,7 +255,7 @@ class IterativeVertexFinder {
   Result<bool> reassignTracksToNewVertex(
       std::vector<Vertex<InputTrack_t>>& vertexCollection,
       Vertex<InputTrack_t>& currentVertex,
-      std::vector<const InputTrack_t*>& perigeesToFit,
+      std::vector<const InputTrack_t*>& tracksToFit,
       std::vector<const InputTrack_t*>& seedTracks,
       const std::vector<const InputTrack_t*>& origTracks,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
