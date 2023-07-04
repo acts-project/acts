@@ -92,9 +92,10 @@ SpacePointGridConfigArg = namedtuple(
         "phiBinDeflectionCoverage",
         "impactMax",
         "deltaRMax",
+        "maxPhiBins",
         "phi",  # (min,max)
     ],
-    defaults=[None] * 5 + [(None, None)] * 1,
+    defaults=[None] * 6 + [(None, None)] * 1,
 )
 
 SeedingAlgorithmConfigArg = namedtuple(
@@ -212,7 +213,7 @@ def addSeeding(
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFilterConfig.hpp
-    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax)
+    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax, maxPhiBins)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
@@ -611,6 +612,7 @@ def addStandardSeeding(
             cotThetaMax=seedFinderConfig.cotThetaMax,
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
             impactMax=spacePointGridConfigArg.impactMax,
             zBinEdges=spacePointGridConfigArg.zBinEdges,
             phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,

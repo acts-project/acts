@@ -92,6 +92,11 @@ Acts::SpacePointGridCreator::createGrid(
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this
     // number) of the maximum expected azimutal deflection.
+
+    // set protection for large number of bins, by default it is infinite
+    if (phiBins > config.maxPhiBins) {
+      phiBins = config.maxPhiBins;
+    }
   }
 
   Acts::detail::Axis<detail::AxisType::Equidistant,
