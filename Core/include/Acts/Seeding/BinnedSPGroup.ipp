@@ -175,11 +175,16 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     // store x,y,z values in extent
     rRangeSPExtent.extend({spX, spY, spZ});
 
+    // remove SPs outside z and phi region
     if (spZ > zMax || spZ < zMin) {
       continue;
     }
     float spPhi = std::atan2(spY, spX);
     if (spPhi > phiMax || spPhi < phiMin) {
+      continue;
+    }
+    // discard SPs according to detector specific cuts
+    if (!config.experimentCuts(spX, spY, spZ)) {
       continue;
     }
 

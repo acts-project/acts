@@ -442,9 +442,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
 
         if fastSeeding == True:
             rMaxGridConfig = 250 * u.mm
-            rMaxSeedFinderConfig = rMaxGridConfig
             deltaRMax = 200 * u.mm
-            deltaRMaxTopSP = 200 * u.mm
             zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
             # variables that are only used for fast tracking:
             skipZMiddleBinSearch = 2
@@ -505,6 +503,9 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
         useDeltaRorTopRadius = False
 
     if fastSeeding == True:
+        minPt = 1000 * u.MeV
+        collisionRegionMin = -150 * u.mm
+        collisionRegionMax = 150 * u.mm
         zBinEdges = [
             -3000.0,
             -2500.0,

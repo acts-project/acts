@@ -194,6 +194,25 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
+  if (m_config.fastTrackingCut) {
+    m_cfg.experimentCuts.connect(
+        [](const void*, float& spX, float& spY, float& spZ) -> bool {
+          float smallR = spX * spX + spY * spY;
+          if (std::abs(spZ) > 200. && smallR < 2500.) {
+            return false;
+          }
+          if (std::abs(spZ) - 150. > 27.2899 * std::sqrt(smallR)) {
+            return false;
+          }
+          return true;
+        });
+  } else {
+                                m_cfg.experimentCuts.connect(
+																		 [](const void*, float& spX, float& spY, float& spZ) -> bool {
+      return false;
+				}
+  }
+
   m_bottomBinFinder = std::make_shared<const Acts::BinFinder<SimSpacePoint>>(
       m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);
   m_topBinFinder = std::make_shared<const Acts::BinFinder<SimSpacePoint>>(
@@ -211,17 +230,18 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // pre-compute the total size required so we only need to allocate once
   size_t nSpacePoints = 0;
   for (const auto& isp : m_inputSpacePoints) {
-    nSpacePoints += (*isp)(ctx).size();
+                                nSpacePoints += (*isp)(ctx).size();
   }
 
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_inputSpacePoints) {
-    for (const auto& spacePoint : (*isp)(ctx)) {
-      // since the event store owns the space points, their pointers should be
-      // stable and we do not need to create local copies.
-      spacePointPtrs.push_back(&spacePoint);
-    }
+                                for (const auto& spacePoint : (*isp)(ctx)) {
+                                  // since the event store owns the space
+                                  // points, their pointers should be stable and
+                                  // we do not need to create local copies.
+                                  spacePointPtrs.push_back(&spacePoint);
+                                }
   }
 
   // construct the seeding tools
@@ -264,37 +284,55 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    for (std::size_t grid_glob_bin(0);
-         grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
-      const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
-      for (const auto& sp : collection) {
-        std::size_t index = sp->index();
+                                for (std::size_t grid_glob_bin(0);
+                                     grid_glob_bin <
+                                     spacePointsGrouping.grid().size();
+                                     ++grid_glob_bin) {
+                                  const auto& collection =
+                                      spacePointsGrouping.grid().at(
+                                          grid_glob_bin);
+                                  for (const auto& sp : collection) {
+                                    std::size_t index = sp->index();
 
-        const float topHalfStripLength =
-            m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp());
-        const float bottomHalfStripLength =
-            m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp());
-        const Acts::Vector3 topStripDirection =
-            m_cfg.seedFinderConfig.getTopStripDirection(sp->sp());
-        const Acts::Vector3 bottomStripDirection =
-            m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp());
+                                    const float topHalfStripLength =
+                                        m_cfg.seedFinderConfig
+                                            .getTopHalfStripLength(sp->sp());
+                                    const float bottomHalfStripLength =
+                                        m_cfg.seedFinderConfig
+                                            .getBottomHalfStripLength(sp->sp());
+                                    const Acts::Vector3 topStripDirection =
+                                        m_cfg.seedFinderConfig
+                                            .getTopStripDirection(sp->sp());
+                                    const Acts::Vector3 bottomStripDirection =
+                                        m_cfg.seedFinderConfig
+                                            .getBottomStripDirection(sp->sp());
 
-        state.spacePointData.setTopStripVector(
-            index, topHalfStripLength * topStripDirection);
-        state.spacePointData.setBottomStripVector(
-            index, bottomHalfStripLength * bottomStripDirection);
-        state.spacePointData.setStripCenterDistance(
-            index, m_cfg.seedFinderConfig.getStripCenterDistance(sp->sp()));
-        state.spacePointData.setTopStripCenterPosition(
-            index, m_cfg.seedFinderConfig.getTopStripCenterPosition(sp->sp()));
-      }
-    }
+                                    state.spacePointData.setTopStripVector(
+                                        index,
+                                        topHalfStripLength * topStripDirection);
+                                    state.spacePointData.setBottomStripVector(
+                                        index, bottomHalfStripLength *
+                                                   bottomStripDirection);
+                                    state.spacePointData.setStripCenterDistance(
+                                        index,
+                                        m_cfg.seedFinderConfig
+                                            .getStripCenterDistance(sp->sp()));
+                                    state.spacePointData
+                                        .setTopStripCenterPosition(
+                                            index,
+                                            m_cfg.seedFinderConfig
+                                                .getTopStripCenterPosition(
+                                                    sp->sp()));
+                                  }
+                                }
   }
 
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
-    m_seedFinder.createSeedsForGroup(
-        m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
-        std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
+                                m_seedFinder.createSeedsForGroup(
+                                    m_cfg.seedFinderOptions, state,
+                                    spacePointsGrouping.grid(),
+                                    std::back_inserter(seeds), bottom, middle,
+                                    top, rMiddleSPRange);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
