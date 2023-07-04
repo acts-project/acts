@@ -34,7 +34,7 @@ void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
 
   const auto pos = convertLength * track->GetPosition();
   const auto time = convertTime * track->GetGlobalTime();
-  const bool secondary =
+  const bool isSecondary =
       track->GetDynamicParticle()->GetPrimaryParticle() == nullptr;
 
   const bool outOfVolume =

@@ -606,7 +606,7 @@ def addGeant4(
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
-    killSecondaries: float = False,
+    killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
 ) -> None:
     """This function steers the detector simulation using Geant4
@@ -633,7 +633,7 @@ def addGeant4(
         if given, particles are killed when going outside of this volume.
     killAfterTime: float
         if given, particle are killed after the global time since event creation exceeds the given value
-    killSecondaries: float
+    killSecondaries: bool
         if given, secondary particles are removed from simulation
     """
 
