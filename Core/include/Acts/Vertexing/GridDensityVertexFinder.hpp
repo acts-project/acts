@@ -16,6 +16,7 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include "DummyVertexFitter.hpp"
+#include <map>
 
 namespace Acts {
 
