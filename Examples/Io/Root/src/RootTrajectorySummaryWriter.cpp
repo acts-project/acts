@@ -332,13 +332,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Initialize the fitted track parameters info
       std::array<float, Acts::eBoundSize> param = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
-      std::array<float, Acts::eBoundSize> res = {NaNfloat, NaNfloat, NaNfloat,
-                                                 NaNfloat, NaNfloat, NaNfloat};
       std::array<float, Acts::eBoundSize> error = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
-      std::array<float, Acts::eBoundSize> pull = {NaNfloat, NaNfloat, NaNfloat,
-                                                  NaNfloat, NaNfloat, NaNfloat};
       bool hasFittedParams = false;
+      bool hasFittedCov = false;
       if (traj.hasTrackParameters(trackTip)) {
         hasFittedParams = true;
         const auto& boundParam = traj.trackParameters(trackTip);
@@ -347,22 +344,31 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           param[i] = parameter[i];
         }
 
-        if (foundMajorityParticle) {
-          res = {
-              param[Acts::eBoundLoc0] - t_d0,
-              param[Acts::eBoundLoc1] - t_z0,
-              Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
-                                                static_cast<float>(2 * M_PI)),
-              param[Acts::eBoundTheta] - t_theta,
-              param[Acts::eBoundQOverP] - t_qop,
-              param[Acts::eBoundTime] - t_time};
+        if (boundParam.covariance().has_value()) {
+          hasFittedCov = true;
+          const auto& covariance = *boundParam.covariance();
+          for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
+            error[i] = std::sqrt(covariance(i, i));
+          }
+        }
+      }
 
-          if (boundParam.covariance().has_value()) {
-            const auto& covariance = *boundParam.covariance();
-            for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-              error[i] = std::sqrt(covariance(i, i));
-              pull[i] = res[i] / error[i];
-            }
+      std::array<float, Acts::eBoundSize> res = {NaNfloat, NaNfloat, NaNfloat,
+                                                 NaNfloat, NaNfloat, NaNfloat};
+      std::array<float, Acts::eBoundSize> pull = {NaNfloat, NaNfloat, NaNfloat,
+                                                  NaNfloat, NaNfloat, NaNfloat};
+      if (foundMajorityParticle && hasFittedParams) {
+        res = {param[Acts::eBoundLoc0] - t_d0,
+               param[Acts::eBoundLoc1] - t_z0,
+               Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
+                                                 static_cast<float>(2 * M_PI)),
+               param[Acts::eBoundTheta] - t_theta,
+               param[Acts::eBoundQOverP] - t_qop,
+               param[Acts::eBoundTime] - t_time};
+
+        if (hasFittedCov) {
+          for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
+            pull[i] = res[i] / error[i];
           }
         }
       }
