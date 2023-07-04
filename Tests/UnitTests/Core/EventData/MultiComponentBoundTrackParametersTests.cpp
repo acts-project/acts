@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include <Acts/EventData/Charge.hpp>
@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Vector3::Ones(), Vector3::Ones().normalized());
 
-    const SingleBoundTrackParameters<SinglyCharged> single_pars(
+    const GenericBoundTrackParameters<SinglyCharged> single_pars(
         surface, BoundVector::Ones(), cov);
 
     const auto multi_pars = [&]() {

@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackProxy.hpp"

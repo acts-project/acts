@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"

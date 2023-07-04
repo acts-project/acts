@@ -74,7 +74,7 @@ class EigenStepper {
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    MagneticFieldProvider::Cache fieldCacheIn,
-                   const SingleBoundTrackParameters<charge_t>& par,
+                   const GenericBoundTrackParameters<charge_t>& par,
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
@@ -170,7 +170,7 @@ class EigenStepper {
   template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const GenericBoundTrackParameters<charge_t>& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const;

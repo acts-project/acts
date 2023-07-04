@@ -13,7 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -228,7 +228,7 @@ void test_multi_stepper_vs_eigen_stepper() {
       Vector3::Zero(), Vector3::Ones().normalized());
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-  SingleBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
+  GenericBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
                          defaultStepSize, defaultTolerance);
@@ -607,7 +607,7 @@ void test_combined_curvilinear_state_function() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, pars, cov});
-  SingleBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
+  GenericBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
