@@ -655,7 +655,7 @@ class Logger {
   /// @return the level
   Logging::Level level() const { return m_filterPolicy->level(); }
 
-  /// Return the name of the print policy of thi logger
+  /// Return the name of the print policy of this logger
   /// @return the name
   const std::string& name() const { return m_printPolicy->name(); }
 

@@ -175,7 +175,7 @@ struct StepCollector {
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
-    result.momentum.push_back(stepper.momentum(state.stepping) *
+    result.momentum.push_back(stepper.absoluteMomentum(state.stepping) *
                               stepper.direction(state.stepping));
   }
 };
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
   CHECK_CLOSE_ABS(es.direction(esState), dir, eps);
-  CHECK_CLOSE_ABS(es.momentum(esState), absMom, eps);
+  CHECK_CLOSE_ABS(es.absoluteMomentum(esState), absMom, eps);
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
             newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
   BOOST_CHECK_EQUAL(es.direction(esState), newMom.normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esState), newMom.norm());
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esState), newMom.norm());
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   BOOST_CHECK_EQUAL(es.time(esState), newTime);
 
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -446,7 +446,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -519,7 +519,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
             *plane);
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
-  CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
+  CHECK_CLOSE_REL(es.absoluteMomentum(esState), 2 * absMom, eps);
   BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
@@ -555,7 +555,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 /// the DenseEnvironmentExtension. The focus of this tests lies in the
 /// choosing of the right extension for the individual use case. This is
 /// performed with three different detectors:
-/// a) Pure vaccuum -> DefaultExtension needs to act
+/// a) Pure vacuum -> DefaultExtension needs to act
 /// b) Pure Be -> DenseEnvironmentExtension needs to act
 /// c) Vacuum - Be - Vacuum -> Both should act and switch during the
 /// propagation
@@ -623,7 +623,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Check that the propagation happend without interactions
+  // Check that the propagation happened without interactions
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
@@ -730,7 +730,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Check that there occured interaction
+  // Check that there occurred interaction
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
@@ -802,7 +802,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const StepCollector::this_result& stepResultB =
       resultB.get<typename StepCollector::result_type>();
 
-  // Check that there occured interaction
+  // Check that there occurred interaction
   for (const auto& pos : stepResultB.position) {
     if (pos == stepResultB.position.front()) {
       CHECK_SMALL(pos, 1_um);
@@ -1128,7 +1128,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Test that momentum changes only occured at the right detector parts
+  // Test that momentum changes only occurred at the right detector parts
   double lastMomentum = stepResult.momentum[0].x();
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     // Test for changes

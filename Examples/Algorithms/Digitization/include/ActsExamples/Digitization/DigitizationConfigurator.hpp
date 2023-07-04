@@ -39,7 +39,7 @@ namespace ActsExamples {
 ///
 /// It acts as a visitor and then builds a fully developed digitization file
 /// for the geometric digitization, filling in the correct dimensions and
-/// numer of bins.
+/// number of bins.
 ///
 /// The simplified file is assumed to have just one bin for the geometric
 /// digitization, which is then used to calculate the number of bins with

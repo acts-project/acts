@@ -243,7 +243,7 @@ auto Acts::Propagator<S, N>::propagate(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  // Apply the loop protection, it resets the interal path limit
+  // Apply the loop protection, it resets the internal path limit
   detail::setupLoopProtection(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
       logger());

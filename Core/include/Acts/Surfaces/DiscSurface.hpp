@@ -104,7 +104,7 @@ class DiscSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   DiscSurface(const GeometryContext& gctx, const DiscSurface& other,
               const Transform3& shift);
 
@@ -112,7 +112,7 @@ class DiscSurface : public Surface {
   ~DiscSurface() override = default;
   DiscSurface() = delete;
 
-  /// Assignement operator
+  /// Assignment operator
   ///
   /// @param other The source sourface for the assignment
   DiscSurface& operator=(const DiscSurface& other);
@@ -132,7 +132,7 @@ class DiscSurface : public Surface {
   /// Normal vector return without argument
   using Surface::normal;
 
-  /// The binning position The position calcualted
+  /// The binning position The position calculated
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -146,31 +146,31 @@ class DiscSurface : public Surface {
   const SurfaceBounds& bounds() const final;
 
   /// Local to global transformation
-  /// For planar surfaces the momentum is ignroed in the local to global
-  /// transformation
+  /// For planar surfaces the momentum direction is ignored in the local to
+  /// global transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return global position by value
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const final;
+                        const Vector3& direction) const final;
 
   /// Global to local transformation
-  /// @note the momentum is ignored for Disc surfaces in this calculateion
+  /// @note the direction is ignored for Disc surfaces in this calculateion
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
@@ -211,7 +211,7 @@ class DiscSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is a global cartesian 3D position
-  /// @param tol The absoltue tolerance parameter
+  /// @param tol The absolute tolerance parameter
   ///
   /// @return value is a local polar
   Vector2 globalToLocalCartesian(const GeometryContext& gctx,
@@ -242,7 +242,7 @@ class DiscSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position as a starting point
-  /// @param direction The global momentum at the starting point
+  /// @param direction The global momentum direction at the starting point
   /// @return The correction factor due to incident
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
                         const Vector3& direction) const final;
@@ -307,7 +307,7 @@ class DiscSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates

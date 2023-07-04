@@ -126,10 +126,10 @@ class Measurement {
 
   /// Expansion matrix from the measured subspace into the full space.
   ///
-  /// This is equivalent to the tranpose of the projection matrix only in the
+  /// This is equivalent to the transpose of the projection matrix only in the
   /// case of a trivial projection matrix. While this is the case here, it is
   /// still recommended to use the expansion matrix directly in cases where it
-  /// is explicitely used.
+  /// is explicitly used.
   ExpansionMatrix expander() const {
     return m_subspace.template expander<Scalar>();
   }

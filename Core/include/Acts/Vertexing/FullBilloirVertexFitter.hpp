@@ -51,7 +51,7 @@ class FullBilloirVertexFitter {
   };
 
   struct Config {
-    /// Maximum number of interations in fitter
+    /// Maximum number of iterations in fitter
     int maxIterations = 5;
   };
 

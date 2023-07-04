@@ -142,7 +142,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
     if ((ibinx == 0u) || ibinx == m_binUtility->bins(0)) {
       // check if it a straight boundary or not: always straight for no lorentz
       // angle,
-      // and either the first boundary or the last dependening on lorentz &
+      // and either the first boundary or the last depending on lorentz &
       // readout
       bool boundaryStraight =
           (lorentzAngle == 0. ||
@@ -154,7 +154,7 @@ void Acts::CartesianSegmentation::createSegmentationSurfaces(
           boundaryStraight
               ? Vector3(cPosX, 0., 0.)
               : Vector3(cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
-      // rotation of the boundary: striaght or lorentz
+      // rotation of the boundary: straight or lorentz
       const RotationMatrix3& boundaryXRotation =
           boundaryStraight ? xBinRotationMatrix : lorentzPlaneRotationMatrix;
       // build the rotation from it
@@ -226,7 +226,7 @@ Acts::Vector2 Acts::CartesianSegmentation::cellPosition(
 }
 
 /** Get the digitization cell from 3D position, it used the projection to the
- * readout surface to estimate the 2D positon */
+ * readout surface to estimate the 2D position */
 Acts::DigitizationStep Acts::CartesianSegmentation::digitizationStep(
     const Vector3& startStep, const Vector3& endStep, double halfThickness,
     int readoutDirection, double lorentzAngle) const {

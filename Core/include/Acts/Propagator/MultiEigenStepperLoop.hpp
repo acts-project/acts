@@ -66,7 +66,7 @@ struct WeightedComponentReducerLoop {
   // TODO: Maybe we can cache this value and only update it when the parameters
   // change
   template <typename stepper_state_t>
-  static ActsScalar qop(const stepper_state_t& s) {
+  static ActsScalar qOverP(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
@@ -627,10 +627,17 @@ class MultiEigenStepperLoop
     return Reducer::direction(state);
   }
 
+  /// QoP access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double qOverP(const State& state) const { return Reducer::qOverP(state); }
+
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return Reducer::momentum(state); }
+  double absoluteMomentum(const State& state) const {
+    return Reducer::momentum(state);
+  }
 
   /// Charge access
   ///
@@ -752,7 +759,7 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
@@ -770,7 +777,7 @@ class MultiEigenStepperLoop
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
-  /// @note This returns the smalles step size of all components. It uses
+  /// @note This returns the smallest step size of all components. It uses
   /// std::abs for comparison to handle backward propagation and negative
   /// step sizes correctly.
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
@@ -819,7 +826,7 @@ class MultiEigenStepperLoop
   /// be guaranteed by the propagator.
   /// @note This is done by combining the gaussian mixture on the specified
   /// surface. If the conversion to bound states of some components
-  /// failes, these components are ignored unless all components fail. In this
+  /// fails, these components are ignored unless all components fail. In this
   /// case an error code is returned.
   ///
   /// @param [in] state State that will be presented as @c BoundState

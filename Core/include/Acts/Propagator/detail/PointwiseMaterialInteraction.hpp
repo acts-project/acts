@@ -79,9 +79,9 @@ struct PointwiseMaterialInteraction {
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
-        qOverP(stepper.qop(state.stepping)),
+        qOverP(stepper.qOverP(state.stepping)),
         absQ(std::abs(stepper.charge(state.stepping))),
-        momentum(stepper.momentum(state.stepping)),
+        momentum(stepper.absoluteMomentum(state.stepping)),
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),
@@ -124,9 +124,9 @@ struct PointwiseMaterialInteraction {
 
   /// @brief This function evaluate the material effects
   ///
-  /// @param [in] multipleScattering Boolean to indiciate the application of
+  /// @param [in] multipleScattering Boolean to indicate the application of
   /// multiple scattering
-  /// @param [in] energyLoss Boolean to indiciate the application of energy loss
+  /// @param [in] energyLoss Boolean to indicate the application of energy loss
   void evaluatePointwiseMaterialInteraction(bool multipleScattering,
                                             bool energyLoss);
 
@@ -167,9 +167,9 @@ struct PointwiseMaterialInteraction {
  private:
   /// @brief Evaluates the contributions to the covariance matrix
   ///
-  /// @param [in] multipleScattering Boolean to indiciate the application of
+  /// @param [in] multipleScattering Boolean to indicate the application of
   /// multiple scattering
-  /// @param [in] energyLoss Boolean to indiciate the application of energy loss
+  /// @param [in] energyLoss Boolean to indicate the application of energy loss
   void covarianceContributions(bool multipleScattering, bool energyLoss);
 
   /// @brief Convenience method for better readability

@@ -82,14 +82,14 @@ Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
 
 Acts::Vector3 Acts::PlaneSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*momentum*/) const {
+    const Vector3& /*direction*/) const {
   return transform(gctx) *
          Vector3(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
 
 Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*momentum*/, double tolerance) const {
+    const Vector3& /*direction*/, double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -143,7 +143,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
     } else {
       // Two concentric rings, we use the pure concentric method momentarily,
       // but that creates too  many unneccesarry faces, when only two
-      // are needed to descibe the mesh, @todo investigate merging flag
+      // are needed to describe the mesh, @todo investigate merging flag
       auto facesMesh = detail::FacesHelper::cylindricalFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
@@ -157,7 +157,7 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
 
 Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
                                          const Vector2& /*lpos*/) const {
-  // fast access via tranform matrix (and not rotation())
+  // fast access via transform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }

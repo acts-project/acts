@@ -68,7 +68,7 @@ ActsExamples::Geant4SimulationBase::Geant4SimulationBase(
 
   m_eventStore = std::make_shared<EventStore>();
 
-  // tweek logging
+  // tweak logging
   // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
   // 3 would be also possible, but that produces infinite amount of output.
   m_geant4Level = logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
@@ -258,7 +258,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     g4FieldCfg.magneticField = cfg.magneticField;
     m_magneticField = std::make_unique<MagneticFieldWrapper>(g4FieldCfg);
 
-    // Set the field ot the G4Field manager
+    // Set the field or the G4Field manager
     m_fieldManager = std::make_unique<G4FieldManager>();
     m_fieldManager->SetDetectorField(m_magneticField.get());
     m_fieldManager->CreateChordFinder(m_magneticField.get());

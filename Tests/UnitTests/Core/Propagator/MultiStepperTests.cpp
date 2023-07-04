@@ -668,8 +668,9 @@ void test_single_component_interface_function() {
     BOOST_CHECK(sstepper.direction(sstepping) ==
                 cmp.pars().template segment<3>(eFreeDir0));
     BOOST_CHECK(sstepper.time(sstepping) == cmp.pars()[eFreeTime]);
-    BOOST_CHECK_CLOSE(sstepper.charge(sstepping) / sstepper.momentum(sstepping),
-                      cmp.pars()[eFreeQOverP], 1.e-8);
+    BOOST_CHECK_CLOSE(
+        sstepper.charge(sstepping) / sstepper.absoluteMomentum(sstepping),
+        cmp.pars()[eFreeQOverP], 1.e-8);
   };
 
   for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
@@ -720,7 +721,7 @@ BOOST_AUTO_TEST_CASE(remove_add_components_test) {
 }
 
 //////////////////////////////////////////////////
-// Instatiate a Propagator with the MultiStepper
+// Instantiate a Propagator with the MultiStepper
 //////////////////////////////////////////////////
 
 template <typename multi_stepper_t>
@@ -740,7 +741,7 @@ void propagator_instatiation_test_function() {
   MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
 
   // This only checks that this compiles, not that it runs without errors
-  // @TODO: Add test that checks the target aborter works corretly
+  // @TODO: Add test that checks the target aborter works correctly
 
   // Instantiate with target
   using type_a =

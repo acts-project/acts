@@ -45,10 +45,10 @@ Acts::Surface::~Surface() = default;
 
 bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
                                 const Vector3& position,
-                                const Vector3& momentum,
+                                const Vector3& direction,
                                 const BoundaryCheck& bcheck) const {
   // global to local transformation
-  auto lpResult = globalToLocal(gctx, position, momentum);
+  auto lpResult = globalToLocal(gctx, position, direction);
   if (lpResult.ok()) {
     return bcheck ? bounds().inside(lpResult.value(), bcheck) : true;
   }
@@ -228,7 +228,7 @@ bool Acts::Surface::operator!=(const Acts::Surface& sf) const {
 }
 
 Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
-  // fast access via tranform matrix (and not translation())
+  // fast access via transform matrix (and not translation())
   auto tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
@@ -253,7 +253,7 @@ bool Acts::Surface::insideBounds(const Vector2& lposition,
 
 Acts::RotationMatrix3 Acts::Surface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*position*/,
-    const Vector3& /*momentum*/) const {
+    const Vector3& /*direction*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
@@ -299,9 +299,9 @@ Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
       referenceFrame(gctx, position, direction).transpose();
-  // Initalize the jacobian from global to local
+  // Initialize the jacobian from global to local
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
-  // Local position component given by the refernece frame
+  // Local position component given by the reference frame
   jacToLocal.block<2, 3>(eBoundLoc0, eFreePos0) = rframeT.block<2, 3>(0, 0);
   // Time component
   jacToLocal(eBoundTime, eFreeTime) = 1;

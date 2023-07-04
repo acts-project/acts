@@ -63,7 +63,7 @@ std::pair<size_t, size_t> ActsExamples::CsvMeasurementReader::availableEvents()
 
 namespace {
 struct CompareHitId {
-  // support transparent comparision between identifiers and full objects
+  // support transparent comparison between identifiers and full objects
   using is_transparent = void;
   template <typename T>
   constexpr bool operator()(const T& left, const T& right) const {
@@ -127,7 +127,7 @@ std::vector<ActsExamples::CellData> readCellsByHitId(
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
   // hit_id in the files is not required to be neither continuous nor
-  // monotonic. internally, we want continous indices within [0,#hits)
+  // monotonic. internally, we want continuous indices within [0,#hits)
   // to simplify data handling. to be able to perform this mapping we first
   // read all data into memory before converting to the internal event data
   // types.

@@ -60,10 +60,13 @@ def run_vertexing(fitter, mu, events):
             s,
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
             EtaConfig(-3.0, 3.0),
+            PhiConfig(0.0, 360.0 * u.degree),
             ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
-                stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
                 mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
             ),
             multiplicity=mu,
             rnd=rnd,

@@ -83,7 +83,7 @@ class CylinderSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   CylinderSurface(const GeometryContext& gctx, const CylinderSurface& other,
                   const Transform3& shift);
 
@@ -111,11 +111,11 @@ class CylinderSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the position where the measurement frame is defined
-  /// @param momentum is the momentum vector (ignored)
+  /// @param direction is the momentum direction vector (ignored)
   /// @return rotation matrix that defines the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                  const Vector3& position,
-                                 const Vector3& momentum) const final;
+                                 const Vector3& direction) const final;
 
   /// Return the surface type
   SurfaceType type() const override;
@@ -125,7 +125,7 @@ class CylinderSurface : public Surface {
   /// vector
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param lposition is the local postion for which the normal vector is
+  /// @param lposition is the local position for which the normal vector is
   /// requested
   ///
   /// @return normal vector at the local position by value
@@ -137,7 +137,7 @@ class CylinderSurface : public Surface {
   /// vector
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the global postion for which the normal vector is
+  /// @param position is the global position for which the normal vector is
   /// requested
   ///
   /// @return normal vector at the global position by value
@@ -161,24 +161,24 @@ class CylinderSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const final;
+                        const Vector3& direction) const final;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
@@ -201,7 +201,7 @@ class CylinderSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position as a starting point
-  /// @param direction is the global momentum at the starting point
+  /// @param direction is the global momentum direction at the starting point
   ///
   /// @return is the correction factor due to incident
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
@@ -237,7 +237,7 @@ class CylinderSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates

@@ -194,7 +194,7 @@ bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   double z = pos.z();
   double zmin = z + tol;
   double zmax = z - tol;
-  // Quick check ouside z
+  // Quick check outside z
   if (zmin < -get(eHalfLengthZ) or zmax > get(eHalfLengthZ)) {
     return false;
   }

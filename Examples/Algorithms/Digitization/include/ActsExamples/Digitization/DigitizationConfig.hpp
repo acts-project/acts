@@ -65,7 +65,7 @@ struct GeometricConfig {
   // The threshold below an cell activation is ignored
   double threshold = 0.;
 
-  // Wether to assume digital readout (activation is either 0 or 1)
+  // Whether to assume digital readout (activation is either 0 or 1)
   bool digital = false;
 
   /// Charge generation (configurable via the chargeSmearer)

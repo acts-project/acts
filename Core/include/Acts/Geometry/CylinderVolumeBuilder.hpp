@@ -252,7 +252,7 @@ struct WrappingConfig {
       cVolumeConfig.midPointAttachZ(pVolumeConfig);
     }
     // adapt r afterwards
-    // - easy if no exisitng volume
+    // - easy if no existing volume
     // - possible if no central volume
     if (!existingVolumeConfig || !cVolumeConfig) {
       nVolumeConfig.adaptR(containerVolumeConfig);
@@ -273,13 +273,13 @@ struct WrappingConfig {
           nVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
           wCondition = Attaching;
-          wConditionScreen = "[n attched]";
+          wConditionScreen = "[n attached]";
         }
         if (pVolumeConfig && pVolumeConfig.zMin > existingVolumeConfig.zMax) {
           pVolumeConfig.attachZ(existingVolumeConfig);
           // will attach the new volume(s)
           wCondition = Attaching;
-          wConditionScreen = "[p attched]";
+          wConditionScreen = "[p attached]";
         }
         // see if inner glue volumes are needed
         if (containerVolumeConfig.rMin > existingVolumeConfig.rMin) {
@@ -418,7 +418,7 @@ struct WrappingConfig {
       sl << "New container built with       configuration: "
          << containerVolumeConfig.toString() << '\n';
     }
-    // go throug the new new ones first
+    // go through the new new ones first
     if (nVolumeConfig) {
       sl << " - n: Negative Endcap, current configuration: "
          << nVolumeConfig.toString() << '\n';
@@ -474,7 +474,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   /// @struct Config
   /// Nested configuration struct for this CylinderVolumeBuilder
   struct Config {
-    /// The trackign volume helper for construction
+    /// The tracking volume helper for construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
     /// The string based indenfication
     std::string volumeName = "";
@@ -497,7 +497,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     /// the additional envelope in Z to create zMin, zMax
     double layerEnvelopeZ = 1. * UnitConstants::mm;
 
-    // The potential boundary material (MB) options - there are 6 at maximium
+    // The potential boundary material (MB) options - there are 6 at maximum
     /// -------------------- MB (outer [1]) ---------------
     /// | MB [2]  NEC  MB [3] |  B |  MB [4]  PEC  MB [5] |
     /// -------------------- MB (inner [0]) ---------------
@@ -510,7 +510,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
 
   /// Constructor
   ///
-  /// @param [in] cvbConfig is the configuraiton struct to steer the builder
+  /// @param [in] cvbConfig is the configuration struct to steer the builder
   /// @param [in] logger logging instance
   CylinderVolumeBuilder(const Config& cvbConfig,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
@@ -544,7 +544,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
 
   /// set logging instance
   ///
-  /// @param [in] newLogger is the logging istance to be set
+  /// @param [in] newLogger is the logging instance to be set
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Analyze the config to gather needed dimension

@@ -30,7 +30,7 @@ class Geant4Manager;
 /// objects during one G4RunManager lifecycle. But Geant4 does not provide a
 /// single way to achieve this and the user has to modify the correct state
 /// variables themselves. In this case we would bind much thighter on the API
-/// and future changes could potentially break our Geant4 state assumtion. This
+/// and future changes could potentially break our Geant4 state assumption. This
 /// is why the current interface only allows for a single G4VUserPhysicsList.
 ///
 /// TODO A way out of this Geant4 lifecycle mess might be dynamically unloading
@@ -49,7 +49,7 @@ struct Geant4Handle {
   Geant4Handle &operator=(const Geant4Handle &) = delete;
   ~Geant4Handle();
 
-  /// Set logging consistently accross common Geant4 modules
+  /// Set logging consistently across common Geant4 modules
   ///
   /// Convenience method which calls into Geant4Manager
   void tweekLogging(int level) const;
@@ -60,7 +60,7 @@ class Geant4Manager {
  public:
   static Geant4Manager &instance();
 
-  /// Set logging consistently accross common Geant4 modules
+  /// Set logging consistently across common Geant4 modules
   static void tweekLogging(G4RunManager &runManager, int level);
 
   /// This can only be called once due to Geant4 limitations

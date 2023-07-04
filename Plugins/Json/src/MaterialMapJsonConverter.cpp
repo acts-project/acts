@@ -49,7 +49,7 @@
 
 namespace Acts {
 // specialisations of decoration helper function
-// to pick correct objects from the contaier object
+// to pick correct objects from the container object
 template <>
 inline void decorateJson<Acts::SurfaceAndMaterialWithContext>(
     const ITrackingGeometryJsonDecorator* decorator,

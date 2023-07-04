@@ -114,8 +114,8 @@ struct SurfaceReached {
   /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in,out] state The propagation state object
-  /// @param [in] stepper Stepper used for the progation
-  /// @param [in] navigator Navigator used for the progation
+  /// @param [in] stepper Stepper used for the propagation
+  /// @param [in] navigator Navigator used for the propagation
   /// @param [in] targetSurface The target surface
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
@@ -224,7 +224,7 @@ struct ParticleStopped {
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
-    if (stepper.momentum(state.stepping) > 0) {
+    if (stepper.absoluteMomentum(state.stepping) > 0) {
       return false;
     }
     navigator.targetReached(state.navigation, true);

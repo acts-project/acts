@@ -115,7 +115,7 @@ class StraightLineStepper {
     /// The absolute charge as the free vector can be 1/p or q/p
     double absCharge = UnitConstants::e;
 
-    /// Boolean to indiciate if you need covariance transport
+    /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
@@ -196,21 +196,21 @@ class StraightLineStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double qop(const State& state) const { return state.pars[eFreeQOverP]; }
+  double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
+  double absoluteMomentum(const State& state) const {
     auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qop(state));
+    return std::abs((q == 0 ? 1 : q) / qOverP(state));
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return std::copysign(state.absCharge, qop(state));
+    return std::copysign(state.absCharge, qOverP(state));
   }
 
   /// Time access
@@ -259,7 +259,7 @@ class StraightLineStepper {
                                                       release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
@@ -332,7 +332,7 @@ class StraightLineStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] freeParams Free parameters that will be written into @p state
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
-  /// @param [in] covariance Covariance that willl be written into @p state
+  /// @param [in] covariance Covariance that will be written into @p state
   /// @param [in] surface The surface used to update the jacToGlobal
   void update(State& state, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,
@@ -387,7 +387,7 @@ class StraightLineStepper {
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize.value();
-    const double p = momentum(state.stepping);
+    const double p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
     // Update the track parameters according to the equations of motion

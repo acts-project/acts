@@ -40,7 +40,8 @@ METHOD_TRAIT(reset_state_t, resetState);
 METHOD_TRAIT(get_field_t, getField);
 METHOD_TRAIT(position_t, position);
 METHOD_TRAIT(direction_t, direction);
-METHOD_TRAIT(momentum_t, momentum);
+METHOD_TRAIT(qop_t, qOverP);
+METHOD_TRAIT(absolute_momentum_t, absoluteMomentum);
 METHOD_TRAIT(charge_t, charge);
 METHOD_TRAIT(time_t, time);
 METHOD_TRAIT(overstep_t, overstepLimit);
@@ -107,8 +108,10 @@ constexpr bool MultiStepperStateConcept= require<
         static_assert(position_exists, "position method not found");
         constexpr static bool direction_exists = has_method<const S, Vector3, direction_t, const state&>;
         static_assert(direction_exists, "direction method not found");
-        constexpr static bool momentum_exists = has_method<const S, double, momentum_t, const state&>;
-        static_assert(momentum_exists, "momentum method not found");
+        constexpr static bool qop_exists = has_method<const S, double, qop_t, const state&>;
+        static_assert(qop_exists, "qOverP method not found");
+        constexpr static bool absolute_momentum_exists = has_method<const S, double, absolute_momentum_t, const state&>;
+        static_assert(absolute_momentum_exists, "absoluteMomentum method not found");
         constexpr static bool charge_exists = has_method<const S, double, charge_t, const state&>;
         static_assert(charge_exists, "charge method not found");
         constexpr static bool time_exists = has_method<const S, double, time_t, const state&>;
@@ -140,7 +143,8 @@ constexpr bool MultiStepperStateConcept= require<
                                               curvilinear_state_exists,
                                               position_exists,
                                               direction_exists,
-                                              momentum_exists,
+                                              qop_exists,
+                                              absolute_momentum_exists,
                                               charge_exists,
                                               time_exists,
                                               bound_state_method_exists,
@@ -159,7 +163,7 @@ constexpr bool MultiStepperStateConcept= require<
     template <typename S, typename state = typename S::State>
       struct SingleStepperConcept {
         constexpr static bool common_stepper_concept_fullfilled = CommonStepperConcept<S, state>::value;
-        static_assert(common_stepper_concept_fullfilled, "Stepper does not fullfill common stepper concept");
+        static_assert(common_stepper_concept_fullfilled, "Stepper does not fulfill common stepper concept");
         constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const FreeVector&, const BoundVector&, const BoundSymMatrix&, const Surface&>, has_method<const S, void, update_t, state&, const Vector3&, const Vector3&, double, double>>;
         // static_assert(update_method_exists, "update method not found");
         constexpr static bool get_field_exists = has_method<const S, Result<Vector3>, get_field_t, state&, const Vector3&>;
@@ -175,14 +179,14 @@ constexpr bool MultiStepperStateConcept= require<
     template <typename S, typename state = typename S::State>
       struct MultiStepperConcept {
         constexpr static bool common_stepper_concept_fullfilled = CommonStepperConcept<S, state>::value;
-        static_assert(common_stepper_concept_fullfilled, "Common stepper concept not fullfilled");
+        static_assert(common_stepper_concept_fullfilled, "Common stepper concept not fulfilled");
 
-        // TODO for now we do not check if the ComponentProxy does fullfill a concept
+        // TODO for now we do not check if the ComponentProxy does fulfill a concept
         template <typename T> using component_proxy_t = typename T::ComponentProxy;
         constexpr static bool component_proxy_exists = exists<component_proxy_t, S>;
         // static_assert(component_proxy_exists, "!component_proxy_exists");
 
-        // TODO for now we do not check if the ConstComponentProxy does fullfill a concept
+        // TODO for now we do not check if the ConstComponentProxy does fulfill a concept
         template <typename T> using const_component_proxy_t = typename T::ConstComponentProxy;
         constexpr static bool const_component_proxy_exists = exists<const_component_proxy_t, S>;
         // static_assert(const_component_proxy_exists, "!const_component_proxy_exists");

@@ -46,7 +46,7 @@ class ILayerArrayCreator {
   /// @param btype is the binning type
   /// @param bvalue is the value in which the binning should be done
   ///
-  /// @return unqiue pointer to a new LayerArray
+  /// @return unique pointer to a new LayerArray
   virtual std::unique_ptr<const LayerArray> layerArray(
       const GeometryContext& gctx, const LayerVector& layers, double min,
       double max, BinningType btype = arbitrary,
