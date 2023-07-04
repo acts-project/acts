@@ -8,6 +8,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Printers/HitsPrinter.hpp"
@@ -29,7 +30,7 @@ using namespace Acts;
 namespace Acts::Python {
 
 void addExampleAlgorithms(Context& ctx) {
-  auto mex = ctx.get("examples");
+  auto [m, mex] = ctx.get("main", "examples");
 
   mex.def("readJsonGeometryList", ActsExamples::readJsonGeometryList);
 
@@ -67,6 +68,18 @@ void addExampleAlgorithms(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputTracks);
     ACTS_PYTHON_MEMBER(outputTracks);
+    ACTS_PYTHON_MEMBER(selectorConfig);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Config = Acts::TrackSelector::Config;
+    auto tool = py::class_<Acts::TrackSelector>(m, "TrackSelector")
+                    .def(py::init<const Config&>(), py::arg("config"));
+
+    auto c = py::class_<Config>(tool, "Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(loc0Min);
     ACTS_PYTHON_MEMBER(loc0Max);
     ACTS_PYTHON_MEMBER(loc1Min);
