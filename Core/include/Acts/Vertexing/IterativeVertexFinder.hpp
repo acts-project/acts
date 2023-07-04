@@ -94,13 +94,23 @@ class IterativeVertexFinder {
     /// ImpactPointEstimator
     IPEstimator ipEst;
 
-    // Vertex finder configuration variables
+    /// Vertex finder configuration variables
     bool useBeamConstraint = false;
+    /// Tracks that are within a distance of 
+    ///
+    /// significanceCutSeeding * sqrt(sigma(d0)^2+sigma(z0)^2) 
+    ///
+    /// are considered compatible with the vertex.
     double significanceCutSeeding = 10;
     double maximumChi2cutForSeeding = 36.;
     int maxVertices = 50;
+
+    /// Assign a certain fraction of compatible tracks to a different (so-called split) vertex if boolean is set to true.
     bool createSplitVertices = false;
+    /// Inverse of the fraction of tracks that will be assigned to the split vertex.
+    /// E.g., if splitVerticesTrkInvFraction = 2, about 50% of compatible tracks will be assigned to the split vertex.
     int splitVerticesTrkInvFraction = 2;
+
     bool reassignTracksAfterFirstFit = false;
     bool doMaxTracksCut = false;
     int maxTracks = 5000;

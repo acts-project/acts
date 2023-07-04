@@ -44,7 +44,6 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     std::vector<const InputTrack_t*> tracksToFitSplitVertex;
 
     // Fill vector with tracks to fit, only compatible with seed:
-    // TODO find out where seedTracks are removed
     auto res =
         fillTracksToFit(seedTracks, seedVertex, tracksToFit,
                           tracksToFitSplitVertex, vertexingOptions, state);
@@ -59,17 +58,11 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     Vertex<InputTrack_t> currentVertex;
     Vertex<InputTrack_t> currentSplitVertex;
 
-    if (m_cfg.useBeamConstraint && !tracksToFit.empty()) {
-      auto fitResult = m_cfg.vertexFitter.fit(
-          tracksToFit, m_cfg.linearizer, vertexingOptions, state.fitterState);
-      if (fitResult.ok()) {
-        currentVertex = std::move(*fitResult);
-      } else {
-        return fitResult.error();
-      }
-    } else if (!m_cfg.useBeamConstraint && tracksToFit.size() > 1) {
-      auto fitResult = m_cfg.vertexFitter.fit(
-          tracksToFit, m_cfg.linearizer, vertexingOptions, state.fitterState);
+    if ((m_cfg.useBeamConstraint  && !tracksToFit.empty()) || 
+        (!m_cfg.useBeamConstraint && tracksToFit.size() > 1)) {
+      auto fitResult = 
+          m_cfg.vertexFitter.fit(tracksToFit, m_cfg.linearizer, 
+                                 vertexingOptions, state.fitterState);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
@@ -358,6 +351,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
   int count = 0;
   // Fill tracksToFit vector with tracks compatible with seed
   for (const auto& sTrack : seedTracks) {
+    // If there are only few tracks left, add them to fit regardless of their position:
     if (numberOfTracks <= 2) {
       tracksToFitOut.push_back(sTrack);
       ++count;
@@ -366,7 +360,6 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
       ++count;
     } else if (numberOfTracks <= 4 * m_cfg.splitVerticesTrkInvFraction &&
                m_cfg.createSplitVertices) {
-      // Only few tracks left, put them into fit regardless their position
       if (count % m_cfg.splitVerticesTrkInvFraction == 0) {
         tracksToFitOut.push_back(sTrack);
         ++count;
@@ -375,9 +368,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
         ++count;
       }
     }
-    // still large amount of tracks available, check compatibility
+    // If a large amount of tracks is available, we check their compatibility with the vertex before adding them to the fit:
     else {
-      // check first that distance is not too large
       const BoundTrackParameters& sTrackParams = m_extractParameters(*sTrack);
       auto distanceRes = m_cfg.ipEst.calculate3dDistance(
           vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
@@ -390,16 +382,17 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
         return VertexingError::NoCovariance;
       }
 
-      double error =
+      // sqrt(sigma(d0)^2+sigma(z0)^2), where sigma(d0)^2 is the variance of d0
+      double hypotVariance =
           sqrt((*(sTrackParams.covariance()))(eBoundLoc0, eBoundLoc0) +
                (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
 
-      if (error == 0.) {
-        ACTS_WARNING("Error is zero. Setting to 1.");
-        error = 1.;
+      if (hypotVariance == 0.) {
+        ACTS_WARNING("Track parameter covariance is zero. Track was not assigned to vertex.");
+        continue;
       }
 
-      if (*distanceRes / error < m_cfg.significanceCutSeeding) {
+      if (*distanceRes / hypotVariance < m_cfg.significanceCutSeeding) {
         if (!m_cfg.createSplitVertices ||
             count % m_cfg.splitVerticesTrkInvFraction == 0) {
           tracksToFitOut.push_back(sTrack);
