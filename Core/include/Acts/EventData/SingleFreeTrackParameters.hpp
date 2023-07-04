@@ -161,7 +161,7 @@ class SingleFreeTrackParameters {
   }
   /// Absolute momentum.
   Scalar absoluteMomentum() const {
-    return m_chargeInterpreter.pFromQOP(m_params[eFreeQOverP]);
+    return m_chargeInterpreter.extractMomentum(m_params[eFreeQOverP]);
   }
   /// Transverse momentum.
   Scalar transverseMomentum() const {
@@ -181,7 +181,7 @@ class SingleFreeTrackParameters {
 
   /// Particle electric charge.
   Scalar charge() const {
-    return m_chargeInterpreter.qFromQOP(get<eFreeQOverP>());
+    return m_chargeInterpreter.extractCharge(get<eFreeQOverP>());
   }
 
  private:

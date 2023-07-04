@@ -323,7 +323,7 @@ class TrackProxy {
   ActsScalar charge() const {
     // Currently, neutral tracks are not supported here
     // @TODO: Evaluate if/how neutral 'tracks' should be accounted for
-    return SinglyCharged{}.qFromQOP(parameters()[eBoundQOverP]);
+    return SinglyCharged{}.extractCharge(parameters()[eBoundQOverP]);
   }
 
   /// Access the theta parameter of the track at the reference surface
@@ -365,7 +365,7 @@ class TrackProxy {
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
   ActsScalar absoluteMomentum() const {
-    return SinglyCharged{}.pFromQOP(qOverP());
+    return SinglyCharged{}.extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum of the track

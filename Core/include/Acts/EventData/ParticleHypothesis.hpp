@@ -16,6 +16,8 @@ namespace Acts {
 using SinglyChargedParticleHypothesis =
     GenericParticleHypothesis<SinglyCharged>;
 using NeutralParticleHypothesis = GenericParticleHypothesis<Neutral>;
+using NonNeutralChargedParticleHypothesis =
+    GenericParticleHypothesis<NonNeutralCharge>;
 using ParticleHypothesis = GenericParticleHypothesis<AnyCharge>;
 
 }  // namespace Acts

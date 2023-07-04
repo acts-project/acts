@@ -67,17 +67,17 @@ struct Neutral {
   constexpr float absQ() const noexcept { return 0; }
 
   template <typename T>
-  constexpr auto qFromQOP(T /*qOverP*/) const noexcept {
+  constexpr auto extractCharge(T /*qOverP*/) const noexcept {
     return 0.0f;
   }
   template <typename T>
-  constexpr auto pFromQOP(T qOverP) const noexcept {
+  constexpr auto extractMomentum(T qOverP) const noexcept {
     assert(qOverP >= 0 && "qOverP cannot be negative");
     return 1.0f / qOverP;
   }
 
   template <typename P, typename Q>
-  constexpr auto qopFromPQ(P p, Q q) const noexcept {
+  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
     assert((q != 0) and "charge must be 0");
     (void)q;
     return 1.0f / p;
@@ -110,20 +110,20 @@ struct SinglyCharged {
   constexpr float absQ() const noexcept { return UnitConstants::e; }
 
   template <typename T>
-  constexpr auto qFromQOP(T qOverP) const noexcept {
+  constexpr auto extractCharge(T qOverP) const noexcept {
     // using because of autodiff
     using std::copysign;
     return copysign(UnitConstants::e, qOverP);
   }
   template <typename T>
-  constexpr auto pFromQOP(T qOverP) const noexcept {
+  constexpr auto extractMomentum(T qOverP) const noexcept {
     // using because of autodiff
     using std::abs;
-    return qFromQOP(qOverP) / qOverP;
+    return extractCharge(qOverP) / qOverP;
   }
 
   template <typename P, typename Q>
-  constexpr auto qopFromPQ(P p, Q q) const noexcept {
+  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
     using std::abs;
     assert((abs(q) == UnitConstants::e) && "absolute charge must be e");
     return q / p;
@@ -157,20 +157,20 @@ class NonNeutralCharge {
   constexpr float absQ() const noexcept { return m_absQ; }
 
   template <typename T>
-  constexpr auto qFromQOP(T qOverP) const noexcept {
+  constexpr auto extractCharge(T qOverP) const noexcept {
     // using because of autodiff
     using std::copysign;
     return copysign(m_absQ, qOverP);
   }
   template <typename T>
-  constexpr auto pFromQOP(T qOverP) const noexcept {
+  constexpr auto extractMomentum(T qOverP) const noexcept {
     // using because of autodiff
     using std::abs;
-    return qFromQOP(qOverP) / qOverP;
+    return extractCharge(qOverP) / qOverP;
   }
 
   template <typename P, typename Q>
-  constexpr auto qopFromPQ(P p, Q q) const noexcept {
+  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
     // using because of autodiff
     using std::abs;
     assert(abs(q) == m_absQ && "inconsistent charge");
@@ -208,20 +208,20 @@ class AnyCharge {
   constexpr float absQ() const noexcept { return m_absQ; }
 
   template <typename T>
-  constexpr auto qFromQOP(T qOverP) const noexcept {
+  constexpr auto extractCharge(T qOverP) const noexcept {
     // using because of autodiff
     using std::copysign;
     return copysign(m_absQ, qOverP);
   }
   template <typename T>
-  constexpr auto pFromQOP(T qOverP) const noexcept {
+  constexpr auto extractMomentum(T qOverP) const noexcept {
     // using because of autodiff
     using std::abs;
-    return (m_absQ != 0.0f) ? qFromQOP(qOverP) / qOverP : 1.0f / qOverP;
+    return (m_absQ != 0.0f) ? extractCharge(qOverP) / qOverP : 1.0f / qOverP;
   }
 
   template <typename P, typename Q>
-  constexpr auto qopFromPQ(P p, Q q) const noexcept {
+  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
     // using because of autodiff
     using std::abs;
     assert(abs(q) == m_absQ && "inconsistent charge");

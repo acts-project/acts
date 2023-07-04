@@ -66,10 +66,11 @@ class GenericParticleHypothesis {
   constexpr static GenericParticleHypothesis<ChargeType> pionLike(float absQ) {
     // we require both because otherwise the used should use a specific particle
     // anyways
-    static_assert(ChargeType::canHoldNeutral,
-                  "neutral not supported by given charge type");
     static_assert(ChargeType::canHoldMultiCharged,
                   "multi charged not supported by given charge type");
+    if constexpr (!ChargeType::canHoldNeutral) {
+      assert(absQ != 0 && "neutral not supported by given charge type");
+    }
 
     return GenericParticleHypothesis<ChargeType>(pion().absPdg(), pion().mass(),
                                                  absQ);
@@ -98,18 +99,18 @@ class GenericParticleHypothesis {
   }
 
   template <typename T>
-  constexpr auto qFromQOP(T qOverP) const noexcept {
-    return m_chargeType.qFromQOP(qOverP);
+  constexpr auto extractCharge(T qOverP) const noexcept {
+    return m_chargeType.extractCharge(qOverP);
   }
 
   template <typename T>
-  constexpr auto pFromQOP(T qOverP) const noexcept {
-    return m_chargeType.pFromQOP(qOverP);
+  constexpr auto extractMomentum(T qOverP) const noexcept {
+    return m_chargeType.extractMomentum(qOverP);
   }
 
   template <typename P, typename Q>
-  constexpr auto qopFromPQ(P p, Q q) const noexcept {
-    return m_chargeType.qopFromPQ(p, q);
+  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
+    return m_chargeType.chargeOverMomentum(p, q);
   }
 
   constexpr const ChargeType& chargeType() const noexcept {
