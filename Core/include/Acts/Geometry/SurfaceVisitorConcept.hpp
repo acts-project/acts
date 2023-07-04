@@ -17,8 +17,8 @@ namespace Acts {
 
 template <typename T>
 concept SurfaceVisitor = requires(T v) {
-                           { v(std::declval<const Surface*>()) };
-                         };
+  {v(std::declval<const Surface*>())};
+};
 
 }  // namespace Acts
 
