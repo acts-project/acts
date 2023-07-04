@@ -189,9 +189,12 @@ class Particle {
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
   /// Check if the particle is alive, i.e. is not at rest.
-  constexpr operator bool() const { return Scalar(0) < m_absMomentum; }
-  /// Check if the particle is dead, i.e is at rest.
-  constexpr bool operator!() const { return m_absMomentum <= Scalar(0); }
+  constexpr bool isAlive() const { return Scalar(0) < m_absMomentum; }
+
+  constexpr bool isSecondary() const {
+    return particleId().vertexSecondary() != 0 ||
+           particleId().generation() != 0 || particleId().subParticle() != 0;
+  }
 
   // simulation specific properties
 
