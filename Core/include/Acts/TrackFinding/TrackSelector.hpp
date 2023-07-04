@@ -13,6 +13,9 @@
 
 namespace Acts {
 
+/// Class which performs filtering of tracks. It accepts an input and an output
+/// track container and uses the built-in copy facility to copy tracks into the
+/// output container.
 class TrackSelector {
  public:
   struct Config {
@@ -38,12 +41,22 @@ class TrackSelector {
     std::size_t minMeasurements = 0;
   };
 
+  /// Constructor from a config object
+  /// @param config is the configuration object
   TrackSelector(const Config& config) : m_cfg(config) {}
 
+  /// Select tracks from an input container and copy them into an output
+  /// container
+  /// @tparam input_tracks_t is the type of the input track container
+  /// @tparam output_tracks_t is the type of the output track container
+  /// @param inputTracks is the input track container
+  /// @param outputTracks is the output track container
   template <typename input_tracks_t, typename output_tracks_t>
   void selectTracks(const input_tracks_t& inputTracks,
                     output_tracks_t& outputTracks) const;
 
+  /// Get readonly access to the config parameters
+  /// @return the config object
   const Config& config() const { return m_cfg; }
 
  private:
