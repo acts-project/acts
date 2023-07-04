@@ -167,8 +167,9 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_ONNX)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesFrameworkML ActsExamplesTrackFindingML)
   target_sources(ActsPythonBindings PRIVATE src/Onnx.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibrator.cpp)
   list(APPEND py_files examples/onnx/__init__.py)
 
   if(ACTS_BUILD_PLUGIN_MLPACK)
@@ -181,6 +182,7 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
   target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)

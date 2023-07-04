@@ -66,7 +66,7 @@ struct WeightedComponentReducerLoop {
   // TODO: Maybe we can cache this value and only update it when the parameters
   // change
   template <typename stepper_state_t>
-  static ActsScalar qop(const stepper_state_t& s) {
+  static ActsScalar qOverP(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
@@ -627,10 +627,17 @@ class MultiEigenStepperLoop
     return Reducer::direction(state);
   }
 
+  /// QoP access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double qOverP(const State& state) const { return Reducer::qOverP(state); }
+
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return Reducer::momentum(state); }
+  double absoluteMomentum(const State& state) const {
+    return Reducer::momentum(state);
+  }
 
   /// Charge access
   ///

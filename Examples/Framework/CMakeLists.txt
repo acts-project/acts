@@ -1,5 +1,8 @@
 include(ActsTargetLinkLibrariesSystem)
 
+set(ActsExamplesFramework_SOURCES)
+
+
 add_library(
   ActsExamplesFramework SHARED
   src/EventData/MeasurementCalibration.cpp
@@ -19,7 +22,8 @@ add_library(
   src/Validation/ResPlotTool.cpp
   src/Validation/TrackClassification.cpp
   src/Validation/TrackSummaryPlotTool.cpp
-)
+  )
+
 target_include_directories(
   ActsExamplesFramework
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -65,3 +69,5 @@ install(
 install(
   DIRECTORY include/ActsExamples 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)

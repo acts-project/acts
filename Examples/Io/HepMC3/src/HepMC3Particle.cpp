@@ -8,8 +8,8 @@
 
 #include "ActsExamples/Io/HepMC3/HepMC3Particle.hpp"
 
+#include "Acts/Definitions/ParticleData.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Vertex.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
 
 ActsExamples::SimParticle ActsExamples::HepMC3Particle::particle(
     const HepMC3::ConstGenParticlePtr& particle) {
@@ -18,7 +18,7 @@ ActsExamples::SimParticle ActsExamples::HepMC3Particle::particle(
   particleId.setParticle(particle->id());
   Acts::PdgParticle pdg = static_cast<Acts::PdgParticle>(particle->pid());
   SimParticle fw(particleId, static_cast<Acts::PdgParticle>(particle->pid()),
-                 ActsFatras::findCharge(pdg), particle->generated_mass());
+                 Acts::findCharge(pdg).value_or(0), particle->generated_mass());
   fw.setDirection(particle->momentum().x(), particle->momentum().y(),
                   particle->momentum().z());
   fw.setAbsoluteMomentum(particle->momentum().p3mod());
@@ -80,8 +80,8 @@ double ActsExamples::HepMC3Particle::mass(
 
 double ActsExamples::HepMC3Particle::charge(
     const std::shared_ptr<HepMC3::GenParticle>& particle) {
-  return ActsFatras::findCharge(
-      static_cast<Acts::PdgParticle>(particle->pid()));
+  return Acts::findCharge(static_cast<Acts::PdgParticle>(particle->pid()))
+      .value_or(0);
 }
 
 void ActsExamples::HepMC3Particle::pdgID(
