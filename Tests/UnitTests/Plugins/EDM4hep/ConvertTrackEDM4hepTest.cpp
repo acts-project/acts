@@ -13,8 +13,8 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
       5_ns;  // -> perpendicular to perigee and pointing right, should be PCA
 
   GenericBoundTrackParameters<SinglyCharged> boundPar{refSurface, par,
-                                                     std::nullopt};
+                                                      std::nullopt};
 
   double Bz = 2_T;
 
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
   par << 1_mm, 5_mm, M_PI / 4., M_PI_2, -1 / 1_GeV, 5_ns;
 
   GenericBoundTrackParameters<SinglyCharged> boundPar{refSurface, par,
-                                                     std::nullopt};
+                                                      std::nullopt};
 
   double Bz = 2_T;
 

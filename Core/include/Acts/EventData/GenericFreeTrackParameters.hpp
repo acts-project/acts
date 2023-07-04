@@ -44,7 +44,7 @@ class GenericFreeTrackParameters {
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
   GenericFreeTrackParameters(const ParametersVector& params, Scalar q,
-                            std::optional<CovarianceMatrix> cov = std::nullopt)
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(params),
         m_cov(std::move(cov)),
         m_chargeInterpreter(std::abs(q)) {
@@ -62,7 +62,7 @@ class GenericFreeTrackParameters {
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   GenericFreeTrackParameters(const ParametersVector& params,
-                            std::optional<CovarianceMatrix> cov = std::nullopt)
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(params), m_cov(std::move(cov)) {}
 
   /// Construct from four-position, angles, absolute momentum, and charge.
@@ -74,8 +74,8 @@ class GenericFreeTrackParameters {
   /// @param q Particle charge
   /// @param cov Free parameters covariance matrix
   GenericFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
-                            Scalar p, Scalar q,
-                            std::optional<CovarianceMatrix> cov = std::nullopt)
+                             Scalar p, Scalar q,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
         m_chargeInterpreter(std::abs(q)) {
@@ -105,8 +105,8 @@ class GenericFreeTrackParameters {
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   GenericFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
-                            Scalar qOverP,
-                            std::optional<CovarianceMatrix> cov = std::nullopt)
+                             Scalar qOverP,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(FreeVector::Zero()), m_cov(std::move(cov)) {
     auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];

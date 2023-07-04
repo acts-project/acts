@@ -51,9 +51,9 @@ class GenericBoundTrackParameters {
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
-  GenericBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const ParametersVector& params, Scalar q,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const ParametersVector& params,
+      Scalar q, std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(params),
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
@@ -74,9 +74,9 @@ class GenericBoundTrackParameters {
   /// ambiguities, i.e. the charge type is default-constructible.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  GenericBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const ParametersVector& params,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const ParametersVector& params,
+      std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(params), m_cov(std::move(cov)), m_surface(std::move(surface)) {
     assert(m_surface);
     normalizePhiTheta();
@@ -108,7 +108,7 @@ class GenericBoundTrackParameters {
     }
 
     return GenericBoundTrackParameters<charge_t>{std::move(surface), *bound, q,
-                                                std::move(cov)};
+                                                 std::move(cov)};
   }
 
   /// Factory to construct from four-position, direction, and
@@ -139,7 +139,7 @@ class GenericBoundTrackParameters {
     }
 
     return GenericBoundTrackParameters<charge_t>{std::move(surface), *bound,
-                                                std::move(cov)};
+                                                 std::move(cov)};
   }
 
   /// Parameters are not default constructible due to the charge type.
@@ -149,7 +149,8 @@ class GenericBoundTrackParameters {
   ~GenericBoundTrackParameters() = default;
   GenericBoundTrackParameters& operator=(const GenericBoundTrackParameters&) =
       default;
-  GenericBoundTrackParameters& operator=(GenericBoundTrackParameters&&) = default;
+  GenericBoundTrackParameters& operator=(GenericBoundTrackParameters&&) =
+      default;
 
   /// Parameters vector.
   ParametersVector& parameters() { return m_params; }
