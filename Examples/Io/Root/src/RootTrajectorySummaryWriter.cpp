@@ -238,7 +238,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       float t_pT = NaNfloat;
       float t_d0 = NaNfloat;
       float t_z0 = NaNfloat;
-      float t_qop = NaNfloat;
 
       // Get the perigee surface
       Acts::Surface* pSurface = nullptr;
@@ -280,7 +279,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           t_phi = phi(particle.unitDirection());
           t_eta = eta(particle.unitDirection());
           t_pT = t_p * perp(particle.unitDirection());
-          t_qop = particle.qop();
 
           if (pSurface != nullptr) {
             auto intersection =
@@ -363,7 +361,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
                                                  static_cast<float>(2 * M_PI)),
                param[Acts::eBoundTheta] - t_theta,
-               param[Acts::eBoundQOverP] - t_qop,
+               param[Acts::eBoundQOverP] - t_charge / t_p,
                param[Acts::eBoundTime] - t_time};
 
         if (hasFittedCov) {
