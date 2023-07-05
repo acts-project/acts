@@ -145,11 +145,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     tracksPtr.push_back(&trk);
   }
 
-  // TODO: test using beam spot constraint
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.beamSpotConstraint = std::get<BeamSpotData>(csvData);
+  // TODO: test without using beam spot constraint
+  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
