@@ -39,7 +39,8 @@
 ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
-      m_cfg(std::move(config)) {
+      m_cfg(std::move(config)),
+      m_trackSelector(m_cfg.selectorConfig) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -145,9 +146,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
       seedNumber(track) = nSeed;
-      const auto eta = -std::log(std::tan(track.theta() / 2));
-      if (track.transverseMomentum() > 1_GeV && std::abs(eta) < 3.0 &&
-          track.nMeasurements() >= 7) {
+      if (m_trackSelector.isValidTrack(track)) {
         auto destProxy = tracks.getTrack(tracks.addTrack());
         destProxy.copyFrom(track, true);  // make sure we copy track states!
       }
