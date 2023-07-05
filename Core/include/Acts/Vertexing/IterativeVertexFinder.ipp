@@ -59,7 +59,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     Vertex<InputTrack_t> currentSplitVertex;
 
     if ((m_cfg.useBeamConstraint  && !tracksToFit.empty()) || 
-        (!m_cfg.useBeamConstraint && tracksToFit.size() > 1)) {
+        tracksToFit.size() > 1) {
       auto fitResult = 
           m_cfg.vertexFitter.fit(tracksToFit, m_cfg.linearizer, 
                                  vertexingOptions, state.fitterState);
@@ -69,14 +69,17 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
         return fitResult.error();
       }
     }
-    if (m_cfg.createSplitVertices && tracksToFitSplitVertex.size() > 1) {
-      auto fitResult =
-          m_cfg.vertexFitter.fit(tracksToFitSplitVertex, m_cfg.linearizer,
-                                 vertexingOptions, state.fitterState);
-      if (fitResult.ok()) {
-        currentSplitVertex = std::move(*fitResult);
-      } else {
-        return fitResult.error();
+    if (m_cfg.createSplitVertices){
+      if ((m_cfg.useBeamConstraint  && !tracksToFitSplitVertex.empty()) || 
+          tracksToFitSplitVertex.size() > 1){
+        auto fitResult =
+            m_cfg.vertexFitter.fit(tracksToFitSplitVertex, m_cfg.linearizer,
+                                  vertexingOptions, state.fitterState);
+        if (fitResult.ok()) {
+          currentSplitVertex = std::move(*fitResult);
+        } else {
+          return fitResult.error();
+        }
       }
     }
     /// End vertex fit
@@ -360,7 +363,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
       ++count;
     } else if (numberOfTracks <= 4 * m_cfg.splitVerticesTrkInvFraction &&
                m_cfg.createSplitVertices) {
-      if (count % m_cfg.splitVerticesTrkInvFraction == 0) {
+      if (count % m_cfg.splitVerticesTrkInvFraction != 0) {
         tracksToFitOut.push_back(sTrack);
         ++count;
       } else {
@@ -388,13 +391,13 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
                (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
 
       if (hypotVariance == 0.) {
-        ACTS_WARNING("Track parameter covariance is zero. Track was not assigned to vertex.");
+        ACTS_WARNING("Track impact parameter covariances are zero. Track was not assigned to vertex.");
         continue;
       }
 
       if (*distanceRes / hypotVariance < m_cfg.significanceCutSeeding) {
         if (!m_cfg.createSplitVertices ||
-            count % m_cfg.splitVerticesTrkInvFraction == 0) {
+            count % m_cfg.splitVerticesTrkInvFraction != 0) {
           tracksToFitOut.push_back(sTrack);
           ++count;
         } else {
