@@ -76,7 +76,6 @@ def run_vertexing(fitter, mu, events):
             s,
             setup.trackingGeometry,
             setup.field,
-            enableInteractions=True,
             rnd=rnd,
         )
 

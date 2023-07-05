@@ -388,7 +388,10 @@ def addFatras(
     rnd: acts.examples.RandomNumbers,
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
-    enableInteractions: bool = True,
+    emScattering: bool = True,
+    emEnergyLossIonisation: bool = True,
+    emEnergyLossRadiation: bool = True,
+    emPhotonConversion: bool = False,
     pMin: Optional[float] = None,
     inputParticles: str = "particles_input",
     outputDirCsv: Optional[Union[Path, str]] = None,
@@ -411,7 +414,10 @@ def addFatras(
         Specify preSelectParticles=None to inhibit ParticleSelector altogether.
     postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
         Similar to preSelectParticles but applied after simulation to "particles_initial", therefore also filters secondaries.
-    enableInteractions : Enable the particle interactions in the simulation
+    emScattering : Simulate (multiple) scattering for charged particles. Default on.
+    emEnergyLossIonisation : Simulate ionisiation/excitation energy loss of charged particles. Default on.
+    emEnergyLossRadiation : Simulate radiative energy loss of charged particles. Default on.
+    emPhotonConversion : Simulate electron-positron pair production by photon conversion. Default off.
     pMin : Minimum monmentum of particles simulated by FATRAS
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
@@ -445,10 +451,10 @@ def addFatras(
             trackingGeometry=trackingGeometry,
             magneticField=field,
             generateHitsOnSensitive=True,
-            emScattering=enableInteractions,
-            emEnergyLossIonisation=enableInteractions,
-            emEnergyLossRadiation=enableInteractions,
-            emPhotonConversion=enableInteractions,
+            emScattering=emScattering,
+            emEnergyLossIonisation=emEnergyLossIonisation,
+            emEnergyLossRadiation=emEnergyLossRadiation,
+            emPhotonConversion=emPhotonConversion,
             pMin=pMin,
         )
     )

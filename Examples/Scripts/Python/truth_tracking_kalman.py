@@ -68,7 +68,6 @@ def runTruthTrackingKalman(
         trackingGeometry,
         field,
         rnd=rnd,
-        enableInteractions=True,
     )
 
     addDigitization(

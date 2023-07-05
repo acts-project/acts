@@ -73,7 +73,6 @@ def runTruthTrackingGsf(
         trackingGeometry,
         field,
         rnd=rnd,
-        enableInteractions=True,
     )
 
     addDigitization(

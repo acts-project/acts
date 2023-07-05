@@ -139,7 +139,6 @@ else:
         )
         if ttbar
         else ParticleSelectorConfig(),
-        enableInteractions=True,
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
         rnd=rnd,
