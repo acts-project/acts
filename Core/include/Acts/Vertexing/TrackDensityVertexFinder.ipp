@@ -23,11 +23,11 @@ auto Acts::TrackDensityVertexFinder<vfitter_t, track_density_t>::find(
   // Calculate seed position
   // Note: constraint position is (0,0,0) if no constraint provided
   Vector3 seedPos =
-      vertexingOptions.vertexConstraint.position() + Vector3(0., 0., z);
+      vertexingOptions.beamSpotConstraint.position() + Vector3(0., 0., z);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  SymMatrix3 seedCov = vertexingOptions.vertexConstraint.covariance();
+  SymMatrix3 seedCov = vertexingOptions.beamSpotConstraint.covariance();
 
   // Check if a constraint is provided and set the new z position constraint
   if (seedCov != SymMatrix3::Zero() && std::isnormal(zAndWidth.second)) {

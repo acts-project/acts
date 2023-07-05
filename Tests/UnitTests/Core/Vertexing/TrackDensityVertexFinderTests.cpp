@@ -139,18 +139,16 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
 
-  // Finder options
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SymMatrix3 constrCov = ActsSymMatrix<3>::Identity();
 
-  Vertex<BoundTrackParameters> vertexConstraint(constraintPos);
-  vertexConstraint.setCovariance(constrCov);
+  Vertex<BoundTrackParameters> beamSpotConstraint(constraintPos);
+  beamSpotConstraint.setCovariance(constrCov);
 
-  vertexingOptions.vertexConstraint = vertexConstraint;
+  // Finder options
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, beamSpotConstraint);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>,
                                GaussianTrackDensity<BoundTrackParameters>>;
@@ -311,17 +309,16 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
 
-  // Finder options
-  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
-
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SymMatrix3 constrCov = SymMatrix3::Identity();
 
-  Vertex<InputTrack> vertexConstraint(constraintPos);
-  vertexConstraint.setCovariance(constrCov);
+  Vertex<InputTrack> beamSpotConstraint(constraintPos);
+  beamSpotConstraint.setCovariance(constrCov);
 
-  vertexingOptions.vertexConstraint = vertexConstraint;
+  // Finder options
+  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
+                                                beamSpotConstraint);
 
   std::function<BoundTrackParameters(InputTrack)> extractParameters =
       [](const InputTrack& params) { return params.parameters(); };

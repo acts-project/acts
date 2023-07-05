@@ -77,17 +77,14 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     ndf = 1;
   }
 
-  // Determine if we do constraint fit or not by checking if an
-  // invertible non-zero constraint vertex covariance is given
-  bool isConstraintFit = false;
-  if (vertexingOptions.vertexConstraint.covariance().determinant() != 0) {
-    isConstraintFit = true;
+  // Determine if we do constraint fit or not
+  if (vertexingOptions.useBeamSpotConstraint) {
     ndf += 3;
   }
 
   std::vector<BilloirTrack<input_track_t>> billoirTracks;
   std::vector<Vector3> trackMomenta;
-  Vector4 linPoint = vertexingOptions.vertexConstraint.fullPosition();
+  Vector4 linPoint = vertexingOptions.beamSpotConstraint.fullPosition();
   Vertex<input_track_t> fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
@@ -186,14 +183,14 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     SymMatrix4 VwgtMat =
         billoirVertex.Amat -
         billoirVertex.BCBmat;  // VwgtMat = Amat-sum{BiMat*Ci^-1*BiMat^T}
-    if (isConstraintFit) {
+    if (vertexingOptions.useBeamSpotConstraint) {
       // this will be 0 for first iteration but != 0 from second on
       Vector4 posInBilloirFrame =
-          vertexingOptions.vertexConstraint.fullPosition() - linPoint;
+          vertexingOptions.beamSpotConstraint.fullPosition() - linPoint;
 
-      Vdel += vertexingOptions.vertexConstraint.fullCovariance().inverse() *
+      Vdel += vertexingOptions.beamSpotConstraint.fullCovariance().inverse() *
               posInBilloirFrame;
-      VwgtMat += vertexingOptions.vertexConstraint.fullCovariance().inverse();
+      VwgtMat += vertexingOptions.beamSpotConstraint.fullCovariance().inverse();
     }
 
     // cov(deltaV) = VwgtMat^-1
@@ -266,20 +263,19 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       newChi2 += bTrack.chi2;
     }
 
-    if (isConstraintFit) {
+    if (vertexingOptions.useBeamSpotConstraint) {
       // last term will also be 0 again but only in the first iteration
       // = calc. vtx in billoir frame - (    isConstraintFit pos. in billoir
       // frame )
 
       Vector4 deltaTrk =
           deltaV -
-          (vertexingOptions.vertexConstraint.fullPosition() - linPoint);
+          (vertexingOptions.beamSpotConstraint.fullPosition() - linPoint);
 
-      newChi2 +=
-          (deltaTrk.transpose())
-              .dot(
-                  vertexingOptions.vertexConstraint.fullCovariance().inverse() *
-                  deltaTrk);
+      newChi2 += (deltaTrk.transpose())
+                     .dot(vertexingOptions.beamSpotConstraint.fullCovariance()
+                              .inverse() *
+                          deltaTrk);
     }
 
     if (!std::isnormal(newChi2)) {
