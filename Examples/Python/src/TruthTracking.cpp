@@ -126,6 +126,7 @@ void addTruthTracking(Context& ctx) {
     ACTS_PYTHON_MEMBER(ptMax);
     ACTS_PYTHON_MEMBER(removeCharged);
     ACTS_PYTHON_MEMBER(removeNeutral);
+    ACTS_PYTHON_MEMBER(removeSecondaries);
     ACTS_PYTHON_STRUCT_END();
 
     pythonRangeProperty(c, "rho", &Config::rhoMin, &Config::rhoMax);
