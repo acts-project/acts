@@ -96,19 +96,21 @@ class IterativeVertexFinder {
 
     /// Vertex finder configuration variables
     bool useBeamConstraint = false;
-    /// Tracks that are within a distance of 
+    /// Tracks that are within a distance of
     ///
-    /// significanceCutSeeding * sqrt(sigma(d0)^2+sigma(z0)^2) 
+    /// significanceCutSeeding * sqrt(sigma(d0)^2+sigma(z0)^2)
     ///
     /// are considered compatible with the vertex.
     double significanceCutSeeding = 10;
     double maximumChi2cutForSeeding = 36.;
     int maxVertices = 50;
 
-    /// Assign a certain fraction of compatible tracks to a different (so-called split) vertex if boolean is set to true.
+    /// Assign a certain fraction of compatible tracks to a different (so-called
+    /// split) vertex if boolean is set to true.
     bool createSplitVertices = false;
-    /// Inverse of the fraction of tracks that will be assigned to the split vertex.
-    /// E.g., if splitVerticesTrkInvFraction = 2, about 50% of compatible tracks will be assigned to the split vertex.
+    /// Inverse of the fraction of tracks that will be assigned to the split
+    /// vertex. E.g., if splitVerticesTrkInvFraction = 2, about 50% of
+    /// compatible tracks will be assigned to the split vertex.
     int splitVerticesTrkInvFraction = 2;
 
     bool reassignTracksAfterFirstFit = false;
@@ -204,7 +206,7 @@ class IterativeVertexFinder {
   /// @param tracksToFit Tracks to be removed from seedTracks
   /// @param seedTracks List to remove tracks from
   void removeTracks(const std::vector<const InputTrack_t*>& tracksToFit,
-                       std::vector<const InputTrack_t*>& seedTracks) const;
+                    std::vector<const InputTrack_t*>& seedTracks) const;
 
   /// @brief Function for calculating how compatible
   /// a given track is to a given vertex

@@ -44,9 +44,8 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     std::vector<const InputTrack_t*> tracksToFitSplitVertex;
 
     // Fill vector with tracks to fit, only compatible with seed:
-    auto res =
-        fillTracksToFit(seedTracks, seedVertex, tracksToFit,
-                          tracksToFitSplitVertex, vertexingOptions, state);
+    auto res = fillTracksToFit(seedTracks, seedVertex, tracksToFit,
+                               tracksToFitSplitVertex, vertexingOptions, state);
 
     if (!res.ok()) {
       return res.error();
@@ -58,23 +57,22 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     Vertex<InputTrack_t> currentVertex;
     Vertex<InputTrack_t> currentSplitVertex;
 
-    if ((m_cfg.useBeamConstraint  && !tracksToFit.empty()) || 
+    if ((m_cfg.useBeamConstraint && !tracksToFit.empty()) ||
         tracksToFit.size() > 1) {
-      auto fitResult = 
-          m_cfg.vertexFitter.fit(tracksToFit, m_cfg.linearizer, 
-                                 vertexingOptions, state.fitterState);
+      auto fitResult = m_cfg.vertexFitter.fit(
+          tracksToFit, m_cfg.linearizer, vertexingOptions, state.fitterState);
       if (fitResult.ok()) {
         currentVertex = std::move(*fitResult);
       } else {
         return fitResult.error();
       }
     }
-    if (m_cfg.createSplitVertices){
-      if ((m_cfg.useBeamConstraint  && !tracksToFitSplitVertex.empty()) || 
-          tracksToFitSplitVertex.size() > 1){
+    if (m_cfg.createSplitVertices) {
+      if ((m_cfg.useBeamConstraint && !tracksToFitSplitVertex.empty()) ||
+          tracksToFitSplitVertex.size() > 1) {
         auto fitResult =
             m_cfg.vertexFitter.fit(tracksToFitSplitVertex, m_cfg.linearizer,
-                                  vertexingOptions, state.fitterState);
+                                   vertexingOptions, state.fitterState);
         if (fitResult.ok()) {
           currentSplitVertex = std::move(*fitResult);
         } else {
@@ -249,8 +247,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
 template <typename vfitter_t, typename sfinder_t>
 Acts::Result<void>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
-    Vertex<InputTrack_t>& vertex,
-    std::vector<const InputTrack_t*>& tracksToFit,
+    Vertex<InputTrack_t>& vertex, std::vector<const InputTrack_t*>& tracksToFit,
     std::vector<const InputTrack_t*>& seedTracks,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
     State& state) const {
@@ -297,8 +294,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
 
   for (const auto& trk : tracksToFit) {
     // calculate chi2 w.r.t. last fitted vertex
-    auto result = getCompatibility(m_extractParameters(*trk),
-                                   vertex, vertexingOptions, state);
+    auto result = getCompatibility(m_extractParameters(*trk), vertex,
+                                   vertexingOptions, state);
 
     if (!result.ok()) {
       return result.error();
@@ -309,10 +306,9 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     // check if sufficiently compatible with last fitted vertex
     // (quite loose constraint)
     if (chi2 < m_cfg.maximumChi2cutForSeeding) {
-      auto foundIter = std::find_if(seedTracks.begin(), seedTracks.end(),
-                                    [&trk](const auto seedTrk) {
-                                      return trk == seedTrk;
-                                    });
+      auto foundIter =
+          std::find_if(seedTracks.begin(), seedTracks.end(),
+                       [&trk](const auto seedTrk) { return trk == seedTrk; });
       if (foundIter != seedTracks.end()) {
         // Remove track from seed tracks
         seedTracks.erase(foundIter);
@@ -321,11 +317,9 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
     } else {
       // Track not compatible with vertex
       // Remove track from current vertex
-      auto foundIter =
-          std::find_if(tracksAtVertex.begin(), tracksAtVertex.end(),
-                       [&trk](auto trkAtVtx) {
-                         return trk == trkAtVtx.originalParams;
-                       });
+      auto foundIter = std::find_if(
+          tracksAtVertex.begin(), tracksAtVertex.end(),
+          [&trk](auto trkAtVtx) { return trk == trkAtVtx.originalParams; });
       if (foundIter != tracksAtVertex.end()) {
         // Remove track from seed tracks
         tracksAtVertex.erase(foundIter);
@@ -354,7 +348,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
   int count = 0;
   // Fill tracksToFit vector with tracks compatible with seed
   for (const auto& sTrack : seedTracks) {
-    // If there are only few tracks left, add them to fit regardless of their position:
+    // If there are only few tracks left, add them to fit regardless of their
+    // position:
     if (numberOfTracks <= 2) {
       tracksToFitOut.push_back(sTrack);
       ++count;
@@ -371,7 +366,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
         ++count;
       }
     }
-    // If a large amount of tracks is available, we check their compatibility with the vertex before adding them to the fit:
+    // If a large amount of tracks is available, we check their compatibility
+    // with the vertex before adding them to the fit:
     else {
       const BoundTrackParameters& sTrackParams = m_extractParameters(*sTrack);
       auto distanceRes = m_cfg.ipEst.calculate3dDistance(
@@ -391,7 +387,9 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
                (*(sTrackParams.covariance()))(eBoundLoc1, eBoundLoc1));
 
       if (hypotVariance == 0.) {
-        ACTS_WARNING("Track impact parameter covariances are zero. Track was not assigned to vertex.");
+        ACTS_WARNING(
+            "Track impact parameter covariances are zero. Track was not "
+            "assigned to vertex.");
         continue;
       }
 
@@ -442,8 +440,8 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
           m_extractParameters(*(tracksIter->originalParams));
 
       // compute compatibility
-      auto resultNew = getCompatibility(origParams, currentVertex,
-                                        vertexingOptions, state);
+      auto resultNew =
+          getCompatibility(origParams, currentVertex, vertexingOptions, state);
       if (!resultNew.ok()) {
         return Result<bool>::failure(resultNew.error());
       }
