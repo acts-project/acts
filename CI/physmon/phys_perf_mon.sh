@@ -18,15 +18,23 @@ refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
-SPYRAL="spyral run -i 0.1 --summary"
+SPYRAL_BIN="spyral"
+SPYRAL="${SPYRAL_BIN} run -i 0.1 --summary"
+
+mkdir ${outdir}/memory
 
 source $SCRIPT_DIR/setup.sh
 echo "::group::Generate validation dataset"
-$SPYRAL -o "physmon/mem_truth_tracking_kalman.csv" -- CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
-$SPYRAL -o "physmon/mem_truth_tracking_gsf.csv" -- CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
-$SPYRAL -o "physmon/mem_ckf_tracking.csv" -- CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
-$SPYRAL -o "physmon/mem_vertexing.csv" -- CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
+$SPYRAL -o "$outdir/memory/mem_truth_tracking_kalman.csv" -- CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
+$SPYRAL -o "$outdir/memory/mem_truth_tracking_gsf.csv" -- CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
+$SPYRAL -o "$outdir/memory/mem_ckf_tracking.csv" -- CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
+$SPYRAL -o "$outdir/memory/mem_vertexing.csv" -- CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
 echo "::endgroup::"
+
+$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_kalman.csv -o $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_gsf.csv -o $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_ckf_tracking.csv -o $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_vertexing.csv -o $outdir/memory
 
 set +e
 
