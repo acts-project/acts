@@ -304,7 +304,7 @@ jobs:
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
           && pip3 install histcmp==0.5.2
-          && pip3 install spyral-cli==1.0.4
+          && pip3 install spyral-cli==1.0.5
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
