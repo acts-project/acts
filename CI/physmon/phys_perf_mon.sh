@@ -25,10 +25,10 @@ mkdir ${outdir}/memory
 
 source $SCRIPT_DIR/setup.sh
 echo "::group::Generate validation dataset"
-$SPYRAL -o "$outdir/memory/mem_truth_tracking_kalman.csv" -- CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
-$SPYRAL -o "$outdir/memory/mem_truth_tracking_gsf.csv" -- CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
-$SPYRAL -o "$outdir/memory/mem_ckf_tracking.csv" -- CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
-$SPYRAL -o "$outdir/memory/mem_vertexing.csv" -- CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
+$SPYRAL -l "Truth Tracking KF" -o "$outdir/memory/mem_truth_tracking_kalman.csv" -- CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
+$SPYRAL -l "Truth Tracking GSF" -o "$outdir/memory/mem_truth_tracking_gsf.csv" -- CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
+$SPYRAL -l "CKF Tracking" -o "$outdir/memory/mem_ckf_tracking.csv" -- CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
+$SPYRAL -l "Vertexing" -o "$outdir/memory/mem_vertexing.csv" -- CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
 echo "::endgroup::"
 
 $SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_kalman.csv -o $outdir/memory
