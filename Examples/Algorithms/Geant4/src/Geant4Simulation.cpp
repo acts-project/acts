@@ -225,6 +225,10 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
       delete runManager().GetUserSteppingAction();
     }
 
+    ParticleKillAction::Config particleKillCfg;
+    particleKillCfg.volume = cfg.killVolume;
+    particleKillCfg.maxTime = cfg.killAfterTime;
+
     SensitiveSteppingAction::Config stepCfg;
     stepCfg.eventStore = m_eventStore;
     stepCfg.charged = true;
@@ -232,15 +236,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     stepCfg.primary = true;
     stepCfg.secondary = cfg.recordHitsOfSecondaries;
 
-    ParticleKillAction::Config particleKillCfg;
-    particleKillCfg.volume = cfg.killVolume;
-    particleKillCfg.maxTime = cfg.killAfterTime;
-
     SteppingActionList::Config steppingCfg;
-    steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(
-        stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
     steppingCfg.actions.push_back(std::make_unique<ParticleKillAction>(
         particleKillCfg, m_logger->cloneWithSuffix("Killer")));
+    steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(
+        stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
 
     // G4RunManager will take care of deletion
     auto steppingAction = new SteppingActionList(steppingCfg);
