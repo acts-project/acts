@@ -13,7 +13,6 @@
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -136,47 +135,6 @@ void addTruthTracking(Context& ctx) {
     pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
     pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
     pythonRangeProperty(c, "m", &Config::mMin, &Config::mMax);
-    pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
-  }
-
-  {
-    using Alg = ActsExamples::TrackSelector;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(mex, "TrackSelector")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTracks);
-    ACTS_PYTHON_MEMBER(outputTracks);
-    ACTS_PYTHON_MEMBER(loc0Min);
-    ACTS_PYTHON_MEMBER(loc0Max);
-    ACTS_PYTHON_MEMBER(loc1Min);
-    ACTS_PYTHON_MEMBER(loc1Max);
-    ACTS_PYTHON_MEMBER(timeMin);
-    ACTS_PYTHON_MEMBER(timeMax);
-    ACTS_PYTHON_MEMBER(phiMin);
-    ACTS_PYTHON_MEMBER(phiMax);
-    ACTS_PYTHON_MEMBER(etaMin);
-    ACTS_PYTHON_MEMBER(etaMax);
-    ACTS_PYTHON_MEMBER(absEtaMin);
-    ACTS_PYTHON_MEMBER(absEtaMax);
-    ACTS_PYTHON_MEMBER(ptMin);
-    ACTS_PYTHON_MEMBER(ptMax);
-    ACTS_PYTHON_MEMBER(minMeasurements);
-    ACTS_PYTHON_STRUCT_END();
-
-    pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
-    pythonRangeProperty(c, "loc1", &Config::loc1Min, &Config::loc1Max);
-    pythonRangeProperty(c, "time", &Config::timeMin, &Config::timeMax);
-    pythonRangeProperty(c, "phi", &Config::phiMin, &Config::phiMax);
-    pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
-    pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
     pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
   }
 
