@@ -5,11 +5,7 @@ import shutil
 
 import acts
 from acts.examples.simulation import (
-    addParticleGun,
-    MomentumConfig,
-    EtaConfig,
-    PhiConfig,
-    ParticleConfig,
+    addPythia8,
     addFatras,
     addDigitization,
 )
@@ -39,7 +35,7 @@ setup = makeSetup()
 
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(
-        events=500,
+        events=3,
         numThreads=-1,
         logLevel=acts.logging.INFO,
         fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
@@ -54,21 +50,6 @@ with tempfile.TemporaryDirectory() as temp:
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
-    addParticleGun(
-        s,
-        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
-        EtaConfig(-3.0, 3.0),
-        PhiConfig(0.0, 360.0 * u.degree),
-        ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
-        vtxGen=acts.examples.GaussianVertexGenerator(
-            mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
-            ),
-        ),
-        multiplicity=50,
-        rnd=rnd,
-    )
 
     addPythia8(
         s,
@@ -137,17 +118,16 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp,
     )
 
-    if label in ["seeded", "orthogonal"]:
-        addAmbiguityResolution(
-            s,
-            AmbiguityResolutionConfig(maximumSharedHits=3),
-            outputDirRoot=tp,
-        )
+    addAmbiguityResolution(
+        s,
+        AmbiguityResolutionConfig(maximumSharedHits=3),
+        outputDirRoot=tp,
+    )
 
     addVertexFitting(
         s,
         setup.field,
-        associatedParticles=None
+        associatedParticles=None,
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",
         vertexFinder=VertexFinder.AMVF,
