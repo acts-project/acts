@@ -40,7 +40,7 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
       m_cfg(std::move(config)),
-      m_trackSelector(m_cfg.selectorConfig) {
+      m_trackSelector(m_cfg.trackSelectorCfg) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }

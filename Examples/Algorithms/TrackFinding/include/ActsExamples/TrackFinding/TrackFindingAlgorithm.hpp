@@ -93,7 +93,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Compute shared hit information
     bool computeSharedHits = false;
     /// Track selector config
-    Acts::TrackSelector::Config selectorConfig;
+    Acts::TrackSelector::Config trackSelectorCfg;
   };
 
   /// Constructor of the track finding algorithm
