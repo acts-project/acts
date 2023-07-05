@@ -137,7 +137,7 @@ struct WeightedComponentReducerLoop {
 
 struct MaxMomentumReducerLoop {
   template <typename component_range_t>
-  static const auto& maxAbsoluteMomenutmIt(const component_range_t& cmps) {
+  static const auto& maxAbsoluteMomentumIt(const component_range_t& cmps) {
     return *std::max_element(cmps.begin(), cmps.end(),
                              [&](const auto& a, const auto& b) {
                                return std::abs(a.state.pars[eFreeQOverP]) >
@@ -147,53 +147,53 @@ struct MaxMomentumReducerLoop {
 
   template <typename stepper_state_t>
   static Vector3 position(const stepper_state_t& s) {
-    return maxAbsoluteMomenutmIt(s.components)
+    return maxAbsoluteMomentumIt(s.components)
         .state.pars.template segment<3>(eFreePos0);
   }
 
   template <typename stepper_state_t>
   static Vector3 direction(const stepper_state_t& s) {
-    return maxAbsoluteMomenutmIt(s.components)
+    return maxAbsoluteMomentumIt(s.components)
         .state.pars.template segment<3>(eFreeDir0);
   }
 
   template <typename stepper_state_t>
   static ActsScalar qOverP(const stepper_state_t& s) {
-    const auto& cmp = maxAbsoluteMomenutmIt(s.components);
+    const auto& cmp = maxAbsoluteMomentumIt(s.components);
     return cmp.state.pars[eFreeQOverP];
   }
 
   template <typename stepper_state_t>
   static ActsScalar absoluteMomentum(const stepper_state_t& s) {
-    const auto& cmp = maxAbsoluteMomenutmIt(s.components);
+    const auto& cmp = maxAbsoluteMomentumIt(s.components);
     return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
   static Vector3 momentum(const stepper_state_t& s) {
-    const auto& cmp = maxAbsoluteMomenutmIt(s.components);
+    const auto& cmp = maxAbsoluteMomentumIt(s.components);
     return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]) *
            cmp.state.pars.template segment<3>(eFreeDir0);
   }
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    return maxAbsoluteMomenutmIt(s.components).state.absCharge;
+    return maxAbsoluteMomentumIt(s.components).state.absCharge;
   }
 
   template <typename stepper_state_t>
   static ActsScalar time(const stepper_state_t& s) {
-    return maxAbsoluteMomenutmIt(s.components).state.pars[eFreeTime];
+    return maxAbsoluteMomentumIt(s.components).state.pars[eFreeTime];
   }
 
   template <typename stepper_state_t>
   static FreeVector pars(const stepper_state_t& s) {
-    return maxAbsoluteMomenutmIt(s.components).state.pars;
+    return maxAbsoluteMomentumIt(s.components).state.pars;
   }
 
   template <typename stepper_state_t>
   static FreeVector cov(const stepper_state_t& s) {
-    return maxAbsoluteMomenutmIt(s.components).state.cov;
+    return maxAbsoluteMomentumIt(s.components).state.cov;
   }
 };
 
