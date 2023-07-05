@@ -31,10 +31,10 @@ $SPYRAL -l "CKF Tracking" -o "$outdir/memory/mem_ckf_tracking.csv" -- CI/physmon
 $SPYRAL -l "Vertexing" -o "$outdir/memory/mem_vertexing.csv" -- CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
 echo "::endgroup::"
 
-$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_kalman.csv -o $outdir/memory
-$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_gsf.csv -o $outdir/memory
-$SPYRAL_BIN plot $outdir/memory/mem_ckf_tracking.csv -o $outdir/memory
-$SPYRAL_BIN plot $outdir/memory/mem_vertexing.csv -o $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_kalman.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_gsf.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_ckf_tracking.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_vertexing.csv --output $outdir/memory
 
 set +e
 
