@@ -23,8 +23,10 @@ class Volume;
 
 namespace ActsExamples {
 
-/// A G4SteppingAction that is called for every step in
-/// the simulation process.
+/// A G4SteppingAction that is called for every step in the simulation process.
+///
+/// It checks whether the particle can be killed according to the user settings
+/// e.g. if its position exceeds the configured values for |z| or r.
 class ParticleKillAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
