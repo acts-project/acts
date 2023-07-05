@@ -439,10 +439,9 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   }
 
   // TODO: test using beam spot constraint
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.beamSpotConstraint = std::get<BeamSpotData>(csvData);
+  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
