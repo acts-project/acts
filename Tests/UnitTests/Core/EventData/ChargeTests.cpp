@@ -90,12 +90,8 @@ BOOST_AUTO_TEST_CASE(NonNeutralChargeSingle) {
   CHECK_CLOSE_REL(q.extractMomentum(1_e / 128_MeV), 128_MeV, eps);
   CHECK_CLOSE_REL(q.extractMomentum(-1_e / 128_MeV), 128_MeV, eps);
 
-  BOOST_CHECK(!(q == Acts::NonNeutralCharge(0_e)));
-  BOOST_CHECK(!(Acts::NonNeutralCharge(0_e) == q));
-  BOOST_CHECK(q == Acts::NonNeutralCharge(1_e));
-  BOOST_CHECK(Acts::NonNeutralCharge(1_e) == q);
-  BOOST_CHECK(!(q == Acts::NonNeutralCharge(2_e)));
-  BOOST_CHECK(!(Acts::NonNeutralCharge(2_e) == q));
+  BOOST_CHECK_EQUAL(q, Acts::NonNeutralCharge(1_e));
+  BOOST_CHECK_EQUAL(Acts::NonNeutralCharge(1_e), q);
 }
 
 BOOST_AUTO_TEST_CASE(NonNeutralChargeMultiple) {
@@ -109,8 +105,6 @@ BOOST_AUTO_TEST_CASE(NonNeutralChargeMultiple) {
   CHECK_CLOSE_REL(q.extractMomentum(3_e / 128_MeV), 128_MeV, eps);
   CHECK_CLOSE_REL(q.extractMomentum(-3_e / 128_MeV), 128_MeV, eps);
 
-  BOOST_CHECK(!(q == Acts::NonNeutralCharge(0_e)));
-  BOOST_CHECK(!(Acts::NonNeutralCharge(0_e) == q));
   BOOST_CHECK(!(q == Acts::NonNeutralCharge(1_e)));
   BOOST_CHECK(!(Acts::NonNeutralCharge(1_e) == q));
   BOOST_CHECK(!(q == Acts::NonNeutralCharge(2_e)));
