@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,19 +20,27 @@
 
 #include <nlohmann/json.hpp>
 
-// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
-// can not match our naming guidelines.
+// Custom Json encoder/decoders.
 namespace Acts {
 class SurfaceBounds;
 
-static std::vector<std::string> boundTypes = {
-    "ConeBounds",          "CylinderBounds",      "DiamondBounds",
-    "RadialBounds",        "EllipseBounds",       "LineBounds",
-    "RectangleBounds",     "TrapezoidBounds",     "TriangleBounds",
-    "DiscTrapezoidBounds", "ConvexPolygonBounds", "AnnulusBounds",
-    "OtherBounds"};
-
 void to_json(nlohmann::json& j, const SurfaceBounds& bounds);
+
+namespace SurfaceBoundsJsonConverter {
+
+/// Interface with detray conversion option
+/// @param bounds is the bounds object
+/// @return the json object
+nlohmann::json toJson(const SurfaceBounds& bounds);
+
+/// Interface with detray conversion option
+/// @param bounds is the bounds object
+/// @param portal is the flag for conversion into detray portal format
+///
+/// @note reading back detray json format to Acts is not supported
+///
+/// @return the json object
+nlohmann::json toJsonDetray(const SurfaceBounds& bounds, bool portal = false);
 
 /// Conversion to surfaceBounds from json
 ///
@@ -43,12 +51,32 @@ void to_json(nlohmann::json& j, const SurfaceBounds& bounds);
 ///
 /// @return a shared_ptr to a surface object for type polymorphism
 template <typename bounds_t>
-std::shared_ptr<const bounds_t> surfaceBoundsFromJson(const nlohmann::json& j) {
+std::shared_ptr<const bounds_t> fromJson(const nlohmann::json& j) {
   const size_t kValues = bounds_t::BoundValues::eSize;
   std::array<ActsScalar, kValues> bValues{};
   std::vector<ActsScalar> bVector = j["values"];
   std::copy_n(bVector.begin(), kValues, bValues.begin());
   return std::make_shared<const bounds_t>(bValues);
 }
+
+}  // namespace SurfaceBoundsJsonConverter
+
+// This macro create a conversion for the surface bounds type
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    SurfaceBounds::BoundsType,
+    {{SurfaceBounds::BoundsType::eCone, "ConeBounds"},
+     {SurfaceBounds::BoundsType::eCylinder, "CylinderBounds"},
+     {SurfaceBounds::BoundsType::eDiamond, "DiamondBounds"},
+     {SurfaceBounds::BoundsType::eDisc, "RadialBounds"},
+     {SurfaceBounds::BoundsType::eEllipse, "EllipseBounds"},
+     {SurfaceBounds::BoundsType::eLine, "LineBounds"},
+     {SurfaceBounds::BoundsType::eRectangle, "RectangleBounds"},
+     {SurfaceBounds::BoundsType::eTrapezoid, "TrapezoidBounds"},
+     {SurfaceBounds::BoundsType::eTriangle, "TriangleBounds"},
+     {SurfaceBounds::BoundsType::eDiscTrapezoid, "DiscTrapezoidBounds"},
+     {SurfaceBounds::BoundsType::eConvexPolygon, "ConvexPolygonBounds"},
+     {SurfaceBounds::BoundsType::eAnnulus, "AnnulusBounds"},
+     {SurfaceBounds::BoundsType::eBoundless, "Boundless"},
+     {SurfaceBounds::BoundsType::eOther, "OtherBounds"}})
 
 }  // namespace Acts
