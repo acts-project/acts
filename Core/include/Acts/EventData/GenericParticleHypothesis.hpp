@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/ChargeConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <utility>
 
@@ -19,7 +21,7 @@ namespace Acts {
 ///
 /// Our reconstruction hypothesis consists of absolute PDG code, mass and
 /// absolute charge
-template <typename charge_t>
+template <ACTS_CONCEPT(ChargeConcept) charge_t>
 class GenericParticleHypothesis {
  public:
   using ChargeType = charge_t;
