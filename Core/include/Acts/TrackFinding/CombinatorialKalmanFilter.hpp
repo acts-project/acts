@@ -912,7 +912,7 @@ class CombinatorialKalmanFilter {
                 result.fittedStates->addTrackState(
                     mask, candidateTrackState.previous()));
         ACTS_VERBOSE(
-            "Create SL output track state #"
+            "Create SourceLink output track state #"
             << trackState.index() << " with mask: "
             << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
                            8>{

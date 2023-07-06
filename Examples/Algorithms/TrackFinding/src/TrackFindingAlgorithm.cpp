@@ -70,8 +70,6 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using namespace Acts::UnitLiterals;
-
   // Read input data
   const auto& measurements = m_inputMeasurements(ctx);
   const auto& sourceLinks = m_inputSourceLinks(ctx);
