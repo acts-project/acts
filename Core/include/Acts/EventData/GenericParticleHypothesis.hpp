@@ -57,8 +57,8 @@ class GenericParticleHypothesis {
   }
 
   template <typename P, typename Q>
-  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
-    return m_chargeType.chargeOverMomentum(p, q);
+  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
+    return m_chargeType.wiggleqOverP(momentum, signedQ);
   }
 
   constexpr const ChargeType& chargeType() const noexcept {

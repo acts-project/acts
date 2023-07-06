@@ -76,10 +76,10 @@ struct Neutral {
   }
 
   template <typename P, typename Q>
-  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
-    assert((q != 0) and "charge must be 0");
-    (void)q;
-    return 1.0f / p;
+  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
+    assert((signedQ != 0) and "charge must be 0");
+    (void)signedQ;
+    return 1.0f / momentum;
   }
 
   /// Compare for equality.
@@ -121,10 +121,10 @@ struct SinglyCharged {
   }
 
   template <typename P, typename Q>
-  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
+  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
     using std::abs;
-    assert((abs(q) == UnitConstants::e) && "absolute charge must be e");
-    return q / p;
+    assert((abs(signedQ) == UnitConstants::e) && "absolute charge must be e");
+    return signedQ / momentum;
   }
 
   /// Compare for equality.
@@ -164,11 +164,11 @@ class NonNeutralCharge {
   }
 
   template <typename P, typename Q>
-  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
+  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
     // using because of autodiff
     using std::abs;
-    assert(abs(q) == m_absQ && "inconsistent charge");
-    return q / p;
+    assert(abs(signedQ) == m_absQ && "inconsistent charge");
+    return signedQ / momentum;
   }
 
   /// Compare for equality.
@@ -211,11 +211,11 @@ class AnyCharge {
   }
 
   template <typename P, typename Q>
-  constexpr auto chargeOverMomentum(P p, Q q) const noexcept {
+  constexpr auto qOverP(P momentum, Q signedQ) const noexcept {
     // using because of autodiff
     using std::abs;
-    assert(abs(q) == m_absQ && "inconsistent charge");
-    return (m_absQ != 0.0f) ? q / p : 1.0f / p;
+    assert(abs(signedQ) == m_absQ && "inconsistent charge");
+    return (m_absQ != 0.0f) ? signedQ / momentum : 1.0f / momentum;
   }
 
   /// Compare for equality.
