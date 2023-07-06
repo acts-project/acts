@@ -327,6 +327,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
+      - name: Install dependencies
+        run: |
+          apt-get update 
+          apt-get install -y python3-pip
+          pip3 install spyral-cli==1.0.6
       - name: Store metrics
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -336,8 +341,7 @@ jobs:
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
           git clone git@github.com:acts-project/runtime_metrics.git
-          # spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
-          echo "hallo" >> runtime_metrics/test.txt
+          spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
           cd runtime_metrics
           git add -A
           git commit -m"update metrics"
