@@ -93,7 +93,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     /// Compute shared hit information
     bool computeSharedHits = false;
     /// Track selector config
-    Acts::TrackSelector::Config trackSelectorCfg;
+    std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
   };
 
   /// Constructor of the track finding algorithm
@@ -121,7 +121,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::TrackSelector m_trackSelector;
+  std::optional<Acts::TrackSelector> m_trackSelector;
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};

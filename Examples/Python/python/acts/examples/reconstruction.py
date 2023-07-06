@@ -967,7 +967,7 @@ def addCKFTracks(
                 ptMax=trackSelectorConfig.pt[1],
                 minMeasurements=trackSelectorConfig.nMeasurementsMin,
             )
-        ),
+        ) if trackSelectorConfig is not None else None,
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",

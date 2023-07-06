@@ -29,6 +29,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <system_error>
@@ -40,7 +41,13 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
       m_cfg(std::move(config)),
-      m_trackSelector(m_cfg.trackSelectorCfg) {
+      m_trackSelector([this]() -> std::optional<Acts::TrackSelector> {
+        if (m_cfg.trackSelectorCfg.has_value()) {
+          return {m_cfg.trackSelectorCfg.value()};
+        } else {
+          return std::nullopt;
+        }
+      }()) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -146,7 +153,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     auto& tracksForSeed = result.value();
     for (auto& track : tracksForSeed) {
       seedNumber(track) = nSeed;
-      if (m_trackSelector.isValidTrack(track)) {
+      if (!m_trackSelector.has_value() ||
+          m_trackSelector->isValidTrack(track)) {
         auto destProxy = tracks.getTrack(tracks.addTrack());
         destProxy.copyFrom(track, true);  // make sure we copy track states!
       }
