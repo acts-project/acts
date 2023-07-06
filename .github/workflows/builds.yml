@@ -328,10 +328,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Install dependencies
-        run: |
-          sudo apt-get update 
-          sudo apt-get install -y python3-pip
-          pip3 install spyral-cli==1.0.6
+        run: pip3 install spyral-cli==1.0.6
       - name: Store metrics
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
