@@ -79,7 +79,8 @@ struct GenericDenseEnvironmentExtension {
           const navigator_t& navigator) const {
     // Check for valid particle properties
     if (stepper.charge(state.stepping) == 0. || state.options.mass == 0. ||
-        stepper.momentum(state.stepping) < state.options.momentumCutOff) {
+        stepper.absoluteMomentum(state.stepping) <
+            state.options.momentumCutOff) {
       return 0;
     }
 
@@ -123,7 +124,7 @@ struct GenericDenseEnvironmentExtension {
       auto volumeMaterial = navigator.currentVolumeMaterial(state.navigation);
       ThisVector3 position = stepper.position(state.stepping);
       material = (volumeMaterial->material(position.template cast<double>()));
-      initialMomentum = stepper.momentum(state.stepping);
+      initialMomentum = stepper.absoluteMomentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = q / initialMomentum;
       initializeEnergyLoss(state);
@@ -173,7 +174,7 @@ struct GenericDenseEnvironmentExtension {
                 const navigator_t& /*navigator*/, const double h) const {
     // Evaluate the new momentum
     auto newMomentum =
-        stepper.momentum(state.stepping) +
+        stepper.absoluteMomentum(state.stepping) +
         (h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]);
 
     // Break propagation if momentum becomes below cut-off

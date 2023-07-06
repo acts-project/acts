@@ -76,7 +76,7 @@ struct MockInteractionList {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
     // break if particle is not alive anymore
-    return !particle;
+    return !particle.isAlive();
   }
 
   template <typename generator_t>
@@ -111,7 +111,7 @@ struct MockStepper {
   auto position(const State &state) const { return state.pos; }
   auto time(const State &state) const { return state.time; }
   auto direction(const State &state) const { return state.dir; }
-  auto momentum(const State &state) const { return state.p; }
+  auto absoluteMomentum(const State &state) const { return state.p; }
   void update(State &state, const Vector3 &pos, const Vector3 &dir, Scalar qop,
               Scalar time) {
     state.pos = pos;

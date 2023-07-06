@@ -42,8 +42,9 @@ ParticleSelectorConfig = namedtuple(
         "m",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
+        "removeSecondaries",  # bool
     ],
-    defaults=[(None, None)] * 8 + [None] * 2,
+    defaults=[(None, None)] * 8 + [None] * 3,
 )
 
 
@@ -371,6 +372,7 @@ def addParticleSelection(
                 mMax=config.m[1],
                 removeCharged=config.removeCharged,
                 removeNeutral=config.removeNeutral,
+                removeSecondaries=config.removeSecondaries,
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,
@@ -606,6 +608,7 @@ def addGeant4(
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
+    killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
 ) -> None:
     """This function steers the detector simulation using Geant4
@@ -630,8 +633,10 @@ def addGeant4(
         the output folder for the Root output, None triggers no output
     killVolume: acts.Volume, None
         if given, particles are killed when going outside of this volume.
-    killAfterTime: float, None
+    killAfterTime: float
         if given, particle are killed after the global time since event creation exceeds the given value
+    killSecondaries: bool
+        if given, secondary particles are removed from simulation
     """
 
     from acts.examples.geant4 import Geant4Simulation
@@ -674,6 +679,7 @@ def addGeant4(
         materialMappings=materialMappings,
         killVolume=killVolume,
         killAfterTime=killAfterTime,
+        killSecondaries=killSecondaries,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )

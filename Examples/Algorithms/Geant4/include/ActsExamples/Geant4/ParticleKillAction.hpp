@@ -23,17 +23,20 @@ class Volume;
 
 namespace ActsExamples {
 
-/// A G4SteppingAction that is called for every step in
-/// the simulation process.
+/// A G4SteppingAction that is called for every step in the simulation process.
 ///
-/// It checks whether the particle can be killed according when its position
-/// exceeds the configured values for |z| or r.
+/// It checks whether the particle can be killed according to the user settings
+/// e.g. if its position exceeds the configured values for |z| or r.
 class ParticleKillAction : public G4UserSteppingAction {
  public:
   /// Configuration of the Stepping action
   struct Config {
+    /// particles outside this volume will be terminated
     std::shared_ptr<const Acts::Volume> volume;
+    /// particles that exceed this global time limit will be terminated
     double maxTime = std::numeric_limits<double>::infinity();
+    /// secondary particles will be terminated
+    bool secondaries = false;
   };
 
   /// Construct the stepping action

@@ -271,12 +271,12 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global position to be evaludated
-  /// @param momentum global momentum (required for line-type surfaces)
+  /// @param direction global momentum direction (required for line-type surfaces)
   /// @param bcheck BoundaryCheck directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
   bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
-                   const Vector3& momentum,
+                   const Vector3& direction,
                    const BoundaryCheck& bcheck = true) const;
 
   /// The insideBounds method for local positions
@@ -294,12 +294,12 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction
   ///
   /// @return The global position by value
   virtual Vector3 localToGlobal(const GeometryContext& gctx,
                                 const Vector2& lposition,
-                                const Vector3& momentum) const = 0;
+                                const Vector3& direction) const = 0;
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
@@ -309,14 +309,14 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   virtual Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const = 0;
 
   /// Return method for the reference frame
@@ -326,13 +326,13 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return RotationMatrix3 which defines the three axes of the measurement
   /// frame
   virtual Acts::RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                                const Vector3& position,
-                                               const Vector3& momentum) const;
+                                               const Vector3& direction) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
