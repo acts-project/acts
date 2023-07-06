@@ -154,12 +154,12 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   }
 
   if (eventStore().hits.empty()) {
-    ACTS_INFO("Step merging: No steps recorded");
+    ACTS_DEBUG("Step merging: No steps recorded");
   } else {
-    ACTS_INFO("Step merging: mean hits per hit: "
-              << static_cast<double>(eventStore().numberGeantSteps) /
-                     eventStore().hits.size());
-    ACTS_INFO(
+    ACTS_DEBUG("Step merging: mean hits per hit: "
+               << static_cast<double>(eventStore().numberGeantSteps) /
+                      eventStore().hits.size());
+    ACTS_DEBUG(
         "Step merging: max hits per hit: " << eventStore().maxStepsForHit);
   }
 
@@ -228,6 +228,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     ParticleKillAction::Config particleKillCfg;
     particleKillCfg.volume = cfg.killVolume;
     particleKillCfg.maxTime = cfg.killAfterTime;
+    particleKillCfg.secondaries = cfg.killSecondaries;
 
     SensitiveSteppingAction::Config stepCfg;
     stepCfg.eventStore = m_eventStore;

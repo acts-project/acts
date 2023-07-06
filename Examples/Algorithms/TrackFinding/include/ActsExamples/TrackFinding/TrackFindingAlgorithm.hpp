@@ -18,6 +18,7 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
+#include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -91,6 +92,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     Acts::MeasurementSelector::Config measurementSelectorCfg;
     /// Compute shared hit information
     bool computeSharedHits = false;
+    /// Track selector config
+    std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
   };
 
   /// Constructor of the track finding algorithm
@@ -118,6 +121,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+  std::optional<Acts::TrackSelector> m_trackSelector;
 
   ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
                                                            "InputMeasurements"};

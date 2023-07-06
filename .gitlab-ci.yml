@@ -226,6 +226,7 @@ linux_physmon:
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
     - pip3 install histcmp==0.5.2
+    - pip3 install spyral-cli==1.0.6
     - pip3 install -r src/Examples/Scripts/requirements.txt
     - /usr/local/bin/geant4-config --install-datasets
     - "source /usr/local/bin/thisroot.sh || true"

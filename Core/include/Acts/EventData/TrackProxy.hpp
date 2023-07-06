@@ -540,7 +540,7 @@ class TrackProxy {
 
     if (copyTrackStates) {
       // append track states (cheap), but they're in the wrong order
-      for (auto srcTrackState : other.trackStates()) {
+      for (const auto& srcTrackState : other.trackStates()) {
         auto destTrackState = appendTrackState(srcTrackState.getMask());
         if (srcTrackState.hasCalibrated()) {
           destTrackState.allocateCalibrated(srcTrackState.calibratedSize());
