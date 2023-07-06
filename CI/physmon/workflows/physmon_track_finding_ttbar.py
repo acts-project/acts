@@ -152,4 +152,4 @@ with tempfile.TemporaryDirectory() as temp:
     ):
         perf_file = tp / f"{stem}.root"
         assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
+        shutil.copy(perf_file, setup.outdir / f"{stem}_ttbar.root")
