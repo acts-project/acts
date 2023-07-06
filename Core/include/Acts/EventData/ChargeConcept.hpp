@@ -23,32 +23,26 @@ namespace Acts {
 
 template <typename C>
 concept ChargeConcept = requires(C c, float f, double d) {
-                          // { C::canHoldNeutral } -> std::convertible_to<bool>;
-                          // { C::canHoldSinglyCharged } ->
-                          // std::convertible_to<bool>; { C::canHoldMultiCharged
-                          // } -> std::convertible_to<bool>;
+  // { C::canHoldNeutral } -> std::convertible_to<bool>;
+  // { C::canHoldSinglyCharged } ->
+  // std::convertible_to<bool>; { C::canHoldMultiCharged
+  // } -> std::convertible_to<bool>;
 
-                          { C{f} };
-                          { c.absQ() } -> std::same_as<float>;
+  {C{f}};
+  { c.absQ() } -> std::same_as<float>;
 
-                          { c.extractCharge(f) } -> std::convertible_to<float>;
-                          { c.extractCharge(d) } -> std::convertible_to<float>;
+  { c.extractCharge(f) } -> std::convertible_to<float>;
+  { c.extractCharge(d) } -> std::convertible_to<float>;
 
-                          {
-                            c.extractMomentum(f)
-                            } -> std::convertible_to<float>;
-                          {
-                            c.extractMomentum(d)
-                            } -> std::convertible_to<float>;
+  { c.extractMomentum(f) } -> std::convertible_to<float>;
+  { c.extractMomentum(d) } -> std::convertible_to<float>;
 
-                          { c.chargeOverMomentum(f, f) } -> std::same_as<float>;
-                          {
-                            c.chargeOverMomentum(d, d)
-                            } -> std::same_as<double>;
+  { c.chargeOverMomentum(f, f) } -> std::same_as<float>;
+  { c.chargeOverMomentum(d, d) } -> std::same_as<double>;
 
-                          { c == c } -> std::same_as<bool>;
-                          { c != c } -> std::same_as<bool>;
-                        };
+  { c == c } -> std::same_as<bool>;
+  { c != c } -> std::same_as<bool>;
+};
 
 }  // namespace Acts
 
