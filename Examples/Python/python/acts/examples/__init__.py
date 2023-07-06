@@ -2,6 +2,7 @@ import sys, inspect
 from pathlib import Path
 from typing import Optional, Protocol, Union, List, Dict
 import os
+import re
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -343,6 +344,9 @@ def defaultLogging(
 
 
 class Sequencer(ActsPythonBindings._examples._Sequencer):
+
+    _autoFpeMasks: Optional[List["FpeMask"]] = None
+
     def __init__(self, *args, **kwargs):
         if "fpeMasks" in kwargs:
             m = kwargs["fpeMasks"]
@@ -352,7 +356,10 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                     t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
                     n.append(self.FpeMask(loc, t, count))
                 kwargs["fpeMasks"] = n
+
+        kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
         super().__init__(*args, **kwargs)
+
 
     class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
         @classmethod
@@ -396,3 +403,30 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                 for fpe, count in types.items():
                     out.append(cls(loc, cls._fpe_types_to_enum[fpe], count))
             return out
+
+    @classmethod
+    def _getAutoFpeMasks(cls) -> List[FpeMask]:
+        if cls._autoFpeMasks is not None:
+            return cls._autoFpeMasks
+
+        srcdir = Path(cls._sourceLocation).parent.parent.parent.parent
+
+        cls._autoFpeMasks = []
+
+        for root, dirs, files in os.walk(srcdir):
+            root = Path(root)
+            for f in files:
+                if not f.endswith(".hpp") and not f.endswith(".cpp") and not f.endswith(".ipp"): continue
+                f = root / f
+                #  print(f)
+                with f.open("r") as fh:
+                    for i, line in enumerate(fh, start=1):
+                        if m := re.match(r".*\/\/ ?MARK: ?(fpeMask.*)$", line):
+                            exp = m.group(1)
+                            for m in re.findall(r"fpeMask\((\w+), ?(\d+)\)", exp):
+                                fpeType, count = m
+                                count = int(count)
+                                rel = f.relative_to(srcdir)
+                                cls._autoFpeMasks.append(cls.FpeMask(f"{rel}:{i}", cls.FpeMask._fpe_types_to_enum[fpeType], count))
+
+        return cls._autoFpeMasks
