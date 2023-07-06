@@ -268,14 +268,14 @@ jobs:
           # && pip3 install -r Examples/Python/tests/requirements.txt
           # && pytest -rFsv -k "not exatrkx" -v
 
-  linux_physmon:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v41
-    # needs: [linux_ubuntu]
-    env:
-      ACTS_SEQUENCER_DISABLE_FPEMON: true
+  # linux_physmon:
+    # runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/ubuntu2204:v41
+    # # needs: [linux_ubuntu]
+    # env:
+      # ACTS_SEQUENCER_DISABLE_FPEMON: true
 
-    steps:
+    # steps:
       # - name: Install git lfs
         # run: apt-get update && apt-get install -y git-lfs
 
@@ -322,8 +322,12 @@ jobs:
           # name: physmon
           # path: physmon
 
+  linux_physmon_perf_report:
+    needs: [linux_physmon]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
       - name: Store metrics
-        if: github.ref == 'refs/heads/main'
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
