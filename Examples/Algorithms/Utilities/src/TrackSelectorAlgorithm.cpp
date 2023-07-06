@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
 
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -23,9 +23,11 @@ namespace ActsExamples {
 struct AlgorithmContext;
 }  // namespace ActsExamples
 
-ActsExamples::TrackSelector::TrackSelector(const Config& config,
-                                           Acts::Logging::Level level)
-    : IAlgorithm("TrackSelector", level), m_cfg(config) {
+ActsExamples::TrackSelectorAlgorithm::TrackSelectorAlgorithm(
+    const Config& config, Acts::Logging::Level level)
+    : IAlgorithm("TrackSelector", level),
+      m_cfg(config),
+      m_selector(config.selectorConfig) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Input track collection is empty");
   }
@@ -38,26 +40,8 @@ ActsExamples::TrackSelector::TrackSelector(const Config& config,
   m_outputTrackContainer.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
+ActsExamples::ProcessCode ActsExamples::TrackSelectorAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  // helper functions to select tracks
-  auto checkMin = [](auto x, auto min) { return min <= x; };
-  auto within = [](double x, double min, double max) {
-    return (min <= x) and (x < max);
-  };
-  auto isValidTrack = [&](const auto& trk) {
-    const auto theta = trk.theta();
-    const auto eta = -std::log(std::tan(theta / 2));
-    return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(eta, m_cfg.etaMin, m_cfg.etaMax) and
-           within(trk.phi(), m_cfg.phiMin, m_cfg.phiMax) and
-           within(trk.loc0(), m_cfg.loc0Min, m_cfg.loc0Max) and
-           within(trk.loc1(), m_cfg.loc1Min, m_cfg.loc1Max) and
-           within(trk.time(), m_cfg.timeMin, m_cfg.timeMax) and
-           checkMin(trk.nMeasurements(), m_cfg.minMeasurements);
-  };
-
   ACTS_VERBOSE("Reading tracks from: " << m_cfg.inputTracks);
 
   const auto& inputTracks = m_inputTrackContainer(ctx);
@@ -75,21 +59,11 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
   TrackContainer filteredTracks{trackContainer, tempTrackStateContainer};
   filteredTracks.ensureDynamicColumns(inputTracks);
 
-  trackContainer->reserve(inputTracks.size());
+  ACTS_DEBUG("Track container size before filtering: " << inputTracks.size());
 
-  ACTS_VERBOSE("Track container size before filtering: " << inputTracks.size());
+  m_selector.selectTracks(inputTracks, filteredTracks);
 
-  for (auto track : inputTracks) {
-    if (!isValidTrack(track)) {
-      continue;
-    }
-    auto destProxy = filteredTracks.getTrack(filteredTracks.addTrack());
-    destProxy.copyFrom(track, false);
-    destProxy.tipIndex() = track.tipIndex();
-  }
-
-  ACTS_VERBOSE(
-      "Track container size after filtering: " << filteredTracks.size());
+  ACTS_DEBUG("Track container size after filtering: " << filteredTracks.size());
 
   ConstTrackContainer outputTracks{
       std::make_shared<Acts::ConstVectorTrackContainer>(

@@ -21,6 +21,7 @@
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
@@ -1436,6 +1437,9 @@ class MultiTrajectory {
   /// @note Is a noop if the track state already has an allocation
   ///       an the dimension is the same.
   void allocateCalibrated(IndexType istate, size_t measdim) {
+    throw_assert(measdim > 0 && measdim <= eBoundSize,
+                 "Invalid measurement dimension detected");
+
     self().allocateCalibrated_impl(istate, measdim);
   }
 
