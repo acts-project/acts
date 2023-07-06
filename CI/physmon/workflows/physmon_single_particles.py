@@ -2,7 +2,6 @@
 
 import tempfile
 from pathlib import Path
-import argparse
 import shutil
 import itertools
 import contextlib

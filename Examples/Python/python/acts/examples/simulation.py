@@ -401,10 +401,10 @@ def addSimulation(
 ) -> None:
     if algorithm == SimulationAlgorithm.Fatras:
         addFatras(
-            s,
-            trackingGeometry,
-            field,
-            rnd,
+            s=s,
+            trackingGeometry=trackingGeometry,
+            field=field,
+            rnd=rnd,
             preSelectParticles=preSelectParticles,
             postSelectParticles=postSelectParticles,
             inputParticles=inputParticles,
@@ -414,13 +414,12 @@ def addSimulation(
             **kwargs,
         )
     elif algorithm == SimulationAlgorithm.Geant4:
-        print("addG")
         addGeant4(
-            s,
-            detector,
-            trackingGeometry,
-            field,
-            rnd,
+            s=s,
+            detector=detector,
+            trackingGeometry=trackingGeometry,
+            field=field,
+            rnd=rnd,
             inputParticles=inputParticles,
             preSelectParticles=preSelectParticles,
             postSelectParticles=postSelectParticles,
@@ -449,6 +448,7 @@ def addFatras(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    **kwargs,
 ) -> None:
     """This function steers the detector simulation using Fatras
 
@@ -668,6 +668,7 @@ def addGeant4(
     killAfterTime: float = float("inf"),
     killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
+    **kwargs,
 ) -> None:
     """This function steers the detector simulation using Geant4
 
