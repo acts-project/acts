@@ -41,6 +41,7 @@
 
 #include <functional>
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 
 namespace Acts {
@@ -466,6 +467,7 @@ class CombinatorialKalmanFilter {
       if (result.filtered) {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
+          // @TODO: Tracks like this should not be in the final output!
           ACTS_WARNING("No tracks found");
           result.finished = true;
         } else {
@@ -832,6 +834,10 @@ class CombinatorialKalmanFilter {
           mask = PM::Calibrated;
         }
 
+        ACTS_VERBOSE(
+            "Create temp track state with mask: " << std::bitset<
+                sizeof(std::underlying_type_t<TrackStatePropMask>) * 8>(
+                static_cast<std::underlying_type_t<TrackStatePropMask>>(mask)));
         size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);
         // CAREFUL! This trackstate has a previous index that is not in this
         // MultiTrajectory Visiting brackwards from this track state will
@@ -905,6 +911,13 @@ class CombinatorialKalmanFilter {
             result.fittedStates->getTrackState(
                 result.fittedStates->addTrackState(
                     mask, candidateTrackState.previous()));
+        ACTS_VERBOSE(
+            "Create SourceLink output track state #"
+            << trackState.index() << " with mask: "
+            << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
+                           8>{
+                   static_cast<std::underlying_type_t<TrackStatePropMask>>(
+                       mask)});
 
         if (it != begin) {
           // assign indices pointing to first track state
@@ -988,11 +1001,14 @@ class CombinatorialKalmanFilter {
                                  size_t prevTip) const {
       // Add a track state
       auto currentTip = result.fittedStates->addTrackState(stateMask, prevTip);
-      if (isSensitive) {
-        ACTS_VERBOSE("Creating Hole track state with tip = " << currentTip);
-      } else {
-        ACTS_VERBOSE("Creating Material track state with tip = " << currentTip);
-      }
+      ACTS_VERBOSE(
+          "Create "
+          << (isSensitive ? "Hole" : "Material") << " output track state #"
+          << currentTip << " with mask: "
+          << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
+                         8>{
+                 static_cast<std::underlying_type_t<TrackStatePropMask>>(
+                     stateMask)});
       // now get track state proxy back
       auto trackStateProxy = result.fittedStates->getTrackState(currentTip);
 
