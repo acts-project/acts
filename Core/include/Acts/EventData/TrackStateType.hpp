@@ -111,6 +111,7 @@ class ConstTrackStateType {
     for (size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
       trunc[i] = bs[i];
     }
+    // MeasurementParameterOutlierHoleMaterialSharedhit
     os << "MPOHMS=" << trunc;
     return os;
   }

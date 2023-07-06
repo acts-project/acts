@@ -295,6 +295,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputTracks);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
+    ACTS_PYTHON_MEMBER(trackSelectorCfg);
     ACTS_PYTHON_STRUCT_END();
   }
 
