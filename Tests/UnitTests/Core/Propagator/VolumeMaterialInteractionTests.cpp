@@ -15,6 +15,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
@@ -29,7 +30,8 @@ namespace Test {
 
 /// @brief Simplified stepper state
 struct StepperState {
-  Vector3 pos, dir;
+  Vector3 pos = Vector3::Zero(), dir = Vector3::Zero();
+  ConstrainedStep stepSize;
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
   Direction navDir = Direction::Forward;
@@ -87,6 +89,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   State state;
   state.stepping.pos = Vector3(1., 2., 3.);
   state.stepping.dir = Vector3(4., 5., 6.);
+  state.stepping.stepSize = ConstrainedStep(1);
   state.stepping.t = 7.;
   state.stepping.p = 8.;
   state.stepping.q = 9.;
@@ -119,7 +122,8 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   bool result = volMatInt.evaluateMaterialSlab(state, navigator);
   BOOST_CHECK(result);
   BOOST_CHECK_EQUAL(volMatInt.slab.material(), mat);
-  BOOST_CHECK_EQUAL(volMatInt.slab.thickness(), 1.);
+  BOOST_CHECK_EQUAL(volMatInt.slab.thickness(),
+                    state.stepping.stepSize.value());
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 
   // Evaluate the material without a tracking volume
