@@ -45,8 +45,9 @@ ParticleSelectorConfig = namedtuple(
         "m",  # (min,max)
         "removeCharged",  # bool
         "removeNeutral",  # bool
+        "removeSecondaries",  # bool
     ],
-    defaults=[(None, None)] * 8 + [None] * 2,
+    defaults=[(None, None)] * 8 + [None] * 3,
 )
 
 
@@ -374,6 +375,7 @@ def addParticleSelection(
                 mMax=config.m[1],
                 removeCharged=config.removeCharged,
                 removeNeutral=config.removeNeutral,
+                removeSecondaries=config.removeSecondaries,
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,
@@ -441,6 +443,9 @@ def addFatras(
     enableInteractions: bool = False,
     pMin: Optional[float] = None,
     inputParticles: str = "particles_input",
+    outputParticlesInitial: str = "particles_initial",
+    outputParticlesFinal: str = "particles_final",
+    outputSimHits: str = "simhits",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -488,9 +493,9 @@ def addFatras(
         **acts.examples.defaultKWArgs(
             level=customLogLevel(),
             inputParticles=particles_selected,
-            outputParticlesInitial="particles_initial",
-            outputParticlesFinal="particles_final",
-            outputSimHits="simhits",
+            outputParticlesInitial=outputParticlesInitial,
+            outputParticlesFinal=outputParticlesFinal,
+            outputSimHits=outputSimHits,
             randomNumbers=rnd,
             trackingGeometry=trackingGeometry,
             magneticField=field,
@@ -508,7 +513,7 @@ def addFatras(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "particles_initial_selected"
+        particlesInitial = "fatras_particles_initial_selected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -516,7 +521,7 @@ def addFatras(
             outputParticles=particlesInitial,
         )
 
-        particlesFinal = "particles_final_selected"
+        particlesFinal = "fatras_particles_final_selected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -591,14 +596,14 @@ def addSimWriters(
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles="particles_initial",
+                inputParticles=particlesInitial,
                 filePath=str(outputDirRoot / "particles_initial.root"),
             )
         )
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles="particles_final",
+                inputParticles=particlesFinal,
                 filePath=str(outputDirRoot / "particles_final.root"),
             )
         )
@@ -649,6 +654,9 @@ def addGeant4(
     volumeMappings: List[str] = [],
     materialMappings: List[str] = [],
     inputParticles: str = "particles_input",
+    outputParticlesInitial: str = "particles_initial",
+    outputParticlesFinal: str = "particles_final",
+    outputSimHits: str = "simhits",
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
     recordHitsOfSecondaries=True,
@@ -658,6 +666,7 @@ def addGeant4(
     logLevel: Optional[acts.logging.Level] = None,
     killVolume: Optional[acts.Volume] = None,
     killAfterTime: float = float("inf"),
+    killSecondaries: bool = False,
     physicsList: str = "FTFP_BERT",
 ) -> None:
     """This function steers the detector simulation using Geant4
@@ -682,8 +691,10 @@ def addGeant4(
         the output folder for the Root output, None triggers no output
     killVolume: acts.Volume, None
         if given, particles are killed when going outside of this volume.
-    killAfterTime: float, None
+    killAfterTime: float
         if given, particle are killed after the global time since event creation exceeds the given value
+    killSecondaries: bool
+        if given, secondary particles are removed from simulation
     """
 
     from acts.examples.geant4 import Geant4Simulation
@@ -716,9 +727,9 @@ def addGeant4(
         detectorConstructionFactory=g4DetectorConstructionFactory,
         randomNumbers=rnd,
         inputParticles=particles_selected,
-        outputSimHits="simhits",
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
+        outputSimHits=outputSimHits,
+        outputParticlesInitial=outputParticlesInitial,
+        outputParticlesFinal=outputParticlesFinal,
         trackingGeometry=trackingGeometry,
         magneticField=field,
         physicsList=physicsList,
@@ -726,6 +737,7 @@ def addGeant4(
         materialMappings=materialMappings,
         killVolume=killVolume,
         killAfterTime=killAfterTime,
+        killSecondaries=killSecondaries,
         recordHitsOfSecondaries=recordHitsOfSecondaries,
         keepParticlesWithoutHits=keepParticlesWithoutHits,
     )
@@ -737,7 +749,7 @@ def addGeant4(
 
     # Selector
     if postSelectParticles is not None:
-        particlesInitial = "particles_initial_selected"
+        particlesInitial = "geant4_particles_initial_selected"
         addParticleSelection(
             s,
             postSelectParticles,
@@ -745,7 +757,7 @@ def addGeant4(
             outputParticles=particlesInitial,
         )
 
-        particlesFinal = "particles_final_selected"
+        particlesFinal = "geant4_particles_final_selected"
         addParticleSelection(
             s,
             postSelectParticles,

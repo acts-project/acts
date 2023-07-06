@@ -18,6 +18,7 @@
   - docs/**
 'Changes Performance':
   - CI/physmon/reference/**
+  - Examples/Python/tests/root_file_hashes.txt
 'Event Data Model':
   - '**/*EventData*/**'
 'Clustering':

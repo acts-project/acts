@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/TrackFinding/TrackSelector.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -22,7 +23,7 @@ namespace ActsExamples {
 struct AlgorithmContext;
 
 /// Select tracks by applying some selection cuts.
-class TrackSelector final : public IAlgorithm {
+class TrackSelectorAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input track collection.
@@ -30,29 +31,10 @@ class TrackSelector final : public IAlgorithm {
     /// Output track collection
     std::string outputTracks;
 
-    // Minimum/maximum local positions.
-    double loc0Min = -std::numeric_limits<double>::infinity();
-    double loc0Max = std::numeric_limits<double>::infinity();
-    double loc1Min = -std::numeric_limits<double>::infinity();
-    double loc1Max = std::numeric_limits<double>::infinity();
-    // Minimum/maximum track time.
-    double timeMin = -std::numeric_limits<double>::infinity();
-    double timeMax = std::numeric_limits<double>::infinity();
-    // Direction cuts.
-    double phiMin = -std::numeric_limits<double>::infinity();
-    double phiMax = std::numeric_limits<double>::infinity();
-    double etaMin = -std::numeric_limits<double>::infinity();
-    double etaMax = std::numeric_limits<double>::infinity();
-    double absEtaMin = 0.0;
-    double absEtaMax = std::numeric_limits<double>::infinity();
-    // Momentum cuts.
-    double ptMin = 0.0;
-    double ptMax = std::numeric_limits<double>::infinity();
-
-    std::size_t minMeasurements = 0;
+    Acts::TrackSelector::Config selectorConfig;
   };
 
-  TrackSelector(const Config& config, Acts::Logging::Level level);
+  TrackSelectorAlgorithm(const Config& config, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
@@ -61,6 +43,8 @@ class TrackSelector final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  Acts::TrackSelector m_selector;
 
   ReadDataHandle<ConstTrackContainer> m_inputTrackContainer{this,
                                                             "InputTracks"};
