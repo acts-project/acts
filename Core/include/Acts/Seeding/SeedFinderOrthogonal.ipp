@@ -428,6 +428,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         continue;
       }
 
+      // Protection against div by zero
+      if (B2 == 0) {
+        B2 = 1e-10;
+      }
+
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
       float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
