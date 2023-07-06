@@ -147,8 +147,7 @@ BOOST_AUTO_TEST_CASE(GenericCuboid) {
   in >> genericCuboidIn;
   in.close();
 
-  auto genericCuboidTest =
-      VolumeBoundsJsonConverter::genericCuboidFromJson(genericCuboidIn);
+  auto genericCuboidTest = VolumeBoundsJsonConverter::fromJson(genericCuboidIn);
   BOOST_CHECK(genericCuboidRef->values() == genericCuboidTest->values());
 }
 

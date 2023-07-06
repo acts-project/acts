@@ -31,6 +31,8 @@ struct Options {
 ///
 /// @param gctx the geometry context
 /// @param detector the detector instance
+/// @param options the writing options that propagate
+///        to the downstream converters
 ///
 /// @return a json object
 nlohmann::json toJson(const GeometryContext& gctx,
@@ -41,6 +43,8 @@ nlohmann::json toJson(const GeometryContext& gctx,
 ///
 /// @param gctx the geometry context
 /// @param detector the detector instance
+/// @param options the writing options that propagate
+///        to the downstream converters
 ///
 /// @return a json object in detray format
 nlohmann::json toJsonDetray(const GeometryContext& gctx,

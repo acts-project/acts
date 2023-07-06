@@ -29,8 +29,6 @@ class VolumeBounds;
 
 void to_json(nlohmann::json& j, const VolumeBounds& bounds);
 
-void to_json(nlohmann::json& j, const GenericCuboidVolumeBounds& bounds);
-
 namespace VolumeBoundsJsonConverter {
 
 /// Conversion to Json from volume bounds
@@ -55,21 +53,6 @@ std::unique_ptr<bounds_t> fromJson(const nlohmann::json& jVolumeBounds) {
   std::vector<ActsScalar> bVector = jVolumeBounds["values"];
   std::copy_n(bVector.begin(), kValues, bValues.begin());
   return std::make_unique<bounds_t>(bValues);
-}
-
-/// Conversion to generic cuboid volume bounds from json
-/// @param jVolumeBounds the read-in json object
-///
-/// @return a unique_ptr to a volume bounds object for type polymorphism
-inline std::unique_ptr<GenericCuboidVolumeBounds> genericCuboidFromJson(
-    const nlohmann::json& jVolumeBounds) {
-  auto json_vertices = jVolumeBounds["values"];
-  std::array<Vector3, 8> vertices;
-  for (size_t i = 0; i < 8; i++) {
-    vertices[i] << json_vertices[i][0], json_vertices[i][1],
-        json_vertices[i][2];
-  }
-  return std::make_unique<GenericCuboidVolumeBounds>(vertices);
 }
 
 /// Conversion to volume bounds from json

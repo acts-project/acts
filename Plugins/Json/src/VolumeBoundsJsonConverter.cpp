@@ -24,16 +24,6 @@ void Acts::to_json(nlohmann::json& j, const VolumeBounds& bounds) {
   j["values"] = bounds.values();
 }
 
-void Acts::to_json(nlohmann::json& j, const GenericCuboidVolumeBounds& bounds) {
-  j["type"] = bounds.type();
-  std::vector<std::vector<double>> vertices;
-  for (size_t i = 0; i < bounds.values().size(); i += 3) {
-    vertices.push_back(
-        {bounds.values()[i], bounds.values()[i + 1], bounds.values()[i + 2]});
-  }
-  j["values"] = vertices;
-}
-
 nlohmann::json Acts::VolumeBoundsJsonConverter::toJson(
     const VolumeBounds& bounds) {
   return nlohmann::json(bounds);
@@ -60,7 +50,7 @@ std::unique_ptr<Acts::VolumeBounds> Acts::VolumeBoundsJsonConverter::fromJson(
       return fromJson<TrapezoidVolumeBounds>(jVolumeBounds);
     } break;
     case VolumeBounds::BoundsType::eGenericCuboid: {
-      return genericCuboidFromJson(jVolumeBounds);
+      return fromJson<GenericCuboidVolumeBounds>(jVolumeBounds);
     } break;
     default: {
       throw std::invalid_argument("Unknown volume bounds type!");

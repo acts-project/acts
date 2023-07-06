@@ -39,7 +39,7 @@ int findVolume(
     return std::distance(volumes.begin(), candidate);
   }
   return -1;
-};
+}
 }  // namespace
 
 nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
