@@ -328,6 +328,11 @@ jobs:
     steps:
       - name: Install dependencies
         run: pip3 install spyral-cli==1.0.7
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: physmon
+
       - name: Store metrics
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
