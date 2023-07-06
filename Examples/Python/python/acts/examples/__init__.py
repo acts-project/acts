@@ -360,7 +360,6 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
         kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
         super().__init__(*args, **kwargs)
 
-
     class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
         @classmethod
         def fromFile(cls, file: Union[str, Path]) -> List["FpeMask"]:
@@ -416,7 +415,12 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
         for root, dirs, files in os.walk(srcdir):
             root = Path(root)
             for f in files:
-                if not f.endswith(".hpp") and not f.endswith(".cpp") and not f.endswith(".ipp"): continue
+                if (
+                    not f.endswith(".hpp")
+                    and not f.endswith(".cpp")
+                    and not f.endswith(".ipp")
+                ):
+                    continue
                 f = root / f
                 #  print(f)
                 with f.open("r") as fh:
@@ -427,6 +431,12 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                                 fpeType, count = m
                                 count = int(count)
                                 rel = f.relative_to(srcdir)
-                                cls._autoFpeMasks.append(cls.FpeMask(f"{rel}:{i}", cls.FpeMask._fpe_types_to_enum[fpeType], count))
+                                cls._autoFpeMasks.append(
+                                    cls.FpeMask(
+                                        f"{rel}:{i}",
+                                        cls.FpeMask._fpe_types_to_enum[fpeType],
+                                        count,
+                                    )
+                                )
 
         return cls._autoFpeMasks
