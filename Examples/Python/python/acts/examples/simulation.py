@@ -430,7 +430,7 @@ def addSimulation(
             **kwargs,
         )
     else:
-        raise ValueError(f"unknown simulation algortihm: {algorithm}")
+        raise ValueError(f"unknown simulation algorithm: {algorithm}")
 
 
 def addFatras(

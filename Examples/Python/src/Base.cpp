@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -236,7 +237,7 @@ void addPdgParticle(Acts::Python::Context& ctx) {
       .value("eLead", Acts::PdgParticle::eLead);
 
   m.def("pdgToShortAbsString",
-        [](PdgParticle pdg) { return toStringShortAbs(pdg); });
+        [](PdgParticle pdg) { return pdgToShortAbsString(pdg); });
 }
 
 void addAlgebra(Acts::Python::Context& ctx) {

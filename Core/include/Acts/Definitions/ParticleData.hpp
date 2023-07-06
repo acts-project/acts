@@ -45,6 +45,9 @@ std::optional<ParticleData> findParticleData(PdgParticle pdg);
 /// Print PDG particle numbers with a descriptive name.
 std::ostream& operator<<(std::ostream& os, PdgParticle pdg);
 
+/// Get a short and absolute (no antimatter) string identifier for a PDG.
+/// @param pdg The pdg to print
+/// @return The string if exists
 std::optional<std::string_view> pdgToShortAbsString(PdgParticle pdg);
 
 }  // namespace Acts

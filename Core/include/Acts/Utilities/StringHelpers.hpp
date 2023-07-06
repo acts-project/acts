@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -102,42 +101,6 @@ inline std::string toString(const Acts::Transform3& transform,
   sout << offset << "Rotation    : "
        << toString(transform.rotation(), precision + 2, rotationOffset);
   return sout.str();
-}
-
-/// Get a short and aboslute (no antimatter) string identifier for a PDG.
-/// @param pdg The pdg to print
-/// @return The printed string
-inline std::string toStringShortAbs(PdgParticle pdg) {
-  pdg = makeAbsolutePdgParticle(pdg);
-  if (pdg == eElectron) {
-    return "e";
-  }
-  if (pdg == eMuon) {
-    return "mu";
-  }
-  if (pdg == eTau) {
-    return "t";
-  }
-  if (pdg == eTau) {
-    return "g";
-  }
-  if (pdg == ePionZero) {
-    return "pi0";
-  }
-  if (pdg == ePionPlus) {
-    return "pi";
-  }
-  if (pdg == eNeutron) {
-    return "n";
-  }
-  if (pdg == eProton) {
-    return "p";
-  }
-  if (pdg == eLead) {
-    return "lead";
-  }
-  assert(false);
-  return "invalid";
 }
 
 }  // namespace Acts

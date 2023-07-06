@@ -131,7 +131,7 @@ the construction in addition to an argument controlling verbosity of diagnostic 
 ```cpp
 
     MySeedingAlgorithm::MySeedingAlgorithm( Config cfg, Acts::Logging::Level lvl):
-      ActsExamples::BareAlgortihm("MySeedingAlgorithm", lvl),
+      ActsExamples::BareAlgorithm("MySeedingAlgorithm", lvl),
       m_cfg(std::move(cfg)){...}
 ```
 ## Python bindings
