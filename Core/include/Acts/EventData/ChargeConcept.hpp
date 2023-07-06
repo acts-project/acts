@@ -23,11 +23,6 @@ namespace Acts {
 
 template <typename C>
 concept ChargeConcept = requires(C c, float f, double d) {
-  // { C::canHoldNeutral } -> std::convertible_to<bool>;
-  // { C::canHoldSinglyCharged } ->
-  // std::convertible_to<bool>; { C::canHoldMultiCharged
-  // } -> std::convertible_to<bool>;
-
   {C{f}};
   { c.absQ() } -> std::same_as<float>;
 
