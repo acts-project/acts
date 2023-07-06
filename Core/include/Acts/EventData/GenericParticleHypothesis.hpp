@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
 
 #include <utility>
@@ -24,57 +23,6 @@ template <typename charge_t>
 class GenericParticleHypothesis {
  public:
   using ChargeType = charge_t;
-
-  constexpr static GenericParticleHypothesis<ChargeType> muon() {
-    static_assert(ChargeType::canHoldSinglyCharged,
-                  "singly charged not supported by given charge type");
-
-    return GenericParticleHypothesis<ChargeType>(
-        PdgParticle::eMuon, 105.6583755 * UnitConstants::MeV, UnitConstants::e);
-  }
-  constexpr static GenericParticleHypothesis<ChargeType> pion() {
-    static_assert(ChargeType::canHoldSinglyCharged,
-                  "singly charged not supported by given charge type");
-
-    return GenericParticleHypothesis<ChargeType>(PdgParticle::ePionPlus,
-                                                 139.57039 * UnitConstants::MeV,
-                                                 UnitConstants::e);
-  }
-  constexpr static GenericParticleHypothesis<ChargeType> electron() {
-    static_assert(ChargeType::canHoldSinglyCharged,
-                  "singly charged not supported by given charge type");
-
-    return GenericParticleHypothesis<ChargeType>(
-        PdgParticle::ePionPlus, 0.51099895000 * UnitConstants::MeV,
-        UnitConstants::e);
-  }
-
-  constexpr static GenericParticleHypothesis<ChargeType> photon() {
-    static_assert(ChargeType::canHoldNeutral,
-                  "neutral not supported by given charge type");
-
-    return GenericParticleHypothesis<ChargeType>(PdgParticle::eGamma, 0, 0);
-  }
-  constexpr static GenericParticleHypothesis<ChargeType> pion0() {
-    static_assert(ChargeType::canHoldNeutral,
-                  "neutral not supported by given charge type");
-
-    return GenericParticleHypothesis<ChargeType>(
-        PdgParticle::ePionZero, 134.9768 * UnitConstants::MeV, 0);
-  }
-
-  constexpr static GenericParticleHypothesis<ChargeType> pionLike(float absQ) {
-    // we require both because otherwise the used should use a specific particle
-    // anyways
-    static_assert(ChargeType::canHoldMultiCharged,
-                  "multi charged not supported by given charge type");
-    if constexpr (!ChargeType::canHoldNeutral) {
-      assert(absQ != 0 && "neutral not supported by given charge type");
-    }
-
-    return GenericParticleHypothesis<ChargeType>(pion().absPdg(), pion().mass(),
-                                                 absQ);
-  }
 
   constexpr GenericParticleHypothesis(PdgParticle absPdg, float mass,
                                       ChargeType chargeType)

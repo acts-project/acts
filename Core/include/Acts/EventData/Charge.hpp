@@ -51,11 +51,10 @@ namespace Acts {
 
 /// Charge and momentum interpretation for neutral particles.
 struct Neutral {
-  static constexpr bool canHoldNeutral = true;
-  static constexpr bool canHoldSinglyCharged = false;
-  static constexpr bool canHoldMultiCharged = false;
+  constexpr Neutral() = default;
 
-  Neutral() = default;
+  // TODO remove this method after grad refactor; currently track parameters
+  // depend on it
   /// Construct and verify the input charge magnitude (in debug builds).
   ///
   /// This constructor is only provided to allow consistent construction.
@@ -94,11 +93,10 @@ struct Neutral {
 
 /// Charge and momentum interpretation for particles with +-e charge.
 struct SinglyCharged {
-  static constexpr bool canHoldNeutral = false;
-  static constexpr bool canHoldSinglyCharged = true;
-  static constexpr bool canHoldMultiCharged = false;
+  constexpr SinglyCharged() = default;
 
-  SinglyCharged() = default;
+  // TODO remove this method after grad refactor; currently track parameters
+  // depend on it
   /// Construct and verify the input charge magnitude (in debug builds).
   ///
   /// This constructor is only provided to allow consistent construction.
@@ -143,10 +141,6 @@ struct SinglyCharged {
 /// particles.
 class NonNeutralCharge {
  public:
-  static constexpr bool canHoldNeutral = false;
-  static constexpr bool canHoldSinglyCharged = true;
-  static constexpr bool canHoldMultiCharged = true;
-
   /// Construct with the magnitude of the input charge.
   constexpr NonNeutralCharge(float absQ) noexcept : m_absQ{absQ} {
     assert((0 < absQ) and "Input charge magnitude must be positive");
@@ -194,10 +188,6 @@ class NonNeutralCharge {
 /// approximate comparison with an arbitrary epsilon.
 class AnyCharge {
  public:
-  static constexpr bool canHoldNeutral = true;
-  static constexpr bool canHoldSinglyCharged = true;
-  static constexpr bool canHoldMultiCharged = true;
-
   /// Construct with the magnitude of the input charge.
   constexpr AnyCharge(float absQ) noexcept : m_absQ{absQ} {
     assert((0 <= absQ) and "Input charge magnitude must be zero or positive");
