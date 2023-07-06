@@ -436,12 +436,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
-	if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2. > m_config.maxPtScattering) {
-	  float pTscatterSigma =
-	    (m_config.highland / m_config.maxPtScattering) *
-	    m_config.sigmaScattering;
+        if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2. >
+                           m_config.maxPtScattering) {
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
           p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-	} 
+        }
       }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
