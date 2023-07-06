@@ -18,24 +18,35 @@ refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
+SPYRAL_BIN="spyral"
+SPYRAL="${SPYRAL_BIN} run -i 0.1 --summary"
+
+mkdir ${outdir}/memory
+
 source $SCRIPT_DIR/setup.sh
 echo "::group::Generate validation dataset"
 if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
-    CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
+    $SPYRAL -l "Truth Tracking KF" -o "$outdir/memory/mem_truth_tracking_kalman.csv" -- CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
 fi
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
-    CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
+    $SPYRAL -l "Truth Tracking GSF" -o "$outdir/memory/mem_truth_tracking_gsf.csv" -- CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
 fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
-    CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
+    $SPYRAL -l "CKF Tracking" -o "$outdir/memory/mem_ckf_tracking.csv" -- CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
 fi
 if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
-    CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
+    $SPYRAL -l "Vertexing" -o "$outdir/memory/mem_vertexing.csv" -- CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
 fi
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
-    CI/physmon/workflows/physmon_simulation.py $outdir 2>&1 > $outdir/run_simulation.log
+    $SPYRAL -l "Simulation" -o "$outdir/memory/mem_simulation.csv" -- CI/physmon/workflows/physmon_simulation.py $outdir 2>&1 > $outdir/run_simulation.log
 fi
 echo "::endgroup::"
+
+$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_kalman.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_gsf.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_ckf_tracking.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_vertexing.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_simulation.csv --output $outdir/memory
 
 set +e
 
