@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ChargeConcept.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -69,6 +71,7 @@ struct Neutral {
   constexpr auto extractCharge(T /*qOverP*/) const noexcept {
     return 0.0f;
   }
+
   template <typename T>
   constexpr auto extractMomentum(T qOverP) const noexcept {
     assert(qOverP >= 0 && "qOverP cannot be negative");
@@ -90,6 +93,8 @@ struct Neutral {
     return true;
   }
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, Neutral);
 
 /// Charge and momentum interpretation for particles with +-e charge.
 struct SinglyCharged {
@@ -113,6 +118,7 @@ struct SinglyCharged {
     using std::copysign;
     return copysign(UnitConstants::e, qOverP);
   }
+
   template <typename T>
   constexpr auto extractMomentum(T qOverP) const noexcept {
     // using because of autodiff
@@ -136,6 +142,8 @@ struct SinglyCharged {
     return true;
   }
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, SinglyCharged);
 
 /// Charge and momentum interpretation for arbitrarily charged but not neutral
 /// particles.
@@ -180,6 +188,8 @@ class NonNeutralCharge {
  private:
   float m_absQ{};
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, NonNeutralCharge);
 
 /// Charge and momentum interpretation for arbitrarily charged particles.
 ///
@@ -226,6 +236,8 @@ class AnyCharge {
  private:
   float m_absQ{};
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ChargeConcept, AnyCharge);
 
 /// @}
 
