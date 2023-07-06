@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <functional>
+#include <limits>
 #include <numeric>
 #include <type_traits>
 
@@ -430,7 +431,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       // Protection against div by zero
       if (B2 == 0) {
-        B2 = 1e-10;
+        B2 = std::numeric_limits<float>::min();
       }
 
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
