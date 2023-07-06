@@ -37,8 +37,8 @@ concept ChargeConcept = requires(C c, float f, double d) {
   { c.extractMomentum(f) } -> std::convertible_to<float>;
   { c.extractMomentum(d) } -> std::convertible_to<float>;
 
-  { c.chargeOverMomentum(f, f) } -> std::same_as<float>;
-  { c.chargeOverMomentum(d, d) } -> std::same_as<double>;
+  { c.qOverP(f, f) } -> std::same_as<float>;
+  { c.qOverP(d, d) } -> std::same_as<double>;
 
   { c == c } -> std::same_as<bool>;
   { c != c } -> std::same_as<bool>;
