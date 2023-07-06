@@ -1,3 +1,4 @@
+// -*- C++ -*-OA
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -15,7 +16,6 @@
 
 #include <cmath>
 #include <functional>
-#include <limits>
 #include <numeric>
 #include <type_traits>
 
@@ -429,11 +429,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         continue;
       }
 
-      // Protection against div by zero
-      if (B2 == 0) {
-        B2 = std::numeric_limits<float>::min();
-      }
-
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
       float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
@@ -442,13 +437,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
-        float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-        if (pT > m_config.maxPtScattering) {
-          float pTscatterSigma =
-              (m_config.highland / m_config.maxPtScattering) *
-              m_config.sigmaScattering;
+	if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2. > m_config.maxPtScattering) {
+	  float pTscatterSigma =
+	    (m_config.highland / m_config.maxPtScattering) *
+	    m_config.sigmaScattering;
           p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-        }
+	} 
       }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
