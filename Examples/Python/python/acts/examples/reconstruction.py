@@ -988,24 +988,24 @@ def addCKFTracks(
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     #  if trackSelectorConfig is not None:
-        #  trackSelector = addTrackSelection(
-            #  s,
-            #  trackSelectorConfig,
-            #  inputTracks=trackFinder.config.outputTracks,
-            #  outputTracks="selectedTracks",
-            #  logLevel=customLogLevel(),
-        #  )
-        #  s.addWhiteboardAlias("tracks", trackSelector.config.outputTracks)
+    #  trackSelector = addTrackSelection(
+    #  s,
+    #  trackSelectorConfig,
+    #  inputTracks=trackFinder.config.outputTracks,
+    #  outputTracks="selectedTracks",
+    #  logLevel=customLogLevel(),
+    #  )
+    #  s.addWhiteboardAlias("tracks", trackSelector.config.outputTracks)
 
-        #  selectedTrackConverter = acts.examples.TracksToTrajectories(
-            #  level=customLogLevel(),
-            #  inputTracks=trackSelector.config.outputTracks,
-            #  outputTrajectories="trajectories-from-selected-tracks",
-        #  )
-        #  s.addAlgorithm(selectedTrackConverter)
-        #  s.addWhiteboardAlias(
-            #  "trajectories", selectedTrackConverter.config.outputTrajectories
-        #  )
+    #  selectedTrackConverter = acts.examples.TracksToTrajectories(
+    #  level=customLogLevel(),
+    #  inputTracks=trackSelector.config.outputTracks,
+    #  outputTrajectories="trajectories-from-selected-tracks",
+    #  )
+    #  s.addAlgorithm(selectedTrackConverter)
+    #  s.addWhiteboardAlias(
+    #  "trajectories", selectedTrackConverter.config.outputTrajectories
+    #  )
 
     addTrajectoryWriters(
         s,
