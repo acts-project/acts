@@ -944,8 +944,7 @@ def addCKFTracks(
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
-        #  level=customLogLevel(),
-        level=acts.logging.DEBUG,
+        level=customLogLevel(),
         measurementSelectorCfg=acts.MeasurementSelector.Config(
             [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
@@ -988,26 +987,6 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
-    #  if trackSelectorConfig is not None:
-    #  trackSelector = addTrackSelection(
-    #  s,
-    #  trackSelectorConfig,
-    #  inputTracks=trackFinder.config.outputTracks,
-    #  outputTracks="selectedTracks",
-    #  logLevel=customLogLevel(),
-    #  )
-    #  s.addWhiteboardAlias("tracks", trackSelector.config.outputTracks)
-
-    #  selectedTrackConverter = acts.examples.TracksToTrajectories(
-    #  level=customLogLevel(),
-    #  inputTracks=trackSelector.config.outputTracks,
-    #  outputTrajectories="trajectories-from-selected-tracks",
-    #  )
-    #  s.addAlgorithm(selectedTrackConverter)
-    #  s.addWhiteboardAlias(
-    #  "trajectories", selectedTrackConverter.config.outputTrajectories
-    #  )
 
     addTrajectoryWriters(
         s,
