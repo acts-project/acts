@@ -271,7 +271,7 @@ jobs:
   linux_physmon:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
-    # needs: [linux_ubuntu]
+    needs: [linux_ubuntu]
     env:
       ACTS_SEQUENCER_DISABLE_FPEMON: true
 
