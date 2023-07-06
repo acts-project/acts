@@ -50,16 +50,13 @@ with tempfile.TemporaryDirectory() as temp:
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
-
     addPythia8(
         s,
         hardProcess=["Top:qqbar2ttbar=on"],
         npileup=200,
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
-            stddev=acts.Vector4(
-                0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
-            ),
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
         ),
         rnd=rnd,
     )
@@ -84,9 +81,7 @@ with tempfile.TemporaryDirectory() as temp:
         setup.trackingGeometry,
         setup.field,
         TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-        ParticleSmearingSigmas(
-            pRel=0.01
-        ),  # only used by SeedingAlgorithm.TruthSmeared
+        ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
         SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(1 * u.mm, 60 * u.mm),
@@ -147,9 +142,7 @@ with tempfile.TemporaryDirectory() as temp:
         "performance_ckf",
         "tracksummary_ckf",
         "performance_amvf",
-    ] + (
-        ["performance_seeding", "performance_ambi"]
-    ):
+    ] + (["performance_seeding", "performance_ambi"]):
         perf_file = tp / f"{stem}.root"
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, setup.outdir / f"{stem}_ttbar.root")
