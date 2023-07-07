@@ -57,6 +57,16 @@ with tempfile.TemporaryDirectory() as temp:
             acts.FpeType.FLTUND,
             1,
         ),
+        acts.examples.Sequencer.FpeMask(
+            "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:110",
+            acts.FpeType.FLTINV,
+            1,
+        ),
+        acts.examples.Sequencer.FpeMask(
+            "Fatras/include/ActsFatras/Kernel/Simulation.hpp:98",
+            acts.FpeType.FLTOVF,
+            1,
+        ),
     ]
     s = acts.examples.Sequencer(
         events=3,
