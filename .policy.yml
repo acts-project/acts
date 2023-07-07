@@ -12,7 +12,7 @@ approval_rules:
   options:
     allow_author: false # just for completeness
     allow_contributor: true # Update button 'contributions' should be ignored
-    invalidate_on_push: true
+    invalidate_on_push: false
     ignore_update_merges: true
   if:
     targets_branch:
