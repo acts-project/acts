@@ -112,7 +112,8 @@ void convert(nlohmann::json& jIndexedSurfaces,
 template <typename tuple_type, std::size_t... I>
 void unrollConvert(nlohmann::json& jIndexedSurfaces,
                    const Experimental::SurfaceCandidatesUpdator& delegate,
-                   const tuple_type& axesTuple, std::index_sequence<I...>) {
+                   const tuple_type& axesTuple,
+                   std::index_sequence<I...> /*unused*/) {
   (convert(jIndexedSurfaces, delegate, std::get<I>(axesTuple)), ...);
 }
 

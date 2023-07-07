@@ -60,14 +60,14 @@ Acts::IndexedSurfacesJsonConverter::fromJson(
   Experimental::SurfaceCandidatesUpdator sfCandidates;
 
   // Helper extractor
-  auto eqExtractor = [](const nlohmann::json jAxis)
+  auto eqExtractor = [](const nlohmann::json& jAxis)
       -> std::tuple<std::array<ActsScalar, 2u>, std::size_t> {
     std::array<ActsScalar, 2u> range = jAxis["range"];
     std::size_t bins = jAxis["bins"];
     return std::make_tuple(range, bins);
   };
 
-  auto vExtractor = [](const nlohmann::json jAxis) -> std::vector<ActsScalar> {
+  auto vExtractor = [](const nlohmann::json& jAxis) -> std::vector<ActsScalar> {
     return std::vector<ActsScalar>(jAxis["boundaries"]);
   };
 

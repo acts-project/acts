@@ -25,7 +25,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
     const GeometryContext& gctx, const Experimental::Detector& detector,
     const Options& options) {
   // Get the time stamp
-  time_t tt;
+  time_t tt = 0;
   time(&tt);
   auto ti = localtime(&tt);
 
@@ -88,7 +88,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
     const GeometryContext& gctx, const Experimental::Detector& detector,
     const Options& options) {
   // Get the time stamp
-  time_t tt;
+  time_t tt = 0;
   time(&tt);
   auto ti = localtime(&tt);
 
@@ -151,12 +151,12 @@ Acts::DetectorJsonConverter::fromJson(const GeometryContext& gctx,
   std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes;
   std::vector<std::shared_ptr<Experimental::Portal>> portals;
 
-  for (auto jVolume : jVolumes) {
+  for (const auto& jVolume : jVolumes) {
     auto volume = DetectorVolumeJsonConverter::fromJson(gctx, jVolume);
     volumes.push_back(volume);
   }
 
-  for (auto jPortal : jPortals) {
+  for (const auto& jPortal : jPortals) {
     auto portal = PortalJsonConverter::fromJson(gctx, jPortal, volumes);
     portals.push_back(portal);
   }

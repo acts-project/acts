@@ -65,13 +65,13 @@ nlohmann::json toJsonDetray(
 /// @brief convert from json format
 ///
 /// @param gctx the geometry context
-/// @param jDetector the json object
+/// @param jVolume the json object representing the detector volume
 ///
 /// @note this only creates a volume in a stand-alone context, not in a detector
 ///       context. For the latter, use the DetectorJsonConverter that will patch
 ///       the portals accordingly
 std::shared_ptr<Experimental::DetectorVolume> fromJson(
-    const GeometryContext& gctx, const nlohmann::json& jDetector);
+    const GeometryContext& gctx, const nlohmann::json& jVolume);
 
 }  // namespace DetectorVolumeJsonConverter
 }  // namespace Acts
