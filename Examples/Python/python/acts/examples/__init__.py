@@ -348,6 +348,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
     _autoFpeMasks: Optional[List["FpeMask"]] = None
 
     def __init__(self, *args, **kwargs):
+
         if "fpeMasks" in kwargs:
             m = kwargs["fpeMasks"]
             if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
@@ -357,17 +358,22 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                     n.append(self.FpeMask(loc, t, count))
                 kwargs["fpeMasks"] = n
 
-        if any(isinstance(a, self.Config) for a in args) or "config" in kwargs:
-            c = kwargs.get("config", None)
-            for a in args:
-                if isinstance(a, self.Config):
-                    c = a
-                    break
-            c.fpeMasks += self._getAutoFpeMasks()
-        else:
             kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
 
-        super().__init__(*args, **kwargs)
+        cfg = self.Config()
+        if len(args) == 1 and isinstance(args[0], self.Config):
+            cfg = args[0]
+            args = args[1:]
+        if "config" in kwargs:
+            cfg = kwargs.pop("config")
+
+        for k, v in kwargs.items():
+            print("Set", k, v)
+            if not hasattr(cfg, k):
+                raise ValueError(f"Sequencer.Config does not have field {k}")
+            setattr(cfg, k, v)
+
+        super().__init__(cfg)
 
     class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
         @classmethod
