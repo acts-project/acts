@@ -427,7 +427,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
         cls._autoFpeMasks = []
 
-        for root, dirs, files in os.walk(srcdir):
+        for root, _, files in os.walk(srcdir):
             root = Path(root)
             for f in files:
                 if (
@@ -442,8 +442,10 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                     for i, line in enumerate(fh, start=1):
                         if m := re.match(r".*\/\/ ?MARK: ?(fpeMask.*)$", line):
                             exp = m.group(1)
-                            for m in re.findall(r"fpeMask\((\w+), ?(\d+)\)", exp):
-                                fpeType, count = m
+                            for m in re.findall(
+                                r"fpeMask\((\w+), ?(\d+) ?, ?issue: ?(\d+)\)", exp
+                            ):
+                                fpeType, count, _ = m
                                 count = int(count)
                                 rel = f.relative_to(srcdir)
                                 cls._autoFpeMasks.append(
