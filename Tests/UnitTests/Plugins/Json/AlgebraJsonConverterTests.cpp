@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(TransformTranspose) {
     CHECK_CLOSE_ABS(readR[i], rr, 1e-5);
   }
 
-  // Test tranposed writing
+  // Test transposed writing
   Transform3JsonConverter::Options transposeOptions{true, true};
   nlohmann::json transposeOut =
       Transform3JsonConverter::toJson(reference, transposeOptions);

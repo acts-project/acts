@@ -56,7 +56,7 @@ void attachDetectorVolumeUpdator(Portal& portal,
 /// @param portal is the portal where the detector volume is going to be attached
 /// @param volumes are the volumes that are pointed to
 /// @param direction is the direction to which it is attached
-/// @param boudnaries are the value boundaries
+/// @param boundaries are the value boundaries
 /// @param binning is the binning type
 ///
 void attachDetectorVolumesUpdator(

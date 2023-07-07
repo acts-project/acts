@@ -100,7 +100,7 @@ struct Options {
 nlohmann::json toJson(const GeometryContext& gctx, const Surface& surface,
                       const Options& options = Options{});
 
-/// Contextual conversion of a surface - Detray expoert
+/// Contextual conversion of a surface - Detray export
 ///
 /// @param gctx the geometry context for this
 /// @param surface the surface to be converted
@@ -121,7 +121,7 @@ std::shared_ptr<Surface> fromJson(const nlohmann::json& jSurface);
 
 }  // namespace SurfaceJsonConverter
 
-// This macro create a conversion for thes urface type
+// This macro create a conversion for the surface type
 NLOHMANN_JSON_SERIALIZE_ENUM(
     Surface::SurfaceType,
     {{Surface::SurfaceType::Cone, "ConeSurface"},
