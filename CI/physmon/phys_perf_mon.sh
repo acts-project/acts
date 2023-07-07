@@ -214,6 +214,47 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         --title "Ambisolver orthogonal" \
         -o $outdir/ambi_orthogonal.html \
         -p $outdir/ambi_orthogonal_plots
+
+    run \
+        $outdir/performance_seeding_ttbar.root \
+        $refdir/performance_seeding_ttbar.root \
+        --title "Seeding ttbar" \
+        -c $config \
+        -o $outdir/seeding_ttbar.html \
+        -p $outdir/seeding_ttbar_plots
+
+    run \
+        $outdir/performance_ckf_ttbar.root \
+        $refdir/performance_ckf_ttbar.root \
+        --title "CKF ttbar" \
+        -c $config \
+        -o $outdir/ckf_ttbar.html \
+        -p $outdir/ckf_ttbar_plots
+
+    run \
+        $outdir/performance_ambi_ttbar.root \
+        $refdir/performance_ambi_ttbar.root \
+        --title "Ambisolver " \
+        -o $outdir/ambi_ttbar.html \
+        -p $outdir/ambi_ttbar_plots
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/performance_amvf_ttbar.root \
+        vertexing \
+        $outdir/performance_amvf_ttbar.root \
+        --silent \
+        --config CI/physmon/vertexing_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/performance_amvf_ttbar.root
+
+    run \
+        $outdir/performance_amvf_ttbar_hist.root \
+        $refdir/performance_amvf_ttbar_hist.root \
+        --title "AMVF ttbar" \
+        -o $outdir/amvf_ttbar.html \
+        -p $outdir/amvf_ttbar_plots
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
