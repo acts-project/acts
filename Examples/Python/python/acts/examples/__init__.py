@@ -356,7 +356,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                     t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
                     n.append(self.FpeMask(loc, t, count))
                 kwargs["fpeMasks"] = n
-        
+
         if any(isinstance(a, self.Config) for a in args) or "config" in kwargs:
             c = kwargs.get("config", None)
             for a in args:
