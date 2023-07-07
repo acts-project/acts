@@ -33,12 +33,10 @@ u = acts.UnitConstants
 setup = makeSetup()
 
 
-
 with tempfile.TemporaryDirectory() as temp:
-    fpeMasks = (acts.examples.Sequencer.FpeMask.fromFile(
+    fpeMasks = acts.examples.Sequencer.FpeMask.fromFile(
         Path(__file__).parent.parent / "fpe_masks.yml"
-    )
-    + [
+    ) + [
         acts.examples.Sequencer.FpeMask(
             "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp:172",
             acts.FpeType.FLTINV,
@@ -59,7 +57,7 @@ with tempfile.TemporaryDirectory() as temp:
             acts.FpeType.FLTUND,
             1,
         ),
-    ])
+    ]
     s = acts.examples.Sequencer(
         events=3,
         numThreads=-1,
