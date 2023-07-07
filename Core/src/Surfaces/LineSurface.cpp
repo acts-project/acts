@@ -151,45 +151,51 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
-  // following nominclature found in header file and doxygen documentation
-  // line one is the straight track
+  // The nominclature is following the header file and doxygen documentation
+
   const Vector3& ma = position;
   const Vector3& ea = direction;
-  // line two is the line surface
-  const auto& tMatrix = transform(gctx).matrix();
-  Vector3 mb = tMatrix.block<3, 1>(0, 3).transpose();
-  Vector3 eb = tMatrix.block<3, 1>(0, 2).transpose();
-  // now go ahead and solve for the closest approach
-  Vector3 mab(mb - ma);
+
+  // Origin of the line surface
+  Vector3 mb = transform(gctx).translation();
+  // Line surface axis
+  Vector3 eb = transform(gctx).rotation() * Vector3::UnitZ();
+
+  // Now go ahead and solve for the closest approach
+  Vector3 mab = mb - ma;
   double eaTeb = ea.dot(eb);
   double denom = 1 - eaTeb * eaTeb;
-  // validity parameter
-  Intersection3D::Status status = Intersection3D::Status::unreachable;
-  if (std::abs(denom) > std::abs(tolerance)) {
-    double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
-    // Check if we are on the surface already
-    status = std::abs(u) < std::abs(tolerance)
-                 ? Intersection3D::Status::onSurface
-                 : Intersection3D::Status::reachable;
-    Vector3 result = (ma + u * ea);
-    // Evaluate the boundary check if requested
-    // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
-    if (bcheck and m_bounds) {
-      // At closest approach: check inside R or and inside Z
-      const Vector3 vecLocal(result - mb);
-      double cZ = vecLocal.dot(eb);
-      double hZ = m_bounds->get(LineBounds::eHalfLengthZ) + tolerance;
-      if ((std::abs(cZ) > std::abs(hZ)) or
-          ((vecLocal - cZ * eb).norm() >
-           m_bounds->get(LineBounds::eR) + tolerance)) {
-        status = Intersection3D::Status::missed;
-      }
-    }
-    return {Intersection3D(result, u, status), this};
+
+  // `tolerance` does not really have a meaning here it is just a sufficently
+  // small number so `u` does not explode
+  if (std::abs(denom) < std::abs(tolerance)) {
+    // return a false intersection
+    return {Intersection3D(position, std::numeric_limits<double>::max(),
+                           Intersection3D::Status::unreachable),
+            this};
   }
-  // return a false intersection
-  return {Intersection3D(position, std::numeric_limits<double>::max(), status),
-          this};
+
+  double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
+  // Check if we are on the surface already
+  Intersection3D::Status status = std::abs(u) < std::abs(tolerance)
+                                      ? Intersection3D::Status::onSurface
+                                      : Intersection3D::Status::reachable;
+  Vector3 result = ma + u * ea;
+  // Evaluate the boundary check if requested
+  // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
+  if (bcheck and m_bounds) {
+    // At closest approach: check inside R or and inside Z
+    Vector3 vecLocal = result - mb;
+    double cZ = vecLocal.dot(eb);
+    double hZ = m_bounds->get(LineBounds::eHalfLengthZ) + tolerance;
+    if ((std::abs(cZ) > std::abs(hZ)) or
+        ((vecLocal - cZ * eb).norm() >
+         m_bounds->get(LineBounds::eR) + tolerance)) {
+      status = Intersection3D::Status::missed;
+    }
+  }
+
+  return {Intersection3D(result, u, status), this};
 }
 
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
