@@ -2,6 +2,7 @@ import sys, inspect
 from pathlib import Path
 from typing import Optional, Protocol, Union, List, Dict
 import os
+import re
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -343,7 +344,11 @@ def defaultLogging(
 
 
 class Sequencer(ActsPythonBindings._examples._Sequencer):
+
+    _autoFpeMasks: Optional[List["FpeMask"]] = None
+
     def __init__(self, *args, **kwargs):
+
         if "fpeMasks" in kwargs:
             m = kwargs["fpeMasks"]
             if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
@@ -352,7 +357,23 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                     t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
                     n.append(self.FpeMask(loc, t, count))
                 kwargs["fpeMasks"] = n
-        super().__init__(*args, **kwargs)
+
+            kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
+
+        cfg = self.Config()
+        if len(args) == 1 and isinstance(args[0], self.Config):
+            cfg = args[0]
+            args = args[1:]
+        if "config" in kwargs:
+            cfg = kwargs.pop("config")
+
+        for k, v in kwargs.items():
+            print("Set", k, v)
+            if not hasattr(cfg, k):
+                raise ValueError(f"Sequencer.Config does not have field {k}")
+            setattr(cfg, k, v)
+
+        super().__init__(cfg)
 
     class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
         @classmethod
@@ -396,3 +417,43 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                 for fpe, count in types.items():
                     out.append(cls(loc, cls._fpe_types_to_enum[fpe], count))
             return out
+
+    @classmethod
+    def _getAutoFpeMasks(cls) -> List[FpeMask]:
+        if cls._autoFpeMasks is not None:
+            return cls._autoFpeMasks
+
+        srcdir = Path(cls._sourceLocation).parent.parent.parent.parent
+
+        cls._autoFpeMasks = []
+
+        for root, _, files in os.walk(srcdir):
+            root = Path(root)
+            for f in files:
+                if (
+                    not f.endswith(".hpp")
+                    and not f.endswith(".cpp")
+                    and not f.endswith(".ipp")
+                ):
+                    continue
+                f = root / f
+                #  print(f)
+                with f.open("r") as fh:
+                    for i, line in enumerate(fh, start=1):
+                        if m := re.match(r".*\/\/ ?MARK: ?(fpeMask.*)$", line):
+                            exp = m.group(1)
+                            for m in re.findall(
+                                r"fpeMask\((\w+), ?(\d+) ?, ?issue: ?(\d+)\)", exp
+                            ):
+                                fpeType, count, _ = m
+                                count = int(count)
+                                rel = f.relative_to(srcdir)
+                                cls._autoFpeMasks.append(
+                                    cls.FpeMask(
+                                        f"{rel}:{i}",
+                                        cls.FpeMask._fpe_types_to_enum[fpeType],
+                                        count,
+                                    )
+                                )
+
+        return cls._autoFpeMasks
