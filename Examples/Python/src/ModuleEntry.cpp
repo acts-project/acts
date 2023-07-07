@@ -262,7 +262,10 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
           .def("addWriter", &Sequencer::addWriter)
           .def("addWhiteboardAlias", &Sequencer::addWhiteboardAlias)
           .def_property_readonly("config", &Sequencer::config)
-          .def_property_readonly("fpeResult", &Sequencer::fpeResult);
+          .def_property_readonly("fpeResult", &Sequencer::fpeResult)
+          .def_property_readonly_static(
+              "_sourceLocation",
+              [](py::object /*self*/) { return std::string{__FILE__}; });
 
   auto c = py::class_<Config>(sequencer, "Config").def(py::init<>());
 
