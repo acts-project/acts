@@ -97,4 +97,14 @@ jobs:
       - name: Check
         run: >
           CI/check_spelling
-
+  fpe_masks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - name: Install dependencies
+        run: >
+          pip install -r CI/requirements_fpe_masks.txt
+      - name: Check
+        run: >
+          CI/check_fpe_masks.py --token ${{ secrets.GITHUB_TOKEN }}

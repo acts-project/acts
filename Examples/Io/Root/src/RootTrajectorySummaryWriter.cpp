@@ -368,7 +368,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
         if (hasFittedCov) {
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-            pull[i] = res[i] / error[i];
+            pull[i] =
+                res[i] / error[i];  // MARK: fpeMask(FLTINV, 1, issue: 2284)
           }
         }
       }
