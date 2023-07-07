@@ -175,8 +175,7 @@ struct StepCollector {
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
-    result.momentum.push_back(stepper.absoluteMomentum(state.stepping) *
-                              stepper.direction(state.stepping));
+    result.momentum.push_back(stepper.momentum(state.stepping));
   }
 };
 
