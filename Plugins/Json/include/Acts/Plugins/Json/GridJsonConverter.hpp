@@ -111,13 +111,16 @@ auto fromJson(const nlohmann::json& jGrid,
 
 }  // namespace GridJsonConverter
 
-NLOHMANN_JSON_SERIALIZE_ENUM(detail::AxisBoundaryType,
-                             {{detail::AxisBoundaryType::Bound, "Bound"},
-                              {detail::AxisBoundaryType::Open, "Open"},
-                              {detail::AxisBoundaryType::Closed, "Closed"}})
+// Namespace need to be declared outside macro for the documentation
+// build to work.
+using namespace detail;
 
-NLOHMANN_JSON_SERIALIZE_ENUM(detail::AxisType,
-                             {{detail::AxisType::Equidistant, "Equidistant"},
-                              {detail::AxisType::Variable, "Variable"}})
+NLOHMANN_JSON_SERIALIZE_ENUM(AxisBoundaryType,
+                             {{AxisBoundaryType::Bound, "Bound"},
+                              {AxisBoundaryType::Open, "Open"},
+                              {AxisBoundaryType::Closed, "Closed"}})
+
+NLOHMANN_JSON_SERIALIZE_ENUM(AxisType, {{AxisType::Equidistant, "Equidistant"},
+                                        {AxisType::Variable, "Variable"}})
 
 }  // namespace Acts
