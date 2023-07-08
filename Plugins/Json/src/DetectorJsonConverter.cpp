@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
 #include <ctime>
 #include <set>
 
