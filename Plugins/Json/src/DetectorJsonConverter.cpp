@@ -35,7 +35,7 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
   std::size_t nSurfaces = 0;
   std::vector<const Experimental::Portal*> portals;
 
-  for (const auto& volume : detector.volumes()) {
+  for (const auto* volume : detector.volumes()) {
     nSurfaces += volume->surfaces().size();
     for (const auto& portal : volume->portals()) {
       if (std::find(portals.begin(), portals.end(), portal) == portals.end()) {
