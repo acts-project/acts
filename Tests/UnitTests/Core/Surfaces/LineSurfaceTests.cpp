@@ -7,14 +7,18 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -27,6 +31,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -49,6 +54,7 @@ GeometryContext tgContext = GeometryContext();
 // using boost::test_tools::output_test_stream;
 
 BOOST_AUTO_TEST_SUITE(Surfaces)
+
 /// Unit test for creating compliant/non-compliant LineSurface object
 BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
   // Default ctor is deleted
@@ -84,6 +90,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_Constructors_test) {
   BOOST_TEST_MESSAGE(
       "All LineSurface constructors are callable without problem");
 }
+
 /// Unit tests of all named methods
 BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // binningPosition()
@@ -162,6 +169,7 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   CHECK_CLOSE_REL(line.pathCorrection(tgContext, any3DVector, any3DVector), 1.,
                   1e-6);
 }
+
 /// Unit test for testing LineSurface assignment
 BOOST_AUTO_TEST_CASE(LineSurface_assignment_test) {
   Translation3 translation{0., 1., 2.};
@@ -264,6 +272,58 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
     CHECK_CLOSE_ABS(global, global2, 1e-10);
     CHECK_CLOSE_ABS(pca, global2, 1e-10);
   }
+}
+
+BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
+  using namespace Acts::UnitLiterals;
+
+  auto eps = 1e-10;
+
+  auto direction = Vector3(1, 1, 100).normalized();
+  auto boundVector =
+      (BoundVector() << 1_cm, 1_cm, VectorHelpers::phi(direction),
+       VectorHelpers::theta(direction), 1, 0)
+          .finished();
+  auto pathLimit = 1_cm;
+
+  auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
+
+  auto initialParams = BoundTrackParameters(surface, boundVector, 1);
+
+  auto propagator = Propagator<StraightLineStepper>({});
+
+  auto displacedParameters =
+      CurvilinearTrackParameters(Vector4::Zero(), Vector3::Zero(), 1);
+  {
+    auto options = PropagatorOptions<>(tgContext, {});
+    options.direction = Acts::Direction::Backward;
+    options.pathLimit = pathLimit;
+
+    auto result = propagator.propagate(initialParams, options);
+    BOOST_CHECK(result.ok());
+    BOOST_CHECK(result.value().endParameters);
+
+    displacedParameters = result.value().endParameters.value();
+  }
+
+  auto intersection =
+      surface->intersect(tgContext, displacedParameters.position(tgContext),
+                         displacedParameters.unitDirection());
+  CHECK_CLOSE_ABS(intersection.intersection.pathLength, pathLimit, eps);
+
+  auto endParameters = BoundTrackParameters(surface, BoundVector::Zero(), 1);
+  {
+    auto options = PropagatorOptions<>(tgContext, {});
+    options.direction = Acts::Direction::Forward;
+
+    auto result = propagator.propagate(displacedParameters, *surface, options);
+    BOOST_CHECK(result.ok());
+    BOOST_CHECK(result.value().endParameters);
+    CHECK_CLOSE_ABS(result.value().pathLength, pathLimit, eps);
+    endParameters = result.value().endParameters.value();
+  }
+
+  CHECK_CLOSE_ABS(initialParams.parameters(), endParameters.parameters(), eps);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
