@@ -16,6 +16,7 @@ from acts.examples.simulation import (
     ParticleConfig,
     addSimulation,
     SimulationAlgorithm,
+    ParticleSelectorConfig,
     addDigitization,
 )
 from acts.examples.reconstruction import (
@@ -34,7 +35,7 @@ from physmon_common import makeArgparser, makeSetup
 u = acts.UnitConstants
 
 parser = makeArgparser()
-parser.add_argument("--pool-size", default=4)
+parser.add_argument("--pool-size", default=2)
 args = parser.parse_args()
 setup = makeSetup(argparser=parser)
 
@@ -77,6 +78,8 @@ def run_single_particles(particle, pT, simulation, label):
             rnd,
             detector=setup.detector,
             enableInteractions=True,
+            preSelectParticles=ParticleSelectorConfig(),
+            postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
         )
 
         addDigitization(
@@ -132,7 +135,7 @@ def run_single_particles(particle, pT, simulation, label):
         s.run()
         del s
 
-        for stem in ["performance_ckf", "tracksummary_ckf"]:
+        for stem in ["performance_ckf", "tracksummary_ckf", "trackstates_ckf"]:
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
@@ -156,8 +159,15 @@ with Pool(args.pool_size, maxtasksperchild=1) as pool:
             acts.PdgParticle.ePionPlus,
             acts.PdgParticle.eElectron,
         ],
-        [1 * u.GeV, 10 * u.GeV, 100 * u.GeV],
-        [SimulationAlgorithm.Fatras, SimulationAlgorithm.Geant4],
+        [
+            1 * u.GeV,
+            10 * u.GeV,
+            100 * u.GeV,
+        ],
+        [
+            SimulationAlgorithm.Fatras,
+            SimulationAlgorithm.Geant4,
+        ],
     ):
         label = create_label(particle, pt, simulation)
         pool.apply_async(run_single_particles, args=(particle, pt, simulation, label))
