@@ -46,7 +46,7 @@ ActsFatras::Particle ActsFatras::BetheHeitler::bremPhoton(
     theta *= (rndTheta1 < 0.25) ? u : u / 3.;  // 9./(9.+27) = 0.25
   }
 
-  Vector3 particleDirection = particle.unitDirection();
+  Vector3 particleDirection = particle.direction();
   Vector3 photonDirection = particleDirection;
 
   // construct the combined rotation to the scattered direction
