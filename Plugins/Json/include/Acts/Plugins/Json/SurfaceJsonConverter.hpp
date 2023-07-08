@@ -96,7 +96,7 @@ struct Options {
 /// @param surface the surface to be converted
 /// @param options the writing options for the surfaces
 ///
-/// return a json object representing the surface
+/// @return a json object representing the surface
 nlohmann::json toJson(const GeometryContext& gctx, const Surface& surface,
                       const Options& options = Options{});
 
