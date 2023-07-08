@@ -133,7 +133,6 @@ nlohmann::json Acts::DetectorJsonConverter::toJsonDetray(
   // from the translated volumes
   jHeader["type"] = "detray";
   jHeader["surface_count"] = nSurfaces;
-
   jDetector["header"] = jHeader;
   jDetector["data"] = jData;
 
