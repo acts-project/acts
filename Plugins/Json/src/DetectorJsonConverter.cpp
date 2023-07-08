@@ -26,9 +26,9 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
     const GeometryContext& gctx, const Experimental::Detector& detector,
     const Options& options) {
   // Get the time stamp
-  time_t tt = 0;
-  time(&tt);
-  auto ti = localtime(&tt);
+  std::time_t tt = 0;
+  std::time(&tt);
+  auto ti = std::localtime(&tt);
 
   nlohmann::json jDetector;
 
