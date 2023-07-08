@@ -147,7 +147,7 @@ Acts::DetectorJsonConverter::fromJson(const GeometryContext& gctx,
   auto jData = jDetector["data"];
   auto jVolumes = jData["volumes"];
   auto jPortals = jData["portals"];
-  std::string name = jData["name"];
+  const std::string name = jData["name"];
 
   std::vector<std::shared_ptr<Experimental::DetectorVolume>> volumes;
   std::vector<std::shared_ptr<Experimental::Portal>> portals;
