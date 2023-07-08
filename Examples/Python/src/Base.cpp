@@ -70,7 +70,6 @@ void addUnits(Context& ctx) {
   UNIT(g)
   UNIT(kg)
   UNIT(e)
-  UNIT(C)
   UNIT(T)
   UNIT(Gauss)
   UNIT(kGauss)
