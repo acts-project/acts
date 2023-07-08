@@ -226,9 +226,9 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         prtVz = particle.position().z() / Acts::UnitConstants::mm;
         prtVt = particle.time() / Acts::UnitConstants::ns;
         const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
-        prtPx = p * particle.unitDirection().x();
-        prtPy = p * particle.unitDirection().y();
-        prtPz = p * particle.unitDirection().z();
+        prtPx = p * particle.direction().x();
+        prtPy = p * particle.direction().y();
+        prtPz = p * particle.direction().z();
         prtM = particle.mass() / Acts::UnitConstants::GeV;
         prtQ = particle.charge() / Acts::UnitConstants::e;
         // reconstruction
