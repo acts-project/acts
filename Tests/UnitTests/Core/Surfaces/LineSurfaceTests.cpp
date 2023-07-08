@@ -111,7 +111,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // globalToLocal()
   Vector3 gpos{0., 1., 0.};
   const Vector3 mom{20., 0., 0.};  // needs more realistic parameters
-  Vector2 localPosition = line.globalToLocal(tgContext, gpos, mom).value();
+  Vector2 localPosition =
+      line.globalToLocal(tgContext, gpos, mom.normalized()).value();
   const Vector2 expectedResult{0, -2};
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
   //
@@ -138,14 +139,14 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   // Vector2 localPosition{0., 0.};
   const Vector3 momentum{300., 200., 0.};  // find better values!
   returnedGlobalPosition =
-      line.localToGlobal(tgContext, localPosition, momentum);
+      line.localToGlobal(tgContext, localPosition, momentum.normalized());
   const Vector3 expectedGlobalPosition{0, 1, 0};
   CHECK_CLOSE_ABS(returnedGlobalPosition, expectedGlobalPosition, 1e-6);
   //
   // referenceFrame
   Vector3 globalPosition{0., 0., 0.};
   auto returnedRotationMatrix =
-      line.referenceFrame(tgContext, globalPosition, momentum);
+      line.referenceFrame(tgContext, globalPosition, momentum.normalized());
   double v0 = std::cos(std::atan(2. / 3.));
   double v1 = std::sin(std::atan(2. / 3.));
   RotationMatrix3 expectedRotationMatrix;
@@ -315,6 +316,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   {
     auto options = PropagatorOptions<>(tgContext, {});
     options.direction = Acts::Direction::Forward;
+    options.maxStepSize = 1_mm;
 
     auto result = propagator.propagate(displacedParameters, *surface, options);
     BOOST_CHECK(result.ok());

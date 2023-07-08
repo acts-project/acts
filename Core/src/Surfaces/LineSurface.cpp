@@ -64,13 +64,12 @@ Acts::LineSurface& Acts::LineSurface::operator=(const LineSurface& other) {
 Acts::Vector3 Acts::LineSurface::localToGlobal(const GeometryContext& gctx,
                                                const Vector2& lposition,
                                                const Vector3& direction) const {
-  const auto& sTransform = transform(gctx);
-  const auto& tMatrix = sTransform.matrix();
-  Vector3 lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  Vector3 lineDirection = transform(gctx).rotation() * Vector3::UnitZ();
 
   // get the vector perpendicular to the momentum direction and the straw axis
-  Vector3 radiusAxisGlobal(lineDirection.cross(direction));
-  Vector3 locZinGlobal = sTransform * Vector3(0., 0., lposition[eBoundLoc1]);
+  Vector3 radiusAxisGlobal = lineDirection.cross(direction);
+  Vector3 locZinGlobal =
+      transform(gctx) * Vector3(0., 0., lposition[eBoundLoc1]);
   // add eBoundLoc0 * radiusAxis
   return Vector3(locZinGlobal +
                  lposition[eBoundLoc0] * radiusAxisGlobal.normalized());
@@ -80,25 +79,20 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, double tolerance) const {
   using VectorHelpers::perp;
-  const auto& sTransform = transform(gctx);
-  const auto& tMatrix = sTransform.matrix();
-  Vector3 lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
-  // Bring the global position into the local frame
-  Vector3 loc3Dframe = sTransform.inverse() * position;
-  // construct localPosition with sign*perp(candidate) and z.()
-  Vector2 lposition(perp(loc3Dframe), loc3Dframe.z());
-  Vector3 sCenter(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
-  Vector3 decVec(position - sCenter);
-  // assign the right sign
-  double sign = ((lineDirection.cross(direction)).dot(decVec) < 0.) ? -1. : 1.;
-  lposition[eBoundLoc0] *= sign;
 
-  // TODO make intersection and local<->global tolerances sound. quick fixed
-  // this with a 50% tolerance increase for now
-  if ((localToGlobal(gctx, lposition, direction) - position).norm() >
-      tolerance * 1.5) {
+  Transform3 totalTransform =
+      referenceFrame(gctx, position, direction).inverse() *
+      transform(gctx).inverse();
+
+  // Bring the global position into the local frame
+  Vector3 lposition3 = totalTransform * position;
+
+  if (std::abs(lposition3.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
+
+  // Construct local position from local x,y
+  Vector2 lposition = lposition3.head<2>();
 
   return Result<Vector2>::success(lposition);
 }
@@ -110,16 +104,15 @@ std::string Acts::LineSurface::name() const {
 Acts::RotationMatrix3 Acts::LineSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*position*/,
     const Vector3& direction) const {
+  Vector3 measZ0 = transform(gctx).rotation() * Vector3::UnitZ();
+  Vector3 measD0 = measZ0.cross(direction).normalized();
+  Vector3 measDepth = measD0.cross(measZ0);
+
   RotationMatrix3 mFrame;
-  const auto& tMatrix = transform(gctx).matrix();
-  Vector3 measY(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
-  Vector3 measX(measY.cross(direction).normalized());
-  Vector3 measDepth(measX.cross(measY));
-  // assign the columnes
-  mFrame.col(0) = measX;
-  mFrame.col(1) = measY;
+  mFrame.col(0) = measD0;
+  mFrame.col(1) = measZ0;
   mFrame.col(2) = measDepth;
-  // return the rotation matrix
+
   return mFrame;
 }
 
