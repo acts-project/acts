@@ -96,7 +96,10 @@ void addGeometry(Context& ctx) {
         .def("visitSurfaces",
              [](Acts::TrackingGeometry& self, py::function& func) {
                self.visitSurfaces(func);
-             });
+             })
+        .def_property_readonly(
+            "worldVolume",
+            &Acts::TrackingGeometry::highestTrackingVolumeShared);
   }
 
   {
