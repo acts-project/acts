@@ -92,16 +92,15 @@ auto fromJson(const nlohmann::json& jGrid,
   nlohmann::json jData = jGrid["data"];
   // Index filling
   if constexpr (GridType::DIM == 1u) {
+    std::vector<std::size_t> values = jd[1u];
     for (const auto& jd : jData) {
       std::array<std::size_t, 1u> lbin = jd[0u];
-      std::vector<std::size_t> values = jd[1u];
       grid.atLocalBins(lbin) = values;
     }
   }
   if constexpr (GridType::DIM == 2u) {
     for (const auto& jd : jData) {
       std::array<std::size_t, 2u> lbin = jd[0u];
-      std::vector<std::size_t> values = jd[1u];
       grid.atLocalBins(lbin) = values;
     }
   }

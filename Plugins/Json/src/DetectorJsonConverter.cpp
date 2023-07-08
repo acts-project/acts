@@ -72,14 +72,11 @@ nlohmann::json Acts::DetectorJsonConverter::toJson(
   // Write the header
   nlohmann::json jHeader;
   jHeader["detector"] = detector.name();
-  jHeader["date"] = std::asctime(ti);
-  jHeader["volume_count"] = detector.volumes().size();
-
-  // For detray, the number of surfaces and portals are collected
-  // from the translated volumes
   jHeader["type"] = "acts";
+  jHeader["date"] = std::asctime(ti);
   jHeader["surface_count"] = nSurfaces;
   jHeader["portal_count"] = portals.size();
+  jHeader["volume_count"] = detector.volumes().size();
   jDetector["header"] = jHeader;
   jDetector["data"] = jData;
   return jDetector;

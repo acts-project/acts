@@ -140,7 +140,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJsonDetray(
         (toJsonDetray(gctx, *p, ip, volume, orientedSurfaces, detectorVolumes,
                       options.portalOptions));
     std::for_each(jPortalSurfaces.begin(), jPortalSurfaces.end(),
-             [&](auto& jSurface) { jSurfaces.push_back(jSurface); });
+                  [&](auto& jSurface) { jSurfaces.push_back(jSurface); });
   }
   jVolume["surfaces"] = jSurfaces;
 
