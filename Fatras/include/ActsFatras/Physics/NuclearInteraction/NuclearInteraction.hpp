@@ -502,7 +502,7 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
     const Acts::ActsDynamicVector& invariantMasses, Particle& initialParticle,
     float parametrizedMomentum, bool soft) const {
   std::uniform_real_distribution<double> uniformDistribution{0., 1.};
-  const auto& initialDirection = initialParticle.unitDirection();
+  const auto& initialDirection = initialParticle.direction();
   const double phi = Acts::VectorHelpers::phi(initialDirection);
   const double theta = Acts::VectorHelpers::theta(initialDirection);
   const unsigned int size = momenta.size();
