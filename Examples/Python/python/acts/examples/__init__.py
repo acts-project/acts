@@ -368,7 +368,6 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
             cfg = kwargs.pop("config")
 
         for k, v in kwargs.items():
-            print("Set", k, v)
             if not hasattr(cfg, k):
                 raise ValueError(f"Sequencer.Config does not have field {k}")
             setattr(cfg, k, v)

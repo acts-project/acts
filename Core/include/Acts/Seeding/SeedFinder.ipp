@@ -715,19 +715,12 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         // maxPtScattering instead of pt.
         // To avoid 0-divison the pT check is skipped in case of B2==0, and
         // p2scatterSigma is calculated directly from maxPtScattering
-        if (B2 == 0) {
+        if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) >
+                           2. * m_config.maxPtScattering) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
               m_config.sigmaScattering;
           p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-        } else {
-          float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-          if (pT > m_config.maxPtScattering) {
-            float pTscatterSigma =
-                (m_config.highland / m_config.maxPtScattering) *
-                m_config.sigmaScattering;
-            p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-          }
         }
       }
 
