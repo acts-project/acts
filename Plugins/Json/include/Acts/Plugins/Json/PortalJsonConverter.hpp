@@ -50,7 +50,7 @@ nlohmann::json toJson(
 /// @param gctx the geometry context
 /// @param portal the portal instance
 /// @param ip is the portal index that could be used to pick the oriented surface
-/// @param volume is the detector volume to which this surfaces belong to
+/// @param volume is the detector volume to which these surfaces belong to
 /// @param orientedSurfaces are the bounding surfaces (may still need to be split)
 /// @param detectorVolumes is the list of all detector voluems for portal pointing
 /// @param options how to write this thing out
