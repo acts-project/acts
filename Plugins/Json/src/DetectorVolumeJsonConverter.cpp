@@ -76,7 +76,7 @@ nlohmann::json Acts::DetectorVolumeJsonConverter::toJson(
   // Write the portals if pre-converted as link
   nlohmann::json jPortals;
   if (not portals.empty()) {
-    for (const auto& p : volume.portals()) {
+    for (const auto* p : volume.portals()) {
       auto it = std::find(portals.begin(), portals.end(), p);
       if (it != portals.end()) {
         jPortals.push_back(std::distance(portals.begin(), it));
