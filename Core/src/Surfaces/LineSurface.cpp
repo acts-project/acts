@@ -159,7 +159,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
   double eaTeb = ea.dot(eb);
   double denom = 1 - eaTeb * eaTeb;
 
-  // `tolerance` does not really have a meaning here it is just a sufficently
+  // `tolerance` does not really have a meaning here it is just a sufficiently
   // small number so `u` does not explode
   if (std::abs(denom) < std::abs(tolerance)) {
     // return a false intersection
