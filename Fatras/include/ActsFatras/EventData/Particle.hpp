@@ -113,16 +113,16 @@ class Particle {
   }
   /// Set the direction three-vector
   Particle &setDirection(const Vector3 &direction) {
-    m_unitDirection = direction;
-    m_unitDirection.normalize();
+    m_direction = direction;
+    m_direction.normalize();
     return *this;
   }
   /// Set the direction three-vector from scalar components.
   Particle &setDirection(Scalar dx, Scalar dy, Scalar dz) {
-    m_unitDirection[Acts::ePos0] = dx;
-    m_unitDirection[Acts::ePos1] = dy;
-    m_unitDirection[Acts::ePos2] = dz;
-    m_unitDirection.normalize();
+    m_direction[Acts::ePos0] = dx;
+    m_direction[Acts::ePos1] = dy;
+    m_direction[Acts::ePos2] = dz;
+    m_direction.normalize();
     return *this;
   }
   /// Set the absolute momentum.
@@ -154,11 +154,15 @@ class Particle {
   constexpr Acts::PdgParticle pdg() const { return m_pdg; }
   /// Particle charge.
   constexpr Scalar charge() const { return m_charge; }
+  /// Particle absolute charge.
+  constexpr Scalar absoluteCharge() const { return std::abs(m_charge); }
   /// Particle mass.
   constexpr Scalar mass() const { return m_mass; }
-  /// Particl qop.
-  constexpr Scalar qop() const {
-    return (charge() == 0 ? 1 : charge()) / absoluteMomentum();
+
+  /// Particl qOverP.
+  constexpr Scalar qOverP() const {
+    return charge() == 0 ? 1 / absoluteMomentum()
+                         : charge() / absoluteMomentum();
   }
 
   /// Space-time position four-vector.
@@ -171,20 +175,22 @@ class Particle {
   Vector4 fourMomentum() const {
     Vector4 mom4;
     // stored direction is always normalized
-    mom4[Acts::eMom0] = m_absMomentum * m_unitDirection[Acts::ePos0];
-    mom4[Acts::eMom1] = m_absMomentum * m_unitDirection[Acts::ePos1];
-    mom4[Acts::eMom2] = m_absMomentum * m_unitDirection[Acts::ePos2];
+    mom4[Acts::eMom0] = m_absMomentum * m_direction[Acts::ePos0];
+    mom4[Acts::eMom1] = m_absMomentum * m_direction[Acts::ePos1];
+    mom4[Acts::eMom2] = m_absMomentum * m_direction[Acts::ePos2];
     mom4[Acts::eEnergy] = energy();
     return mom4;
   }
   /// Unit three-direction, i.e. the normalized momentum three-vector.
-  const Vector3 &unitDirection() const { return m_unitDirection; }
+  const Vector3 &direction() const { return m_direction; }
   /// Absolute momentum in the x-y plane.
   Scalar transverseMomentum() const {
-    return m_absMomentum * m_unitDirection.segment<2>(Acts::eMom0).norm();
+    return m_absMomentum * m_direction.segment<2>(Acts::eMom0).norm();
   }
   /// Absolute momentum.
   constexpr Scalar absoluteMomentum() const { return m_absMomentum; }
+  /// Absolute momentum.
+  Vector3 momentum() const { return absoluteMomentum() * direction(); }
   /// Total energy, i.e. norm of the four-momentum.
   Scalar energy() const { return std::hypot(m_mass, m_absMomentum); }
 
@@ -234,7 +240,7 @@ class Particle {
   Scalar m_charge = Scalar(0);
   Scalar m_mass = Scalar(0);
   // kinematics, i.e. things that change over the particle lifetime.
-  Vector3 m_unitDirection = Vector3::UnitZ();
+  Vector3 m_direction = Vector3::UnitZ();
   Scalar m_absMomentum = Scalar(0);
   Vector4 m_position4 = Vector4::Zero();
   // proper time in the particle rest frame
