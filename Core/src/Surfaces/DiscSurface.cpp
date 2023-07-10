@@ -171,8 +171,9 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     if (exactPolyhedron or toCenter or not fullDisc) {
       // Transform them into the vertex frame
       wCenter *= 1. / vertices.size();
-      if (addCentreFromConvexFace)
+      if (addCentreFromConvexFace) {
         vertices.push_back(wCenter);
+      }
       auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
