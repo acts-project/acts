@@ -280,7 +280,7 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = Acts::Direction::Forward;
   options.pathLimit = pathLimit;
-  options.maxStepSize = 1_cm;
+  options.maxStepSize = 0.9_cm;
 
   auto result = propagator.propagate(initialParams, targetSurface, options);
   BOOST_CHECK(result.ok());
