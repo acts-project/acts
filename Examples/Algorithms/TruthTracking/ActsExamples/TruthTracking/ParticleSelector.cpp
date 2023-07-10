@@ -59,8 +59,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     return (min <= x) and (x < max);
   };
   auto isValidParticle = [&](const ActsFatras::Particle& p) {
-    const auto eta = Acts::VectorHelpers::eta(p.unitDirection());
-    const auto phi = Acts::VectorHelpers::phi(p.unitDirection());
+    const auto eta = Acts::VectorHelpers::eta(p.direction());
+    const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // define charge selection
     const bool validNeutral = (p.charge() == 0) and not m_cfg.removeNeutral;
