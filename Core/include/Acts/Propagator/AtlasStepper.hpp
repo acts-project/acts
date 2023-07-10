@@ -359,6 +359,10 @@ class AtlasStepper {
     return 1. / std::abs(qOverP(state));
   }
 
+  Vector3 momentum(const State& state) const {
+    return absoluteMomentum(state) * direction(state);
+  }
+
   /// Charge access
   double charge(const State& state) const {
     return qOverP(state) > 0. ? 1. : -1.;

@@ -226,6 +226,13 @@ class EigenStepper {
     return std::abs((q == 0 ? 1 : q) / qOverP(state));
   }
 
+  /// Momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  Vector3 momentum(const State& state) const {
+    return absoluteMomentum(state) * direction(state);
+  }
+
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)

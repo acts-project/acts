@@ -71,8 +71,7 @@ struct SteppingLogger {
     Step step;
     step.stepSize = state.stepping.stepSize;
     step.position = stepper.position(state.stepping);
-    step.momentum = stepper.absoluteMomentum(state.stepping) *
-                    stepper.direction(state.stepping);
+    step.momentum = stepper.momentum(state.stepping);
 
     if (navigator.currentSurface(state.navigation) != nullptr) {
       // hang on to surface

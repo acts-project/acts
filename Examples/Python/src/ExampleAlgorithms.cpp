@@ -8,12 +8,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/TrackFinding/TrackSelector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Io/Json/JsonGeometryList.hpp"
 #include "ActsExamples/Printers/HitsPrinter.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsExamples/Utilities/TrackSelectorAlgorithm.hpp"
 
 #include <vector>
 
@@ -28,7 +30,7 @@ using namespace Acts;
 namespace Acts::Python {
 
 void addExampleAlgorithms(Context& ctx) {
-  auto mex = ctx.get("examples");
+  auto [m, mex] = ctx.get("main", "examples");
 
   mex.def("readJsonGeometryList", ActsExamples::readJsonGeometryList);
 
@@ -50,6 +52,59 @@ void addExampleAlgorithms(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParametersPrinter, mex,
                                 "TrackParametersPrinter", inputTrackParameters);
+
+  {
+    using Alg = ActsExamples::TrackSelectorAlgorithm;
+    using Config = Alg::Config;
+
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "TrackSelectorAlgorithm")
+                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputTracks);
+    ACTS_PYTHON_MEMBER(outputTracks);
+    ACTS_PYTHON_MEMBER(selectorConfig);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Config = Acts::TrackSelector::Config;
+    auto tool = py::class_<Acts::TrackSelector>(m, "TrackSelector")
+                    .def(py::init<const Config&>(), py::arg("config"));
+
+    auto c = py::class_<Config>(tool, "Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(loc0Min);
+    ACTS_PYTHON_MEMBER(loc0Max);
+    ACTS_PYTHON_MEMBER(loc1Min);
+    ACTS_PYTHON_MEMBER(loc1Max);
+    ACTS_PYTHON_MEMBER(timeMin);
+    ACTS_PYTHON_MEMBER(timeMax);
+    ACTS_PYTHON_MEMBER(phiMin);
+    ACTS_PYTHON_MEMBER(phiMax);
+    ACTS_PYTHON_MEMBER(etaMin);
+    ACTS_PYTHON_MEMBER(etaMax);
+    ACTS_PYTHON_MEMBER(absEtaMin);
+    ACTS_PYTHON_MEMBER(absEtaMax);
+    ACTS_PYTHON_MEMBER(ptMin);
+    ACTS_PYTHON_MEMBER(ptMax);
+    ACTS_PYTHON_MEMBER(minMeasurements);
+    ACTS_PYTHON_STRUCT_END();
+
+    pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
+    pythonRangeProperty(c, "loc1", &Config::loc1Min, &Config::loc1Max);
+    pythonRangeProperty(c, "time", &Config::timeMin, &Config::timeMax);
+    pythonRangeProperty(c, "phi", &Config::phiMin, &Config::phiMax);
+    pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
+    pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
+    pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
+  }
 }
 
 }  // namespace Acts::Python
