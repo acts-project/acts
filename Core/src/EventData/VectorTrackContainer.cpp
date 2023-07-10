@@ -132,7 +132,7 @@ void VectorTrackContainer::reserve(IndexType size) {
   }
 }
 
-void VectorTrackContainer::clear_impl() {
+  void VectorTrackContainer::clear() {
   m_tipIndex.clear();
 
   m_params.clear();
