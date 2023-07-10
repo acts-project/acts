@@ -194,22 +194,8 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
         });
   }
 
-  if (m_config.fastTrackingCut) {
-    m_cfg.experimentCuts.connect(
-        [](const void*, float& spX, float& spY, float& spZ) -> bool {
-          float smallR = spX * spX + spY * spY;
-          if (std::abs(spZ) > 200. && smallR < 2500.) {
-            return false;
-          }
-          if (std::abs(spZ) - 150. > 27.2899 * std::sqrt(smallR)) {
-            return false;
-          }
-          return true;
-        });
-  } else {
-    m_cfg.experimentCuts.connect([](const void*, float& spX, float& spY,
+	m_cfg.seedFinderConfig.experimentCuts.connect([](const void*, float& spX, float& spY,
                                     float& spZ) -> bool { return false; });
-  }
 
   m_bottomBinFinder = std::make_shared<const Acts::BinFinder<SimSpacePoint>>(
       m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);

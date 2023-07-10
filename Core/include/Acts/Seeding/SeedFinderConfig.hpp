@@ -227,8 +227,6 @@ struct SeedFinderConfig {
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
 
-    config.fastTrackingRMin /= 1_mm;
-
     config.toleranceParam /= 1_mm;
 
     return config;
