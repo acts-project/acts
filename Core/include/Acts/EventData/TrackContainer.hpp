@@ -236,13 +236,13 @@ class TrackContainer {
     container().ensureDynamicColumns_impl(other.container());
   }
 
-  /// Clear the content of the track container  
+  /// Clear the content of the track container
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void clear() {
     m_container->clear_impl();
     m_traj->clear_impl();
   }
-  
+
  protected:
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
