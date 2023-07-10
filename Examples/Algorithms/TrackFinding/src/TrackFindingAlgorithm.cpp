@@ -123,7 +123,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   auto trackContainerTemp = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainerTemp =
       std::make_shared<Acts::VectorMultiTrajectory>();
-
+ 
   TrackContainer tracks(trackContainer, trackStateContainer);
   TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
 
@@ -134,8 +134,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   unsigned int nSeed = 0;
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
-    trackContainerTemp->clear();
-    trackStateContainerTemp->clear();
+    tracksTemp.clear();
+    
     auto result =
         (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracksTemp);
     m_nTotalSeeds++;
