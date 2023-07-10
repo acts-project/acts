@@ -132,43 +132,43 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<double> Acts::ImpactPointEstimator<
     input_track_t, propagator_t,
-    propagator_options_t>::performNewtonApproximation(const Vector3& trkPos,
+    propagator_options_t>::performNewtonOptimization(const Vector3& helixCenter,
                                                       const Vector3& vtxPos,
                                                       double phi, double theta,
-                                                      double r) const {
-  double sinNewPhi = -std::sin(phi);
-  double cosNewPhi = std::cos(phi);
+                                                      double rho) const {
+  double sinPhi = std::sin(phi);
+  double cosPhi = std::cos(phi);
 
   int nIter = 0;
   bool hasConverged = false;
 
   double cotTheta = 1. / std::tan(theta);
 
-  // start iteration until convergence or max iteration reached
+  double xO = helixCenter.x();
+  double yO = helixCenter.y();
+  double zO = helixCenter.z();
+
+  double xVtx = vtxPos.x();
+  double yVtx = vtxPos.y();
+  double zVtx = vtxPos.z();
+
+  // Iterate until convergence is reached or the maximum amount of iterations is exceeded
   while (!hasConverged && nIter < m_cfg.maxIterations) {
-    double x0 = trkPos.x();
-    double y0 = trkPos.y();
-    double z0 = trkPos.z();
-
-    double xc = vtxPos.x();
-    double yc = vtxPos.y();
-    double zc = vtxPos.z();
-
-    double derivative = (x0 - xc) * (-r * cosNewPhi) +
-                        (y0 - yc) * r * sinNewPhi +
-                        (z0 - zc - r * phi * cotTheta) * (-r * cotTheta);
-    double secDerivative = r * (-(x0 - xc) * sinNewPhi - (y0 - yc) * cosNewPhi +
-                                r * cotTheta * cotTheta);
+    double derivative = rho * ((xVtx - xO) * cosPhi +
+                               (yVtx - yO) * sinPhi +
+                               (zVtx - zO + rho * phi * cotTheta) * cotTheta);
+    double secDerivative = rho * (-(xVtx - xO) * sinPhi + (yVtx - yO) * cosPhi +
+                                rho * cotTheta * cotTheta);
 
     if (secDerivative < 0.) {
       return VertexingError::NumericFailure;
     }
 
-    double deltaPhi = -derivative / secDerivative;
+    double deltaPhi = - derivative / secDerivative;
 
     phi += deltaPhi;
-    sinNewPhi = -std::sin(phi);
-    cosNewPhi = std::cos(phi);
+    sinPhi = std::sin(phi);
+    cosPhi = std::cos(phi);
 
     nIter += 1;
 
@@ -192,42 +192,48 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
                            const BoundTrackParameters& trkParams,
                            const Vector3& vtxPos, Vector3& deltaR,
                            Vector3& momDir, State& state) const {
-  Vector3 trkSurfaceCenter = trkParams.referenceSurface().center(gctx);
+  // Reference point R
+  Vector3 refPoint = trkParams.referenceSurface().center(gctx);
 
+  // Perigee parameters (parameters of 2D PCA)
   double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
   double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
-  double phi = trkParams.parameters()[BoundIndices::eBoundPhi];
   double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
   double qOvP = trkParams.parameters()[BoundIndices::eBoundQOverP];
-
+  // Functions of Perigee parameters for later use
   double sinTheta = std::sin(theta);
-
   double cotTheta = 1. / std::tan(theta);
 
-  // get B-field z-component at current position
-  auto fieldRes = m_cfg.bField->getField(trkSurfaceCenter, state.fieldCache);
+  // Set optimization variable phi to the angle at the 2D PCA as a first guess (i.e., phi = phiP)
+  // Note that phi corresponds to phiV in the reference
+  double phi = trkParams.parameters()[BoundIndices::eBoundPhi];
+
+  // B-field z-component at the reference position.
+  // Note that we assume a constant B field here!
+  auto fieldRes = m_cfg.bField->getField(refPoint, state.fieldCache);
   if (!fieldRes.ok()) {
     return fieldRes.error();
   }
   double bZ = (*fieldRes)[eZ];
 
-  // The radius
-  double r = 0;
+  // Signed radius of the helix on which the particle moves
+  double rho = 0;
   // Curvature is infinite w/o b field
   if (bZ == 0. || std::abs(qOvP) < m_cfg.minQoP) {
-    r = m_cfg.maxRho;
+    rho = m_cfg.maxRho;
   } else {
-    // signed(!) r
-    r = sinTheta * (1. / qOvP) / bZ;
+    rho = sinTheta * (1. / qOvP) / bZ;
   }
 
-  Vector3 vec0 = trkSurfaceCenter + Vector3(-(d0 - r) * std::sin(phi),
-                                            (d0 - r) * std::cos(phi),
-                                            z0 + r * phi * cotTheta);
+  // Position of the helix center.
+  // We can set the z-position to a convenient value since it is not fixed by the Perigee parameters.
+  // Note that phi = phiP because we did not start the optimization yet.
+  Vector3 helixCenter = refPoint + Vector3(-(d0 - rho) * std::sin(phi),
+                                            (d0 - rho) * std::cos(phi),
+                                            z0 + rho * phi * cotTheta);
 
-  // Perform newton approximation method
-  // this will change the value of phi
-  auto res = performNewtonApproximation(vec0, vtxPos, phi, theta, r);
+  // Use Newton optimization method to iteratively change phi until we arrive at the 3D PCA
+  auto res = performNewtonOptimization(helixCenter, vtxPos, phi, theta, rho);
   if (!res.ok()) {
     return res.error();
   }
@@ -237,14 +243,15 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double cosPhi = std::cos(phi);
   double sinPhi = std::sin(phi);
 
-  // Set momentum direction
+  // Momentum direction at the 3D PCA.
+  // Note that we have thetaV = thetaP since the polar angle does not change in a constant B field.
   momDir = Vector3(sinTheta * cosPhi, sinPhi * sinTheta, std::cos(theta));
 
-  // point of closest approach in 3D
-  Vector3 pointCA3d = vec0 + r * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
+  // 3D PCA (point P' in the reference)
+  Vector3 pca3D = helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
-  // Set deltaR
-  deltaR = pointCA3d - vtxPos;
+  // Vector pointing from the vertex position to the 3D PCA
+  deltaR = pca3D - vtxPos;
 
   return {};
 }

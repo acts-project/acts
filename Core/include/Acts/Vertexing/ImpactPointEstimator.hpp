@@ -182,29 +182,27 @@ class ImpactPointEstimator {
   /// @brief Performs a Newton approximation to retrieve a point
   /// of closest approach in 3D to a reference position
   ///
-  /// @param trkPos Initial position
-  /// @param vtxPos Reference position
-  /// @param phi Phi along the helix which will be changed by
-  ///        the Newton method
-  /// @param theta Track theta
-  /// @param r     Helix radius
+  /// @param helixCenter Position of the helix center
+  /// @param vtxPos Vertex position 
+  /// @param phi Azimuthal momentum angle
+  /// @note Modifying phi corresponds to moving along the track. This function optimizes phi until we reach a 3D PCA.
+  /// @param theta Polar momentum angle (constant along the track)
+  /// @param rho Signed helix radius
   ///
-  /// @return New phi value
-  Result<double> performNewtonApproximation(const Vector3& trkPos,
+  /// @return Phi value at 3D PCA
+  Result<double> performNewtonOptimization(const Vector3& helixCenter,
                                             const Vector3& vtxPos, double phi,
-                                            double theta, double r) const;
+                                            double theta, double rho) const;
 
-  /// @brief Helper function to calculate relative
-  /// distance between track and vtxPos and the
-  /// direction of the momentum
+  /// @brief Helper function to calculate the distance between a track and a vertex by finding the corresponding 3D PCA. Returns also the momentum at the 3D PCA.
   ///
-  /// @param gctx The geometry context
+  /// @param gctx Geometry context
   /// @param trkParams Track parameters
-  /// @param vtxPos The vertex position
-  /// @param deltaR Relative position between
-  ///   track and vtxPos, to be determined by method
-  /// @param momDir Momentum direction, to be
-  ///   determined by method
+  /// @param vtxPos Vertex position
+  /// @param deltaR Vector pointing from vertex to 3D PCA
+  /// @note Will be filled by the method
+  /// @param momDir Momentum direction at the 3D PCA
+  /// @note Will be filled by the method
   /// @param state The state object
   Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
                                       const BoundTrackParameters& trkParams,
