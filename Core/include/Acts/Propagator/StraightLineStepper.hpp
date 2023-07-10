@@ -244,6 +244,7 @@ class StraightLineStepper {
   /// @param [in] surface The surface provided
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] logger A logger instance
+  /// @param [in] surfaceTolerance Surface tolerance used for intersection
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
       const Logger& logger = getDummyLogger(),

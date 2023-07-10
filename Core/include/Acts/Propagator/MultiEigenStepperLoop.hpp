@@ -299,7 +299,6 @@ class MultiEigenStepperLoop
     /// @param [in] multipars The track multi-component track-parameters at start
     /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
-    /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
@@ -686,7 +685,8 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
-  /// @param logger [in] A @c Loggerinstance
+  /// @param logger [in] A @c Logger instance
+  /// @param [in] surfaceTolerance Surface tolerance used for intersection
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
       const Logger& logger = getDummyLogger(),
