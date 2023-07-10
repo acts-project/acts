@@ -170,7 +170,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     // For rings there's a sweet spot when this stops working
     if (exactPolyhedron or toCenter or not fullDisc) {
       // Transform them into the vertex frame
-      wCenter * 1. / vertices.size();
+      wCenter *= 1. / vertices.size();
       if (addCentreFromConvexFace)
         vertices.push_back(wCenter);
       auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
