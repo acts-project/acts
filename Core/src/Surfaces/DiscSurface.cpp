@@ -160,18 +160,13 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
   if (m_bounds) {
     auto vertices2D = m_bounds->vertices(lseg);
     vertices.reserve(vertices2D.size() + 1);
-    Vector3 wCenter(0., 0., 0);
     for (const auto& v2D : vertices2D) {
       vertices.push_back(transform(gctx) * Vector3(v2D.x(), v2D.y(), 0.));
-      wCenter += (*vertices.rbegin());
     }
     // These are convex shapes, use the helper method
     // For rings there's a sweet spot when this stops working
-    if (m_bounds->type() == SurfaceBounds::eDiscTrapezoid or toCenter or
-        not fullDisc) {
+    if (exactPolyhedron or toCenter or not fullDisc) {
       // Transform them into the vertex frame
-      wCenter *= 1. / vertices.size();
-      vertices.push_back(wCenter);
       auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;
