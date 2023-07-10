@@ -10,13 +10,18 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <memory>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
+// acts/Core/include/Acts/Geometry/detail/DefaultDetectorElementBase.hpp 
 namespace Acts {
 
 class Surface;
+// class GeometryIdentifier;
 
 /// @class DetectorElementBase
 ///
@@ -44,6 +49,40 @@ class DetectorElementBase {
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   virtual double thickness() const = 0;
+
+  void setSensorMisalignment(GeometryIdentifier sensorId, double misalignmentX, double misalignmentY);
+  std::pair<double, double> getSensorMisalignment(GeometryIdentifier sensorId) const;
+
+  void setCorrelatedSensorMisalignment(GeometryIdentifier sensorId, double correlatedMisalignmentX, double correlatedMisalignmentY);
+  std::pair<double, double> getCorrelatedSensorMisalignment(GeometryIdentifier sensorId) const;
+
+ private:
+  std::unordered_map<GeometryIdentifier, std::pair<double, double>> m_sensorMisalignment;
+  std::unordered_map<GeometryIdentifier, std::pair<double, double>> m_correlatedSensorMisalignment;
 };
+
+void DetectorElementBase::setSensorMisalignment(GeometryIdentifier sensorId, double misalignmentX, double misalignmentY) {
+  m_sensorMisalignment[sensorId] = std::make_pair(misalignmentX, misalignmentY);
+}
+
+std::pair<double, double> DetectorElementBase::getSensorMisalignment(GeometryIdentifier sensorId) const {
+  auto it = m_sensorMisalignment.find(sensorId);
+  if (it != m_sensorMisalignment.end()) {
+    return it->second;
+  }
+  return std::make_pair(0.0, 0.0);  // Default values if sensor not found
+}
+
+void DetectorElementBase::setCorrelatedSensorMisalignment(GeometryIdentifier sensorId, double correlatedMisalignmentX, double correlatedMisalignmentY) {
+  m_correlatedSensorMisalignment[sensorId] = std::make_pair(correlatedMisalignmentX, correlatedMisalignmentY);
+}
+
+std::pair<double, double> DetectorElementBase::getCorrelatedSensorMisalignment(GeometryIdentifier sensorId) const {
+  auto it = m_correlatedSensorMisalignment.find(sensorId);
+  if (it != m_correlatedSensorMisalignment.end()) {
+    return it->second;
+  }
+  return std::make_pair(0.0, 0.0);  // Default values if sensor not found
+}
 
 }  // end of namespace Acts

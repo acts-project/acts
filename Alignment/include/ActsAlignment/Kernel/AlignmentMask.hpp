@@ -1,17 +1,12 @@
-// This file is part of the Acts project.
-//
-// Copyright (C) 2019 CERN for the benefit of the Acts project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 #pragma once
 
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 
 #include <limits>
 #include <type_traits>
+#include <vector>
+
+//acts/Alignment/include/ActsAlignment/Kernel/AlignmentMask.hpp
 
 namespace ActsAlignment {
 
@@ -35,5 +30,29 @@ enum struct AlignmentMask : uint8_t {
 };
 
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(AlignmentMask)
+
+
+struct MisalignmentParameters {
+  double centerShiftX;
+  double centerShiftY;
+  double centerShiftZ;
+  double rotationX;
+  double rotationY;
+  double rotationZ;
+};
+
+class SensorMisalignments {
+public:
+  explicit SensorMisalignments(size_t numSensors)
+      : misalignments(numSensors, MisalignmentParameters{}) {}
+
+  // misalignment parameters for a specific sensor
+  MisalignmentParameters& getMisalignment(size_t sensorIndex) {
+    return misalignments[sensorIndex];
+  }
+
+private:
+  std::vector<MisalignmentParameters> misalignments;
+};
 
 }  // namespace ActsAlignment

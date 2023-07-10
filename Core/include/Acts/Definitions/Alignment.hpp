@@ -5,11 +5,13 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+//Core/include/Acts/Definitions/Alignment.hpp
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+
+#include <vector>
 
 namespace Acts {
 
@@ -39,5 +41,30 @@ using AlignmentMatrix = ActsMatrix<eAlignmentSize, eAlignmentSize>;
 using AlignmentToPositionMatrix = ActsMatrix<3, eAlignmentSize>;
 using AlignmentToBoundMatrix = ActsMatrix<eBoundSize, eAlignmentSize>;
 using AlignmentToPathMatrix = ActsMatrix<1, eAlignmentSize>;
+
+// for each individual sensor and its parameter, we have a structure 
+struct MisalignmentParameters {
+  double centerShiftX;
+  double centerShiftY;
+  double centerShiftZ;
+  double rotationX;
+  double rotationY;
+  double rotationZ;
+};
+
+// class specific for the misalignment
+class SensorMisalignments {
+public:
+  explicit SensorMisalignments(size_t numSensors)
+      : misalignments(numSensors, MisalignmentParameters{}) {}
+
+  //misalignment parameters
+  MisalignmentParameters& getMisalignment(size_t sensorIndex) {
+    return misalignments[sensorIndex];
+  }
+
+private:
+  std::vector<MisalignmentParameters> misalignments;
+};
 
 }  // namespace Acts

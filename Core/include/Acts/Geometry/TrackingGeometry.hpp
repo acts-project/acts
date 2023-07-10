@@ -8,6 +8,7 @@
 
 #pragma once
 
+//  acts/Core/include/Acts/Geometry/TrackingGeometry.hpp
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -126,6 +127,31 @@ class TrackingGeometry {
   /// @retval pointer to the found surface otherwise.
   const Surface* findSurface(GeometryIdentifier id) const;
 
+  // adding new functions - implementation of misalignment of individual sensors
+
+  /// Set the misalignment for a specific sensor (identified by  ID)  ///
+  /// @param sensorId The identifier of the sensor
+  /// @param misalignmentX misalignment in the x - direction
+  /// @param misalignmentY misalignment in the y -  direction
+  void setSensorMisalignment(GeometryIdentifier sensorId,
+                             double misalignmentX, double misalignmentY);
+
+  /// Get the misalignment value for a specific sensor identified by its ID
+  ///
+  /// @param sensorId The identifier of the sensor
+  /// @return std::pair<double, double> The misalignment values in the
+  ///         X and Y directions for the sensor
+  std::pair<double, double> getSensorMisalignment(GeometryIdentifier sensorId) const;
+
+
+  // Add functions to set and retrieve misalignment information
+  void setSensorMisalignment(const GeometryIdentifier&, double misalignmentX, double misalignmentY);
+  std::pair<double, double> getSensorMisalignment(const GeometryIdentifier& sensorName) const;
+
+  void setCorrelatedMisalignment(double correlatedMisalignmentX, double correlatedMisalignmentY);
+  std::pair<double, double> getCorrelatedMisalignment() const;
+
+
  private:
   // the known world
   TrackingVolumePtr m_world;
@@ -134,6 +160,48 @@ class TrackingGeometry {
   // lookup containers
   std::unordered_map<GeometryIdentifier, const TrackingVolume*> m_volumesById;
   std::unordered_map<GeometryIdentifier, const Surface*> m_surfacesById;
+  // misalignment map
+  std::unordered_map<GeometryIdentifier, std::pair<double, double>> m_sensorMisalignment;
 };
 
+inline void TrackingGeometry::setSensorMisalignment(const GeometryIdentifier& sensor, double misalignmentX, double misalignmentY) {
+  // Implementation to set the misalignment for the given sensor
+  m_sensorMisalignment[sensor] = std::make_pair(misalignmentX, misalignmentY);
+}
+
+
+inline std::pair<double, double> TrackingGeometry::getSensorMisalignment(const GeometryIdentifier& sensor) const {
+  // Implementation to retrieve the misalignment for the given sensor
+  auto it = m_sensorMisalignment.find(sensor);
+  if (it != m_sensorMisalignment.end()) {
+    return it->second;
+  } else {
+    // Handle case when sensor misalignment is not found
+    throw std::runtime_error("Misalignment information not available for sensor: "); // TODO
+  }
+}
+
+inline void TrackingGeometry::setCorrelatedMisalignment(double correlatedMisalignmentX, double correlatedMisalignmentY) {
+  // Implementation to set the correlated misalignment for all sensors
+  for (auto& sensorMisalignment : m_sensorMisalignment) {
+    sensorMisalignment.second = std::make_pair(correlatedMisalignmentX, correlatedMisalignmentY);
+  }
+}
+
+
+inline std::pair<double, double> TrackingGeometry::getCorrelatedMisalignment() const {
+  // We assume that all sensors have the same correlated misalignment
+  // Thus, we can retrieve the misalignment from any sensor
+
+  if (!m_sensorMisalignment.empty()) {
+    // Retrieve the misalignment from the first sensor
+    const auto& firstSensorMisalignment = m_sensorMisalignment.begin()->second;
+    return firstSensorMisalignment;
+  } else {
+    // Return default values if no sensors are present
+    return std::make_pair(0.0, 0.0);
+  }
+}
+
 }  // namespace Acts
+

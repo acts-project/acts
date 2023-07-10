@@ -18,6 +18,8 @@
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
+
+//Examples/Algorithms/Alignment/src/AlignmentAlgorithmFunction.cpp
 namespace {
 
 using Updater = Acts::GainMatrixUpdater;
@@ -27,19 +29,20 @@ using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using Fitter = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;
 using Alignment = ActsAlignment::Alignment<Fitter>;
 
-struct AlignmentFunctionImpl
-    : public ActsExamples::AlignmentAlgorithm::AlignmentFunction {
+struct AlignmentFunctionImpl : public ActsExamples::AlignmentAlgorithm::AlignmentFunction {
   Alignment align;
 
   AlignmentFunctionImpl(Alignment&& a) : align(std::move(a)) {}
 
   ActsExamples::AlignmentAlgorithm::AlignmentResult operator()(
-      const std::vector<std::vector<ActsExamples::IndexSourceLink>>&
-          sourceLinks,
+      const std::vector<std::vector<ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
-      const ActsAlignment::AlignmentOptions<
-          ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options)
-      const override {
+      const ActsAlignment::AlignmentOptions<ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options,
+      const SensorMisalignments& sensorMisalignments) const override {
+    //  misalignment to the elements
+    align.applyMisalignments(sensorMisalignments);
+
+    // Run the alignment algorithm
     return align.align(sourceLinks, initialParameters, options);
   };
 };
@@ -59,6 +62,6 @@ ActsExamples::AlignmentAlgorithm::makeAlignmentFunction(
   Fitter trackFitter(std::move(propagator));
   Alignment alignment(std::move(trackFitter));
 
-  // build the alignment functions. owns the alignment object.
+  // Build the alignment functions. Owns the alignment object.
   return std::make_shared<AlignmentFunctionImpl>(std::move(alignment));
 }

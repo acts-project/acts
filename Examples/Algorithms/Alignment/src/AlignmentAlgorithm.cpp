@@ -1,10 +1,12 @@
-// This file is part of the Acts project.
+/// This file is part of the Acts project.
 //
 // Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+//Examples/Algorithms/Alignment/src/AlignmentAlgorithm.cpp 
 
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
 
@@ -61,7 +63,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   }
 
   size_t numTracksUsed = protoTracks.size();
-  if (m_cfg.maxNumTracks > 0 and
+  if (m_cfg.maxNumTracks > 0 &&
       m_cfg.maxNumTracks < static_cast<int>(protoTracks.size())) {
     numTracksUsed = m_cfg.maxNumTracks;
   }
@@ -114,18 +116,34 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
 
   // Set the KalmanFitter options
   TrackFitterOptions kfOptions(ctx.geoContext, ctx.magFieldContext,
-                               ctx.calibContext, extensions,
-                               Acts::PropagatorPlainOptions(), &(*pSurface));
+                               ctx.calibContext, extensionsContinuing from the previous code snippet:
+
+```cpp
+      Acts::PropagatorPlainOptions(), &(*pSurface));
 
   // Set the alignment options
   ActsAlignment::AlignmentOptions<TrackFitterOptions> alignOptions(
       kfOptions, m_cfg.alignedTransformUpdater, m_cfg.alignedDetElements,
       m_cfg.chi2ONdfCutOff, m_cfg.deltaChi2ONdfCutOff, m_cfg.maxNumIterations);
 
+  // SensorMisalignments object
+SensorMisalignments sensorMisalignments;
+
+// Iterate over the aligned detector elements
+for (auto detElement : m_cfg.alignedDetElements) {
+// using the setMisalignment() function of the SensorMisalignments object - misalignment for each detector
+  sensorMisalignments.setMisalignment(detElement, misalignmentParameters);
+}
+
+// Passing sensorMisalignments object to the alignment function
+auto result = (*m_cfg.align)(sourceLinkTrackContainer, initialParameters,
+                             alignOptions, sensorMisalignments);
+
+
   ACTS_DEBUG("Invoke track-based alignment with " << numTracksUsed
                                                   << " input tracks");
-  auto result =
-      (*m_cfg.align)(sourceLinkTrackContainer, initialParameters, alignOptions);
+  auto result = (*m_cfg.align)(sourceLinkTrackContainer, initialParameters,
+                               alignOptions, sensorMisalignments);
   if (result.ok()) {
     const auto& alignOutput = result.value();
     alignedParameters = alignOutput.alignedParameters;
@@ -135,7 +153,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
     ACTS_WARNING("Alignment failed with " << result.error());
   }
 
-  // add alignment parameters to event store
+  // Add alignment parameters to the event store
   m_outputAlignmentParameters(ctx, std::move(alignedParameters));
   return ActsExamples::ProcessCode::SUCCESS;
 }

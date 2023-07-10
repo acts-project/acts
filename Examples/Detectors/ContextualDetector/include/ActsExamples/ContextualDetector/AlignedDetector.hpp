@@ -1,11 +1,5 @@
-// This file is part of the Acts project.
-//
-// Copyright (C) 2019 CERN for the benefit of the Acts project
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+//acts/Examples/Detectors/ContextualDetector/include/ActsExamples/ContextualDetector/AlignedDetector.hpp 
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
@@ -16,6 +10,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <random>  // Include the header for random distributions
 
 namespace Acts {
 class TrackingGeometry;
@@ -78,6 +73,65 @@ class AlignedDetector {
   /// The Store of the detector elements (lifetime: job)
   std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>
       m_detectorStore;
+
+  // Helper function to generate correlated misalignment values
+  std::tuple<double, double, double, double> generateCorrelatedMisalignments(
+      double sigmaInPlane, double sigmaOutPlane, double sigmaInRot,
+      double sigmaOutRot, RandomEngine& rng);
+
+ public:
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      const Config& cfg,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
 
 }  // namespace ActsExamples::Contextual
+
+// Add the implementation of generateCorrelatedMisalignments outside the class
+std::tuple<double, double, double, double>
+ActsExamples::Contextual::AlignedDetector::generateCorrelatedMisalignments(
+    double sigmaInPlane, double sigmaOutPlane, double sigmaInRot,
+    double sigmaOutRot, RandomEngine& rng) {
+  std::normal_distribution<double> inPlaneDistribution(0.0, sigmaInPlane);
+  std::normal_distribution<double> outPlaneDistribution(0.0, sigmaOutPlane);
+  std::normal_distribution<double> inRotDistribution(0.0, sigmaInRot);
+  std::normal_distribution<double> outRotDistribution(0.0, sigmaOutRot);
+
+  double inPlaneMisalignment = inPlaneDistribution(rng);
+  double outPlaneMisalignment = outPlaneDistribution(rng);
+  double inRotMisalignment = inRotDistribution(rng);
+  double outRotMisalignment = outRotDistribution(rng);
+
+  return std::make_tuple(inPlaneMisalignment, outPlaneMisalignment,
+                         inRotMisalignment, outRotMisalignment);
+}
+
+// Add the implementation of finalize outside the class
+std::pair<ActsExamples::Contextual::AlignedDetector::TrackingGeometryPtr,
+          ActsExamples::Contextual::AlignedDetector::ContextDecorators>
+ActsExamples::Contextual::AlignedDetector::finalize(
+    const Config& cfg,
+    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) {
+  // ...
+
+  // Create an algorithm local random number generator
+  RandomEngine rng(cfg.seed);
+
+  // Loop over the detector elements and apply misalignments
+  for (auto& detectorElements : m_detectorStore) {
+    // Generate correlated misalignment values
+    auto misalignments = generateCorrelatedMisalignments(
+        cfg.sigmaInPlane, cfg.sigmaOutPlane, cfg.sigmaInRot, cfg.sigmaOutRot,
+        rng);
+
+    // Apply the misalignments to each detector element
+    for (auto& detectorElement : detectorElements) {
+      detectorElement->applyMisalignment(std::get<0>(misalignments),
+                                         std::get<1>(misalignments),
+                                         std::get<2>(misalignments),
+                                         std::get<3>(misalignments));
+    }
+  }
+
+  // ...
+}

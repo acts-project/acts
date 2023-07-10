@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
+// acts/Core/include/Acts/Detector/Detector.hpp
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
@@ -128,6 +128,13 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// Return the name of the detector
   const std::string& name() const;
 
+  // Add functions to set and retrieve misalignment information
+  void setSensorMisalignment(const std::string& sensorName, double misalignmentX, double misalignmentY);
+  std::pair<double, double> getSensorMisalignment(const std::string& sensorName) const;
+
+  void setCorrelatedMisalignment(double correlatedMisalignmentX, double correlatedMisalignmentY);
+  std::pair<double, double> getCorrelatedMisalignment() const;
+
  private:
   /// Name of the detector
   std::string m_name = "Unnamed";
@@ -145,5 +152,5 @@ class Detector : public std::enable_shared_from_this<Detector> {
   std::unordered_map<std::string, size_t> m_volumeNameIndex;
 };
 
-}  // namespace Experimental
-}  // namespace Acts
+}
+}

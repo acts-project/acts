@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include <cstdint>
 #include <functional>
 #include <iosfwd>
@@ -33,9 +32,11 @@ class GeometryIdentifier {
   using Value = uint64_t;
 
   /// Construct from an already encoded value.
-  constexpr GeometryIdentifier(Value encoded) : m_value(encoded) {}
+  constexpr GeometryIdentifier(Value encoded)
+      : m_value(encoded), m_misalignmentX(0.0), m_misalignmentY(0.0) {}
   /// Construct default GeometryIdentifier with all values set to zero.
-  GeometryIdentifier() = default;
+  GeometryIdentifier()
+      : m_value(0), m_misalignmentX(0.0), m_misalignmentY(0.0) {}
   GeometryIdentifier(GeometryIdentifier&&) = default;
   GeometryIdentifier(const GeometryIdentifier&) = default;
   ~GeometryIdentifier() = default;
@@ -85,6 +86,19 @@ class GeometryIdentifier {
     return setBits(kExtraMask, extra);
   }
 
+  /// Return the misalignment in x- direction
+  double misalignmentX() const { return m_misalignmentX; }
+  /// Return the misalignment in y-direction (for the surface)
+  double misalignmentY() const { return m_misalignmentY; }
+  /// Setting the misalignment in x-direction 
+  void setMisalignmentX(double misalignmentX) {
+    m_misalignmentX = misalignmentX;
+  }
+  /// Setting the misalignment in y - direction (for the surface)
+  void setMisalignmentY(double misalignmentY) {
+    m_misalignmentY = misalignmentY;
+  }
+
  private:
   // clang-format off
   static constexpr Value kVolumeMask    = 0xff00000000000000; // (2^8)-1 = 255 volumes
@@ -96,6 +110,8 @@ class GeometryIdentifier {
   // clang-format on
 
   Value m_value = 0;
+  double m_misalignmentX = 0.0;
+  double m_misalignmentY = 0.0;
 
   /// Extract the bit shift necessary to access the masked values.
   static constexpr int extractShift(Value mask) {

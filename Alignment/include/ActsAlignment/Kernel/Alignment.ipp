@@ -5,9 +5,15 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+//acts/Alignment/include/ActsAlignment/Kernel/Alignment.ipp
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+
+struct MisalignmentParameters {
+  Acts::Translation3 translation;
+  Acts::RotationMatrix3 rotation;
+};
 
 template <typename fitter_t>
 template <typename source_link_t, typename start_parameters_t,
@@ -59,14 +65,13 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const fit_options_t& fitOptions,
     ActsAlignment::AlignmentResult& alignResult,
     const ActsAlignment::AlignmentMask& alignMask) const {
-  // The number of trajectories must be eual to the number of starting
-  // parameters
+  // The number of trajectories must be equal to the number of starting parameters
   assert(trajectoryCollection.size() == startParametersCollection.size());
 
   // The total alignment degree of freedom
   alignResult.alignmentDof =
       alignResult.idxedAlignSurfaces.size() * Acts::eAlignmentSize;
-  // Initialize derivative of chi2 w.r.t. aligment parameters for all tracks
+  // Initialize derivative of chi2 w.r.t. alignment parameters for all tracks
   Acts::ActsDynamicVector sumChi2Derivative =
       Acts::ActsDynamicVector::Zero(alignResult.alignmentDof);
   Acts::ActsDynamicMatrix sumChi2SecondDerivative =
@@ -97,7 +102,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const auto& alignState = evaluateRes.value();
     for (const auto& [rowSurface, rows] : alignState.alignedSurfaces) {
       const auto& [dstRow, srcRow] = rows;
-      // Fill the results into full chi2 derivative matrixs
+      // Fill the results into full chi2 derivative matrices
       sumChi2Derivative.segment<Acts::eAlignmentSize>(dstRow *
                                                       Acts::eAlignmentSize) +=
           alignState.alignmentToChi2Derivative.segment(
@@ -114,7 +119,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
       }
     }
     alignResult.chi2 += alignState.chi2;
-    alignResult.measurementDim += alignState.measurementDim;
+    alignResultmeasurementDim += alignState.measurementDim;
     sumChi2ONdf += alignState.chi2 / alignState.measurementDim;
   }
   alignResult.averageChi2ONdf = sumChi2ONdf / alignResult.numTracks;
@@ -138,7 +143,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
       Acts::ActsDynamicMatrix::Zero(alignDof, alignDof);
   // Solve the linear equation to get alignment parameters change
   alignResult.deltaAlignmentParameters =
-      -sumChi2SecondDerivative.fullPivLu().solve(sumChi2Derivative);
+      -sumChi2SecondDerivativeInverse * sumChi2Derivative;
   ACTS_VERBOSE("sumChi2SecondDerivative = \n" << sumChi2SecondDerivative);
   ACTS_VERBOSE("sumChi2Derivative = \n" << sumChi2Derivative);
   ACTS_VERBOSE("alignResult.deltaAlignmentParameters \n");
@@ -148,65 +153,24 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
   // chi2 change
   alignResult.deltaChi2 = 0.5 * sumChi2Derivative.transpose() *
                           alignResult.deltaAlignmentParameters;
-}
 
-template <typename fitter_t>
-Acts::Result<void>
-ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
-    const Acts::GeometryContext& gctx,
-    const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
-    const ActsAlignment::AlignedTransformUpdater& alignedTransformUpdater,
-    ActsAlignment::AlignmentResult& alignResult) const {
-  // Update the aligned transform
-  Acts::AlignmentVector deltaAlignmentParam = Acts::AlignmentVector::Zero();
+  // Update the misalignment parameters
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
-    // 1. The original transform
-    const Acts::Vector3& oldCenter = surface->center(gctx);
-    const Acts::Transform3& oldTransform = surface->transform(gctx);
-    const Acts::RotationMatrix3& oldRotation = oldTransform.rotation();
-    // The elements stored below is (rotZ, rotY, rotX)
-    const Acts::Vector3& oldEulerAngles = oldRotation.eulerAngles(2, 1, 0);
+    const MisalignmentParameters& misalignmentParams =
+        alignOptions.misalignmentParameters.at(index);
+    // Calculate the misalignment parameters delta
+    Acts::AlignmentVector deltaMisalignmentParams =
+        Acts::AlignmentVector::Zero();
+    deltaMisalignmentParams.segment<3>(Acts::eAlignmentCenter0) =
+        misalignmentParams.translation;
+    deltaMisalignmentParams.segment<3>(Acts::eAlignmentRotation0) =
+        Acts::RotationMatrix3::Identity().eulerAngles(2, 1, 0);
 
-    // 2. The delta transform
-    deltaAlignmentParam = alignResult.deltaAlignmentParameters.segment(
-        Acts::eAlignmentSize * index, Acts::eAlignmentSize);
-    // The delta translation
-    Acts::Vector3 deltaCenter =
-        deltaAlignmentParam.segment<3>(Acts::eAlignmentCenter0);
-    // The delta Euler angles
-    Acts::Vector3 deltaEulerAngles =
-        deltaAlignmentParam.segment<3>(Acts::eAlignmentRotation0);
-
-    // 3. The new transform
-    const Acts::Vector3 newCenter = oldCenter + deltaCenter;
-    // The rotation around global z axis
-    Acts::AngleAxis3 rotZ(oldEulerAngles(0) + deltaEulerAngles(2),
-                          Acts::Vector3::UnitZ());
-    // The rotation around global y axis
-    Acts::AngleAxis3 rotY(oldEulerAngles(1) + deltaEulerAngles(1),
-                          Acts::Vector3::UnitY());
-    // The rotation around global x axis
-    Acts::AngleAxis3 rotX(oldEulerAngles(2) + deltaEulerAngles(0),
-                          Acts::Vector3::UnitX());
-    Eigen::Quaternion<Acts::ActsScalar> newRotation = rotZ * rotY * rotX;
-    const Acts::Transform3 newTransform =
-        Acts::Translation3(newCenter) * newRotation;
-
-    // 4. Update the aligned transform
-    //@Todo: use a better way to handle this (need dynamic cast to inherited
-    // detector element type)
-    ACTS_VERBOSE("Delta of alignment parameters at element "
-                 << index << "= \n"
-                 << deltaAlignmentParam);
-    bool updated = alignedTransformUpdater(alignedDetElements.at(index), gctx,
-                                           newTransform);
-    if (not updated) {
-      ACTS_ERROR("Update alignment parameters for detector element failed");
-      return AlignmentError::AlignmentParametersUpdateFailure;
-    }
+    // Apply the misalignment parameters delta
+    alignResult.deltaAlignmentParameters.segment(
+        index * Acts::eAlignmentSize, Acts::eAlignmentSize) +=
+        deltaMisalignmentParams;
   }
-
-  return Acts::Result<void>::success();
 }
 
 template <typename fitter_t>
@@ -262,7 +226,7 @@ ActsAlignment::Alignment<fitter_t>::align(
       if (std::abs(recentChi2ONdf.front() - alignResult.averageChi2ONdf) <=
           alignOptions.deltaAverageChi2ONdfCutOff.second) {
         ACTS_INFO(
-            "Alignment has converaged with change of chi2/ndf < "
+            "Alignment has converged with change of chi2/ndf < "
             << alignOptions.deltaAverageChi2ONdfCutOff.second << " in the last "
             << alignOptions.deltaAverageChi2ONdfCutOff.first << " iterations"
             << " after " << iIter << " iteration(s)");
@@ -273,7 +237,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     }
     // 2. or the average chi2/ndf (is this correct?)
     if (alignResult.averageChi2ONdf <= alignOptions.averageChi2ONdfCutOff) {
-      ACTS_INFO("Alignment has converaged with average chi2/ndf < "
+      ACTS_INFO("Alignment has converged with average chi2/ndf < "
                 << alignOptions.averageChi2ONdfCutOff << " after " << iIter
                 << " iteration(s)");
       converged = true;
@@ -285,7 +249,7 @@ ActsAlignment::Alignment<fitter_t>::align(
 
     ACTS_INFO("The solved delta of alignmentParameters = \n "
               << alignResult.deltaAlignmentParameters);
-    // Not coveraged yet, update the detector element alignment parameters
+    // Not converged yet, update the detector element alignment parameters
     auto updateRes = updateAlignmentParameters(
         alignOptions.fitOptions.geoContext, alignOptions.alignedDetElements,
         alignOptions.alignedTransformUpdater, alignResult);
@@ -305,7 +269,7 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Screen out the final aligned parameters
   // @todo
   if (alignmentParametersUpdated) {
-    for (const auto& det : alignOptions.alignedDetElements) {
+    for (const auto&det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
           det->transform(alignOptions.fitOptions.geoContext);
@@ -323,7 +287,7 @@ ActsAlignment::Alignment<fitter_t>::align(
       ACTS_VERBOSE("Rotation marix = \n" << rotation);
     }
   } else {
-    ACTS_DEBUG("Alignment parameters is not updated.");
+    ACTS_DEBUG("Alignment parameters are not updated.");
   }
 
   return alignResult;
