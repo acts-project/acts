@@ -86,7 +86,7 @@ std::uniform_real_distribution<> resIPDist(0., 100_um);
 // Track angular distribution
 std::uniform_real_distribution<> resAngDist(0., 0.1);
 // Track q/p resolution distribution
-std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
+std::uniform_real_distribution<> resQoPDist(0.0, 0.1);
 // Track time resolution distribution
 std::uniform_real_distribution<> resTDist(0.1_ns, 0.2_ns);
 
@@ -131,10 +131,11 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
     double x = vXYDist(gen);
     double y = vXYDist(gen);
     double z = vZDist(gen);
-    t0v = vTDist(gen);
+    double t = vTDist(gen);
     d0v = std::hypot(x, y);
     z0v = z;
-    vtxPos << x, y, z, t0v;
+    t0v = t;
+    vtxPos << x, y, z, t;
   }
 
   // Vector storing the tracks that we linearize

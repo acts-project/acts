@@ -82,6 +82,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // Get mass hypothesis from propagator options
   ActsScalar m0 = pOptions.mass;
   // Assume unit charge
+  // TODO: Get charge hypothesis from propagator options once they are included
+  // there.
   ActsScalar p = std::abs(1. / qOvP);
   // Speed in units of c
   ActsScalar beta = p / std::hypot(p, m0);
