@@ -258,26 +258,22 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       transMat(4, 6) = 1.;
       transMat(5, 3) = 1.;
 
-      // some intermediate calculations to get 5x5 matrix
-      // cov(V,V), 4x4 matrix
-      SymMatrix4 covVV = covV;
-
       // cov(V,P)
       // TODO: This is incorrect (see Ref. (2)), but it will not be needed
       // anyways once we replace fittedParams with fittedMomentum
       ActsMatrix<4, 3> covVP = billoirTrack.B;
 
       // cov(P,P), 3x3 matrix
-      ActsSymMatrix<3> covPP =
+      ActsSymMatrix<3> covP =
           billoirTrack.Cinv +
           billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
 
       ActsSymMatrix<7> cov;
       cov.setZero();
-      cov.block<4, 4>(0, 0) = covVV;
+      cov.block<4, 4>(0, 0) = covV;
       cov.block<4, 3>(0, 4) = covVP;
       cov.block<3, 4>(4, 0) = covVP.transpose();
-      cov.block<3, 3>(4, 4) = covPP;
+      cov.block<3, 3>(4, 4) = covP;
 
       // covdelta_P calculation
       covDeltaP[iTrack] = transMat * cov * transMat.transpose();
