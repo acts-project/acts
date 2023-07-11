@@ -134,6 +134,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   unsigned int nSeed = 0;
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    // Clear trackContainerTemp and trackStateContainerTemp
     tracksTemp.clear();
 
     auto result =
