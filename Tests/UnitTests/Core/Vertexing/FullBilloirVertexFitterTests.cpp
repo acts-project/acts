@@ -142,8 +142,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
 
   // Set up Billoir vertex fitter with default tracks
   using VertexFitter =
-      FullBilloirVertexFitter<BoundTrackParameters,
-                              Linearizer>;  // TODO move outside loop
+      FullBilloirVertexFitter<BoundTrackParameters, Linearizer>; 
   VertexFitter::Config vertexFitterCfg;
   VertexFitter billoirFitter(vertexFitterCfg);
   VertexFitter::State state(bField->makeCache(magFieldContext));
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
       tracks.push_back(BoundTrackParameters(perigeeSurface, paramVec, covMat));
-      customTracks.push_back(InputTrack(
+      customTracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
           BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat))));
     }
 

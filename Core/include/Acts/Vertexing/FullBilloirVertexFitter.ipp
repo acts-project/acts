@@ -235,7 +235,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // Calculate chi2 of the track...
       Acts::BoundVector diffQ = billoirTrack.deltaQ - billoirTrack.D * deltaV -
                                 billoirTrack.E * deltaP;
-      billoirTrack.chi2 = (diffQ.transpose()).dot(billoirTrack.W * diffQ);
+      billoirTrack.chi2 = diffQ.transpose().dot(billoirTrack.W * diffQ);
       // ... and add it to the total chi2 value
       newChi2 += billoirTrack.chi2;
 
@@ -286,7 +286,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     // assign new linearization point (= new vertex position in global frame)
     linPoint += deltaV;
 
-    // Add an additional term to chi2 if there is a vertex constrain (see Ref.
+    // Add an additional term to chi2 if there is a vertex constraint (see Ref.
     // (1))
     if (isConstraintFit) {
       // Position of vertex constraint in Billoir frame (i.e., in coordinate
