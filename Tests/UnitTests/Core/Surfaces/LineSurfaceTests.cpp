@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   output << line.name();
   BOOST_CHECK(output.is_equal("Acts::LineSurface"));
   //
-  // normal
-  Vector3 normalVector{0., 0., 1.};  // line direction is same as normal????
+  // normal does not exist without known momentum direction
+  Vector3 normalVector{0., 0., 0.};
   CHECK_CLOSE_ABS(line.normal(tgContext), normalVector, 1e-6);
   //
   // pathCorrection
