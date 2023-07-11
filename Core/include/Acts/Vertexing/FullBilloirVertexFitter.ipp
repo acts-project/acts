@@ -275,7 +275,6 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       cov.block<3, 4>(4, 0) = covVP.transpose();
       cov.block<3, 3>(4, 4) = covP;
 
-      // covdelta_P calculation
       covDeltaP[iTrack] = transMat * cov * transMat.transpose();
     }
 
