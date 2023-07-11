@@ -254,6 +254,7 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
   options.direction = Acts::Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
   options.targetTolerance = 1_nm;
+  options.tolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, options);
   BOOST_CHECK(result.ok());
@@ -281,6 +282,7 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   options.direction = Acts::Direction::Forward;
   options.pathLimit = pathLimit;
   options.targetTolerance = 1_nm;
+  options.tolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, targetSurface, options);
   BOOST_CHECK(result.ok());
