@@ -19,32 +19,30 @@
 
 namespace Acts {
 
-/// @class LineBounds
+/// @class PointBounds
 ///
-/// Bounds for a LineSurface.
-class LineBounds : public SurfaceBounds {
+/// Bounds for a PointSurface.
+class PointBounds : public SurfaceBounds {
  public:
-  enum BoundValues : int { eR = 0, eHalfLengthZ = 1, eSize = 2 };
+  enum BoundValues : int { eR = 0, eSize = 2 };
 
-  LineBounds() = delete;
+  PointBounds() = delete;
 
   /// Constructor
   ///
   /// @param r is the radius of the cylinder, default = 0.
   /// @param halfZ is the half length in z, default = 0.
-  LineBounds(double r, double halfZ) noexcept(false) : m_values({r, halfZ}) {
-    checkConsistency();
-  }
+  PointBounds(double r) noexcept(false) : m_values({r}) { checkConsistency(); }
 
   /// Constructor - from fixed size array
   ///
   /// @param values The parameter values
-  LineBounds(const std::array<double, eSize>& values) noexcept(false)
+  PointBounds(const std::array<double, eSize>& values) noexcept(false)
       : m_values(values) {
     checkConsistency();
   }
 
-  ~LineBounds() override = default;
+  ~PointBounds() override = default;
 
   BoundsType type() const final;
 
@@ -81,18 +79,15 @@ class LineBounds : public SurfaceBounds {
   void checkConsistency() noexcept(false);
 };
 
-inline std::vector<double> LineBounds::values() const {
+inline std::vector<double> PointBounds::values() const {
   std::vector<double> valvector;
   valvector.insert(valvector.begin(), m_values.begin(), m_values.end());
   return valvector;
 }
 
-inline void LineBounds::checkConsistency() noexcept(false) {
+inline void PointBounds::checkConsistency() noexcept(false) {
   if (get(eR) < 0.) {
-    throw std::invalid_argument("LineBounds: zero radius.");
-  }
-  if (get(eHalfLengthZ) <= 0.) {
-    throw std::invalid_argument("LineBounds: zero/negative length.");
+    throw std::invalid_argument("PointBounds: zero radius.");
   }
 }
 
