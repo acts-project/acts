@@ -614,7 +614,7 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
                 1,
             ),
             (
-                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:178",
+                "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:177",
                 acts.FpeType.FLTUND,
                 1,
             ),

@@ -42,6 +42,7 @@ METHOD_TRAIT(position_t, position);
 METHOD_TRAIT(direction_t, direction);
 METHOD_TRAIT(qop_t, qOverP);
 METHOD_TRAIT(absolute_momentum_t, absoluteMomentum);
+METHOD_TRAIT(momentum_t, momentum);
 METHOD_TRAIT(charge_t, charge);
 METHOD_TRAIT(time_t, time);
 METHOD_TRAIT(overstep_t, overstepLimit);
@@ -112,6 +113,8 @@ constexpr bool MultiStepperStateConcept= require<
         static_assert(qop_exists, "qOverP method not found");
         constexpr static bool absolute_momentum_exists = has_method<const S, double, absolute_momentum_t, const state&>;
         static_assert(absolute_momentum_exists, "absoluteMomentum method not found");
+        constexpr static bool momentum_exists = has_method<const S, Vector3, momentum_t, const state&>;
+        static_assert(momentum_exists, "momentum method not found");
         constexpr static bool charge_exists = has_method<const S, double, charge_t, const state&>;
         static_assert(charge_exists, "charge method not found");
         constexpr static bool time_exists = has_method<const S, double, time_t, const state&>;
@@ -145,6 +148,7 @@ constexpr bool MultiStepperStateConcept= require<
                                               direction_exists,
                                               qop_exists,
                                               absolute_momentum_exists,
+                                              momentum_exists,
                                               charge_exists,
                                               time_exists,
                                               bound_state_method_exists,

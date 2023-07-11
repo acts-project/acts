@@ -948,6 +948,27 @@ def addCKFTracks(
         measurementSelectorCfg=acts.MeasurementSelector.Config(
             [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
+        trackSelectorCfg=acts.TrackSelector.Config(
+            **acts.examples.defaultKWArgs(
+                loc0Min=trackSelectorConfig.loc0[0],
+                loc0Max=trackSelectorConfig.loc0[1],
+                loc1Min=trackSelectorConfig.loc1[0],
+                loc1Max=trackSelectorConfig.loc1[1],
+                timeMin=trackSelectorConfig.time[0],
+                timeMax=trackSelectorConfig.time[1],
+                phiMin=trackSelectorConfig.phi[0],
+                phiMax=trackSelectorConfig.phi[1],
+                etaMin=trackSelectorConfig.eta[0],
+                etaMax=trackSelectorConfig.eta[1],
+                absEtaMin=trackSelectorConfig.absEta[0],
+                absEtaMax=trackSelectorConfig.absEta[1],
+                ptMin=trackSelectorConfig.pt[0],
+                ptMax=trackSelectorConfig.pt[1],
+                minMeasurements=trackSelectorConfig.nMeasurementsMin,
+            )
+        )
+        if trackSelectorConfig is not None
+        else None,
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
@@ -966,26 +987,6 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
-    if trackSelectorConfig is not None:
-        trackSelector = addTrackSelection(
-            s,
-            trackSelectorConfig,
-            inputTracks=trackFinder.config.outputTracks,
-            outputTracks="selectedTracks",
-            logLevel=customLogLevel(),
-        )
-        s.addWhiteboardAlias("tracks", trackSelector.config.outputTracks)
-
-        selectedTrackConverter = acts.examples.TracksToTrajectories(
-            level=customLogLevel(),
-            inputTracks=trackSelector.config.outputTracks,
-            outputTrajectories="trajectories-from-selected-tracks",
-        )
-        s.addAlgorithm(selectedTrackConverter)
-        s.addWhiteboardAlias(
-            "trajectories", selectedTrackConverter.config.outputTrajectories
-        )
 
     addTrajectoryWriters(
         s,
