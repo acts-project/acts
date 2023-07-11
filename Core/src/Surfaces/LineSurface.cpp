@@ -85,14 +85,14 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
       transform(gctx).inverse();
 
   // Bring the global position into the local frame
-  Vector3 lposition3 = totalTransform * position;
+  Vector3 localPosition = totalTransform * position;
 
   if (std::abs(lposition3.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
 
   // Construct local position from local x,y
-  Vector2 lposition = lposition3.head<2>();
+  Vector2 localXY = localPosition.head<2>();
 
   return Result<Vector2>::success(lposition);
 }
@@ -144,7 +144,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
-  // The nominclature is following the header file and doxygen documentation
+  // The nomenclature is following the header file and doxygen documentation
 
   const Vector3& ma = position;
   const Vector3& ea = direction;
