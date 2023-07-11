@@ -17,12 +17,9 @@ from acts.examples.simulation import (
 
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
-    ParticleSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -105,7 +102,6 @@ def run_vertexing(fitter, mu, events):
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
             geoSelectionConfigFile=setup.geoSel,
-            rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
         addCKFTracks(
