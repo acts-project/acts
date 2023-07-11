@@ -157,6 +157,7 @@ addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
     if ttbar
     else TruthSeedRanges(),
+    initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
 )
