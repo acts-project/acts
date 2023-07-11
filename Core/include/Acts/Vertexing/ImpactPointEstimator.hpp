@@ -183,7 +183,7 @@ class ImpactPointEstimator {
   /// of closest approach in 3D to a reference position
   ///
   /// @param helixCenter Position of the helix center
-  /// @param vtxPos Vertex position 
+  /// @param vtxPos Vertex position
   /// @param phi Azimuthal momentum angle
   /// @note Modifying phi corresponds to moving along the track. This function optimizes phi until we reach a 3D PCA.
   /// @param theta Polar momentum angle (constant along the track)
@@ -191,8 +191,8 @@ class ImpactPointEstimator {
   ///
   /// @return Phi value at 3D PCA
   Result<double> performNewtonOptimization(const Vector3& helixCenter,
-                                            const Vector3& vtxPos, double phi,
-                                            double theta, double rho) const;
+                                           const Vector3& vtxPos, double phi,
+                                           double theta, double rho) const;
 
   /// @brief Helper function to calculate the distance between a track and a vertex by finding the corresponding 3D PCA. Returns also the momentum at the 3D PCA.
   ///
@@ -207,7 +207,9 @@ class ImpactPointEstimator {
   Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
                                       const BoundTrackParameters& trkParams,
                                       const Vector3& vtxPos, Vector3& deltaR,
-                                      Vector3& momDir, State& state) const;
+                                      Vector3& momDir, State& state,
+                                      const ActsScalar& massHypothesis = 0.13957018,
+                                      const ActsScalar& chargeHypothesis = 1.) const;
 };
 
 }  // namespace Acts
