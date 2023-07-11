@@ -25,7 +25,7 @@ namespace Acts {
 /// Linearizes the track parameters at the PCA to a user-provided
 /// point (linPoint). The track parameters are written as a function
 /// of the global PCA position and the momentum of the particle at
-/// the PCA. The linearization then reads (see Eq. 5.7 in Ref(1)):
+/// the PCA. The linearization then reads (see Eq. 5.7 in Ref. (1)):
 ///
 /// q = A (r - r_0) + B (p - p_0) + c,
 ///
@@ -37,7 +37,7 @@ namespace Acts {
 ///
 /// This class computes A and B using the analytic formulae of Ref. (1).
 ///
-/// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
+/// Ref. (1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
 /// @tparam propagator_t Propagator type
 /// @tparam propagator_options_t Propagator options type

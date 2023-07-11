@@ -109,7 +109,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // If there is a constant magnetic field it has a helical trajectory
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
     // Derivatives can be found in Eqs. 5.39 and 5.40 of Ref. (1).
-    // Since we propagated to the PCA (point P in Ref(1)), we evaluate the
+    // Since we propagated to the PCA (point P in Ref. (1)), we evaluate the
     // Jacobians there. One can show that, in this case, RTilde = 0 and QTilde =
     // -d0.
 
@@ -143,7 +143,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     // Sign of helix radius
     ActsScalar h = (rho < 0.) ? -1 : 1;
 
-    // Quantities from Eq. 5.34 in Ref(1) (see .hpp)
+    // Quantities from Eq. 5.34 in Ref. (1) (see .hpp)
     ActsScalar X = pca(0) - linPointPos.x() + rho * sinPhi;
     ActsScalar Y = pca(1) - linPointPos.y() - rho * cosPhi;
     ActsScalar S2 = (X * X + Y * Y);
@@ -159,7 +159,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     ActsScalar absRhoOverS = h * rho / S;
 
     // Derivatives can be found in Eq. 5.36 in Ref. (1)
-    // Since we propagated to the PCA (point P in Ref(1)), the points
+    // Since we propagated to the PCA (point P in Ref. (1)), the points
     // P and V coincide, and thus deltaPhi = 0.
     // One can show that if deltaPhi = 0 --> R = 0 and Q = h * S.
     // As a consequence, many terms of the B matrix vanish.
@@ -198,7 +198,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   ActsMatrix<eBoundSize, eLinMomSize> momentumJacobian =
       completeJacobian.block<eBoundSize, eLinMomSize>(0, eLinPosSize);
 
-  // const term in Taylor expansion from Eq. 5.38 in Ref(1)
+  // const term in Taylor expansion from Eq. 5.38 in Ref. (1)
   BoundVector constTerm =
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
