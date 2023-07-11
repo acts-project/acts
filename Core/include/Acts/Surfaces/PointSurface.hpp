@@ -47,7 +47,6 @@ class PointSurface : public Surface {
   /// @param transform The transform that positions the surface in the global
   /// frame
   /// @param radius The straw radius
-  /// @param halez The half length in z
   PointSurface(const Translation3& transform, double radius);
 
   /// Constructor from Translation3 and a shared bounds object

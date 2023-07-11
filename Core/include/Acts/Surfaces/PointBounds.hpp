@@ -31,7 +31,6 @@ class PointBounds : public SurfaceBounds {
   /// Constructor
   ///
   /// @param r is the radius of the cylinder, default = 0.
-  /// @param halfZ is the half length in z, default = 0.
   PointBounds(double r) noexcept(false) : m_values({r}) { checkConsistency(); }
 
   /// Constructor - from fixed size array
