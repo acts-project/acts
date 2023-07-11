@@ -27,7 +27,6 @@ def runDigitization(
         PhiConfig,
         ParticleConfig,
         addFatras,
-        addDigitization,
     )
 
     s = s or acts.examples.Sequencer(
@@ -61,6 +60,7 @@ def runDigitization(
         field,
         rnd=rnd,
     )
+    from acts.examples.simulation import addDigitization
 
     addDigitization(
         s,

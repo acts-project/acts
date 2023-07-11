@@ -25,8 +25,8 @@ histograms:
     max: 3.14
 
   eT_fit:
-    min: -2000
-    max: 2000
+    min: -150
+    max: 150
 
   err_eLOC0_fit:
     min: 0
@@ -109,8 +109,8 @@ histograms:
 
   t_time:
     nbins: 100
-    min: -2000
-    max: 2000
+    min: -1.0
+    max: 1.0
 
   "t_vx|t_vy":
     nbins: 100
@@ -168,6 +168,3 @@ exclude:
   - majorityParticleId
   - multiTraj_nr
   - subTraj_nr
-
-                
-

@@ -91,12 +91,12 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             s,
             setup.trackingGeometry,
             setup.field,
-            TruthSeedRanges(pt=(500 * u.MeV, None), nHits=(9, None)),
+            TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
             ParticleSmearingSigmas(
                 pRel=0.01
             ),  # only used by SeedingAlgorithm.TruthSmeared
             SeedFinderConfigArg(
-                r=(33 * u.mm, 200 * u.mm),
+                r=(None, 200 * u.mm),  # rMin=default, 33mm
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
@@ -106,7 +106,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
+            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
             TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.TruthSmeared
             if truthSmearedSeeded
@@ -126,8 +126,8 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
+                loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 nMeasurementsMin=6,
             ),
             outputDirRoot=tp,

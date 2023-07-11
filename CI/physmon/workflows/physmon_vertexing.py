@@ -93,7 +93,7 @@ def run_vertexing(fitter, mu, events):
             setup.trackingGeometry,
             setup.field,
             SeedFinderConfigArg(
-                r=(33 * u.mm, 200 * u.mm),
+                r=(None, 200 * u.mm),  # rMin=default, 33mm
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
@@ -103,10 +103,11 @@ def run_vertexing(fitter, mu, events):
                 minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
+            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
             initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
             geoSelectionConfigFile=setup.geoSel,
+            rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
         addCKFTracks(
@@ -114,8 +115,9 @@ def run_vertexing(fitter, mu, events):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
+                loc0=(-4.0 * u.mm, 4.0 * u.mm),
+                absEta=(None, 3.0),
                 nMeasurementsMin=6,
             ),
         )
