@@ -80,21 +80,19 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
     const Vector3& direction, double tolerance) const {
   using VectorHelpers::perp;
 
-  Transform3 totalTransform =
-      referenceFrame(gctx, position, direction).inverse() *
-      transform(gctx).inverse();
+  // Bring the global position into the local frame. First remove the
+  // translation then the rotation.
+  Vector3 localPosition = referenceFrame(gctx, position, direction).inverse() *
+                          (position - transform(gctx).translation());
 
-  // Bring the global position into the local frame
-  Vector3 localPosition = totalTransform * position;
-
-  if (std::abs(lposition3.z()) > std::abs(tolerance)) {
+  if (std::abs(localPosition.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
 
-  // Construct local position from local x,y
+  // Construct result from local x,y
   Vector2 localXY = localPosition.head<2>();
 
-  return Result<Vector2>::success(lposition);
+  return Result<Vector2>::success(localXY);
 }
 
 std::string Acts::LineSurface::name() const {
@@ -104,14 +102,14 @@ std::string Acts::LineSurface::name() const {
 Acts::RotationMatrix3 Acts::LineSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*position*/,
     const Vector3& direction) const {
-  Vector3 measZ0 = transform(gctx).rotation() * Vector3::UnitZ();
-  Vector3 measD0 = measZ0.cross(direction).normalized();
-  Vector3 measDepth = measD0.cross(measZ0);
+  Vector3 unitZ0 = transform(gctx).rotation() * Vector3::UnitZ();
+  Vector3 unitD0 = unitZ0.cross(direction).normalized();
+  Vector3 unitDistance = unitD0.cross(unitZ0);
 
   RotationMatrix3 mFrame;
-  mFrame.col(0) = measD0;
-  mFrame.col(1) = measZ0;
-  mFrame.col(2) = measDepth;
+  mFrame.col(0) = unitD0;
+  mFrame.col(1) = unitZ0;
+  mFrame.col(2) = unitDistance;
 
   return mFrame;
 }
@@ -127,10 +125,9 @@ Acts::Vector3 Acts::LineSurface::binningPosition(
   return center(gctx);
 }
 
-Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& gctx,
+Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& /*gctx*/,
                                         const Vector2& /*lpos*/) const {
-  const auto& tMatrix = transform(gctx).matrix();
-  return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  return Vector3::Zero();
 }
 
 const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
@@ -197,37 +194,39 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
   // The global position
-  const Vector3 position = freeParams.segment<3>(eFreePos0);
+  Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
-  const Vector3 direction = freeParams.segment<3>(eFreeDir0);
+  Vector3 direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
-  const double cos_theta = std::cos(boundParams[eBoundTheta]);
-  const double sin_theta = std::sin(boundParams[eBoundTheta]);
-  const double cos_phi = std::cos(boundParams[eBoundPhi]);
-  const double sin_phi = std::sin(boundParams[eBoundPhi]);
+  double cosTheta = std::cos(boundParams[eBoundTheta]);
+  double sinTheta = std::sin(boundParams[eBoundTheta]);
+  double cosPhi = std::cos(boundParams[eBoundPhi]);
+  double sinPhi = std::sin(boundParams[eBoundPhi]);
   // retrieve the reference frame
-  const auto rframe = referenceFrame(gctx, position, direction);
+  auto rframe = referenceFrame(gctx, position, direction);
+
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
+
   // the local error components - given by the reference frame
   jacToGlobal.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the time component
   jacToGlobal(eFreeTime, eBoundTime) = 1;
   // the momentum components
-  jacToGlobal(eFreeDir0, eBoundPhi) = (-sin_theta) * sin_phi;
-  jacToGlobal(eFreeDir0, eBoundTheta) = cos_theta * cos_phi;
-  jacToGlobal(eFreeDir1, eBoundPhi) = sin_theta * cos_phi;
-  jacToGlobal(eFreeDir1, eBoundTheta) = cos_theta * sin_phi;
-  jacToGlobal(eFreeDir2, eBoundTheta) = (-sin_theta);
+  jacToGlobal(eFreeDir0, eBoundPhi) = -sinTheta * sinPhi;
+  jacToGlobal(eFreeDir0, eBoundTheta) = cosTheta * cosPhi;
+  jacToGlobal(eFreeDir1, eBoundPhi) = sinTheta * cosPhi;
+  jacToGlobal(eFreeDir1, eBoundTheta) = cosTheta * sinPhi;
+  jacToGlobal(eFreeDir2, eBoundTheta) = -sinTheta;
   jacToGlobal(eFreeQOverP, eBoundQOverP) = 1;
 
   // the projection of direction onto ref frame normal
   double ipdn = 1. / direction.dot(rframe.col(2));
   // build the cross product of d(D)/d(eBoundPhi) components with y axis
-  auto dDPhiY = rframe.block<3, 1>(0, 1).cross(
+  Vector3 dDPhiY = rframe.block<3, 1>(0, 1).cross(
       jacToGlobal.block<3, 1>(eFreeDir0, eBoundPhi));
   // and the same for the d(D)/d(eTheta) components
-  auto dDThetaY = rframe.block<3, 1>(0, 1).cross(
+  Vector3 dDThetaY = rframe.block<3, 1>(0, 1).cross(
       jacToGlobal.block<3, 1>(eFreeDir0, eBoundTheta));
   // and correct for the x axis components
   dDPhiY -= rframe.block<3, 1>(0, 0) * (rframe.block<3, 1>(0, 0).dot(dDPhiY));
@@ -238,34 +237,36 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
       dDPhiY * boundParams[eBoundLoc0] * ipdn;
   jacToGlobal.block<3, 1>(eFreePos0, eBoundTheta) =
       dDThetaY * boundParams[eBoundLoc0] * ipdn;
+
   return jacToGlobal;
 }
 
 Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
-  const auto position = parameters.segment<3>(eFreePos0);
+  Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
+  Vector3 direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const auto pcRowVec = (position - center(gctx)).transpose().eval();
-  // The rotation
-  const auto& rotation = transform(gctx).rotation();
+  Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
-  const auto& localZAxis = rotation.col(2);
+  Vector3 localZAxis = transform(gctx).rotation() * Vector3::UnitZ();
   // The local z coordinate
-  const auto pz = pcRowVec * localZAxis;
+  double pz = pcRowVec.dot(localZAxis);
   // Cosine of angle between momentum direction and local frame z axis
-  const auto dz = localZAxis.dot(direction);
-  const auto norm = 1 / (1 - dz * dz);
+  double dz = localZAxis.dot(direction);
+  double norm = 1 / (1 - dz * dz);
+
   // Initialize the derivative of propagation path w.r.t. free parameter
   FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
+
   // The derivative of path w.r.t. position
   freeToPath.segment<3>(eFreePos0) =
       norm * (dz * localZAxis.transpose() - direction.transpose());
+
   // The derivative of path w.r.t. direction
   freeToPath.segment<3>(eFreeDir0) =
-      norm * (pz * localZAxis.transpose() - pcRowVec);
+      norm * (pz * localZAxis.transpose() - pcRowVec.transpose());
 
   return freeToPath;
 }
@@ -273,46 +274,42 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
 Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
     const GeometryContext& gctx, const FreeVector& parameters) const {
   // The global posiiton
-  const auto position = parameters.segment<3>(eFreePos0);
+  Vector3 position = parameters.segment<3>(eFreePos0);
   // The direction
-  const auto direction = parameters.segment<3>(eFreeDir0);
+  Vector3 direction = parameters.segment<3>(eFreeDir0);
   // The vector between position and center
-  const auto pcRowVec = (position - center(gctx)).transpose().eval();
-  // The rotation
-  const auto& rotation = transform(gctx).rotation();
+  Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
-  const Vector3 localZAxis = rotation.col(2);
+  Vector3 localZAxis = transform(gctx).rotation() * Vector3::UnitZ();
   // The local z coordinate
-  const auto pz = pcRowVec * localZAxis;
+  double pz = pcRowVec.dot(localZAxis);
   // Cosine of angle between momentum direction and local frame z axis
-  const auto dz = localZAxis.dot(direction);
-  const auto norm = 1 / (1 - dz * dz);
+  double dz = localZAxis.dot(direction);
+  double norm = 1 / (1 - dz * dz);
   // Calculate the derivative of local frame axes w.r.t its rotation
-  const auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
-      detail::rotationToLocalAxesDerivative(rotation);
+  auto [rotToLocalXAxis, rotToLocalYAxis, rotToLocalZAxis] =
+      detail::rotationToLocalAxesDerivative(transform(gctx).rotation());
+
   // Initialize the derivative of propagation path w.r.t. local frame
   // translation (origin) and rotation
   AlignmentToPathMatrix alignToPath = AlignmentToPathMatrix::Zero();
   alignToPath.segment<3>(eAlignmentCenter0) =
       norm * (direction.transpose() - dz * localZAxis.transpose());
   alignToPath.segment<3>(eAlignmentRotation0) =
-      norm * (dz * pcRowVec + pz * direction.transpose()) * rotToLocalZAxis;
+      norm * (dz * pcRowVec.transpose() + pz * direction.transpose()) *
+      rotToLocalZAxis;
 
   return alignToPath;
 }
 
 Acts::ActsMatrix<2, 3> Acts::LineSurface::localCartesianToBoundLocalDerivative(
     const GeometryContext& gctx, const Vector3& position) const {
-  using VectorHelpers::phi;
-  // The local frame transform
-  const auto& sTransform = transform(gctx);
   // calculate the transformation to local coordinates
-  const Vector3 localPos = sTransform.inverse() * position;
-  const double lphi = phi(localPos);
-  const double lcphi = std::cos(lphi);
-  const double lsphi = std::sin(lphi);
+  Vector3 localPosition = transform(gctx).inverse() * position;
+  double localPhi = VectorHelpers::phi(localPosition);
+
   ActsMatrix<2, 3> loc3DToLocBound = ActsMatrix<2, 3>::Zero();
-  loc3DToLocBound << lcphi, lsphi, 0, 0, 0, 1;
+  loc3DToLocBound << std::cos(localPhi), std::sin(localPhi), 0, 0, 0, 1;
 
   return loc3DToLocBound;
 }
