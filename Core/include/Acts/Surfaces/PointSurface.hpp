@@ -44,18 +44,18 @@ class PointSurface : public Surface {
  protected:
   /// Constructor from Translation3 and bounds
   ///
-  /// @param transform The transform that positions the surface in the global
+  /// @param translation The translation that positions the surface in the global
   /// frame
   /// @param radius The straw radius
-  PointSurface(const Translation3& transform, double radius);
+  PointSurface(const Translation3& translation, double radius);
 
   /// Constructor from Translation3 and a shared bounds object
   ///
-  /// @param transform The transform that positions the surface in the global
+  /// @param translation The translation that positions the surface in the global
   /// frame
   /// @param pbounds The bounds describing the straw dimensions, can be
   /// optionally nullptr
-  PointSurface(const Translation3& transform,
+  PointSurface(const Translation3& translation,
                std::shared_ptr<const PointBounds> pbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
@@ -74,9 +74,9 @@ class PointSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transform applied after copying
+  /// @param translation is the additional translation applied after copying
   PointSurface(const GeometryContext& gctx, const PointSurface& other,
-               const Transform3& shift);
+               const Translation3& translation);
 
  public:
   ~PointSurface() override = default;

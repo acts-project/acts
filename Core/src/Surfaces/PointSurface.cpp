@@ -29,14 +29,16 @@ namespace Acts {
 class DetectorElementBase;
 }  // namespace Acts
 
-Acts::PointSurface::PointSurface(const Translation3& transform, double radius)
+Acts::PointSurface::PointSurface(const Translation3& translation, double radius)
     : GeometryObject(),
-      Surface(transform),
+      Surface(Transform3(translation)),
       m_bounds(std::make_shared<const PointBounds>(radius)) {}
 
-Acts::PointSurface::PointSurface(const Transform3& transform,
+Acts::PointSurface::PointSurface(const Translation3& transform,
                                  std::shared_ptr<const PointBounds> pbounds)
-    : GeometryObject(), Surface(transform), m_bounds(std::move(pbounds)) {}
+    : GeometryObject(),
+      Surface(Transform3(transform)),
+      m_bounds(std::move(pbounds)) {}
 
 Acts::PointSurface::PointSurface(std::shared_ptr<const PointBounds> pbounds,
                                  const DetectorElementBase& detelement)
@@ -49,8 +51,10 @@ Acts::PointSurface::PointSurface(const PointSurface& other)
 
 Acts::PointSurface::PointSurface(const GeometryContext& gctx,
                                  const PointSurface& other,
-                                 const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+                                 const Translation3& translation)
+    : GeometryObject(),
+      Surface(gctx, other, Transform3(translation)),
+      m_bounds(other.m_bounds) {}
 
 Acts::PointSurface& Acts::PointSurface::operator=(const PointSurface& other) {
   if (this != &other) {
@@ -177,10 +181,8 @@ Acts::SurfaceIntersection Acts::PointSurface::intersect(
       // At closest approach: check inside R or and inside Z
       const Vector3 vecLocal(result - mb);
       double cZ = vecLocal.dot(eb);
-      double hZ = m_bounds->get(LineBounds::eHalfLengthZ) + tolerance;
-      if ((std::abs(cZ) > std::abs(hZ)) or
-          ((vecLocal - cZ * eb).norm() >
-           m_bounds->get(LineBounds::eR) + tolerance)) {
+      if ((vecLocal - cZ * eb).norm() >
+          m_bounds->get(PointBounds::eR) + tolerance) {
         status = Intersection3D::Status::missed;
       }
     }
