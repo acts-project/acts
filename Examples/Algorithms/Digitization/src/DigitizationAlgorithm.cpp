@@ -10,20 +10,31 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
 #include <algorithm>
-#include <list>
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <ostream>
+#include <set>
 #include <stdexcept>
 #include <string>
-#include <type_traits>
+#include <utility>
 
 ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     DigitizationConfig config, Acts::Logging::Level level)
@@ -206,7 +217,8 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               auto res =
                   digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
-                ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
+                ACTS_WARNING("Problem in hit smearing, skip hit ("
+                             << res.error().message() << ")");
                 continue;
               }
               const auto& [par, cov] = res.value();
@@ -336,6 +348,15 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     } else {
       dParameters.variances =
           std::vector<Acts::ActsScalar>(dParameters.indices.size(), -1.);
+    }
+
+    if (dParameters.variances[0] == -1) {
+      size_t ictr = b0min + size0 / 2;
+      dParameters.variances[0] = std::pow(binningData[0].width(ictr), 2) / 12.0;
+    }
+    if (dParameters.variances[1] == -1) {
+      size_t ictr = b1min + size1 / 2;
+      dParameters.variances[1] = std::pow(binningData[1].width(ictr), 2) / 12.0;
     }
 
     dParameters.cluster.sizeLoc0 = size0;

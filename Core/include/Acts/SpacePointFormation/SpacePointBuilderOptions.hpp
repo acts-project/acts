@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 
 namespace Acts {
@@ -17,7 +20,7 @@ struct SpacePointBuilderOptions {
   std::pair<const std::pair<Vector3, Vector3>,
             const std::pair<Vector3, Vector3>>
       stripEndsPair;
-  // accessor of local position and covariance from soruce link
+  // accessor of local position and covariance from source link
   std::function<std::pair<const BoundVector, const BoundSymMatrix>(
       const SourceLink&)>
       paramCovAccessor;
@@ -27,11 +30,10 @@ struct SpacePointBuilderOptions {
   double stripLengthTolerance = 0.01;
   /// Allowed increase of strip length wrt gaps between strips
   double stripLengthGapTolerance = 0.01;
-  SpacePointBuilderOptions() = default;
 };
 
 struct StripPairOptions {
-  // accessor of local position and covariance from soruce link
+  // accessor of local position and covariance from source link
   std::function<std::pair<const BoundVector, const BoundSymMatrix>(
       const SourceLink&)>
       paramCovAccessor;
@@ -43,7 +45,6 @@ struct StripPairOptions {
   double diffPhi2 = 1.;
   /// Accepted distance between two clusters
   double diffDist = 100. * UnitConstants::mm;
-  StripPairOptions() = default;
 };
 
 }  // namespace Acts

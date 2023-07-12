@@ -86,7 +86,7 @@ KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
 }
 
 ///
-/// @brief Contruct a telescope-like detector
+/// @brief Construct a telescope-like detector
 ///
 struct TelescopeDetector {
   /// Default constructor for the Cubit tracking geometry

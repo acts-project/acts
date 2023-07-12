@@ -8,11 +8,16 @@
 
 #include "Acts/Geometry/Layer.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
+
+#include <algorithm>
+#include <functional>
+#include <iterator>
+#include <vector>
 
 Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
                    std::unique_ptr<ApproachDescriptor> ades, LayerType laytyp)
@@ -63,7 +68,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   }
   // loop over the approach surfaces
   if (m_approachDescriptor) {
-    // indicates the existance of approach surfaces
+    // indicates the existence of approach surfaces
     m_ssApproachSurfaces = 1;
     // loop through the approachSurfaces and assign unique GeomeryID
     GeometryIdentifier::Value iasurface = 0;
@@ -82,7 +87,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   }
   // check if you have sensitive surfaces
   if (m_surfaceArray) {
-    // indicates the existance of sensitive surfaces
+    // indicates the existence of sensitive surfaces
     m_ssSensitiveSurfaces = 1;
     // loop sensitive surfaces and assign unique GeometryIdentifier
     GeometryIdentifier::Value issurface = 0;
@@ -124,7 +129,7 @@ Acts::Layer::compatibleSurfaces(
   double overstepLimit = options.overstepLimit;
   if (options.endObject != nullptr) {
     // intersect the end surface
-    // - it is the final one don't use the bounday check at all
+    // - it is the final one don't use the boundary check at all
     SurfaceIntersection endInter = options.endObject->intersect(
         gctx, position, options.navDir * direction, BoundaryCheck(true));
     // non-valid intersection with the end surface provided at this layer
@@ -157,7 +162,7 @@ Acts::Layer::compatibleSurfaces(
     if (options.resolveMaterial && sf.surfaceMaterial() != nullptr) {
       return true;
     }
-    // last option: resovle all
+    // last option: resolve all
     return options.resolvePassive;
   };
 
@@ -213,7 +218,7 @@ Acts::Layer::compatibleSurfaces(
   // check the sensitive surfaces if you have some
   if (m_surfaceArray && (options.resolveMaterial || options.resolvePassive ||
                          options.resolveSensitive)) {
-    // get the canditates
+    // get the candidates
     const std::vector<const Surface*>& sensitiveSurfaces =
         m_surfaceArray->neighbors(position);
     // loop through and veto
@@ -245,7 +250,7 @@ Acts::Layer::compatibleSurfaces(
   sIntersections.resize(std::distance(sIntersections.begin(), it));
 
   // sort according to the path length
-  if (options.navDir == NavigationDirection::Forward) {
+  if (options.navDir == Direction::Forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());

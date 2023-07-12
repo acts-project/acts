@@ -13,13 +13,17 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
+#include <algorithm>
+#include <array>
 #include <functional>
 #include <memory>
 #include <string>
@@ -27,9 +31,11 @@
 
 namespace Acts {
 class TrackingGeometry;
-}
+class MagneticFieldProvider;
+}  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Estimate track parameters for track seeds.
 ///
@@ -65,8 +71,8 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     /// q/p resolution.
     double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
     /// Time resolution.
-    double sigmaT0 = 1400 * Acts::UnitConstants::s;
-    /// Inflate tracks
+    double sigmaT0 = 10 * Acts::UnitConstants::ns;
+    /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
   };
 

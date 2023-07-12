@@ -8,11 +8,15 @@
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -89,7 +93,7 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
 
 bool Acts::CylinderBounds::inside3D(const Vector3& position,
                                     const BoundaryCheck& bcheck) const {
-  // additional tolerance from the boundary check if configred
+  // additional tolerance from the boundary check if configured
   bool checkAbsolute = bcheck.m_type == BoundaryCheck::Type::eAbsolute;
 
   // this fast check only applies to closed cylindrical bounds

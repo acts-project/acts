@@ -6,7 +6,10 @@ import contextlib
 import acts
 from acts.examples import IAlgorithm
 
-geant4Enabled = any(v.startswith("G4") for v in os.environ.keys())
+geant4Enabled = (
+    any(v.startswith("G4") for v in os.environ.keys())
+    or "GEANT4_DATA_DIR" in os.environ
+)
 if geant4Enabled:
     try:
         import acts.examples.geant4
@@ -79,6 +82,11 @@ except ModuleNotFoundError:
     podioEnabled = False
 
 isCI = os.environ.get("CI", "false") == "true"
+
+if isCI:
+    for k, v in dict(locals()).items():
+        if k.endswith("Enabled"):
+            locals()[k] = True
 
 
 class AssertCollectionExistsAlg(IAlgorithm):

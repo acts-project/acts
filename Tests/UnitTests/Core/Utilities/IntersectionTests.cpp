@@ -8,10 +8,20 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -200,7 +210,7 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
                                          Intersection3D::Status::reachable),
                           psf9.get());
   PlaneIntersection int9b(
-      Intersection3D(Vector3(9., 1., 0.), std::sqrt(9. * 9. + 1.),
+      Intersection3D(Vector3(9., 1., 0.), std::hypot(9., 1.),
                      Intersection3D::Status::reachable),
       psf9.get());
   PlaneIntersection int10(Intersection3D(Vector3(10., 0., 0.), 10.,

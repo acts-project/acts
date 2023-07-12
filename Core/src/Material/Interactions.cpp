@@ -8,9 +8,9 @@
 
 #include "Acts/Material/Interactions.hpp"
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -201,10 +201,10 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, int /* unused */,
   const auto rq = Acts::RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
-  const auto t = computeMassTerm(Me, rq);
-  // uses RPP2018 eq. 33.11
+  const auto u = computeMassTerm(Me, rq);
+  // uses RPP2018 eq. 33.12
   const auto running =
-      std::log(t / I) + std::log(eps / I) + 0.2f - rq.beta2 - 2 * dhalf;
+      std::log(u / I) + std::log(eps / I) + 0.2f - rq.beta2 - 2 * dhalf;
   return eps * running;
 }
 
@@ -381,7 +381,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab, int pdg,
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const auto momentum = q / qOverP;
-  const auto energy = std::sqrt(m * m + momentum * momentum);
+  const auto energy = std::hypot(m, momentum);
 
   auto dEdx = computeBremsstrahlungLossMean(m, energy);
   if (((pdg == PdgParticle::eMuon) or (pdg == PdgParticle::eAntiMuon)) and
@@ -406,7 +406,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab, int pdg,
   // particle momentum and energy
   // do not need to care about the sign since it is only used squared
   const auto momentum = q / qOverP;
-  const auto energy = std::sqrt(m * m + momentum * momentum);
+  const auto energy = std::hypot(m, momentum);
 
   // compute derivative w/ respect to energy.
   auto derE = deriveBremsstrahlungLossMeanE(m);
@@ -457,7 +457,7 @@ namespace {
 /// Multiple scattering theta0 for minimum ionizing particles.
 inline float theta0Highland(float xOverX0, float momentumInv,
                             float q2OverBeta2) {
-  // RPP2018 eq. 33.15 (treats beta and q² consistenly)
+  // RPP2018 eq. 33.15 (treats beta and q² consistently)
   const auto t = std::sqrt(xOverX0 * q2OverBeta2);
   // log((x/X0) * (q²/beta²)) = log((sqrt(x/X0) * (q/beta))²)
   //                          = 2 * log(sqrt(x/X0) * (q/beta))

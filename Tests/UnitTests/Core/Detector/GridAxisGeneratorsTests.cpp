@@ -9,17 +9,19 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/GridAxisGenerators.hpp"
+#include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
+#include <cmath>
 #include <tuple>
+#include <utility>
 
 using namespace Acts;
 using namespace Acts::detail;
 using namespace Acts::Experimental;
-using namespace Acts::Experimental::GridAxisGenerators;
+using namespace Acts::Experimental::detail::GridAxisGenerators;
 
 BOOST_AUTO_TEST_SUITE(Detector)
 

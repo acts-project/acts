@@ -19,9 +19,9 @@ template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const SingleBoundTrackParameters<charge_t>& par, NavigationDirection ndir,
-    double ssize, double stolerance) const -> State {
-  return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
+    const SingleBoundTrackParameters<charge_t>& par, Direction navDir,
+    double ssize) const -> State {
+  return State{gctx, m_bField->makeCache(mctx), par, navDir, ssize};
 }
 
 template <typename E, typename A>
@@ -29,7 +29,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundVector& boundParams,
                                           const BoundSymMatrix& cov,
                                           const Surface& surface,
-                                          const NavigationDirection navDir,
+                                          const Direction navDir,
                                           const double stepSize) const {
   // Update the stepping state
   update(state,
@@ -84,12 +84,12 @@ void Acts::EigenStepper<E, A>::update(State& state,
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::update(State& state, const Vector3& uposition,
-                                      const Vector3& udirection, double up,
+                                      const Vector3& udirection, double qOverP,
                                       double time) const {
   state.pars.template segment<3>(eFreePos0) = uposition;
   state.pars.template segment<3>(eFreeDir0) = udirection;
   state.pars[eFreeTime] = time;
-  state.pars[eFreeQOverP] = (state.q != 0. ? state.q / up : 1. / up);
+  state.pars[eFreeQOverP] = qOverP;
 }
 
 template <typename E, typename A>

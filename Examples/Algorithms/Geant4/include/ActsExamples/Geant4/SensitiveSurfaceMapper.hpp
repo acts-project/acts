@@ -34,18 +34,18 @@ namespace ActsExamples {
 /// elements of the Acts::TrackingGeoemtry w/o map lookup.
 class SensitiveSurfaceMapper {
  public:
-  static constexpr const char* mappingPrefix = "ActsGeoID#";
+  constexpr static std::string_view mappingPrefix = "ActsGeoID#";
 
   /// Configuration struct for the surface mapper
   struct Config {
     /// For which G4 material names we try to find a mapping
-    std::vector<std::string> materialMappings = {"Silicon"};
+    std::vector<std::string> materialMappings;
 
     /// For which G4 volume names we try to find a mapping
-    std::vector<std::string> volumeMappings = {};
+    std::vector<std::string> volumeMappings;
 
     /// The tracking geometry we try to map
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor with:

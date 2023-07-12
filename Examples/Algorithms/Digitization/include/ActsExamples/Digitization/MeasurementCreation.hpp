@@ -14,7 +14,13 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 
+#include <array>
+#include <cstddef>
+#include <tuple>
+#include <vector>
+
 namespace ActsExamples {
+class IndexSourceLink;
 
 /// Struct to identify digitized parameters
 ///
@@ -38,7 +44,7 @@ struct DigitizedParameters {
 Measurement createMeasurement(const DigitizedParameters& dParams,
                               const IndexSourceLink& isl) noexcept(false);
 
-/// Contruct the constituents of a measurement.
+/// Construct the constituents of a measurement.
 ///
 /// @tparam kMeasDIM the full dimension of the measurement
 ///

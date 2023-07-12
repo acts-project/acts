@@ -8,19 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 
-#include <exception>
 #include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 /// Unpack to shared - simply to test the getSharedPtr mechanism
 ///
@@ -81,7 +84,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 =
       {cyl0, cyl1, cyl2};
   auto det012 = Acts::Experimental::Detector::makeShared(
-      "Det012", volumes012, Acts::Experimental::tryAllVolumes());
+      "Det012", volumes012, Acts::Experimental::tryRootVolumes());
 
   // Check the basic return functions
   BOOST_CHECK(det012->name() == "Det012");
@@ -130,7 +133,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
       {cyl0, cyl0nameDup, cyl2};
   BOOST_CHECK_THROW(Acts::Experimental::Detector::makeShared(
                         "Det002_name_duplicate", volumes002,
-                        Acts::Experimental::tryAllVolumes()),
+                        Acts::Experimental::tryRootVolumes()),
                     std::invalid_argument);
 }
 

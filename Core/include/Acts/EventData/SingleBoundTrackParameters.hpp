@@ -46,7 +46,7 @@ class SingleBoundTrackParameters {
   /// @param q Particle charge
   /// @param cov Bound parameters covariance matrix
   ///
-  /// In principle, only the charge magnitude is needed her to allow unambigous
+  /// In principle, only the charge magnitude is needed her to allow unambiguous
   /// extraction of the absolute momentum. The particle charge is required as
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
@@ -160,7 +160,7 @@ class SingleBoundTrackParameters {
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
-  /// Access a single parameter value indentified by its index.
+  /// Access a single parameter value identified by its index.
   ///
   /// @tparam kIndex Track parameter index
   template <BoundIndices kIndex>
@@ -168,6 +168,8 @@ class SingleBoundTrackParameters {
     return m_params[kIndex];
   }
 
+  /// Local spatial position two-vector.
+  Vector2 localPosition() const { return m_params.segment<2>(eBoundLoc0); }
   /// Space-time position four-vector.
   ///
   /// @param[in] geoCtx Geometry context for the local-to-global
@@ -178,11 +180,9 @@ class SingleBoundTrackParameters {
   /// select the appropriate transformation and might be a computationally
   /// expensive operation.
   Vector4 fourPosition(const GeometryContext& geoCtx) const {
-    const Vector2 loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
-    const Vector3 dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
-                                                      m_params[eBoundTheta]);
     Vector4 pos4;
-    pos4.segment<3>(ePos0) = m_surface->localToGlobal(geoCtx, loc, dir);
+    pos4.segment<3>(ePos0) =
+        m_surface->localToGlobal(geoCtx, localPosition(), unitDirection());
     pos4[eTime] = m_params[eBoundTime];
     return pos4;
   }
@@ -196,10 +196,7 @@ class SingleBoundTrackParameters {
   /// select the appropriate transformation and might be a computationally
   /// expensive operation.
   Vector3 position(const GeometryContext& geoCtx) const {
-    const Vector2 loc(m_params[eBoundLoc0], m_params[eBoundLoc1]);
-    const Vector3 dir = makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
-                                                      m_params[eBoundTheta]);
-    return m_surface->localToGlobal(geoCtx, loc, dir);
+    return m_surface->localToGlobal(geoCtx, localPosition(), unitDirection());
   }
   /// Time coordinate.
   Scalar time() const { return m_params[eBoundTime]; }
@@ -261,7 +258,7 @@ class SingleBoundTrackParameters {
   /// @note Comparing track parameters for bitwise equality is not a good
   /// idea.
   ///   Depending on the context you might want to compare only the
-  ///   parameter values, or compare them for compability instead of
+  ///   parameter values, or compare them for compatibility instead of
   ///   equality; you might also have different (floating point) thresholds
   ///   of equality in different contexts. None of that can be handled by
   ///   this operator. Users should think really hard if this is what they

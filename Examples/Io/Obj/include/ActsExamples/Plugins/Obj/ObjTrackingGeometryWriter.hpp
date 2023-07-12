@@ -13,9 +13,12 @@
 #include <Acts/Utilities/Logger.hpp>
 #include <Acts/Visualization/ViewConfig.hpp>
 
+#include <cstddef>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <mutex>
+#include <string>
 
 namespace Acts {
 class TrackingVolume;
@@ -23,6 +26,7 @@ class TrackingGeometry;
 }  // namespace Acts
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class ObjTrackingGeometryWriter
 ///

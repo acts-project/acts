@@ -8,13 +8,29 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
+#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 
+#include <any>
+#include <cassert>
+#include <cstddef>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace Acts {
+class Surface;
+template <typename T>
+struct IsReadOnlyTrackContainer;
 
 namespace detail_vtc {
 
@@ -61,8 +77,6 @@ class VectorTrackContainerBase {
         return &instance.m_params[itrack];
       case "cov"_hash:
         return &instance.m_cov[itrack];
-      case "referenceSurface"_hash:
-        return &instance.m_referenceSurfaces[itrack];
       case "nMeasurements"_hash:
         return &instance.m_nMeasurements[itrack];
       case "nHoles"_hash:
@@ -129,6 +143,10 @@ class VectorTrackContainerBase {
       default:
         return m_dynamic.find(key) != m_dynamic.end();
     }
+  }
+
+  const Surface* referenceSurface_impl(IndexType itrack) const {
+    return m_referenceSurfaces[itrack].get();
   }
 
   std::size_t size_impl() const {
@@ -216,11 +234,20 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
       const detail_vtc::VectorTrackContainerBase& other);
 
   void reserve(IndexType size);
+  void clear();
+
+  void setReferenceSurface_impl(IndexType itrack,
+                                std::shared_ptr<const Surface> surface) {
+    m_referenceSurfaces[itrack] = std::move(surface);
+  }
 
   // END INTERFACE
 };
 
+ACTS_STATIC_CHECK_CONCEPT(TrackContainerBackend, VectorTrackContainer);
+
 class ConstVectorTrackContainer;
+
 template <>
 struct IsReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
 
@@ -259,6 +286,9 @@ class ConstVectorTrackContainer final
 
   // END INTERFACE
 };
+
+ACTS_STATIC_CHECK_CONCEPT(ConstTrackContainerBackend,
+                          ConstVectorTrackContainer);
 
 inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)

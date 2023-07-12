@@ -8,11 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Geant4/PDGtoG4Converter.hpp"
 
 #include <cmath>
+#include <limits>
 #include <random>
 #include <vector>
 

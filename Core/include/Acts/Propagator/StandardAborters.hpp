@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -24,7 +25,7 @@ namespace Acts {
 /// @brief TargetOptions struct for geometry interface
 struct TargetOptions {
   /// Navigation direction
-  NavigationDirection navDir = NavigationDirection::Forward;
+  Direction navDir = Direction::Forward;
 
   /// Target Boundary check directive - always false here
   BoundaryCheck boundaryCheck = false;
@@ -36,7 +37,7 @@ struct TargetOptions {
   double pathLimit = std::numeric_limits<double>::max();
 
   /// create target options
-  TargetOptions(NavigationDirection ndir) : navDir(ndir) {}
+  TargetOptions(Direction ndir) : navDir(ndir) {}
 };
 
 /// This is the condition that the pathLimit has been reached
@@ -113,8 +114,8 @@ struct SurfaceReached {
   /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in,out] state The propagation state object
-  /// @param [in] stepper Stepper used for the progation
-  /// @param [in] navigator Navigator used for the progation
+  /// @param [in] stepper Stepper used for the propagation
+  /// @param [in] navigator Navigator used for the propagation
   /// @param [in] targetSurface The target surface
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
@@ -139,7 +140,8 @@ struct SurfaceReached {
     const double tolerance = state.options.targetTolerance;
     const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
-        state.stepping.navDir * stepper.direction(state.stepping), true);
+        state.stepping.navDir * stepper.direction(state.stepping), true,
+        tolerance);
 
     // The target is reached
     bool targetReached = (sIntersection.intersection.status ==
@@ -222,7 +224,7 @@ struct ParticleStopped {
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
-    if (stepper.momentum(state.stepping) > 0) {
+    if (stepper.absoluteMomentum(state.stepping) > 0) {
       return false;
     }
     navigator.targetReached(state.navigation, true);

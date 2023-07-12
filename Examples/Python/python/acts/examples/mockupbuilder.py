@@ -1,3 +1,5 @@
+import os
+
 import acts
 import acts.examples.geant4 as actsG4
 
@@ -18,18 +20,20 @@ mockupChamberConfigOuter.name = "Outer_Detector_Chamber"
 mockupChamberConfigOuter.SensitiveNames = ["Outer_Skin"]
 mockupChamberConfigOuter.PassiveNames = ["xx"]
 
-mockupConfig.gdmlPath = "/home/dimitra/ACTS_Dimitra/acts/Examples/Python/python/acts/examples/MuonChamber.gdml"
+dirOfThisScript = os.path.dirname(__file__)
+mockupConfig.gdmlPath = os.path.join(
+    dirOfThisScript,
+    "../../../../Detectors/MuonSpectrometerMockupDetector/MuonChamber.gdml",
+)
 mockupConfig.NumberOfSectors = 8
 
 mockupBuilder = actsG4.MockupSectorBuilder(mockupConfig)
-print("hello")
+
 detectorVolumeInner = mockupBuilder.buildChamber(mockupChamberConfigInner)
-print("inner built")
+
 detectorVolumeOuter = mockupBuilder.buildChamber(mockupChamberConfigOuter)
-print("outer built")
+
 detectorVolumeMiddle = mockupBuilder.buildChamber(mockupChamberConfigMiddle)
-print("middle built")
-print("hello")
 
 detectorVolumes = [detectorVolumeInner, detectorVolumeMiddle, detectorVolumeOuter]
 

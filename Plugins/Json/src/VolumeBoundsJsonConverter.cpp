@@ -14,6 +14,10 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
+
+#include <algorithm>
+#include <stdexcept>
 
 void Acts::to_json(nlohmann::json& j, const Acts::VolumeBounds& bounds) {
   j["type"] = volumeBoundTypes[bounds.type()];

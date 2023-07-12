@@ -1,0 +1,37 @@
+'Infrastructure':
+  - .github/**
+  - CI/**
+  - cmake/**
+'Component - Core':
+  - Core/**
+  - Tests/UnitTests/Core/**
+'Component - Examples':
+  - Examples/**
+  - Tests/UnitTests/Examples/**
+'Component - Fatras':
+  - Fatras/**
+  - Tests/UnitTests/Fatras/**
+'Component - Plugins':
+  - Plugins/**
+  - Tests/UnitTests/Plugins/**
+'Component - Documentation':
+  - docs/**
+'Changes Performance':
+  - CI/physmon/reference/**
+  - Examples/Python/tests/root_file_hashes.txt
+'Event Data Model':
+  - '**/*EventData*/**'
+'Clustering':
+  - '**/*Clusterization*/**'
+'SP formation':
+  - '**/*SpacePointFormation*/**'
+'Seeding':
+  - '**/*Seeding*/**'
+'Track Finding':
+  - '**/*TrackFinding*/**'
+'Track Fitting':
+  - '**/*TrackFitting*/**'
+'Vertexing':
+  - '**/*Vertexing*/**'
+'Ambiguity Resolution':
+  - '**/*AmbiguityResolution*/**'

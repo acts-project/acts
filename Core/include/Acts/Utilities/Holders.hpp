@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <utility>
+
 namespace Acts::detail {
 
 /// Internal holder type for referencing a backend without ownership
@@ -15,14 +17,28 @@ template <typename T>
 struct RefHolder {
   T* ptr;
 
-  RefHolder(T* _ptr) : ptr{_ptr} {}
-  RefHolder(T& ref) : ptr{&ref} {}
+  explicit RefHolder(T* _ptr) : ptr{_ptr} {}
+  explicit RefHolder(T& ref) : ptr{&ref} {}
 
   const T& operator*() const { return *ptr; }
   T& operator*() { return *ptr; }
 
   const T* operator->() const { return ptr; }
   T* operator->() { return ptr; }
+};
+
+/// Internal holder type for referencing a backend without ownership that is
+/// const
+template <typename T>
+struct ConstRefHolder {
+  const T* ptr;
+
+  explicit ConstRefHolder(const T* _ptr) : ptr{_ptr} {}
+  explicit ConstRefHolder(const T& ref) : ptr{&ref} {}
+
+  const T& operator*() const { return *ptr; }
+
+  const T* operator->() const { return ptr; }
 };
 
 /// Internal holder type holding a backend container by value
@@ -33,7 +49,10 @@ struct ValueHolder {
   // Let's be clear with the user that we take the ownership
   // Only require rvalues and avoid hidden copies
   ValueHolder(T& _val) = delete;
-  ValueHolder(T&& _val) : val{std::move(_val)} {}
+  // @FIXME: Ideally we want this to be explicit, but cannot be explicit,
+  // because using an explicit constructor and a deduction guide leads to
+  // a SEGFAULT in GCC11 (an up?). Re-evaluate down the line
+  /* explicit */ ValueHolder(T&& _val) : val{std::move(_val)} {}
 
   // Does it makes sense to allow copy operations?
 

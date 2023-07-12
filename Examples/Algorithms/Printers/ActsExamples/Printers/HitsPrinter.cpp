@@ -9,13 +9,17 @@
 #include "HitsPrinter.hpp"
 
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <algorithm>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 ActsExamples::HitsPrinter::HitsPrinter(

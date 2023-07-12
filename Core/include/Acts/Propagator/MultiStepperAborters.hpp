@@ -35,7 +35,7 @@ struct MultiStepperSurfaceReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
-  /// @param [in] navigator Navigator used for the progation
+  /// @param [in] navigator Navigator used for the propagation
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
@@ -52,8 +52,8 @@ struct MultiStepperSurfaceReached {
   /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in,out] state The propagation state object
-  /// @param [in] stepper Stepper used for the progation
-  /// @param [in] navigator Navigator used for the progation
+  /// @param [in] stepper Stepper used for the propagation
+  /// @param [in] navigator Navigator used for the propagation
   /// @param [in] targetSurface The target surface
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
@@ -80,11 +80,11 @@ struct MultiStepperSurfaceReached {
     if (averageOnSurface) {
       const auto sIntersection = targetSurface.intersect(
           state.geoContext, stepper.position(state.stepping),
-          state.stepping.navDir * stepper.direction(state.stepping), true);
+          state.stepping.navDir * stepper.direction(state.stepping), true,
+          averageOnSurfaceTolerance);
 
       if (sIntersection.intersection.status ==
-              Intersection3D::Status::onSurface or
-          sIntersection.intersection.pathLength < averageOnSurfaceTolerance) {
+          Intersection3D::Status::onSurface) {
         ACTS_VERBOSE("Reached target in average mode");
         navigator.currentSurface(state.navigation, &targetSurface);
         navigator.targetReached(state.navigation, true);

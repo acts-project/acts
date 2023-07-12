@@ -122,7 +122,7 @@ struct SinglyCharged {
 /// approximate comparison with an arbitrary epsilon.
 class AnyCharge {
  public:
-  /// Delete default constructor to ensure charge is always explicitely given.
+  /// Delete default constructor to ensure charge is always explicitly given.
   AnyCharge() = delete;
   /// Construct with the magnitude of the input charge.
   template <typename T>

@@ -16,7 +16,9 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <cstddef>
 #include <fstream>
 
 namespace bdata = boost::unit_test::data;

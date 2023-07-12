@@ -23,6 +23,7 @@ pybind11_add_module(ActsPythonBindings
   src/TrackFitting.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
+  src/AmbiguityResolution.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
@@ -52,6 +53,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesPrinters
   ActsExamplesDetectorTelescope
   ActsExamplesUtilities
+  ActsExamplesAmbiguityResolution
 )
 
 set(py_files 
@@ -109,7 +111,7 @@ if(ACTS_BUILD_EXAMPLES_GEANT4)
   pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
   target_link_libraries(ActsPythonBindingsGeant4 PUBLIC 
     ActsExamplesGeant4 ActsExamplesDetectorGeant4
-    ActsPythonUtilities)
+    ActsPythonUtilities ActsExamplesMuonSpectrometerMockupDetector)
   add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
 
   install(TARGETS ActsPythonBindingsGeant4 DESTINATION ${_python_install_dir})
@@ -165,8 +167,9 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_ONNX)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesFrameworkML ActsExamplesTrackFindingML)
   target_sources(ActsPythonBindings PRIVATE src/Onnx.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibrator.cpp)
   list(APPEND py_files examples/onnx/__init__.py)
 
   if(ACTS_BUILD_PLUGIN_MLPACK)
@@ -179,6 +182,7 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
   target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)

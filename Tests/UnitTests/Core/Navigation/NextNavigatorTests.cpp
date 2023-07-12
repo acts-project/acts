@@ -8,24 +8,36 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/Portal.hpp"
-#include "Acts/Detector/PortalHelper.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NextNavigator.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
+#include <array>
 #include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 Acts::GeometryContext tgContext;
 Acts::MagneticFieldContext mfContext;
@@ -39,6 +51,7 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
       std::make_unique<Acts::CuboidVolumeBounds>(3, 3, 3),
       std::vector<std::shared_ptr<Acts::Surface>>(),
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(),
+      Acts::Experimental::tryAllSubVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -48,13 +61,11 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
       std::vector<std::shared_ptr<Acts::Surface>>(),
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(
           {innerVolume}),
+      Acts::Experimental::tryAllSubVolumes(),
       Acts::Experimental::tryAllPortalsAndSurfaces());
 
   auto detector = Acts::Experimental::Detector::makeShared(
-      "Detector",
-      std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>(
-          {detectorVolume}),
-      Acts::Experimental::tryAllVolumes());
+      "Detector", {detectorVolume}, Acts::Experimental::tryRootVolumes());
 
   using ActionListType = Acts::ActionList<>;
   using AbortListType = Acts::AbortList<>;
