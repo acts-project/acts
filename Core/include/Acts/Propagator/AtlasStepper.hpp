@@ -74,10 +74,10 @@ class AtlasStepper {
       const auto pos = pars.position(gctx);
       const auto Vp = pars.parameters();
 
-      double Sf = sin(Vp[eBoundPhi]);
-      double Cf = cos(Vp[eBoundPhi]);
-      double Se = sin(Vp[eBoundTheta]);
-      double Ce = cos(Vp[eBoundTheta]);
+      double Sf = std::sin(Vp[eBoundPhi]);
+      double Cf = std::cos(Vp[eBoundPhi]);
+      double Se = std::sin(Vp[eBoundTheta]);
+      double Ce = std::cos(Vp[eBoundTheta]);
 
       pVector[0] = pos[ePos0];
       pVector[1] = pos[ePos1];
@@ -168,8 +168,8 @@ class AtlasStepper {
         const auto& surface = pars.referenceSurface();
         // the disc needs polar coordinate adaptations
         if (surface.type() == Surface::Disc) {
-          double lCf = cos(Vp[1]);
-          double lSf = sin(Vp[1]);
+          double lCf = std::cos(Vp[1]);
+          double lSf = std::sin(Vp[1]);
           double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
           double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
           double d0 = lCf * Ax[0] + lSf * Ay[0];
@@ -385,11 +385,13 @@ class AtlasStepper {
   /// @param [in] surface The surface provided
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] logger Logger instance to use
+  /// @param [in] surfaceTolerance Surface tolerance used for intersection
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      const Logger& logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger(),
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
-        *this, state, surface, bcheck, logger);
+        *this, state, surface, bcheck, logger, surfaceTolerance);
   }
 
   /// Update step size
@@ -568,10 +570,10 @@ class AtlasStepper {
     Vector3 pos(state.pVector[0], state.pVector[1], state.pVector[2]);
     Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
 
-    double Sf = sin(boundParams[eBoundPhi]);
-    double Cf = cos(boundParams[eBoundPhi]);
-    double Se = sin(boundParams[eBoundTheta]);
-    double Ce = cos(boundParams[eBoundTheta]);
+    double Sf = std::sin(boundParams[eBoundPhi]);
+    double Cf = std::cos(boundParams[eBoundPhi]);
+    double Se = std::sin(boundParams[eBoundTheta]);
+    double Ce = std::cos(boundParams[eBoundTheta]);
 
     const auto transform = surface.referenceFrame(state.geoContext, pos, mom);
 
@@ -639,8 +641,8 @@ class AtlasStepper {
     // special treatment for surface types
     // the disc needs polar coordinate adaptations
     if (surface.type() == Surface::Disc) {
-      double lCf = cos(boundParams[eBoundLoc1]);
-      double lSf = sin(boundParams[eBoundLoc1]);
+      double lCf = std::cos(boundParams[eBoundLoc1]);
+      double lSf = std::sin(boundParams[eBoundLoc1]);
       double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
       double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
       double d0 = lCf * Ax[0] + lSf * Ay[0];
@@ -1220,7 +1222,7 @@ class AtlasStepper {
           2. * h *
           (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
            std::abs((C1 + C6) - (C3 + C4)));
-      if (EST > state.options.tolerance) {
+      if (std::abs(EST) > std::abs(state.options.tolerance)) {
         h = h * .5;
         state.stepping.stepSize.setValue(h);
         //        dltm = 0.;
