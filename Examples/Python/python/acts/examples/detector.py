@@ -36,7 +36,7 @@ class DetectorVolume:
         shape: acts.VolumeBoundsType
             The bounds type of the volume
         bounds : list of float
-            The bound parameters of the volume, accoring to the volume bounds type.
+            The bound parameters of the volume, according to the volume bounds type.
         transform : acts.Transform3
             The positioning of the volume in global coordinates
         surfaces : list of Surface
@@ -44,7 +44,7 @@ class DetectorVolume:
         binnings : list of int
             The binnings of the layer structure (if existing)
         supports : list of support structure parameters
-            The supports of the layer structure (if exisiting)
+            The supports of the layer structure (if existing)
 
         Returns
         -------
@@ -281,7 +281,7 @@ def createCylindricalContainer(name, dimensions, layer_volumes, binning):
             volume_z = 0.5 * (volume_z_max + volume_z_min)
             volume_transform = acts.Transform3([0.0, 0.0, volume_z])
 
-            # Force detector container dimention onto layer
+            # Force detector container dimension onto layer
             layer.setBounds([layer_r_min, layer_r_max, volume_half_z])
             layer.setTransform(volume_transform)
 
@@ -311,7 +311,7 @@ def createCylindricalContainer(name, dimensions, layer_volumes, binning):
             last_r_max = layer_r_max
         # The container is z-ordered
         elif binning is acts.Binning.z:
-            # Force detector container dimention onto layer
+            # Force detector container dimension onto layer
             layer.setBounds(
                 [volume_r_min, volume_r_max, 0.5 * (layer_z_max - layer_z_min)]
             )
