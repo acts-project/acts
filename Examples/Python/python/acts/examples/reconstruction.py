@@ -150,6 +150,11 @@ AmbiguityResolutionMLDBScanConfig = namedtuple(
     defaults=[None] * 3,
 )
 
+SeedFilterMLDBScanConfig = namedtuple(
+    "SeedFilterMLDBScanConfig",
+    ["epsilonDBScan", "minPointsDBScan"],
+    defaults=[None] * 2,
+)
 
 class VertexFinder(Enum):
     Truth = (1,)
@@ -187,6 +192,7 @@ def addSeeding(
     truthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg = TruthEstimatedSeedingAlgorithmConfigArg(),
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> None:
@@ -345,6 +351,25 @@ def addSeeding(
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
             )
+
+        if outputDirCsv is not None:
+            outputDirCsv = Path(outputDirCsv)
+
+            if not outputDirCsv.exists():
+                outputDirCsv.mkdir()
+
+            CsvSeedWriter = acts.examples.CsvSeedWriter(
+                level=logLevel,
+                inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
+                inputSimSeeds=seeds,
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                outputDir=str(outputDirCsv),
+                fileName=str(f"seed.csv"),
+            )
+            s.addWriter(CsvSeedWriter)
+
 
     return s
 
@@ -791,6 +816,38 @@ def addSeedPerformanceWriters(
             treeName="estimatedparams",
         )
     )
+
+@acts.examples.NamedTypeArgs(
+    config=SeedFilterMLDBScanConfig,
+)
+def addSeedFilterML(
+    s,
+    config: SeedFilterMLDBScanConfig = SeedFilterMLDBScanConfig(),
+    onnxModelFile: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    from acts.examples.onnx.mlpack import SeedFilterMLAlgorithm
+    filterML = SeedFilterMLAlgorithm(
+        level=customLogLevel(),
+        inputTrackParameters="estimatedparameters",
+        inputSimSeeds = "seeds", 
+        inputSeedFilterNN = onnxModelFile,
+        outputTrackParameters = "filtered-parameters",
+        outputSimSeeds = "filtered-seeds",
+        **acts.examples.defaultKWArgs(
+            epsilonDBScan=config.epsilonDBScan,
+            minPointsDBScan=config.minPointsDBScan,
+            minSeed=config.minSeed,
+            minScore=config.minScore
+        ),
+    )
+    s.addAlgorithm(filterML)
+    s.addWhiteboardAlias("seeds", "filtered-seeds")
+    s.addWhiteboardAlias("estimatedparameters", "filtered-parameters")
+
+    return s
 
 
 def addKalmanTracks(
@@ -1365,7 +1422,7 @@ def addAmbiguityResolutionMLDBScan(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import AmbiguityResolutionMLDBScanAlgorithm
+    from acts.examples.onnx.mlpack import AmbiguityResolutionMLDBScanAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 

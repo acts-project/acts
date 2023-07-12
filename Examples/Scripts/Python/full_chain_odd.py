@@ -23,6 +23,8 @@ from acts.examples.reconstruction import (
     AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
+    addSeedFilterML,
+    SeedFilterMLDBScanConfig
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
@@ -85,7 +87,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 ),
                 mean=acts.Vector4(0, 0, 0, 0),
             ),
-            multiplicity=50,
+            multiplicity=200,
             rnd=rnd,
         )
     else:
@@ -162,6 +164,15 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         else TruthSeedRanges(),
         geoSelectionConfigFile=oddSeedingSel,
         outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
+    )
+
+    addSeedFilterML(
+        s,
+        SeedFilterMLDBScanConfig(epsilonDBScan=0.03, minPointsDBScan=2),
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
+        # onnxModelFile="/Users/allaire/Desktop/ACTS-ML-PR/acts/Work/seedduplicateClassifier_test.onnx",
     )
 
     addCKFTracks(
