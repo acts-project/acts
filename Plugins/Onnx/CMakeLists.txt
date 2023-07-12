@@ -4,6 +4,7 @@ add_library(
   include/Acts/Plugins/Onnx/OnnxRuntimeBase.hpp
   include/Acts/Plugins/Onnx/MLTrackClassifier.hpp
   include/Acts/Plugins/Onnx/AmbiguityTrackClassifier.hpp
+  include/Acts/Plugins/Onnx/SeedClassifier.hpp
   # source files
   src/OnnxRuntimeBase.cpp
   src/MLTrackClassifier.cpp)

@@ -16,7 +16,8 @@
 
 namespace Acts {
 
-/// Clusterise seed based on their Z position, their direction and their momentum using DBScan
+/// Clusterise seed based on their Z position, their direction and their
+/// momentum using DBScan
 ///
 /// @param input : Input parameters for the clustering (phi, eta, z, Pt/10)
 /// @param epsilon : Maximum distance between 2 tracks to be clustered

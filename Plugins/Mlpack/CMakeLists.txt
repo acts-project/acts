@@ -1,7 +1,8 @@
 add_library(
   ActsPluginMlpack SHARED
   # header files
-  include/Acts/Plugins/Mlpack/AmbiguityDBScanClustering.hpp)
+  include/Acts/Plugins/Mlpack/AmbiguityDBScanClustering.hpp
+  include/Acts/Plugins/Mlpack/SeedFilterDBScanClustering.hpp)
 
 target_include_directories(
   ActsPluginMlpack

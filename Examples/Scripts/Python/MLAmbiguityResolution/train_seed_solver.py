@@ -10,7 +10,12 @@ from torch.utils.tensorboard import SummaryWriter
 
 from sklearn.preprocessing import LabelEncoder, StandardScaler, OrdinalEncoder
 
-from seed_solver_network import prepareDataSet, DuplicateClassifier, Normalise, EtaAnnotation
+from seed_solver_network import (
+    prepareDataSet,
+    DuplicateClassifier,
+    Normalise,
+    EtaAnnotation,
+)
 
 avg_mean = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 avg_sdv = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -28,12 +33,17 @@ def readDataSet(Seed_files: list[str]) -> pd.DataFrame:
     for f in Seed_files:
         print()
         datafile = pd.read_csv(f)
-        if (f[-11:-4] != "cleaned"):
+        if f[-11:-4] != "cleaned":
             # Remove the particle ID where all seeds are fakes
             cleanedData = pd.DataFrame()
             for ID in datafile["particleId"].unique():
-                if not (datafile.loc[datafile["particleId"] == ID, "good/duplicate/fake"] == "fake").all() :
-                    cleanedData = pd.concat([datafile.loc[datafile["particleId"] == ID], cleanedData])
+                if not (
+                    datafile.loc[datafile["particleId"] == ID, "good/duplicate/fake"]
+                    == "fake"
+                ).all():
+                    cleanedData = pd.concat(
+                        [datafile.loc[datafile["particleId"] == ID], cleanedData]
+                    )
             cleanedData = prepareDataSet(cleanedData)
             # Save the cleaned dataset for futur use (the cleaning is time consuming)
             newName = f[:-4] + "_cleaned.csv"
@@ -122,10 +132,14 @@ def computeLoss(
     batch_loss = batch_loss
     if score_duplicate:
         for s in score_duplicate:
-            batch_loss += F.relu(s - score_good + margin) / (len(score_duplicate) + len(score_fake))
+            batch_loss += F.relu(s - score_good + margin) / (
+                len(score_duplicate) + len(score_fake)
+            )
     if score_fake:
         for s in score_fake:
-            batch_loss += F.relu(s - score_good + 3 * margin) / (len(score_duplicate) + len(score_fake))
+            batch_loss += F.relu(s - score_good + 3 * margin) / (
+                len(score_duplicate) + len(score_fake)
+            )
     return batch_loss
 
 
@@ -190,7 +204,7 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
                 score_good = pred
             elif truth == 0:
                 score_duplicate.append(pred)
-            else :
+            else:
                 score_fake.append(pred)
             # Prepare efficiency computtion
             if pred == max_score:
@@ -203,7 +217,9 @@ def scoringBatch(batch: list[pd.DataFrame], Optimiser=0) -> tuple[int, int, floa
             nb_good_match += 1
         if max_score == 2:
             nb_best_match += 1
-        batch_loss = computeLoss(score_good, score_duplicate, score_fake, batch_loss, margin=0.1)
+        batch_loss = computeLoss(
+            score_good, score_duplicate, score_fake, batch_loss, margin=0.1
+        )
         nb_part += 1
         # Normalise the loss to the batch size
         batch_loss = batch_loss / len(b_data[0])
@@ -247,20 +263,37 @@ def train(
         nb_good_match = 0.0
 
         # Loop over all the network over the training batch
-        nb_part, nb_good_match, nb_best_match, loss = scoringBatch(batch[:val_batch], Optimiser=opt)
-        print("Loss/train : ", loss, " Eff/train : ", nb_good_match / nb_part, " Eff_best/train : ", nb_best_match / nb_part)
+        nb_part, nb_good_match, nb_best_match, loss = scoringBatch(
+            batch[:val_batch], Optimiser=opt
+        )
+        print(
+            "Loss/train : ",
+            loss,
+            " Eff/train : ",
+            nb_good_match / nb_part,
+            " Eff_best/train : ",
+            nb_best_match / nb_part,
+        )
         writer.add_scalar("Loss/train", loss, epoch)
         writer.add_scalar("Eff/train", nb_good_match / nb_part, epoch)
         writer.add_scalar("Eff_best/train", nb_best_match / nb_part, epoch)
 
         # If using validation, compute the efficiency and loss over the training batch
         if validation > 0.0:
-            nb_part, nb_good_match, nb_best_match, loss = scoringBatch(batch[val_batch:])
+            nb_part, nb_good_match, nb_best_match, loss = scoringBatch(
+                batch[val_batch:]
+            )
             writer.add_scalar("Loss/val", loss, epoch)
             writer.add_scalar("Eff/val", nb_good_match / nb_part, epoch)
             writer.add_scalar("Eff_best/train", nb_best_match / nb_part, epoch)
-            print("Loss/val : ", loss, " Eff/val : ", nb_good_match / nb_part, " Eff_best/val : ", nb_best_match / nb_part)
-            
+            print(
+                "Loss/val : ",
+                loss,
+                " Eff/val : ",
+                nb_good_match / nb_part,
+                " Eff_best/val : ",
+                nb_best_match / nb_part,
+            )
 
     writer.close()
     return duplicateClassifier

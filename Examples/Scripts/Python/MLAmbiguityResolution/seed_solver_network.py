@@ -19,7 +19,7 @@ def prepareDataSet(data: pd.DataFrame) -> pd.DataFrame:
     # Sort by particle ID
     data = data.sort_values("particleId")
     # Set truth particle ID as index
-    print(data.shape[0]/data["particleId"].nunique())
+    print(data.shape[0] / data["particleId"].nunique())
     print(data["particleId"].nunique())
     print(data.loc[data["good/duplicate/fake"] == "good"].shape[0])
     print("=====")
@@ -65,12 +65,13 @@ class Normalise(nn.Module):
         z = z - self.mean
         z = z / self.std
         return z
-    
+
 
 class EtaAnnotation(nn.Module):
     """Perform the eta annotation of the input before the MLP model. Based on : https://cds.cern.ch/record/2856774/files/ATL-COM-PHYS-2023-283.pdf"""
+
     # Doesn't appear to improve the performance of the model
-    # Kept as it could be useful for further studies 
+    # Kept as it could be useful for further studies
     def __init__(self):
         super(EtaAnnotation, self).__init__()
 
@@ -79,10 +80,12 @@ class EtaAnnotation(nn.Module):
         self.std = [0.8, 0.7, 0.6, 0.5, 0.4, 0.2, 0.4, 0.5, 0.6, 0.7, 0.8]
 
     def forward(self, z):
-        eta = torch.abs(z[:,1])
+        eta = torch.abs(z[:, 1])
         anotation = torch.zeros(eta.size(0), 11)
         for i in range(11):
-            anotation[:,i] = torch.exp(-((eta - self.mean[i]) ** 2) / (2 * self.std[i] ** 2))
+            anotation[:, i] = torch.exp(
+                -((eta - self.mean[i]) ** 2) / (2 * self.std[i] ** 2)
+            )
         anotation = F.relu(self.linear(anotation))
         out = torch.cat((z, anotation), 1)
         return out
