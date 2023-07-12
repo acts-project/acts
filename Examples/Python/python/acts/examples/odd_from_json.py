@@ -45,6 +45,7 @@ pixelEndcapConfigs = [
     [1320.0, 5.0],
     [1520.0, 5.0],
 ]
+nPEs = len(pixelEndcapConfigs)
 
 # Pixel endcap section
 pixelEndcapBinningR = acts.ProtoBinning(
@@ -54,7 +55,7 @@ pixelEndcapBinningPhi = acts.ProtoBinning(
     acts.Binning.phi, acts.Binning.closed, -math.pi, math.pi, 56, 1
 )
 pixelEndcapConfigsN = [
-    [-pixelEndcapConfigs[i][0], pixelEndcapConfigs[i][1]] for i in range(7)
+    [-pixelEndcapConfigs[i][0], pixelEndcapConfigs[i][1]] for i in range(nPEs)
 ]
 pixelEndcapConfigsN.reverse()
 
@@ -62,22 +63,24 @@ pixelNegativeEndcap = detector.createEndcap(
     "PixelNegativeEndcap",
     [beamPipeRmax, pixelRmax, -detectorZmax, -pixelZmid],
     pixelEndcapConfigsN,
-    [LayerSurfaces(svlMap[16][4 + i * 2]) for i in range(7)],
-    [[pixelEndcapBinningR, pixelEndcapBinningPhi] for i in range(7)],
+    [LayerSurfaces(svlMap[16][4 + i * 2]) for i in range(nPEs)],
+    [[pixelEndcapBinningR, pixelEndcapBinningPhi] for i in range(nPEs)],
 )
 
 pixelPositiveEndcap = detector.createEndcap(
     "PixelPositiveEndcap",
     [beamPipeRmax, pixelRmax, pixelZmid, detectorZmax],
     pixelEndcapConfigs,
-    [LayerSurfaces(svlMap[18][2 + i * 2]) for i in range(7)],
-    [[pixelEndcapBinningR, pixelEndcapBinningPhi] for i in range(7)],
+    [LayerSurfaces(svlMap[18][2 + i * 2]) for i in range(nPEs)],
+    [[pixelEndcapBinningR, pixelEndcapBinningPhi] for i in range(nPEs)],
 )
 
 # Pixel barrel section
 pixelBarrelDims = [beamPipeRmax, pixelRmax, -pixelZmid, pixelZmid]
+nPBs = len(pixelBarrelDims)
+
 pixelBarrelConfigs = [[34.0, 5.0], [70.0, 5], [116.0, 5.0], [172.0, 5.0]]
-pixelBarrelSurfaces = [LayerSurfaces(svlMap[17][2 + i * 2]) for i in range(4)]
+pixelBarrelSurfaces = [LayerSurfaces(svlMap[17][2 + i * 2]) for i in range(nPBs)]
 pixelBarrelBinningZ = acts.ProtoBinning(
     acts.Binning.z, acts.Binning.bound, -500, 500, 14, 1
 )
@@ -128,9 +131,10 @@ sstripEndcapConfigs = [
     [2550.0, 15.0],
     [2950.0, 15.0],
 ]
+nSEs = len(sstripEndcapConfigs)
 
 sstripEndcapConfigsN = [
-    [-sstripEndcapConfigs[i][0], sstripEndcapConfigs[i][1]] for i in range(6)
+    [-sstripEndcapConfigs[i][0], sstripEndcapConfigs[i][1]] for i in range(nSEs)
 ]
 sstripEndcapConfigsN.reverse()
 
@@ -138,20 +142,22 @@ sstripNegativeEndcap = detector.createEndcap(
     "ShortsStripsNegativeEndcap",
     [pstRmax, sstripRmax, -detectorZmax, -sstripZmid],
     sstripEndcapConfigsN,
-    [LayerSurfaces(svlMap[23][2 + i * 2]) for i in range(6)],
-    [[sstripEndcapBinningR, sstripEndcapBinningPhi] for i in range(6)],
+    [LayerSurfaces(svlMap[23][2 + i * 2]) for i in range(nSEs)],
+    [[sstripEndcapBinningR, sstripEndcapBinningPhi] for i in range(nSEs)],
 )
 
 sstripPositiveEndcap = detector.createEndcap(
     "ShortStripsPositiveEndcap",
     [pstRmax, sstripRmax, sstripZmid, detectorZmax],
     sstripEndcapConfigs,
-    [LayerSurfaces(svlMap[25][2 + i * 2]) for i in range(6)],
-    [[sstripEndcapBinningR, sstripEndcapBinningPhi] for i in range(6)],
+    [LayerSurfaces(svlMap[25][2 + i * 2]) for i in range(nSEs)],
+    [[sstripEndcapBinningR, sstripEndcapBinningPhi] for i in range(nSEs)],
 )
 
 # SStrip barrel
 sstripBarrelConfigs = [[260.0, 25], [360.0, 25.0], [500.0, 25.0], [660.0, 25.0]]
+nSBs = len(sstripBarrelConfigs)
+
 sstripBarrelBinningZ = acts.ProtoBinning(
     acts.Binning.z, acts.Binning.bound, -1100, 1100, 21, 1
 )
@@ -160,13 +166,12 @@ sstripBarrel = detector.createBarrel(
     "ShortStripsBarrel",
     [pstRmax, sstripRmax, -sstripZmid, sstripZmid],
     sstripBarrelConfigs,
-    [LayerSurfaces(svlMap[24][2 + i * 2]) for i in range(4)],
+    [LayerSurfaces(svlMap[24][2 + i * 2]) for i in range(nSBs)],
     [
         [sstripBarrelBinningZ, detector.phiBinning(sstripBarrelPhiBins[i], 1)]
-        for i in range(4)
+        for i in range(nSBs)
     ],
 )
-
 
 sstripContainer = detector.ContainerStructure(
     "ShortStrips",
@@ -195,9 +200,10 @@ lstripEndcapConfigs = [
     [2600.0, 25.0],
     [3000.0, 25.0],
 ]
+nLEs = len(lstripEndcapConfigs)
 
 lstripEndcapConfigsN = [
-    [-lstripEndcapConfigs[i][0], lstripEndcapConfigs[i][1]] for i in range(6)
+    [-lstripEndcapConfigs[i][0], lstripEndcapConfigs[i][1]] for i in range(nLEs)
 ]
 lstripEndcapConfigsN.reverse()
 
@@ -205,16 +211,16 @@ lstripNegativeEndcap = detector.createEndcap(
     "LongStripsNegativeEndcap",
     [sstripRmax, lstripRmax, -detectorZmax, -lstripZmid],
     lstripEndcapConfigsN,
-    [LayerSurfaces(svlMap[28][2 + i * 2]) for i in range(6)],
-    [[lstripEndcapBinningR, lstripEndcapBinningPhi] for i in range(6)],
+    [LayerSurfaces(svlMap[28][2 + i * 2]) for i in range(nLEs)],
+    [[lstripEndcapBinningR, lstripEndcapBinningPhi] for i in range(nLEs)],
 )
 
 lstripPositiveEndcap = detector.createEndcap(
     "LongStripsPositiveEndcap",
     [sstripRmax, lstripRmax, lstripZmid, detectorZmax],
     lstripEndcapConfigs,
-    [LayerSurfaces(svlMap[30][2 + i * 2]) for i in range(6)],
-    [[lstripEndcapBinningR, lstripEndcapBinningPhi] for i in range(6)],
+    [LayerSurfaces(svlMap[30][2 + i * 2]) for i in range(nLEs)],
+    [[lstripEndcapBinningR, lstripEndcapBinningPhi] for i in range(nLEs)],
 )
 
 # SStrip barrel
@@ -223,12 +229,13 @@ lstripBarrelBinningZ = acts.ProtoBinning(
     acts.Binning.z, acts.Binning.bound, -1100, 1100, 21, 1
 )
 lstripBarrelPhiBins = [40, 56]
+nLBs = len(lstripBarrelConfigs)
 
 lstripBarrel = detector.createBarrel(
     "LongStripsBarrel",
     [sstripRmax, lstripRmax, -lstripZmid, lstripZmid],
     lstripBarrelConfigs,
-    [LayerSurfaces(svlMap[29][2 + i * 2]) for i in range(2)],
+    [LayerSurfaces(svlMap[29][2 + i * 2]) for i in range(nLBs)],
     [
         [lstripBarrelBinningZ, detector.phiBinning(lstripBarrelPhiBins[i], 1)]
         for i in range(2)
