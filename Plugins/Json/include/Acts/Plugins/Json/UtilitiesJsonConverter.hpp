@@ -13,10 +13,15 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Range1D.hpp"
 
+#include <nlohmann/json.hpp>
+
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 
 namespace Acts {
+class BinningData;
+template <typename Type>
+class Range1D;
 
 void to_json(nlohmann::json& j, const BinningData& bd);
 

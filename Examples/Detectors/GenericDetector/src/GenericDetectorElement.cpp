@@ -8,10 +8,10 @@
 
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
-#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+
+#include <utility>
 
 ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
     const Identifier identifier,

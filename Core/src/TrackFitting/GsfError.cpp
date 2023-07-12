@@ -8,6 +8,8 @@
 
 #include "Acts/TrackFitting/GsfError.hpp"
 
+#include <string>
+
 namespace {
 
 class GsfErrorCategory : public std::error_category {

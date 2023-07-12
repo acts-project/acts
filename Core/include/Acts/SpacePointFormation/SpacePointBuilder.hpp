@@ -53,7 +53,7 @@ class SpacePointBuilder {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param sourceLinks vector of Sourcelink
-  /// @param opt option for the space point bulding. It contains the ends of the strips for strip SP building
+  /// @param opt option for the space point building. It contains the ends of the strips for strip SP building
   /// @param spacePointIt Output iterator for the space point
   template <template <typename...> typename container_t>
   void buildSpacePoint(

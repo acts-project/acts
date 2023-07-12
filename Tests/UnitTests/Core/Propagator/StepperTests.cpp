@@ -9,31 +9,67 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/BoundarySurfaceT.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
-#include "Acts/Material/IVolumeMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
-#include <fstream>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <limits>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class ISurfaceMaterial;
+class Logger;
+}  // namespace Acts
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -139,8 +175,7 @@ struct StepCollector {
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
-    result.momentum.push_back(stepper.momentum(state.stepping) *
-                              stepper.direction(state.stepping));
+    result.momentum.push_back(stepper.momentum(state.stepping));
   }
 };
 
@@ -223,7 +258,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test the getters
   CHECK_CLOSE_ABS(es.position(esState), pos, eps);
   CHECK_CLOSE_ABS(es.direction(esState), dir, eps);
-  CHECK_CLOSE_ABS(es.momentum(esState), absMom, eps);
+  CHECK_CLOSE_ABS(es.absoluteMomentum(esState), absMom, eps);
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
   //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
@@ -262,7 +297,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
             newTime);
   BOOST_CHECK_EQUAL(es.position(esState), newPos);
   BOOST_CHECK_EQUAL(es.direction(esState), newMom.normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esState), newMom.norm());
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esState), newMom.norm());
   BOOST_CHECK_EQUAL(es.charge(esState), charge);
   BOOST_CHECK_EQUAL(es.time(esState), newTime);
 
@@ -359,7 +394,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -384,7 +419,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -410,7 +445,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(es.direction(esStateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(es.momentum(esStateCopy),
+  BOOST_CHECK_EQUAL(es.absoluteMomentum(esStateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
@@ -483,7 +518,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
             *plane);
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
-  CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
+  CHECK_CLOSE_REL(es.absoluteMomentum(esState), 2 * absMom, eps);
   BOOST_CHECK_EQUAL(es.charge(esState), -1. * charge);
   CHECK_CLOSE_OR_SMALL(es.time(esState), 2. * time, eps, eps);
   CHECK_CLOSE_COVARIANCE(esState.cov, Covariance(2. * cov), eps);
@@ -519,7 +554,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 /// the DenseEnvironmentExtension. The focus of this tests lies in the
 /// choosing of the right extension for the individual use case. This is
 /// performed with three different detectors:
-/// a) Pure vaccuum -> DefaultExtension needs to act
+/// a) Pure vacuum -> DefaultExtension needs to act
 /// b) Pure Be -> DenseEnvironmentExtension needs to act
 /// c) Vacuum - Be - Vacuum -> Both should act and switch during the
 /// propagation
@@ -587,7 +622,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Check that the propagation happend without interactions
+  // Check that the propagation happened without interactions
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
@@ -694,7 +729,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Check that there occured interaction
+  // Check that there occurred interaction
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
@@ -766,7 +801,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   const StepCollector::this_result& stepResultB =
       resultB.get<typename StepCollector::result_type>();
 
-  // Check that there occured interaction
+  // Check that there occurred interaction
   for (const auto& pos : stepResultB.position) {
     if (pos == stepResultB.position.front()) {
       CHECK_SMALL(pos, 1_um);
@@ -1092,7 +1127,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   const StepCollector::this_result& stepResult =
       result.get<typename StepCollector::result_type>();
 
-  // Test that momentum changes only occured at the right detector parts
+  // Test that momentum changes only occurred at the right detector parts
   double lastMomentum = stepResult.momentum[0].x();
   for (unsigned int i = 0; i < stepResult.position.size(); i++) {
     // Test for changes

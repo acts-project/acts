@@ -42,7 +42,7 @@ void reconstructionPerformance(std::vector<std::string> inputFileNames) {
 
   unsigned int imode = 1;
   for (auto fileName : inputFileNames) {
-    // Te approprate file
+    // The appropriate file
     auto file = TFile::Open(fileName.c_str(), "read");
     unsigned int itag = 0;
     for (const auto& t : tags) {

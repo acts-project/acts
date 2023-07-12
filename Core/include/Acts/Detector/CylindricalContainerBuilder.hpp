@@ -10,6 +10,8 @@
 
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -39,8 +41,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
-    /// Auxilliary information, mainly for screen output
-    std::string auxilliary = "";
+    /// Auxiliary information, mainly for screen output
+    std::string auxiliary = "";
   };
 
   /// Constructor with configuration arguments
@@ -54,18 +56,16 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
 
   /// The final implementation of the cylindrical container builder
   ///
-  /// @param roots [in,out] the detector root volumes
   /// @param gctx The geometry context for this call
   ///
   /// @return an outgoing detector component
-  DetectorComponent construct(RootDetectorVolumes& roots,
-                              const GeometryContext& gctx) const final;
+  DetectorComponent construct(const GeometryContext& gctx) const final;
 
  private:
   /// configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// logging instance

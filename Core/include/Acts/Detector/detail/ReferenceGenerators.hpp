@@ -30,14 +30,14 @@ struct CenterReferenceGenerator {
   /// @param gctx the geometry context of this operation
   /// @param surface the surface for which the reference point is to be accessed
   ///
-  /// @return a vector of referene points for filling
+  /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const {
     return {surface.center(gctx)};
   }
 };
 
-/// A struct to access reference postions based on bin values
+/// A struct to access reference positions based on bin values
 ///
 /// This generator will provide only one filling point and hence
 /// only a single bin in the indexed grid.
@@ -45,12 +45,12 @@ struct BinningValueReferenceGenerator {
   /// The binning value
   BinningValue bValue = BinningValue::binValues;
 
-  /// Helper to access a reference postion based on binning value
+  /// Helper to access a reference position based on binning value
   ///
   /// @param gctx the geometry context of this operation
   /// @param surface the surface for which the reference point is to be accessed
   ///
-  /// @return a vector of referene points for filling
+  /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const {
     return {surface.binningPosition(gctx, bValue)};
@@ -75,7 +75,7 @@ struct PolyhedronReferenceGenerator {
   /// @param gctx the geometry context of this operation
   /// @param surface the surface for which the reference point is to be accessed
   ///
-  /// @return a vector of referene points for filling
+  /// @return a vector of reference points for filling
   const std::vector<Vector3> references(const GeometryContext& gctx,
                                         const Surface& surface) const {
     // Create the return  vector

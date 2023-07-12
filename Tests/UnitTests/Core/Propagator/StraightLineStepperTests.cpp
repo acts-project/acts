@@ -8,13 +8,34 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <functional>
 #include <limits>
+#include <memory>
+#include <optional>
+#include <string>
+#include <tuple>
+#include <utility>
 
 namespace tt = boost::test_tools;
 using Acts::VectorHelpers::makeVector4;
@@ -73,7 +94,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.cov, Covariance::Zero());
   CHECK_CLOSE_OR_SMALL(sls.position(slsState), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(sls.direction(slsState), dir.normalized(), eps, eps);
-  CHECK_CLOSE_REL(sls.momentum(slsState), absMom, eps);
+  CHECK_CLOSE_REL(sls.absoluteMomentum(slsState), absMom, eps);
   BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), time, eps, eps);
   BOOST_CHECK_EQUAL(slsState.navDir, navDir);
@@ -128,7 +149,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Test the getters
   CHECK_CLOSE_ABS(sls.position(slsState), pos, 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsState), dir, 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsState), absMom, 1e-6);
+  CHECK_CLOSE_ABS(sls.absoluteMomentum(slsState), absMom, 1e-6);
   BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
   BOOST_CHECK_EQUAL(sls.time(slsState), time);
 
@@ -149,7 +170,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   auto curvState = sls.curvilinearState(slsState);
   auto curvPars = std::get<0>(curvState);
   CHECK_CLOSE_ABS(curvPars.position(tgContext), cp.position(tgContext), 1e-6);
-  CHECK_CLOSE_ABS(curvPars.momentum(), cp.momentum(), 1e-6);
+  CHECK_CLOSE_ABS(curvPars.absoluteMomentum(), cp.absoluteMomentum(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.charge(), cp.charge(), 1e-6);
   CHECK_CLOSE_ABS(curvPars.time(), cp.time(), 1e-6);
   BOOST_CHECK(curvPars.covariance().has_value());
@@ -166,7 +187,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
              newTime);
   CHECK_CLOSE_ABS(sls.position(slsState), newPos, 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsState), newMom.normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsState), newMom.norm(), 1e-6);
+  CHECK_CLOSE_ABS(sls.absoluteMomentum(slsState), newMom.norm(), 1e-6);
   BOOST_CHECK_EQUAL(sls.charge(slsState), charge);
   BOOST_CHECK_EQUAL(sls.time(slsState), newTime);
 
@@ -189,7 +210,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(ps.stepping), newMom.normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(ps.stepping), newMom.norm(), 1e-6);
+  CHECK_CLOSE_ABS(sls.absoluteMomentum(ps.stepping), newMom.norm(), 1e-6);
   CHECK_CLOSE_ABS(sls.charge(ps.stepping), charge, 1e-6);
   BOOST_CHECK_LT(sls.time(ps.stepping), newTime);
   BOOST_CHECK_EQUAL(ps.stepping.derivative, FreeVector::Zero());
@@ -202,7 +223,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(ps.stepping), newMom.normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(ps.stepping), newMom.norm(), 1e-6);
+  CHECK_CLOSE_ABS(sls.absoluteMomentum(ps.stepping), newMom.norm(), 1e-6);
   CHECK_CLOSE_ABS(sls.charge(ps.stepping), charge, 1e-6);
   BOOST_CHECK_LT(sls.time(ps.stepping), newTime);
   BOOST_CHECK_NE(ps.stepping.derivative, FreeVector::Zero());
@@ -239,7 +260,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreePos0), 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsStateCopy),
                   freeParams.template segment<3>(eFreeDir0).normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
+  CHECK_CLOSE_ABS(sls.absoluteMomentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
   CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
@@ -265,7 +286,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreePos0), 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsStateCopy),
                   freeParams.template segment<3>(eFreeDir0), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
+  CHECK_CLOSE_ABS(sls.absoluteMomentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
   CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
@@ -292,7 +313,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                   freeParams.template segment<3>(eFreePos0), 1e-6);
   CHECK_CLOSE_ABS(sls.direction(slsStateCopy),
                   freeParams.template segment<3>(eFreeDir0).normalized(), 1e-6);
-  CHECK_CLOSE_ABS(sls.momentum(slsStateCopy),
+  CHECK_CLOSE_ABS(sls.absoluteMomentum(slsStateCopy),
                   std::abs(1. / freeParams[eFreeQOverP]), 1e-6);
   CHECK_CLOSE_ABS(sls.charge(slsStateCopy), -sls.charge(ps.stepping), 1e-6);
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);

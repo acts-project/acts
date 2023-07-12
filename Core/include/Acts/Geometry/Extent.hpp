@@ -32,7 +32,7 @@ constexpr ExtentEnvelope zeroEnvelopes = {
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope,
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope};
 
-/// A class representing the geometric extent of an object in its possbile
+/// A class representing the geometric extent of an object in its possible
 /// dimensions, these can be all dimensions that are described as BinningValues
 ///
 /// The extent object can have an optional envelope in all of those values
@@ -154,7 +154,7 @@ class Extent {
 
   /// Return the histogram store
   ///
-  /// The histogram stroe can be used for automated binning detection
+  /// The histogram store can be used for automated binning detection
   const std::array<std::vector<ActsScalar>, binValues>& valueHistograms() const;
 
   /// Access the minimum parameter

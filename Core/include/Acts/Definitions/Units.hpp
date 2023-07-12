@@ -124,7 +124,7 @@ namespace Acts {
 ///    double bfield   = 3.9_T;
 ///
 ///    // convert output values (via unit constants)
-///    doube t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
+///    double t_in_ns    = trackPars.time() / Acts::UnitConstants::ns;
 ///    // convert output values (via unit user literals)
 ///    double x_in_mm   = trackPars.position()[ePos0] / 1_mm;
 ///    double p_in_TeV = trackPars.absoluteMomentum() / 1_TeV;
@@ -187,7 +187,6 @@ constexpr double g = 1.0 / 1.782662e-24;
 constexpr double kg = 1.0 / 1.782662e-27;
 // Charge, native unit e (elementary charge)
 constexpr double e = 1.0;
-constexpr double C = J / eV;
 // Magnetic field, native unit GeV/(e*mm)
 constexpr double T = 0.000299792458;  // equivalent to c in appropriate SI units
 constexpr double Gauss = 1e-4 * T;
@@ -240,7 +239,6 @@ ACTS_DEFINE_UNIT_LITERAL(u)
 ACTS_DEFINE_UNIT_LITERAL(g)
 ACTS_DEFINE_UNIT_LITERAL(kg)
 ACTS_DEFINE_UNIT_LITERAL(e)
-ACTS_DEFINE_UNIT_LITERAL(C)
 ACTS_DEFINE_UNIT_LITERAL(T)
 ACTS_DEFINE_UNIT_LITERAL(Gauss)
 ACTS_DEFINE_UNIT_LITERAL(kGauss)
@@ -253,6 +251,8 @@ ACTS_DEFINE_UNIT_LITERAL(mol)
 ///
 /// Unit constants are intentionally not listed.
 namespace PhysicalConstants {
+// Speed of light
+constexpr double c = 1.0;
 /// Reduced Planck constant h/2*pi.
 ///
 /// Computed from CODATA 2018 constants to double precision.

@@ -17,10 +17,16 @@ namespace Acts {
 
 class BoostTrackBuilding final : public Acts::TrackBuildingBase {
  public:
-  std::vector<std::vector<int>> operator()(std::any nodes, std::any edges,
-                                           std::any edge_weights,
-                                           std::vector<int> &spacepointIDs,
-                                           const Logger &logger) override;
+  BoostTrackBuilding(std::unique_ptr<const Logger> logger)
+      : m_logger(std::move(logger)){};
+
+  std::vector<std::vector<int>> operator()(
+      std::any nodes, std::any edges, std::any edge_weights,
+      std::vector<int> &spacepointIDs) override;
+
+ private:
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const auto &logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

@@ -31,10 +31,10 @@ template <typename aopt_t>
 void addMaterialMappingOptions(aopt_t& opt) {
   opt.add_options()(
       "mat-mapping-emptybins", po::value<bool>()->default_value(true),
-      "Empty bin correction (recommended). Corrects for vaccuum/emtpy "
-      "assigments.")("mat-mapping-surfaces",
-                     po::value<bool>()->default_value(true),
-                     "Map the material onto the selected surfaces")(
+      "Empty bin correction (recommended). Corrects for vacuum/empty "
+      "assignments.")("mat-mapping-surfaces",
+                      po::value<bool>()->default_value(true),
+                      "Map the material onto the selected surfaces")(
       "mat-mapping-volumes", po::value<bool>()->default_value(false),
       "Map the material into the selected material volumes")(
       "mat-mapping-volume-stepsize",

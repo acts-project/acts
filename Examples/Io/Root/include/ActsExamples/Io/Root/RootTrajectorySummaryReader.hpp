@@ -17,12 +17,18 @@
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootTrajectorySummaryReader
 ///

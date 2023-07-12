@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -15,12 +16,19 @@
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootMaterialTrackReader
 ///

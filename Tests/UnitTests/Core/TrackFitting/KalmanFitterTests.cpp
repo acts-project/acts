@@ -9,16 +9,33 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
-#include "Acts/Utilities/FpeMonitor.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
+#include <functional>
+#include <map>
 #include <memory>
+#include <optional>
 #include <random>
+#include <utility>
 
 #include "FitterTestsCommon.hpp"
 
@@ -88,7 +105,6 @@ auto makeDefaultKalmanFitterOptions() {
 BOOST_AUTO_TEST_SUITE(TrackFittingKalmanFitter)
 
 BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
-  FpeMonitor fpe;
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
@@ -100,7 +116,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
-  FpeMonitor fpe;
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
@@ -123,7 +138,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
-  FpeMonitor fpe;
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
@@ -146,7 +160,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
-  FpeMonitor fpe;
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
@@ -158,7 +171,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
-  FpeMonitor fpe;
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
@@ -169,7 +181,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
-  FpeMonitor fpe;
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
@@ -180,7 +191,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
-  FpeMonitor fpe;
   auto start = makeParameters();
 
   // fitter options w/o target surface. outlier distance is set to be below the
@@ -198,7 +208,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
-  FpeMonitor fpe;
   auto start = makeParameters();
 
   auto test = [&](double threshold, bool reverse, bool expected_reversed,
@@ -234,7 +243,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
 // TODO this is not really Kalman fitter specific. is probably better tested
 // with a synthetic trajectory.
 BOOST_AUTO_TEST_CASE(GlobalCovariance) {
-  FpeMonitor fpe;
   auto start = makeParameters();
   auto kfOptions = makeDefaultKalmanFitterOptions();
 

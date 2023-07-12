@@ -8,12 +8,15 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <climits>
+#include <utility>
 
 namespace Acts {
 
@@ -37,7 +40,7 @@ BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test) {
   BOOST_CHECK_EQUAL(hsm, hsmCopyMoved);
   // Assignment constructor
   HomogeneousSurfaceMaterial hsmAssigned = hsm;
-  // Test equality of the asignment
+  // Test equality of the assignment
   BOOST_CHECK_EQUAL(hsm, hsmAssigned);
   // Assignment move constructor
   HomogeneousSurfaceMaterial hsmAssignedMoved(std::move(hsmAssigned));

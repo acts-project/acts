@@ -12,6 +12,9 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -19,14 +22,22 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/SteppingHelper.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <functional>
+#include <limits>
+#include <string>
+#include <tuple>
 
 namespace Acts {
+template <class charge_t>
+class SingleBoundTrackParameters;
 
 /// @brief straight line stepper based on Surface intersection
 ///
@@ -104,7 +115,7 @@ class StraightLineStepper {
     /// The absolute charge as the free vector can be 1/p or q/p
     double absCharge = UnitConstants::e;
 
-    /// Boolean to indiciate if you need covariance transport
+    /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
@@ -185,21 +196,28 @@ class StraightLineStepper {
   /// QoP direction accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double qop(const State& state) const { return state.pars[eFreeQOverP]; }
+  double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
 
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
+  double absoluteMomentum(const State& state) const {
     auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qop(state));
+    return std::abs((q == 0 ? 1 : q) / qOverP(state));
+  }
+
+  /// Momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  Vector3 momentum(const State& state) const {
+    return absoluteMomentum(state) * direction(state);
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return std::copysign(state.absCharge, qop(state));
+    return std::copysign(state.absCharge, qOverP(state));
   }
 
   /// Time access
@@ -248,7 +266,7 @@ class StraightLineStepper {
                                                       release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
@@ -321,7 +339,7 @@ class StraightLineStepper {
   /// @param [in,out] state State object that will be updated
   /// @param [in] freeParams Free parameters that will be written into @p state
   /// @param [in] boundParams Corresponding bound parameters used to update jacToGlobal in @p state
-  /// @param [in] covariance Covariance that willl be written into @p state
+  /// @param [in] covariance Covariance that will be written into @p state
   /// @param [in] surface The surface used to update the jacToGlobal
   void update(State& state, const FreeVector& freeParams,
               const BoundVector& boundParams, const Covariance& covariance,
@@ -376,7 +394,7 @@ class StraightLineStepper {
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize.value();
-    const double p = momentum(state.stepping);
+    const double p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
     // Update the track parameters according to the equations of motion

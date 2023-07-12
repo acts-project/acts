@@ -8,13 +8,30 @@
 
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
+#include <cstddef>
+#include <functional>
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 ActsExamples::TrackFittingChi2Algorithm::TrackFittingChi2Algorithm(
     Config config, Acts::Logging::Level level)

@@ -8,9 +8,7 @@
 
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
-#include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
 ActsExamples::Telescope::TelescopeDetectorElement::TelescopeDetectorElement(

@@ -12,6 +12,7 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -66,7 +67,7 @@ struct WeightedComponentReducerLoop {
   // TODO: Maybe we can cache this value and only update it when the parameters
   // change
   template <typename stepper_state_t>
-  static ActsScalar qop(const stepper_state_t& s) {
+  static ActsScalar qOverP(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
@@ -75,12 +76,24 @@ struct WeightedComponentReducerLoop {
   }
 
   template <typename stepper_state_t>
-  static ActsScalar momentum(const stepper_state_t& s) {
+  static ActsScalar absoluteMomentum(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [](const auto& sum, const auto& cmp) -> ActsScalar {
           return sum + cmp.weight * std::abs(cmp.state.absCharge /
                                              cmp.state.pars[eFreeQOverP]);
+        });
+  }
+
+  template <typename stepper_state_t>
+  static Vector3 momentum(const stepper_state_t& s) {
+    return std::accumulate(
+        s.components.begin(), s.components.end(), Vector3::Zero().eval(),
+        [](const auto& sum, const auto& cmp) -> Vector3 {
+          return sum + cmp.weight *
+                           std::abs(cmp.state.absCharge /
+                                    cmp.state.pars[eFreeQOverP]) *
+                           cmp.state.pars.template segment<3>(eFreeDir0);
         });
   }
 
@@ -124,7 +137,7 @@ struct WeightedComponentReducerLoop {
 
 struct MaxMomentumReducerLoop {
   template <typename component_range_t>
-  static const auto& maxMomenutmIt(const component_range_t& cmps) {
+  static const auto& maxAbsoluteMomentumIt(const component_range_t& cmps) {
     return *std::max_element(cmps.begin(), cmps.end(),
                              [&](const auto& a, const auto& b) {
                                return std::abs(a.state.pars[eFreeQOverP]) >
@@ -134,40 +147,53 @@ struct MaxMomentumReducerLoop {
 
   template <typename stepper_state_t>
   static Vector3 position(const stepper_state_t& s) {
-    return maxMomenutmIt(s.components)
+    return maxAbsoluteMomentumIt(s.components)
         .state.pars.template segment<3>(eFreePos0);
   }
 
   template <typename stepper_state_t>
   static Vector3 direction(const stepper_state_t& s) {
-    return maxMomenutmIt(s.components)
+    return maxAbsoluteMomentumIt(s.components)
         .state.pars.template segment<3>(eFreeDir0);
   }
 
   template <typename stepper_state_t>
-  static ActsScalar momentum(const stepper_state_t& s) {
-    const auto& cmp = maxMomenutmIt(s.components);
+  static ActsScalar qOverP(const stepper_state_t& s) {
+    const auto& cmp = maxAbsoluteMomentumIt(s.components);
+    return cmp.state.pars[eFreeQOverP];
+  }
+
+  template <typename stepper_state_t>
+  static ActsScalar absoluteMomentum(const stepper_state_t& s) {
+    const auto& cmp = maxAbsoluteMomentumIt(s.components);
     return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]);
   }
 
   template <typename stepper_state_t>
+  static Vector3 momentum(const stepper_state_t& s) {
+    const auto& cmp = maxAbsoluteMomentumIt(s.components);
+    return std::abs(cmp.state.absCharge / cmp.state.pars[eFreeQOverP]) *
+           cmp.state.pars.template segment<3>(eFreeDir0);
+  }
+
+  template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
-    return maxMomenutmIt(s.components).state.absCharge;
+    return maxAbsoluteMomentumIt(s.components).state.absCharge;
   }
 
   template <typename stepper_state_t>
   static ActsScalar time(const stepper_state_t& s) {
-    return maxMomenutmIt(s.components).state.pars[eFreeTime];
+    return maxAbsoluteMomentumIt(s.components).state.pars[eFreeTime];
   }
 
   template <typename stepper_state_t>
   static FreeVector pars(const stepper_state_t& s) {
-    return maxMomenutmIt(s.components).state.pars;
+    return maxAbsoluteMomentumIt(s.components).state.pars;
   }
 
   template <typename stepper_state_t>
   static FreeVector cov(const stepper_state_t& s) {
-    return maxMomenutmIt(s.components).state.cov;
+    return maxAbsoluteMomentumIt(s.components).state.cov;
   }
 };
 
@@ -627,10 +653,24 @@ class MultiEigenStepperLoop
     return Reducer::direction(state);
   }
 
+  /// QoP access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double qOverP(const State& state) const { return Reducer::qOverP(state); }
+
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const { return Reducer::momentum(state); }
+  double absoluteMomentum(const State& state) const {
+    return Reducer::absoluteMomentum(state);
+  }
+
+  /// Momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  Vector3 momentum(const State& state) const {
+    return Reducer::momentum(state);
+  }
 
   /// Charge access
   ///
@@ -752,7 +792,7 @@ class MultiEigenStepperLoop
     }
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
@@ -770,7 +810,7 @@ class MultiEigenStepperLoop
   ///
   /// @param state [in] The stepping state (thread-local cache)
   /// @param stype [in] The step size type to be returned
-  /// @note This returns the smalles step size of all components. It uses
+  /// @note This returns the smallest step size of all components. It uses
   /// std::abs for comparison to handle backward propagation and negative
   /// step sizes correctly.
   double getStepSize(const State& state, ConstrainedStep::Type stype) const {
@@ -819,7 +859,7 @@ class MultiEigenStepperLoop
   /// be guaranteed by the propagator.
   /// @note This is done by combining the gaussian mixture on the specified
   /// surface. If the conversion to bound states of some components
-  /// failes, these components are ignored unless all components fail. In this
+  /// fails, these components are ignored unless all components fail. In this
   /// case an error code is returned.
   ///
   /// @param [in] state State that will be presented as @c BoundState
