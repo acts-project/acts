@@ -63,7 +63,6 @@ using MultiStepperLoop =
 using SingleStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
 
 const double defaultStepSize = 123.;
-const double defaultTolerance = 234.;
 const auto defaultNDir = Direction::Backward;
 
 const auto defaultBField =
@@ -144,7 +143,7 @@ void test_multi_stepper_state() {
       makeDefaultBoundPars<charge_t>(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                   defaultStepSize, defaultTolerance);
+                   defaultStepSize);
 
   MultiStepper ms(defaultBField);
 
@@ -202,7 +201,7 @@ void test_multi_stepper_state_invalid() {
   const auto multi_pars = makeDefaultBoundPars(false, 0);
 
   BOOST_CHECK_THROW(MultiState(geoCtx, magCtx, defaultBField, multi_pars,
-                               defaultNDir, defaultStepSize, defaultTolerance),
+                               defaultNDir, defaultStepSize),
                     std::invalid_argument);
 }
 
@@ -231,10 +230,9 @@ void test_multi_stepper_vs_eigen_stepper() {
   SingleBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
   SingleStepper::State single_state(geoCtx, defaultBField->makeCache(magCtx),
-                                    single_pars, defaultNDir, defaultStepSize,
-                                    defaultTolerance);
+                                    single_pars, defaultNDir, defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
   SingleStepper single_stepper(defaultBField);
@@ -294,11 +292,9 @@ void test_components_modifying_accessors() {
   const auto multi_pars = makeDefaultBoundPars();
 
   MultiState mutable_multi_state(geoCtx, magCtx, defaultBField, multi_pars,
-                                 defaultNDir, defaultStepSize,
-                                 defaultTolerance);
+                                 defaultNDir, defaultStepSize);
   const MultiState const_multi_state(geoCtx, magCtx, defaultBField, multi_pars,
-                                     defaultNDir, defaultStepSize,
-                                     defaultTolerance);
+                                     defaultNDir, defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 
@@ -400,10 +396,10 @@ void test_multi_stepper_surface_status_update() {
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
-                         Direction::Forward, defaultStepSize, defaultTolerance);
+                         Direction::Forward, defaultStepSize);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      Direction::Forward, defaultStepSize, defaultTolerance);
+      Direction::Forward, defaultStepSize);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
@@ -500,10 +496,10 @@ void test_component_bound_state() {
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
-                         Direction::Forward, defaultStepSize, defaultTolerance);
+                         Direction::Forward, defaultStepSize);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      Direction::Forward, defaultStepSize, defaultTolerance);
+      Direction::Forward, defaultStepSize);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
@@ -566,7 +562,7 @@ void test_combined_bound_state_function() {
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
   MultiStepper multi_stepper(defaultBField);
 
   auto res = multi_stepper.boundState(multi_state, *surface, true,
@@ -611,7 +607,7 @@ void test_combined_curvilinear_state_function() {
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
   MultiStepper multi_stepper(defaultBField);
 
   const auto [curv_pars, jac, pathLength] =
@@ -652,7 +648,7 @@ void test_single_component_interface_function() {
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 
@@ -697,7 +693,7 @@ void remove_add_components_function() {
   const auto multi_pars = makeDefaultBoundPars(4);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 

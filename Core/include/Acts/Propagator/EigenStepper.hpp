@@ -11,6 +11,8 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -68,7 +70,6 @@ class EigenStepper {
     /// @param [in] par The track parameters at start
     /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
-    /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
@@ -76,12 +77,10 @@ class EigenStepper {
                    MagneticFieldProvider::Cache fieldCacheIn,
                    const SingleBoundTrackParameters<charge_t>& par,
                    Direction ndir = Direction::Forward,
-                   double ssize = std::numeric_limits<double>::max(),
-                   double stolerance = s_onSurfaceTolerance)
+                   double ssize = std::numeric_limits<double>::max())
         : absCharge(std::abs(par.charge())),
           navDir(ndir),
           stepSize(ndir * std::abs(ssize)),
-          tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
@@ -135,9 +134,6 @@ class EigenStepper {
     /// Last performed step (for overstep limit calculation)
     double previousStepSize = 0.;
 
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
-
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
@@ -172,8 +168,7 @@ class EigenStepper {
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
                   Direction navDir = Direction::Forward,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const;
+                  double ssize = std::numeric_limits<double>::max()) const;
 
   /// @brief Resets the state
   ///
@@ -254,11 +249,13 @@ class EigenStepper {
   /// @param [in] surface The surface provided
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] logger A @c Logger instance
+  /// @param [in] surfaceTolerance Surface tolerance used for intersection
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      const Logger& logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger(),
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
-        *this, state, surface, bcheck, logger);
+        *this, state, surface, bcheck, logger, surfaceTolerance);
   }
 
   /// Update step size
