@@ -103,6 +103,11 @@ void addGeometry(Context& ctx) {
   }
 
   {
+    py::class_<Acts::TrackingVolume, Acts::Volume,
+               std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume");
+  }
+
+  {
     py::class_<Acts::Volume, std::shared_ptr<Acts::Volume>>(m, "Volume")
         .def_static(
             "makeCylinderVolume",
