@@ -238,8 +238,10 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
-      tracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec, covMat));
-      customTracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+      tracks.emplace_back(
+          BoundTrackParameters(perigeeSurface, paramVec, covMat));
+      customTracks.emplace_back(
+          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
     }
 
     std::vector<const BoundTrackParameters*> tracksPtr;
