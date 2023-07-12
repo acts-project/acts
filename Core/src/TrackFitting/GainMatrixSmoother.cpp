@@ -26,8 +26,6 @@ Result<void> GainMatrixSmoother::calculate(
     const Logger& logger) const {
   ACTS_VERBOSE("Prev. predicted covariance\n"
                << predictedCovariance(prev_ts) << "\n, inverse: \n"
-               << predictedCovariance(prev_ts).inverse()
-               << "\n, regularized inverse: \n"
                << predictedCovariance(prev_ts).inverse());
 
   // Gain smoothing matrix
