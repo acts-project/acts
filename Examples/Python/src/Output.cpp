@@ -12,6 +12,7 @@
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSeedWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
@@ -323,6 +324,11 @@ void addOutput(Context& ctx) {
       ActsExamples::CsvMultiTrajectoryWriter, mex, "CsvMultiTrajectoryWriter",
       inputTrajectories, outputDir, fileName, inputMeasurementParticlesMap,
       outputPrecision, nMeasurementsMin, truthMatchProbMin, ptMin);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSeedWriter, mex, "CsvSeedWriter",
+                             inputTrackParameters, inputSimSeeds, inputSimHits,
+                             inputMeasurementParticlesMap,
+                             inputMeasurementSimHitsMap, fileName, outputDir);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CsvTrackingGeometryWriter, mex, "CsvTrackingGeometryWriter",
