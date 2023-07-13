@@ -32,7 +32,6 @@ void addOnnxMlpack(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedFilterMLAlgorithm, mlpack, "SeedFilterMLAlgorithm",
       inputTrackParameters, inputSimSeeds, inputSeedFilterNN,
-      outputTrackParameters, outputSimSeeds, epsilonDBScan, minPointsDBScan,
-      minSeed, minScore);
+      outputTrackParameters, outputSimSeeds, epsilonDBScan, minPointsDBScan);
 }
 }  // namespace Acts::Python

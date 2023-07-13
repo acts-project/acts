@@ -24,9 +24,7 @@ class SeedClassifier {
   /// @param modelPath path to the model file
   SeedClassifier(const char* modelPath)
       : m_env(ORT_LOGGING_LEVEL_WARNING, "MLSeedClassifier"),
-        m_duplicateClassifier(m_env, modelPath),
-        m_minSeed(minSeed),
-        m_minScore(minScore){};
+        m_duplicateClassifier(m_env, modelPath){};
 
   /// Compute a score for each seed to be used in the seed selection
   ///
