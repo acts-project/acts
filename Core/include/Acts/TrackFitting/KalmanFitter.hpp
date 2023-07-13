@@ -924,7 +924,8 @@ class KalmanFitter {
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
         return targetSurface->intersect(
             state.geoContext, freeVector.segment<3>(eFreePos0),
-            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
+            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
+            state.options.targetTolerance);
       };
 
       // The smoothed free params at the first/last measurement state.
