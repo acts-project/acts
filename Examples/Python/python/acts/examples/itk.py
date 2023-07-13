@@ -449,7 +449,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
             skipZMiddleBinSearch = 2
             fastTrackingCut = True
             fastTrackingRMin = 50 * u.mm
-            fastTrackingCotThetaMax = 2.1293  # 1.5 eta
+            fastTrackingCotThetaMax = 1.5
 
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
         outputSeeds = "StripSeeds"
