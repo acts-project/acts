@@ -119,7 +119,7 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::TrackingVolume, Acts::Volume,
                std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume");
   }
-  
+
   {
     py::class_<Acts::GeometryIdentifierHook,
                std::shared_ptr<Acts::GeometryIdentifierHook>>(
