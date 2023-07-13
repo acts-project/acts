@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, argparse, pathlib, contextlib, acts, acts.examples
+import os, argparse, pathlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -120,7 +120,7 @@ if g4_simulation:
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
         rnd=rnd,
-        killVolume=acts.Volume.makeCylinderVolume(r=1.1 * u.m, halfZ=3.0 * u.m),
+        killVolume=trackingGeometry.worldVolume,
         killAfterTime=25 * u.ns,
     )
 else:

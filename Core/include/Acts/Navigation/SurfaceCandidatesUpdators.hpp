@@ -45,8 +45,9 @@ inline static void updateCandidates(const GeometryContext& gctx,
         (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
 
     // Get the intersection @todo make a templated intersector
-    auto sIntersection =
-        sRep.intersect(gctx, position, direction, c.boundaryCheck);
+    // TODO surface tolerance
+    auto sIntersection = sRep.intersect(gctx, position, direction,
+                                        c.boundaryCheck, s_onSurfaceTolerance);
     // Re-order and swap if necessary
     if (sIntersection.intersection.pathLength + s_onSurfaceTolerance <
             nState.overstepTolerance and

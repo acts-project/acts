@@ -16,4 +16,6 @@ using TrackIndexType = std::uint32_t;
 static constexpr TrackIndexType kTrackIndexInvalid =
     std::numeric_limits<TrackIndexType>::max();
 
+using ProjectorBitset = uint64_t;
+
 }  // namespace Acts

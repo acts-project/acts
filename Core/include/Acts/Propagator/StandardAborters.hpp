@@ -224,7 +224,7 @@ struct ParticleStopped {
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
-    if (stepper.momentum(state.stepping) > 0) {
+    if (stepper.absoluteMomentum(state.stepping) > 0) {
       return false;
     }
     navigator.targetReached(state.navigation, true);
