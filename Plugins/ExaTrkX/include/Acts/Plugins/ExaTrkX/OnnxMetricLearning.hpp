@@ -31,11 +31,11 @@ class OnnxMetricLearning final : public Acts::GraphConstructionBase {
     int knnVal = 500;
   };
 
-  OnnxMetricLearning(const Config& cfg);
+  OnnxMetricLearning(const Config& cfg, std::unique_ptr<const Logger> logger);
   ~OnnxMetricLearning();
 
-  std::tuple<std::any, std::any> operator()(std::vector<float>& inputValues,
-                                            const Logger& logger) override;
+  std::tuple<std::any, std::any> operator()(
+      std::vector<float>& inputValues) override;
 
   Config config() const { return m_cfg; }
 
@@ -43,6 +43,9 @@ class OnnxMetricLearning final : public Acts::GraphConstructionBase {
   void buildEdgesWrapper(std::vector<float>& embedFeatures,
                          std::vector<int64_t>& edgeList, int64_t numSpacepoints,
                          const Logger& logger) const;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const auto& logger() const { return *m_logger; }
 
   Config m_cfg;
   std::unique_ptr<Ort::Env> m_env;

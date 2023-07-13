@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Interactions.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 
 #include <random>
 

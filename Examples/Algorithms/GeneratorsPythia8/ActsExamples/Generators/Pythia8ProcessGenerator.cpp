@@ -8,9 +8,15 @@
 
 #include "ActsExamples/Generators/Pythia8ProcessGenerator.hpp"
 
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
 #include <algorithm>
+#include <cmath>
 #include <iterator>
+#include <ostream>
 #include <random>
+#include <utility>
 
 #include <Pythia8/Pythia.h>
 
@@ -30,7 +36,7 @@ ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
     : m_cfg(cfg),
       m_logger(Acts::getDefaultLogger("Pythia8Generator", lvl)),
       m_pythia8(std::make_unique<Pythia8::Pythia>("", false)) {
-  // disable all output by default but allow reenable via config
+  // disable all output by default but allow re-enable via config
   m_pythia8->settings.flag("Print:quiet", true);
   for (const auto& setting : m_cfg.settings) {
     ACTS_VERBOSE("use Pythia8 setting '" << setting << "'");
@@ -59,7 +65,17 @@ ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
   // use per-thread random engine also in pythia
   FrameworkRndmEngine rndmEngine(rng);
   m_pythia8->rndm.rndmEnginePtr(&rndmEngine);
-  m_pythia8->next();
+  {
+    Acts::FpeMonitor mon{0};  // disable all FPEs while we're in Pythia8
+    m_pythia8->next();
+  }
+
+  if (m_cfg.printShortEventListing) {
+    m_pythia8->process.list();
+  }
+  if (m_cfg.printLongEventListing) {
+    m_pythia8->event.list();
+  }
 
   // convert generated final state particles into internal format
   for (int ip = 0; ip < m_pythia8->event.size(); ++ip) {

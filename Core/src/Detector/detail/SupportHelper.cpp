@@ -15,8 +15,12 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <stdexcept>
+#include <utility>
 
 std::vector<std::shared_ptr<Acts::Surface>>
 Acts::Experimental::detail::SupportHelper::cylindricalSupport(

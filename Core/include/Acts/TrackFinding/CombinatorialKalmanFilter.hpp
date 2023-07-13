@@ -41,6 +41,7 @@
 
 #include <functional>
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 
 namespace Acts {
@@ -215,7 +216,7 @@ struct CombinatorialKalmanFilterResult {
   std::vector<typename traj_t::TrackStateProxy> trackStateCandidates;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
-  // This correspond to the last measurment state in the multitrajectory.
+  // This correspond to the last measurement state in the multitrajectory.
   std::vector<MultiTrajectoryTraits::IndexType> lastMeasurementIndices;
 
   // This is the indices of the 'tip' of the tracks stored in multitrajectory.
@@ -383,7 +384,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Reset propagation state:
-      // - When navigation breaks and there is stil active tip present after
+      // - When navigation breaks and there is still active tip present after
       // recording&removing track tips on current surface
       if (navigator.navigationBreak(state.navigation) and not result.filtered) {
         // Record the tips on current surface as trajectory entry indices
@@ -466,6 +467,7 @@ class CombinatorialKalmanFilter {
       if (result.filtered) {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
+          // @TODO: Tracks like this should not be in the final output!
           ACTS_WARNING("No tracks found");
           result.finished = true;
         } else {
@@ -736,7 +738,7 @@ class CombinatorialKalmanFilter {
           tipState.nStates++;
           size_t currentTip = SIZE_MAX;
           if (isSensitive) {
-            // Incremet of number of holes
+            // Increment of number of holes
             tipState.nHoles++;
           }
 
@@ -832,6 +834,10 @@ class CombinatorialKalmanFilter {
           mask = PM::Calibrated;
         }
 
+        ACTS_VERBOSE(
+            "Create temp track state with mask: " << std::bitset<
+                sizeof(std::underlying_type_t<TrackStatePropMask>) * 8>(
+                static_cast<std::underlying_type_t<TrackStatePropMask>>(mask)));
         size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);
         // CAREFUL! This trackstate has a previous index that is not in this
         // MultiTrajectory Visiting brackwards from this track state will
@@ -905,6 +911,13 @@ class CombinatorialKalmanFilter {
             result.fittedStates->getTrackState(
                 result.fittedStates->addTrackState(
                     mask, candidateTrackState.previous()));
+        ACTS_VERBOSE(
+            "Create SourceLink output track state #"
+            << trackState.index() << " with mask: "
+            << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
+                           8>{
+                   static_cast<std::underlying_type_t<TrackStatePropMask>>(
+                       mask)});
 
         if (it != begin) {
           // assign indices pointing to first track state
@@ -988,11 +1001,14 @@ class CombinatorialKalmanFilter {
                                  size_t prevTip) const {
       // Add a track state
       auto currentTip = result.fittedStates->addTrackState(stateMask, prevTip);
-      if (isSensitive) {
-        ACTS_VERBOSE("Creating Hole track state with tip = " << currentTip);
-      } else {
-        ACTS_VERBOSE("Creating Material track state with tip = " << currentTip);
-      }
+      ACTS_VERBOSE(
+          "Create "
+          << (isSensitive ? "Hole" : "Material") << " output track state #"
+          << currentTip << " with mask: "
+          << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
+                         8>{
+                 static_cast<std::underlying_type_t<TrackStatePropMask>>(
+                     stateMask)});
       // now get track state proxy back
       auto trackStateProxy = result.fittedStates->getTrackState(currentTip);
 
@@ -1151,7 +1167,8 @@ class CombinatorialKalmanFilter {
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
         return targetSurface->intersect(
             state.geoContext, freeVector.segment<3>(eFreePos0),
-            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
+            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
+            state.options.targetTolerance);
       };
 
       // The smoothed free params at the first/last measurement state
@@ -1224,7 +1241,7 @@ class CombinatorialKalmanFilter {
 
     CombinatorialKalmanFilterExtensions<traj_t> m_extensions;
 
-    /// The source link accesor
+    /// The source link accessor
     source_link_accessor_t m_sourcelinkAccessor;
 
     /// The Surface being targeted

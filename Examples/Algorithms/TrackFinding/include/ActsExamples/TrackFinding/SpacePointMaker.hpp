@@ -10,11 +10,13 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
 #include <string>
@@ -25,6 +27,7 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Create space point representations from measurements.
 ///

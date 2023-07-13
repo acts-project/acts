@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -15,11 +16,17 @@
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
-#include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/VolumeBoundsJsonConverter.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <fstream>
-#include <iostream>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 using namespace Acts;
 

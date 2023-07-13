@@ -9,21 +9,34 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <system_error>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class GeometryIdentifier;
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace ActsExamples {
 
@@ -52,7 +65,7 @@ struct GeometricConfig {
   // The threshold below an cell activation is ignored
   double threshold = 0.;
 
-  // Wether to assume digital readout (activation is either 0 or 1)
+  // Whether to assume digital readout (activation is either 0 or 1)
   bool digital = false;
 
   /// Charge generation (configurable via the chargeSmearer)

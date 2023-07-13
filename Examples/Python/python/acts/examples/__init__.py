@@ -1,5 +1,8 @@
 import sys, inspect
-from typing import Optional, Protocol
+from pathlib import Path
+from typing import Optional, Protocol, Union, List, Dict
+import os
+import re
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -26,6 +29,17 @@ def ConcretePropagator(propagator):
 _patch_config(ActsPythonBindings._examples)
 
 _patch_detectors(ActsPythonBindings._examples)
+
+# Manually patch ExaTrkX constructors
+# Need to do it this way, since they are not always present
+for module in [
+    "TorchMetricLearning",
+    "OnnxMetricLearning",
+    "TorchEdgeClassifier",
+    "OnnxEdgeClassifier",
+]:
+    if hasattr(ActsPythonBindings._examples, module):
+        _patchKwargsConstructor(getattr(ActsPythonBindings._examples, module))
 
 
 def _makeLayerTriplet(*args, **kwargs):
@@ -327,3 +341,118 @@ def defaultLogging(
         return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
 
     return customLogLevel
+
+
+class Sequencer(ActsPythonBindings._examples._Sequencer):
+
+    _autoFpeMasks: Optional[List["FpeMask"]] = None
+
+    def __init__(self, *args, **kwargs):
+
+        if "fpeMasks" in kwargs:
+            m = kwargs["fpeMasks"]
+            if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
+                n = []
+                for loc, fpe, count in m:
+                    t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
+                    n.append(self.FpeMask(loc, t, count))
+                kwargs["fpeMasks"] = n
+
+            kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
+
+        cfg = self.Config()
+        if len(args) == 1 and isinstance(args[0], self.Config):
+            cfg = args[0]
+            args = args[1:]
+        if "config" in kwargs:
+            cfg = kwargs.pop("config")
+
+        for k, v in kwargs.items():
+            if not hasattr(cfg, k):
+                raise ValueError(f"Sequencer.Config does not have field {k}")
+            setattr(cfg, k, v)
+
+        super().__init__(cfg)
+
+    class FpeMask(ActsPythonBindings._examples._Sequencer._FpeMask):
+        @classmethod
+        def fromFile(cls, file: Union[str, Path]) -> List["FpeMask"]:
+            if isinstance(file, str):
+                file = Path(file)
+
+            if file.suffix in (".yml", ".yaml"):
+                try:
+                    return cls.fromYaml(file)
+                except ImportError:
+                    print("FPE mask input file is YAML, but PyYAML is not installed")
+                    raise
+
+        @classmethod
+        def fromYaml(cls, file: Union[str, Path]) -> List["FpeMask"]:
+            import yaml
+
+            with file.open() as fh:
+                d = yaml.safe_load(fh)
+
+            return cls.fromDict(d)
+
+        _fpe_types_to_enum = {v.name: v for v in acts.FpeType.values}
+
+        @staticmethod
+        def toDict(
+            masks: List["FpeMask"],
+        ) -> Dict[str, Dict[str, int]]:
+            out = {}
+            for mask in masks:
+                out.setdefault(mask.loc, {})
+                out[mask.loc][mask.type.name] = mask.count
+
+                return out
+
+        @classmethod
+        def fromDict(cls, d: Dict[str, Dict[str, int]]) -> List["FpeMask"]:
+            out = []
+            for loc, types in d.items():
+                for fpe, count in types.items():
+                    out.append(cls(loc, cls._fpe_types_to_enum[fpe], count))
+            return out
+
+    @classmethod
+    def _getAutoFpeMasks(cls) -> List[FpeMask]:
+        if cls._autoFpeMasks is not None:
+            return cls._autoFpeMasks
+
+        srcdir = Path(cls._sourceLocation).parent.parent.parent.parent
+
+        cls._autoFpeMasks = []
+
+        for root, _, files in os.walk(srcdir):
+            root = Path(root)
+            for f in files:
+                if (
+                    not f.endswith(".hpp")
+                    and not f.endswith(".cpp")
+                    and not f.endswith(".ipp")
+                ):
+                    continue
+                f = root / f
+                #  print(f)
+                with f.open("r") as fh:
+                    for i, line in enumerate(fh, start=1):
+                        if m := re.match(r".*\/\/ ?MARK: ?(fpeMask.*)$", line):
+                            exp = m.group(1)
+                            for m in re.findall(
+                                r"fpeMask\((\w+), ?(\d+) ?, ?issue: ?(\d+)\)", exp
+                            ):
+                                fpeType, count, _ = m
+                                count = int(count)
+                                rel = f.relative_to(srcdir)
+                                cls._autoFpeMasks.append(
+                                    cls.FpeMask(
+                                        f"{rel}:{i}",
+                                        cls.FpeMask._fpe_types_to_enum[fpeType],
+                                        count,
+                                    )
+                                )
+
+        return cls._autoFpeMasks

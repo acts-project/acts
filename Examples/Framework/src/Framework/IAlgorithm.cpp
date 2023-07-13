@@ -8,7 +8,9 @@
 
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
-#include "ActsExamples/Framework/DataHandle.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <utility>
 
 namespace ActsExamples {
 

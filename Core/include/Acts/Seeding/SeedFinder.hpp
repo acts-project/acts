@@ -132,12 +132,12 @@ class SeedFinder {
  private:
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
-  /// @param spacePointData object contaning the spacepoint data
+  /// @param spacePointData object containing the spacepoint data
   /// @param options frequently changing configuration (like beam position)
   /// @param grid spacepoint grid
   /// @param otherSPsNeighbours inner or outer space points to be used in the dublet
   /// @param mediumSP space point candidate to be used as middle SP in a seed
-  /// @param linCircleVec vector contining inner or outer SP parameters after reference frame transformation to the u-v space
+  /// @param linCircleVec vector containing inner or outer SP parameters after reference frame transformation to the u-v space
   /// @param outVec Output object containing top or bottom SPs that are compatible with a certain middle SPs
   /// @param deltaRMinSP minimum allowed r-distance between dublet components
   /// @param deltaRMaxSP maximum allowed r-distance between dublet components
@@ -159,7 +159,7 @@ class SeedFinder {
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
-  /// @param spacePointData object contaning the spacepoint data
+  /// @param spacePointData object containing the spacepoint data
   /// @param SpM space point candidate to be used as middle SP in a seed
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter

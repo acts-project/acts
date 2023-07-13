@@ -469,7 +469,7 @@ class Chi2Fitter {
 
         // We count the processed states
         ++result.processedStates;
-        // Update the number of holes only when encoutering a measurement
+        // Update the number of holes only when encountering a measurement
         result.measurementHoles = result.missedActiveSurfaces.size();
         // Since we encountered a measurement update the lastMeasurementIndex to
         // the lastTrackIndex.

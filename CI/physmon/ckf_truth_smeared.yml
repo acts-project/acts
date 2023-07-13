@@ -11,12 +11,10 @@ checks:
     IntegralCheck:
       threshold: 3
 
-
-
-
   nHoles_vs_eta:
     KolmogorovTest:
       threshold: 0.25
+
   nOutliers_vs_pT:
     KolmogorovTest:
       threshold: 0.59

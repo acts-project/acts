@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <algorithm>
 #include <vector>
 
 Acts::PlaneLayer::PlaneLayer(const Transform3& transform,

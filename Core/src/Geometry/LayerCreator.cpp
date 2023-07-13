@@ -11,20 +11,26 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <algorithm>
+#include <array>
 #include <iterator>
+#include <ostream>
 #include <set>
 #include <utility>
+
+namespace Acts {
+class PlanarBounds;
+}  // namespace Acts
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
