@@ -41,11 +41,10 @@ struct VolumeMaterialInteraction {
   const bool performCovarianceTransport = false;
   /// The navigation direction
   const Direction navDir;
-
-  /// Data evaluated within this struct
-  MaterialSlab slab;
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 0;
+  /// Data evaluated within this struct
+  MaterialSlab slab;
 
   /// @brief Constructor
   ///
@@ -90,7 +89,7 @@ struct VolumeMaterialInteraction {
       slab = MaterialSlab(navigator.currentVolume(state.navigation)
                               ->volumeMaterial()
                               ->material(pos),
-                          state.stepping.stepSize.value());
+                          state.stepping.previousStepSize);
     } else {
       slab = MaterialSlab();
     }

@@ -141,5 +141,6 @@ struct MaterialCollector {
       }
     }
   }
-};  // namespace Acts
+};
+
 }  // namespace Acts

@@ -16,8 +16,6 @@
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-#include <sstream>
-
 namespace Acts {
 
 /// Material interactor propagator action.
@@ -180,13 +178,9 @@ struct MaterialInteractor {
   void updateResult(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
     // Update the previous interaction
-    Vector3 shift = stepper.position(state.stepping) -
-                    result.materialInteractions.back().position;
     double momentum = stepper.direction(state.stepping).norm();
     result.materialInteractions.back().deltaP =
         momentum - result.materialInteractions.back().direction.norm();
-    result.materialInteractions.back().materialSlab.scaleThickness(
-        shift.norm());
     result.materialInteractions.back().updatedVolumeStep = true;
     result.materialInX0 +=
         result.materialInteractions.back().materialSlab.thicknessInX0();
