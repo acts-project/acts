@@ -21,14 +21,14 @@ namespace Acts {
 ///
 template <typename input_track_t>
 struct VertexingOptions {
-  /// Default contstructor is deleted
+  /// Default constructor is deleted
   VertexingOptions() = delete;
 
   /// VertexingOptions with context
   ///
   /// @param gctx The goemetry context for this fit
   /// @param mctx The magnetic context for this fit
-  /// @param vconstr The pointing contraint to a vertex
+  /// @param vconstr The pointing constraint to a vertex
   VertexingOptions(
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       const Vertex<input_track_t>& vconstr = Vertex<input_track_t>())

@@ -40,13 +40,14 @@ inline static void updateCandidates(const GeometryContext& gctx,
   auto& nCandidates = nState.surfaceCandidates;
 
   for (auto& c : nCandidates) {
-    // Get the surface reprensentation: either native surfcae of portal
+    // Get the surface representation: either native surfcae of portal
     const Surface& sRep =
         (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
 
     // Get the intersection @todo make a templated intersector
-    auto sIntersection =
-        sRep.intersect(gctx, position, direction, c.boundaryCheck);
+    // TODO surface tolerance
+    auto sIntersection = sRep.intersect(gctx, position, direction,
+                                        c.boundaryCheck, s_onSurfaceTolerance);
     // Re-order and swap if necessary
     if (sIntersection.intersection.pathLength + s_onSurfaceTolerance <
             nState.overstepTolerance and
@@ -191,7 +192,7 @@ template <typename grid_type>
 using IndexedSurfacesImpl =
     IndexedUpdatorImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
 
-/// @brief An indexed surface implementaion with portal access
+/// @brief An indexed surface implementation with portal access
 template <typename grid_type>
 using IndexedSurfacesAllPortalsImpl =
     ChainedUpdatorImpl<IndexedSurfacesImpl<grid_type>, AllPortalsImpl>;

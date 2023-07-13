@@ -8,6 +8,13 @@
 
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
+
+#include <TEfficiency.h>
+#include <TProfile.h>
+
 using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -92,8 +99,8 @@ void ActsExamples::DuplicationPlotTool::fill(
 void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const ActsFatras::Particle& truthParticle, size_t nDuplicatedTracks) const {
-  const auto t_phi = phi(truthParticle.unitDirection());
-  const auto t_eta = eta(truthParticle.unitDirection());
+  const auto t_phi = phi(truthParticle.direction());
+  const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
   PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_pT, t_pT,

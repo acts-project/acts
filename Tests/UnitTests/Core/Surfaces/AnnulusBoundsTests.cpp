@@ -10,15 +10,17 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
+#include <algorithm>
+#include <array>
+#include <stdexcept>
+#include <vector>
 // clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
-
-#include <fstream>
-#include <limits>
 
 namespace Acts {
 

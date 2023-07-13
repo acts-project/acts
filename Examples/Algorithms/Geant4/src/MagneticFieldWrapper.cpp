@@ -8,9 +8,15 @@
 
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <ostream>
+#include <system_error>
+#include <utility>
 
 #include <G4SystemOfUnits.hh>
 #include <G4UnitsTable.hh>

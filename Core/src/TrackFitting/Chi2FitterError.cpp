@@ -8,6 +8,8 @@
 
 #include "Acts/TrackFitting/Chi2FitterError.hpp"
 
+#include <string>
+
 namespace {
 
 class Chi2FitterErrorCategory : public std::error_category {

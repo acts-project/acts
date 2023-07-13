@@ -272,7 +272,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         }
       }
 
-      // We update the iterator in the Neighbout object
+      // We update the iterator in the Neighbour object
       // that mean that we have changed the middle space point
       // and the lower bound has moved accordingly
       if (not found) {
@@ -314,7 +314,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
           continue;
         }
 
-        // transform SP cordinates to the u-v reference frame
+        // transform SP coordinates to the u-v reference frame
         const float deltaX = otherSP->x() - xM;
         const float deltaY = otherSP->y() - yM;
 
@@ -344,7 +344,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      // transform SP cordinates to the u-v reference frame
+      // transform SP coordinates to the u-v reference frame
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
 
@@ -732,19 +732,12 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         // maxPtScattering instead of pt.
         // To avoid 0-divison the pT check is skipped in case of B2==0, and
         // p2scatterSigma is calculated directly from maxPtScattering
-        if (B2 == 0) {
+        if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) >
+                           2. * m_config.maxPtScattering) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
               m_config.sigmaScattering;
           p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-        } else {
-          float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-          if (pT > m_config.maxPtScattering) {
-            float pTscatterSigma =
-                (m_config.highland / m_config.maxPtScattering) *
-                m_config.sigmaScattering;
-            p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-          }
         }
       }
 

@@ -12,8 +12,13 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <fstream>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {

@@ -15,6 +15,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <array>
+#include <limits>
 
 #include "Eigen/Dense"
 
@@ -51,7 +52,7 @@ double phi(const Eigen::MatrixBase<Derived>& v) noexcept {
 }
 
 /// Calculate phi (transverse plane angle) from anything implementing a method
-/// like `phi()` returing anything convertible to `double`.
+/// like `phi()` returning anything convertible to `double`.
 /// @tparam T anything that has a phi method
 /// @param v Any type that implements a phi method
 /// @return The phi value
@@ -119,7 +120,11 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
     assert(v.rows() == 3 && "Eta function not valid for non-3D vectors.");
   }
 
-  return std::atanh(v[2] / v.norm());
+  if (v[0] == 0. && v[1] == 0.) {
+    return std::copysign(std::numeric_limits<double>::infinity(), v[2]);
+  } else {
+    return std::asinh(v[2] / perp(v));
+  }
 }
 
 /// @brief Fast evaluation of trigonomic functions.

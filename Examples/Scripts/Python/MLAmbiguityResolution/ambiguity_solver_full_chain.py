@@ -69,7 +69,7 @@ def clusterTracks(
     @param[in] event: input DataFrame that contain all track in one event
     @param[in] DBSCAN_eps: minimum radius used by the DBSCAN to cluster track together
     @param[in] DBSCAN_min_samples: minimum number of tracks needed for DBSCAN to create a cluster
-    @return: DataFrame identical to the output with an added collumn with the cluster 
+    @return: DataFrame identical to the output with an added column with the cluster 
     """
     # Perform the DBSCAN clustering and sort the Db by cluster ID
     trackDir = event[["eta", "phi"]].to_numpy()
@@ -122,7 +122,7 @@ def subClustering(clusterarray: np.ndarray, c: int, lastCluster: float) -> np.nd
     if hits_IDs == []:
         return clusterarray
     else:
-        # Performe a new subclusterning for the remaning tracks
+        # Perform a new subclusterning for the remaining tracks
         clusterarray = subClustering(clusterarray, c, newCluster)
         return clusterarray
 
@@ -187,7 +187,7 @@ for clusteredEvent in clusteredData:
 
     clusteredEvent["score"] = output_predict
     cleanedEvent = clusteredEvent
-    # For each cluster only keep the track with the higest score
+    # For each cluster only keep the track with the highest score
     idx = (
         cleanedEvent.groupby(["cluster"])["score"].transform(max)
         == cleanedEvent["score"]

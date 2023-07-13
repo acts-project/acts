@@ -14,6 +14,7 @@
 // clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -23,7 +24,6 @@
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
@@ -108,7 +108,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   using action_list_type = action_list_t;
   using aborter_list_type = aborter_list_t;
 
-  /// Delete default contructor
+  /// Delete default constructor
   PropagatorOptions() = delete;
 
   /// PropagatorOptions copy constructor
