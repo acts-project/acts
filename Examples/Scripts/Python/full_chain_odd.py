@@ -24,7 +24,7 @@ from acts.examples.reconstruction import (
     addVertexFitting,
     VertexFinder,
     addSeedFilterML,
-    SeedFilterMLDBScanConfig
+    SeedFilterMLDBScanConfig,
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
@@ -45,12 +45,18 @@ parser.add_argument(
     help="Use the Ml Ambiguity Solver instead of the classical one",
     action="store_true",
 )
+parser.add_argument(
+    "--MLSeedFilter",
+    help="Use the Ml seed filter to select seed after the seeding step",
+    action="store_true",
+)
 
 args = vars(parser.parse_args())
 
 ttbar = args["ttbar"]
 g4_simulation = args["geant4"]
 ambiguity_MLSolver = args["MLSolver"]
+seedFilter_ML = args["MLSeedFilter"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
@@ -120,19 +126,11 @@ if g4_simulation:
             removeNeutral=True,
         ),
         outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
         rnd=rnd,
         killVolume=trackingGeometry.worldVolume,
         killAfterTime=25 * u.ns,
     )
 
-    addSeedFilterML(
-        s,
-        SeedFilterMLDBScanConfig(epsilonDBScan=0.03, minPointsDBScan=2),
-        onnxModelFile=os.path.dirname(__file__)
-        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
-        # onnxModelFile="/Users/allaire/Desktop/ACTS-ML-PR/acts/Work/seedduplicateClassifier_test.onnx",
-    )
 else:
     addFatras(
         s,
@@ -169,7 +167,15 @@ addSeeding(
     else TruthSeedRanges(),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
+    outputDirCsv=outputDir,
 )
+if seedFilter_ML:
+    addSeedFilterML(
+        s,
+        SeedFilterMLDBScanConfig(epsilonDBScan=0.03, minPointsDBScan=2),
+        onnxModelFile=os.path.dirname(__file__)
+        + "/MLAmbiguityResolution/seedDuplicateClassifier.onnx",
+    )
 
 addCKFTracks(
     s,
@@ -201,7 +207,7 @@ else:
             maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
         ),
         outputDirRoot=outputDir,
-        # outputDirCsv=outputDir,
+        outputDirCsv=outputDir,
     )
 
 addVertexFitting(

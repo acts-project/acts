@@ -142,6 +142,7 @@ SeedFilterMLDBScanConfig = namedtuple(
     defaults=[None] * 2,
 )
 
+
 class VertexFinder(Enum):
     Truth = (1,)
     AMVF = (2,)
@@ -363,7 +364,6 @@ def addSeeding(
                 fileName=str(f"seed.csv"),
             )
             s.addWriter(CsvSeedWriter)
-
 
     return s
 
@@ -826,6 +826,7 @@ def addSeedPerformanceWriters(
         )
     )
 
+
 @acts.examples.NamedTypeArgs(
     config=SeedFilterMLDBScanConfig,
 )
@@ -835,21 +836,19 @@ def addSeedFilterML(
     onnxModelFile: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
     from acts.examples.onnx.mlpack import SeedFilterMLAlgorithm
+
     filterML = SeedFilterMLAlgorithm(
         level=customLogLevel(),
         inputTrackParameters="estimatedparameters",
-        inputSimSeeds = "seeds", 
-        inputSeedFilterNN = onnxModelFile,
-        outputTrackParameters = "filtered-parameters",
-        outputSimSeeds = "filtered-seeds",
+        inputSimSeeds="seeds",
+        inputSeedFilterNN=onnxModelFile,
+        outputTrackParameters="filtered-parameters",
+        outputSimSeeds="filtered-seeds",
         **acts.examples.defaultKWArgs(
             epsilonDBScan=config.epsilonDBScan,
             minPointsDBScan=config.minPointsDBScan,
-            minSeed=config.minSeed,
-            minScore=config.minScore
         ),
     )
     s.addAlgorithm(filterML)
