@@ -61,7 +61,7 @@ addFatras(
     field,
     rnd=rnd,
     preSelectParticles=ParticleSelectorConfig(
-        rho=(0.0 * u.mm, 50.0 * u.mm),
+        rho=(0.0 * u.mm, 28.0 * u.mm),
         absZ=(0.0 * u.mm, 1.0 * u.m),
         eta=(-4.0, 4.0),
         pt=(150 * u.MeV, None),
