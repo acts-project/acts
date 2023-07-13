@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,7 +19,7 @@ nlohmann::json Acts::AxisJsonConverter::toJson(const IAxis& ia) {
     jAxis["range"] = std::array<ActsScalar, 2u>({ia.getMin(), ia.getMax()});
     jAxis["bins"] = ia.getNBins();
   } else {
-    jAxis["type"] = detail::AxisType::Equidistant;
+    jAxis["type"] = detail::AxisType::Variable;
     jAxis["boundaries"] = ia.getBinEdges();
   }
   return jAxis;

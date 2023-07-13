@@ -102,7 +102,6 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
       forwardVolumeA.get(), forwardVolumeB.get(), forwardVolumeC.get(),
       backwardVolume.get()};
 
-  // No volumes provided, must bail
   auto jPortal =
       Acts::PortalJsonConverter::toJson(tContext, *portal, detectorVolumes);
 

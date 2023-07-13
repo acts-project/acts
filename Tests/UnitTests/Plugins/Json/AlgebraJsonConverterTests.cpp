@@ -16,6 +16,7 @@
 #include <fstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 

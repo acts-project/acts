@@ -13,6 +13,7 @@
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 
 #include <array>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -94,32 +95,28 @@ Acts::IndexedSurfacesJsonConverter::fromJson(
           auto [range, bins] = eqExtractor(jAxis);
           if (axisBoundaryType == detail::AxisBoundaryType::Closed) {
             EqClosed ecAG{range, bins};
-            auto grid = GridJsonConverter::fromJson<EqClosed>(jGrid, ecAG);
-            return createUpdator<decltype(grid)>(std::move(grid), {bValue},
-                                                 transform);
+            auto grid = GridJsonConverter::fromJson(jGrid, ecAG);
+            return createUpdator(std::move(grid), {bValue}, transform);
           } else {
             EqBound ebAG{range, bins};
-            auto grid = GridJsonConverter::fromJson<EqBound>(jGrid, ebAG);
-            return createUpdator<decltype(grid)>(std::move(grid), {bValue},
-                                                 transform);
+            auto grid = GridJsonConverter::fromJson(jGrid, ebAG);
+            return createUpdator(std::move(grid), {bValue}, transform);
           }
         } else {
           // Variable type
           if (axisBoundaryType == detail::AxisBoundaryType::Closed) {
             VarClosed vcAG{vExtractor(jAxis)};
-            auto grid = GridJsonConverter::fromJson<VarClosed>(jGrid, vcAG);
-            return createUpdator<decltype(grid)>(std::move(grid), {bValue},
-                                                 transform);
+            auto grid = GridJsonConverter::fromJson(jGrid, vcAG);
+            return createUpdator(std::move(grid), {bValue}, transform);
           } else {
             VarBound vbAG{vExtractor(jAxis)};
-            auto grid = GridJsonConverter::fromJson<VarBound>(jGrid, vbAG);
-            return createUpdator<decltype(grid)>(std::move(grid), {bValue},
-                                                 transform);
+            auto grid = GridJsonConverter::fromJson(jGrid, vbAG);
+            return createUpdator(std::move(grid), {bValue}, transform);
           }
         }
       } else if (jAxes.size() == 2u) {
         // This currently writes out only the main options of 2D grids
-        // w.g. it assumes if one axis is closed, it is axis B
+        // nota bene: it assumes if one axis is closed, it is axis B
 
         BinningValue bValueA = jCasts[0u];
         BinningValue bValueB = jCasts[1u];
@@ -137,31 +134,27 @@ Acts::IndexedSurfacesJsonConverter::fromJson(
             if (axisTypeB == detail::AxisType::Equidistant) {
               auto [rangeB, binsB] = eqExtractor(jAxisB);
               EqBoundEqBound ebebAG{rangeA, binsA, rangeB, binsB};
-              auto grid =
-                  GridJsonConverter::fromJson<EqBoundEqBound>(jGrid, ebebAG);
-              return createUpdator<decltype(grid)>(
-                  std::move(grid), {bValueA, bValueB}, transform);
+              auto grid = GridJsonConverter::fromJson(jGrid, ebebAG);
+              return createUpdator(std::move(grid), {bValueA, bValueB},
+                                   transform);
             } else {
               EqBoundVarBound ebvbAG{rangeA, binsA, vExtractor(jAxisB)};
-              auto grid =
-                  GridJsonConverter::fromJson<EqBoundVarBound>(jGrid, ebvbAG);
-              return createUpdator<decltype(grid)>(
-                  std::move(grid), {bValueA, bValueB}, transform);
+              auto grid = GridJsonConverter::fromJson(jGrid, ebvbAG);
+              return createUpdator(std::move(grid), {bValueA, bValueB},
+                                   transform);
             }
           } else {
             if (axisTypeB == detail::AxisType::Equidistant) {
               auto [rangeB, binsB] = eqExtractor(jAxisB);
               VarBoundEqBound vbebAG{vExtractor(jAxisA), rangeB, binsB};
-              auto grid =
-                  GridJsonConverter::fromJson<VarBoundEqBound>(jGrid, vbebAG);
-              return createUpdator<decltype(grid)>(
-                  std::move(grid), {bValueA, bValueB}, transform);
+              auto grid = GridJsonConverter::fromJson(jGrid, vbebAG);
+              return createUpdator(std::move(grid), {bValueA, bValueB},
+                                   transform);
             } else {
               VarBoundVarBound vbvbAG{vExtractor(jAxisA), vExtractor(jAxisB)};
-              auto grid =
-                  GridJsonConverter::fromJson<VarBoundVarBound>(jGrid, vbvbAG);
-              return createUpdator<decltype(grid)>(
-                  std::move(grid), {bValueA, bValueB}, transform);
+              auto grid = GridJsonConverter::fromJson(jGrid, vbvbAG);
+              return createUpdator(std::move(grid), {bValueA, bValueB},
+                                   transform);
             }
           }
         } else {
@@ -171,31 +164,27 @@ Acts::IndexedSurfacesJsonConverter::fromJson(
             if (axisTypeB == detail::AxisType::Equidistant) {
               auto [rangeB, binsB] = eqExtractor(jAxisB);
               EqBoundEqClosed ebecAG{rangeA, binsA, rangeB, binsB};
-              auto grid =
-                  GridJsonConverter::fromJson<EqBoundEqClosed>(jGrid, ebecAG);
-              return createUpdator<decltype(grid)>(
-                  std::move(grid), {bValueA, bValueB}, transform);
+              auto grid = GridJsonConverter::fromJson(jGrid, ebecAG);
+              return createUpdator(std::move(grid), {bValueA, bValueB},
+                                   transform);
             } else {
               EqBoundVarClosed ebvcAG{rangeA, binsA, vExtractor(jAxisB)};
-              auto grid =
-                  GridJsonConverter::fromJson<EqBoundVarClosed>(jGrid, ebvcAG);
-              return createUpdator<decltype(grid)>(
-                  std::move(grid), {bValueA, bValueB}, transform);
+              auto grid = GridJsonConverter::fromJson(jGrid, ebvcAG);
+              return createUpdator(std::move(grid), {bValueA, bValueB},
+                                   transform);
             }
           } else {
             if (axisTypeB == detail::AxisType::Equidistant) {
               auto [rangeB, binsB] = eqExtractor(jAxisB);
               VarBoundEqClosed vbecAG{vExtractor(jAxisA), rangeB, binsB};
-              auto grid =
-                  GridJsonConverter::fromJson<VarBoundEqClosed>(jGrid, vbecAG);
-              return createUpdator<decltype(grid)>(
-                  std::move(grid), {bValueA, bValueB}, transform);
+              auto grid = GridJsonConverter::fromJson(jGrid, vbecAG);
+              return createUpdator(std::move(grid), {bValueA, bValueB},
+                                   transform);
             } else {
               VarBoundVarClosed vbvcAG{vExtractor(jAxisA), vExtractor(jAxisB)};
-              auto grid =
-                  GridJsonConverter::fromJson<VarBoundVarClosed>(jGrid, vbvcAG);
-              return createUpdator<decltype(grid)>(
-                  std::move(grid), {bValueA, bValueB}, transform);
+              auto grid = GridJsonConverter::fromJson(jGrid, vbvcAG);
+              return createUpdator(std::move(grid), {bValueA, bValueB},
+                                   transform);
             }
           }
         }

@@ -30,8 +30,11 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 #include <fstream>
+#include <memory>
+#include <vector>
 
 #include <nlohmann/json.hpp>
+
 namespace {
 
 /// Helper method that allows to use the already existing testing

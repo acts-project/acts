@@ -25,6 +25,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <fstream>
+#include <memory>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
