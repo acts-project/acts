@@ -184,7 +184,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Set up some variables
   Direction navDir = Direction::Backward;
   double stepSize = 123.;
-  double tolerance = 234.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
 
   Vector3 pos(1., 2., 3.);
@@ -196,7 +195,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom);
   EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
-                                navDir, stepSize, tolerance);
+                                navDir, stepSize);
 
   EigenStepper<> es(bField);
 
@@ -210,13 +209,12 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), navDir * stepSize);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
-  BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
   // Test without charge and covariance matrix
   NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
                                         1 / absMom);
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
-                                  navDir, stepSize, tolerance);
+                                  navDir, stepSize);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
@@ -224,7 +222,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
                                           1 / absMom, cov);
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
-                                  navDir, stepSize, tolerance);
+                                  navDir, stepSize);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, cov);
@@ -236,7 +234,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Set up some variables for the state
   Direction navDir = Direction::Backward;
   double stepSize = 123.;
-  double tolerance = 234.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
   auto bCache = bField->makeCache(mfContext);
 
@@ -252,7 +249,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Build the state and the stepper
   EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
-                                navDir, stepSize, tolerance);
+                                navDir, stepSize);
   EigenStepper<> es(bField);
 
   // Test the getters
@@ -261,7 +258,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   CHECK_CLOSE_ABS(es.absoluteMomentum(esState), absMom, eps);
   CHECK_CLOSE_ABS(es.charge(esState), charge, eps);
   CHECK_CLOSE_ABS(es.time(esState), time, eps);
-  //~ BOOST_CHECK_EQUAL(es.overstepLimit(esState), tolerance);
   BOOST_CHECK_EQUAL(es.getField(esState, pos).value(),
                     bField->getField(pos, bCache).value());
 
@@ -351,7 +347,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto copyState = [&](auto& field, const auto& state) {
     using field_t = std::decay_t<decltype(field)>;
     std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
-                                       cp, navDir, stepSize, tolerance);
+                                       cp, navDir, stepSize);
     copy.pars = state.pars;
     copy.absCharge = state.absCharge;
     copy.covTransport = state.covTransport;
@@ -364,7 +360,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     copy.pathAccumulated = state.pathAccumulated;
     copy.stepSize = state.stepSize;
     copy.previousStepSize = state.previousStepSize;
-    copy.tolerance = state.tolerance;
 
     copy.fieldCache =
         MagneticFieldProvider::Cache::make<typename field_t::Cache>(
@@ -402,7 +397,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), navDir * stepSize2);
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
-  BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   // Reset all possible parameters except the step size
   esStateCopy = copyState(*bField, ps.stepping);
@@ -428,7 +422,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
                     std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
-  BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   // Reset the least amount of parameters
   esStateCopy = copyState(*bField, ps.stepping);
@@ -454,7 +447,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
                     std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
-  BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir.normalized());
@@ -463,7 +455,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                                    dir, charge / absMom, cov)
           .value();
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), cp,
-                                  navDir, stepSize, tolerance);
+                                  navDir, stepSize);
 
   // Test the intersection in the context of a surface
   auto targetSurface =
@@ -533,7 +525,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto nBfield = std::make_shared<NullBField>();
   EigenStepper<> nes(nBfield);
   EigenStepper<>::State nesState(tgContext, nBfield->makeCache(mfContext), cp,
-                                 navDir, stepSize, tolerance);
+                                 navDir, stepSize);
   PropState nps(copyState(*nBfield, nesState));
   // Test that we can reach the minimum step size
   nps.options.tolerance = 1e-21;
