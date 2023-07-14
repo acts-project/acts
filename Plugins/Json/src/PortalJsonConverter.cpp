@@ -315,7 +315,7 @@ std::shared_ptr<Acts::Experimental::Portal> Acts::PortalJsonConverter::fromJson(
       auto binning = jMultiLink["binning"].get<BinningValue>();
       auto targets = jMultiLink["targets"].get<std::vector<unsigned int>>();
       std::vector<std::shared_ptr<Experimental::DetectorVolume>> targetVolumes;
-      for (const auto& t : targets) {
+      for (const auto t : targets) {
         targetVolumes.push_back(detectorVolumes[t]);
       }
       Experimental::detail::PortalHelper::attachDetectorVolumesUpdator(
