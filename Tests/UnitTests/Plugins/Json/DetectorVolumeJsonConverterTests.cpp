@@ -38,7 +38,7 @@ std::vector<std::shared_ptr<Acts::Surface>> unpackSurfaces(
     const std::vector<const Acts::Surface*>& surfaces) {
   std::vector<std::shared_ptr<Acts::Surface>> uSurfaces;
   uSurfaces.reserve(surfaces.size());
-  for (const auto& s : surfaces) {
+  for (const auto s : surfaces) {
     auto* ncs = const_cast<Acts::Surface*>(s);
     uSurfaces.push_back(ncs->getSharedPtr());
   }
