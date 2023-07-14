@@ -507,20 +507,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
         minPt = 1000 * u.MeV
         collisionRegionMin = -150 * u.mm
         collisionRegionMax = 150 * u.mm
-        zBinEdges = [
-            -3000.0,
-            -2500.0,
-            -1400.0,
-            -925.0,
-            -450.0,
-            -250.0,
-            250.0,
-            450.0,
-            925.0,
-            1400.0,
-            2500.0,
-            3000.0,
-        ]
         rRangeMiddleSP = [
             [40.0, 80.0],
             [40.0, 200.0],

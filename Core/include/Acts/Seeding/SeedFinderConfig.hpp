@@ -72,7 +72,7 @@ struct SeedFinderConfig {
   // seeding
   bool fastTrackingCut = false;
   float fastTrackingRMin = 50. * Acts::UnitConstants::mm;
-  float fastTrackingCotThetaMax = 2.13;
+  float fastTrackingCotThetaMax = 1.5;
 
   // use arithmetic average in the calculation of the squared error on the
   // difference in tan(theta)
