@@ -7,11 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <array>
@@ -70,7 +70,6 @@ void addUnits(Context& ctx) {
   UNIT(g)
   UNIT(kg)
   UNIT(e)
-  UNIT(C)
   UNIT(T)
   UNIT(Gauss)
   UNIT(kGauss)
@@ -268,6 +267,17 @@ void addAlgebra(Acts::Python::Context& ctx) {
       }))
       .def("__getitem__",
            [](const Acts::Vector4& self, Eigen::Index i) { return self[i]; });
+
+  py::class_<Acts::Transform3>(m, "Transform3")
+      .def(py::init([](std::array<double, 3> translation) {
+        Acts::Transform3 t = Acts::Transform3::Identity();
+        t.pretranslate(
+            Acts::Vector3(translation[0], translation[1], translation[2]));
+        return t;
+      }))
+      .def("getTranslation", [](const Acts::Transform3& self) {
+        return Vector3(self.translation());
+      });
 }
 
 void addBinning(Context& ctx) {
