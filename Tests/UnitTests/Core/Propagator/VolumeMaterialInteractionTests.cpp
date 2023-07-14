@@ -32,6 +32,7 @@ namespace Test {
 struct StepperState {
   Vector3 pos = Vector3::Zero(), dir = Vector3::Zero();
   ConstrainedStep stepSize;
+  double previousStepSize = 0;
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
   Direction navDir = Direction::Forward;
@@ -90,6 +91,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.pos = Vector3(1., 2., 3.);
   state.stepping.dir = Vector3(4., 5., 6.);
   state.stepping.stepSize = ConstrainedStep(1);
+  state.stepping.previousStepSize = 1;
   state.stepping.t = 7.;
   state.stepping.p = 8.;
   state.stepping.q = 9.;
