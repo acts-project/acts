@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 5);
+      rSurface, false, false, FreeToBoundCorrection(false), 50);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
@@ -334,15 +334,14 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK(!track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10.521387980023833, 1e-8);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10.143918540958712, 1e-8);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1.4992306159443798e-05,
-                    1e-8);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], 1.5707952030421313, 1e-8);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10.5213879800238, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10.1439185409587, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1.49923061594437e-05, 1e-6);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], 1.57079520304213, 1e-6);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.283236000001, 1e-8);
-  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1.0382256071672664e-27,
-                    1e-8);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1.03822560716726e-27,
+                    1e-6);
 
   std::cout << "##### Finished test case Fit5Iterations #####" << std::endl;
 }

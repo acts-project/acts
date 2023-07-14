@@ -32,6 +32,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -98,6 +99,7 @@ struct Gx2FitterOptions {
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
   /// @param freeToBoundCorrection_ Correction for non-linearity effect during transform from free to bound
+  /// @param nUpdateMax_ Max number of iterations for updating the parameters
   Gx2FitterOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
                    std::reference_wrapper<const CalibrationContext> cctx,
