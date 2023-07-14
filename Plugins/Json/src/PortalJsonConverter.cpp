@@ -191,7 +191,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
           if (ib > 0) {
             // Create sub surfaces
             std::array<ActsScalar, CylinderBounds::BoundValues::eSize>
-                subBoundValues;
+                subBoundValues = {};
             for (auto [ibv, bv] : enumerate(boundValues)) {
               subBoundValues[ibv] = bv;
             }
@@ -217,7 +217,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
           if (ib > 0) {
             // Create sub surfaces
             std::array<ActsScalar, RadialBounds::BoundValues::eSize>
-                subBoundValues;
+                subBoundValues = {};
             for (auto [ibv, bv] : enumerate(boundValues)) {
               subBoundValues[ibv] = bv;
             }
