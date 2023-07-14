@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -68,7 +69,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
     std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
-              [&invHelixDiameterVec](const size_t& i1, const size_t& i2) {
+              [&invHelixDiameterVec](const size_t& i1, const size_t& i2) {		
                 return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
               });
   }
@@ -92,7 +93,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         m_cfg.useDeltaRorTopRadius
             ? spacePointData.deltaR(topSpVec[topSPIndex]->index())
             : topSpVec[topSPIndex]->radius();
-    float impact = impactParametersVec[topSPIndex];
+    const float& impact = impactParametersVec[topSPIndex];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
 

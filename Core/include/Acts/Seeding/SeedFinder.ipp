@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -470,9 +471,9 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   }
 
   // Reserve enough space, in case current capacity is too little
-  state.topSpVec.reserve(numTopSP);
-  state.curvatures.reserve(numTopSP);
-  state.impactParameters.reserve(numTopSP);
+  state.topSpVec.resize(numTopSP, nullptr);
+  state.curvatures.resize(numTopSP, 0.f);
+  state.impactParameters.resize(numTopSP, 0.f);
 
   size_t t0 = 0;
 
@@ -510,10 +511,10 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     float cosTheta = cotThetaB * sinTheta;
 
     // clear all vectors used in each inner for loop
-    state.topSpVec.clear();
-    state.curvatures.clear();
-    state.impactParameters.clear();
-
+    std::size_t number_of_sp_vec = 0;
+    //    state.topSpVec.clear();
+    state.topSpVec.resize(numTopSP, nullptr);
+    
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
     float rotationTermsUVtoXY[2] = {0, 0};
@@ -534,7 +535,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       minCompatibleTopSPs++;
     }
 
-    for (size_t index_t = t0; index_t < numTopSP; index_t++) {
+    for (size_t index_t = t0; index_t < numTopSP; ++index_t) {
       const std::size_t& t = sorted_tops[index_t];
 
       auto lt = state.linCircleTop[t];
@@ -749,20 +750,20 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         continue;
       }
 
-      state.topSpVec.push_back(state.compatTopSP[t]);
+      state.topSpVec[number_of_sp_vec] = state.compatTopSP[t];
       // inverse diameter is signed depending if the curvature is
       // positive/negative in phi
-      state.curvatures.push_back(B / std::sqrt(S2));
-      state.impactParameters.push_back(Im);
+      state.curvatures[number_of_sp_vec] = B / std::sqrt(S2);
+      state.impactParameters[number_of_sp_vec++] = Im;
     }  // loop on tops
 
     // continue if number of top SPs is smaller than minimum required for filter
-    if (state.topSpVec.size() < minCompatibleTopSPs) {
+    if (number_of_sp_vec < minCompatibleTopSPs) {
       continue;
     }
 
     seedFilterState.zOrigin = spM.z() - rM * lb.cotTheta;
-
+    state.topSpVec.resize(number_of_sp_vec); // this will shrink it
     m_config.seedFilter->filterSeeds_2SpFixed(
         state.spacePointData, *state.compatBottomSP[b], spM, state.topSpVec,
         state.curvatures, state.impactParameters, seedFilterState,
