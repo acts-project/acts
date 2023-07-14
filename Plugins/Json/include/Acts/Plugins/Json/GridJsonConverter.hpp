@@ -118,7 +118,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(Acts::detail::AxisBoundaryType,
                               {Acts::detail::AxisBoundaryType::Closed,
                                "Closed"}})
 
-NLOHMANN_JSON_SERIALIZE_ENUM(AxisType,
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::detail::AxisType,
                              {{Acts::detail::AxisType::Equidistant,
                                "Equidistant"},
                               {Acts::detail::AxisType::Variable, "Variable"}})
