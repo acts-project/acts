@@ -222,8 +222,8 @@ class Gx2Fitter {
 
  public:
   Gx2Fitter(propagator_t pPropagator,
-             std::unique_ptr<const Logger> _logger =
-                 getDefaultLogger("Gx2Fitter", Logging::INFO))
+            std::unique_ptr<const Logger> _logger =
+                getDefaultLogger("Gx2Fitter", Logging::INFO))
       : m_propagator(std::move(pPropagator)),
         m_logger{std::move(_logger)},
         m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
@@ -334,11 +334,13 @@ class Gx2Fitter {
         auto sourcelink_it = inputMeasurements->find(surface->geometryId());
 
         if (sourcelink_it != inputMeasurements->end()) {
-          stepper.transportCovarianceToBound(state.stepping, *surface, freeToBoundCorrection);
+          stepper.transportCovarianceToBound(state.stepping, *surface,
+                                             freeToBoundCorrection);
           auto res = stepper.boundState(state.stepping, *surface, false,
                                         freeToBoundCorrection);
           if (!res.ok()) {
-            std::cout << "dbgActor: res = stepper.boundState res not ok" << std::endl;
+            std::cout << "dbgActor: res = stepper.boundState res not ok"
+                      << std::endl;
             return;
           }
           auto& [boundParams, jacobian, pathLength] = *res;
@@ -497,7 +499,9 @@ class Gx2Fitter {
     // Iterate the fit and improve result. Abort after n steps or after
     // convergence
     for (size_t nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
-      std::cout << "\nnUpdate = " << nUpdate + 1 << "/" << gx2fOptions.nUpdateMax << "\n" << std::endl;
+      std::cout << "\nnUpdate = " << nUpdate + 1 << "/"
+                << gx2fOptions.nUpdateMax << "\n"
+                << std::endl;
 
       // update params
       params.parameters() += deltaParams;
@@ -520,29 +524,31 @@ class Gx2Fitter {
 
       r.fittedStates = &trackContainer.trackStateContainer();
       // propagate with params and return jacobians and residuals
-      auto result = m_propagator.template propagate(
-          params, propagatorOptions, std::move(inputResult));
+      auto result = m_propagator.template propagate(params, propagatorOptions,
+                                                    std::move(inputResult));
 
-      // TODO Improve Propagator + Actor [allocate before loop], rewrite makeMeasurements
+      // TODO Improve Propagator + Actor [allocate before loop], rewrite
+      // makeMeasurements
       auto& propRes = *result;
       auto gx2fResult = std::move(propRes.template get<GX2FResult>());
 
-//      std::cout << "gx2fResult.collectorResiduals.size() = "
-//                << gx2fResult.collectorResiduals.size() << std::endl;
-//      for (auto vec : gx2fResult.collectorResiduals) {
-//        for (auto s : vec) {
-//          std::cout << s << ", ";
-//        }
-//      }
-//      std::cout << std::endl;
+      //      std::cout << "gx2fResult.collectorResiduals.size() = "
+      //                << gx2fResult.collectorResiduals.size() << std::endl;
+      //      for (auto vec : gx2fResult.collectorResiduals) {
+      //        for (auto s : vec) {
+      //          std::cout << s << ", ";
+      //        }
+      //      }
+      //      std::cout << std::endl;
 
-//      std::cout << "gx2fResult.collectorCovariance.size() = "
-//                << gx2fResult.collectorCovariance.size() << std::endl;
-//      for (auto s : gx2fResult.collectorCovariance) {
-//        std::cout << s(0, 0) << ", " << s(0, 1) << ", " << s(1, 0) << ", "
-//                  << s(1, 1) << "\n";
-//      }
-//      std::cout << std::endl;
+      //      std::cout << "gx2fResult.collectorCovariance.size() = "
+      //                << gx2fResult.collectorCovariance.size() << std::endl;
+      //      for (auto s : gx2fResult.collectorCovariance) {
+      //        std::cout << s(0, 0) << ", " << s(0, 1) << ", " << s(1, 0) << ",
+      //        "
+      //                  << s(1, 1) << "\n";
+      //      }
+      //      std::cout << std::endl;
 
       //            std::cout << "gx2fResult.collectorJacobians.size() = " <<
       //            gx2fResult.collectorJacobians.size() << std::endl;
@@ -570,7 +576,8 @@ class Gx2Fitter {
         const auto ri = gx2fResult.collectorResiduals[iMeas];
         const auto covi = gx2fResult.collectorCovariance[iMeas];
         const auto coviInv = covi.inverse();
-        const auto projectedJacobian = proj * gx2fResult.collectorJacobians[iMeas];
+        const auto projectedJacobian =
+            proj * gx2fResult.collectorJacobians[iMeas];
 
         const double chi2meas = (ri.transpose() * coviInv * ri).eval()(0);
         const BoundMatrix aMatrixMeas =
@@ -587,11 +594,11 @@ class Gx2Fitter {
       deltaParams = BoundVector::Zero();
       const ActsVector<reducedMatrixSize> deltaParamsReduced =
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
-              .colPivHouseholderQr().solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
+              .colPivHouseholderQr()
+              .solve(bVector.topLeftCorner<reducedMatrixSize, 1>());
 
-      for (size_t idp = 0; idp < reducedMatrixSize; idp++)
-      {
-        deltaParams(idp,0) = deltaParamsReduced(idp,0);
+      for (size_t idp = 0; idp < reducedMatrixSize; idp++) {
+        deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
       }
 
       // TODO use Acts logging for this
@@ -611,14 +618,17 @@ class Gx2Fitter {
 
     // Calculate covariance of the fitted parameters with inverse of [a]
     BoundMatrix fullCovariancePredicted = BoundMatrix::Identity();
-    if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().determinant() != 0){
-      fullCovariancePredicted.template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
-          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>().inverse();
+    if (aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+            .determinant() != 0) {
+      fullCovariancePredicted
+          .template topLeftCorner<reducedMatrixSize, reducedMatrixSize>() =
+          aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
+              .inverse();
     } else if (gx2fOptions.nUpdateMax > 0) {
       // TODO
-      std::cout << "det(a) == 0. This shouldn't happen. Implement real ERROR" << std::endl;
+      std::cout << "det(a) == 0. This shouldn't happen. Implement real ERROR"
+                << std::endl;
     }
-
 
     // Prepare track for return
     auto track = trackContainer.getTrack(trackContainer.addTrack());
@@ -628,7 +638,8 @@ class Gx2Fitter {
     // TODO track.setReferenceSurface(params.referenceSurface().getSharedPtr());
     // TODO track.nMeasurements() = gx2fResult.measurementStates;
     // TODO track.nHoles() = gx2fResult.measurementHoles;
-    calculateTrackQuantities(track); // TODO write test for calculateTrackQuantities
+    calculateTrackQuantities(
+        track);  // TODO write test for calculateTrackQuantities
 
     // Return the converted Track
     return track;

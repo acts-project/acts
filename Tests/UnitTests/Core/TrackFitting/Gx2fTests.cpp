@@ -10,26 +10,26 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
-#include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 
 #include <vector>
 
@@ -41,14 +41,11 @@ namespace Acts {
 namespace Test {
 
 //// Construct initial track parameters.
-Acts::CurvilinearTrackParameters makeParameters(const ActsScalar x=0.0_m,
-                                                const ActsScalar y=0.0_m,
-                                                const ActsScalar z=0.0_m,
-                                                const ActsScalar w=42_ns,
-                                                const ActsScalar phi=0_degree,
-                                                const ActsScalar theta=90_degree,
-                                                const ActsScalar p=1_GeV,
-                                                const ActsScalar q=1_e) {
+Acts::CurvilinearTrackParameters makeParameters(
+    const ActsScalar x = 0.0_m, const ActsScalar y = 0.0_m,
+    const ActsScalar z = 0.0_m, const ActsScalar w = 42_ns,
+    const ActsScalar phi = 0_degree, const ActsScalar theta = 90_degree,
+    const ActsScalar p = 1_GeV, const ActsScalar q = 1_e) {
   // create covariance matrix from reasonable standard deviations
   Acts::BoundVector stddev;
   stddev[Acts::eBoundLoc0] = 100_um;
@@ -199,7 +196,8 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   detector.geometry = makeToyDetector(geoCtx, nSurfaces);
 
   auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(0.1_m, 0.1_m, 0.1_m, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+  auto startParametersFit = makeParameters(0.1_m, 0.1_m, 0.1_m, 42_ns,
+                                           10_degree, 80_degree, 1_GeV, 1_e);
 
   MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
   MeasurementResolutionMap resolutions = {
@@ -209,8 +207,8 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   using SimPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
-  auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, parametersMeasurements,
-                                         resolutions, rng);
+  auto measurements = createMeasurements(
+      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
 
   using Gx2Fitter =
@@ -231,8 +229,8 @@ BOOST_AUTO_TEST_CASE(NoFit) {
                               Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(), startParametersFit,
-                        gx2fOptions, tracks);
+  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                        startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
@@ -260,7 +258,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   std::cout << "\n*** Go to propagator ***\n" << std::endl;
 
   auto parametersMeasurements = makeParameters();
-  auto startParametersFit = makeParameters(10_mm, 10_mm, 10_mm, 42_ns, 10_degree, 80_degree, 1_GeV, 1_e);
+  auto startParametersFit = makeParameters(10_mm, 10_mm, 10_mm, 42_ns,
+                                           10_degree, 80_degree, 1_GeV, 1_e);
   //  auto startParametersFit = parametersMeasurements;
   // Context objects
   Acts::GeometryContext geoCtx;
@@ -278,9 +277,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   using SimPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
-  auto measurements = createMeasurements(simPropagator, geoCtx, magCtx,
-                                         parametersMeasurements,
-                                         resolutions, rng);
+  auto measurements = createMeasurements(
+      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
   std::cout << "sourceLinks.size() = " << sourceLinks.size() << std::endl;
 
@@ -288,8 +286,10 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   std::cout << "\n*** Start fitting ***\n" << std::endl;
 
-  std::cout << "\n*** startParameter unsmeared: ***\n" << parametersMeasurements << std::endl;
-  std::cout << "\n*** startParameter fit: ***\n" << startParametersFit << std::endl;
+  std::cout << "\n*** startParameter unsmeared: ***\n"
+            << parametersMeasurements << std::endl;
+  std::cout << "\n*** startParameter fit: ***\n"
+            << startParametersFit << std::endl;
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   Navigator::Config cfg{detector.geometry};
@@ -321,11 +321,11 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
       rSurface, false, false, FreeToBoundCorrection(false), 5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
-                                  Acts::VectorMultiTrajectory{}};
+                              Acts::VectorMultiTrajectory{}};
 
   // Fit the track
-  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(), startParametersFit,
-                        gx2fOptions, tracks);
+  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                        startParametersFit, gx2fOptions, tracks);
 
   BOOST_REQUIRE(res.ok());
 
@@ -336,11 +336,13 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10.521387980023833, 1e-8);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10.143918540958712, 1e-8);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1.4992306159443798e-05, 1e-8);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1.4992306159443798e-05,
+                    1e-8);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], 1.5707952030421313, 1e-8);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.283236000001, 1e-8);
-  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1.0382256071672664e-27, 1e-8);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1.0382256071672664e-27,
+                    1e-8);
 
   std::cout << "##### Finished test case Fit5Iterations #####" << std::endl;
 }
