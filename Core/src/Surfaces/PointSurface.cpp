@@ -150,6 +150,10 @@ const Acts::SurfaceBounds& Acts::PointSurface::bounds() const {
   return s_noBounds;
 }
 
+Acts::Surface::SurfaceType Acts::PointSurface::type() const {
+  return SurfaceType::Point;
+}
+
 Acts::SurfaceIntersection Acts::PointSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,

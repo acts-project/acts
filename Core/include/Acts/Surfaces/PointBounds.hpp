@@ -24,7 +24,7 @@ namespace Acts {
 /// Bounds for a PointSurface.
 class PointBounds : public SurfaceBounds {
  public:
-  enum BoundValues : int { eR = 0, eSize = 2 };
+  enum BoundValues : int { eR = 0, eSize = 1 };
 
   PointBounds() = delete;
 

@@ -34,8 +34,6 @@ class SurfaceBounds;
 ///
 /// Base class for a point surfaces in the TrackingGeometry to allow propagation
 /// to the closest point of approach of a 3D point. It inherits from Surface.
-///
-/// @note It leaves the type() method virtual, so it can not be instantiated
 class PointSurface : public Surface {
 #ifndef DOXYGEN
   friend Surface;
@@ -191,6 +189,9 @@ class PointSurface : public Surface {
   /// @note there's no material associated to the point surface
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
                         const Vector3& direction) const override;
+
+  /// Return the surface type
+  SurfaceType type() const override;
 
   /// This method returns the bounds of the Surface by reference */
   const SurfaceBounds& bounds() const final;
