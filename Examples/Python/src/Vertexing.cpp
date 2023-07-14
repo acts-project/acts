@@ -50,10 +50,9 @@ void addVertexing(Context& ctx) {
       inputTrackParameters, inputTrajectories, inputProtoVertices,
       outputVertices, bField, doConstrainedFit, constraintPos, constraintCov);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SingleSeedVertexFinderAlgorithm, mex,
-                                "SingleSeedVertexFinderAlgorithm",
-                                inputSpacepoints,
-                                outputVertices);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SingleSeedVertexFinderAlgorithm,
+                                mex, "SingleSeedVertexFinderAlgorithm",
+                                inputSpacepoints, outputVertices);
 }
 
 }  // namespace Acts::Python

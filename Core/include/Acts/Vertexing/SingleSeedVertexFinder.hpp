@@ -118,10 +118,7 @@ class SingleSeedVertexFinder {
   struct Triplet {
     Triplet(const spacepoint_t& aa, const spacepoint_t& bb,
             const spacepoint_t& cc)
-        : a(aa),
-          b(bb),
-          c(cc),
-          ray(Acts::Vector3::Zero(), {1., 1., 1.}) {}
+        : a(aa), b(bb), c(cc), ray(Acts::Vector3::Zero(), {1., 1., 1.}) {}
 
     const spacepoint_t &a, &b, &c;
     Acts::Ray3D ray;

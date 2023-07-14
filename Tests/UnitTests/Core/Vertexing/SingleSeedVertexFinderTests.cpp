@@ -29,7 +29,7 @@ struct SpacePoint4SSVFT {
   double r() const { return std::sqrt(m_x * m_x + m_y * m_y); }
 };
 
-/// @brief Provides random double number betwenn $from and $to
+/// @brief Provides random double number between $from and $to
 /// @param gen random number generator
 /// @param from lower threshold
 /// @param to upper threshold
@@ -38,7 +38,7 @@ double getRndDouble(std::mt19937& gen, double from, double to) {
   return gen() / 4294967296. * (to - from) + from;
 }
 
-/// @brief Provides random integer number betwenn $from and $to
+/// @brief Provides random integer number between $from and $to
 /// @param gen random number generator
 /// @param from lower threshold
 /// @param to upper threshold
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(single_seed_vertex_finder_full_planes_test) {
     // make straight lines originating from the given vertex
     int nTracks = getRndInt(gen, 200, 400);
     for (int track = 0; track < nTracks; ++track) {
-      // inital position of the track
+      // initial position of the track
       double posX = vtxX;
       double posY = vtxY;
       double posZ = vtxZ;
