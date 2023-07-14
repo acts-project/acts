@@ -45,6 +45,16 @@ BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   out.open("portal.json");
   out << jPortal.dump(4);
   out.close();
+
+  // Now read it back in
+  auto in =
+      std::ifstream("portal.json", std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json jPortalIn;
+  in >> jPortalIn;
+  in.close();
+
+  auto portalIn = Acts::PortalJsonConverter::fromJson(tContext, jPortalIn, {});
 }
 
 BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
@@ -74,6 +84,17 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
   out.open("portal-single-connected.json");
   out << jPortal.dump(4);
   out.close();
+
+  // Now read it back in
+  auto in = std::ifstream("portal-single-connected.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json jPortalIn;
+  in >> jPortalIn;
+  in.close();
+
+  auto portalIn = Acts::PortalJsonConverter::fromJson(
+      tContext, jPortalIn, {forwardVolume, backwardVolume});
 }
 
 BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
