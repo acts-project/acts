@@ -344,11 +344,12 @@ class CombinatorialKalmanFilter {
     /// @param stepper is the stepper in use
     /// @param navigator is the navigator in use
     /// @param result is the mutable result state object
+    /// @param logger the logger object to be used
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
-                    const Logger& /*logger*/) const {
+                    const Logger& logger) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -521,16 +522,15 @@ class CombinatorialKalmanFilter {
               // -> set the smoothed status to false
               // -> update the index of track to be smoothed
               if (result.iSmoothed < result.lastMeasurementIndices.size() - 1) {
-                navigator.targetReached(state.navigation, false);
                 result.smoothed = false;
                 result.iSmoothed++;
                 // Reverse navigation direction to start targeting for the rest
                 // tracks
                 state.stepping.navDir = state.stepping.navDir.invert();
-                // To avoid meaningless navigation target call
-                state.stepping.stepSize =
-                    ConstrainedStep(state.stepping.navDir *
-                                    std::abs(state.options.maxStepSize));
+
+                // TODO this is kinda silly but I dont see a better solution
+                // with the current CKF control flow
+                operator()(state, stepper, navigator, result, logger);
               } else {
                 ACTS_VERBOSE("Finish Kalman filtering and smoothing");
                 // Remember that track finding is done
