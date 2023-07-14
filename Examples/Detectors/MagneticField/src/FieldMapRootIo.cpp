@@ -10,8 +10,10 @@
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
+#include <stdexcept>
 #include <vector>
 
+#include <RtypesCore.h>
 #include <TFile.h>
 #include <TTree.h>
 

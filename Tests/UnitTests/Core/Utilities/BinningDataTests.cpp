@@ -8,11 +8,16 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -134,8 +139,7 @@ BOOST_AUTO_TEST_CASE(BinningData_BinningValue) {
   BOOST_CHECK_EQUAL(xData_arb_binary.value(xyPosition), 0.5);
 
   // r/phi/rphiData
-  CHECK_CLOSE_REL(rData_eq.value(xyzPosition), sqrt(0.5 * 0.5 + 1.5 * 1.5),
-                  1e-5);
+  CHECK_CLOSE_REL(rData_eq.value(xyzPosition), std::hypot(0.5, 1.5), 1e-5);
   BOOST_CHECK_EQUAL(rData_eq.value(rphiPosition), 3.5);
 
   CHECK_SMALL(phiData_eq.value(phi0Position), 1e-6 * M_PI);

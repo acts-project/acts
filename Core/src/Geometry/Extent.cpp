@@ -8,9 +8,13 @@
 
 #include "Acts/Geometry/Extent.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <sstream>
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <iomanip>
+#include <limits>
 
 Acts::Extent::Extent(
     const std::array<std::array<ActsScalar, 2>, binValues>& envelope)
@@ -67,7 +71,7 @@ void Acts::Extent::extend(const Extent& rhs,
       }
       m_constrains.set(bValue);
     } else if (rhs.envelope()[bValue] != zeroEnvelope) {
-      // Only an envelope given, but value is not contraint -> apply envelope
+      // Only an envelope given, but value is not constraint -> apply envelope
       m_range[bValue].expand(m_range[bValue].min() - rhs.envelope()[bValue][0],
                              m_range[bValue].max() + rhs.envelope()[bValue][1]);
       m_constrains.set(bValue);

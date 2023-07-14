@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/ConeVolumeBounds.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
@@ -18,13 +20,13 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <stdexcept>
+#include <type_traits>
+#include <utility>
 
 Acts::ConeVolumeBounds::ConeVolumeBounds(double innerAlpha, double innerOffsetZ,
                                          double outerAlpha, double outerOffsetZ,
@@ -192,7 +194,7 @@ bool Acts::ConeVolumeBounds::inside(const Vector3& pos, double tol) const {
   double z = pos.z();
   double zmin = z + tol;
   double zmax = z - tol;
-  // Quick check ouside z
+  // Quick check outside z
   if (zmin < -get(eHalfLengthZ) or zmax > get(eHalfLengthZ)) {
     return false;
   }

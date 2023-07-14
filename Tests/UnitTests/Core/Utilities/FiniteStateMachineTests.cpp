@@ -11,6 +11,8 @@
 #include "Acts/Utilities/FiniteStateMachine.hpp"
 
 #include <iostream>
+#include <optional>
+#include <stdexcept>
 
 namespace tt = boost::test_tools;
 

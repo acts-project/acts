@@ -10,4 +10,3 @@ checks:
       threshold: 3
     IntegralCheck:
       threshold: 3
-

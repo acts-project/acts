@@ -8,12 +8,17 @@
 
 #include "ActsExamples/Geant4/MaterialSteppingAction.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Propagator/MaterialInteractor.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
+
+#include <cstddef>
+#include <ostream>
+#include <unordered_map>
+#include <utility>
 
 #include <G4Material.hh>
 #include <G4RunManager.hh>
@@ -27,9 +32,6 @@ ActsExamples::MaterialSteppingAction::~MaterialSteppingAction() = default;
 
 void ActsExamples::MaterialSteppingAction::UserSteppingAction(
     const G4Step* step) {
-  // Get the event data
-  auto& eventData = EventStoreRegistry::eventData();
-
   // Get the material & check if it is present
   G4Material* material = step->GetPreStepPoint()->GetMaterial();
   if (material == nullptr) {
@@ -94,7 +96,7 @@ void ActsExamples::MaterialSteppingAction::UserSteppingAction(
 
   G4Track* g4Track = step->GetTrack();
   size_t trackID = g4Track->GetTrackID();
-  auto& materialTracks = eventData.materialTracks;
+  auto& materialTracks = eventStore().materialTracks;
   if (materialTracks.find(trackID - 1) == materialTracks.end()) {
     Acts::RecordedMaterialTrack rmTrack;
     const auto& g4Vertex = g4Track->GetVertexPosition();

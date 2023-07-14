@@ -17,6 +17,10 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <cassert>
+#include <system_error>
+#include <tuple>
+
 namespace Acts {
 
 /// Kalman update step using the gain matrix formalism.
@@ -47,11 +51,10 @@ class GainMatrixUpdater {
   /// @param[in] direction The navigation direction
   /// @param[in] logger Where to write logging information to
   template <typename traj_t>
-  Result<void> operator()(
-      const GeometryContext& gctx,
-      typename MultiTrajectory<traj_t>::TrackStateProxy trackState,
-      Direction direction = Direction::Forward,
-      const Logger& logger = getDummyLogger()) const {
+  Result<void> operator()(const GeometryContext& gctx,
+                          typename traj_t::TrackStateProxy trackState,
+                          Direction direction = Direction::Forward,
+                          const Logger& logger = getDummyLogger()) const {
     (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 

@@ -8,9 +8,10 @@
 
 #include "Acts/MagneticField/SolenoidBField.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 #define BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
 

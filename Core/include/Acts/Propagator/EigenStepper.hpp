@@ -11,6 +11,8 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -46,7 +48,7 @@ template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class EigenStepper {
  public:
-  /// Jacobian, Covariance and State defintions
+  /// Jacobian, Covariance and State definitions
   using Jacobian = BoundMatrix;
   using Covariance = BoundSymMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
@@ -69,7 +71,6 @@ class EigenStepper {
     /// @param [in] par The track parameters at start
     /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
-    /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
@@ -77,12 +78,10 @@ class EigenStepper {
                    MagneticFieldProvider::Cache fieldCacheIn,
                    const SingleBoundTrackParameters<charge_t>& par,
                    Direction ndir = Direction::Forward,
-                   double ssize = std::numeric_limits<double>::max(),
-                   double stolerance = s_onSurfaceTolerance)
-        : q(par.charge()),
+                   double ssize = std::numeric_limits<double>::max())
+        : absCharge(std::abs(par.charge())),
           navDir(ndir),
           stepSize(ssize),
-          tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
@@ -104,8 +103,8 @@ class EigenStepper {
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// The charge as the free vector can be 1/p or q/p
-    double q = 1.;
+    /// The absolute charge as the free vector can be 1/p or q/p
+    double absCharge = UnitConstants::e;
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
@@ -135,9 +134,6 @@ class EigenStepper {
 
     /// Last performed step (for overstep limit calculation)
     double previousStepSize = 0.;
-
-    /// The tolerance for the stepping
-    double tolerance = s_onSurfaceTolerance;
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
@@ -173,8 +169,7 @@ class EigenStepper {
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
                   Direction navDir = Direction::Forward,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const;
+                  double ssize = std::numeric_limits<double>::max()) const;
 
   /// @brief Resets the state
   ///
@@ -214,17 +209,32 @@ class EigenStepper {
     return state.pars.template segment<3>(eFreeDir0);
   }
 
+  /// QoP direction accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  double qOverP(const State& state) const { return state.pars[eFreeQOverP]; }
+
   /// Absolute momentum accessor
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double momentum(const State& state) const {
-    return std::abs((state.q == 0. ? 1. : state.q) / state.pars[eFreeQOverP]);
+  double absoluteMomentum(const State& state) const {
+    auto q = charge(state);
+    return std::abs((q == 0 ? 1 : q) / qOverP(state));
+  }
+
+  /// Momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  Vector3 momentum(const State& state) const {
+    return absoluteMomentum(state) * direction(state);
   }
 
   /// Charge access
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  double charge(const State& state) const { return state.q; }
+  double charge(const State& state) const {
+    return std::copysign(state.absCharge, qOverP(state));
+  }
 
   /// Time access
   ///
@@ -240,11 +250,13 @@ class EigenStepper {
   /// @param [in] surface The surface provided
   /// @param [in] bcheck The boundary check for this status update
   /// @param [in] logger A @c Logger instance
+  /// @param [in] surfaceTolerance Surface tolerance used for intersection
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      const Logger& logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger(),
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
-        *this, state, surface, bcheck, logger);
+        *this, state, surface, bcheck, logger, surfaceTolerance);
   }
 
   /// Update step size
@@ -263,7 +275,7 @@ class EigenStepper {
     detail::updateSingleStepSize<EigenStepper>(state, oIntersection, release);
   }
 
-  /// Set Step size - explicitely with a double
+  /// Set Step size - explicitly with a double
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param stepSize [in] The step size value
@@ -351,15 +363,15 @@ class EigenStepper {
               const BoundVector& boundParams, const Covariance& covariance,
               const Surface& surface) const;
 
-  /// Method to update momentum, direction and p
+  /// Method to update the stepper state
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
-  /// @param [in] up the updated momentum value
+  /// @param [in] qOverP the updated qOverP value
   /// @param [in] time the updated time value
   void update(State& state, const Vector3& uposition, const Vector3& udirection,
-              double up, double time) const;
+              double qOverP, double time) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current  position,

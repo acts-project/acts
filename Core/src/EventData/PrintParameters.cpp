@@ -8,12 +8,14 @@
 
 #include "Acts/EventData/detail/PrintParameters.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <array>
 #include <cstddef>
 #include <iomanip>
 #include <ostream>
+#include <string>
 
 namespace {
 

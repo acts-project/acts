@@ -40,9 +40,9 @@ namespace detail {
 /// @note for closed binning a span over half the bins flips direction
 ///
 /// @return a vector of bins to be filled
-std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
-                                     std::size_t expand, std::size_t nBins,
-                                     Acts::detail::AxisBoundaryType type) {
+static inline std::vector<std::size_t> binSequence(
+    std::array<std::size_t, 2u> minMaxBins, std::size_t expand,
+    std::size_t nBins, Acts::detail::AxisBoundaryType type) {
   // Return vector for iterations
   std::vector<std::size_t> rBins;
   /// Helper method to fill a range
@@ -193,7 +193,7 @@ std::set<typename grid_type::index_t> localIndices(
 ///
 /// @param lbins the local bins
 ///
-/// @return a string containing the local bins orderd in a set
+/// @return a string containing the local bins ordered in a set
 template <typename local_bin>
 std::string outputIndices(const std::set<local_bin>& lbins) {
   std::string rString;
@@ -259,7 +259,7 @@ struct IndexedGridFiller {
       std::vector<typename index_grid::grid_type::point_t> gridQueries;
       gridQueries.reserve(refs.size());
       for (const auto& ref : refs) {
-        // Cast the transfrom according to the grid binning
+        // Cast the transform according to the grid binning
         gridQueries.push_back(iGrid.castPosition(ref));
       }
       ACTS_DEBUG(gridQueries.size() << " reference points generated.");

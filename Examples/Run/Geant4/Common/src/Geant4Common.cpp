@@ -21,7 +21,7 @@
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Geant4/EventStoreRegistry.hpp"
+#include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
@@ -42,102 +42,65 @@
 
 #include <FTFP_BERT.hh>
 #include <G4RunManager.hh>
+#include <G4VUserDetectorConstruction.hh>
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {
 
+void setupMaterialRecording(
+    const ActsExamples::Options::Variables& vars,
+    ActsExamples::Sequencer& sequencer,
+    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory) {
+  auto g4loglevel =
+      Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
+  size_t seed = vars["g4-seed"].as<size_t>();
+
+  Geant4MaterialRecording::Config g4Cfg;
+
+  g4Cfg.detectorConstructionFactory = std::move(detectorConstructionFactory);
+  g4Cfg.randomNumbers = std::make_shared<ActsExamples::RandomNumbers>(
+      ActsExamples::RandomNumbers::Config{seed});
+  g4Cfg.inputParticles = Simulation::kParticlesInitial;
+  g4Cfg.outputMaterialTracks = Simulation::kMaterialTracks;
+  g4Cfg.excludeMaterials = {"Air", "Vacuum"};
+
+  sequencer.addAlgorithm(
+      std::make_shared<Geant4MaterialRecording>(g4Cfg, g4loglevel));
+}
+
 void setupGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
     ActsExamples::Sequencer& sequencer,
-    std::shared_ptr<G4RunManager> runManager,
-    std::unique_ptr<G4VUserDetectorConstruction> detector,
-    std::vector<G4UserRunAction*> runActions,
-    std::vector<G4UserEventAction*> eventActions,
-    std::vector<G4UserTrackingAction*> trackingActions,
-    std::vector<G4UserSteppingAction*> steppingActions,
-    const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
-    const std::shared_ptr<const Acts::MagneticFieldProvider>& magneticField,
-    bool materialRecording) {
+    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory,
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   auto g4loglevel =
       Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
-
-  if (runActions.size() > 1 or eventActions.size() > 1 or
-      trackingActions.size() > 1 or steppingActions.size() > 1) {
-    throw std::invalid_argument("Only one user action per category allowed");
-  }
-
   size_t seed = vars["g4-seed"].as<size_t>();
 
-  // Set the main Geant4 algorithm, primary generation, detector construction
   Geant4Simulation::Config g4Cfg;
 
-  g4Cfg.runManager = std::move(runManager);
+  g4Cfg.detectorConstructionFactory = std::move(detectorConstructionFactory);
   g4Cfg.randomNumbers = std::make_shared<ActsExamples::RandomNumbers>(
       ActsExamples::RandomNumbers::Config{seed});
-  g4Cfg.inputParticles = materialRecording ? Simulation::kParticlesInitial
-                                           : Simulation::kParticlesSelection;
-
-  // Read the particle from the generator
-  SimParticleTranslation::Config g4PrCfg;
-
-  if (materialRecording) {
-    g4PrCfg.forcedPdgCode = 0;
-    g4PrCfg.forcedCharge = 0.;
-    g4PrCfg.forcedMass = 0.;
-    // Set the material tracks at output
-    g4Cfg.outputMaterialTracks = Simulation::kMaterialTracks;
-  }
-
-  // Set the primarty generator
-  g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
-      g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", g4loglevel));
-  g4Cfg.detectorConstruction = detector.release();
-
-  // Set the user actions
-  g4Cfg.runAction = runActions.empty() ? nullptr : runActions.front();
-  g4Cfg.eventAction = eventActions.empty() ? nullptr : eventActions.front();
-  g4Cfg.trackingAction =
-      trackingActions.empty() ? nullptr : trackingActions.front();
-  g4Cfg.steppingAction =
-      steppingActions.empty() ? nullptr : steppingActions.front();
-
-  // An ACTS Magnetic field is provided
-  if (magneticField) {
-    MagneticFieldWrapper::Config g4FieldCfg;
-    g4FieldCfg.magneticField = magneticField;
-    g4Cfg.magneticField = new MagneticFieldWrapper(g4FieldCfg);
-  }
-
-  // An ACTS TrackingGeometry is provided, so simulation for sensitive
-  // detectors is turned on - they need to get matched first
-  if (trackingGeometry) {
-    SensitiveSurfaceMapper::Config ssmCfg;
-    ssmCfg.trackingGeometry = trackingGeometry;
-    g4Cfg.sensitiveSurfaceMapper =
-        std::make_shared<const SensitiveSurfaceMapper>(
-            ssmCfg,
-            Acts::getDefaultLogger("SensitiveSurfaceMapper", g4loglevel));
-
-    // Add the output collection
-    g4Cfg.outputSimHits = Simulation::kSimHits;
-    g4Cfg.outputParticlesInitial = Simulation::kParticlesInitial;
-    g4Cfg.outputParticlesFinal = Simulation::kParticlesFinal;
-  }
+  g4Cfg.inputParticles = Simulation::kParticlesSelection;
+  g4Cfg.outputSimHits = Simulation::kSimHits;
+  g4Cfg.outputParticlesInitial = Simulation::kParticlesInitial;
+  g4Cfg.outputParticlesFinal = Simulation::kParticlesFinal;
+  g4Cfg.trackingGeometry = std::move(trackingGeometry);
+  g4Cfg.magneticField = std::move(magneticField);
 
   sequencer.addAlgorithm(std::make_shared<Geant4Simulation>(g4Cfg, g4loglevel));
-
-  return;
 }
 
 int runMaterialRecording(
     const ActsExamples::Options::Variables& vars,
-    std::unique_ptr<G4VUserDetectorConstruction> detector) {
+    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory) {
   // Set up the sequencer
   Sequencer sequencer(Options::readSequencerConfig(vars));
+
   // Output level and log level
   auto logLevel = Options::readLogLevel(vars);
-  auto g4loglevel =
-      Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
 
   std::string outputDir =
       ensureWritableDirectory(vars["output-dir"].as<std::string>());
@@ -152,28 +115,9 @@ int runMaterialRecording(
   evgen.randomNumbers = rnd;
   sequencer.addReader(std::make_shared<EventGenerator>(evgen, logLevel));
 
-  auto* physicsList = new MaterialPhysicsList(
-      Acts::getDefaultLogger("MaterialPhysicsList", g4loglevel));
-
-  auto runManager = std::make_shared<G4RunManager>();
-  runManager->SetUserInitialization(physicsList);
-
-  // The Geant4 actions needed
-  std::vector<G4UserRunAction*> runActions = {};
-  std::vector<G4UserEventAction*> eventActions = {};
-  std::vector<G4UserTrackingAction*> trackingActions = {};
-
-  MaterialSteppingAction::Config mStepCfg;
-  mStepCfg.excludeMaterials = {"Air", "Vacuum"};
-  std::vector<G4UserSteppingAction*> steppingActions = {
-      new MaterialSteppingAction(
-          mStepCfg,
-          Acts::getDefaultLogger("MaterialSteppingAction", g4loglevel))};
-
   // Set up the Geant4 Simulation
-  setupGeant4Simulation(vars, sequencer, runManager, std::move(detector),
-                        runActions, eventActions, trackingActions,
-                        steppingActions, nullptr, nullptr, true);
+  setupMaterialRecording(vars, sequencer,
+                         std::move(detectorConstructionFactory));
 
   // setup the output writing
   if (vars["output-root"].as<bool>()) {
@@ -195,34 +139,11 @@ int runMaterialRecording(
 
 int runGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
-    std::unique_ptr<G4VUserDetectorConstruction> detector,
-    const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry) {
+    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory,
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
   // Basic services
   auto randomNumbers =
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vars));
-
-  // Output level and log level
-  auto g4loglevel =
-      Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
-
-  auto runManager = std::make_shared<G4RunManager>();
-  runManager->SetUserInitialization(new FTFP_BERT());
-
-  // The Geant4 actions needed
-  std::vector<G4UserRunAction*> runActions = {};
-  std::vector<G4UserEventAction*> eventActions = {};
-  std::vector<G4UserTrackingAction*> trackingActions = {};
-  std::vector<G4UserSteppingAction*> steppingActions = {};
-
-  ParticleTrackingAction::Config g4TrackCfg;
-  ParticleTrackingAction* particleAction = new ParticleTrackingAction(
-      g4TrackCfg, Acts::getDefaultLogger("ParticleTrackingAction", g4loglevel));
-  trackingActions.push_back(particleAction);
-
-  SensitiveSteppingAction::Config g4StepCfg;
-  SensitiveSteppingAction* sensitiveStepping = new SensitiveSteppingAction(
-      g4StepCfg, Acts::getDefaultLogger("SensitiveSteppingAction", g4loglevel));
-  steppingActions.push_back(sensitiveStepping);
 
   // Set up the sequencer
   Sequencer sequencer(Options::readSequencerConfig(vars));
@@ -232,9 +153,8 @@ int runGeant4Simulation(
 
   // Setup algorithm chain: Input / Simulation / Output
   Simulation::setupInput(vars, sequencer, randomNumbers);
-  setupGeant4Simulation(vars, sequencer, runManager, std::move(detector),
-                        runActions, eventActions, trackingActions,
-                        steppingActions, trackingGeometry, magneticField);
+  setupGeant4Simulation(vars, sequencer, std::move(detectorConstructionFactory),
+                        std::move(trackingGeometry), magneticField);
   Simulation::setupOutput(vars, sequencer);
 
   auto result = sequencer.run();

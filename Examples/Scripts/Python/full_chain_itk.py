@@ -15,8 +15,7 @@ from acts.examples.reconstruction import (
     SeedingAlgorithm,
     TruthSeedRanges,
     addCKFTracks,
-    CKFPerformanceConfig,
-    TrackSelectorRanges,
+    TrackSelectorConfig,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
     addVertexFitting,
@@ -62,7 +61,11 @@ addFatras(
     field,
     rnd=rnd,
     preSelectParticles=ParticleSelectorConfig(
-        eta=(-4.0, 4.0), pt=(150 * u.MeV, None), removeNeutral=True
+        rho=(0.0 * u.mm, 28.0 * u.mm),
+        absZ=(0.0 * u.mm, 1.0 * u.m),
+        eta=(-4.0, 4.0),
+        pt=(150 * u.MeV, None),
+        removeNeutral=True,
     )
     if ttbar_pu200
     else ParticleSelectorConfig(),
@@ -97,15 +100,17 @@ addCKFTracks(
     s,
     trackingGeometry,
     field,
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0)),
+    TrackSelectorConfig(
+        pt=(1.0 * u.GeV if ttbar_pu200 else 0.0, None),
+        absEta=(None, 4.0),
+        nMeasurementsMin=6,
+    ),
     outputDirRoot=outputDir,
 )
 
 addAmbiguityResolution(
     s,
     AmbiguityResolutionConfig(maximumSharedHits=3),
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
 

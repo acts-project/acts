@@ -11,7 +11,13 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "ActsFatras/Digitization/DigitizationError.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
 
 std::vector<ActsFatras::Channelizer::ChannelSegment>
 ActsFatras::Channelizer::segments(const Acts::GeometryContext& geoCtx,

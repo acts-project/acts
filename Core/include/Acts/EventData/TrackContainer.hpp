@@ -13,7 +13,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -29,12 +31,13 @@ template <typename T>
 struct IsReadOnlyTrackContainer;
 
 /// Track container interface class. This type represents a collections of
-/// tracks. It uses a backend to store bothe the actual tracks and the
+/// tracks. It uses a backend to store both the actual tracks and the
 /// associated track states.
 /// @tparam track_container_t the track container backend
 /// @tparam traj_t the track state container backend
 /// @tparam holder_t ownership management class for the backend
-template <typename track_container_t, typename traj_t,
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t,
           template <typename> class holder_t = detail::RefHolder>
 class TrackContainer {
  public:
@@ -47,8 +50,8 @@ class TrackContainer {
                 "Either both track container and track state container need to "
                 "be readonly or both have to be readwrite");
 
-  using IndexType = MultiTrajectoryTraits::IndexType;
-  static constexpr IndexType kInvalid = MultiTrajectoryTraits::kInvalid;
+  using IndexType = TrackIndexType;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   using TrackProxy =
       Acts::TrackProxy<track_container_t, traj_t, holder_t, false>;
@@ -127,7 +130,7 @@ class TrackContainer {
 
   /// Remove a track at index @p itrack from the container
   /// @note This invalidates all track proxies!
-  /// @param itrack The index of the track to remmove
+  /// @param itrack The index of the track to remove
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void removeTrack(IndexType itrack) {
     m_container->removeTrack_impl(itrack);
@@ -233,6 +236,13 @@ class TrackContainer {
     container().ensureDynamicColumns_impl(other.container());
   }
 
+  /// Clear the content of the track container
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void clear() {
+    m_container->clear();
+    m_traj->clear();
+  }
+
  protected:
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
@@ -296,15 +306,18 @@ class TrackContainer {
   detail_tc::ConstIf<holder_t<traj_t>, ReadOnly> m_traj;
 };
 
-template <typename track_container_t, typename traj_t>
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
-template <typename track_container_t, typename traj_t>
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
 TrackContainer(const track_container_t& container, const traj_t& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ConstRefHolder>;
 
-template <typename track_container_t, typename traj_t>
+template <ACTS_CONCEPT(TrackContainerBackend) track_container_t,
+          typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
     -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 

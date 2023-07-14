@@ -13,9 +13,16 @@
 #include "ActsExamples/Utilities/Helpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <string>
+
+class TEfficiency;
+class TH2F;
+namespace ActsFatras {
+class Particle;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
 

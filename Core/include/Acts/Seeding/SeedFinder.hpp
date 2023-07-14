@@ -32,7 +32,7 @@
 
 namespace Acts {
 
-enum class SpacePointCandidateType : short { BOTTOM, TOP };
+enum class SpacePointCandidateType : short { eBottom, eTop };
 
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
@@ -132,15 +132,19 @@ class SeedFinder {
  private:
   /// Iterates over dublets and tests the compatibility between them by applying
   /// a series of cuts that can be tested with only two SPs
-  /// @param spacePointData object contaning the spacepoint data
+  /// @param spacePointData object containing the spacepoint data
   /// @param options frequently changing configuration (like beam position)
   /// @param grid spacepoint grid
   /// @param otherSPsNeighbours inner or outer space points to be used in the dublet
   /// @param mediumSP space point candidate to be used as middle SP in a seed
-  /// @param linCircleVec vector contining inner or outer SP parameters after reference frame transformation to the u-v space
+  /// @param linCircleVec vector containing inner or outer SP parameters after reference frame transformation to the u-v space
   /// @param outVec Output object containing top or bottom SPs that are compatible with a certain middle SPs
   /// @param deltaRMinSP minimum allowed r-distance between dublet components
   /// @param deltaRMaxSP maximum allowed r-distance between dublet components
+  /// @param uIP minus one over radius of middle SP
+  /// @param uIP2 square of uIP
+  /// @param cosPhiM ratio between middle SP x position and radius
+  /// @param sinPhiM ratio between middle SP y position and radius
   template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
   void getCompatibleDoublets(
       Acts::SpacePointData& spacePointData,
@@ -150,11 +154,12 @@ class SeedFinder {
           otherSPsNeighbours,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-      const float& deltaRMinSP, const float& deltaRMaxSP) const;
+      const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
+      const float& uIP2, const float& cosPhiM, const float& sinPhiM) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
-  /// @param spacePointData object contaning the spacepoint data
+  /// @param spacePointData object containing the spacepoint data
   /// @param SpM space point candidate to be used as middle SP in a seed
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter

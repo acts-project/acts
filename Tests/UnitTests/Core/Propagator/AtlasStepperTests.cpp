@@ -9,17 +9,43 @@
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/Assertions.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <functional>
+#include <iterator>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 
 namespace Acts {
 namespace Test {
@@ -132,7 +158,7 @@ BOOST_AUTO_TEST_CASE(Getters) {
   CHECK_CLOSE_ABS(stepper.position(state), pos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), time, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), unitDir, eps);
-  CHECK_CLOSE_ABS(stepper.momentum(state), absMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 }
 
@@ -174,7 +200,7 @@ BOOST_AUTO_TEST_CASE(UpdateFromBound) {
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);
-  CHECK_CLOSE_ABS(stepper.momentum(state), newAbsMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), newAbsMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 }
 
@@ -191,11 +217,11 @@ BOOST_AUTO_TEST_CASE(UpdateFromComponents) {
   auto newUnitDir = (unitDir + Vector3(1, -1, -1)).normalized();
   auto newAbsMom = 0.9 * absMom;
 
-  stepper.update(state, newPos, newUnitDir, newAbsMom, newTime);
+  stepper.update(state, newPos, newUnitDir, charge / newAbsMom, newTime);
   CHECK_CLOSE_ABS(stepper.position(state), newPos, eps);
   CHECK_CLOSE_ABS(stepper.time(state), newTime, eps);
   CHECK_CLOSE_ABS(stepper.direction(state), newUnitDir, eps);
-  CHECK_CLOSE_ABS(stepper.momentum(state), newAbsMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state), newAbsMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state), charge);
 }
 
@@ -274,7 +300,7 @@ BOOST_AUTO_TEST_CASE(Step) {
   BOOST_CHECK_LT(projDir, 1);
 
   // momentum and charge should not change
-  CHECK_CLOSE_ABS(stepper.momentum(state.stepping), absMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state.stepping), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state.stepping), charge);
 }
 
@@ -307,7 +333,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   BOOST_CHECK_LT(projDir, 1);
 
   // momentum and charge should not change
-  CHECK_CLOSE_ABS(stepper.momentum(state.stepping), absMom, eps);
+  CHECK_CLOSE_ABS(stepper.absoluteMomentum(state.stepping), absMom, eps);
   BOOST_CHECK_EQUAL(stepper.charge(state.stepping), charge);
 
   stepper.transportCovarianceToCurvilinear(state.stepping);
@@ -390,7 +416,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.momentum(stateCopy),
+  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
@@ -412,7 +438,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.momentum(stateCopy),
+  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
@@ -435,7 +461,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                     freeParams.template segment<3>(eFreePos0));
   BOOST_CHECK_EQUAL(stepper.direction(stateCopy),
                     freeParams.template segment<3>(eFreeDir0).normalized());
-  BOOST_CHECK_EQUAL(stepper.momentum(stateCopy),
+  BOOST_CHECK_EQUAL(stepper.absoluteMomentum(stateCopy),
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);

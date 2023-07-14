@@ -106,7 +106,7 @@ class Measurement {
   /// The measurement indices
   constexpr std::array<indices_t, kSize> indices() const {
     std::array<uint8_t, kSize> subInds = m_subspace.indices();
-    std::array<indices_t, kSize> inds;
+    std::array<indices_t, kSize> inds{};
     for (size_t i = 0; i < kSize; i++) {
       inds[i] = static_cast<indices_t>(subInds[i]);
     }
@@ -126,10 +126,10 @@ class Measurement {
 
   /// Expansion matrix from the measured subspace into the full space.
   ///
-  /// This is equivalent to the tranpose of the projection matrix only in the
+  /// This is equivalent to the transpose of the projection matrix only in the
   /// case of a trivial projection matrix. While this is the case here, it is
   /// still recommended to use the expansion matrix directly in cases where it
-  /// is explicitely used.
+  /// is explicitly used.
   ExpansionMatrix expander() const {
     return m_subspace.template expander<Scalar>();
   }

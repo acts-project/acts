@@ -23,7 +23,6 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 
@@ -69,7 +68,7 @@ class ProtoLayerCreatorT {
   ///
   /// Nested configuration struct for the ProtoLayerCreatorT
   struct Config {
-    /// a single paramater for the approach surface envelope
+    /// a single parameter for the approach surface envelope
     double approachSurfaceEnvelope = 0.5;
     /// central layer specification
     /// bin multipliers in rphi,z for finer module binning
@@ -210,7 +209,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
   for (auto& eLayers : detectorStore) {
     imodule += eLayers.size();
   }
-  ACTS_VERBOSE("Starting with identfier " << imodule);
+  ACTS_VERBOSE("Starting with identifier " << imodule);
 
   // ----------------------- central layers -------------------------
   // the central layers
@@ -251,7 +250,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
 
       sVector.reserve(nCentralModules);
 
-      // prepartion :
+      // preparation :
       // create digitizaiton module
       std::shared_ptr<const Acts::DigitizationModule> moduleDigitizationPtr =
           nullptr;
@@ -360,14 +359,14 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
       phiBins *= m_cfg.centralLayerBinMultipliers.first;
       size_t zBins = m_cfg.centralModuleBinningSchema.at(icl).second;
       zBins *= m_cfg.centralLayerBinMultipliers.second;
-      // create the surface array - it will also fill the accesible binmember
-      // chache if avalable
+      // create the surface array - it will also fill the accessible binmember
+      // cache if available
       Acts::ProtoLayer pl(gctx, sVector);
       pl.envelope[Acts::binR] = {m_cfg.approachSurfaceEnvelope,
                                  m_cfg.approachSurfaceEnvelope};
       pl.envelope[Acts::binZ] = {layerEnvelopeCoverZ, layerEnvelopeCoverZ};
 
-      // Record the proto layer anb dthe surfaces for the later layer building
+      // Record the proto layer and the surfaces for the later layer building
       ProtoLayerSurfaces pls{std::move(pl), sVector, phiBins, zBins};
       cpLayers.push_back(std::move(pls));
       // fill the detector store
@@ -407,7 +406,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
   for (auto& eLayers : detectorStore) {
     imodule += eLayers.size();
   }
-  ACTS_VERBOSE("Starting with identfier " << imodule);
+  ACTS_VERBOSE("Starting with identifier " << imodule);
   // the return layers
   std::vector<ProtoLayerSurfaces> epLayers;
   // create the detector store entry
@@ -420,7 +419,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
                << numpnLayers << " passive positive/negative side layers.");
     epLayers.reserve(numpnLayers);
 
-    /// this is the loop over th elayer positions
+    /// this is the loop over the layer positions
     for (size_t ipnl = 0; ipnl < numpnLayers; ++ipnl) {
       // some screen output
       ACTS_VERBOSE("- building layer "
@@ -504,7 +503,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
               std::make_shared<const Acts::Transform3>(
                   Acts::Translation3(moduleCenter) * moduleRotation);
 
-          // reate the modules identifier
+          // create the modules identifier
           Identifier moduleIdentifier = Identifier(identifier_type(imodule++));
 
           // create the module
@@ -552,7 +551,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
       size_t layerBinsR = m_cfg.posnegModulePhiBins.at(ipnl).size();
       // never multiply 1 single r-bin, does not make sense
       if (layerBinsR > 1) {
-        // multiply with the given bin mulitplier
+        // multiply with the given bin multiplier
         layerBinsR *= m_cfg.posnegLayerBinMultipliers.first;
       }
       size_t layerBinsPhi = 0;

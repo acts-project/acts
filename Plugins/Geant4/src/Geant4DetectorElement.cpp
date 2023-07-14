@@ -8,6 +8,10 @@
 
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <utility>
+
 Acts::Geant4DetectorElement::Geant4DetectorElement(
     std::shared_ptr<Acts::Surface> surface, const G4VPhysicalVolume& g4physVol,
     const Acts::Transform3& toGlobal, Acts::ActsScalar thickness)

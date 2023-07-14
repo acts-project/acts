@@ -23,6 +23,7 @@ pybind11_add_module(ActsPythonBindings
   src/TrackFitting.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
+  src/AmbiguityResolution.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
@@ -46,12 +47,12 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesGenerators
   ActsExamplesTrackFinding
   ActsExamplesTrackFitting
-  ActsExamplesTrackFittingChi2
   ActsExamplesVertexing
   ActsExamplesFatras
   ActsExamplesPrinters
   ActsExamplesDetectorTelescope
   ActsExamplesUtilities
+  ActsExamplesAmbiguityResolution
 )
 
 set(py_files 
@@ -76,13 +77,6 @@ if(ACTS_BUILD_PLUGIN_ACTSVG)
   target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_JSON AND ACTS_BUILD_PLUGIN_ACTSVG)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesDetectoInspectors)
-  target_sources(ActsPythonBindings PRIVATE src/DetectorInspectors.cpp)
-else()
-  target_sources(ActsPythonBindings PRIVATE src/DetectorInspectorsStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
@@ -172,8 +166,9 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_ONNX)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesFrameworkML ActsExamplesTrackFindingML)
   target_sources(ActsPythonBindings PRIVATE src/Onnx.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibrator.cpp)
   list(APPEND py_files examples/onnx/__init__.py)
 
   if(ACTS_BUILD_PLUGIN_MLPACK)
@@ -186,6 +181,7 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
   target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)

@@ -8,14 +8,17 @@
 
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
-#include <iostream>
-
+#include "RtypesCore.h"
+#include "TCollection.h"
 #include "TGeoBBox.h"
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
+#include "TObjArray.h"
+#include "TObject.h"
 
 void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
                               const Acts::TGeoParser::Options& options,
@@ -28,9 +31,9 @@ void Acts::TGeoParser::select(Acts::TGeoParser::State& state,
         state.onBranch or
         TGeoPrimitivesHelper::match(options.volumeNames, volumeName.c_str());
     // Loop over the daughters and collect them
-    auto daugthers = state.volume->GetNodes();
+    auto daughters = state.volume->GetNodes();
     // Daughter node iteration
-    TIter iObj(daugthers);
+    TIter iObj(daughters);
     while (TObject* obj = iObj()) {
       TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
       if (node != nullptr) {

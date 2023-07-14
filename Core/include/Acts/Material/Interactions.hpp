@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
+#include <cmath>
+
 namespace Acts {
 
 /// Additional derived relativistic quantities.
@@ -79,7 +81,7 @@ float deriveEnergyLossLandauQOverP(const MaterialSlab& slab, int pdg, float m,
 ///
 /// @see computeEnergyLossBethe for parameters description
 ///
-/// This is the sigma paramter of a Gaussian distribution with the same
+/// This is the sigma parameter of a Gaussian distribution with the same
 /// full-width-half-maximum as the Landau-Vavilov-Bichsel distribution. The
 /// computations are valid for intermediate particle energies.
 float computeEnergyLossLandauSigma(const MaterialSlab& slab, int pdg, float m,

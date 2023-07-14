@@ -480,7 +480,7 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 //   a ~GHz CPU clock this gives you a clock-related bias and noise of ~10ns. At
 //   ~10µs run times, that only contributes for 1/1000 of observed timings.
 // - The main source of benchmark noise is that your operating system's
-//   scheduler disturbs the program every few miliseconds. With run timings of
+//   scheduler disturbs the program every few milliseconds. With run timings of
 //   ~10µs, this disturbance affects less than 1% of data points, and is thus
 //   perfectly eliminated by our outlier-robust statistics.
 //
@@ -502,7 +502,7 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 //       * Outlier rejection (many runs mean better outlier rejection)
 //       * Benchmark running time (many runs take longer)
 //       * Handling of short-lived background disturbances (these have a higher
-//         chance of occuring in longer-lived benchmarks, but if they only take
+//         chance of occurring in longer-lived benchmarks, but if they only take
 //         a small portion of the benchmark's running time, they can be taken
 //         care of by outlier rejection instead of polluting the results)
 // - `warmup_time` should be chosen based on the time it takes for run timings

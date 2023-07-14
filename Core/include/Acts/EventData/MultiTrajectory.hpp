@@ -13,9 +13,15 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/TrackStateProxyConcept.hpp"
+#include "Acts/EventData/TrackStateType.hpp"
+#include "Acts/EventData/Types.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
+#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
@@ -31,105 +37,10 @@
 
 namespace Acts {
 
-/// @enum TrackStateFlag
-///
-/// This enum describes the type of TrackState
-enum TrackStateFlag {
-  MeasurementFlag = 0,
-  ParameterFlag = 1,
-  OutlierFlag = 2,
-  HoleFlag = 3,
-  MaterialFlag = 4,
-  SharedHitFlag = 5,
-  NumTrackStateFlags = 6
-};
-
-class ConstTrackStateType;
-
-/// View type over a bitset stored in a 64 bit integer
-/// This view allows modifications.
-class TrackStateType {
- public:
-  using raw_type = std::uint64_t;
-  /// Constructor from a reference to the underlying value container
-  /// @param raw the value container
-  TrackStateType(raw_type& raw) : m_raw{&raw} {}
-
-  /// Assign the value from another set of flags
-  /// @param other the other set of flags to assign
-  /// @return this object
-  TrackStateType& operator=(const TrackStateType& other) {
-    *m_raw = *other.m_raw;
-    return *this;
-  }
-
-  /// Assign the value from another set of flags
-  /// @param other the other set of flags to assign
-  /// @return this object
-  TrackStateType& operator=(const ConstTrackStateType& other);
-
-  /// Return if the bit at position @p pos is 1
-  /// @param pos the bit position
-  /// @return if the bit at @p pos is one or not
-  bool test(std::size_t pos) const {
-    std::bitset<sizeof(raw_type)> bs{*m_raw};
-    return bs.test(pos);
-  }
-
-  /// Change the value of the bit at position @p pos to @p value.
-  /// @param pos the position of the bit to change
-  /// @param value the value to change the bit to
-  void set(std::size_t pos, bool value = true) {
-    std::bitset<sizeof(raw_type)> bs{*m_raw};
-    bs.set(pos, value);
-    *m_raw = bs.to_ullong();
-  }
-
-  /// Change the value of the bit at position at @p pos to @c false
-  /// @param pos the position of the bit to change
-  void reset(std::size_t pos) { set(pos, false); }
-
- private:
-  raw_type* m_raw{nullptr};
-};
-
-/// View type over a bitset stored in a 64 bit integer
-/// This view does not allow modifications
-class ConstTrackStateType {
- public:
-  using raw_type = std::uint64_t;
-
-  /// Constructor from a reference to the underlying value container
-  /// @param raw the value container
-  ConstTrackStateType(const raw_type& raw) : m_raw{&raw} {}
-
-  /// Return if the bit at position @p pos is 1
-  /// @param pos the bit position
-  /// @return if the bit at @p pos is one or not
-  bool test(std::size_t pos) const {
-    std::bitset<sizeof(raw_type)> bs{*m_raw};
-    return bs.test(pos);
-  }
-
- private:
-  friend class TrackStateType;
-  const raw_type* m_raw{nullptr};
-};
-
-inline TrackStateType& TrackStateType::operator=(
-    const ConstTrackStateType& other) {
-  *m_raw = *other.m_raw;
-  return *this;
-}
-
-// using TrackStateType = std::bitset<TrackStateFlag::NumTrackStateFlags>;
-
 // forward declarations
 template <typename derived_t>
 class MultiTrajectory;
 class Surface;
-
-using ProjectorBitset = uint64_t;
 
 namespace detail_lt {
 /// Either type T or const T depending on the boolean.
@@ -210,9 +121,6 @@ struct TrackStateTraits {
   using MeasurementCovariance =
       typename detail_lt::Types<M, ReadOnly>::CovarianceMap;
 
-  using IndexType = std::uint32_t;
-  static constexpr IndexType kInvalid = std::numeric_limits<IndexType>::max();
-
   constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
   using Projector =
       Eigen::Matrix<typename Covariance::Scalar, M, eBoundSize, ProjectorFlags>;
@@ -244,8 +152,8 @@ class TrackStateProxy {
   using ConstMeasurementCovariance =
       typename TrackStateTraits<N, true>::MeasurementCovariance;
 
-  using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
-  static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
+  using IndexType = TrackIndexType;
+  static constexpr IndexType kInvalid = kTrackIndexInvalid;
 
   // as opposed to the types above, this is an actual Matrix (rather than a
   // map)
@@ -282,7 +190,15 @@ class TrackStateProxy {
     return component<IndexType, hashString("previous")>();
   }
 
-  /// Return whather this track state has a previous (parent) track state.
+  /// Return a mutable reference to the index of the track state 'previous' in
+  /// the track sequence
+  /// @return The index of the previous track state.
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  IndexType& previous() {
+    return component<IndexType, hashString("previous")>();
+  }
+
+  /// Return whether this track state has a previous (parent) track state.
   /// @return Boolean indicating whether a previous track state exists
   bool hasPrevious() const {
     return component<IndexType, hashString("previous")>() != kInvalid;
@@ -319,7 +235,7 @@ class TrackStateProxy {
     shareFrom(other, component, component);
   }
 
-  /// Share a shareable component from anothe track state
+  /// Share a shareable component from another track state
   /// @param shareSource Which component to share from
   /// @param shareTarget Which component to share as. This can be be different from
   ///                    as @p shareSource, e.g. predicted can be shared as filtered.
@@ -349,9 +265,9 @@ class TrackStateProxy {
   ///       an exception is thrown.
   /// @note The mask parameter will not cause a copy of components that are
   ///       not allocated in the source track state proxy.
-  template <bool RO = ReadOnly, bool ReadOnlyOther,
-            typename = std::enable_if_t<!RO>>
-  void copyFrom(TrackStateProxy<Trajectory, M, ReadOnlyOther> other,
+  template <ACTS_CONCEPT(TrackStateProxyConcept) track_state_proxy_t,
+            bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void copyFrom(const track_state_proxy_t& other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {
     using PM = TrackStatePropMask;
@@ -1126,9 +1042,8 @@ constexpr bool VisitorConcept = Concepts ::require<
 /// from @c TrackStateTraits using the default maximum measurement dimension.
 namespace MultiTrajectoryTraits {
 constexpr unsigned int MeasurementSizeMax = eBoundSize;
-using IndexType = TrackStateTraits<MeasurementSizeMax, true>::IndexType;
-constexpr IndexType kInvalid =
-    TrackStateTraits<MeasurementSizeMax, true>::kInvalid;
+using IndexType = TrackIndexType;
+constexpr IndexType kInvalid = kTrackIndexInvalid;
 }  // namespace MultiTrajectoryTraits
 
 template <typename T>
@@ -1522,6 +1437,9 @@ class MultiTrajectory {
   /// @note Is a noop if the track state already has an allocation
   ///       an the dimension is the same.
   void allocateCalibrated(IndexType istate, size_t measdim) {
+    throw_assert(measdim > 0 && measdim <= eBoundSize,
+                 "Invalid measurement dimension detected");
+
     self().allocateCalibrated_impl(istate, measdim);
   }
 

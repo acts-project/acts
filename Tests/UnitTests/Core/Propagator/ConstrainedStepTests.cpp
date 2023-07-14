@@ -12,6 +12,8 @@
 
 #include "Acts/Propagator/ConstrainedStep.hpp"
 
+#include <limits>
+
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 

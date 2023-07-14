@@ -12,10 +12,12 @@
 #include "Acts/Digitization/Segmentation.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
 class Surface;
+
 using SurfacePtr = std::shared_ptr<const Surface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
 
@@ -113,7 +115,7 @@ class DigitizationModule {
   DigitizationStep digitizationStep(const Vector3& start,
                                     const Vector3& end) const;
 
-  /// Return the bounding surfaces inlcuding top and bottom
+  /// Return the bounding surfaces including top and bottom
   const SurfacePtrVector& boundarySurfaces() const;
 
   /// Return all surfaces in X - excluding the boundaries

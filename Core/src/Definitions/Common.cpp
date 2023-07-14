@@ -9,6 +9,7 @@
 #include "Acts/Definitions/Common.hpp"
 
 #include <cassert>
+#include <cstdlib>
 #include <ostream>
 
 std::ostream& Acts::operator<<(std::ostream& os,
