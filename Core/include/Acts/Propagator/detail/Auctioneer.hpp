@@ -9,6 +9,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 
 namespace Acts {
 namespace detail {
