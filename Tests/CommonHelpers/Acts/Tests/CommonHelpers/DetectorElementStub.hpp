@@ -16,7 +16,9 @@
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PointBounds.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
+#include "Acts/Tests/CommonHelpers/PointSurfaceStub.hpp"
 
 namespace Acts {
 
@@ -71,6 +73,24 @@ class DetectorElementStub : public DetectorElementBase {
         m_elementTransform(transform),
         m_elementThickness(thickness) {
     m_elementSurface = Surface::makeShared<LineSurfaceStub>(lBounds, *this);
+    m_elementSurface->assignSurfaceMaterial(std::move(material));
+  }
+
+  /// Constructor for single sided detector element
+  /// - bound to a Point Surface
+  ///
+  /// @param transform is the transform that element the layer in 3D frame
+  /// @param dBounds is the line bounds for the line like detector element
+  /// @param thickness is the module thickness
+  /// @param material is the (optional) Surface material associated to it
+  DetectorElementStub(
+      const Translation3& translation,
+      const std::shared_ptr<const PointBounds>& pBounds, double thickness,
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr)
+      : DetectorElementBase(),
+        m_elementTransform(translation),
+        m_elementThickness(thickness) {
+    m_elementSurface = Surface::makeShared<PointSurfaceStub>(pBounds, *this);
     m_elementSurface->assignSurfaceMaterial(std::move(material));
   }
 

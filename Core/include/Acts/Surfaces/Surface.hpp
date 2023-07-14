@@ -73,7 +73,8 @@ class Surface : public virtual GeometryObject,
     Plane = 4,
     Straw = 5,
     Curvilinear = 6,
-    Other = 7
+    Other = 7,
+    Point = 8
   };
 
   /// Helper strings for screen output
