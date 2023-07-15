@@ -9,8 +9,12 @@
 #pragma once
 
 #include <bitset>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
+#include <ostream>
+
 namespace Acts {
 
 /// @enum TrackStateFlag

@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include <tuple>
+#include <utility>
+
 namespace Acts {
 /// Helper utility to allow indexed enumeration with structured binding
 ///
@@ -23,7 +26,7 @@ template <typename container_type,
           typename = decltype(std::end(std::declval<container_type>()))>
 constexpr auto enumerate(container_type &&iterable) {
   struct iterator {
-    size_t i;
+    std::size_t i;
     container_type_iter iter;
 
     bool operator!=(const iterator &rhs) const { return iter != rhs.iter; }
