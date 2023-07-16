@@ -51,6 +51,10 @@ class SeedFinder {
     // ...for middle-top
     std::vector<LinCircle> linCircleTop;
 
+    // vectors for sorting
+    std::vector<std::size_t> sorted_bottoms {};
+    std::vector<std::size_t> sorted_tops {};
+    
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
     std::vector<float> curvatures;

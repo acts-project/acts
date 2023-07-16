@@ -437,33 +437,43 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     const InternalSpacePoint<external_spacepoint_t>& spM,
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
     SeedingState& state) const {
-  float rM = spM.radius();
-  float cosPhiM = spM.x() / rM;
-  float sinPhiM = spM.y() / rM;
-  float varianceRM = spM.varianceR();
-  float varianceZM = spM.varianceZ();
+  const float& rM = spM.radius();
+  const float cosPhiM = spM.x() / rM;
+  const float sinPhiM = spM.y() / rM;
+  const float& varianceRM = spM.varianceR();
+  const float& varianceZM = spM.varianceZ();
 
   std::size_t numTopSP = state.compatTopSP.size();
 
   // sort: make index vector
-  std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
-  for (std::size_t i(0); i < sorted_bottoms.size(); ++i) {
-    sorted_bottoms[i] = i;
+  std::size_t current_bottom_size = state.sorted_bottoms.size();
+  state.sorted_bottoms.resize(state.linCircleBottom.size(), 0ul);
+  //  std::size_t start_bottom_point = 0ul;
+  std::size_t start_bottom_point = current_bottom_size <= state.sorted_bottoms.size()
+    ? current_bottom_size
+    : 0ul;
+  for (std::size_t i(start_bottom_point); i < state.sorted_bottoms.size(); ++i) { ////
+    state.sorted_bottoms[i] = i;
   }
 
-  std::vector<std::size_t> sorted_tops(state.linCircleTop.size());
-  for (std::size_t i(0); i < sorted_tops.size(); ++i) {
-    sorted_tops[i] = i;
+  std::size_t current_top_size = state.sorted_tops.size();
+  state.sorted_tops.resize(state.linCircleTop.size());
+  //std::size_t start_top_point = 0ul;
+  std::size_t start_top_point = current_top_size <= state.sorted_tops.size()
+    ? current_top_size
+    : 0ul;
+  for (std::size_t i(start_top_point); i < state.sorted_tops.size(); ++i) {
+    state.sorted_tops[i] = i;
   }
 
   if (not m_config.useDetailedDoubleMeasurementInfo) {
-    std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
+    std::sort(state.sorted_bottoms.begin(), state.sorted_bottoms.end(),
               [&state](const std::size_t& a, const std::size_t& b) -> bool {
                 return state.linCircleBottom[a].cotTheta <
                        state.linCircleBottom[b].cotTheta;
               });
 
-    std::sort(sorted_tops.begin(), sorted_tops.end(),
+    std::sort(state.sorted_tops.begin(), state.sorted_tops.end(),
               [&state](const std::size_t& a, const std::size_t& b) -> bool {
                 return state.linCircleTop[a].cotTheta <
                        state.linCircleTop[b].cotTheta;
@@ -471,16 +481,17 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   }
 
   // Reserve enough space, in case current capacity is too little
-  state.topSpVec.resize(numTopSP, nullptr);
-  state.curvatures.resize(numTopSP, 0.f);
-  state.impactParameters.resize(numTopSP, 0.f);
+  if (numTopSP > state.curvatures.size()) {
+    state.curvatures.resize(numTopSP, 0.f);
+    state.impactParameters.resize(numTopSP, 0.f);
+  }
 
   size_t t0 = 0;
 
   // clear previous results and then loop on bottoms and tops
   state.candidates_collector.clear();
 
-  for (const std::size_t& b : sorted_bottoms) {
+  for (const std::size_t& b : state.sorted_bottoms) {
     // break if we reached the last top SP
     if (t0 == numTopSP) {
       break;
@@ -536,7 +547,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     }
 
     for (size_t index_t = t0; index_t < numTopSP; ++index_t) {
-      const std::size_t& t = sorted_tops[index_t];
+      const std::size_t& t = state.sorted_tops[index_t];
 
       auto lt = state.linCircleTop[t];
 
@@ -766,7 +777,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     state.topSpVec.resize(number_of_sp_vec); // this will shrink it
     m_config.seedFilter->filterSeeds_2SpFixed(
         state.spacePointData, *state.compatBottomSP[b], spM, state.topSpVec,
-        state.curvatures, state.impactParameters, seedFilterState,
+	state.curvatures, state.impactParameters, seedFilterState,
         state.candidates_collector);
   }  // loop on bottoms
 }
