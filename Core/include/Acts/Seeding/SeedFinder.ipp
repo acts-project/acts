@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -448,7 +447,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   // sort: make index vector
   std::size_t current_bottom_size = state.sorted_bottoms.size();
   state.sorted_bottoms.resize(state.linCircleBottom.size(), 0ul);
-  //  std::size_t start_bottom_point = 0ul;
+  // If the resize of the vector adds eleemnts, we can simply add the new indexes to the tail
+  // If the vector shrinks we need to reset all the indexes
   std::size_t start_bottom_point = current_bottom_size <= state.sorted_bottoms.size()
     ? current_bottom_size
     : 0ul;
@@ -458,7 +458,6 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
   std::size_t current_top_size = state.sorted_tops.size();
   state.sorted_tops.resize(state.linCircleTop.size());
-  //std::size_t start_top_point = 0ul;
   std::size_t start_top_point = current_top_size <= state.sorted_tops.size()
     ? current_top_size
     : 0ul;
@@ -480,7 +479,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
               });
   }
 
-  // Reserve enough space, in case current capacity is too little
+  // Resize the vectors only if we need extra elements
   if (numTopSP > state.curvatures.size()) {
     state.curvatures.resize(numTopSP, 0.f);
     state.impactParameters.resize(numTopSP, 0.f);
@@ -521,9 +520,11 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     float sinTheta = 1 / std::sqrt(iSinTheta2);
     float cosTheta = cotThetaB * sinTheta;
 
-    // clear all vectors used in each inner for loop
+    // reset the number of elements to zero
     std::size_t number_of_sp_vec = 0;
-    //    state.topSpVec.clear();
+    // resize the vector of topSpVec to the proper size
+    // ne need to clear it, we'll simple replace the values
+    // It is safe, since this vector takes no ownership on the SPs
     state.topSpVec.resize(numTopSP, nullptr);
     
     // coordinate transformation and checks for middle spacepoint
@@ -774,7 +775,14 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     }
 
     seedFilterState.zOrigin = spM.z() - rM * lb.cotTheta;
-    state.topSpVec.resize(number_of_sp_vec); // this will shrink it
+
+    // Shrink the topSpVec vector to the final correct size.
+    // This is bacause filterSeeds_2SpFixed will use the vector size
+    // No need to do the same for curvatures and impactParameters since the
+    // code relies on these vector to be same size. So only the size of topSpVec matters
+    // They are not in reality since we are not cleaning, nor resizing curvatures
+    // nor impactParameters.
+    state.topSpVec.resize(number_of_sp_vec);
     m_config.seedFilter->filterSeeds_2SpFixed(
         state.spacePointData, *state.compatBottomSP[b], spM, state.topSpVec,
 	state.curvatures, state.impactParameters, seedFilterState,
