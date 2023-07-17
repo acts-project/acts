@@ -447,20 +447,20 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   // sort: make index vector
   std::size_t current_bottom_size = state.sorted_bottoms.size();
   state.sorted_bottoms.resize(state.linCircleBottom.size(), 0ul);
-  // If the resize of the vector adds eleemnts, we can simply add the new indexes to the tail
-  // If the vector shrinks we need to reset all the indexes
-  std::size_t start_bottom_point = current_bottom_size <= state.sorted_bottoms.size()
-    ? current_bottom_size
-    : 0ul;
-  for (std::size_t i(start_bottom_point); i < state.sorted_bottoms.size(); ++i) { ////
+  // If the resize of the vector adds eleemnts, we can simply add the new
+  // indexes to the tail If the vector shrinks we need to reset all the indexes
+  std::size_t start_bottom_point =
+      current_bottom_size <= state.sorted_bottoms.size() ? current_bottom_size
+                                                         : 0ul;
+  for (std::size_t i(start_bottom_point); i < state.sorted_bottoms.size();
+       ++i) {  ////
     state.sorted_bottoms[i] = i;
   }
 
   std::size_t current_top_size = state.sorted_tops.size();
   state.sorted_tops.resize(state.linCircleTop.size());
-  std::size_t start_top_point = current_top_size <= state.sorted_tops.size()
-    ? current_top_size
-    : 0ul;
+  std::size_t start_top_point =
+      current_top_size <= state.sorted_tops.size() ? current_top_size : 0ul;
   for (std::size_t i(start_top_point); i < state.sorted_tops.size(); ++i) {
     state.sorted_tops[i] = i;
   }
@@ -526,7 +526,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     // ne need to clear it, we'll simple replace the values
     // It is safe, since this vector takes no ownership on the SPs
     state.topSpVec.resize(numTopSP, nullptr);
-    
+
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
     float rotationTermsUVtoXY[2] = {0, 0};
@@ -777,15 +777,15 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     seedFilterState.zOrigin = spM.z() - rM * lb.cotTheta;
 
     // Shrink the topSpVec vector to the final correct size.
-    // This is bacause filterSeeds_2SpFixed will use the vector size
+    // This is because filterSeeds_2SpFixed will use the vector size
     // No need to do the same for curvatures and impactParameters since the
-    // code relies on these vector to be same size. So only the size of topSpVec matters
-    // They are not in reality since we are not cleaning, nor resizing curvatures
-    // nor impactParameters.
+    // code relies on these vector to be same size. So only the size of topSpVec
+    // matters They are not in reality since we are not cleaning, nor resizing
+    // curvatures nor impactParameters.
     state.topSpVec.resize(number_of_sp_vec);
     m_config.seedFilter->filterSeeds_2SpFixed(
         state.spacePointData, *state.compatBottomSP[b], spM, state.topSpVec,
-	state.curvatures, state.impactParameters, seedFilterState,
+        state.curvatures, state.impactParameters, seedFilterState,
         state.candidates_collector);
   }  // loop on bottoms
 }

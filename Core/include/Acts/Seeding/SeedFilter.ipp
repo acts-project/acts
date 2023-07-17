@@ -59,9 +59,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   float weightMax = std::numeric_limits<float>::lowest();
   float zOrigin = seedFilterState.zOrigin;
 
-  // In general both invHelixDiameterVec and impactParametersVec have a size greater then
-  // topSpVec. However, the range of valid values corresponds to the size of topSpVec
-  
+  // In general both invHelixDiameterVec and impactParametersVec have a size
+  // greater then topSpVec. However, the range of valid values corresponds to
+  // the size of topSpVec
+
   // initialize original index locations
   std::vector<size_t> topSPIndexVec(topSpVec.size());
   for (std::size_t i(0); i < topSPIndexVec.size(); ++i) {
