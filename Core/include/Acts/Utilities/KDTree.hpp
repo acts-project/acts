@@ -13,6 +13,10 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <functional>
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace Acts {
 /// @brief A general k-d tree with fast range search.

@@ -88,7 +88,7 @@ struct Stepper {
   Vector3 direction(const SteppingState& state) const { return state.dir; }
 
   /// Access method - momentum
-  double momentum(const SteppingState& state) const { return state.p; }
+  double absoluteMomentum(const SteppingState& state) const { return state.p; }
 };
 
 /// @brief mockup of navigation state

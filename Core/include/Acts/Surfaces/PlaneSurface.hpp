@@ -117,25 +117,27 @@ class PlaneSurface : public Surface {
   const SurfaceBounds& bounds() const override;
 
   /// Local to global transformation
-  /// For planar surfaces the momentum is ignored in the local to global
+  ///
+  /// @note For planar surfaces the momentum direction is ignored in the local to global
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return the global position by value
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const override;
+                        const Vector3& direction) const override;
 
   /// Global to local transformation
-  /// For planar surfaces the momentum is ignored in the global to local
+  ///
+  /// @note For planar surfaces the momentum direction is ignored in the global to local
   /// transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   /// method symmetry)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
@@ -143,7 +145,7 @@ class PlaneSurface : public Surface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const override;
 
   /// Method that calculates the correction due to incident angle
