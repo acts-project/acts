@@ -19,9 +19,9 @@
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 #include <tuple>
 #include <vector>
@@ -69,7 +69,6 @@ namespace IndexedSurfacesConverter {
 struct Options {
   /// Hierarchy map of styles
   GeometryHierarchyMap<Style> surfaceStyles;
-
   /// The Grid converter options
   GridConverter::Options gridOptions;
 };

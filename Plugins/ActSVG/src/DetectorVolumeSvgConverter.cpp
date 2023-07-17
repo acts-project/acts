@@ -14,19 +14,13 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
-#include <set>
 #include <utility>
 
 std::tuple<Acts::Svg::ProtoVolume, Acts::Svg::ProtoIndexedSurfaceGrid>
 Acts::Svg::DetectorVolumeConverter::convert(
     const GeometryContext& gctx, const Experimental::DetectorVolume& dVolume,
     const DetectorVolumeConverter::Options& volumeOptions) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("DetectorVolumeSvgConverter", volumeOptions.logLevel));
-
   ProtoVolume pVolume;
   pVolume._name = dVolume.name();
 

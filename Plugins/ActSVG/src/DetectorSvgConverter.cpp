@@ -14,17 +14,12 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <map>
 
 Acts::Svg::ProtoDetector Acts::Svg::DetectorConverter::convert(
     const GeometryContext& gctx, const Experimental::Detector& detector,
     const DetectorConverter::Options& detectorOptions) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("DetectorVolumeConverter", detectorOptions.logLevel));
-
   ProtoDetector pDetector;
 
   const auto volumes = detector.volumes();

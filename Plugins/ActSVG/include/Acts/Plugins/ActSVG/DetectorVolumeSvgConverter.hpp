@@ -13,9 +13,8 @@
 #include "Acts/Plugins/ActSVG/IndexedSurfacesSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/PortalSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "actsvg/core.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 #include <map>
 #include <string>
@@ -42,8 +41,6 @@ struct Options {
   PortalConverter::Options portalOptions;
   /// The Surface converter options
   SurfaceConverter::Options surfaceOptions;
-  /// ACTS log level
-  Logging::Level logLevel = Logging::INFO;
 };
 
 /// Write/create the detector volume

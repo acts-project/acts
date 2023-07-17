@@ -12,9 +12,8 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/ActSVG/DetectorVolumeSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "actsvg/core.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 namespace Acts {
 
@@ -32,8 +31,6 @@ namespace DetectorConverter {
 struct Options {
   /// Top level options
   DetectorVolumeConverter::Options volumeOptions;
-  /// ACTS log level
-  Logging::Level logLevel = Logging::INFO;
 };
 
 /// Write/create the detector volume
