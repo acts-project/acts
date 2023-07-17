@@ -66,7 +66,7 @@ IndexedSurfacesConverter::Options generateDrawOptions() {
 
 auto drawOptions = generateDrawOptions();
 
-BOOST_AUTO_TEST_SUITE(DetectorSvg)
+BOOST_AUTO_TEST_SUITE(ActSvg)
 
 BOOST_AUTO_TEST_CASE(RingDisc1D) {
   // A single ring
