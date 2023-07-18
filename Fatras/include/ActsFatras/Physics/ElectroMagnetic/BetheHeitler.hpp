@@ -72,9 +72,8 @@ struct BetheHeitler {
         bremPhoton(particle, sampledEnergyLoss, uDist(generator),
                    uDist(generator), uDist(generator), uDist(generator));
     // Recoil input momentum
-    particle.setDirection(particle.unitDirection() *
-                              particle.absoluteMomentum() -
-                          photon.energy() * photon.unitDirection());
+    particle.setDirection(particle.direction() * particle.absoluteMomentum() -
+                          photon.energy() * photon.direction());
 
     // apply the energy loss
     particle.correctEnergy(-sampledEnergyLoss);

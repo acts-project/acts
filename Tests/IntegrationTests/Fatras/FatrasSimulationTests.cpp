@@ -9,6 +9,7 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -24,7 +25,6 @@
 #include "ActsFatras/Physics/StandardInteractions.hpp"
 #include "ActsFatras/Selectors/ParticleSelectors.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <algorithm>
 #include <random>
@@ -226,7 +226,7 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
   BOOST_CHECK_LE(input.size(), simulatedInitial.size());
   BOOST_CHECK_LE(input.size(), simulatedFinal.size());
   // there should be some hits if we started with a charged particle
-  if (ActsFatras::findCharge(pdg) != 0) {
+  if (Acts::findCharge(pdg) != 0) {
     BOOST_CHECK_LT(0u, hits.size());
   }
 

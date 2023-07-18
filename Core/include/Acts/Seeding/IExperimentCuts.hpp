@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 
+#include <limits>
 #include <memory>
 
 namespace Acts {
