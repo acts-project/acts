@@ -51,3 +51,40 @@ Acts::Experimental::detail::PortalHelper::attachedDetectorVolumes(
   unsigned int iu = attachedVolumes[0u].empty() ? 1u : 0u;
   return attachedVolumes[iu];
 }
+
+std::map<unsigned int,
+         std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
+Acts::Experimental::detail::PortalHelper::stripSideVolumes(
+    const std::vector<DetectorComponent::PortalContainer>& containers,
+    const std::vector<unsigned int>& sides,
+    const std::vector<unsigned int>& selectedOnly) {
+  // These are the stripped off outside volumes
+  std::map<unsigned int, std::vector<std::shared_ptr<DetectorVolume>>>
+      sideVolumes;
+
+  // Principle sides and selected sides, make an intersection
+  std::vector<unsigned int> selectedSides;
+  if (not selectedOnly.empty()) {
+    std::set_intersection(sides.begin(), sides.end(), selectedOnly.begin(),
+                          selectedOnly.end(),
+                          std::back_inserter(selectedSides));
+  } else {
+    selectedSides = sides;
+  }
+
+  // Loop through the containers
+  for (const auto& pc : containers) {
+    // Loop through the selected sides and check if they are contained
+    for (const auto& s : selectedSides) {
+      auto cSide = pc.find(s);
+      if (cSide != pc.end()) {
+        auto p = cSide->second;
+        auto& sVolumes = sideVolumes[s];
+        auto aVolumes = attachedDetectorVolumes(*p);
+        sVolumes.insert(sVolumes.end(), aVolumes.begin(), aVolumes.end());
+      }
+    }
+  }
+  // return them
+  return sideVolumes;
+}

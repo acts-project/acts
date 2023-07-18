@@ -37,13 +37,13 @@ class RectangleBounds;
 /// \f$ plane at negative \f$ z \f$
 ///    - positiveFaceXY [1] : Rectangular Acts::PlaneSurface, parallel to \f$ xy
 /// \f$ plane at positive \f$ z \f$
-///    - negativeFaceXY [2] : Rectangular Acts::PlaneSurface, attached to \f$ yz
+///    - negativeFaceYZ [2] : Rectangular Acts::PlaneSurface, attached to \f$ yz
 /// \f$ plane at negative \f$ x \f$
-///    - positiveFaceXY [3] : Rectangular Acts::PlaneSurface, attached to \f$ yz
+///    - positiveFaceYZ [3] : Rectangular Acts::PlaneSurface, attached to \f$ yz
 /// \f$ plane at negative \f$ x \f$
-///    - negativeFaceXY [4] : Rectangular Acts::PlaneSurface, parallel to \f$ zx
+///    - negativeFaceZX [4] : Rectangular Acts::PlaneSurface, parallel to \f$ zx
 /// \f$ plane at negative \f$ y \f$
-///    - positiveFaceXY [5] : Rectangular Acts::PlaneSurface, parallel to \f$ zx
+///    - positiveFaceZX [5] : Rectangular Acts::PlaneSurface, parallel to \f$ zx
 /// \f$ plane at positive \f$ y \f$
 ///
 class CuboidVolumeBounds : public VolumeBounds {

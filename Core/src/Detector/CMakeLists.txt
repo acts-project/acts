@@ -1,7 +1,9 @@
 target_sources(
   ActsCore
   PRIVATE
-    detail/CylindricalDetectorHelper.cpp
+    detail/CubicDetectorHelper.cpp
+    detail/ConsistencyChecker.cpp
+    detail/CylindricalDetectorHelper.cpp    
     detail/PortalHelper.cpp
     detail/SupportHelper.cpp
     CylindricalContainerBuilder.cpp

@@ -10,10 +10,12 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <map>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -60,6 +62,19 @@ void attachDetectorVolumeUpdators(
 /// @return a vector of attached volumes
 std::vector<std::shared_ptr<DetectorVolume>> attachedDetectorVolumes(
     Portal& portal) noexcept(false);
+
+/// @brief  Helper method to strip side volumes from containers
+///
+/// @param containers the list of container
+/// @param sides the sides
+/// @param selectedOnly the selection restriction
+///
+/// @return a map of stripped out volumes from the container
+std::map<unsigned int, std::vector<std::shared_ptr<DetectorVolume>>>
+stripSideVolumes(
+    const std::vector<DetectorComponent::PortalContainer>& containers,
+    const std::vector<unsigned int>& sides,
+    const std::vector<unsigned int>& selectedOnly = {});
 
 }  // namespace PortalHelper
 }  // namespace detail
