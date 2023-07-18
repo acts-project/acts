@@ -36,7 +36,7 @@ void checkRotationAlignment(
     const GeometryContext& gctx,
     const std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes);
 
-/// @brief Helper method to check wether a set of volumes is lined up on
+/// @brief Helper method to check whether a set of volumes is lined up on
 /// a given common axis definition
 ///
 /// @param gctx the geometry context

@@ -9,6 +9,7 @@
 #include "Acts/Detector/detail/CubicDetectorHelper.hpp"
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/ConsistencyChecker.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
@@ -55,7 +56,7 @@ Acts::Experimental::detail::CubicDetectorHelper::connect(
       0.,
   };
 
-  // Pick the coutner part value
+  // Pick the counter part value
   auto counterPart = [&](BinningValue mValue) -> BinningValue {
     for (auto cValue : possibleValues) {
       if (cValue != mValue and cValue != bValue) {
@@ -183,6 +184,13 @@ Acts::Experimental::detail::CubicDetectorHelper::connect(
     }
 
     for (auto [is, index] : enumerate(portalSets[mergeValue])) {
+      // Check if you need to skip due to selections
+      if (not selectedOnly.empty() and
+          std::find(selectedOnly.begin(), selectedOnly.end(), index) ==
+              selectedOnly.end()) {
+        continue;
+      }
+
       auto [keepHalfLength, portalTransform] = mergeParameters[index];
       std::shared_ptr<RectangleBounds> portalBounds =
           mergedInX ? std::make_shared<RectangleBounds>(mergeHalfLengths[im],

@@ -3,12 +3,13 @@ target_sources(
   PRIVATE
     detail/CubicDetectorHelper.cpp
     detail/ConsistencyChecker.cpp
-    detail/CylindricalDetectorHelper.cpp    
+    detail/CylindricalDetectorHelper.cpp 
     detail/PortalHelper.cpp
     detail/SupportHelper.cpp
     CylindricalContainerBuilder.cpp
     Detector.cpp
     DetectorBuilder.cpp
+    DetectorComponentsExtractors.cpp   
     DetectorVolume.cpp
     DetectorVolumeBuilder.cpp
     LayerStructureBuilder.cpp

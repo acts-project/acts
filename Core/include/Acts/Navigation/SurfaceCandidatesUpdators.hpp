@@ -8,73 +8,19 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/DetectorVolume.hpp"
-#include "Acts/Detector/Portal.hpp"
+#include "Acts/Detector/DetectorComponentsExtractors.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <memory>
-#include <tuple>
 
 namespace Acts {
+
 namespace Experimental {
-
-/// Helper method to update the candidates (portals/surfaces),
-/// this can be called for initial surface/portal estimation,
-/// but also during the navigation to update the current list
-/// of candidates.
-///
-/// @param gctx is the Geometry context of this call
-/// @param nState [in,out] is the navigation state to be updated
-///
-/// @todo for surfaces skip the non-reached ones, while keep for portals
-inline static void updateCandidates(const GeometryContext& gctx,
-                                    NavigationState& nState) {
-  const auto& position = nState.position;
-  const auto& direction = nState.direction;
-  auto& nCandidates = nState.surfaceCandidates;
-
-  for (auto& c : nCandidates) {
-    // Get the surface representation: either native surfcae of portal
-    const Surface& sRep =
-        (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
-
-    // Get the intersection @todo make a templated intersector
-    // TODO surface tolerance
-    auto sIntersection = sRep.intersect(gctx, position, direction,
-                                        c.boundaryCheck, s_onSurfaceTolerance);
-    // Re-order and swap if necessary
-    if (sIntersection.intersection.pathLength + s_onSurfaceTolerance <
-            nState.overstepTolerance and
-        sIntersection.alternative.status >= Intersection3D::Status::reachable) {
-      sIntersection.swapSolutions();
-    }
-    c.objectIntersection = sIntersection;
-  }
-  // Sort and stuff non-allowed solutions to the end
-  std::sort(
-      nCandidates.begin(), nCandidates.end(),
-      [&](const auto& a, const auto& b) {
-        // The two path lengths
-        ActsScalar pathToA = a.objectIntersection.intersection.pathLength;
-        ActsScalar pathToB = b.objectIntersection.intersection.pathLength;
-        if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
-            std::abs(pathToA) < s_onSurfaceTolerance) {
-          return false;
-        } else if (pathToB + s_onSurfaceTolerance < nState.overstepTolerance or
-                   std::abs(pathToB) < s_onSurfaceTolerance) {
-          return true;
-        }
-        return pathToA < pathToB;
-      });
-  // Set the surface candidate
-  nState.surfaceCandidate = nCandidates.begin();
-}
 
 struct AllPortalsImpl : public INavigationDelegate {
   /// A ordered portal provider
@@ -86,26 +32,7 @@ struct AllPortalsImpl : public INavigationDelegate {
   /// smallest intersection pathlength >= overstep tolerance is the lowest
   ///
   /// @return an ordered list of portal candidates
-  inline void update(const GeometryContext& gctx,
-                     NavigationState& nState) const {
-    if (nState.currentVolume == nullptr) {
-      throw std::runtime_error(
-          "AllPortalsImpl: no detector volume set to navigation state.");
-    }
-    // Retrieval necessary
-    if (nState.surfaceCandidates.empty()) {
-      // Fill internal portals if existing
-      for (const auto v : nState.currentVolume->volumes()) {
-        const auto& iPortals = v->portals();
-        PortalsFiller::fill(nState, iPortals);
-      }
-      // Filling the new portal candidates
-      const auto& portals = nState.currentVolume->portals();
-      PortalsFiller::fill(nState, portals);
-    }
-    // Sort and update
-    updateCandidates(gctx, nState);
-  }
+  void update(const GeometryContext& gctx, NavigationState& nState) const;
 };
 
 struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
@@ -118,29 +45,7 @@ struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
   /// smallest intersection pathlength >= overstep tolerance is the lowest
   ///
   /// @return an ordered list of portal and surface candidates
-  inline void update(const GeometryContext& gctx,
-                     NavigationState& nState) const {
-    if (nState.currentDetector == nullptr) {
-      throw std::runtime_error(
-          "AllPortalsAndSurfacesImpl: no detector volume set to navigation "
-          "state.");
-    }
-    // A volume switch has happened, update list of portals & surfaces
-    if (nState.surfaceCandidates.empty()) {
-      // Fill internal portals if existing
-      for (const auto v : nState.currentVolume->volumes()) {
-        const auto& iPortals = v->portals();
-        PortalsFiller::fill(nState, iPortals);
-      }
-      // Assign the new volume
-      const auto& portals = nState.currentVolume->portals();
-      const auto& surfaces = nState.currentVolume->surfaces();
-      PortalsFiller::fill(nState, portals);
-      SurfacesFiller::fill(nState, surfaces);
-    }
-    // Update internal candidates
-    updateCandidates(gctx, nState);
-  }
+  void update(const GeometryContext& gctx, NavigationState& nState) const;
 };
 
 /// Generate a provider for all portals
