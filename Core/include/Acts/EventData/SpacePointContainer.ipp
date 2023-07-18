@@ -100,28 +100,28 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
 template <typename container_t, template <typename> class holder_t>
 inline const Acts::Vector3&
 SpacePointContainer<container_t, holder_t>::topStripVector(
-    const std::size_t& n) const {
+    const std::size_t n) const {
   return m_data.topStripVector(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const Acts::Vector3&
 SpacePointContainer<container_t, holder_t>::bottomStripVector(
-    const std::size_t& n) const {
+    const std::size_t n) const {
   return m_data.bottomStripVector(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const Acts::Vector3&
 SpacePointContainer<container_t, holder_t>::stripCenterDistance(
-    const std::size_t& n) const {
+    const std::size_t n) const {
   return m_data.stripCenterDistance(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const Acts::Vector3&
 SpacePointContainer<container_t, holder_t>::topStripCenterPosition(
-    const std::size_t& n) const {
+    const std::size_t n) const {
   return m_data.topStripCenterPosition(n);
 }
 
@@ -179,92 +179,92 @@ SpacePointContainer<container_t, holder_t>::container() const {
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
 inline typename SpacePointContainer<container_t, holder_t>::ValueType&
-SpacePointContainer<container_t, holder_t>::sp(const std::size_t& n) {
+SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) {
   return container().get_impl(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline typename SpacePointContainer<container_t, holder_t>::ValueType&
-SpacePointContainer<container_t, holder_t>::sp(const std::size_t& n) const {
+SpacePointContainer<container_t, holder_t>::sp(const std::size_t n) const {
   return container().get_impl(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::x(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::x(
+    const std::size_t n) const {
   return m_data.x(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::y(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::y(
+    const std::size_t n) const {
   return m_data.y(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::z(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::z(
+    const std::size_t n) const {
   return m_data.z(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::phi(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::phi(
+    const std::size_t n) const {
   return m_data.phi(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::radius(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::radius(
+    const std::size_t n) const {
   return m_data.radius(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::varianceR(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::varianceR(
+    const std::size_t n) const {
   return m_data.varianceR(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::varianceZ(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::varianceZ(
+    const std::size_t n) const {
   return m_data.varianceZ(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::quality(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::quality(
+    const std::size_t n) const {
   return m_data.quality(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const float& SpacePointContainer<container_t, holder_t>::deltaR(
-    const std::size_t& n) const {
+inline float SpacePointContainer<container_t, holder_t>::deltaR(
+    const std::size_t n) const {
   return m_data.deltaR(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline void SpacePointContainer<container_t, holder_t>::setQuality(
-    const std::size_t& n, const float& value) const {
+    const std::size_t n, const float value) const {
   m_data.setQuality(n, value);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline void SpacePointContainer<container_t, holder_t>::setDeltaR(
-    const std::size_t& n, const float& value) const {
+    const std::size_t n, const float value) const {
   m_data.setDeltaR(n, value);
 }
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
 inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::proxy(const std::size_t& n) {
+SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) {
   return proxies()[n];
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const typename SpacePointContainer<container_t, holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::proxy(const std::size_t& n) const {
+SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) const {
   return proxies()[n];
 }
 
