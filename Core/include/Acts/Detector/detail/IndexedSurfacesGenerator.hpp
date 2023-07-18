@@ -93,7 +93,7 @@ struct IndexedSurfacesGenerator {
     using DelegateType =
         IndexedSurfacesAllPortalsImpl<decltype(grid), indexed_updator>;
     auto indesSurfacesAllPortals = std::make_unique<const DelegateType>(
-        std::tie( allPortals, indexedSurfaces));
+        std::tie(allPortals, indexedSurfaces));
 
     // Create the delegate and connect it
     SurfaceCandidatesUpdator nStateUpdator;
