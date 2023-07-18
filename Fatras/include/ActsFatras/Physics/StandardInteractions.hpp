@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/PdgParticle.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "ActsFatras/Kernel/ContinuousProcess.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/BetheBloch.hpp"

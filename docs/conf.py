@@ -55,6 +55,8 @@ linkcheck_ignore = [
     r"https://doi.org/.*",
     r"https://cernvm.cern.ch/.*",
     r"https://tavianator.com/.*",
+    r"http://eigen.tuxfamily.org.*",
+    r"https://pythia.org.*",
 ]
 
 # -- Options for HTML output --------------------------------------------------

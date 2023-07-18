@@ -8,12 +8,12 @@
 
 /// @brief compute energy loss tables using the Acts implementation
 
+#include "Acts/Definitions/ParticleData.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/Interactions.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <cstddef>
 #include <cstdlib>
@@ -80,8 +80,8 @@ int main(int argc, char const* argv[]) {
   }
   const auto thickness = atof(argv[1]) * 1_mm;
   const auto pdg = static_cast<Acts::PdgParticle>(atoi(argv[2]));
-  const auto mass = ActsFatras::findMass(pdg);
-  const auto charge = ActsFatras::findCharge(pdg);
+  const auto mass = Acts::findMass(pdg).value_or(0);
+  const auto charge = Acts::findCharge(pdg).value_or(0);
   const auto pmin = atof(argv[3]) * 1_GeV;
   const auto pmax = atof(argv[4]) * 1_GeV;
   const auto deltap = (pmax - pmin) / atoi(argv[5]);

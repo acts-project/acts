@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -33,10 +33,6 @@ using SurfaceAndMaterialWithContext =
                std::shared_ptr<const Acts::ISurfaceMaterial>,
                Acts::GeometryContext>;
 
-static std::vector<std::string> surfaceTypes = {
-    "ConeSurface",  "CylinderSurface", "DiscSurface",       "PerigeeSurface",
-    "PlaneSurface", "StrawSurface",    "CurvilinearSurface"};
-
 /// Conversion of a pair of surface and material used for the material mapping
 void to_json(nlohmann::json& j, const SurfaceAndMaterialWithContext& surface);
 
@@ -44,14 +40,6 @@ void to_json(nlohmann::json& j, const SurfaceAndMaterialWithContext& surface);
 ///
 /// @note it will take the default context
 void to_json(nlohmann::json& j, const Surface& surface);
-
-/// Contextual conversion of a surface
-///
-/// @param j the json to be filled
-/// @param surface the surface to be converted
-/// @param gctx the geometry context for this
-void toJson(nlohmann::json& j, const Surface& surface,
-            const Acts::GeometryContext& gctx);
 
 /// Non-contextual conversion of a surface
 ///
@@ -83,12 +71,66 @@ std::shared_ptr<Surface> surfaceFromJson(const nlohmann::json& j);
 /// @return a shared_ptr to a typed surface object for type polymorphism
 template <typename surface_t, typename bounds_t>
 std::shared_ptr<surface_t> surfaceFromJsonT(const nlohmann::json& j) {
-  Transform3 sTransform;
-  nlohmann::json jtrf = j["transform"];
-  from_json(jtrf, sTransform);
-  nlohmann::json jbounds = j["bounds"];
-  auto sBounds = surfaceBoundsFromJson<bounds_t>(jbounds);
+  nlohmann::json jTransform = j["transform"];
+  Transform3 sTransform = Transform3JsonConverter::fromJson(jTransform);
+  nlohmann::json jBounds = j["bounds"];
+  auto sBounds = SurfaceBoundsJsonConverter::fromJson<bounds_t>(jBounds);
   return Surface::makeShared<surface_t>(sTransform, std::move(sBounds));
 }
+
+namespace SurfaceJsonConverter {
+
+struct Options {
+  // The way the transforms are written out
+  Transform3JsonConverter::Options transformOptions =
+      Transform3JsonConverter::Options{};
+  // Write the material
+  bool writeMaterial = true;
+  // Write surface as a portal
+  bool portal = false;
+};
+
+/// Contextual conversion of a surface
+///
+/// @param gctx the geometry context for this
+/// @param surface the surface to be converted
+/// @param options the writing options for the surfaces
+///
+/// @return a json object representing the surface
+nlohmann::json toJson(const GeometryContext& gctx, const Surface& surface,
+                      const Options& options = Options{});
+
+/// Contextual conversion of a surface - Detray export
+///
+/// @param gctx the geometry context for this
+/// @param surface the surface to be converted
+/// @param options the writing options for the surfaces
+///
+/// @note reading back detray json is not supported and will fail
+///
+/// @return a json object representing the surface
+nlohmann::json toJsonDetray(const GeometryContext& gctx, const Surface& surface,
+                            const Options& options = Options{});
+
+/// @brief The Surface converter from json
+///
+/// @param jSurface the surface json object
+///
+/// @return a shared object created from json input
+std::shared_ptr<Surface> fromJson(const nlohmann::json& jSurface);
+
+}  // namespace SurfaceJsonConverter
+
+// This macro create a conversion for the surface type
+NLOHMANN_JSON_SERIALIZE_ENUM(
+    Surface::SurfaceType,
+    {{Surface::SurfaceType::Cone, "ConeSurface"},
+     {Surface::SurfaceType::Cylinder, "CylinderSurface"},
+     {Surface::SurfaceType::Disc, "DiscSurface"},
+     {Surface::SurfaceType::Perigee, "PerigeeSurface"},
+     {Surface::SurfaceType::Plane, "PlaneSurface"},
+     {Surface::SurfaceType::Straw, "StrawSurface"},
+     {Surface::SurfaceType::Curvilinear, "CurvilinearSurface"},
+     {Surface::SurfaceType::Other, "Other"}})
 
 }  // namespace Acts
