@@ -43,8 +43,10 @@ Acts::Experimental::detail::CubicDetectorHelper::connect(
   // 1 -> [ 2,3 ] for binX connection (cylclic one step)
   // 2 -> [ 4,5 ] for binY connection (cylclic two steps)
   // 0 -> [ 0,1 ] for binZ connection (to be in line with cylinder covnention)
-  std::vector<std::array<std::size_t, 2>> portalSets = {
-      {{2, 3}, {4, 5}, {0, 1}}};
+  using PortalSet = std::array<std::size_t, 2u>;
+  std::vector<PortalSet> portalSets = {
+      {PortalSet{2, 3}, PortalSet{4, 5}, PortalSet{0, 1}}};
+
   // This is the picked set for fusing
   auto [wasteIndex, keepIndex] = portalSets[bValue];
 
@@ -243,8 +245,9 @@ Acts::Experimental::detail::CubicDetectorHelper::connect(
   // The possible bin values
   std::array<BinningValue, 3u> possibleValues = {binX, binY, binZ};
   // And their associated portal sets, see above
-  std::vector<std::array<std::size_t, 2>> portalSets = {
-      {{2, 3}, {4, 5}, {0, 1}}};
+  using PortalSet = std::array<std::size_t, 2u>;
+  std::vector<PortalSet> portalSets = {
+      {PortalSet{2, 3}, PortalSet{4, 5}, PortalSet{0, 1}}};
 
   // This is the picked set for refubishing
   auto [startIndex, endIndex] = portalSets[bValue];
