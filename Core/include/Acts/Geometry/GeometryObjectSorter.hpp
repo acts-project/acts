@@ -15,8 +15,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <functional>
+#include <memory>
 
 namespace Acts {
 
