@@ -34,6 +34,7 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
+  using GridDensity = std::unordered_map<int, float>;
   using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
   /// The configuration struct
@@ -60,7 +61,12 @@ class AdaptiveGridTrackDensity {
 
   AdaptiveGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
-  /// @brief Returns the z position of maximum track density
+  /// @brief TODO
+  /// @param gridDensity Map between z bins and corresponding density value
+  /// @return 
+  GridDensity::const_iterator highestDensityEntry(const GridDensity& gridDensity) const;
+
+  /// @brief Returns the z position of maximum (surrounding) track density
   ///
   /// @param mainGridDensity The main 1-dim density grid along the z-axis
   /// @param mainGridZValues The corresponding z-bin values of the track
@@ -144,26 +150,19 @@ class AdaptiveGridTrackDensity {
   /// maximum) and take the z-bin of the maximum with the highest surrounding
   /// density
   ///
-  /// @param mainGridDensity The main 1-dim density grid along the z-axis
-  /// @param mainGridZValues The corresponding z-bin values of the track
-  /// densities along the z-axis
+  /// @param gridDensity Map between z bins and corresponding density value
   ///
   /// @return The z-bin position
-  int getHighestSumZPosition(std::vector<float>& mainGridDensity,
-                             const std::vector<int>& mainGridZValues) const;
+  int highestDensitySumBin(GridDensity& gridDensity) const;
 
   /// @brief Calculates the density sum of a z-bin and its two neighboring bins
-  /// as needed for 'getHighestSumZPosition'
+  /// as needed for 'highestDensitySumBin'
   ///
-  /// @param mainGridDensity The main 1-dim density grid along the z-axis
-  /// @param mainGridZValues The corresponding z-bin values of the track
-  /// densities along the z-axis
-  /// @param pos The center z-bin position
+  /// @param gridDensity Map between z bins and corresponding density value
+  /// @param zBin The center z-bin whose neighbors we want to sum up
   ///
   /// @return The sum
-  double getDensitySum(const std::vector<float>& mainGridDensity,
-                       const std::vector<int>& mainGridZValues,
-                       unsigned int pos) const;
+  float getDensitySum(const GridDensity& gridDensity, int zBin) const;
 
   Config m_cfg;
 };
