@@ -63,7 +63,7 @@ struct IndexedSurfacesExtractor {
   /// @return a vector of raw Surface pointers
   static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t>& indices);
+      const NavigationState& nState, const std::vector<std::size_t>& indices);
 };
 
 /// Helper extractors: all sub volumes of a volume
