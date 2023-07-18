@@ -9,9 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <optional>
 #include <type_traits>
 
 namespace Acts {

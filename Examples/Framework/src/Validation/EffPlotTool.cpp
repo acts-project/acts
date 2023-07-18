@@ -55,8 +55,8 @@ void ActsExamples::EffPlotTool::write(
 void ActsExamples::EffPlotTool::fill(EffPlotTool::EffPlotCache& effPlotCache,
                                      const ActsFatras::Particle& truthParticle,
                                      bool status) const {
-  const auto t_phi = phi(truthParticle.unitDirection());
-  const auto t_eta = eta(truthParticle.unitDirection());
+  const auto t_phi = phi(truthParticle.direction());
+  const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
   PlotHelpers::fillEff(effPlotCache.trackEff_vs_pT, t_pT, status);

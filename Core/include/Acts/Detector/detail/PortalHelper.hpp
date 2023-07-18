@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -36,6 +37,33 @@ using PortalReplacement =
 
 namespace detail {
 namespace PortalHelper {
+
+/// @brief Method to attach a single detector volume to a portal
+///
+/// @param portal is the portal where the detector volume is going to be attached
+/// @param volume is the volume that is attached to the portal
+/// @param direction is the direction to which it is attached
+///
+void attachDetectorVolumeUpdator(Portal& portal,
+                                 const std::shared_ptr<DetectorVolume>& volume,
+                                 const Direction& direction);
+
+/// @brief Create and attach the multi link updator, the portal will get
+/// a volume updator attached, that points to the different sub volumes
+/// depending on the global position and binning - single assignment case
+///
+/// @param gctx the geometry context
+/// @param portal is the portal where the detector volume is going to be attached
+/// @param volumes are the volumes that are pointed to
+/// @param direction is the direction to which it is attached
+/// @param boundaries are the value boundaries
+/// @param binning is the binning type
+///
+void attachDetectorVolumesUpdator(
+    const GeometryContext& gctx, Portal& portal,
+    const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    const Direction& direction, const std::vector<ActsScalar>& boundaries,
+    const BinningValue& binning);
 
 /// @brief Create and attach the multi link updator, the portal will get
 /// a volume updator attached, that points to the different sub volumes

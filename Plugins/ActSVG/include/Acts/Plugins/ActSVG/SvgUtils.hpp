@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/meta.hpp>
 
 #include <array>
 #include <fstream>
