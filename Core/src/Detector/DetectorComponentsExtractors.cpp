@@ -26,7 +26,7 @@ Acts::Experimental::AllPortalsExtractor::extract(
 const std::vector<const Acts::Surface*>
 Acts::Experimental::AllSurfacesExtractor::extract(
     [[maybe_unused]] const GeometryContext& gctx, const NavigationState& nState,
-    [[maybe_unused]] const std::vector<size_t>& indices) {
+    [[maybe_unused]] const std::vector<std::size_t>& indices) {
   if (nState.currentVolume == nullptr) {
     throw std::runtime_error("AllSurfacesExtractor: no detector volume given.");
   }
@@ -36,7 +36,7 @@ Acts::Experimental::AllSurfacesExtractor::extract(
 const std::vector<const Acts::Surface*>
 Acts::Experimental::IndexedSurfacesExtractor::extract(
     [[maybe_unused]] const GeometryContext& gctx, const NavigationState& nState,
-    const std::vector<size_t>& indices) {
+    const std::vector<std::size_t>& indices) {
   if (nState.currentVolume == nullptr) {
     throw std::runtime_error(
         "IndexedSurfacesExtractor: no detector volume given.");
@@ -54,7 +54,7 @@ Acts::Experimental::IndexedSurfacesExtractor::extract(
 const std::vector<const Acts::Experimental::DetectorVolume*>
 Acts::Experimental::AllSubVolumesExtractor::extract(
     [[maybe_unused]] const GeometryContext& gctx, const NavigationState& nState,
-    [[maybe_unused]] const std::vector<size_t>& indices) {
+    [[maybe_unused]] const std::vector<std::size_t>& indices) {
   if (nState.currentVolume == nullptr) {
     throw std::runtime_error(
         "AllSubVolumesExtractor: no detector volume given.");
@@ -65,7 +65,7 @@ Acts::Experimental::AllSubVolumesExtractor::extract(
 const std::vector<const Acts::Experimental::DetectorVolume*>
 Acts::Experimental::IndexedSubVolumesExtractor::extract(
     [[maybe_unused]] const GeometryContext& gctx, const NavigationState& nState,
-    const std::vector<size_t>& indices) {
+    const std::vector<std::size_t>& indices) {
   if (nState.currentVolume == nullptr) {
     throw std::runtime_error(
         "AllSubVolumesExtractor: no detector volume given.");

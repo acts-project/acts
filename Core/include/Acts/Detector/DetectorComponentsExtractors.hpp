@@ -47,7 +47,7 @@ struct AllSurfacesExtractor {
   static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {});
+      [[maybe_unused]] const std::vector<std::size_t>& indices = {});
 };
 
 /// Helper extractors: indexed surfaces
@@ -78,7 +78,7 @@ struct AllSubVolumesExtractor {
   static const std::vector<const DetectorVolume*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t>& indices = {});
+      [[maybe_unused]] const std::vector<std::size_t>& indices = {});
 };
 
 /// Helper extractors: indexed sub volume of a volume
@@ -92,7 +92,7 @@ struct IndexedSubVolumesExtractor {
   /// @return a vector of raw DetectorVolume pointers
   static const std::vector<const DetectorVolume*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t>& indices);
+      const NavigationState& nState, const std::vector<std::size_t>& indices);
 };
 
 }  // namespace Experimental
