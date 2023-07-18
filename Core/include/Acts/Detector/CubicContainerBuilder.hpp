@@ -21,26 +21,23 @@
 namespace Acts {
 namespace Experimental {
 
-/// @brief A dedicated container builder for cylindrical detector containers
+/// @brief A dedicated container builder for cubical detector containers
 ///
-/// It relies on the detailed implementation of the CylindricalDetectorHelper
-/// and allows for DetectorVolume attachment in z/r/phi, such as wrapping
-/// of bevelled cylinder objects in z/r
+/// It relies on the detailed implementation of the CubicDetectorHelper
+/// and allows for DetectorVolume attachment in x/y/z
 ///
 /// @note the builder expects a fully consistent set of sub volume builders
 /// that will be executed in a chain
 ///
-/// @note allowed BinningValue(s) for the cylindrical container builder are
-/// {binZ}, {binR}, {binPhi}, {binZ, binR}, whereas the last option indicates
-/// a wrapping setup.
-class CylindricalContainerBuilder : public IDetectorComponentBuilder {
+/// @note allowed BinningValue are binX, binY, binZ
+class CubicContainerBuilder : public IDetectorComponentBuilder {
  public:
   /// Nested configuration object
   struct Config {
     /// The configured volume builders
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
-    /// Binning prescription of attachment
-    std::vector<BinningValue> binning = {};
+    /// Binning description
+    BinningValue binning = BinningValue::binValues;
     /// Auxiliary information, mainly for screen output
     std::string auxiliary = "";
   };
@@ -49,12 +46,11 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
   ///
   /// @param cfg is the configuration struct
   /// @param logger logging instance for screen output
-  CylindricalContainerBuilder(
-      const Config& cfg,
-      std::unique_ptr<const Logger> logger =
-          getDefaultLogger("CylindricalContainerBuilder", Logging::INFO));
+  CubicContainerBuilder(const Config& cfg,
+                        std::unique_ptr<const Logger> logger = getDefaultLogger(
+                            "CubicContainerBuilder", Logging::INFO));
 
-  /// The final implementation of the cylindrical container builder
+  /// The final implementation of the cubic container builder
   ///
   /// @param gctx The geometry context for this call
   ///

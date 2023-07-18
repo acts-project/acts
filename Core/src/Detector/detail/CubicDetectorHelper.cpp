@@ -240,20 +240,137 @@ Acts::Experimental::detail::CubicDetectorHelper::connect(
   // Return the new container
   DetectorComponent::PortalContainer dShell;
 
+  // The possible bin values
+  std::array<BinningValue, 3u> possibleValues = {binX, binY, binZ};
+  // And their associated portal sets, see above
+  std::vector<std::array<std::size_t, 2>> portalSets = {
+      {{2, 3}, {4, 5}, {0, 1}}};
+
+  // This is the picked set for refubishing
+  auto [startIndex, endIndex] = portalSets[bValue];
+  // They are identical to waste and kepp index, for clarity rename them
+  size_t wasteIndex = startIndex;
+  size_t keepIndex = endIndex;
+
+  // Fusing along the connection direction (bValue)
+  for (std::size_t ic = 1; ic < containers.size(); ++ic) {
+    auto& formerContainer = containers[ic - 1];
+    auto& currentContainer = containers[ic];
+    // Check and throw exception
+    if (formerContainer.find(keepIndex) == formerContainer.end()) {
+      throw std::invalid_argument(
+          "CubicDetectorHelper: proto container has no fuse portal at index of "
+          "former container.");
+    }
+    if (currentContainer.find(wasteIndex) == currentContainer.end()) {
+      throw std::invalid_argument(
+          "CubicDetectorHelper: proto container has no fuse portal at index of "
+          "current container.");
+    }
+    std::shared_ptr<Portal> keepPortal =
+        formerContainer.find(keepIndex)->second;
+    std::shared_ptr<Portal> wastePortal =
+        currentContainer.find(wasteIndex)->second;
+    keepPortal->fuse(wastePortal);
+    for (auto& av : wastePortal->attachedDetectorVolumes()[1u]) {
+      ACTS_VERBOSE("Update portal of detector volume '" << av->name() << "'.");
+      av->updatePortal(keepPortal, keepIndex);
+    }
+  }
+  // Proto container refurbishment - outside
+  dShell[startIndex] = containers.front().find(startIndex)->second;
+  dShell[endIndex] = containers.back().find(endIndex)->second;
+
+  // Create remaining outside shells now
+  std::vector<unsigned int> sidePortals = {};
+  for (auto sVals : possibleValues) {
+    if (sVals != bValue) {
+      sidePortals.push_back(portalSets[sVals][0]);
+      sidePortals.push_back(portalSets[sVals][1]);
+    }
+  }
+
+  // Strip the side volumes
+  auto sideVolumes =
+      PortalHelper::stripSideVolumes(containers, sidePortals, selectedOnly);
+
+  ACTS_VERBOSE("There remain " << sideVolumes.size()
+                               << " side volume packs to be connected");
+  for (auto [s, volumes] : sideVolumes) {
+    ACTS_VERBOSE(" - connect " << volumes.size() << " at selected side " << s);
+    auto pR = connect(gctx, volumes, bValue, {s}, logLevel);
+    if (pR.find(s) != pR.end()) {
+      dShell[s] = pR.find(s)->second;
+    }
+  }
+
   // Done.
   return dShell;
 }
 
 std::array<std::vector<Acts::ActsScalar>, 3u>
 Acts::Experimental::detail::CubicDetectorHelper::xyzBoundaries(
-    const GeometryContext& gctx,
-    const std::vector<const Acts::Experimental::DetectorVolume*>& volumes,
+    [[maybe_unused]] const GeometryContext& gctx,
+    [[maybe_unused]] const std::vector<
+        const Acts::Experimental::DetectorVolume*>& volumes,
     Acts::Logging::Level logLevel) {
   // The local logger
   ACTS_LOCAL_LOGGER(getDefaultLogger("CubicDetectorHelper", logLevel));
 
   // The return boundaries
   std::array<std::vector<Acts::ActsScalar>, 3u> boundaries;
+
+  // The map for collecting
+  std::array<std::map<ActsScalar, size_t>, 3u> valueMaps;
+  auto& xMap = valueMaps[0u];
+  auto& yMap = valueMaps[1u];
+  auto& zMap = valueMaps[2u];
+
+  auto fillMap = [&](std::map<ActsScalar, size_t>& map,
+                     const std::array<ActsScalar, 2u>& values) {
+    for (auto v : values) {
+      if (map.find(v) != map.end()) {
+        ++map[v];
+      } else {
+        map[v] = 1u;
+      }
+    }
+  };
+
+  // Loop over the volumes and collect boundaries
+  for (const auto& v : volumes) {
+    if (v->volumeBounds().type() == Acts::VolumeBounds::BoundsType::eCuboid) {
+      auto bValues = v->volumeBounds().values();
+      // The min/max values
+      ActsScalar halfX = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthX];
+      ActsScalar halfY = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthY];
+      ActsScalar halfZ = bValues[CuboidVolumeBounds::BoundValues::eHalfLengthZ];
+      // Get the transform @todo use a center of gravity of the detector
+      auto translation = v->transform(gctx).translation();
+      // The min/max values
+      ActsScalar xMin = translation.x() - halfX;
+      ActsScalar xMax = translation.x() + halfX;
+      ActsScalar yMin = translation.y() - halfY;
+      ActsScalar yMax = translation.y() + halfY;
+      ActsScalar zMin = translation.z() - halfZ;
+      ActsScalar zMax = translation.z() + halfZ;
+      // Fill the maps
+      fillMap(xMap, {xMin, xMax});
+      fillMap(yMap, {yMin, yMax});
+      fillMap(zMap, {zMin, zMax});
+    }
+  }
+
+  for (auto [im, map] : enumerate(valueMaps)) {
+    for (auto [key, value] : map) {
+      boundaries[im].push_back(key);
+    }
+    std::sort(boundaries[im].begin(), boundaries[im].end());
+  }
+
+  ACTS_VERBOSE("- did yield " << boundaries[0u].size() << " boundaries in X.");
+  ACTS_VERBOSE("- did yield " << boundaries[1u].size() << " boundaries in Y.");
+  ACTS_VERBOSE("- did yield " << boundaries[2u].size() << " boundaries in Z.");
 
   return boundaries;
 }

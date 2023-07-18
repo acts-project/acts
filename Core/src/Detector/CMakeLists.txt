@@ -6,6 +6,7 @@ target_sources(
     detail/CylindricalDetectorHelper.cpp 
     detail/PortalHelper.cpp
     detail/SupportHelper.cpp
+    CubicContainerBuilder.cpp
     CylindricalContainerBuilder.cpp
     Detector.cpp
     DetectorBuilder.cpp
