@@ -20,7 +20,11 @@
 
 namespace Acts {
 
-/// A constrained step class for the steppers
+/// A constrained step class for the steppers.
+///
+/// This class is symmetrical for forward and backward propagation. The sign of
+/// the propagation direction should not enter here but rather be applied the
+/// step is actually taken.
 ///
 /// As simple as this class looks it hides a few very important details:
 /// - Overstepping handling. The step size sign will flip if we happened to pass
@@ -29,9 +33,8 @@ namespace Acts {
 /// order to converge on a target.
 ///
 /// Because of the points mentioned above, the update function will always
-/// prefer step sizes that point opposite the navigation direction. A side
-/// effect of this is that we will propagate in the opposite direction if the
-/// target is "behind us".
+/// prefer negative step sizes. A side effect of this is that we will propagate
+/// in the opposite direction if the target is "behind us".
 ///
 /// The hierarchy is:
 /// - Overstepping resolution / backpropagation

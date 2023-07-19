@@ -264,9 +264,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.setStepSize(esState, 17.);
+  es.setStepSize(esState, -1337.);
   BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
-  BOOST_CHECK_EQUAL(esState.stepSize.value(), 17.);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
   es.releaseStepSize(esState);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
