@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat(Covariance::Identity());
+  Covariance covMat(Covariance::Identity()*0.005);
 
   float z0Trk1 = 0.25;
   float z0Trk2 = -10.95;

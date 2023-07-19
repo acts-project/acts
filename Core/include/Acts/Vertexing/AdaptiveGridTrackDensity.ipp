@@ -20,6 +20,7 @@ typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap::const_iterator
   );
   return maxEntry;
 }
+/// TODO use .at() function to retrieve map elems
 
 template <int trkGridSize>
 Acts::Result<float>
@@ -184,62 +185,63 @@ Acts::Result<float>
 Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
     const std::vector<float>& mainGridDensity,
     const std::vector<int>& mainGridZValues, float maxZ) const {
-  if (mainGridDensity.empty() || mainGridZValues.empty()) {
+  
+  DensityMap mainDensityMap;
+  for (unsigned int i = 0; i < mainGridDensity.size(); i++) {
+    mainDensityMap[mainGridZValues[i]] = mainGridDensity[i];
+  }
+
+  if (mainDensityMap.empty()) {
     return VertexingError::EmptyInput;
   }
-  // Get z bin of max density z value
+
+  // Get z bin of max density and max density value
   int sign = (maxZ > 0) ? +1 : -1;
-  int zMaxGridBin = int(maxZ / m_cfg.binSize - sign * 0.5f);
+  int zMaxBin = int(maxZ / m_cfg.binSize - sign * 0.5f);
+  const float maxValue = mainDensityMap[zMaxBin];
 
-  // Find location in mainGridZValues
-  auto findIter =
-      std::find(mainGridZValues.begin(), mainGridZValues.end(), zMaxGridBin);
-  int zBin = std::distance(mainGridZValues.begin(), findIter);
-
-  const float maxValue = mainGridDensity[zBin];
-  float gridValue = mainGridDensity[zBin];
-
-  // Find right half-maximum bin
-  int rhmBin = zBin;
+  int rhmBin = zMaxBin;
+  float gridValue = maxValue;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if ((zMaxGridBin + (rhmBin - zBin)) != mainGridZValues[rhmBin]) {
+    if (mainDensityMap.count(rhmBin+1) == 0) {
+      // TODO: I think in this case the linear approximation does not work, we would need to use 0 instead of mainDensityMap.at(rhmBin) in the computation of deltaZ1
       break;
     }
     rhmBin += 1;
-    if (rhmBin == int(mainGridDensity.size())) {
-      break;
-    }
-    gridValue = mainGridDensity[rhmBin];
+    gridValue = mainDensityMap.at(rhmBin);
   }
 
   // Use linear approximation to find better z value for FWHM between bins
   float deltaZ1 =
-      (maxValue / 2 - mainGridDensity[rhmBin - 1]) *
-      (m_cfg.binSize / (mainGridDensity[rhmBin - 1] - mainGridDensity[rhmBin]));
-  // Find left half-maximum bin
-  int lhmBin = zBin;
-  gridValue = mainGridDensity[zBin];
+      (maxValue / 2 - mainDensityMap.at(rhmBin - 1)) *
+      (m_cfg.binSize / (mainDensityMap.at(rhmBin - 1) - mainDensityMap.at(rhmBin)));
+  // TODO: I think we should have here:
+  // float deltaZ1 =
+  //       (maxValue / 2 - mainDensityMap.at(rhmBin)) *
+  //       (m_cfg.binSize / (mainDensityMap.at(rhmBin - 1) - mainDensityMap.at(rhmBin)));
+  int lhmBin = zMaxBin;
+  gridValue = maxValue;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if ((zMaxGridBin + (lhmBin - zBin)) != mainGridZValues[lhmBin]) {
+    if (mainDensityMap.count(lhmBin-1) == 0) {
+      // TODO: I think in this case the linear approximation does not work
       break;
     }
     lhmBin -= 1;
-    if (lhmBin < 0) {
-      break;
-    }
-    gridValue = mainGridDensity[lhmBin];
+    gridValue = mainDensityMap.at(lhmBin);
   }
 
   // Use linear approximation to find better z value for FWHM between bins
   float deltaZ2 =
-      (maxValue / 2 - mainGridDensity[lhmBin + 1]) *
-      (m_cfg.binSize / (mainGridDensity[rhmBin + 1] - mainGridDensity[rhmBin]));
+      (maxValue / 2 - mainDensityMap.at(lhmBin + 1)) *
+      (m_cfg.binSize / (mainDensityMap.at(rhmBin + 1) - mainDensityMap.at(rhmBin)));
+  // TODO: I think we should have here:
+  // float deltaZ2 =
+  //    (maxValue / 2 - mainDensityMap.at(lhmBin)) *
+  //    (m_cfg.binSize / (mainDensityMap.at(lhmBin + 1) - mainDensityMap.at(lhmBin)));
 
-  // Approximate FWHM
-  float fwhm =
-      rhmBin * m_cfg.binSize - deltaZ1 - lhmBin * m_cfg.binSize - deltaZ2;
+  float fwhm = (rhmBin - lhmBin) * m_cfg.binSize - deltaZ1 - deltaZ2;
 
   // FWHM = 2.355 * sigma
   float width = fwhm / 2.355f;
