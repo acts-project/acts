@@ -117,9 +117,6 @@ BOOST_AUTO_TEST_CASE(IrregularBoxConnectionInZ) {
   for (auto [it, t] : Acts::enumerate(transforms)) {
     std::string trstr = it == 0 ? "" : "_rotated";
     auto rotation = t.rotation();
-
-    std::cout << "Rotation: " << Acts::toString(rotation) << std::endl;
-
     // Try for all binning values
     for (auto bVal : binningValues) {
       auto [vsA, vsB, vsC] = volSetups[bVal];
