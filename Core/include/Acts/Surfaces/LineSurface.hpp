@@ -120,13 +120,13 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
   /// constructed
-  /// @param momentum is the momentum used for the measurement frame
+  /// @param direction is the momentum direction used for the measurement frame
   /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                  const Vector3& position,
-                                 const Vector3& momentum) const final;
+                                 const Vector3& direction) const final;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -149,23 +149,24 @@ class LineSurface : public Surface {
       const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Local to global transformation
-  /// for line surfaces the momentum is used in order to interpret the drift
-  /// radius
+  ///
+  /// @note for line surfaces the momentum direction is used in order to interpret the
+  /// drift radius
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param momentum is the global momentum (used to sign the closest approach)
+  /// @param direction is the global momentum direction (used to sign the closest approach)
   ///
   /// @return global position by value
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const final;
+                        const Vector3& direction) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
   ///
   /// This method is the true global->local transformation.<br>
   /// makes use of globalToLocal and indicates the sign of the Acts::eBoundLoc0
-  /// by the given momentum
+  /// by the given momentum direction
   ///
   /// The calculation of the sign of the radius (or \f$ d_0 \f$) can be done as
   /// follows:<br>
@@ -192,13 +193,13 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   /// @param tolerance (unused)
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// @brief Straight line intersection schema
@@ -249,7 +250,7 @@ class LineSurface : public Surface {
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
-                        const Vector3& momentum) const override;
+                        const Vector3& direction) const override;
 
   /// This method returns the bounds of the Surface by reference */
   const SurfaceBounds& bounds() const final;
@@ -288,10 +289,10 @@ class LineSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position
-  /// @param momentum is the momentum
+  /// @param direction is the momentum direction
   /// @param lposition is the local position to be filled
   bool globalToLocalPlain(const GeometryContext& gctx, const Vector3& position,
-                          const Vector3& momentum, Vector2& lposition) const;
+                          const Vector3& direction, Vector2& lposition) const;
 };
 
 }  // namespace Acts

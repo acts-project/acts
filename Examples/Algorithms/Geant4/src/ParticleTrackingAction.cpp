@@ -8,9 +8,9 @@
 
 #include "ActsExamples/Geant4/ParticleTrackingAction.hpp"
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/MultiIndex.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Geant4/EventStore.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
@@ -102,7 +102,7 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
 ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
     const G4Track& aTrack, SimBarcode particleId) const {
   // Unit conversions G4->::ACTS
-  constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
+  constexpr double convertTime = Acts::UnitConstants::ns / CLHEP::ns;
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
 
@@ -110,7 +110,7 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
   const G4ParticleDefinition* particleDef = aTrack.GetParticleDefinition();
   G4int pdg = particleDef->GetPDGEncoding();
   G4double charge = particleDef->GetPDGCharge();
-  G4double mass = particleDef->GetPDGMass();
+  G4double mass = convertEnergy * particleDef->GetPDGMass();
   G4ThreeVector pPosition = convertLength * aTrack.GetPosition();
   G4double pTime = convertTime * aTrack.GetGlobalTime();
   G4ThreeVector pDirection = aTrack.GetMomentumDirection();
