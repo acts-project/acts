@@ -34,7 +34,7 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
-  using GridDensity = std::unordered_map<int, float>;
+  using DensityMap = std::unordered_map<int, float>;
   using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
   /// The configuration struct
@@ -62,9 +62,9 @@ class AdaptiveGridTrackDensity {
   AdaptiveGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
   /// @brief TODO
-  /// @param gridDensity Map between z bins and corresponding density value
+  /// @param densityMap Map between z bins and corresponding density value
   /// @return 
-  GridDensity::const_iterator highestDensityEntry(const GridDensity& gridDensity) const;
+  DensityMap::const_iterator highestDensityEntry(const DensityMap& densityMap) const;
 
   /// @brief Returns the z position of maximum (surrounding) track density
   ///
@@ -124,6 +124,7 @@ class AdaptiveGridTrackDensity {
   /// @param cov The track covariance matrix
   /// @param distCtrD The distance in d0 from the track position to its
   /// bin center in the 2-dim grid
+  /// @param centralZBin Central z bin of the track (where its density is the highest)
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
   TrackGridVector createTrackGrid(int offset, const SymMatrix2& cov,
@@ -150,19 +151,19 @@ class AdaptiveGridTrackDensity {
   /// maximum) and take the z-bin of the maximum with the highest surrounding
   /// density
   ///
-  /// @param gridDensity Map between z bins and corresponding density value
+  /// @param densityMap Map between z bins and corresponding density value
   ///
   /// @return The z-bin position
-  int highestDensitySumBin(GridDensity& gridDensity) const;
+  int highestDensitySumBin(DensityMap& densityMap) const;
 
   /// @brief Calculates the density sum of a z-bin and its two neighboring bins
   /// as needed for 'highestDensitySumBin'
   ///
-  /// @param gridDensity Map between z bins and corresponding density value
+  /// @param densityMap Map between z bins and corresponding density value
   /// @param zBin The center z-bin whose neighbors we want to sum up
   ///
   /// @return The sum
-  float getDensitySum(const GridDensity& gridDensity, int zBin) const;
+  float getDensitySum(const DensityMap& densityMap, int zBin) const;
 
   Config m_cfg;
 };
