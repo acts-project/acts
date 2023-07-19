@@ -34,7 +34,8 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
-  using DensityMap = std::unordered_map<int, float>;
+ // TODO: go back to ordered map
+  using DensityMap = std::map<int, float>;
   using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
   /// The configuration struct
@@ -129,6 +130,20 @@ class AdaptiveGridTrackDensity {
   /// bin center in the 2-dim grid
   TrackGridVector createTrackGrid(int offset, const SymMatrix2& cov,
                                   float distCtrD, float distCtrZ) const;
+                                  
+   private:
+  /// @brief Function that creates a track density map, i.e., a map of z bins to corresponding density values from a single track.
+  ///
+  /// @param offset Offset in d0 direction, to account for the 2-dim part
+  /// of the Gaussian track distribution
+  /// @param cov The track covariance matrix
+  /// @param distCtrD The distance in d0 from the track position to its
+  /// bin center in the 2-dim grid
+  /// @param centralZBin Central z bin of the track (where its density is the highest)
+  /// @param distCtrZ The distance in z0 from the track position to its
+  /// bin center in the 2-dim grid                               
+  DensityMap createTrackGrid(int offset, const SymMatrix2& cov,
+                                  float distCtrD, int centralZBin, float distCtrZ) const;
 
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak

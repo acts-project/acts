@@ -110,6 +110,23 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
 
   // Create the track grid
   trackGrid = createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
+  DensityMap trackGridNew = createTrackGrid(dOffset, cov, distCtrD, zBin, distCtrZ);
+
+  int cnt = 0;
+  for (auto i = trackGridNew.begin(); i!= trackGridNew.end(); i++) {
+    trackGrid[cnt] = i->second;
+    cnt ++;
+  
+/*
+  std::cout << "\n new track:\n";
+  std::cout << "\n central z bin: " << zBin << "\n";
+  int cnt2 = 0;
+  for (auto i = trackGridNew.begin(); i!= trackGridNew.end(); i++) {
+    std::cout << "\n zind: " << i->first << " density: " << i->second << " trackGridDensity: " << trackGrid[cnt2] << "\n";
+    cnt2 ++;
+  }
+  */
+  
 
   std::vector<int> zBinValues;
 
@@ -178,6 +195,27 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
     trackGrid(j) = normal2D(d + distCtrD, z + distCtrZ, cov);
   }
   return trackGrid;
+}
+
+template <int trkGridSize>
+typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap
+Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
+    int offset, const Acts::SymMatrix2& cov, float distCtrD,
+    int centralZBin, float distCtrZ) const {
+  DensityMap trackDensityMap;
+
+  int halfTrkGridSize = (trkGridSize - 1) / 2;
+  // TODO: I think we can just pass d0
+  float i = halfTrkGridSize + offset;
+  float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
+
+  int firstZBin = centralZBin - halfTrkGridSize;
+  // Loop over columns
+  for (int j = 0; j < trkGridSize; j++) {
+    float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
+    trackDensityMap[firstZBin + j] = normal2D(d + distCtrD, z + distCtrZ, cov);
+  }
+  return trackDensityMap;
 }
 
 template <int trkGridSize>
