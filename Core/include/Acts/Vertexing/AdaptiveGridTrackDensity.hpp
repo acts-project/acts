@@ -117,22 +117,7 @@ class AdaptiveGridTrackDensity {
       const std::vector<int>& mainGridZValues) const;
 
  private:
-  /// @brief Function that creates a 1-dim track grid (i.e. a vector)
-  /// with the correct density contribution of a track along the z-axis
-  ///
-  /// @param offset Offset in d0 direction, to account for the 2-dim part
-  /// of the Gaussian track distribution
-  /// @param cov The track covariance matrix
-  /// @param distCtrD The distance in d0 from the track position to its
-  /// bin center in the 2-dim grid
-  /// @param centralZBin Central z bin of the track (where its density is the highest)
-  /// @param distCtrZ The distance in z0 from the track position to its
-  /// bin center in the 2-dim grid
-  TrackGridVector createTrackGrid(int offset, const SymMatrix2& cov,
-                                  float distCtrD, float distCtrZ) const;
-                                  
-   private:
-  /// @brief Function that creates a track density map, i.e., a map of z bins to corresponding density values from a single track.
+  /// @brief Function that creates a track density map, i.e., a map of z bins to corresponding density values coming from a single track.
   ///
   /// @param offset Offset in d0 direction, to account for the 2-dim part
   /// of the Gaussian track distribution

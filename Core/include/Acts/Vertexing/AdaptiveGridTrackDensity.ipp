@@ -84,8 +84,19 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
+  DensityMap mainDensityMap;
+  for (unsigned int i = 0; i < mainGridDensity.size(); i++) {
+    mainDensityMap[mainGridZValues[i]] = mainGridDensity[i];
+  }
+
   // Calculate offset in d direction to central bin at z-axis
   int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
+  // Check if current track affects grid density
+  // in central bins at z-axis
+  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
+    DensityMap emptyTrackDensityMap;
+    return {0, emptyTrackDensityMap};
+  }
   // Calculate bin in z
   int zBin = int(z0 / m_cfg.binSize);
 
@@ -100,62 +111,33 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float distCtrD = d0 - binCtrD;
   float distCtrZ = z0 - binCtrZ;
 
-  TrackGridVector trackGrid(TrackGridVector::Zero());
+  DensityMap trackDensityMap = createTrackGrid(dOffset, cov, distCtrD, zBin, distCtrZ);
 
-  // Check if current track does affect grid density
-  // in central bins at z-axis
-  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
-    return {0, trackGrid};
+  for (const auto& densityEntry : trackDensityMap) {
+    int zBin2 = densityEntry.first;
+    float trackDensity = densityEntry.second;
+    // Check if z bin is already part of the main grid
+    if (mainDensityMap.count(zBin2) == 1) {
+      mainDensityMap[zBin2] += trackDensity;
+    }
+    else {
+      mainDensityMap[zBin2] = trackDensity;
+    }
   }
 
-  // Create the track grid
-  trackGrid = createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
-  DensityMap trackGridNew = createTrackGrid(dOffset, cov, distCtrD, zBin, distCtrZ);
+  mainGridZValues.clear();
+  mainGridDensity.clear();
+  for (const auto& densityEntry : mainDensityMap) {
+    mainGridZValues.push_back(densityEntry.first);
+    mainGridDensity.push_back(densityEntry.second);
+  }
 
-  int cnt = 0;
-  for (auto i = trackGridNew.begin(); i!= trackGridNew.end(); i++) {
-    trackGrid[cnt] = i->second;
-    cnt ++;
-  
-/*
   std::cout << "\n new track:\n";
   std::cout << "\n central z bin: " << zBin << "\n";
   int cnt2 = 0;
-  for (auto i = trackGridNew.begin(); i!= trackGridNew.end(); i++) {
-    std::cout << "\n zind: " << i->first << " density: " << i->second << " trackGridDensity: " << trackGrid[cnt2] << "\n";
+  for (auto i = mainDensityMap.begin(); i!= mainDensityMap.end(); i++) {
+    std::cout << "\n zind: " << i->first << " density: " << i->second << " trackGridDensity: " << mainGridDensity[cnt2] << "\n";
     cnt2 ++;
-  }
-  */
-  
-
-  std::vector<int> zBinValues;
-
-  int startEnd = int(trkGridSize - 1) / 2;
-
-  for (int i = 0; i < trkGridSize; i++) {
-    zBinValues.push_back(int(zBin + (i - startEnd)));
-  }
-
-  for (int i = 0; i < trkGridSize; i++) {
-    int z = zBinValues[i];
-
-    // Check if track density already exists at current z position
-    auto findIter =
-        std::find(mainGridZValues.begin(), mainGridZValues.end(), z);
-
-    if (findIter != mainGridZValues.end()) {
-      // Z bin already exists
-      mainGridDensity[std::distance(mainGridZValues.begin(), findIter)] +=
-          trackGrid[i];
-    } else {
-      // Create new z bin
-      auto it =
-          std::upper_bound(mainGridZValues.begin(), mainGridZValues.end(), z);
-      mainGridDensity.insert(
-          mainGridDensity.begin() + std::distance(mainGridZValues.begin(), it),
-          trackGrid[i]);
-      mainGridZValues.insert(it, z);
-    }
   }
 
   return {zBin, trackGrid};
@@ -177,24 +159,6 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::removeTrackGridFromMainGrid(
   for (int i = 0; i < trkGridSize; i++) {
     mainGridDensity[int(densityIdx + (i - startEnd))] -= trkGrid[i];
   }
-}
-
-template <int trkGridSize>
-typename Acts::AdaptiveGridTrackDensity<trkGridSize>::TrackGridVector
-Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2& cov, float distCtrD,
-    float distCtrZ) const {
-  TrackGridVector trackGrid(TrackGridVector::Zero());
-
-  float i = (trkGridSize - 1) / 2 + offset;
-  float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-
-  // Loop over columns
-  for (int j = 0; j < trkGridSize; j++) {
-    float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-    trackGrid(j) = normal2D(d + distCtrD, z + distCtrZ, cov);
-  }
-  return trackGrid;
 }
 
 template <int trkGridSize>
