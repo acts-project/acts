@@ -122,12 +122,21 @@ Acts::Experimental::detail::SupportHelper::discSupport(
   return dSupport;
 }
 
+std::vector<std::shared_ptr<Acts::Surface>>
+Acts::Experimental::detail::SupportHelper::rectangularSupport(
+    const Transform3& transform, const std::array<ActsScalar, 2u>& bounds) {
+  // Return vector
+  return {Surface::makeShared<PlaneSurface>(
+      transform, std::make_shared<RectangleBounds>(bounds[0u], bounds[1u]))};
+}
+
 void Acts::Experimental::detail::SupportHelper::addSupport(
     std::vector<std::shared_ptr<Surface>>& layerSurfaces,
     std::vector<size_t>& assignToAll, const Extent& layerExtent,
     Surface::SurfaceType layerRepresentation,
     const std::array<ActsScalar, 5u>& layerSupportValues,
-    std::optional<Transform3> layerTransform, unsigned int supportSplits) {
+    std::optional<Transform3> layerTransform, unsigned int supportSplits,
+    BinningValue supportBinning) {
   // Cylinder and Disc section
   if (layerRepresentation == Surface::SurfaceType::Cylinder or
       layerRepresentation == Surface::SurfaceType::Disc) {
@@ -173,8 +182,13 @@ void Acts::Experimental::detail::SupportHelper::addSupport(
     // Now specify into Cylinder or disc
     if (layerRepresentation == Surface::SurfaceType::Cylinder) {
       ActsScalar layerR = doff < 0 ? minR + doff : maxR + doff;
-      minZ -= std::abs(demin);
-      maxZ += std::abs(demax);
+      minZ -= demin;
+      maxZ += demax;
+      if (minZ > maxZ) {
+        throw std::runtime_error(
+            "SupportHelper::addSupport(...) - minZ > maxZ.");
+      }
+
       ActsScalar midZ = 0.5 * (minZ + maxZ);
       ActsScalar halfZ = 0.5 * (maxZ - minZ);
       // midZ / halfZ are overwritten if the cylinder
@@ -196,12 +210,19 @@ void Acts::Experimental::detail::SupportHelper::addSupport(
       // Add those to the layer surfaces
       layerSurfaces.insert(layerSurfaces.end(), cSupport.begin(),
                            cSupport.end());
-
     } else {
       // Disc section
       ActsScalar layerZ = doff < 0 ? minZ + doff : maxZ + doff;
-      minR -= std::abs(demin);
-      maxR += std::abs(demax);
+      minR -= demin;
+      maxR += demax;
+      // Make sure minR is not negative
+      minR = std::max(minR, 0.);
+      maxR = std::max(maxR, minR);
+      if (minR == maxR) {
+        throw std::runtime_error(
+            "SupportHelper::addSupport(...) - minR == maxR.");
+      }
+
       Transform3 sTransform = Transform3::Identity();
       sTransform.pretranslate(Vector3(0., 0., layerZ));
       auto dSupport = SupportHelper::discSupport(
@@ -215,9 +236,50 @@ void Acts::Experimental::detail::SupportHelper::addSupport(
       layerSurfaces.insert(layerSurfaces.end(), dSupport.begin(),
                            dSupport.end());
     }
+  } else if (layerRepresentation == Surface::SurfaceType::Plane) {
+    if (not layerExtent.constrains(binX) or not layerExtent.constrains(binY) or
+        not layerExtent.constrains(binZ)) {
+      throw std::runtime_error(
+          "SupportHelper::addSupport(...) - x,y or z are not constrained, "
+          "needed for rectangular support.");
+    }
+
+    // Get the main support parameters:
+    // - doff .. offset (in r.z)
+    // - dl0min, dl0max .. envelop min, max (in z,r)
+    // - dl1min, dl1max .. envelop min, max (in phi)
+    auto [doff, dl0min, dl0max, dl1min, dl1max] = layerSupportValues;
+    std::array<BinningValue, 2u> extentValues =
+        (supportBinning == binX)   ? std::array<BinningValue, 2u>{binY, binZ}
+        : (supportBinning == binY) ? std::array<BinningValue, 2u>{binZ, binX}
+                                   : std::array<BinningValue, 2u>{binX, binY};
+
+    ActsScalar minL0 = layerExtent.min(extentValues[0u]);
+    ActsScalar maxL0 = layerExtent.max(extentValues[0u]);
+    ActsScalar minL1 = layerExtent.min(extentValues[1u]);
+    ActsScalar maxL1 = layerExtent.max(extentValues[1u]);
+    ActsScalar halfL0 = (maxL0 + dl0max - minL0 + dl0min) / 2.;
+    ActsScalar halfL1 = (maxL1 + dl1max - minL1 + dl1min) / 2.;
+    if (halfL0 <= 0. or halfL1 <= 0.) {
+      throw std::runtime_error(
+          "SupportHelper::addSupport(...) - halfL0 <= 0. or halfL1 <= 0.");
+    }
+
+    Transform3 sTransform = layerTransform.has_value() ? layerTransform.value()
+                                                       : Transform3::Identity();
+    Vector3 sOffset = sTransform.rotation().col(supportBinning) * doff;
+    sTransform.pretranslate(sOffset);
+
+    auto rSupport =
+        SupportHelper::rectangularSupport(sTransform, {halfL0, halfL1});
+
+    assignToAll.push_back(layerSurfaces.size());
+    // Add those to the layer surfaces
+    layerSurfaces.insert(layerSurfaces.end(), rSupport.begin(), rSupport.end());
+
   } else {
     throw std::invalid_argument(
-        "SupportHelper: currently only cylindrical/disc support building "
-        "possible.");
+        "SupportHelper: currently only cylindrical/disc/rectangular support "
+        "building supported.");
   }
 }
