@@ -578,11 +578,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // We save the momenta if we find a match.
           for (const auto& trk : tracksAtVtx) {
             if (trk.originalParams->parameters() == params) {
-              const auto& trueUnitDir = particle.unitDirection();
+              const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
               trueMom.head(2) =
                   Acts::makePhiThetaFromDirectionUnit(trueUnitDir);
-              trueMom[2] = particle.qop();
+              trueMom[2] = particle.qOverP();
               m_truthPhi.push_back(trueMom[0]);
               m_truthTheta.push_back(trueMom[1]);
               m_truthQOverP.push_back(trueMom[2]);
