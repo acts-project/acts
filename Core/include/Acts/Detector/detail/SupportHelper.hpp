@@ -50,7 +50,7 @@ std::vector<std::shared_ptr<Surface>> discSupport(
     const Transform3& transform, const std::array<ActsScalar, 4u>& bounds,
     unsigned int splits = 1u);
 
-/// @brief Helper method to build planar, rectangular support sturcture
+/// @brief Helper method to build planar, rectangular support structure
 ///
 /// @param transform the transform where this disc should be located
 /// @param bounds the boundary values: halfX, halfY
@@ -69,7 +69,7 @@ std::vector<std::shared_ptr<Surface>> rectangularSupport(
 ///        they comprise of 1 offset & 2 sets of envelopes
 /// @param layerTransform is an optional value of the layer transform
 /// @param supportSplits the number of splits if splitting is configured
-/// @param supportBinning indicates the direciton where the support is added
+/// @param supportBinning indicates the direction where the support is added
 ///
 /// @note this modifies the layerSurfaces and toAllIndices
 void addSupport(std::vector<std::shared_ptr<Surface>>& layerSurfaces,
