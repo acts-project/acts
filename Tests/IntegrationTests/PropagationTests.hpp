@@ -253,7 +253,8 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
   options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = Acts::Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
-  options.maxStepSize = 1_cm;
+  options.targetTolerance = 1_nm;
+  options.tolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, options);
   BOOST_CHECK(result.ok());
@@ -280,7 +281,8 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = Acts::Direction::Forward;
   options.pathLimit = pathLimit;
-  options.maxStepSize = 0.9_cm;
+  options.targetTolerance = 1_nm;
+  options.tolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, targetSurface, options);
   BOOST_CHECK(result.ok());
