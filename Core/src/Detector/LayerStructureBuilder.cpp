@@ -58,8 +58,9 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
-  Acts::Experimental::detail::IndexedSurfacesGenerator<decltype(lSurfaces)> isg{
-      lSurfaces, assignToAll, {binning.binValue}, {binning.expansion}};
+  Acts::Experimental::detail::IndexedSurfacesGenerator<
+      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
+      isg{lSurfaces, assignToAll, {binning.binValue}, {binning.expansion}};
   if (binning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant
     Acts::Experimental::detail::GridAxisGenerators::Eq<aType> aGenerator{
@@ -98,11 +99,12 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
-  Acts::Experimental::detail::IndexedSurfacesGenerator<decltype(lSurfaces)> isg{
-      lSurfaces,
-      assignToAll,
-      {aBinning.binValue, bBinning.binValue},
-      {aBinning.expansion, bBinning.expansion}};
+  Acts::Experimental::detail::IndexedSurfacesGenerator<
+      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
+      isg{lSurfaces,
+          assignToAll,
+          {aBinning.binValue, bBinning.binValue},
+          {aBinning.expansion, bBinning.expansion}};
   // Run through the cases
   if (aBinning.axisType == Acts::detail::AxisType::Equidistant and
       bBinning.axisType == Acts::detail::AxisType::Equidistant) {

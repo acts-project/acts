@@ -39,10 +39,10 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
   Acts::Experimental::AllPortalsImpl allPortals;
 
   // The chained delegate: indexed surfaces and all portals
-  using DelegateType =
-      Acts::Experimental::IndexedSurfacesAllPortalsImpl<grid_type>;
+  using DelegateType = Acts::Experimental::IndexedSurfacesAllPortalsImpl<
+      grid_type, Acts::Experimental::IndexedSurfacesImpl>;
   auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
-      std::tie(indexedSurfaces, allPortals));
+      std::tie(allPortals, indexedSurfaces));
 
   // Create the delegate and connect it
   Acts::Experimental::SurfaceCandidatesUpdator nStateUpdator;
