@@ -16,6 +16,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
@@ -80,7 +81,7 @@ class EigenStepper {
                    double ssize = std::numeric_limits<double>::max())
         : absCharge(std::abs(par.charge())),
           navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
