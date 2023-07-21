@@ -31,7 +31,7 @@
 namespace Acts {
 namespace Experimental {
 
-class NextNavigator {
+class DetectorNavigator {
  public:
   struct Config {
     /// Detector for this Navigation
@@ -68,9 +68,10 @@ class NextNavigator {
   ///
   /// @param cfg The navigator configuration
   /// @param _logger a logger instance
-  explicit NextNavigator(Config cfg, std::shared_ptr<const Logger> _logger =
-                                         getDefaultLogger("NextNavigator",
-                                                          Logging::Level::INFO))
+  explicit DetectorNavigator(Config cfg,
+                             std::shared_ptr<const Logger> _logger =
+                                 getDefaultLogger("DetectorNavigator",
+                                                  Logging::Level::INFO))
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
   State makeState(const Surface* startSurface,
