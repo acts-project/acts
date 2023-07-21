@@ -26,6 +26,7 @@ if (
     else:
         warnings.warn(error + "\nThe compile-time threshold will be used in this case!")
 
+
 def Propagator(stepper, navigator):
     for prefix in ("Eigen", "Atlas", "StraightLine"):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
