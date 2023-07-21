@@ -1226,8 +1226,7 @@ class CombinatorialKalmanFilter {
       state.stepping.jacTransport = FreeMatrix::Identity();
       state.stepping.derivative = FreeVector::Zero();
       // Reset the step size
-      state.stepping.stepSize = ConstrainedStep(
-          state.stepping.navDir * std::abs(state.options.maxStepSize));
+      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 
