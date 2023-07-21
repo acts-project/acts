@@ -74,7 +74,7 @@ Acts::Experimental::DetectorVolume::makeShared(
     DetectorVolumeUpdator detectorVolumeUpdator,
     SurfaceCandidatesUpdator surfaceCandidateUpdator) {
   return std::shared_ptr<DetectorVolume>(new DetectorVolume(
-      gctx, name, transform, std::move(bounds), std::move(surfaces),
+      gctx, std::move(name), transform, std::move(bounds), std::move(surfaces),
       std::move(volumes), std::move(detectorVolumeUpdator),
       std::move(surfaceCandidateUpdator)));
 }
