@@ -12,8 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/meta.hpp>
 
 #include <tuple>
 #include <vector>
@@ -35,9 +34,6 @@ namespace SurfaceArrayConverter {
 struct Options {
   /// Hierarchy map of styles
   GeometryHierarchyMap<Style> surfaceStyles;
-
-  /// ACTS Logging level
-  Logging::Level logLevel = Logging::INFO;
 };
 
 /// Convert a surface array into needed constituents
