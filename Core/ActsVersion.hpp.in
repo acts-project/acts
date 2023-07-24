@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,5 +25,24 @@ constexpr unsigned int Version =
     10000u * VersionMajor + 100u * VersionMinor + VersionPatch;
 constexpr const char* const CommitHash = "@_acts_commit_hash@";
 constexpr const char* const CommitHashShort = "@_acts_commit_hash_short@";
+
+struct VersionInfo {
+  unsigned int major;
+  unsigned int minor;
+  unsigned int patch;
+  const char* const commitHash;
+  const char* const commitHashShort;
+
+  VersionInfo();
+
+  static bool isConsistent() {
+    // this is filled by the Core shared library
+    // while the constants above depend on the include
+    VersionInfo compiled;
+    return (compiled.major == VersionMajor && compiled.minor == VersionMinor &&
+            compiled.patch == VersionPatch && compiled.commitHash == CommitHash &&
+            compiled.commitHashShort == CommitHashShort);
+  }
+};
 
 }  // namespace Acts

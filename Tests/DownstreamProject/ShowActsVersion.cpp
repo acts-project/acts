@@ -14,5 +14,9 @@
 int main(void) {
   printf("Using Acts version %u.%u.%u commit %s\n", Acts::VersionMajor,
          Acts::VersionMinor, Acts::VersionPatch, Acts::CommitHash);
+  if (!Acts::VersionInfo::isConsistent()) {
+    printf("WARNING: The version information is inconsistent!\n");
+    return EXIT_FAILURE;
+  }
   return EXIT_SUCCESS;
 }
