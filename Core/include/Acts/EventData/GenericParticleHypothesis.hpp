@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/ChargeConcept.hpp"
@@ -29,6 +30,14 @@ class GenericParticleHypothesis {
   constexpr GenericParticleHypothesis(PdgParticle absPdg, float mass,
                                       ChargeType chargeType)
       : m_absPdg{absPdg}, m_mass{mass}, m_chargeType{std::move(chargeType)} {
+    assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
+           "pdg is expected to be absolute");
+  }
+
+  GenericParticleHypothesis(PdgParticle absPdg)
+      : m_absPdg{absPdg},
+        m_mass{findMass(absPdg).value()},
+        m_chargeType{std::abs(findCharge(absPdg).value())} {
     assert(absPdg == makeAbsolutePdgParticle(absPdg) &&
            "pdg is expected to be absolute");
   }

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/ParticleData.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
@@ -24,23 +25,22 @@ class SinglyChargedParticleHypothesis
  public:
   constexpr SinglyChargedParticleHypothesis(PdgParticle absPdg, float mass)
       : GenericParticleHypothesis(absPdg, mass, {}) {}
+  SinglyChargedParticleHypothesis(PdgParticle absPdg)
+      : GenericParticleHypothesis(absPdg) {}
 
   template <typename other_charge_t>
   constexpr SinglyChargedParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : GenericParticleHypothesis(other) {}
 
-  constexpr static SinglyChargedParticleHypothesis muon() {
-    return SinglyChargedParticleHypothesis(PdgParticle::eMuon,
-                                           105.6583755 * UnitConstants::MeV);
+  static SinglyChargedParticleHypothesis muon() {
+    return SinglyChargedParticleHypothesis(PdgParticle::eMuon);
   }
-  constexpr static SinglyChargedParticleHypothesis pion() {
-    return SinglyChargedParticleHypothesis(PdgParticle::ePionPlus,
-                                           139.57039 * UnitConstants::MeV);
+  static SinglyChargedParticleHypothesis pion() {
+    return SinglyChargedParticleHypothesis(PdgParticle::ePionPlus);
   }
-  constexpr static SinglyChargedParticleHypothesis electron() {
-    return SinglyChargedParticleHypothesis(PdgParticle::ePionPlus,
-                                           0.51099895000 * UnitConstants::MeV);
+  static SinglyChargedParticleHypothesis electron() {
+    return SinglyChargedParticleHypothesis(PdgParticle::ePionPlus);
   }
 };
 
@@ -48,18 +48,19 @@ class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
  public:
   constexpr NeutralParticleHypothesis(PdgParticle absPdg, float mass)
       : GenericParticleHypothesis(absPdg, mass, {}) {}
+  NeutralParticleHypothesis(PdgParticle absPdg)
+      : GenericParticleHypothesis(absPdg) {}
 
   template <typename other_charge_t>
   constexpr NeutralParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : GenericParticleHypothesis(other) {}
 
-  constexpr static NeutralParticleHypothesis photon() {
-    return NeutralParticleHypothesis(PdgParticle::eGamma, 0);
+  static NeutralParticleHypothesis photon() {
+    return NeutralParticleHypothesis(PdgParticle::eGamma);
   }
-  constexpr static NeutralParticleHypothesis pion0() {
-    return NeutralParticleHypothesis(PdgParticle::ePionZero,
-                                     134.9768 * UnitConstants::MeV);
+  static NeutralParticleHypothesis pion0() {
+    return NeutralParticleHypothesis(PdgParticle::ePionZero);
   }
 };
 
@@ -69,23 +70,25 @@ class NonNeutralChargedParticleHypothesis
   constexpr NonNeutralChargedParticleHypothesis(PdgParticle absPdg, float mass,
                                                 NonNeutralCharge chargeType)
       : GenericParticleHypothesis(absPdg, mass, chargeType) {}
+  NonNeutralChargedParticleHypothesis(PdgParticle absPdg)
+      : GenericParticleHypothesis(absPdg) {}
 
   template <typename other_charge_t>
   constexpr NonNeutralChargedParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : GenericParticleHypothesis(other) {}
 
-  constexpr static NonNeutralChargedParticleHypothesis muon() {
+  static NonNeutralChargedParticleHypothesis muon() {
     return SinglyChargedParticleHypothesis::muon();
   }
-  constexpr static NonNeutralChargedParticleHypothesis pion() {
+  static NonNeutralChargedParticleHypothesis pion() {
     return SinglyChargedParticleHypothesis::pion();
   }
-  constexpr static NonNeutralChargedParticleHypothesis electron() {
+  static NonNeutralChargedParticleHypothesis electron() {
     return SinglyChargedParticleHypothesis::electron();
   }
 
-  constexpr static NonNeutralChargedParticleHypothesis pionLike(float absQ) {
+  static NonNeutralChargedParticleHypothesis pionLike(float absQ) {
     return NonNeutralChargedParticleHypothesis(pion().absPdg(), pion().mass(),
                                                absQ);
   }
@@ -96,30 +99,31 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
   constexpr ParticleHypothesis(PdgParticle absPdg, float mass,
                                AnyCharge chargeType)
       : GenericParticleHypothesis(absPdg, mass, chargeType) {}
+  ParticleHypothesis(PdgParticle absPdg) : GenericParticleHypothesis(absPdg) {}
 
   template <typename other_charge_t>
   constexpr ParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
       : GenericParticleHypothesis(other) {}
 
-  constexpr static ParticleHypothesis muon() {
+  static ParticleHypothesis muon() {
     return SinglyChargedParticleHypothesis::muon();
   }
-  constexpr static ParticleHypothesis pion() {
+  static ParticleHypothesis pion() {
     return SinglyChargedParticleHypothesis::pion();
   }
-  constexpr static ParticleHypothesis electron() {
+  static ParticleHypothesis electron() {
     return SinglyChargedParticleHypothesis::electron();
   }
 
-  constexpr static ParticleHypothesis photon() {
+  static ParticleHypothesis photon() {
     return NeutralParticleHypothesis::photon();
   }
-  constexpr static ParticleHypothesis pion0() {
+  static ParticleHypothesis pion0() {
     return NeutralParticleHypothesis::pion0();
   }
 
-  constexpr static ParticleHypothesis pionLike(float absQ) {
+  static ParticleHypothesis pionLike(float absQ) {
     return ParticleHypothesis(pion().absPdg(), pion().mass(), absQ);
   }
 };
