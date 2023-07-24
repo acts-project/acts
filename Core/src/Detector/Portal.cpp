@@ -91,16 +91,16 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
 }
 
 void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
-    Direction dir, DetectorVolumeUpdator&& dVolumeUpdator,
-    const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
+    Direction dir, DetectorVolumeUpdator dVolumeUpdator,
+    std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes) {
   auto idx = dir.index();
   m_volumeUpdators[idx] = std::move(dVolumeUpdator);
-  m_attachedVolumes[idx] = attachedVolumes;
+  m_attachedVolumes[idx] = std::move(attachedVolumes);
 }
 
 void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
-    DetectorVolumeUpdator&& dVolumeUpdator,
-    const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
+    DetectorVolumeUpdator dVolumeUpdator,
+    std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes) {
   // Check and throw exceptions
   if (not m_volumeUpdators[0u].connected() and
       not m_volumeUpdators[1u].connected()) {
@@ -111,7 +111,7 @@ void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
   }
   size_t idx = m_volumeUpdators[0u].connected() ? 1u : 0u;
   m_volumeUpdators[idx] = std::move(dVolumeUpdator);
-  m_attachedVolumes[idx] = attachedVolumes;
+  m_attachedVolumes[idx] = std::move(attachedVolumes);
 }
 
 void Acts::Experimental::Portal::updateDetectorVolume(

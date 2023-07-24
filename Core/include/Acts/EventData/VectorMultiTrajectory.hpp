@@ -16,6 +16,8 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <any>
 #include <cassert>
@@ -156,7 +158,7 @@ class VectorMultiTrajectoryBase {
 
     IndexType iuncalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
-    IndexType measdim = 0;
+    IndexType measdim = kInvalid;
 
     TrackStatePropMask allocMask = TrackStatePropMask::None;
   };
@@ -448,6 +450,9 @@ class VectorMultiTrajectory final
   }
 
   void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+    throw_assert(measdim > 0 && measdim <= eBoundSize,
+                 "Invalid measurement dimension detected");
+
     if (m_measOffset[istate] != kInvalid &&
         m_measCovOffset[istate] != kInvalid &&
         m_index[istate].measdim == measdim) {

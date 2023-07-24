@@ -146,8 +146,7 @@ struct GenericDenseEnvironmentExtension {
              (stepper.direction(state.stepping) + h * kprev).cross(bField);
       // Evaluate k_i for the time propagation
       auto qopNew = qop[0] + h * Lambdappi[i - 1];
-      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] /
-                     (q * q * UnitConstants::C * UnitConstants::C);
+      Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (q * q);
       tKi[i] = hypot(1, state.options.mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }

@@ -69,18 +69,20 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
   m_inputAllTruthParticles.initialize(m_cfg.inputAllTruthParticles);
   m_inputSelectedTruthParticles.initialize(m_cfg.inputSelectedTruthParticles);
 
-  if (!m_cfg.inputAssociatedTruthParticles.empty()) {
-    m_inputAssociatedTruthParticles.initialize(
-        m_cfg.inputAssociatedTruthParticles);
-    if (!m_cfg.inputTrackParameters.empty()) {
-      m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+  if (m_cfg.useTracks) {
+    if (!m_cfg.inputAssociatedTruthParticles.empty()) {
+      m_inputAssociatedTruthParticles.initialize(
+          m_cfg.inputAssociatedTruthParticles);
+      if (!m_cfg.inputTrackParameters.empty()) {
+        m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+      } else {
+        m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+      }
     } else {
+      m_inputMeasurementParticlesMap.initialize(
+          m_cfg.inputMeasurementParticlesMap);
       m_inputTrajectories.initialize(m_cfg.inputTrajectories);
     }
-  } else {
-    m_inputMeasurementParticlesMap.initialize(
-        m_cfg.inputMeasurementParticlesMap);
-    m_inputTrajectories.initialize(m_cfg.inputTrajectories);
   }
 
   // Setup ROOT I/O
@@ -232,90 +234,100 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
   std::vector<Acts::BoundTrackParameters> trackParameters;
   std::vector<SimParticle> associatedTruthParticles;
 
-  if (!m_cfg.inputAssociatedTruthParticles.empty()) {
-    if (!m_cfg.inputTrackParameters.empty()) {
-      trackParameters = m_inputTrackParameters(ctx);
+  if (m_cfg.useTracks) {
+    if (!m_cfg.inputAssociatedTruthParticles.empty()) {
+      if (!m_cfg.inputTrackParameters.empty()) {
+        trackParameters = m_inputTrackParameters(ctx);
+      } else {
+        const auto& inputTrajectories = m_inputTrajectories(ctx);
+
+        for (const auto& trajectories : inputTrajectories) {
+          for (auto tip : trajectories.tips()) {
+            if (!trajectories.hasTrackParameters(tip)) {
+              continue;
+            }
+            trackParameters.push_back(trajectories.trackParameters(tip));
+          }
+        }
+      }
+
+      // Read track-associated truth particle input collection
+      associatedTruthParticles =
+          std::vector<SimParticle>(m_inputAssociatedTruthParticles(ctx).begin(),
+                                   m_inputAssociatedTruthParticles(ctx).end());
+
+      /*****************  Start x,y,z resolution plots here *****************/
+      // Matching tracks at vertex to fitted tracks that are in turn matched
+      // to truth particles. Match reco and true vtx if >50% of tracks match
+
+      auto mismatchMsg = [&](auto level, const auto& extra) {
+        ACTS_LOG(
+            level,
+            "Number of fitted tracks and associated truth particles do not "
+            "match. ("
+                << trackParameters.size()
+                << " != " << associatedTruthParticles.size()
+                << ") Not able to match fitted tracks at reconstructed "
+                   "vertex to truth vertex."
+                << extra);
+      };
+
+      if (associatedTruthParticles.size() < trackParameters.size()) {
+        mismatchMsg(Acts::Logging::ERROR,
+                    " Switch to hit based truth matching.");
+      } else if (associatedTruthParticles.size() > trackParameters.size()) {
+        mismatchMsg(Acts::Logging::INFO,
+                    " This is likely due to track efficiency < 1");
+      }
     } else {
+      // get active tips
       const auto& inputTrajectories = m_inputTrajectories(ctx);
+
+      std::vector<ParticleHitCount> particleHitCounts;
+
+      const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
       for (const auto& trajectories : inputTrajectories) {
         for (auto tip : trajectories.tips()) {
           if (!trajectories.hasTrackParameters(tip)) {
             continue;
           }
+
+          identifyContributingParticles(hitParticlesMap, trajectories, tip,
+                                        particleHitCounts);
+          ActsFatras::Barcode majorityParticleId =
+              particleHitCounts.front().particleId;
+          size_t nMajorityHits = particleHitCounts.front().hitCount;
+
+          auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+              trajectories.multiTrajectory(), tip);
+
+          if (nMajorityHits * 1. / trajState.nMeasurements <
+              m_cfg.truthMatchProbMin) {
+            continue;
+          }
+
+          auto it = std::find_if(allTruthParticles.begin(),
+                                 allTruthParticles.end(), [&](const auto& tp) {
+                                   return tp.particleId() == majorityParticleId;
+                                 });
+
+          if (it == allTruthParticles.end()) {
+            continue;
+          }
+
+          const auto& majorityParticle = *it;
           trackParameters.push_back(trajectories.trackParameters(tip));
+          associatedTruthParticles.push_back(majorityParticle);
         }
       }
-    }
-
-    // Read track-associated truth particle input collection
-    associatedTruthParticles =
-        std::vector<SimParticle>(m_inputAssociatedTruthParticles(ctx).begin(),
-                                 m_inputAssociatedTruthParticles(ctx).end());
-
-    /*****************  Start x,y,z resolution plots here *****************/
-    // Matching tracks at vertex to fitted tracks that are in turn matched
-    // to truth particles. Match reco and true vtx if >50% of tracks match
-
-    auto mismatchMsg = [&](auto level, const auto& extra) {
-      ACTS_LOG(level,
-               "Number of fitted tracks and associated truth particles do not "
-               "match. ("
-                   << trackParameters.size()
-                   << " != " << associatedTruthParticles.size()
-                   << ") Not able to match fitted tracks at reconstructed "
-                      "vertex to truth vertex."
-                   << extra);
-    };
-
-    if (associatedTruthParticles.size() < trackParameters.size()) {
-      mismatchMsg(Acts::Logging::ERROR, " Switch to hit based truth matching.");
-    } else if (associatedTruthParticles.size() > trackParameters.size()) {
-      mismatchMsg(Acts::Logging::INFO,
-                  " This is likely due to track efficiency < 1");
     }
   } else {
-    // get active tips
-    const auto& inputTrajectories = m_inputTrajectories(ctx);
-
-    std::vector<ParticleHitCount> particleHitCounts;
-
-    const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
-
-    for (const auto& trajectories : inputTrajectories) {
-      for (auto tip : trajectories.tips()) {
-        if (!trajectories.hasTrackParameters(tip)) {
-          continue;
-        }
-
-        identifyContributingParticles(hitParticlesMap, trajectories, tip,
-                                      particleHitCounts);
-        ActsFatras::Barcode majorityParticleId =
-            particleHitCounts.front().particleId;
-        size_t nMajorityHits = particleHitCounts.front().hitCount;
-
-        auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-            trajectories.multiTrajectory(), tip);
-
-        if (nMajorityHits * 1. / trajState.nMeasurements <
-            m_cfg.truthMatchProbMin) {
-          continue;
-        }
-
-        auto it = std::find_if(allTruthParticles.begin(),
-                               allTruthParticles.end(), [&](const auto& tp) {
-                                 return tp.particleId() == majorityParticleId;
-                               });
-
-        if (it == allTruthParticles.end()) {
-          continue;
-        }
-
-        const auto& majorityParticle = *it;
-        trackParameters.push_back(trajectories.trackParameters(tip));
-        associatedTruthParticles.push_back(majorityParticle);
-      }
-    }
+    // if not using tracks, then all truth particles
+    // are associated with the vertex
+    associatedTruthParticles =
+        std::vector<SimParticle>(m_inputAllTruthParticles(ctx).begin(),
+                                 m_inputAllTruthParticles(ctx).end());
   }
 
   // Get number of track-associated true primary vertices
@@ -340,24 +352,31 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     SimParticleContainer particleAtVtx;
     std::vector<int> contributingTruthVertices;
 
-    for (const auto& trk : tracks) {
-      Acts::BoundTrackParameters origTrack = *(trk.originalParams);
+    if (m_cfg.useTracks) {
+      for (const auto& trk : tracks) {
+        Acts::BoundTrackParameters origTrack = *(trk.originalParams);
 
-      // Find associated truth particle now
-      // We expect that the vectors `trackParameters` and
-      // `associatedTruthParticles` align
-      for (std::size_t i = 0; i < trackParameters.size(); ++i) {
-        const auto& particle = associatedTruthParticles[i];
-        const auto& trackParameter = trackParameters[i].parameters();
+        // Find associated truth particle now
+        // We expect that the vectors `trackParameters` and
+        // `associatedTruthParticles` align
+        for (std::size_t i = 0; i < trackParameters.size(); ++i) {
+          const auto& particle = associatedTruthParticles[i];
+          const auto& trackParameter = trackParameters[i].parameters();
 
-        if (origTrack.parameters() == trackParameter) {
-          int priVtxId = particle.particleId().vertexPrimary();
+          if (origTrack.parameters() == trackParameter) {
+            int priVtxId = particle.particleId().vertexPrimary();
 
-          particleAtVtx.insert(particle);
-          contributingTruthVertices.push_back(priVtxId);
+            particleAtVtx.insert(particle);
+            contributingTruthVertices.push_back(priVtxId);
+          }
         }
+      }  // end loop tracks
+    } else {
+      for (const auto& particle : allTruthParticles) {
+        int priVtxId = particle.particleId().vertexPrimary();
+        contributingTruthVertices.push_back(priVtxId);
       }
-    }  // end loop tracks
+    }
 
     // Now find true vtx with most matching tracks at reco vtx
     // and check if it contributes more than 50% of all tracks
@@ -385,7 +404,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
 
     // Match reco to truth vertex if at least 50% of tracks match
     double trackVtxMatchFraction =
-        (double)fmap[maxOccurrenceId] / tracks.size();
+        (m_cfg.useTracks ? (double)fmap[maxOccurrenceId] / tracks.size() : 1.0);
     if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
       for (const auto& particle : associatedTruthParticles) {
         int priVtxId = particle.particleId().vertexPrimary();
