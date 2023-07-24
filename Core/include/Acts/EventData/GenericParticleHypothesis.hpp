@@ -88,8 +88,8 @@ class GenericParticleHypothesis {
   ///
   /// @param qOverP the `q over p` track parameter.
   template <typename T>
-  constexpr auto extractAbsoluteMomentum(T qOverP) const noexcept {
-    return m_chargeType.extractAbsoluteMomentum(qOverP);
+  constexpr auto extractMomentum(T qOverP) const noexcept {
+    return m_chargeType.extractMomentum(qOverP);
   }
 
   /// Calculate the `q over p` track parameter with the given absolute momentum

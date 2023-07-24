@@ -44,7 +44,7 @@ namespace Acts {
 /// or the absolute momentum
 ///
 /// ```cpp
-/// auto p = c.extractAbsoluteMomentum(qOverP);
+/// auto p = c.extractMomentum(qOverP);
 /// ```
 ///
 /// from the charge-over-momentum track parameter.
@@ -73,7 +73,7 @@ struct Neutral {
   }
 
   template <typename T>
-  constexpr auto extractAbsoluteMomentum(T qOverP) const noexcept {
+  constexpr auto extractMomentum(T qOverP) const noexcept {
     assert(qOverP >= 0 && "qOverP cannot be negative");
     return 1.0f / qOverP;
   }
@@ -120,7 +120,7 @@ struct SinglyCharged {
   }
 
   template <typename T>
-  constexpr auto extractAbsoluteMomentum(T qOverP) const noexcept {
+  constexpr auto extractMomentum(T qOverP) const noexcept {
     // using because of autodiff
     using std::abs;
     return extractCharge(qOverP) / qOverP;
@@ -165,7 +165,7 @@ class NonNeutralCharge {
     return copysign(m_absQ, qOverP);
   }
   template <typename T>
-  constexpr auto extractAbsoluteMomentum(T qOverP) const noexcept {
+  constexpr auto extractMomentum(T qOverP) const noexcept {
     // using because of autodiff
     using std::abs;
     return extractCharge(qOverP) / qOverP;
@@ -214,7 +214,7 @@ class AnyCharge {
     return copysign(m_absQ, qOverP);
   }
   template <typename T>
-  constexpr auto extractAbsoluteMomentum(T qOverP) const noexcept {
+  constexpr auto extractMomentum(T qOverP) const noexcept {
     // using because of autodiff
     using std::abs;
     return (m_absQ != 0.0f) ? extractCharge(qOverP) / qOverP : 1.0f / qOverP;
