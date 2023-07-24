@@ -20,6 +20,9 @@ namespace Acts {
 // instance which would avoid copying the particle hypothesis and potentially
 // save some memory. But constexpr+static seems to require C++2b extension.
 
+/// Specialized particle hypothesis for singly charged particles.
+///
+/// @note This serves as a factory for common singly charge particles.
 class SinglyChargedParticleHypothesis
     : public GenericParticleHypothesis<SinglyCharged> {
  public:
@@ -44,6 +47,9 @@ class SinglyChargedParticleHypothesis
   }
 };
 
+/// Specialized particle hypothesis for neutral particles.
+///
+/// @note This serves as a factory for common neutral particles.
 class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
  public:
   constexpr NeutralParticleHypothesis(PdgParticle absPdg, float mass)
@@ -64,6 +70,9 @@ class NeutralParticleHypothesis : public GenericParticleHypothesis<Neutral> {
   }
 };
 
+/// Specialized particle hypothesis for non-neutral particles.
+///
+/// @note This serves as a factory for common non-neutral particles.
 class NonNeutralChargedParticleHypothesis
     : public GenericParticleHypothesis<NonNeutralCharge> {
  public:
@@ -94,6 +103,9 @@ class NonNeutralChargedParticleHypothesis
   }
 };
 
+/// Specialized particle hypothesis for any kind of charged particles.
+///
+/// @note This serves as a factory for common particles with any kind of charge.
 class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
  public:
   constexpr ParticleHypothesis(PdgParticle absPdg, float mass,
