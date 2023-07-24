@@ -29,9 +29,9 @@ constexpr const char* const CommitHash = "@_acts_commit_hash@";
 constexpr const char* const CommitHashShort = "@_acts_commit_hash_short@";
 
 struct VersionInfo {
-  unsigned int major;
-  unsigned int minor;
-  unsigned int patch;
+  unsigned int versionMajor;
+  unsigned int versionMinor;
+  unsigned int versionPatch;
   const char* const commitHash;
 
   static VersionInfo fromHeader() {

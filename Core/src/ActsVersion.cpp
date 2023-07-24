@@ -15,9 +15,9 @@ namespace Acts {
 
 VersionInfo::VersionInfo(unsigned int majorIn, unsigned int minorIn,
                          unsigned int patchIn, const char* const commitHashIn)
-    : major(majorIn),
-      minor(minorIn),
-      patch(patchIn),
+    : versionMajor(majorIn),
+      versionMinor(minorIn),
+      versionPatch(patchIn),
       commitHash(commitHashIn) {}
 
 VersionInfo VersionInfo::fromLibrary() {
@@ -27,13 +27,15 @@ VersionInfo VersionInfo::fromLibrary() {
 }
 
 bool VersionInfo::operator==(const VersionInfo& other) const {
-  return major == other.major && minor == other.minor && patch == other.patch &&
+  return versionMajor == other.versionMajor &&
+         versionMinor == other.versionMinor &&
+         versionPatch == other.versionPatch &&
          std::string_view{commitHash} == std::string_view{other.commitHash};
 }
 
 std::ostream& operator<<(std::ostream& os, const VersionInfo& vi) {
-  os << vi.major << "." << vi.minor << "." << vi.patch << " (commit "
-     << vi.commitHash << ")";
+  os << vi.versionMajor << "." << vi.versionMinor << "." << vi.versionPatch
+     << " (commit " << vi.commitHash << ")";
   return os;
 }
 }  // namespace Acts
