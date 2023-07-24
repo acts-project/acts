@@ -106,12 +106,12 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
   DetectorVolume(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
+      DetectorVolumeUpdator detectorVolumeUpdator,
+      SurfaceCandidatesUpdator surfaceCandidateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -125,28 +125,28 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
   DetectorVolume(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
+      SurfaceCandidatesUpdator surfaceCandidateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
   /// @note This is called by the @class DetectorVolumeFactory
   static std::shared_ptr<DetectorVolume> makeShared(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
+      DetectorVolumeUpdator detectorVolumeUpdator,
+      SurfaceCandidatesUpdator surfaceCandidateUpdator);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
   /// @note This is called by the @class DetectorVolumeFactory
   static std::shared_ptr<DetectorVolume> makeShared(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
+      SurfaceCandidatesUpdator surfaceCandidateUpdator);
 
  public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
@@ -290,7 +290,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param volumes the volumes the new navigation state updator points to
   ///
   void assignSurfaceCandidatesUpdator(
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator,
+      SurfaceCandidatesUpdator surfaceCandidateUpdator,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
@@ -409,8 +409,8 @@ class DetectorVolumeFactory {
       std::shared_ptr<VolumeBounds> bounds,
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
+      DetectorVolumeUpdator detectorVolumeUpdator,
+      SurfaceCandidatesUpdator surfaceCandidateUpdator) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, name, transform, std::move(bounds), surfaces, volumes,
         std::move(detectorVolumeUpdator), std::move(surfaceCandidateUpdator));
@@ -421,12 +421,12 @@ class DetectorVolumeFactory {
   /// Create a detector volume - from factory
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
-      const std::string& name, const Transform3& transform,
+      std::string name, const Transform3& transform,
       std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
-    auto dVolume =
-        DetectorVolume::makeShared(gctx, name, transform, std::move(bounds),
-                                   std::move(surfaceCandidateUpdator));
+      SurfaceCandidatesUpdator surfaceCandidateUpdator) {
+    auto dVolume = DetectorVolume::makeShared(
+        gctx, std::move(name), transform, std::move(bounds),
+        std::move(surfaceCandidateUpdator));
     dVolume->construct(gctx, portalGenerator);
     return dVolume;
   }
