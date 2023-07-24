@@ -42,7 +42,7 @@ class GenericParticleHypothesis {
 
   /// Creates a particle hypothesis using the absolute PDG.
   /// The mass and charge is looked up using @ref findMass and @ref findCharge.
-  /// If the lookup fails an expection is thrown.
+  /// If the lookup fails an exception is thrown.
   ///
   /// @param absPdg the absolute PDG
   GenericParticleHypothesis(PdgParticle absPdg)
