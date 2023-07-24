@@ -13,6 +13,8 @@
 //  will cause a recompile every time a new Acts version is
 //  used.
 
+#include <iosfwd>
+
 namespace Acts {
 
 // clang-format does not like the CMake @...@ replacement variables
@@ -31,18 +33,20 @@ struct VersionInfo {
   unsigned int minor;
   unsigned int patch;
   const char* const commitHash;
-  const char* const commitHashShort;
 
-  VersionInfo();
-
-  static bool isConsistent() {
-    // this is filled by the Core shared library
-    // while the constants above depend on the include
-    VersionInfo compiled;
-    return (compiled.major == VersionMajor && compiled.minor == VersionMinor &&
-            compiled.patch == VersionPatch && compiled.commitHash == CommitHash &&
-            compiled.commitHashShort == CommitHashShort);
+  static VersionInfo fromHeader() {
+    return VersionInfo(VersionMajor, VersionMinor, VersionPatch, CommitHash);
   }
+
+  static VersionInfo fromLibrary();
+
+  bool operator==(const VersionInfo& other) const;
+
+  friend std::ostream& operator<<(std::ostream& os, const VersionInfo& vi);
+
+ private:
+  VersionInfo(unsigned int major, unsigned int minor, unsigned int patch,
+              const char* const commitHash);
 };
 
 }  // namespace Acts
