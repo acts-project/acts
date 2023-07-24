@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Utilities/PdgParticle.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 
 #include <unordered_map>
 

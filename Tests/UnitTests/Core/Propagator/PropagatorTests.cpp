@@ -114,7 +114,8 @@ struct SurfaceObserver {
                           stepper.direction(state.stepping), true)
               .intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      state.stepping.stepSize.update(distance, ConstrainedStep::actor);
+      state.stepping.stepSize.update(distance * state.stepping.navDir,
+                                     ConstrainedStep::actor);
       // return true if you fall below tolerance
       if (std::abs(distance) <= tolerance) {
         ++result.surfaces_passed;
