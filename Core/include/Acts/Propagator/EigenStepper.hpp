@@ -80,7 +80,6 @@ class EigenStepper {
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max())
         : absCharge(std::abs(par.charge())),
-          navDir(ndir),
           stepSize(ssize),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
@@ -110,9 +109,6 @@ class EigenStepper {
     /// associated with the initial error on track parameters
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
-
-    /// Navigation direction, this is needed for searching
-    Direction navDir;
 
     /// The full jacobian of the transport entire transport
     Jacobian jacobian = Jacobian::Identity();
@@ -168,7 +164,6 @@ class EigenStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
-                  Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max()) const;
 
   /// @brief Resets the state
@@ -177,11 +172,10 @@ class EigenStepper {
   /// @param [in] boundParams Parameters in bound parametrisation
   /// @param [in] cov Covariance matrix
   /// @param [in] surface The reference surface of the bound parameters
-  /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const Direction navDir = Direction::Forward,
+      const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, it checks first if the access is still

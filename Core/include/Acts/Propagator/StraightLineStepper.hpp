@@ -78,7 +78,6 @@ class StraightLineStepper {
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : absCharge(std::abs(par.charge())),
-          navDir(ndir),
           stepSize(ssize),
           tolerance(stolerance),
           geoContext(gctx) {
@@ -119,9 +118,6 @@ class StraightLineStepper {
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
-    /// Navigation direction, this is needed for searching
-    Direction navDir;
-
     /// accummulated path length state
     double pathAccumulated = 0.;
 
@@ -148,10 +144,9 @@ class StraightLineStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
-                  Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx, mctx, par, navDir, ssize, stolerance};
+    return State{gctx, mctx, par, ssize, stolerance};
   }
 
   /// @brief Resets the state
@@ -160,11 +155,10 @@ class StraightLineStepper {
   /// @param [in] boundParams Parameters in bound parametrisation
   /// @param [in] cov Covariance matrix
   /// @param [in] surface The reset @c State will be on this surface
-  /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const Direction navDir = Direction::Forward,
+      const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, this gives back a zero field
@@ -395,7 +389,7 @@ class StraightLineStepper {
   Result<double> step(propagator_state_t& state,
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
-    const auto h = state.stepping.stepSize.value() * state.stepping.navDir;
+    const auto h = state.stepping.stepSize.value() * state.options.direction;
     const double p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);

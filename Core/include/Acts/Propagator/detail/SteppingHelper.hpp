@@ -17,7 +17,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
-
 namespace detail {
 
 /// Update surface status - Single component

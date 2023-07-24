@@ -61,8 +61,7 @@ class AtlasStepper {
           Direction ndir = Direction::Forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
-        : navDir(ndir),
-          field(0., 0., 0.),
+        : field(0., 0., 0.),
           stepSize(ssize),
           tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
@@ -233,7 +232,6 @@ class AtlasStepper {
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
-    Direction navDir = Direction::Forward;
     bool useJacobian = false;
     double step = 0;
     double maxPathLength = 0;
@@ -298,10 +296,9 @@ class AtlasStepper {
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const SingleBoundTrackParameters<charge_t>& par,
-                  Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx,      m_bField->makeCache(mctx), par, navDir, ssize,
+    return State{gctx,      m_bField->makeCache(mctx), par, ssize,
                  stolerance};
   }
 
@@ -311,18 +308,16 @@ class AtlasStepper {
   /// @param [in] boundParams Parameters in bound parametrisation
   /// @param [in] cov Covariance matrix
   /// @param [in] surface Reset state will be on this surface
-  /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const Direction navDir = Direction::Forward,
+      const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
     update(state,
            detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                   boundParams),
            boundParams, cov, surface);
-    state.navDir = navDir;
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;
 
@@ -1113,7 +1108,7 @@ class AtlasStepper {
   Result<double> step(propagator_state_t& state,
                       const navigator_t& /*navigator*/) const {
     // we use h for keeping the nominclature with the original atlas code
-    auto h = state.stepping.stepSize.value() * state.stepping.navDir;
+    auto h = state.stepping.stepSize.value() * state.options.direction;
     bool Jac = state.stepping.useJacobian;
 
     double* R = &(state.stepping.pVector[0]);  // Coordinates
@@ -1225,7 +1220,7 @@ class AtlasStepper {
       if (std::abs(EST) > std::abs(state.options.tolerance)) {
         h = h * .5;
         // neutralize the sign of h again
-        state.stepping.stepSize.setValue(h * state.stepping.navDir);
+        state.stepping.stepSize.setValue(h * state.options.direction);
         //        dltm = 0.;
         nStepTrials++;
         continue;

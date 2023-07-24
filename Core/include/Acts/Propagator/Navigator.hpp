@@ -551,7 +551,7 @@ class Navigator {
         auto boundary = state.navigation.navBoundary().object;
         state.navigation.currentVolume = boundary->attachedVolume(
             state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), state.stepping.navDir);
+            stepper.direction(state.stepping), state.options.direction);
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           ACTS_VERBOSE(
@@ -787,7 +787,7 @@ class Navigator {
       if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
         // has hierarchy, use that, skip layer resolution
         NavigationOptions<Surface> navOpts(
-            state.stepping.navDir, true, m_cfg.resolveSensitive,
+            state.options.direction, true, m_cfg.resolveSensitive,
             m_cfg.resolveMaterial, m_cfg.resolvePassive, nullptr,
             state.navigation.targetSurface);
         navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
@@ -967,7 +967,7 @@ class Navigator {
     // Helper function to find boundaries
     auto findBoundaries = [&]() -> bool {
       // The navigation options
-      NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+      NavigationOptions<Surface> navOpts(state.options.direction, true);
       navOpts.pathLimit =
           stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
       navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
@@ -1103,7 +1103,7 @@ class Navigator {
       // target volume and layer search through global search
       auto targetIntersection = state.navigation.targetSurface->intersect(
           state.geoContext, stepper.position(state.stepping),
-          state.stepping.navDir * stepper.direction(state.stepping), false,
+          state.options.direction * stepper.direction(state.stepping), false,
           state.options.targetTolerance);
       if (targetIntersection) {
         ACTS_VERBOSE(volInfo(state)
@@ -1152,7 +1152,7 @@ class Navigator {
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
     // Use navigation parameters and NavigationOptions
     NavigationOptions<Surface> navOpts(
-        state.stepping.navDir, true, m_cfg.resolveSensitive,
+        state.options.direction, true, m_cfg.resolveSensitive,
         m_cfg.resolveMaterial, m_cfg.resolvePassive, startSurface,
         state.navigation.targetSurface);
 
@@ -1233,7 +1233,7 @@ class Navigator {
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
     NavigationOptions<Layer> navOpts(
-        state.stepping.navDir, m_cfg.boundaryCheckLayerResolving,
+        state.options.direction, m_cfg.boundaryCheckLayerResolving,
         m_cfg.resolveSensitive, m_cfg.resolveMaterial, m_cfg.resolvePassive,
         startLayer, nullptr);
     // Set also the target surface
