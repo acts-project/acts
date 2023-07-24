@@ -158,7 +158,7 @@ constexpr double mm3 = mm * mm * mm;
 constexpr double cm3 = cm * cm * cm;
 constexpr double m3 = m * m * m;
 // Time, native unit mm = [speed-of-light * time] = mm/s * s
-/// @ref speed of light
+/// @note Depends on speed of light in SI units
 constexpr double s = 299792458000.0;  // = 299792458.0 * (m / 1.0) * 1.0;
 constexpr double fs = 1e-15 * s;
 constexpr double ps = 1e-12 * s;
@@ -189,8 +189,7 @@ constexpr double kg = 1.0 / 1.782662e-27;
 /// Charge, native unit e (elementary charge)
 constexpr double e = 1.0;
 /// Magnetic field, native unit (eV*s)/(e*m²)
-/// @note equivalent to c in appropriate SI units
-/// @ref speed of light
+/// @note Depends on speed of light in SI units
 constexpr double T = 0.000299792458;  // = eV * s / (e * m2);
 constexpr double Gauss = 1e-4 * T;
 constexpr double kGauss = 1e-1 * T;
