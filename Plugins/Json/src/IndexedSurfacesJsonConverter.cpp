@@ -27,9 +27,9 @@ namespace {
 /// @param bv the bin value array
 /// @param transform the transform for the indexed surfaces inmplementaiton
 ///
-/// @return a connected SurfaceCandidatesUpdator object
+/// @return a connected SurfaceCandidatesProvider object
 template <typename grid_type>
-Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
+Acts::Experimental::SurfaceCandidatesProvider createUpdator(
     grid_type&& grid, const std::array<Acts::BinningValue, grid_type::DIM>& bv,
     const Acts::Transform3& transform) {
   Acts::Experimental::IndexedSurfacesImpl<grid_type> indexedSurfaces(
@@ -45,7 +45,7 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
       std::tie(allPortals, indexedSurfaces));
 
   // Create the delegate and connect it
-  Acts::Experimental::SurfaceCandidatesUpdator nStateUpdator;
+  Acts::Experimental::SurfaceCandidatesProvider nStateUpdator;
   nStateUpdator.connect<&DelegateType::update>(
       std::move(indexedSurfacesAllPortals));
 
@@ -54,11 +54,11 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
 
 }  // namespace
 
-Acts::Experimental::SurfaceCandidatesUpdator
+Acts::Experimental::SurfaceCandidatesProvider
 Acts::IndexedSurfacesJsonConverter::fromJson(
     const nlohmann::json& jSurfaceNavigation) {
   // The return object
-  Experimental::SurfaceCandidatesUpdator sfCandidates;
+  Experimental::SurfaceCandidatesProvider sfCandidates;
 
   // Helper extractor
   auto eqExtractor = [](const nlohmann::json& jAxis)

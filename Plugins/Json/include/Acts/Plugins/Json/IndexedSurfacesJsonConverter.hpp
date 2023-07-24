@@ -13,7 +13,7 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesProviders.hpp"
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
@@ -84,7 +84,7 @@ nlohmann::json convertImpl(const index_grid& indexGrid) {
 /// @param refInstance is a reference instance of potential type casting
 template <typename instance_type>
 void convert(nlohmann::json& jIndexedSurfaces,
-             const Experimental::SurfaceCandidatesUpdator& delegate,
+             const Experimental::SurfaceCandidatesProvider& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
@@ -112,7 +112,7 @@ void convert(nlohmann::json& jIndexedSurfaces,
 /// @note parameters are as of the `convertImpl` method
 template <typename tuple_type, std::size_t... I>
 void unrollConvert(nlohmann::json& jIndexedSurfaces,
-                   const Experimental::SurfaceCandidatesUpdator& delegate,
+                   const Experimental::SurfaceCandidatesProvider& delegate,
                    const tuple_type& axesTuple,
                    std::index_sequence<I...> /*unused*/) {
   (convert(jIndexedSurfaces, delegate, std::get<I>(axesTuple)), ...);
@@ -127,7 +127,7 @@ void unrollConvert(nlohmann::json& jIndexedSurfaces,
 ///
 /// @return a collection of proto surface object and a grid, and associations
 static inline nlohmann::json toJson(
-    const Experimental::SurfaceCandidatesUpdator& delegate) {
+    const Experimental::SurfaceCandidatesProvider& delegate) {
   // Convert if dynamic cast happens to work
   nlohmann::json jIndexedSurfaces;
   unrollConvert(jIndexedSurfaces, delegate, s_possibleAxes,
@@ -143,7 +143,7 @@ static inline nlohmann::json toJson(
 /// @param jSurfaceNavigation the json file to read from
 ///
 /// @return the surface navigation delegate
-Experimental::SurfaceCandidatesUpdator fromJson(
+Experimental::SurfaceCandidatesProvider fromJson(
     const nlohmann::json& jSurfaceNavigation);
 
 }  // namespace IndexedSurfacesJsonConverter

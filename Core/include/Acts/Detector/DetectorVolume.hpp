@@ -111,7 +111,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
       DetectorVolumeUpdator detectorVolumeUpdator,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator) noexcept(false);
+      SurfaceCandidatesProvider surfaceCandidateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -127,7 +127,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolume(
       const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator) noexcept(false);
+      SurfaceCandidatesProvider surfaceCandidateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
@@ -138,7 +138,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
       DetectorVolumeUpdator detectorVolumeUpdator,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator);
+      SurfaceCandidatesProvider surfaceCandidateUpdator);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
@@ -146,7 +146,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   static std::shared_ptr<DetectorVolume> makeShared(
       const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator);
+      SurfaceCandidatesProvider surfaceCandidateUpdator);
 
  public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
@@ -289,13 +289,13 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param surfaces the surfaces the new navigation state updator points to
   /// @param volumes the volumes the new navigation state updator points to
   ///
-  void assignSurfaceCandidatesUpdator(
-      SurfaceCandidatesUpdator surfaceCandidateUpdator,
+  void assignSurfaceCandidatesProvider(
+      SurfaceCandidatesProvider surfaceCandidateUpdator,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
-  const SurfaceCandidatesUpdator& surfaceCandidatesUpdator() const;
+  const SurfaceCandidatesProvider& surfaceCandidatesProvider() const;
 
   /// Update a portal given a portal index
   ///
@@ -385,7 +385,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolumeUpdator m_detectorVolumeUpdator;
 
   /// The navigation state updator
-  SurfaceCandidatesUpdator m_surfaceCandidatesUpdator;
+  SurfaceCandidatesProvider m_surfaceCandidatesProvider;
 
   /// Volume material (optional)
   std::shared_ptr<IVolumeMaterial> m_volumeMaterial = nullptr;
@@ -410,7 +410,7 @@ class DetectorVolumeFactory {
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
       DetectorVolumeUpdator detectorVolumeUpdator,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator) {
+      SurfaceCandidatesProvider surfaceCandidateUpdator) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, name, transform, std::move(bounds), surfaces, volumes,
         std::move(detectorVolumeUpdator), std::move(surfaceCandidateUpdator));
@@ -423,7 +423,7 @@ class DetectorVolumeFactory {
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
       std::string name, const Transform3& transform,
       std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator surfaceCandidateUpdator) {
+      SurfaceCandidatesProvider surfaceCandidateUpdator) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, std::move(name), transform, std::move(bounds),
         std::move(surfaceCandidateUpdator));

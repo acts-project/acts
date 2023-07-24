@@ -49,13 +49,13 @@ namespace {
 ///
 /// @return a configured surface candidate updators
 template <Acts::detail::AxisBoundaryType aType>
-Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
+Acts::Experimental::SurfaceCandidatesProvider createUpdator(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Surface>> lSurfaces,
     std::vector<size_t> assignToAll,
     const Acts::Experimental::ProtoBinning& binning) {
   // The surface candidate updator & a generator for polyhedrons
-  Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
+  Acts::Experimental::SurfaceCandidatesProvider sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
@@ -92,14 +92,14 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
 /// @return a configured surface candidate updators
 template <Acts::detail::AxisBoundaryType aType,
           Acts::detail::AxisBoundaryType bType>
-Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
+Acts::Experimental::SurfaceCandidatesProvider createUpdator(
     const Acts::GeometryContext& gctx,
     const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
     const std::vector<size_t>& assignToAll,
     const Acts::Experimental::ProtoBinning& aBinning,
     const Acts::Experimental::ProtoBinning& bBinning) {
   // The surface candidate updator & a generator for polyhedrons
-  Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
+  Acts::Experimental::SurfaceCandidatesProvider sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
   Acts::Experimental::detail::IndexedSurfacesGenerator<
@@ -167,7 +167,7 @@ Acts::Experimental::LayerStructureBuilder::construct(
   }
 
   // Retrieve the layer surfaces
-  SurfaceCandidatesUpdator internalCandidatesUpdator;
+  SurfaceCandidatesProvider internalCandidatesUpdator;
   auto internalSurfaces = m_cfg.surfacesProvider->surfaces(gctx);
   ACTS_DEBUG("Building internal layer structure from "
              << internalSurfaces.size() << " provided surfaces.");

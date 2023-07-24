@@ -13,6 +13,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/NavigationDelegateHelpers.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
@@ -30,16 +31,17 @@ namespace Experimental {
 /// of candidates.
 ///
 /// @param gctx is the Geometry context of this call
-/// @param nState [in,out] is the navigation state to be updated
+/// @param nState [in] is the navigation state
+/// @param candidates [out] are the candidates to be updated
 ///
 /// @todo for surfaces skip the non-reached ones, while keep for portals
-inline static void updateCandidates(const GeometryContext& gctx,
-                                    NavigationState& nState) {
+inline static void updateCandidates(
+    const GeometryContext& gctx, const NavigationState& nState,
+    NavigationState::SurfaceCandidates& candidates) {
   const auto& position = nState.position;
   const auto& direction = nState.direction;
-  auto& nCandidates = nState.surfaceCandidates;
 
-  for (auto& c : nCandidates) {
+  for (auto& c : candidates) {
     // Get the surface representation: either native surfcae of portal
     const Surface& sRep =
         (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
@@ -56,10 +58,10 @@ inline static void updateCandidates(const GeometryContext& gctx,
     }
     c.objectIntersection = sIntersection;
   }
+
   // Sort and stuff non-allowed solutions to the end
   std::sort(
-      nCandidates.begin(), nCandidates.end(),
-      [&](const auto& a, const auto& b) {
+      candidates.begin(), candidates.end(), [&](const auto& a, const auto& b) {
         // The two path lengths
         ActsScalar pathToA = a.objectIntersection.intersection.pathLength;
         ActsScalar pathToB = b.objectIntersection.intersection.pathLength;
@@ -72,11 +74,9 @@ inline static void updateCandidates(const GeometryContext& gctx,
         }
         return pathToA < pathToB;
       });
-  // Set the surface candidate
-  nState.surfaceCandidate = nCandidates.begin();
 }
 
-struct AllPortalsImpl : public INavigationDelegate {
+struct AllPortalsImpl : public ISurfaceCandidatesProvider {
   /// A ordered portal provider
   ///
   /// @param gctx is the Geometry context of this call
@@ -86,29 +86,29 @@ struct AllPortalsImpl : public INavigationDelegate {
   /// smallest intersection pathlength >= overstep tolerance is the lowest
   ///
   /// @return an ordered list of portal candidates
-  inline void update(const GeometryContext& gctx,
-                     NavigationState& nState) const {
-    if (nState.currentVolume == nullptr) {
-      throw std::runtime_error(
-          "AllPortalsImpl: no detector volume set to navigation state.");
+  inline void update(
+      const GeometryContext& gctx, const NavigationState& nState,
+      NavigationState::SurfaceCandidates& candidates) const override {
+    auto currentVolume = nState.currentVolume;
+
+    if (currentVolume == nullptr) {
+      throw std::runtime_error("no detector volume set");
     }
-    // Retrieval necessary
-    if (nState.surfaceCandidates.empty()) {
-      // Fill internal portals if existing
-      for (const auto v : nState.currentVolume->volumes()) {
-        const auto& iPortals = v->portals();
-        PortalsFiller::fill(nState, iPortals);
-      }
-      // Filling the new portal candidates
-      const auto& portals = nState.currentVolume->portals();
-      PortalsFiller::fill(nState, portals);
+
+    // Fill child volume portals
+    for (const auto v : currentVolume->volumes()) {
+      fillSurfaceCandidates(candidates, v->portals());
     }
+
+    // Fill portals from the current volume
+    fillSurfaceCandidates(candidates, currentVolume->portals());
+
     // Sort and update
-    updateCandidates(gctx, nState);
+    updateCandidates(gctx, nState, candidates);
   }
 };
 
-struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
+struct AllPortalsAndSurfacesImpl : public ISurfaceCandidatesProvider {
   /// An ordered list of portals and surfaces provider
   ///
   /// @param gctx is the Geometry context of this call
@@ -118,37 +118,36 @@ struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
   /// smallest intersection pathlength >= overstep tolerance is the lowest
   ///
   /// @return an ordered list of portal and surface candidates
-  inline void update(const GeometryContext& gctx,
-                     NavigationState& nState) const {
-    if (nState.currentDetector == nullptr) {
-      throw std::runtime_error(
-          "AllPortalsAndSurfacesImpl: no detector volume set to navigation "
-          "state.");
+  inline void update(
+      const GeometryContext& gctx, const NavigationState& nState,
+      NavigationState::SurfaceCandidates& candidates) const override {
+    auto currentVolume = nState.currentVolume;
+
+    if (currentVolume == nullptr) {
+      throw std::runtime_error("no detector volume set");
     }
-    // A volume switch has happened, update list of portals & surfaces
-    if (nState.surfaceCandidates.empty()) {
-      // Fill internal portals if existing
-      for (const auto v : nState.currentVolume->volumes()) {
-        const auto& iPortals = v->portals();
-        PortalsFiller::fill(nState, iPortals);
-      }
-      // Assign the new volume
-      const auto& portals = nState.currentVolume->portals();
-      const auto& surfaces = nState.currentVolume->surfaces();
-      PortalsFiller::fill(nState, portals);
-      SurfacesFiller::fill(nState, surfaces);
+
+    // Fill child volume portals
+    for (const auto v : currentVolume->volumes()) {
+      fillSurfaceCandidates(candidates, v->portals());
     }
+
+    // Fill surfaces and portals from the current volume
+    fillSurfaceCandidates(candidates, currentVolume->portals());
+    fillSurfaceCandidates(candidates, currentVolume->surfaces(),
+                          nState.surfaceBoundaryCheck);
+
     // Update internal candidates
-    updateCandidates(gctx, nState);
+    updateCandidates(gctx, nState, candidates);
   }
 };
 
 /// Generate a provider for all portals
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdator tryAllPortals() {
+inline static SurfaceCandidatesProvider tryAllPortals() {
   auto ap = std::make_unique<const AllPortalsImpl>();
-  SurfaceCandidatesUpdator nStateUpdator;
+  SurfaceCandidatesProvider nStateUpdator;
   nStateUpdator.connect<&AllPortalsImpl::update>(std::move(ap));
   return nStateUpdator;
 }
@@ -159,9 +158,9 @@ inline static SurfaceCandidatesUpdator tryAllPortals() {
 /// setup with many surfaces
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdator tryAllPortalsAndSurfaces() {
+inline static SurfaceCandidatesProvider tryAllPortalsAndSurfaces() {
   auto aps = std::make_unique<const AllPortalsAndSurfacesImpl>();
-  SurfaceCandidatesUpdator nStateUpdator;
+  SurfaceCandidatesProvider nStateUpdator;
   nStateUpdator.connect<&AllPortalsAndSurfacesImpl::update>(std::move(aps));
   return nStateUpdator;
 }
@@ -170,7 +169,7 @@ inline static SurfaceCandidatesUpdator tryAllPortalsAndSurfaces() {
 /// checking, this could be e.g. support surfaces for layer structures,
 /// e.g.
 ///
-struct AdditionalSurfacesImpl : public INavigationDelegate {
+struct AdditionalSurfacesImpl : public ISurfaceCandidatesProvider {
   /// The volumes held by this collection
   std::vector<const Surface*> surfaces = {};
 
@@ -180,7 +179,7 @@ struct AdditionalSurfacesImpl : public INavigationDelegate {
   /// @param nState is the navigation state
   ///
   inline void update([[maybe_unused]] const GeometryContext& gctx,
-                     NavigationState& nState) const {
+                     NavigationState& nState) const override {
     SurfacesFiller::fill(nState, surfaces);
   }
 };

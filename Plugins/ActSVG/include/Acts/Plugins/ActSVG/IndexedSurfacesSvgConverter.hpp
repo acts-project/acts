@@ -14,7 +14,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesProviders.hpp"
 #include "Acts/Plugins/ActSVG/GridSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
@@ -191,7 +191,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 template <typename surface_container, typename instance_type>
 void convert(const GeometryContext& gctx, const surface_container& surfaces,
              const Options& cOptions, ProtoIndexedSurfaceGrid& sgi,
-             const Experimental::SurfaceCandidatesUpdator& delegate,
+             const Experimental::SurfaceCandidatesProvider& delegate,
              [[maybe_unused]] const instance_type& refInstance) {
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
@@ -221,7 +221,7 @@ template <typename surface_container, typename tuple_type, std::size_t... I>
 void unrollConvert(const GeometryContext& gctx,
                    const surface_container& surfaces, const Options& cOptions,
                    ProtoIndexedSurfaceGrid& sgi,
-                   const Experimental::SurfaceCandidatesUpdator& delegate,
+                   const Experimental::SurfaceCandidatesProvider& delegate,
                    const tuple_type& axesTuple, std::index_sequence<I...>) {
   (convert(gctx, surfaces, cOptions, sgi, delegate, std::get<I>(axesTuple)),
    ...);
@@ -241,7 +241,7 @@ void unrollConvert(const GeometryContext& gctx,
 template <typename surface_container>
 ProtoIndexedSurfaceGrid convert(
     const GeometryContext& gctx, const surface_container& surfaces,
-    const Experimental::SurfaceCandidatesUpdator& delegate,
+    const Experimental::SurfaceCandidatesProvider& delegate,
     const Options& cOptions) {
   // Prep work what is to be filled
   std::vector<ProtoSurface> pSurfaces;

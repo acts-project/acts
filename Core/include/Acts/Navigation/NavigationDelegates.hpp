@@ -27,6 +27,15 @@ class INavigationDelegate {
   virtual ~INavigationDelegate() = default;
 };
 
+class ISurfaceCandidatesProvider {
+ public:
+  virtual ~ISurfaceCandidatesProvider() = default;
+
+  virtual void update(const GeometryContext& gctx,
+                      const NavigationState& nState,
+                      NavigationState::SurfaceCandidates& candidates) const = 0;
+};
+
 /// Declare an updator for the local navigation, i.e. the
 /// navigation inside a detector volume. This can be called
 /// either directly after a volume switch or in order to update
@@ -36,14 +45,16 @@ class INavigationDelegate {
 /// to a dedicated struct or function that is optimised for
 /// the given environment.
 ///
-/// @param gctx is the current geometry context
-/// @param nState [in,out] is the navigation state to be updated
+/// @param gctx [in] is the current geometry context
+/// @param nState [in] is the navigation state
+/// @param candidates [out] are the candidates to be updated
 ///
-/// @note it relies on the detector volume to be set to the state
-/// Memory  managed navigation state updator
-using SurfaceCandidatesUpdator =
-    OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
-                   INavigationDelegate>;
+/// @note it relies on the detector volume to be set to the state memory managed navigation state updator
+using SurfaceCandidatesProvider =
+    OwningDelegate<void(const GeometryContext& gctx,
+                        const NavigationState& nState,
+                        NavigationState::SurfaceCandidates& candidates),
+                   ISurfaceCandidatesProvider>;
 
 /// Declare a Detctor Volume finding or switching delegate
 ///
@@ -60,6 +71,15 @@ inline static DetectorVolumeUpdator unconnectedUpdator() {
   DetectorVolumeUpdator unconnected;
   unconnected.disconnect();
   return unconnected;
+}
+
+template <typename Derived, typename... Args>
+inline static SurfaceCandidatesProvider makeSurfaceCandidatesProvider(
+    Args... args) {
+  SurfaceCandidatesProvider provider;
+  provider.template connect<&Derived::update>(
+      std::make_unique<Derived>(std::forward<Args>(args)...));
+  return provider;
 }
 
 }  // namespace Experimental

@@ -66,7 +66,7 @@ The implementation of a unique, binned or any other volume link can be adapted t
 A detector volume has to contain:
 
 - a list of bounding portal objects (that can be shared with other volumes)
-- a navigation state updator as a `Acts::Experimental::SurfaceCandidatesUpdator` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
+- a navigation state updator as a `Acts::Experimental::SurfaceCandidatesProvider` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
 - a unique name string
 
 :::{note}

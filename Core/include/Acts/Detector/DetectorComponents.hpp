@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesProviders.hpp"
 
 #include <map>
 #include <memory>
@@ -82,7 +82,7 @@ struct InternalStructure {
   /// Contained volumes of this volume, handled by the volumeUpdator
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {};
   /// Navigation delegate for surfaces
-  SurfaceCandidatesUpdator surfacesUpdator;
+  SurfaceCandidatesProvider surfacesUpdator;
   // Navigation delegate for volumes
   DetectorVolumeUpdator volumeUpdator;
 };
