@@ -37,16 +37,16 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note will throw an exception if volumes vector is empty
   /// @note will throw an exception if duplicate volume names exist
   /// @note will throw an exception if the delegate is not connected
-  Detector(const std::string& name,
+  Detector(std::string name,
            std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-           DetectorVolumeUpdator&& detectorVolumeUpdator) noexcept(false);
+           DetectorVolumeUpdator detectorVolumeUpdator) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of Detector.
   static std::shared_ptr<Detector> makeShared(
-      const std::string& name,
+      std::string name,
       std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator);
+      DetectorVolumeUpdator detectorVolumeUpdator);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
@@ -119,8 +119,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// Update the volume finder
   ///
   /// @param detectorVolumeUpdator the new volume finder
-  void updateDetectorVolumeFinder(
-      DetectorVolumeUpdator&& detectorVolumeUpdator);
+  void updateDetectorVolumeFinder(DetectorVolumeUpdator detectorVolumeUpdator);
 
   /// Const access to the volume finder
   const DetectorVolumeUpdator& detectorVolumeFinder() const;
@@ -130,7 +129,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
  private:
   /// Name of the detector
-  std::string m_name = "Unnamed";
+  std::string m_name;
 
   /// Root volumes
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_rootVolumes;

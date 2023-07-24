@@ -53,7 +53,6 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Svg::SurfaceConverter::Options);
     ACTS_PYTHON_MEMBER(style);
     ACTS_PYTHON_MEMBER(templateSurface);
-    ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -76,7 +75,6 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(projectionInfo);
     ACTS_PYTHON_MEMBER(labelProjection);
     ACTS_PYTHON_MEMBER(labelGauge);
-    ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -96,7 +94,6 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Svg::TrackingGeometryConverter::Options);
     ACTS_PYTHON_MEMBER(prefix);
     ACTS_PYTHON_MEMBER(layerOptions);
-    ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();
   }
 

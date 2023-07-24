@@ -388,7 +388,7 @@ def addFatras(
     rnd: acts.examples.RandomNumbers,
     preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
-    enableInteractions: bool = False,
+    enableInteractions: bool = True,
     pMin: Optional[float] = None,
     inputParticles: str = "particles_input",
     outputParticlesInitial: str = "particles_initial",
