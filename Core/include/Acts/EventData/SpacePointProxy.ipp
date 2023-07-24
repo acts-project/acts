@@ -29,66 +29,66 @@ SpacePointProxy<container_t, read_only>::sp() const {
 }
 
 template <typename container_t, bool read_only>
-inline const std::size_t& SpacePointProxy<container_t, read_only>::index()
+inline std::size_t SpacePointProxy<container_t, read_only>::index()
     const {
   return m_index;
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::x() const {
+inline float SpacePointProxy<container_t, read_only>::x() const {
   return container().x(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::y() const {
+inline float SpacePointProxy<container_t, read_only>::y() const {
   return container().y(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::z() const {
+inline float SpacePointProxy<container_t, read_only>::z() const {
   return container().z(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::phi() const {
+inline float SpacePointProxy<container_t, read_only>::phi() const {
   return container().phi(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::radius() const {
+inline float SpacePointProxy<container_t, read_only>::radius() const {
   return container().radius(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::varianceR() const {
+inline float SpacePointProxy<container_t, read_only>::varianceR() const {
   return container().varianceR(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::varianceZ() const {
+inline float SpacePointProxy<container_t, read_only>::varianceZ() const {
   return container().varianceZ(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::quality() const {
+inline float SpacePointProxy<container_t, read_only>::quality() const {
   return container().quality(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const float& SpacePointProxy<container_t, read_only>::deltaR() const {
+inline float SpacePointProxy<container_t, read_only>::deltaR() const {
   return container().deltaR(m_index);
 }
 
 template <typename container_t, bool read_only>
 inline void SpacePointProxy<container_t, read_only>::setQuality(
-    const float& value) const {
+    const float value) const {
   // this is a mutable quantity
   container().setQuality(m_index, value);
 }
 
 template <typename container_t, bool read_only>
 inline void SpacePointProxy<container_t, read_only>::setDeltaR(
-    const float& value) const {
+    const float value) const {
   // this is a mutable quantity
   container().setDeltaR(m_index, value);
 }

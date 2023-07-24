@@ -41,31 +41,31 @@ class SpacePointData {
   ~SpacePointData() = default;
 
   /// @brief Getters
-  const float& x(const std::size_t& idx) const;
-  const float& y(const std::size_t& idx) const;
-  const float& z(const std::size_t& idx) const;
-  const float& radius(const std::size_t& idx) const;
-  const float& phi(const std::size_t& idx) const;
-  const float& varianceZ(const std::size_t& idx) const;
-  const float& varianceR(const std::size_t& idx) const;
+  float x(const std::size_t idx) const;
+  float y(const std::size_t idx) const;
+  float z(const std::size_t idx) const;
+  float radius(const std::size_t idx) const;
+  float phi(const std::size_t idx) const;
+  float varianceZ(const std::size_t idx) const;
+  float varianceR(const std::size_t idx) const;
 
-  const float& quality(const std::size_t& idx) const;
-  const float& deltaR(const std::size_t& idx) const;
+  float quality(const std::size_t idx) const;
+  float deltaR(const std::size_t idx) const;
 
   /// @brief Setters
-  void setX(const std::size_t& idx, const float& value);
-  void setY(const std::size_t& idx, const float& value);
-  void setZ(const std::size_t& idx, const float& value);
-  void setRadius(const std::size_t& idx, const float& value);
-  void setPhi(const std::size_t& idx, const float& value);
-  void setVarianceZ(const std::size_t& idx, const float& value);
-  void setVarianceR(const std::size_t& idx, const float& value);
+  void setX(const std::size_t idx, const float value);
+  void setY(const std::size_t idx, const float value);
+  void setZ(const std::size_t idx, const float value);
+  void setRadius(const std::size_t idx, const float value);
+  void setPhi(const std::size_t idx, const float value);
+  void setVarianceZ(const std::size_t idx, const float value);
+  void setVarianceR(const std::size_t idx, const float value);
 
-  void setQuality(const std::size_t& idx, const float& value) const;
-  void setDeltaR(const std::size_t& idx, const float& value) const;
+  void setQuality(const std::size_t idx, const float value) const;
+  void setDeltaR(const std::size_t idx, const float value) const;
 
   /// @brief Resize vectors
-  void resize(const std::size_t& n, bool resizeDynamic = false);
+  void resize(const std::size_t n, bool resizeDynamic = false);
 
   /// @brief clear vectors
   void clear();
@@ -73,16 +73,16 @@ class SpacePointData {
   ///
   bool hasDynamicVariable() const;
 
-  const Acts::Vector3& topStripVector(const std::size_t& idx) const;
-  const Acts::Vector3& bottomStripVector(const std::size_t& idx) const;
-  const Acts::Vector3& stripCenterDistance(const std::size_t& idx) const;
-  const Acts::Vector3& topStripCenterPosition(const std::size_t& idx) const;
+  const Acts::Vector3& topStripVector(const std::size_t idx) const;
+  const Acts::Vector3& bottomStripVector(const std::size_t idx) const;
+  const Acts::Vector3& stripCenterDistance(const std::size_t idx) const;
+  const Acts::Vector3& topStripCenterPosition(const std::size_t idx) const;
 
-  void setTopStripVector(const std::size_t& idx, const Acts::Vector3& value);
-  void setBottomStripVector(const std::size_t& idx, const Acts::Vector3& value);
-  void setStripCenterDistance(const std::size_t& idx,
+  void setTopStripVector(const std::size_t idx, const Acts::Vector3& value);
+  void setBottomStripVector(const std::size_t idx, const Acts::Vector3& value);
+  void setStripCenterDistance(const std::size_t idx,
                               const Acts::Vector3& value);
-  void setTopStripCenterPosition(const std::size_t& idx,
+  void setTopStripCenterPosition(const std::size_t idx,
                                  const Acts::Vector3& value);
 
  private:

@@ -155,9 +155,9 @@ class SpacePointContainer {
   const_iterator end() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ValueType& sp(const std::size_t& n);
+  ValueType& sp(const std::size_t n);
 
-  ValueType& sp(const std::size_t& n) const;
+  ValueType& sp(const std::size_t n) const;
 
  private:
   void initialize();
@@ -168,9 +168,9 @@ class SpacePointContainer {
   const container_t& container() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType& proxy(const std::size_t& n);
+  ProxyType& proxy(const std::size_t n);
 
-  const ProxyType& proxy(const std::size_t& n) const;
+  const ProxyType& proxy(const std::size_t n) const;
 
   const std::vector<ProxyType>& proxies() const;
 
@@ -178,24 +178,24 @@ class SpacePointContainer {
   std::vector<ProxyType>& proxies();
 
  private:
-  const float& x(const std::size_t& n) const;
-  const float& y(const std::size_t& n) const;
-  const float& z(const std::size_t& n) const;
-  const float& phi(const std::size_t& n) const;
-  const float& radius(const std::size_t& n) const;
-  const float& varianceR(const std::size_t& n) const;
-  const float& varianceZ(const std::size_t& n) const;
+  float x(const std::size_t n) const;
+  float y(const std::size_t n) const;
+  float z(const std::size_t n) const;
+  float phi(const std::size_t n) const;
+  float radius(const std::size_t n) const;
+  float varianceR(const std::size_t n) const;
+  float varianceZ(const std::size_t n) const;
 
-  const float& quality(const std::size_t& n) const;
-  const float& deltaR(const std::size_t& n) const;
+  float quality(const std::size_t n) const;
+  float deltaR(const std::size_t n) const;
 
-  void setQuality(const std::size_t& n, const float& value) const;
-  void setDeltaR(const std::size_t& n, const float& value) const;
+  void setQuality(const std::size_t n, const float value) const;
+  void setDeltaR(const std::size_t n, const float value) const;
 
-  const Acts::Vector3& topStripVector(const std::size_t& n) const;
-  const Acts::Vector3& bottomStripVector(const std::size_t& n) const;
-  const Acts::Vector3& stripCenterDistance(const std::size_t& n) const;
-  const Acts::Vector3& topStripCenterPosition(const std::size_t& n) const;
+  const Acts::Vector3& topStripVector(const std::size_t n) const;
+  const Acts::Vector3& bottomStripVector(const std::size_t n) const;
+  const Acts::Vector3& stripCenterDistance(const std::size_t n) const;
+  const Acts::Vector3& topStripCenterPosition(const std::size_t n) const;
 
  private:
   Acts::SpacePointContainerConfig m_config;

@@ -84,7 +84,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   }
 
   for (const auto& spM : middleSPs) {
-    const float& rM = spM->radius();
+    const float rM = spM->radius();
 
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
@@ -194,9 +194,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
         otherSPsNeighbours,
     const external_spacepoint_t& mediumSP, std::vector<LinCircle>& linCircleVec,
-    out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
-    const float& uIP, const float& uIP2, const float& cosPhiM,
-    const float& sinPhiM) const {
+    out_range_t& outVec, const float deltaRMinSP, const float deltaRMaxSP,
+    const float uIP, const float uIP2, const float cosPhiM,
+    const float sinPhiM) const {
   float impactMax = m_config.impactMax;
   if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
     impactMax = -impactMax;
@@ -214,12 +214,12 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   linCircleVec.reserve(nsp);
   outVec.reserve(nsp);
 
-  const float& rM = mediumSP.radius();
-  const float& xM = mediumSP.x();
-  const float& yM = mediumSP.y();
-  const float& zM = mediumSP.z();
-  const float& varianceRM = mediumSP.varianceR();
-  const float& varianceZM = mediumSP.varianceZ();
+  const float rM = mediumSP.radius();
+  const float xM = mediumSP.x();
+  const float yM = mediumSP.y();
+  const float zM = mediumSP.z();
+  const float varianceRM = mediumSP.varianceR();
+  const float varianceZM = mediumSP.varianceZ();
 
   float vIPAbs = 0;
   if (m_config.interactionPointCut) {
@@ -428,11 +428,11 @@ template <typename external_spacepoint_t, typename platform_t>
 inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     const external_spacepoint_t& spM, const Acts::SeedFinderOptions& options,
     SeedFilterState& seedFilterState, SeedingState& state) const {
-  const float& rM = spM.radius();
+  const float rM = spM.radius();
   const float cosPhiM = spM.x() / rM;
   const float sinPhiM = spM.y() / rM;
-  const float& varianceRM = spM.varianceR();
-  const float& varianceZM = spM.varianceZ();
+  const float varianceRM = spM.varianceR();
+  const float varianceZM = spM.varianceZ();
 
   std::size_t numTopSP = state.compatTopSP.size();
 
