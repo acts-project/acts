@@ -41,6 +41,7 @@
 
 #include <functional>
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 
 namespace Acts {
@@ -343,11 +344,12 @@ class CombinatorialKalmanFilter {
     /// @param stepper is the stepper in use
     /// @param navigator is the navigator in use
     /// @param result is the mutable result state object
+    /// @param logger the logger object to be used
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
-                    const Logger& /*logger*/) const {
+                    const Logger& logger) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -466,6 +468,7 @@ class CombinatorialKalmanFilter {
       if (result.filtered) {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
+          // @TODO: Tracks like this should not be in the final output!
           ACTS_WARNING("No tracks found");
           result.finished = true;
         } else {
@@ -519,16 +522,15 @@ class CombinatorialKalmanFilter {
               // -> set the smoothed status to false
               // -> update the index of track to be smoothed
               if (result.iSmoothed < result.lastMeasurementIndices.size() - 1) {
-                navigator.targetReached(state.navigation, false);
                 result.smoothed = false;
                 result.iSmoothed++;
                 // Reverse navigation direction to start targeting for the rest
                 // tracks
                 state.stepping.navDir = state.stepping.navDir.invert();
-                // To avoid meaningless navigation target call
-                state.stepping.stepSize =
-                    ConstrainedStep(state.stepping.navDir *
-                                    std::abs(state.options.maxStepSize));
+
+                // TODO this is kinda silly but I dont see a better solution
+                // with the current CKF control flow
+                operator()(state, stepper, navigator, result, logger);
               } else {
                 ACTS_VERBOSE("Finish Kalman filtering and smoothing");
                 // Remember that track finding is done
@@ -832,6 +834,10 @@ class CombinatorialKalmanFilter {
           mask = PM::Calibrated;
         }
 
+        ACTS_VERBOSE(
+            "Create temp track state with mask: " << std::bitset<
+                sizeof(std::underlying_type_t<TrackStatePropMask>) * 8>(
+                static_cast<std::underlying_type_t<TrackStatePropMask>>(mask)));
         size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);
         // CAREFUL! This trackstate has a previous index that is not in this
         // MultiTrajectory Visiting brackwards from this track state will
@@ -905,6 +911,13 @@ class CombinatorialKalmanFilter {
             result.fittedStates->getTrackState(
                 result.fittedStates->addTrackState(
                     mask, candidateTrackState.previous()));
+        ACTS_VERBOSE(
+            "Create SourceLink output track state #"
+            << trackState.index() << " with mask: "
+            << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
+                           8>{
+                   static_cast<std::underlying_type_t<TrackStatePropMask>>(
+                       mask)});
 
         if (it != begin) {
           // assign indices pointing to first track state
@@ -988,11 +1001,14 @@ class CombinatorialKalmanFilter {
                                  size_t prevTip) const {
       // Add a track state
       auto currentTip = result.fittedStates->addTrackState(stateMask, prevTip);
-      if (isSensitive) {
-        ACTS_VERBOSE("Creating Hole track state with tip = " << currentTip);
-      } else {
-        ACTS_VERBOSE("Creating Material track state with tip = " << currentTip);
-      }
+      ACTS_VERBOSE(
+          "Create "
+          << (isSensitive ? "Hole" : "Material") << " output track state #"
+          << currentTip << " with mask: "
+          << std::bitset<sizeof(std::underlying_type_t<TrackStatePropMask>) *
+                         8>{
+                 static_cast<std::underlying_type_t<TrackStatePropMask>>(
+                     stateMask)});
       // now get track state proxy back
       auto trackStateProxy = result.fittedStates->getTrackState(currentTip);
 
@@ -1151,7 +1167,8 @@ class CombinatorialKalmanFilter {
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
         return targetSurface->intersect(
             state.geoContext, freeVector.segment<3>(eFreePos0),
-            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
+            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
+            state.options.targetTolerance);
       };
 
       // The smoothed free params at the first/last measurement state
@@ -1209,8 +1226,7 @@ class CombinatorialKalmanFilter {
       state.stepping.jacTransport = FreeMatrix::Identity();
       state.stepping.derivative = FreeVector::Zero();
       // Reset the step size
-      state.stepping.stepSize = ConstrainedStep(
-          state.stepping.navDir * std::abs(state.options.maxStepSize));
+      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 

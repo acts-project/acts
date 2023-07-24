@@ -11,7 +11,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceArraySvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <set>
 #include <sstream>
@@ -19,22 +18,17 @@
 std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     const GeometryContext& gctx, const Layer& layer,
     const LayerConverter::Options& cOptions) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(getDefaultLogger("LayerSvgConverter", cOptions.logLevel));
-
   // The sheets
   std::vector<actsvg::svg::object> sheets;
 
   // The volume
   Acts::Svg::ProtoVolume volume;
   volume._name = cOptions.name;
-  ACTS_DEBUG("Processing layer: " << cOptions.name);
 
   /// Convert the surface array into proto surfaces and a grid structure
   if (layer.surfaceArray() != nullptr) {
     SurfaceArrayConverter::Options sacOptions;
     sacOptions.surfaceStyles = cOptions.surfaceStyles;
-    sacOptions.logLevel = cOptions.logLevel;
     auto [surfaces, grid, associations] = SurfaceArrayConverter::convert(
         gctx, *(layer.surfaceArray()), sacOptions);
     volume._surfaces = surfaces;

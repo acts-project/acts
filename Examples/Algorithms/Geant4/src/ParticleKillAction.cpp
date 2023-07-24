@@ -34,16 +34,20 @@ void ActsExamples::ParticleKillAction::UserSteppingAction(const G4Step* step) {
 
   const auto pos = convertLength * track->GetPosition();
   const auto time = convertTime * track->GetGlobalTime();
+  const bool isSecondary =
+      track->GetDynamicParticle()->GetPrimaryParticle() == nullptr;
 
   const bool outOfVolume =
       m_cfg.volume and
       not m_cfg.volume->inside(Acts::Vector3{pos.x(), pos.y(), pos.z()});
   const bool outOfTime = time > m_cfg.maxTime;
+  const bool invalidSecondary = m_cfg.secondaries && isSecondary;
 
-  if (outOfVolume or outOfTime) {
+  if (outOfVolume or outOfTime or invalidSecondary) {
     ACTS_DEBUG("Kill track with internal track ID "
                << track->GetTrackID() << " at " << pos << " and global time "
-               << time / Acts::UnitConstants::ns << "ns");
+               << time / Acts::UnitConstants::ns << "ns and isSecondary "
+               << isSecondary);
     track->SetTrackStatus(G4TrackStatus::fStopAndKill);
   }
 }
