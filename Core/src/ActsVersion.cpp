@@ -13,9 +13,12 @@
 
 namespace Acts {
 
-VersionInfo::VersionInfo(unsigned int major, unsigned int minor,
-                         unsigned int patch, const char* const commitHash)
-    : major(major), minor(minor), patch(patch), commitHash(commitHash) {}
+VersionInfo::VersionInfo(unsigned int majorIn, unsigned int minorIn,
+                         unsigned int patchIn, const char* const commitHashIn)
+    : major(majorIn),
+      minor(minorIn),
+      patch(patchIn),
+      commitHash(commitHashIn) {}
 
 VersionInfo VersionInfo::fromLibrary() {
   // this is filled by the Core shared library
