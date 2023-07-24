@@ -21,6 +21,7 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
+    TruthSeedRanges,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
@@ -43,7 +44,7 @@ setup = makeSetup(argparser=parser)
 def run_single_particles(particle, pT, simulation, label):
     with contextlib.nullcontext(), tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=10000,
+            events=100000,
             numThreads=1,
             logLevel=acts.logging.INFO,
             trackFpes=False,
@@ -58,9 +59,9 @@ def run_single_particles(particle, pT, simulation, label):
 
         addParticleGun(
             s,
-            MomentumConfig(pT, pT, transverse=True),
-            EtaConfig(-3.0, 3.0),
             ParticleConfig(1, particle, randomizeCharge=True),
+            MomentumConfig(pT, pT, transverse=True),
+            EtaConfig(-3.0, 3.0, uniform=True),
             PhiConfig(0.0 * u.degree, 360.0 * u.degree),
             vtxGen=acts.examples.GaussianVertexGenerator(
                 mean=acts.Vector4(0, 0, 0, 0),
@@ -68,6 +69,7 @@ def run_single_particles(particle, pT, simulation, label):
             ),
             multiplicity=1,
             rnd=rnd,
+            outputDirRoot=tp,
         )
 
         addSimulation(
@@ -80,6 +82,7 @@ def run_single_particles(particle, pT, simulation, label):
             enableInteractions=True,
             preSelectParticles=ParticleSelectorConfig(),
             postSelectParticles=ParticleSelectorConfig(removeSecondaries=True),
+            outputDirRoot=tp,
         )
 
         addDigitization(
@@ -88,13 +91,19 @@ def run_single_particles(particle, pT, simulation, label):
             setup.field,
             digiConfigFile=setup.digiConfig,
             rnd=rnd,
+            outputDirRoot=tp,
         )
 
         addSeeding(
             s,
             setup.trackingGeometry,
             setup.field,
-            SeedFinderConfigArg(
+            seedingAlgorithm=SeedingAlgorithm.TruthEstimated,
+            truthSeedRanges=TruthSeedRanges(
+                nHits=(7, None),
+            ),
+            seedFinderConfigArg=SeedFinderConfigArg(
+                cotThetaMax=27.2899, # eta 4
                 r=(33 * u.mm, 200 * u.mm),
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
@@ -105,9 +114,9 @@ def run_single_particles(particle, pT, simulation, label):
                 minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
-            seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
-            initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
+            seedFinderOptionsArg=SeedFinderOptionsArg(bFieldInZ=2 * u.T, beamPos=(0.0, 0.0)),
+            initialSigmas=[0.1, 0.1, 0.002, 0.0001, 0.001, 1000],
+            initialVarInflation=[1e3] * 6,
             geoSelectionConfigFile=setup.geoSel,
             outputDirRoot=tp,
         )
@@ -127,7 +136,9 @@ def run_single_particles(particle, pT, simulation, label):
         addAmbiguityResolution(
             s,
             AmbiguityResolutionConfig(
-                maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
+                maximumSharedHits=3,
+                maximumIterations=10000,
+                nMeasurementsMin=7,
             ),
             outputDirRoot=tp,
         )
@@ -135,7 +146,13 @@ def run_single_particles(particle, pT, simulation, label):
         s.run()
         del s
 
-        for stem in ["performance_ckf", "tracksummary_ckf", "trackstates_ckf"]:
+        for stem in [
+            "performance_ckf",
+            "tracksummary_ckf",
+            "trackstates_ckf",
+            "hits",
+            "measurements",
+        ]:
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, setup.outdir / f"{stem}_{label}.root")
@@ -156,8 +173,8 @@ with Pool(args.pool_size, maxtasksperchild=1) as pool:
     for particle, pt, simulation in itertools.product(
         [
             acts.PdgParticle.eMuon,
-            acts.PdgParticle.ePionPlus,
-            acts.PdgParticle.eElectron,
+            #acts.PdgParticle.ePionPlus,
+            #acts.PdgParticle.eElectron,
         ],
         [
             1 * u.GeV,
@@ -166,7 +183,7 @@ with Pool(args.pool_size, maxtasksperchild=1) as pool:
         ],
         [
             SimulationAlgorithm.Fatras,
-            SimulationAlgorithm.Geant4,
+            #SimulationAlgorithm.Geant4,
         ],
     ):
         label = create_label(particle, pt, simulation)
