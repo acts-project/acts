@@ -16,7 +16,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -32,7 +31,7 @@
 namespace Acts {
 namespace Experimental {
 
-class NextNavigator {
+class DetectorNavigator {
  public:
   struct Config {
     /// Detector for this Navigation
@@ -69,9 +68,10 @@ class NextNavigator {
   ///
   /// @param cfg The navigator configuration
   /// @param _logger a logger instance
-  explicit NextNavigator(Config cfg, std::shared_ptr<const Logger> _logger =
-                                         getDefaultLogger("NextNavigator",
-                                                          Logging::Level::INFO))
+  explicit DetectorNavigator(Config cfg,
+                             std::shared_ptr<const Logger> _logger =
+                                 getDefaultLogger("DetectorNavigator",
+                                                  Logging::Level::INFO))
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
   State makeState(const Surface* startSurface,
@@ -196,20 +196,20 @@ class NextNavigator {
                    << posInfo(state, stepper) << "stepping through portal");
 
       nState.surfaceCandidates.clear();
-      nState.surfaceCandidate = nState.surfaceCandidates.end();
+      nState.surfaceCandidate = nState.surfaceCandidates.cend();
 
       nState.currentPortal->updateDetectorVolume(state.geoContext, nState);
 
       initializeTarget(state, stepper);
     }
 
-    for (; nState.surfaceCandidate != nState.surfaceCandidates.end();
+    for (; nState.surfaceCandidate != nState.surfaceCandidates.cend();
          ++nState.surfaceCandidate) {
       // Screen output how much is left to try
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper)
                    << std::distance(nState.surfaceCandidate,
-                                    nState.surfaceCandidates.end())
+                                    nState.surfaceCandidates.cend())
                    << " out of " << nState.surfaceCandidates.size()
                    << " surfaces remain to try.");
       // Take the surface
@@ -263,7 +263,7 @@ class NextNavigator {
       return;
     }
 
-    if (nState.surfaceCandidate == nState.surfaceCandidates.end()) {
+    if (nState.surfaceCandidate == nState.surfaceCandidates.cend()) {
       ACTS_VERBOSE(volInfo(state)
                    << posInfo(state, stepper)
                    << "no surface candidates - waiting for target call");

@@ -1557,3 +1557,48 @@ def addVertexFitting(
         )
 
     return s
+
+
+def addSingleSeedVertexFinding(
+    s,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+    inputSpacePoints: Optional[str] = "spacepoints",
+    outputVertices: Optional[str] = "fittedSeedVertices",
+) -> None:
+
+    from acts.examples import (
+        SingleSeedVertexFinderAlgorithm,
+        VertexPerformanceWriter,
+    )
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    findSingleSeedVertex = SingleSeedVertexFinderAlgorithm(
+        level=customLogLevel(),
+        inputSpacepoints=inputSpacePoints,
+        outputVertices=outputVertices,
+    )
+    s.addAlgorithm(findSingleSeedVertex)
+
+    inputParticles = "particles_input"
+    selectedParticles = "particles_selected"
+
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        s.addWriter(
+            VertexPerformanceWriter(
+                level=customLogLevel(),
+                inputAllTruthParticles=inputParticles,
+                inputSelectedTruthParticles=selectedParticles,
+                useTracks=False,
+                inputVertices=outputVertices,
+                treeName="seedvertexing",
+                filePath=str(outputDirRoot / "performance_seedvertexing.root"),
+            )
+        )
+
+    return s

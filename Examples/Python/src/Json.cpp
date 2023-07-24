@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
+#include "Acts/Plugins/Json/DetectorJsonConverter.hpp"
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
@@ -162,6 +164,57 @@ void addJson(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
 
     mex.def("readSurfaceFromJson", ActsExamples::JsonSurfacesReader::read);
+  }
+
+  {
+    mex.def("writeDetectorToJson",
+            [](const Acts::GeometryContext& gctx,
+               const Acts::Experimental::Detector& detector) -> void {
+              auto jDetector =
+                  Acts::DetectorJsonConverter::toJson(gctx, detector);
+              std::ofstream out;
+              out.open(detector.name() + ".json");
+              out << jDetector.dump(4);
+              out.close();
+            });
+  }
+
+  {
+    mex.def("writeDetectorToJsonDetray",
+            [](const Acts::GeometryContext& gctx,
+               const Acts::Experimental::Detector& detector) -> void {
+              // Detray format test - manipulate for detray
+              Acts::DetectorVolumeJsonConverter::Options detrayOptions;
+              detrayOptions.transformOptions.writeIdentity = true;
+              detrayOptions.transformOptions.transpose = true;
+              detrayOptions.surfaceOptions.transformOptions =
+                  detrayOptions.transformOptions;
+              detrayOptions.portalOptions.surfaceOptions =
+                  detrayOptions.surfaceOptions;
+
+              auto jDetector = Acts::DetectorJsonConverter::toJsonDetray(
+                  gctx, detector,
+                  Acts::DetectorJsonConverter::Options{detrayOptions});
+              std::ofstream out;
+              out.open(detector.name() + "_detray.json");
+              out << jDetector.dump(4);
+              out.close();
+            });
+  }
+
+  {
+    mex.def(
+        "readDetectorFromJson",
+        [](const Acts::GeometryContext& gctx,
+           const std::string& fileName) -> auto{
+          auto in = std::ifstream(fileName,
+                                  std::ifstream::in | std::ifstream::binary);
+          nlohmann::json jDetectorIn;
+          in >> jDetectorIn;
+          in.close();
+
+          return Acts::DetectorJsonConverter::fromJson(gctx, jDetectorIn);
+        });
   }
 }
 }  // namespace Acts::Python

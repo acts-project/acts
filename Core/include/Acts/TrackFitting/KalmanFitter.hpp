@@ -515,9 +515,7 @@ class KalmanFitter {
       state.stepping.navDir = state.stepping.navDir.invert();
 
       // Reset propagator options
-      state.options.maxStepSize =
-          state.stepping.navDir * std::abs(state.options.maxStepSize);
-      // Not sure if reset of pathLimit during propagation makes any sense
+      // TODO Not sure if reset of pathLimit during propagation makes any sense
       state.options.pathLimit =
           state.stepping.navDir * std::abs(state.options.pathLimit);
 
@@ -978,8 +976,7 @@ class KalmanFitter {
         state.stepping.navDir = state.stepping.navDir.invert();
       }
       // Reset the step size
-      state.stepping.stepSize = ConstrainedStep(
-          state.stepping.navDir * std::abs(state.options.maxStepSize));
+      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 
