@@ -496,7 +496,18 @@ class CombinatorialKalmanFilter {
                 result.result = res.error();
               }
               result.smoothed = true;
+
+              // TODO another ugly control flow hack
+              navigator.preStep(state, stepper);
             }
+
+            if (result.smoothed) {
+              // Update state and stepper with material effects
+              materialInteractor(navigator.currentSurface(state.navigation),
+                                 state, stepper, navigator,
+                                 MaterialUpdateStage::FullUpdate);
+            }
+
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
             if (result.smoothed and targetReached(state, stepper, navigator,
@@ -1229,6 +1240,19 @@ class CombinatorialKalmanFilter {
       state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
+
+      // Reset the navigation state
+      // Set targetSurface to nullptr for forward filtering; it's only needed
+      // after smoothing
+      navigator.resetState(state.navigation, state.geoContext,
+                           stepper.position(state.stepping),
+                           stepper.direction(state.stepping),
+                           state.stepping.navDir, &surface, nullptr);
+
+      // No Kalman filtering for the starting surface, but still need
+      // to consider the material effects here
+      materialInteractor(navigator.currentSurface(state.navigation), state,
+                         stepper, navigator, MaterialUpdateStage::FullUpdate);
 
       // Reset the navigation state to enable propagation towards the target
       // surface
