@@ -140,9 +140,9 @@ namespace UnitConstants {
 constexpr double mm = 1.0;
 constexpr double fm = 1e-12 * mm;
 constexpr double pm = 1e-9 * mm;
-constexpr double um = 1e-3 * mm;
 constexpr double nm = 1e-6 * mm;
-constexpr double cm = 1e2 * mm;
+constexpr double um = 1e-3 * mm;
+constexpr double cm = 1e1 * mm;
 constexpr double m = 1e3 * mm;
 constexpr double km = 1e6 * mm;
 // Shortcuts for commonly used area and volume units. This intentionally
