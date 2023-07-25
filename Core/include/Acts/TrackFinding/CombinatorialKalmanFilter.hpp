@@ -773,11 +773,9 @@ class CombinatorialKalmanFilter {
             nBranchesOnSurface = 0;
           }
         }
-        if (surface->surfaceMaterial() != nullptr) {
-          // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper, navigator,
-                             MaterialUpdateStage::FullUpdate);
-        }
+        // Update state and stepper with material effects
+        materialInteractor(surface, state, stepper, navigator,
+                           MaterialUpdateStage::FullUpdate);
       } else {
         // Neither measurement nor material on surface, this branch is still
         // valid. Count the branch on current surface
@@ -1242,17 +1240,15 @@ class CombinatorialKalmanFilter {
       state.stepping.pathAccumulated = 0.;
 
       // Reset the navigation state
-      // Set targetSurface to nullptr for forward filtering; it's only needed
-      // after smoothing
+      // Set targetSurface to nullptr as it is handled manually in the actor
       navigator.resetState(state.navigation, state.geoContext,
                            stepper.position(state.stepping),
                            stepper.direction(state.stepping),
                            state.stepping.navDir, &surface, nullptr);
 
-      // No Kalman filtering for the starting surface, but still need
-      // to consider the material effects here
-      materialInteractor(navigator.currentSurface(state.navigation), state,
-                         stepper, navigator, MaterialUpdateStage::FullUpdate);
+      // Need to consider the material effects of the starting surface
+      materialInteractor(&surface, state, stepper, navigator,
+                         MaterialUpdateStage::FullUpdate);
 
       // Reset the navigation state to enable propagation towards the target
       // surface
