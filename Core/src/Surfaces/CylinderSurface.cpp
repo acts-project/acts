@@ -8,14 +8,23 @@
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
 
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
-#include <system_error>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class DetectorElementBase;
+}  // namespace Acts
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -77,7 +86,7 @@ Acts::Vector3 Acts::CylinderSurface::binningPosition(
 // return the measurement frame: it's the tangential plane
 Acts::RotationMatrix3 Acts::CylinderSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*momentum*/) const {
+    const Vector3& /*direction*/) const {
   RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the z axis
@@ -100,7 +109,7 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
 
 Acts::Vector3 Acts::CylinderSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*momentum*/) const {
+    const Vector3& /*direction*/) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -110,7 +119,7 @@ Acts::Vector3 Acts::CylinderSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::CylinderSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*momentum*/, double tolerance) const {
+    const Vector3& /*direction*/, double tolerance) const {
   double inttol = tolerance;
   if (tolerance == s_onSurfaceTolerance) {
     // transform default value!
@@ -182,7 +191,7 @@ Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
 
 Acts::Vector3 Acts::CylinderSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
-  // fast access via tranform matrix (and not rotation())
+  // fast access via transform matrix (and not rotation())
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
@@ -254,7 +263,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
                 ? status
                 : Intersection3D::Status::missed);
   };
-  // Check first solution for boundary compatiblity
+  // Check first solution for boundary compatibility
   status1 = boundaryCheck(solution1, status1);
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
@@ -267,7 +276,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
                                        ? Intersection3D::Status::onSurface
                                        : Intersection3D::Status::reachable;
-  // Check first solution for boundary compatiblity
+  // Check first solution for boundary compatibility
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);
   // Check one if its valid or neither is valid
@@ -343,7 +352,7 @@ Acts::CylinderSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);

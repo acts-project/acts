@@ -8,9 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+
+#include <cstdint>
 #include <limits>
 
 namespace Acts {
+
 /// @brief contains parameters for  seed confirmation
 struct SeedConfirmationRangeConfig {
   // z minimum and maximum of middle component of the seed used to define the
@@ -26,10 +30,10 @@ struct SeedConfirmationRangeConfig {
 
   // number of compatible top SPs of seed if bottom radius is larger than
   // rMaxSeedConf
-  size_t nTopForLargeR = 0;
+  std::size_t nTopForLargeR = 0;
   // number of compatible top SPs of seed if bottom radius is smaller than
   // rMaxSeedConf
-  size_t nTopForSmallR = 0;
+  std::size_t nTopForSmallR = 0;
 
   // minimum radius for bottom SP in seed confirmation
   float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
@@ -38,4 +42,5 @@ struct SeedConfirmationRangeConfig {
   // minimum impact parameter for seed confirmation
   float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
 };
+
 }  // namespace Acts

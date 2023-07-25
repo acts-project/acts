@@ -10,9 +10,45 @@
 
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <array>
 #include <stdexcept>
+#include <utility>
+
+void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
+    Portal& portal, const std::shared_ptr<DetectorVolume>& volume,
+    const Direction& direction) {
+  // Create a shared link instance & delegate
+  auto volumeLinkImpl =
+      std::make_unique<const Acts::Experimental::SingleDetectorVolumeImpl>(
+          volume.get());
+  Acts::Experimental::DetectorVolumeUpdator volumeLink;
+  volumeLink.connect<&Acts::Experimental::SingleDetectorVolumeImpl::update>(
+      std::move(volumeLinkImpl));
+  // Update the volume link and the store
+  portal.assignDetectorVolumeUpdator(direction, std::move(volumeLink),
+                                     {volume});
+}
+
+void Acts::Experimental::detail::PortalHelper::attachDetectorVolumesUpdator(
+    const GeometryContext& gctx, Portal& portal,
+    const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    const Direction& direction, const std::vector<ActsScalar>& boundaries,
+    const BinningValue& binning) {
+  // Check if the boundaries need a transform
+  const auto pTransform = portal.surface().transform(gctx);
+  // Creating a link to the mother
+  auto volumes1D = std::make_unique<const BoundVolumesGrid1Impl>(
+      boundaries, binning, unpack_shared_const_vector(volumes),
+      pTransform.inverse());
+  DetectorVolumeUpdator dVolumeUpdator;
+  dVolumeUpdator.connect<&BoundVolumesGrid1Impl::update>(std::move(volumes1D));
+  portal.assignDetectorVolumeUpdator(direction, std::move(dVolumeUpdator),
+                                     volumes);
+}
 
 void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     const GeometryContext& gctx,
@@ -20,7 +56,7 @@ void Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdators(
     std::vector<PortalReplacement>& pReplacements) {
   // Unpack to navigation bare points
   auto cVolumes = unpack_shared_const_vector(volumes);
-  // Set to the contructed portals (p), at index (i), in direction (d)
+  // Set to the constructed portals (p), at index (i), in direction (d)
   // using boundaries and binning
   for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
     // Check if the boundaries need a transform

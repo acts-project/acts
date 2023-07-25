@@ -16,7 +16,7 @@ inline void runSessionWithIoBinding(Ort::Session& sess,
                                     std::vector<const char*>& outputNames,
                                     std::vector<Ort::Value>& outputData) {
   if (inputNames.size() < 1) {
-    throw std::runtime_error("Onnxruntime input data maping cannot be empty");
+    throw std::runtime_error("Onnxruntime input data mapping cannot be empty");
   }
   if (inputNames.size() != inputData.size()) {
     throw std::runtime_error("inputData size mismatch");

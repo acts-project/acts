@@ -123,7 +123,7 @@ Then you can run your executable, which uses Acts tools and algorithms, in
 the following way (tested under Unix)
 
 ```console
-$ LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/exectuable
+$ LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/executable
 ```
 
 ## Logging thresholds

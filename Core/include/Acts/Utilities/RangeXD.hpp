@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <array>
 #include <limits>
+#include <sstream>
+#include <string>
 
 namespace Acts {
 /// @brief An orthogonal range in an arbitrary number of dimensions

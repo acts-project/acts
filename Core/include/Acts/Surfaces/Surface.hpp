@@ -11,6 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
@@ -24,9 +26,13 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <array>
+#include <cstddef>
 #include <memory>
 #include <ostream>
 #include <string>
+#include <tuple>
+#include <utility>
 
 namespace Acts {
 
@@ -36,6 +42,7 @@ class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
 class IVisualization3D;
+class Surface;
 
 /// Typedef of the surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
@@ -87,7 +94,7 @@ class Surface : public virtual GeometryObject,
   /// @param other Source surface for copy.
   Surface(const Surface& other);
 
-  /// Constructor fromt DetectorElementBase: Element proxy
+  /// Constructor from DetectorElementBase: Element proxy
   ///
   /// @param detelement Detector element which is represented by this surface
   Surface(const DetectorElementBase& detelement);
@@ -264,12 +271,12 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global position to be evaludated
-  /// @param momentum global momentum (required for line-type surfaces)
+  /// @param direction global momentum direction (required for line-type surfaces)
   /// @param bcheck BoundaryCheck directive for this onSurface check
   ///
   /// @return boolean indication if operation was successful
   bool isOnSurface(const GeometryContext& gctx, const Vector3& position,
-                   const Vector3& momentum,
+                   const Vector3& direction,
                    const BoundaryCheck& bcheck = true) const;
 
   /// The insideBounds method for local positions
@@ -287,12 +294,12 @@ class Surface : public virtual GeometryObject,
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction
   ///
   /// @return The global position by value
   virtual Vector3 localToGlobal(const GeometryContext& gctx,
                                 const Vector2& lposition,
-                                const Vector3& momentum) const = 0;
+                                const Vector3& direction) const = 0;
 
   /// Global to local transformation
   /// Generalized global to local transformation for the surface types. Since
@@ -302,30 +309,30 @@ class Surface : public virtual GeometryObject,
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   virtual Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const = 0;
 
-  /// Return mehtod for the reference frame
+  /// Return method for the reference frame
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return RotationMatrix3 which defines the three axes of the measurement
   /// frame
   virtual Acts::RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                                const Vector3& position,
-                                               const Vector3& momentum) const;
+                                               const Vector3& direction) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -473,7 +480,7 @@ class Surface : public virtual GeometryObject,
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
@@ -492,11 +499,11 @@ class Surface : public virtual GeometryObject,
   /// nullptr if not associated
   const Layer* m_associatedLayer{nullptr};
 
-  /// The assoicated TrackingVolume - tracking volume in case the surface is a
+  /// The associated TrackingVolume - tracking volume in case the surface is a
   /// boundary surface, nullptr if not associated
   const TrackingVolume* m_associatedTrackingVolume{nullptr};
 
-  /// Possibility to attach a material descrption
+  /// Possibility to attach a material description
   std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
 
  private:

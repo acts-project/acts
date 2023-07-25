@@ -10,14 +10,31 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
-#include "Acts/Detector/detail/IndexedGridFiller.hpp"
 #include "Acts/Detector/detail/IndexedSurfacesGenerator.hpp"
+#include "Acts/Detector/detail/ReferenceGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <set>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 using namespace Acts;
 using namespace Acts::Test;
@@ -35,15 +52,17 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   auto rSurfaces = cGeometry.surfacesRing(dStore, 6.4, 12.4, 36., 0.125, 0.,
                                           55., 0., 2., 22u);
 
-  IndexedSurfacesGenerator<decltype(rSurfaces)> irSurfaces{
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
       rSurfaces, {}, {binPhi}};
 
   GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
   PolyhedronReferenceGenerator rGenerator{true, 1};
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
+
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
-  using DelegateType = IndexedSurfacesAllPortalsImpl<GridType>;
+  using DelegateType =
+      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -58,6 +77,7 @@ BOOST_AUTO_TEST_CASE(RingDisc1D) {
   // Check that surfaces 10, 11, 12 build the bins at phi == 0
   std::vector<size_t> reference = {10, 11, 12};
   GridType::point_t p = {0.05};
+
   BOOST_CHECK(grid.atPosition(p) == reference);
 
   // Check that surfaces 0, 1, 21 build the bins at phi == -M_PI + epsilon
@@ -77,15 +97,18 @@ BOOST_AUTO_TEST_CASE(RingDisc1DWithSupport) {
                                                    std::move(rBounds));
   rSurfaces.push_back(dSurface.get());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces)> irSurfaces{
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
       rSurfaces, {rSurfaces.size() - 1u}, {binPhi}};
 
   GridAxisGenerators::EqClosed aGenerator{{-M_PI, M_PI}, 44u};
   PolyhedronReferenceGenerator rGenerator{true, 1};
 
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
+
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
-  using DelegateType = IndexedSurfacesAllPortalsImpl<GridType>;
+
+  using DelegateType =
+      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -121,7 +144,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   decltype(rSurfacesR0) rSurfaces = rSurfacesR0;
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces)> irSurfaces{
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
       rSurfaces, {}, {binR, binPhi}};
 
   GridAxisGenerators::VarBoundEqClosed aGenerator{
@@ -131,7 +154,9 @@ BOOST_AUTO_TEST_CASE(RingDisc2D) {
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
 
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
-  using DelegateType = IndexedSurfacesAllPortalsImpl<GridType>;
+
+  using DelegateType =
+      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -165,7 +190,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces)> irSurfaces{
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
       rSurfaces, {}, {binR, binPhi}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
@@ -176,7 +201,9 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFine) {
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
 
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
-  using DelegateType = IndexedSurfacesAllPortalsImpl<GridType>;
+
+  using DelegateType =
+      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -210,7 +237,7 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   rSurfaces.insert(rSurfaces.end(), rSurfacesR1.begin(), rSurfacesR1.end());
   rSurfaces.insert(rSurfaces.end(), rSurfacesR2.begin(), rSurfacesR2.end());
 
-  IndexedSurfacesGenerator<decltype(rSurfaces)> irSurfaces{
+  IndexedSurfacesGenerator<decltype(rSurfaces), IndexedSurfacesImpl> irSurfaces{
       rSurfaces, {}, {binR, binPhi}, {2u, 4u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
@@ -220,7 +247,8 @@ BOOST_AUTO_TEST_CASE(RingDisc2DFineExpanded) {
   auto indexedRing = irSurfaces(tContext, aGenerator, rGenerator);
 
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
-  using DelegateType = IndexedSurfacesAllPortalsImpl<GridType>;
+  using DelegateType =
+      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedRing.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -243,17 +271,19 @@ BOOST_AUTO_TEST_CASE(Cylinder2D) {
   auto surfaces = cGeometry.surfacesCylinder(dStore, 8.4, 36., 0.15, 0.145,
                                              116., 3., 2., {52, 14});
 
-  IndexedSurfacesGenerator<decltype(surfaces)> icSurfaces{
+  IndexedSurfacesGenerator<decltype(surfaces), IndexedSurfacesImpl> icSurfaces{
       surfaces, {}, {binZ, binPhi}, {1u, 1u}};
 
   GridAxisGenerators::EqBoundEqClosed aGenerator{
       {-500., 500}, 28, {-M_PI, M_PI}, 52u};
   PolyhedronReferenceGenerator rGenerator{true, 1};
+  ;
 
   auto indexedCylinder = icSurfaces(tContext, aGenerator, rGenerator);
 
   using GridType = decltype(aGenerator)::grid_type<std::vector<std::size_t>>;
-  using DelegateType = IndexedSurfacesAllPortalsImpl<GridType>;
+  using DelegateType =
+      IndexedSurfacesAllPortalsImpl<GridType, IndexedSurfacesImpl>;
 
   const auto* instance = indexedCylinder.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);

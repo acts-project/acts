@@ -19,9 +19,9 @@
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 #include <tuple>
 #include <vector>
@@ -69,7 +69,6 @@ namespace IndexedSurfacesConverter {
 struct Options {
   /// Hierarchy map of styles
   GeometryHierarchyMap<Style> surfaceStyles;
-
   /// The Grid converter options
   GridConverter::Options gridOptions;
 };
@@ -185,7 +184,7 @@ ProtoIndexedSurfaceGrid convertImpl(const GeometryContext& gctx,
 ///
 /// @param gctx The Geometry context of this operation
 /// @param surfaces The surfaces to be converted
-/// @param cOptions the covnersion options
+/// @param cOptions the conversion options
 /// @param sgi [in,out] the proto indexed grid to be converted
 /// @param delegate the delegate to be translated
 /// @param refInstance the reference input type from the reference Axes
@@ -197,8 +196,10 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<GridType>;
+  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
+      GridType, Experimental::IndexedSurfacesImpl>;
   using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
+
   // Get the instance
   const auto* instance = delegate.instance();
   auto castedDelegate = dynamic_cast<const DelegateType*>(instance);
@@ -296,7 +297,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
   xyIndexedGrid.add_objects(sObs);
 
   auto xmax = xyIndexedGrid._x_range[1u];
-  // The assoication info boxes
+  // The association info boxes
   for (auto [ig, gTile] : enumerate(gOb._sub_objects)) {
     // Target surface text
     std::vector<std::string> binText;
@@ -325,7 +326,7 @@ static inline actsvg::svg::object xy(const ProtoIndexedSurfaceGrid& pIndexGrid,
 /// @param identification is the to be translated id_ for actsvg
 ///
 /// @note this works, because the actual display at the end is 2D
-/// in an x-y plane and the parameters are appropriatly defined
+/// in an x-y plane and the parameters are appropriately defined
 ///
 /// @return an svg object that can be written out directly
 static inline actsvg::svg::object zphi(

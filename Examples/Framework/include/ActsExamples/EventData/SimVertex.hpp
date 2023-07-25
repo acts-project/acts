@@ -40,7 +40,7 @@ struct SimVertex {
   SimVertex(const Vector4& position4_, ActsFatras::ProcessType process_ =
                                            ActsFatras::ProcessType::eUndefined)
       : position4(position4_), process(process_) {}
-  // explicitely default rule-of-five.
+  // explicitly default rule-of-five.
   SimVertex() = default;
   SimVertex(const SimVertex&) = default;
   SimVertex(SimVertex&&) = default;

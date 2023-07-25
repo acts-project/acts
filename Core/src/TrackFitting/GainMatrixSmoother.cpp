@@ -8,6 +8,14 @@
 
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/detail/covariance_helper.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
+
+#include <algorithm>
+#include <ostream>
+#include <utility>
+
 namespace Acts {
 
 Result<void> GainMatrixSmoother::calculate(
@@ -18,8 +26,6 @@ Result<void> GainMatrixSmoother::calculate(
     const Logger& logger) const {
   ACTS_VERBOSE("Prev. predicted covariance\n"
                << predictedCovariance(prev_ts) << "\n, inverse: \n"
-               << predictedCovariance(prev_ts).inverse()
-               << "\n, regularized inverse: \n"
                << predictedCovariance(prev_ts).inverse());
 
   // Gain smoothing matrix

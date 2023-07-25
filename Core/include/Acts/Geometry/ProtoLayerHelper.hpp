@@ -20,6 +20,7 @@
 namespace Acts {
 
 class Surface;
+struct ProtoLayer;
 
 /// @class ProtoLayerHelper
 ///

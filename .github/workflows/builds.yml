@@ -39,8 +39,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -93,6 +94,13 @@ jobs:
       - name: ccache stats
         run: ${SETUP} && ccache -s
 
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
       - name: Unit tests
         run: ${SETUP} && cmake --build build --target test
 
@@ -141,8 +149,9 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -179,6 +188,13 @@ jobs:
       - name: ccache stats
         run: ccache -s
 
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+
       - name: Unit tests
         run: ctest --test-dir build -j$(nproc)
 
@@ -188,8 +204,9 @@ jobs:
       - name: Install
         run: cmake --build build --target install
 
+
       - name: Package build
-        run: tar czf build.tar.gz -C build . 
+        run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
 
       - uses: actions/upload-artifact@v3
         with:
@@ -215,6 +232,9 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     needs: [linux_ubuntu]
+    env:
+      ACTS_SEQUENCER_DISABLE_FPEMON: true
+
     steps:
       - name: Install git lfs
         run: apt-get update && apt-get install -y git-lfs
@@ -255,6 +275,8 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2204:v41
     needs: [linux_ubuntu]
+    env:
+      ACTS_SEQUENCER_DISABLE_FPEMON: true
 
     steps:
       - name: Install git lfs
@@ -284,7 +306,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.5.2
+          && pip3 install histcmp==0.6.2 spyral-cli==1.1.0 matplotlib
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
@@ -301,6 +323,34 @@ jobs:
         with:
           name: physmon
           path: physmon
+
+  linux_physmon_perf_report:
+    needs: [linux_physmon]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Install dependencies
+        run: pip3 install spyral-cli==1.1.0
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: physmon
+          path: physmon
+
+      - name: Store metrics
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git clone git@github.com:acts-project/runtime_metrics.git
+          spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
+          cd runtime_metrics
+          git add -A
+          git commit -m"update metrics"
+          git push
 
   linux_ubuntu_extra:
     runs-on: ubuntu-latest
@@ -326,8 +376,9 @@ jobs:
           submodules: true
           lfs: true
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux_${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -362,6 +413,13 @@ jobs:
 
       - name: ccache stats
         run: ccache -s
+
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
       - name: Unit tests
         run: cmake --build build --target test
@@ -414,8 +472,9 @@ jobs:
           dnf -y install ninja-build tbb-devel ccache
           && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -444,6 +503,12 @@ jobs:
       # the build fails for technical reasons.
       - name: ccache stats
         run: ccache -s
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
       - name: Unit tests
         run: ${SETUP} && cmake --build build --target test
       - name: Integration tests
@@ -508,8 +573,9 @@ jobs:
           && tar -xf deps.tar.gz -C /usr/local/acts
           && python3 -m pip install pyyaml jinja2
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -540,6 +606,12 @@ jobs:
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
       - name: Unit tests
         run: cmake --build build --target test
       - name: Integration tests
@@ -569,8 +641,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -592,6 +665,12 @@ jobs:
         run: cmake --build build
       - name: ccache stats
         run: ccache -s
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
   sycl:
     runs-on: ubuntu-latest
@@ -602,8 +681,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Restore ccache
+        uses: actions/cache/restore@v3
+        id: ccache-restore
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -629,3 +709,9 @@ jobs:
           && cmake --build build
       - name: ccache stats
         run: ccache -s
+      - name: Save ccache
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ steps.ccache-restore.outputs.cache-primary-key }}

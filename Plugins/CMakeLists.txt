@@ -4,6 +4,7 @@
 add_component_if(Autodiff PluginAutodiff ACTS_BUILD_PLUGIN_AUTODIFF)
 add_component_if(ActSVG PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 add_component_if(Cuda PluginCuda ACTS_BUILD_PLUGIN_CUDA)
+add_component_if(FpeMonitoring PluginFpeMonitoring ACTS_BUILD_PLUGIN_FPEMON)
 add_component_if(Geant4 PluginGeant4 ACTS_BUILD_PLUGIN_GEANT4)
 add_component_if(Identification PluginIdentification ACTS_BUILD_PLUGIN_IDENTIFICATION)
 add_component_if(Json PluginJson ACTS_BUILD_PLUGIN_JSON)

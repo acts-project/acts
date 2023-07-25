@@ -811,8 +811,8 @@ def addKalmanTracks(
     inputProtoTracks: str = "truth_particle_tracks",
     multipleScattering: bool = True,
     energyLoss: bool = True,
-    calibrationConfigFile: str = None,
     clusters: str = None,
+    calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -835,11 +835,6 @@ def addKalmanTracks(
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
         "level": customLogLevel(),
     }
-
-    if calibrationConfigFile is None:
-        calibrator = acts.examples.makePassThroughCalibrator()
-    else:
-        calibrator = acts.examples.makeScalingCalibrator(calibrationConfigFile)
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=customLogLevel(),
@@ -953,6 +948,27 @@ def addCKFTracks(
         measurementSelectorCfg=acts.MeasurementSelector.Config(
             [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
+        trackSelectorCfg=acts.TrackSelector.Config(
+            **acts.examples.defaultKWArgs(
+                loc0Min=trackSelectorConfig.loc0[0],
+                loc0Max=trackSelectorConfig.loc0[1],
+                loc1Min=trackSelectorConfig.loc1[0],
+                loc1Max=trackSelectorConfig.loc1[1],
+                timeMin=trackSelectorConfig.time[0],
+                timeMax=trackSelectorConfig.time[1],
+                phiMin=trackSelectorConfig.phi[0],
+                phiMax=trackSelectorConfig.phi[1],
+                etaMin=trackSelectorConfig.eta[0],
+                etaMax=trackSelectorConfig.eta[1],
+                absEtaMin=trackSelectorConfig.absEta[0],
+                absEtaMax=trackSelectorConfig.absEta[1],
+                ptMin=trackSelectorConfig.pt[0],
+                ptMax=trackSelectorConfig.pt[1],
+                minMeasurements=trackSelectorConfig.nMeasurementsMin,
+            )
+        )
+        if trackSelectorConfig is not None
+        else None,
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
@@ -971,26 +987,6 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
-    if trackSelectorConfig is not None:
-        trackSelector = addTrackSelection(
-            s,
-            trackSelectorConfig,
-            inputTracks=trackFinder.config.outputTracks,
-            outputTracks="selectedTracks",
-            logLevel=customLogLevel(),
-        )
-        s.addWhiteboardAlias("tracks", trackSelector.config.outputTracks)
-
-        selectedTrackConverter = acts.examples.TracksToTrajectories(
-            level=customLogLevel(),
-            inputTracks=trackSelector.config.outputTracks,
-            outputTrajectories="trajectories-from-selected-tracks",
-        )
-        s.addAlgorithm(selectedTrackConverter)
-        s.addWhiteboardAlias(
-            "trajectories", selectedTrackConverter.config.outputTrajectories
-        )
 
     addTrajectoryWriters(
         s,
@@ -1036,7 +1032,7 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection. This could be avoided when a seperate track
+                # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputSimHits="simhits",
@@ -1054,7 +1050,7 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection. This could be avoided when a seperate track
+                # filtered particle collection. This could be avoided when a separate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputMeasurementParticlesMap="measurement_particles_map",
@@ -1125,13 +1121,10 @@ def addTrackSelection(
     inputTracks: str,
     outputTracks: str,
     logLevel: Optional[acts.logging.Level] = None,
-) -> acts.examples.TrackSelector:
+) -> acts.examples.TrackSelectorAlgorithm:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    trackSelector = acts.examples.TrackSelector(
-        level=customLogLevel(),
-        inputTracks=inputTracks,
-        outputTracks=outputTracks,
+    selectorConfig = acts.TrackSelector.Config(
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorConfig.loc0[0],
             loc0Max=trackSelectorConfig.loc0[1],
@@ -1148,7 +1141,14 @@ def addTrackSelection(
             ptMin=trackSelectorConfig.pt[0],
             ptMax=trackSelectorConfig.pt[1],
             minMeasurements=trackSelectorConfig.nMeasurementsMin,
-        ),
+        )
+    )
+
+    trackSelector = acts.examples.TrackSelectorAlgorithm(
+        level=customLogLevel(),
+        inputTracks=inputTracks,
+        outputTracks=outputTracks,
+        selectorConfig=selectorConfig,
     )
 
     s.addAlgorithm(trackSelector)
@@ -1200,15 +1200,20 @@ def addExaTrkX(
     )
 
     metricLearningConfig = {
+        "level": customLogLevel(),
         "spacepointFeatures": 3,
         "embeddingDim": 8,
         "rVal": 1.6,
-        "knnVal": 500,
+        "knnVal": 100,
     }
 
-    filterConfig = {"cut": 0.21}
+    filterConfig = {
+        "level": customLogLevel(),
+        "cut": 0.01,
+    }
 
     gnnConfig = {
+        "level": customLogLevel(),
         "cut": 0.5,
     }
 
@@ -1217,13 +1222,14 @@ def addExaTrkX(
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["nChunks"] = 10
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
+        gnnConfig["undirected"] = True
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
             acts.examples.TorchEdgeClassifier(**filterConfig),
             acts.examples.TorchEdgeClassifier(**gnnConfig),
         ]
-        trackBuilder = acts.examples.BoostTrackBuilding()
+        trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
     elif backend == ExaTrkXBackend.Onnx:
         metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
@@ -1234,7 +1240,7 @@ def addExaTrkX(
             acts.examples.OnnxEdgeClassifier(**filterConfig),
             acts.examples.OnnxEdgeClassifier(**gnnConfig),
         ]
-        trackBuilder = acts.examples.CugraphTrackBuilding()
+        trackBuilder = acts.examples.CugraphTrackBuilding(customLogLevel())
 
     s.addAlgorithm(
         acts.examples.TrackFindingAlgorithmExaTrkX(
@@ -1547,6 +1553,51 @@ def addVertexFitting(
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
+            )
+        )
+
+    return s
+
+
+def addSingleSeedVertexFinding(
+    s,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+    inputSpacePoints: Optional[str] = "spacepoints",
+    outputVertices: Optional[str] = "fittedSeedVertices",
+) -> None:
+
+    from acts.examples import (
+        SingleSeedVertexFinderAlgorithm,
+        VertexPerformanceWriter,
+    )
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    findSingleSeedVertex = SingleSeedVertexFinderAlgorithm(
+        level=customLogLevel(),
+        inputSpacepoints=inputSpacePoints,
+        outputVertices=outputVertices,
+    )
+    s.addAlgorithm(findSingleSeedVertex)
+
+    inputParticles = "particles_input"
+    selectedParticles = "particles_selected"
+
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        s.addWriter(
+            VertexPerformanceWriter(
+                level=customLogLevel(),
+                inputAllTruthParticles=inputParticles,
+                inputSelectedTruthParticles=selectedParticles,
+                useTracks=False,
+                inputVertices=outputVertices,
+                treeName="seedvertexing",
+                filePath=str(outputDirRoot / "performance_seedvertexing.root"),
             )
         )
 

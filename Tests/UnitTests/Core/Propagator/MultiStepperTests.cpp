@@ -8,11 +8,46 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
+#include "Acts/Propagator/DefaultExtension.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
-#include "Acts/Propagator/MultiStepperAborters.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+struct MultiStepperSurfaceReached;
+}  // namespace Acts
 
 using namespace Acts;
 using namespace Acts::VectorHelpers;
@@ -28,7 +63,6 @@ using MultiStepperLoop =
 using SingleStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
 
 const double defaultStepSize = 123.;
-const double defaultTolerance = 234.;
 const auto defaultNDir = Direction::Backward;
 
 const auto defaultBField =
@@ -109,7 +143,7 @@ void test_multi_stepper_state() {
       makeDefaultBoundPars<charge_t>(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                   defaultStepSize, defaultTolerance);
+                   defaultStepSize);
 
   MultiStepper ms(defaultBField);
 
@@ -167,7 +201,7 @@ void test_multi_stepper_state_invalid() {
   const auto multi_pars = makeDefaultBoundPars(false, 0);
 
   BOOST_CHECK_THROW(MultiState(geoCtx, magCtx, defaultBField, multi_pars,
-                               defaultNDir, defaultStepSize, defaultTolerance),
+                               defaultNDir, defaultStepSize),
                     std::invalid_argument);
 }
 
@@ -196,10 +230,9 @@ void test_multi_stepper_vs_eigen_stepper() {
   SingleBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
   SingleStepper::State single_state(geoCtx, defaultBField->makeCache(magCtx),
-                                    single_pars, defaultNDir, defaultStepSize,
-                                    defaultTolerance);
+                                    single_pars, defaultNDir, defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
   SingleStepper single_stepper(defaultBField);
@@ -259,11 +292,9 @@ void test_components_modifying_accessors() {
   const auto multi_pars = makeDefaultBoundPars();
 
   MultiState mutable_multi_state(geoCtx, magCtx, defaultBField, multi_pars,
-                                 defaultNDir, defaultStepSize,
-                                 defaultTolerance);
+                                 defaultNDir, defaultStepSize);
   const MultiState const_multi_state(geoCtx, magCtx, defaultBField, multi_pars,
-                                     defaultNDir, defaultStepSize,
-                                     defaultTolerance);
+                                     defaultNDir, defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 
@@ -365,10 +396,10 @@ void test_multi_stepper_surface_status_update() {
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
-                         Direction::Forward, defaultStepSize, defaultTolerance);
+                         Direction::Forward, defaultStepSize);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      Direction::Forward, defaultStepSize, defaultTolerance);
+      Direction::Forward, defaultStepSize);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
@@ -465,10 +496,10 @@ void test_component_bound_state() {
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
-                         Direction::Forward, defaultStepSize, defaultTolerance);
+                         Direction::Forward, defaultStepSize);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      Direction::Forward, defaultStepSize, defaultTolerance);
+      Direction::Forward, defaultStepSize);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
@@ -531,7 +562,7 @@ void test_combined_bound_state_function() {
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
   MultiStepper multi_stepper(defaultBField);
 
   auto res = multi_stepper.boundState(multi_state, *surface, true,
@@ -576,7 +607,7 @@ void test_combined_curvilinear_state_function() {
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
   MultiStepper multi_stepper(defaultBField);
 
   const auto [curv_pars, jac, pathLength] =
@@ -617,7 +648,7 @@ void test_single_component_interface_function() {
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 
@@ -633,8 +664,8 @@ void test_single_component_interface_function() {
     BOOST_CHECK(sstepper.direction(sstepping) ==
                 cmp.pars().template segment<3>(eFreeDir0));
     BOOST_CHECK(sstepper.time(sstepping) == cmp.pars()[eFreeTime]);
-    BOOST_CHECK_CLOSE(sstepper.charge(sstepping) / sstepper.momentum(sstepping),
-                      cmp.pars()[eFreeQOverP], 1.e-8);
+    BOOST_CHECK_CLOSE(sstepper.qOverP(sstepping), cmp.pars()[eFreeQOverP],
+                      1.e-8);
   };
 
   for (const auto cmp : multi_stepper.constComponentIterable(multi_state)) {
@@ -662,7 +693,7 @@ void remove_add_components_function() {
   const auto multi_pars = makeDefaultBoundPars(4);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                         defaultStepSize, defaultTolerance);
+                         defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 
@@ -685,7 +716,7 @@ BOOST_AUTO_TEST_CASE(remove_add_components_test) {
 }
 
 //////////////////////////////////////////////////
-// Instatiate a Propagator with the MultiStepper
+// Instantiate a Propagator with the MultiStepper
 //////////////////////////////////////////////////
 
 template <typename multi_stepper_t>
@@ -705,7 +736,7 @@ void propagator_instatiation_test_function() {
   MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
 
   // This only checks that this compiles, not that it runs without errors
-  // @TODO: Add test that checks the target aborter works corretly
+  // @TODO: Add test that checks the target aborter works correctly
 
   // Instantiate with target
   using type_a =

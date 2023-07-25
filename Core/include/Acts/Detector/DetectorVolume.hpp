@@ -13,6 +13,7 @@
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
@@ -22,14 +23,19 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Acts {
 
 class Surface;
+class IVolumeMaterial;
+class VolumeBounds;
 
 namespace Experimental {
 
@@ -46,7 +52,7 @@ class Detector;
 ///
 /// @note The construction of DetectorVolumes is done via a dedicated
 /// factory, this is necessary as then the shared_ptr is non-weak and it
-/// can be registred in the portal generator for further geometry processing.
+/// can be registered in the portal generator for further geometry processing.
 ///
 /// @note Navigation is always done by plain pointers, while
 /// object ownership is done by shared/unique pointers.
@@ -92,20 +98,20 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
   /// @param surfaces are the contained surfaces of this volume
-  /// @param volumes are the containes volumes of this volume
-  /// @param detectorVolumeUpdator is a Delegate to find the assocaited volume
+  /// @param volumes are the contains volumes of this volume
+  /// @param detectorVolumeUpdator is a Delegate to find the associated volume
   /// @param surfaceCandidateUpdator the navigation state updator for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
   DetectorVolume(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
+      DetectorVolumeUpdator detectorVolumeUpdator,
+      SurfaceCandidatesUpdator surfaceCandidateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -119,28 +125,28 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
   DetectorVolume(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
+      SurfaceCandidatesUpdator surfaceCandidateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
   /// @note This is called by the @class DetectorVolumeFactory
   static std::shared_ptr<DetectorVolume> makeShared(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
       std::vector<std::shared_ptr<Surface>> surfaces,
       std::vector<std::shared_ptr<DetectorVolume>> volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
+      DetectorVolumeUpdator detectorVolumeUpdator,
+      SurfaceCandidatesUpdator surfaceCandidateUpdator);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   ///
   /// @note This is called by the @class DetectorVolumeFactory
   static std::shared_ptr<DetectorVolume> makeShared(
-      const GeometryContext& gctx, const std::string& name,
+      const GeometryContext& gctx, std::string name,
       const Transform3& transform, std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
+      SurfaceCandidatesUpdator surfaceCandidateUpdator);
 
  public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
@@ -167,7 +173,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 
   /// Const access to the transform
   ///
-  /// @param gctx the geometry contect
+  /// @param gctx the geometry context
   ///
   /// @note the geometry context is currently ignored, but
   ///       is a placeholder for eventually misaligned volumes
@@ -178,7 +184,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 
   /// Const access to the center
   ///
-  /// @param gctx the geometry contect
+  /// @param gctx the geometry context
   ///
   /// @note the geometry context is currently ignored, but
   ///       is a placeholder for eventually misaligned volumes
@@ -212,7 +218,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// The Extent for this volume
   ///
   /// @param gctx is the geometry context
-  /// @param nseg is the number of segements to approximate
+  /// @param nseg is the number of segments to approximate
   ///
   /// @return an Extent object
   Extent extent(const GeometryContext& gctx, size_t nseg = 1) const;
@@ -284,7 +290,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param volumes the volumes the new navigation state updator points to
   ///
   void assignSurfaceCandidatesUpdator(
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator,
+      SurfaceCandidatesUpdator surfaceCandidateUpdator,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
@@ -346,7 +352,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   // Check containment - only in debug mode
   ///
   /// @param gctx the current geometry context object, e.g. alignment
-  /// @param nseg is the number of segements to approximate
+  /// @param nseg is the number of segments to approximate
   ///
   /// @return a boolean indicating if the objects are properly contained
   bool checkContainment(const GeometryContext& gctx, size_t nseg = 1) const;
@@ -403,8 +409,8 @@ class DetectorVolumeFactory {
       std::shared_ptr<VolumeBounds> bounds,
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
+      DetectorVolumeUpdator detectorVolumeUpdator,
+      SurfaceCandidatesUpdator surfaceCandidateUpdator) {
     auto dVolume = DetectorVolume::makeShared(
         gctx, name, transform, std::move(bounds), surfaces, volumes,
         std::move(detectorVolumeUpdator), std::move(surfaceCandidateUpdator));
@@ -415,12 +421,12 @@ class DetectorVolumeFactory {
   /// Create a detector volume - from factory
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,
-      const std::string& name, const Transform3& transform,
+      std::string name, const Transform3& transform,
       std::shared_ptr<VolumeBounds> bounds,
-      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) {
-    auto dVolume =
-        DetectorVolume::makeShared(gctx, name, transform, std::move(bounds),
-                                   std::move(surfaceCandidateUpdator));
+      SurfaceCandidatesUpdator surfaceCandidateUpdator) {
+    auto dVolume = DetectorVolume::makeShared(
+        gctx, std::move(name), transform, std::move(bounds),
+        std::move(surfaceCandidateUpdator));
     dVolume->construct(gctx, portalGenerator);
     return dVolume;
   }

@@ -11,18 +11,43 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <random>
+#include <tuple>
+#include <utility>
+
+namespace Acts {
+class Logger;
+}  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -89,7 +114,8 @@ struct SurfaceObserver {
                           stepper.direction(state.stepping), true)
               .intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      state.stepping.stepSize.update(distance, ConstrainedStep::actor);
+      state.stepping.stepSize.update(distance * state.stepping.navDir,
+                                     ConstrainedStep::actor);
       // return true if you fall below tolerance
       if (std::abs(distance) <= tolerance) {
         ++result.surfaces_passed;

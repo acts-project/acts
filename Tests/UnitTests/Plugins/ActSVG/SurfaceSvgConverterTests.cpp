@@ -22,7 +22,7 @@
 
 #include <fstream>
 
-BOOST_AUTO_TEST_SUITE(SurfaceSvgConverter)
+BOOST_AUTO_TEST_SUITE(ActSvg)
 
 namespace {
 

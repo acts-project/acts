@@ -8,9 +8,12 @@
 
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 Acts::DiscTrapezoidBounds::DiscTrapezoidBounds(double halfXminR,
                                                double halfXmaxR, double minR,

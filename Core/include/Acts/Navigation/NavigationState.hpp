@@ -80,7 +80,7 @@ struct NavigationState {
 
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
-  SurfaceCandidates::iterator surfaceCandidate = surfaceCandidates.end();
+  SurfaceCandidates::const_iterator surfaceCandidate = surfaceCandidates.cend();
 
   /// Boundary directives for surfaces
   BoundaryCheck surfaceBoundaryCheck = true;
@@ -88,8 +88,8 @@ struct NavigationState {
   /// An overstep tolerance
   ActsScalar overstepTolerance = -0.1;
 
-  /// Auxilliary attached information
-  std::any auxilliary;
+  /// Auxiliary attached information
+  std::any auxiliary;
 };
 
 }  // namespace Experimental

@@ -10,11 +10,16 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <array>
 #include <memory>
 #include <vector>
+
+namespace Acts {
+class TrackingGeometry;
+}  // namespace Acts
 
 namespace ActsExamples {
 namespace Telescope {

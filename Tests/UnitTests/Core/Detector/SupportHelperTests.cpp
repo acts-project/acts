@@ -8,8 +8,22 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Detector/detail/SupportHelper.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <vector>
 
 Acts::GeometryContext tContext;
 
@@ -90,7 +104,7 @@ BOOST_AUTO_TEST_CASE(addCylinderSupport) {
   BOOST_CHECK(lSurfaces.size() == 1u);
   BOOST_CHECK(assignToAll.size() == 1u);
   BOOST_CHECK(assignToAll[0u] == 0u);
-  // The radius of the newly created suport surface should be 10 out of the
+  // The radius of the newly created support surface should be 10 out of the
   // maximum
   CHECK_CLOSE_ABS(lSurfaces[0u]->bounds().values()[0u], 120, 1e-3);
 
@@ -126,7 +140,7 @@ BOOST_AUTO_TEST_CASE(addDiscSupport) {
   BOOST_CHECK(lSurfaces.size() == 1u);
   BOOST_CHECK(assignToAll.size() == 1u);
   BOOST_CHECK(assignToAll[0u] == 0u);
-  // The radius of the newly created suport surface should be 10 out of the
+  // The radius of the newly created support surface should be 10 out of the
   // minimum
   CHECK_CLOSE_ABS(lSurfaces[0u]->transform(tContext).translation().z(), -120,
                   1e-3);

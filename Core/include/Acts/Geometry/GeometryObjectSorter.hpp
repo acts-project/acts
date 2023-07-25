@@ -15,8 +15,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <functional>
+#include <memory>
 
 namespace Acts {
 
@@ -33,7 +35,7 @@ class ObjectSorterT {
   /// @param one first object
   /// @param two second object
   ///
-  /// @return boolen indicator
+  /// @return boolean indicator
   bool operator()(T one, T two) const {
     using Acts::VectorHelpers::eta;
     using Acts::VectorHelpers::perp;
@@ -98,7 +100,7 @@ class DistanceSorterT {
   /// @tparam one first object
   /// @tparam two second object
   ///
-  /// @return boolen indicator
+  /// @return boolean indicator
   bool operator()(T one, T two) const {
     using Acts::VectorHelpers::eta;
     using Acts::VectorHelpers::perp;
@@ -178,7 +180,7 @@ class GeometryObjectSorterT {
   /// @tparam one first object
   /// @tparam two second object
   ///
-  /// @return boolen indicator
+  /// @return boolean indicator
   bool operator()(T one, T two) const {
     // get the pos one / pos two
     Vector3 posOne =
