@@ -241,7 +241,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     Examples/Scripts/generic_plotter.py \
         $outdir/performance_amvf_ttbar.root \
         vertexing \
-        $outdir/performance_amvf_ttbar.root \
+        $outdir/performance_amvf_ttbar_hist.root \
         --silent \
         --config CI/physmon/vertexing_config.yml
     ec=$(($ec | $?))
