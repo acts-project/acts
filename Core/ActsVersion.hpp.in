@@ -34,6 +34,8 @@ struct VersionInfo {
   unsigned int versionPatch;
   const char* const commitHash;
 
+  VersionInfo() = delete;
+
   static VersionInfo fromHeader() {
     return VersionInfo(VersionMajor, VersionMinor, VersionPatch, CommitHash);
   }
