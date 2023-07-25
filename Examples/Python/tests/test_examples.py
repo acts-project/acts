@@ -1036,10 +1036,10 @@ def test_digitization_example_input(
             "vol12_lay12_mod141", "vol12_lay12_mod167", "vol13", "vol13_lay2",
             "vol14_lay2_mod93", "vol14_lay2_mod102", "vol14_lay2_mod112",
             "vol14_lay2_mod118", "vol14_lay4_mod112", "vol14_lay4_mod118",
-            "vol14_lay4_mod152", "vol14_lay4_mod161", "vol14_lay6_mod152",
-            "vol16_lay4", "vol16_lay6", "vol16_lay8", "vol16_lay10", "vol16_lay12",
-            "vol17", "vol17_lay2", "vol18_lay2", "vol18_lay2_mod71", "vol18_lay4",
-            "vol18_lay6", "vol18_lay8", "vol18_lay10"
+            "vol14_lay4_mod152", "vol14_lay4_mod161", "vol16_lay4", "vol16_lay6",
+            "vol16_lay8", "vol16_lay10", "vol16_lay12", "vol17", "vol17_lay2",
+            "vol18_lay2", "vol18_lay2_mod71", "vol18_lay4", "vol18_lay6",
+            "vol18_lay8", "vol18_lay10"
         ]
         # fmt: on
 
