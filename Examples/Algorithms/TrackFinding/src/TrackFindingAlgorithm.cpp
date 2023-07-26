@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -81,6 +82,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   Acts::PropagatorPlainOptions pOptions;
   pOptions.maxSteps = 100000;
+  pOptions.direction =
+      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
 
   PassThroughCalibrator pcalibrator;
   MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);

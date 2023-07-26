@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
   // Set the target surface
-  options.referenceSurface = &(*pSurface);
+  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
   // Set the target surface
-  options.referenceSurface = &(*pSurface);
+  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
