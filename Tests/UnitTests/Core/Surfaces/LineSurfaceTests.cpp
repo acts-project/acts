@@ -281,15 +281,13 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   auto eps = 1e-10;
 
   auto direction = Vector3(1, 1, 100).normalized();
-  auto boundVector =
-      (BoundVector() << 1_cm, 1_cm, VectorHelpers::phi(direction),
-       VectorHelpers::theta(direction), 1, 0)
-          .finished();
+  BoundVector boundVector;
+  boundVector << 1_cm, 1_cm, VectorHelpers::phi(direction), VectorHelpers::theta(direction), 1, 0;
   auto pathLimit = 1_cm;
 
   auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
 
-  auto initialParams = BoundTrackParameters(surface, boundVector, 1);
+  BoundTrackParameters initialParams{surface, boundVector, 1};
 
   auto propagator = Propagator<StraightLineStepper>({});
 
