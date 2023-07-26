@@ -278,23 +278,24 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
 BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   using namespace Acts::UnitLiterals;
 
-  auto eps = 1e-10;
+  double eps = 1e-10;
 
-  auto direction = Vector3(1, 1, 100).normalized();
+  Vector3 direction = Vector3(1, 1, 100).normalized();
   BoundVector boundVector;
-  boundVector << 1_cm, 1_cm, VectorHelpers::phi(direction), VectorHelpers::theta(direction), 1, 0;
-  auto pathLimit = 1_cm;
+  boundVector << 1_cm, 1_cm, VectorHelpers::phi(direction),
+      VectorHelpers::theta(direction), 1, 0;
+  double pathLimit = 1_cm;
 
   auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
 
   BoundTrackParameters initialParams{surface, boundVector, 1};
 
-  auto propagator = Propagator<StraightLineStepper>({});
+  Propagator<StraightLineStepper> propagator({});
 
-  auto displacedParameters =
-      CurvilinearTrackParameters(Vector4::Zero(), Vector3::Zero(), 1);
+  CurvilinearTrackParameters displacedParameters{Vector4::Zero(),
+                                                 Vector3::Zero(), 1};
   {
-    auto options = PropagatorOptions<>(tgContext, {});
+    PropagatorOptions<> options(tgContext, {});
     options.direction = Acts::Direction::Backward;
     options.pathLimit = pathLimit;
 
@@ -310,9 +311,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
                          displacedParameters.unitDirection());
   CHECK_CLOSE_ABS(intersection.intersection.pathLength, pathLimit, eps);
 
-  auto endParameters = BoundTrackParameters(surface, BoundVector::Zero(), 1);
+  BoundTrackParameters endParameters{surface, BoundVector::Zero(), 1};
   {
-    auto options = PropagatorOptions<>(tgContext, {});
+    PropagatorOptions<> options(tgContext, {});
     options.direction = Acts::Direction::Forward;
     options.maxStepSize = 1_mm;
 
