@@ -496,6 +496,16 @@ class CombinatorialKalmanFilter {
                 result.result = res.error();
               }
               result.smoothed = true;
+
+              // TODO another ugly control flow hack
+              navigator.preStep(state, stepper);
+            }
+
+            if (result.smoothed) {
+              // Update state and stepper with material effects
+              materialInteractor(navigator.currentSurface(state.navigation),
+                                 state, stepper, navigator,
+                                 MaterialUpdateStage::FullUpdate);
             }
 
             // -> then progress to target/reference surface and built the final
@@ -768,11 +778,9 @@ class CombinatorialKalmanFilter {
             nBranchesOnSurface = 0;
           }
         }
-        if (surface->surfaceMaterial() != nullptr) {
-          // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper, navigator,
-                             MaterialUpdateStage::FullUpdate);
-        }
+        // Update state and stepper with material effects
+        materialInteractor(surface, state, stepper, navigator,
+                           MaterialUpdateStage::FullUpdate);
       } else {
         // Neither measurement nor material on surface, this branch is still
         // valid. Count the branch on current surface
@@ -1235,6 +1243,17 @@ class CombinatorialKalmanFilter {
       state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
+
+      // Reset the navigation state
+      // Set targetSurface to nullptr as it is handled manually in the actor
+      navigator.resetState(state.navigation, state.geoContext,
+                           stepper.position(state.stepping),
+                           stepper.direction(state.stepping),
+                           state.stepping.navDir, &surface, nullptr);
+
+      // Need to consider the material effects of the starting surface
+      materialInteractor(&surface, state, stepper, navigator,
+                         MaterialUpdateStage::FullUpdate);
 
       // Reset the navigation state to enable propagation towards the target
       // surface
