@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
   // Acts::CalibrationContext calCtx;
-//  std::default_random_engine rng(42);
+  std::default_random_engine rng(42);
 
   MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
   // MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
@@ -277,7 +277,6 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   using SimPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
-  std::default_random_engine rng(42);
   auto measurements = createMeasurements(
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
@@ -335,14 +334,15 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK(!track.hasReferenceSurface());
   BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
   BOOST_CHECK_EQUAL(track.nHoles(), 0u);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10.5213879800238, 1e-6);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10.1439185409587, 1e-6);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1.49923061594437e-05, 1e-6);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], 1.57079520304213, 1e-6);
+  // We need quite coarse checks here, since on different builds
+  // the created measurements differ in the randomness
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e2);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
-  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1.03822560716726e-27,
-                    1e-6);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   std::cout << "##### Finished test case Fit5Iterations #####" << std::endl;
 }
