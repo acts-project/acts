@@ -32,7 +32,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "../../Tests/CommonHelpers/Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
