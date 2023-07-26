@@ -161,18 +161,15 @@ struct CombinatorialKalmanFilterOptions {
       std::reference_wrapper<const CalibrationContext> cctx,
       SourceLinkAccessor accessor_,
       CombinatorialKalmanFilterExtensions<traj_t> extensions_,
-      const PropagatorPlainOptions& pOptions,
-      const Surface* fTargetSurface = nullptr,
-      const Surface* sTargetSurface = nullptr, bool mScattering = true,
-      bool eLoss = true, bool rSmoothing = true)
+      const PropagatorPlainOptions& pOptions, const Surface* rSurface = nullptr,
+      bool mScattering = true, bool eLoss = true, bool rSmoothing = true)
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
         sourcelinkAccessor(std::move(accessor_)),
         extensions(extensions_),
         propagatorPlainOptions(pOptions),
-        filterTargetSurface(fTargetSurface),
-        smoothingTargetSurface(sTargetSurface),
+        smoothingTargetSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
         smoothing(rSmoothing) {}

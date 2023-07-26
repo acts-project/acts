@@ -114,7 +114,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, pOptions, &(*pSurface));
+      extensions, pOptions, pSurface.get());
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
