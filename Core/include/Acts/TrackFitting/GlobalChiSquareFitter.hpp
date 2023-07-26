@@ -305,13 +305,6 @@ class Gx2Fitter {
         return;
       }
 
-      //      ACTS_VERBOSE("Gx2Fitter step at pos: "
-      //                   << stepper.position(state.stepping).transpose()
-      //                   << " dir: " <<
-      //                   stepper.direction(state.stepping).transpose()
-      //                   << " momentum: " <<
-      //                   stepper.momentum(state.stepping));
-
       // Add the measurement surface as external surface to navigator.
       // We will try to hit those surface by ignoring boundary checks.
       if constexpr (not isDirectNavigator) {
@@ -384,6 +377,7 @@ class Gx2Fitter {
             residual[i] = measurement[i] - predicted[i];
             //            covDiagonal.push_back(measurement[i] - predicted[i]);
           }
+          std::cout << "dbgMeasurement: " << measurement << std::endl;
           result.collectorResiduals.push_back(residual);
           result.collectorCovariance.push_back(covarianceMeasurement);
 

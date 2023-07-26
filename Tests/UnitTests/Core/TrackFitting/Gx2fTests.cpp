@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
-      rSurface, false, false, FreeToBoundCorrection(false), 50);
+      rSurface, false, false, FreeToBoundCorrection(false), 5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
