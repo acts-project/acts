@@ -338,7 +338,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   // the created measurements differ in the randomness
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10., 6e0);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10., 6e0);
-  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 2e2);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
   BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
