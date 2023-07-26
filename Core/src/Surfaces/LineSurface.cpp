@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <stdexcept>
 #include <utility>
 
 namespace Acts {
@@ -85,6 +86,12 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
   Vector3 localPosition = referenceFrame(gctx, position, direction).inverse() *
                           (position - transform(gctx).translation());
 
+  // `localPosition.z()` is not the distance to the PCA but the smallest
+  // distance between `position` and the imaginary plane surface defined by the
+  // local x,y axes in the global frame and the position of the line surface.
+  //
+  // This check is also done for the `PlaneSurface` so I aligned the
+  // `LineSurface` to do the same thing.
   if (std::abs(localPosition.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
@@ -127,7 +134,8 @@ Acts::Vector3 Acts::LineSurface::binningPosition(
 
 Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& /*gctx*/,
                                         const Vector2& /*lpos*/) const {
-  return Vector3::Zero();
+  throw std::runtime_error(
+      "LineSurface: normal is undefined without known direction");
 }
 
 const Acts::SurfaceBounds& Acts::LineSurface::bounds() const {
@@ -167,9 +175,9 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
 
   double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
   // Check if we are on the surface already
-  Intersection3D::Status status = std::abs(u) < std::abs(tolerance)
-                                      ? Intersection3D::Status::onSurface
-                                      : Intersection3D::Status::reachable;
+  Intersection3D::Status status = std::abs(u) > std::abs(tolerance)
+                                      ? Intersection3D::Status::reachable
+                                      : Intersection3D::Status::onSurface;
   Vector3 result = ma + u * ea;
   // Evaluate the boundary check if requested
   // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
