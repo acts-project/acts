@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   Acts::GeometryContext geoCtx;
   Acts::MagneticFieldContext magCtx;
   // Acts::CalibrationContext calCtx;
-  std::default_random_engine rng(42);
+//  std::default_random_engine rng(42);
 
   MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
   // MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {100_um}};
@@ -277,6 +277,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   using SimPropagator =
       Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
   SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  std::default_random_engine rng(42);
   auto measurements = createMeasurements(
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
