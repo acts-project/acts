@@ -33,13 +33,13 @@ class SurfaceBounds;
 
 /// @class DiscSurface
 ///
-/// Class for a DiscSurface in the, it inherits from Surface.
+/// Class for a disc surface, defined by a radius and and angle
 ///
 /// The DiscSurface has a polar local coordinate system, with
-/// (r,phi) describing the coordinates.
+/// @f$ (r,phi) @f$ describing the coordinates.
 ///
 /// The surface transform positions the disc such, that the origin
-/// is at r=0, independent of the provided DiscBounds. The z-axis
+/// is at @f$ r=0 @f$, independent of the provided \c DiscBounds. The @f$z@f$-axis
 /// The normal vector of the Disc, being perpendicular to the
 /// radial direction.
 ///
@@ -256,7 +256,7 @@ class DiscSurface : public Surface {
   /// @param bcheck The boundary check prescription
   /// @param tolerance the tolerance used for the intersection
   ///
-  ///  <b>mathematical motivation:</b>
+  /// Mathematical motivation:</b>
   ///
   /// the equation of the plane is given by: <br>
   /// @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
