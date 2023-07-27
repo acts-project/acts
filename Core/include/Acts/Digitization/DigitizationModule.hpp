@@ -10,6 +10,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 
 #include <memory>
 #include <vector>
@@ -18,7 +19,7 @@ namespace Acts {
 
 class Surface;
 
-using SurfacePtr = std::shared_ptr<const Surface>;
+using SurfacePtr = std::shared_ptr<const RegularSurface>;
 using SurfacePtrVector = std::vector<SurfacePtr>;
 
 /// @class DigitizationModule

@@ -118,15 +118,18 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
   //
   // intersection
-  const Vector3 direction{0., 1., 2.};
-  BoundaryCheck bcheck(false);
-  auto sfIntersection =
-      line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck);
-  BOOST_CHECK(bool(sfIntersection));
-  Vector3 expectedIntersection(0, 1., 2.);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position, expectedIntersection,
-                  1e-6);  // need more tests..
-  BOOST_CHECK_EQUAL(sfIntersection.object, &line);
+  {
+    const Vector3 direction{0., 1., 2.};
+    BoundaryCheck bcheck(false);
+    auto sfIntersection =
+        line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck);
+    BOOST_CHECK(bool(sfIntersection));
+    Vector3 expectedIntersection(0, 1., 2.);
+    CHECK_CLOSE_ABS(sfIntersection.intersection.position, expectedIntersection,
+                    1e-6);  // need more tests..
+    BOOST_CHECK_EQUAL(sfIntersection.object, &line);
+  }
+
   //
   // isOnSurface
   const Vector3 insidePosition{0., 2.5, 0.};
@@ -162,13 +165,33 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   output << line.name();
   BOOST_CHECK(output.is_equal("Acts::LineSurface"));
   //
-  // normal does not exist without known momentum direction for line surface
-  BOOST_CHECK_THROW(line.normal(tgContext), std::runtime_error);
+  // normal
+  {
+    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector3 direction{1, 0, 0};
+    Vector3 normalVector{0., 1., 0.};
+    CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), normalVector,
+                    1e-6);
+  }
+  {
+    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector3 direction{-1, 0, 0};
+    Vector3 normalVector{0., -1., 0.};
+    CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), normalVector,
+                    1e-6);
+  }
+  {
+    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector3 direction{0, 1, 0};
+    Vector3 normalVector{1., 0., 0.};
+    CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), normalVector,
+                    1e-6);
+  }
   //
-  // pathCorrection is always 1 for the line surface
-  CHECK_CLOSE_ABS(
-      line.pathCorrection(tgContext, Vector3::Zero(), Vector3::UnitX()), 1,
-      1e-6);
+  // pathCorrection
+  Vector3 any3DVector = Vector3::Random();
+  CHECK_CLOSE_REL(line.pathCorrection(tgContext, any3DVector, any3DVector), 1.,
+                  1e-6);
 }
 
 /// Unit test for testing LineSurface assignment

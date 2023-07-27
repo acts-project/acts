@@ -15,6 +15,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <array>
@@ -45,7 +46,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// Constructor from surface w/o portal links
   ///
   /// @param surface is the representing surface
-  Portal(std::shared_ptr<Surface> surface);
+  Portal(std::shared_ptr<RegularSurface> surface);
 
  public:
   /// The volume links forward/backward with respect to the surface normal
@@ -60,7 +61,8 @@ class Portal : public std::enable_shared_from_this<Portal> {
   friend class DetectorVolume;
 
   /// Factory for producing memory managed instances of Portal.
-  static std::shared_ptr<Portal> makeShared(std::shared_ptr<Surface> surface);
+  static std::shared_ptr<Portal> makeShared(
+      std::shared_ptr<RegularSurface> surface);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
@@ -88,10 +90,10 @@ class Portal : public std::enable_shared_from_this<Portal> {
   virtual ~Portal() = default;
 
   /// Const access to the surface representation
-  const Surface& surface() const;
+  const RegularSurface& surface() const;
 
   /// Non-const access to the surface reference
-  Surface& surface();
+  RegularSurface& surface();
 
   /// Update the current volume
   ///
@@ -147,7 +149,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
  private:
   /// The surface representation of this portal
-  std::shared_ptr<Surface> m_surface;
+  std::shared_ptr<RegularSurface> m_surface;
 
   /// The portal targets along/opposite the normal vector
   DetectorVolumeUpdators m_volumeUpdators = {unconnectedUpdator(),

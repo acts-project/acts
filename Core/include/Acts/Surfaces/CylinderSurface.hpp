@@ -16,6 +16,7 @@
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -40,7 +41,7 @@ class DetectorElementBase;
 ///
 /// @image html figures/CylinderSurface.png
 
-class CylinderSurface : public Surface {
+class CylinderSurface : public RegularSurface {
 #ifndef DOXYGEN
   friend Surface;
 #endif
@@ -145,7 +146,7 @@ class CylinderSurface : public Surface {
                  const Vector3& position) const final;
 
   /// Normal vector return without argument
-  using Surface::normal;
+  using RegularSurface::normal;
 
   /// Return method for the rotational symmetry axis
   ///

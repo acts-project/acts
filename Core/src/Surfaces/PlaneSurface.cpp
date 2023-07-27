@@ -26,17 +26,17 @@
 #include <vector>
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
 Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                                  const PlaneSurface& other,
                                  const Transform3& transform)
     : GeometryObject(),
-      Surface(gctx, other, transform),
+      RegularSurface(gctx, other, transform),
       m_bounds(other.m_bounds) {}
 
 Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
-    : Surface(), m_bounds(nullptr) {
+    : RegularSurface(), m_bounds(nullptr) {
   /// the right-handed coordinate system is defined as
   /// T = normal
   /// U = Z x T if T not parallel to Z otherwise U = X x T
@@ -59,14 +59,14 @@ Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
 Acts::PlaneSurface::PlaneSurface(
     const std::shared_ptr<const PlanarBounds>& pbounds,
     const Acts::DetectorElementBase& detelement)
-    : Surface(detelement), m_bounds(pbounds) {
+    : RegularSurface(detelement), m_bounds(pbounds) {
   /// surfaces representing a detector element must have bounds
   throw_assert(pbounds, "PlaneBounds must not be nullptr");
 }
 
 Acts::PlaneSurface::PlaneSurface(const Transform3& transform,
                                  std::shared_ptr<const PlanarBounds> pbounds)
-    : Surface(transform), m_bounds(std::move(pbounds)) {}
+    : RegularSurface(transform), m_bounds(std::move(pbounds)) {}
 
 Acts::PlaneSurface& Acts::PlaneSurface::operator=(const PlaneSurface& other) {
   if (this != &other) {
@@ -171,7 +171,7 @@ double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
                                           const Vector3& position,
                                           const Vector3& direction) const {
   // We can ignore the global position here
-  return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
+  return 1. / std::abs(RegularSurface::normal(gctx, position).dot(direction));
 }
 
 Acts::SurfaceIntersection Acts::PlaneSurface::intersect(

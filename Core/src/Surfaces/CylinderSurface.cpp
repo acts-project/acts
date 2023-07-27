@@ -30,25 +30,27 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
                                        const CylinderSurface& other,
                                        const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+    : GeometryObject(),
+      RegularSurface(gctx, other, shift),
+      m_bounds(other.m_bounds) {}
 
 Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
                                        double radius, double halfz,
                                        double halfphi, double avphi,
                                        double bevelMinZ, double bevelMaxZ)
-    : Surface(transform),
+    : RegularSurface(transform),
       m_bounds(std::make_shared<const CylinderBounds>(
           radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
     const Acts::DetectorElementBase& detelement)
-    : Surface(detelement), m_bounds(std::move(cbounds)) {
+    : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
   /// surfaces representing a detector element must have bounds
   assert(cbounds);
 }
@@ -56,7 +58,7 @@ Acts::CylinderSurface::CylinderSurface(
 Acts::CylinderSurface::CylinderSurface(
     const Transform3& transform,
     const std::shared_ptr<const CylinderBounds>& cbounds)
-    : Surface(transform), m_bounds(cbounds) {
+    : RegularSurface(transform), m_bounds(cbounds) {
   throw_assert(cbounds, "CylinderBounds must not be nullptr");
 }
 

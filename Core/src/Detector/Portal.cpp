@@ -24,21 +24,22 @@ class DetectorVolume;
 }  // namespace Experimental
 }  // namespace Acts
 
-Acts::Experimental::Portal::Portal(std::shared_ptr<Surface> surface)
+Acts::Experimental::Portal::Portal(std::shared_ptr<RegularSurface> surface)
     : m_surface(std::move(surface)) {
   throw_assert(m_surface, "Portal surface is nullptr");
 }
 
 std::shared_ptr<Acts::Experimental::Portal>
-Acts::Experimental::Portal::makeShared(std::shared_ptr<Surface> surface) {
+Acts::Experimental::Portal::makeShared(
+    std::shared_ptr<RegularSurface> surface) {
   return std::shared_ptr<Portal>(new Portal(std::move(surface)));
 }
 
-const Acts::Surface& Acts::Experimental::Portal::surface() const {
+const Acts::RegularSurface& Acts::Experimental::Portal::surface() const {
   return *m_surface.get();
 }
 
-Acts::Surface& Acts::Experimental::Portal::surface() {
+Acts::RegularSurface& Acts::Experimental::Portal::surface() {
   return *m_surface.get();
 }
 

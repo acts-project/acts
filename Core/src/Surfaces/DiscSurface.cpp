@@ -33,34 +33,38 @@ using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& other)
-    : GeometryObject(), Surface(other), m_bounds(other.m_bounds) {}
+    : GeometryObject(), RegularSurface(other), m_bounds(other.m_bounds) {}
 
 Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
                                const DiscSurface& other,
                                const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+    : GeometryObject(),
+      RegularSurface(gctx, other, shift),
+      m_bounds(other.m_bounds) {}
 
 Acts::DiscSurface::DiscSurface(const Transform3& transform, double rmin,
                                double rmax, double hphisec)
     : GeometryObject(),
-      Surface(transform),
+      RegularSurface(transform),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
 Acts::DiscSurface::DiscSurface(const Transform3& transform, double minhalfx,
                                double maxhalfx, double minR, double maxR,
                                double avephi, double stereo)
     : GeometryObject(),
-      Surface(transform),
+      RegularSurface(transform),
       m_bounds(std::make_shared<const DiscTrapezoidBounds>(
           minhalfx, maxhalfx, minR, maxR, avephi, stereo)) {}
 
 Acts::DiscSurface::DiscSurface(const Transform3& transform,
                                std::shared_ptr<const DiscBounds> dbounds)
-    : GeometryObject(), Surface(transform), m_bounds(std::move(dbounds)) {}
+    : GeometryObject(),
+      RegularSurface(transform),
+      m_bounds(std::move(dbounds)) {}
 
 Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
                                const DetectorElementBase& detelement)
-    : GeometryObject(), Surface(detelement), m_bounds(dbounds) {
+    : GeometryObject(), RegularSurface(detelement), m_bounds(dbounds) {
   throw_assert(dbounds, "nullptr as DiscBounds");
 }
 
@@ -374,5 +378,5 @@ double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
                                          const Vector3& position,
                                          const Vector3& direction) const {
   /// we can ignore the global position here
-  return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
+  return 1. / std::abs(RegularSurface::normal(gctx, position).dot(direction));
 }

@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -39,7 +40,7 @@ class SurfaceBounds;
 ///
 /// @image html figures/PlaneSurface.png
 ///
-class PlaneSurface : public Surface {
+class PlaneSurface : public RegularSurface {
 #ifndef DOXYGEN
   friend Surface;
 #endif
@@ -98,7 +99,7 @@ class PlaneSurface : public Surface {
                  const Vector2& lposition) const final;
 
   /// Normal vector return without argument
-  using Surface::normal;
+  using RegularSurface::normal;
 
   /// The binning position is the position calculated
   /// for a certain binning type
