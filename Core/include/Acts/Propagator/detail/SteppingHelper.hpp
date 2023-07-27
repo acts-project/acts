@@ -57,8 +57,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
     if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
                                   surfaceTolerance, logger)) {
       ACTS_VERBOSE("Surface is reachable");
-      stepper.setStepSize(state,
-                          state.navDir * sIntersection.intersection.pathLength);
+      stepper.setStepSize(state, sIntersection.intersection.pathLength);
       return Intersection3D::Status::reachable;
     }
 
@@ -66,8 +65,7 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
         detail::checkIntersection(sIntersection.alternative, pLimit, oLimit,
                                   surfaceTolerance, logger)) {
       ACTS_VERBOSE("Surface is reachable");
-      stepper.setStepSize(state,
-                          state.navDir * sIntersection.alternative.pathLength);
+      stepper.setStepSize(state, sIntersection.alternative.pathLength);
       return Intersection3D::Status::reachable;
     }
   }
