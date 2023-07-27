@@ -65,9 +65,8 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   }
 
   m_cfg.seedFinderConfig.experimentCuts.connect(
-      [](const void *, float & /*bottomRadius*/, float & /*cotTheta*/) -> bool {
-        return false;
-      });
+      [](const void *, const float & /*bottomRadius*/,
+         const float & /*cotTheta*/) -> bool { return false; });
 
   // construct seed filter
   m_cfg.seedFinderConfig.seedFilter =

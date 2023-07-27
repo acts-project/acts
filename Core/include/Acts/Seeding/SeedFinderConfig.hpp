@@ -171,7 +171,8 @@ struct SeedFinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
   // Delegate to apply experiment specific cuts
-  Delegate<bool(float& bottomRadius, float& cotTheta)> experimentCuts;
+  Delegate<bool(const float& bottomRadius, const float& cotTheta)>
+      experimentCuts;
 
   bool isInInternalUnits = false;
 
@@ -215,8 +216,6 @@ struct SeedFinderConfig {
     config.rMax /= 1_mm;
     config.rMin /= 1_mm;
     config.deltaZMax /= 1_mm;
-
-    config.fastTrackingRMin /= 1_mm;
 
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
