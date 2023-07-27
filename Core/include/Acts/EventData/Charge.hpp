@@ -153,7 +153,7 @@ class NonNeutralCharge {
   constexpr NonNeutralCharge(float absQ) noexcept : m_absQ{absQ} {
     assert((0 < absQ) and "Input charge magnitude must be positive");
   }
-  constexpr NonNeutralCharge(SinglyCharged) noexcept
+  constexpr NonNeutralCharge(SinglyCharged /*unused*/) noexcept
       : m_absQ{UnitConstants::e} {}
 
   constexpr float absQ() const noexcept { return m_absQ; }
@@ -202,8 +202,9 @@ class AnyCharge {
   constexpr AnyCharge(float absQ) noexcept : m_absQ{absQ} {
     assert((0 <= absQ) and "Input charge magnitude must be zero or positive");
   }
-  constexpr AnyCharge(SinglyCharged) noexcept : m_absQ{UnitConstants::e} {}
-  constexpr AnyCharge(Neutral) noexcept : m_absQ{0} {}
+  constexpr AnyCharge(SinglyCharged /*unused*/) noexcept
+      : m_absQ{UnitConstants::e} {}
+  constexpr AnyCharge(Neutral /*unused*/) noexcept {}
 
   constexpr float absQ() const noexcept { return m_absQ; }
 
