@@ -196,7 +196,8 @@ void convert(const GeometryContext& gctx, const surface_container& surfaces,
   using GridType =
       typename instance_type::template grid_type<std::vector<std::size_t>>;
   // Defining a Delegate type
-  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<GridType>;
+  using DelegateType = Experimental::IndexedSurfacesAllPortalsImpl<
+      GridType, Experimental::IndexedSurfacesImpl>;
   using SubDelegateType = Experimental::IndexedSurfacesImpl<GridType>;
 
   // Get the instance

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -28,6 +29,7 @@ namespace detail {
 /// @brief the step information for
 struct Step {
   ConstrainedStep stepSize;
+  Direction navDir;
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
@@ -70,6 +72,7 @@ struct SteppingLogger {
     // record the propagation state
     Step step;
     step.stepSize = state.stepping.stepSize;
+    step.navDir = state.stepping.navDir;
     step.position = stepper.position(state.stepping);
     step.momentum = stepper.momentum(state.stepping);
 
