@@ -22,7 +22,7 @@
 
 Acts::GeometryContext tgContext;
 
-BOOST_AUTO_TEST_SUITE(TrackingGeometrySvgConverter)
+BOOST_AUTO_TEST_SUITE(ActSvg)
 
 BOOST_AUTO_TEST_CASE(CylindricalTrackingGeometrySvg) {
   Acts::Svg::Style cylinderLayerStyle;

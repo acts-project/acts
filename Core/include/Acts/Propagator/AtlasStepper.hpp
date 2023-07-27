@@ -63,7 +63,7 @@ class AtlasStepper {
           double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
           field(0., 0., 0.),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
@@ -1113,7 +1113,7 @@ class AtlasStepper {
   Result<double> step(propagator_state_t& state,
                       const navigator_t& /*navigator*/) const {
     // we use h for keeping the nominclature with the original atlas code
-    auto h = state.stepping.stepSize.value();
+    auto h = state.stepping.stepSize.value() * state.stepping.navDir;
     bool Jac = state.stepping.useJacobian;
 
     double* R = &(state.stepping.pVector[0]);  // Coordinates
@@ -1224,7 +1224,8 @@ class AtlasStepper {
            std::abs((C1 + C6) - (C3 + C4)));
       if (std::abs(EST) > std::abs(state.options.tolerance)) {
         h = h * .5;
-        state.stepping.stepSize.setValue(h);
+        // neutralize the sign of h again
+        state.stepping.stepSize.setValue(h * state.stepping.navDir);
         //        dltm = 0.;
         nStepTrials++;
         continue;
