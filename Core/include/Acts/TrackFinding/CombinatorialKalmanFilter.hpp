@@ -349,7 +349,7 @@ class CombinatorialKalmanFilter {
               typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
-                    const Logger& logger) const {
+                    const Logger& _logger) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -546,7 +546,7 @@ class CombinatorialKalmanFilter {
 
                 // TODO this is kinda silly but I dont see a better solution
                 // with the current CKF control flow
-                operator()(state, stepper, navigator, result, logger);
+                operator()(state, stepper, navigator, result, _logger);
               } else {
                 ACTS_VERBOSE("Finish Kalman filtering and smoothing");
                 // Remember that track finding is done
@@ -575,7 +575,7 @@ class CombinatorialKalmanFilter {
       auto currentState =
           result.fittedStates->getTrackState(result.activeTips.back().first);
 
-      // Update the stepping state
+      // Reset the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
                          currentState.referenceSurface(), state.stepping.navDir,
@@ -1074,10 +1074,14 @@ class CombinatorialKalmanFilter {
                             const stepper_t& stepper,
                             const navigator_t& navigator,
                             const MaterialUpdateStage& updateStage) const {
+      if (surface == nullptr) {
+        return;
+      }
+
       // Indicator if having material
       bool hasMaterial = false;
 
-      if (surface and surface->surfaceMaterial()) {
+      if (surface->surfaceMaterial() != nullptr) {
         // Prepare relevant input particle properties
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
@@ -1095,7 +1099,7 @@ class CombinatorialKalmanFilter {
                        << surface->geometryId()
                        << " at update stage: " << updateStage << " are :");
           ACTS_VERBOSE("eLoss = "
-                       << interaction.Eloss << ", "
+                       << interaction.Eloss * interaction.navDir << ", "
                        << "variancePhi = " << interaction.variancePhi << ", "
                        << "varianceTheta = " << interaction.varianceTheta
                        << ", "
@@ -1203,22 +1207,29 @@ class CombinatorialKalmanFilter {
       // assumes the target surface is not within the first and the last
       // smoothed measurement state. Also, whether the intersection is on
       // surface is not checked here.
-      bool reverseDirection = false;
       bool closerToFirstCreatedState =
           (std::abs(firstIntersection.intersection.pathLength) <=
            std::abs(lastIntersection.intersection.pathLength));
+      bool reverseDirection = false;
       if (closerToFirstCreatedState) {
-        stepper.update(state.stepping, firstParams,
-                       firstCreatedState.smoothed(),
-                       firstCreatedState.smoothedCovariance(),
-                       firstCreatedState.referenceSurface());
-        reverseDirection = (firstIntersection.intersection.pathLength < 0);
+        stepper.resetState(state.stepping, firstCreatedState.smoothed(),
+                           firstCreatedState.smoothedCovariance(),
+                           firstCreatedState.referenceSurface(),
+                           state.stepping.navDir, state.options.maxStepSize);
+        reverseDirection = firstIntersection.intersection.pathLength < 0;
       } else {
-        stepper.update(state.stepping, lastParams,
-                       lastCreatedMeasurement.smoothed(),
-                       lastCreatedMeasurement.smoothedCovariance(),
-                       lastCreatedMeasurement.referenceSurface());
-        reverseDirection = (lastIntersection.intersection.pathLength < 0);
+        stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
+                           lastCreatedMeasurement.smoothedCovariance(),
+                           lastCreatedMeasurement.referenceSurface(),
+                           state.stepping.navDir, state.options.maxStepSize);
+        reverseDirection = lastIntersection.intersection.pathLength < 0;
+      }
+      // Reverse the navigation direction if necessary
+      if (reverseDirection) {
+        ACTS_VERBOSE(
+            "Reverse navigation direction after smoothing for reaching the "
+            "target surface");
+        state.stepping.navDir = state.stepping.navDir.invert();
       }
       const auto& surface = closerToFirstCreatedState
                                 ? firstCreatedState.referenceSurface()
@@ -1227,22 +1238,6 @@ class CombinatorialKalmanFilter {
           "Smoothing successful, updating stepping state to smoothed "
           "parameters at surface "
           << surface.geometryId() << ". Prepared to reach the target surface.");
-
-      // Reverse the navigation direction if necessary
-      if (reverseDirection) {
-        ACTS_VERBOSE(
-            "Reverse navigation direction after smoothing for reaching the "
-            "target surface");
-        state.stepping.navDir = state.stepping.navDir.invert();
-      }
-      // Reinitialize the stepping jacobian
-      state.stepping.jacobian = BoundMatrix::Identity();
-      state.stepping.jacTransport = FreeMatrix::Identity();
-      state.stepping.derivative = FreeVector::Zero();
-      // Reset the step size
-      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
-      // Set accumulatd path to zero before targeting surface
-      state.stepping.pathAccumulated = 0.;
 
       // Reset the navigation state
       // Set targetSurface to nullptr as it is handled manually in the actor
