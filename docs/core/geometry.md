@@ -7,6 +7,15 @@ of higher complexity. This design has been chosen as the surface objects can be
 used together with the track propagation module and thus all geometry objects
 become natively integrated into the tracking software.
 
+```{note}
+There is an ongoing rewrite of the geometry module and associated navigation
+module that will remove the explicit modeling of layers and replace them with a
+description where logical layers are modeled as volumes.
+
+See [](exp_geometry_impl)
+
+```
+
 ## GeometryObject base class
 
 All geometry objects in Acts inherit from a virtual {class}`Acts::GeometryObject` base class
@@ -150,11 +159,6 @@ members: false
 
 ## Layer classes
 
-```{note}
-There is an ongoing rewrite of the geometry module and associated navigation
-module that will remove the explicit modeling of layers and replace them with a
-description where logical layers are modeled as volumes.
-```
 
 The {class}`Acts::Layer` class is an extension of the {class}`Acts::Surface` class that allows the
 definition of sub surfaces (sensitive surfaces for modules, or extra material

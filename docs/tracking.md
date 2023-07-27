@@ -914,10 +914,6 @@ circular *real* trajectory.
 
 ## Ambiguity resolution
 
-:::{note}
-There is currently no general-purpose ambiguity resolution implemented in ACTS.
-:::
-
 Due to the combinatorial nature of track finding, and to achieve high
 efficiencies, this set of candidates is often large, and contains a
 non-negligible fraction of *fake* candidates. These fake candidates are either

@@ -3,7 +3,8 @@
 # Experimental Geometry module
 
 :::{note}
-This module is in production and is under the namespace `Acts::Experimental`.
+This module is not considered production-ready yet, and is under the namespace
+`Acts::Experimental`.
 :::
 
 ## Overview
