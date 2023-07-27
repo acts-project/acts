@@ -164,7 +164,7 @@ class LineSurface : public Surface {
   /// Specified for `LineSurface`: global to local method without dynamic
   /// memory allocation.
   ///
-  /// This method is the true global -> local transformation and  makes use of
+  /// This method is the true global -> local transformation and makes use of
   /// @c globalToLocal and indicates the sign of the @c Acts::eBoundLoc0
   /// by the given momentum direction.
   ///

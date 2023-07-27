@@ -256,7 +256,7 @@ class DiscSurface : public Surface {
   /// @param bcheck The boundary check prescription
   /// @param tolerance the tolerance used for the intersection
   ///
-  /// Mathematical motivation:</b>
+  /// <b>Mathematical motivation:</b>
   ///
   /// the equation of the plane is given by: <br>
   /// @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
