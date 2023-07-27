@@ -68,12 +68,6 @@ struct SeedFinderConfig {
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
-  // cut on bottom SPs in a certain (r, eta) region of the detector for fast
-  // seeding
-  bool fastTrackingCut = false;
-  float fastTrackingRMin = 50. * Acts::UnitConstants::mm;
-  float fastTrackingCotThetaMax = 1.5;
-
   // use arithmetic average in the calculation of the squared error on the
   // difference in tan(theta)
   bool arithmeticAverageCotTheta = false;
@@ -175,6 +169,9 @@ struct SeedFinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getStripCenterDistance;
   // Returns position of the center of the top strip.
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
+
+  // Delegate to apply experiment specific cuts
+  Delegate<bool(float& bottomRadius, float& cotTheta)> experimentCuts;
 
   bool isInInternalUnits = false;
 

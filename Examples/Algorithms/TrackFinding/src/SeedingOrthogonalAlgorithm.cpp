@@ -64,6 +64,11 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     throw std::invalid_argument("Inconsistent config maxSeedsPerSpM");
   }
 
+  m_cfg.seedFinderConfig.experimentCuts.connect(
+      [](const void *, float & /*bottomRadius*/, float & /*cotTheta*/) -> bool {
+        return false;
+      });
+
   // construct seed filter
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(

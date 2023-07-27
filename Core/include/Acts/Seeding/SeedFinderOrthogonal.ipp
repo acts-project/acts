@@ -227,15 +227,12 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   }
 
   /*
-   * Cut: Ensure that inner SPs is in a certain (r, eta) region of the detector
-   * for fast seeding.
+   * Cut: Ensure that inner-middle dublet is in a certain (r, eta) region of the
+   * detector according to detector specific cuts.
    */
-  if (m_config.fastTrackingCut) {
-    const float rInner = (isMiddleInverted) ? rH : rL;
-    if (rInner < m_config.fastTrackingRMin and
-        std::fabs(cotTheta) > m_config.fastTrackingCotThetaMax) {
-      return false;
-    }
+  const float rInner = (isMiddleInverted) ? rH : rL;
+  if (!config.experimentCuts(rInner, cotTheta)) {
+    continue;
   }
 
   return true;

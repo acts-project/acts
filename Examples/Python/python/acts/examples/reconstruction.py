@@ -48,9 +48,6 @@ SeedFinderConfigArg = namedtuple(
         "seedConfirmation",
         "centralSeedConfirmationRange",
         "forwardSeedConfirmationRange",
-        "fastTrackingCut",
-        "fastTrackingRMin",
-        "fastTrackingCotThetaMax",
         "deltaR",  # (min,max)
         "deltaRBottomSP",  # (min,max)
         "deltaRTopSP",  # (min,max)
@@ -60,7 +57,7 @@ SeedFinderConfigArg = namedtuple(
         "z",  # (min,max)
         "zOutermostLayers",  # (min,max)
     ],
-    defaults=[None] * 23 + [(None, None)] * 8,
+    defaults=[None] * 20 + [(None, None)] * 8,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -206,7 +203,7 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, skipZMiddleBinSearch, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, fastTrackingCut, fastTrackingRMin, fastTrackingCotThetaMax, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, skipZMiddleBinSearch, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
@@ -556,9 +553,6 @@ def addStandardSeeding(
             seedConfirmation=seedFinderConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
-            fastTrackingCut=seedFinderConfigArg.fastTrackingCut,
-            fastTrackingRMin=seedFinderConfigArg.fastTrackingRMin,
-            fastTrackingCotThetaMax=seedFinderConfigArg.fastTrackingCotThetaMax,
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(
@@ -709,9 +703,6 @@ def addOrthogonalSeeding(
             seedConfirmation=seedFinderConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
-            fastTrackingCut=seedFinderConfigArg.fastTrackingCut,
-            fastTrackingRMin=seedFinderConfigArg.fastTrackingRMin,
-            fastTrackingCotThetaMax=seedFinderConfigArg.fastTrackingCotThetaMax,
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(

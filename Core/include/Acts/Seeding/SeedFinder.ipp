@@ -371,13 +371,10 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         const float iDeltaR = std::sqrt(iDeltaR2);
         const float cotTheta = deltaZ * iDeltaR;
 
-        // cut on bottom SPs in a certain (r, eta) region of the detector for
-        // fast seeding
+        // discard bottom-middle dublets in a certain (r, eta) region according
+        // to detector specific cuts
         if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
-          if (m_config.fastTrackingCut and
-              otherSP->radius() < m_config.fastTrackingRMin and
-              (cotTheta > m_config.fastTrackingCotThetaMax or
-               cotTheta < -m_config.fastTrackingCotThetaMax)) {
+          if (!config.experimentCuts(otherSP->radius(), cotTheta)) {
             continue;
           }
         }
@@ -423,13 +420,10 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float iDeltaR = std::sqrt(iDeltaR2);
       const float cotTheta = deltaZ * iDeltaR;
 
-      // cut on bottom SPs in a certain (r, eta) region of the detector for
-      // fast seeding
+      // discard bottom-middle dublets in a certain (r, eta) region according to
+      // detector specific cuts
       if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
-        if (m_config.fastTrackingCut and
-            otherSP->radius() < m_config.fastTrackingRMin and
-            (cotTheta > m_config.fastTrackingCotThetaMax or
-             cotTheta < -m_config.fastTrackingCotThetaMax)) {
+        if (!config.experimentCuts(otherSP->radius(), cotTheta)) {
           continue;
         }
       }
