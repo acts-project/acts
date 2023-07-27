@@ -11,8 +11,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
-// System include(s).
 #include <cstddef>
+#include <cstdint>
+#include <stdexcept>
 
 namespace Acts {
 struct SeedFilterConfig {
