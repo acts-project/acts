@@ -183,10 +183,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     if (spPhi > phiMax || spPhi < phiMin) {
       continue;
     }
-    // discard SPs according to detector specific cuts
-    if (!config.experimentCuts(spX, spY, spZ)) {
-      continue;
-    }
 
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
         counter, sp, spPosition, options.beamPos, variance);
