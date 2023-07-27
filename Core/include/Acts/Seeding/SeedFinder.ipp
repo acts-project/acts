@@ -360,14 +360,16 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // interactionPointCut == true we apply this cut first cuts before
       // coordinate transformation to avoid unnecessary calculations
       if (std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        const float cotTheta = deltaZ * iDeltaR;
-
         // check if duplet cotTheta is within the region of interest
-        if (cotTheta > m_config.cotThetaMax or
-            cotTheta < -m_config.cotThetaMax) {
+        // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+        // cotThetaMax by deltaR to avoid division
+        if (deltaZ > m_config.cotThetaMax * deltaR or
+            deltaZ < -m_config.cotThetaMax * deltaR) {
           continue;
         }
+
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        const float cotTheta = deltaZ * iDeltaR;
 
         // cut on bottom SPs in a certain (r, eta) region of the detector for
         // fast seeding
@@ -410,13 +412,16 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
-      const float iDeltaR = std::sqrt(iDeltaR2);
-      const float cotTheta = deltaZ * iDeltaR;
-
       // check if duplet cotTheta is within the region of interest
-      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+      // cotTheta is defined as (deltaZ / deltaR) but instead we multiply
+      // cotThetaMax by deltaR to avoid division
+      if (deltaZ > m_config.cotThetaMax * deltaR or
+          deltaZ < -m_config.cotThetaMax * deltaR) {
         continue;
       }
+
+      const float iDeltaR = std::sqrt(iDeltaR2);
+      const float cotTheta = deltaZ * iDeltaR;
 
       // cut on bottom SPs in a certain (r, eta) region of the detector for
       // fast seeding
