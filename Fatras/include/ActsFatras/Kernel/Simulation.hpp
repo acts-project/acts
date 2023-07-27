@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -92,7 +92,7 @@ struct SingleParticleSimulation {
     actor.selectHitSurface = selectHitSurface;
     actor.initialParticle = particle;
     // use AnyCharge to be able to handle neutral and charged parameters
-    Acts::SingleCurvilinearTrackParameters<Acts::AnyCharge> start(
+    Acts::GenericCurvilinearTrackParameters<Acts::AnyCharge> start(
         particle.fourPosition(), particle.direction(),
         particle.absoluteMomentum(), particle.charge());
     auto result = propagator.propagate(start, options);
