@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/Volume.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
@@ -27,7 +28,7 @@ class Direction;
 
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
-using OrientedSurface = std::pair<std::shared_ptr<Surface>, Direction>;
+using OrientedSurface = std::pair<std::shared_ptr<RegularSurface>, Direction>;
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces

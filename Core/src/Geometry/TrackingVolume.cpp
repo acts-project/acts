@@ -17,6 +17,7 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Frustum.hpp"
@@ -263,7 +264,8 @@ void Acts::TrackingVolume::assignBoundaryMaterial(
     std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
     BoundarySurfaceFace bsFace) {
   auto bSurface = m_boundarySurfaces.at(bsFace);
-  Surface* surface = const_cast<Surface*>(&bSurface->surfaceRepresentation());
+  RegularSurface* surface =
+      const_cast<RegularSurface*>(&bSurface->surfaceRepresentation());
   surface->assignSurfaceMaterial(std::move(surfaceMaterial));
 }
 
@@ -277,7 +279,8 @@ void Acts::TrackingVolume::updateBoundarySurface(
                             .surfaceMaterialSharedPtr();
     auto bsMaterial = bs->surfaceRepresentation().surfaceMaterial();
     if (cMaterialPtr != nullptr && bsMaterial == nullptr) {
-      Surface* surface = const_cast<Surface*>(&bs->surfaceRepresentation());
+      RegularSurface* surface =
+          const_cast<RegularSurface*>(&bs->surfaceRepresentation());
       surface->assignSurfaceMaterial(cMaterialPtr);
     }
   }
@@ -399,7 +402,7 @@ void Acts::TrackingVolume::closeGeometry(
     // create the boundary surface id
     auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
     // now assign to the boundary surface
-    auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
+    auto& mutableBSurface = *(const_cast<RegularSurface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
     // Assign material if you have a decorator
     if (materialDecorator != nullptr) {
@@ -431,7 +434,8 @@ void Acts::TrackingVolume::closeGeometry(
           const auto& bndSrf = avol->boundarySurfaces();
           for (const auto& bnd : bndSrf) {
             const auto& srf = bnd->surfaceRepresentation();
-            Surface* mutableSurfcePtr = const_cast<Surface*>(&srf);
+            RegularSurface* mutableSurfcePtr =
+                const_cast<RegularSurface*>(&srf);
             auto geoID = GeometryIdentifier(volumeID).setSensitive(++isurface);
             mutableSurfcePtr->assignGeometryId(geoID);
           }

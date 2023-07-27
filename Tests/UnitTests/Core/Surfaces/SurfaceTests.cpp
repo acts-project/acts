@@ -114,9 +114,9 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
       tgContext, reference, mom);  // need more complex case to test
   BOOST_CHECK_EQUAL(referenceFrame, unitary);
   // normal()
-  auto normal = surface.Surface::normal(tgContext,
-                                        reference);  // needs more complex
-                                                     // test
+  auto normal = surface.normal(tgContext, reference,
+                               Vector3::UnitZ());  // needs more
+                                                   // complex test
   Vector3 zero{0., 0., 0.};
   BOOST_CHECK_EQUAL(zero, normal);
   // pathCorrection is pure virtual
