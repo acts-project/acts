@@ -497,26 +497,32 @@ class CombinatorialKalmanFilter {
               }
               result.smoothed = true;
             }
+
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
-            if (result.smoothed and targetReached(state, stepper, navigator,
-                                                  *targetSurface, logger())) {
+            if (result.smoothed and (targetSurface == nullptr or
+                                     targetReached(state, stepper, navigator,
+                                                   *targetSurface, logger()))) {
               ACTS_VERBOSE(
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
-              // Transport & bind the parameter to the final surface
-              auto res = stepper.boundState(state.stepping, *targetSurface);
-              if (!res.ok()) {
-                ACTS_ERROR("Error in finalize: " << res.error());
-                result.result = res.error();
-                return;
+
+              if (targetSurface != nullptr) {
+                // Transport & bind the parameter to the final surface
+                auto res = stepper.boundState(state.stepping, *targetSurface);
+                if (!res.ok()) {
+                  ACTS_ERROR("Error in finalize: " << res.error());
+                  result.result = res.error();
+                  return;
+                }
+
+                auto fittedState = *res;
+                // Assign the fitted parameters
+                result.fittedParameters.emplace(
+                    result.lastMeasurementIndices.at(result.iSmoothed),
+                    std::get<BoundTrackParameters>(fittedState));
               }
 
-              auto fittedState = *res;
-              // Assign the fitted parameters
-              result.fittedParameters.emplace(
-                  result.lastMeasurementIndices.at(result.iSmoothed),
-                  std::get<BoundTrackParameters>(fittedState));
               // If there are more trajectories to handle:
               // -> set the targetReached status to false
               // -> set the smoothed status to false
