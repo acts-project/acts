@@ -298,7 +298,9 @@ def buildITkGeometry(
     )
 
 
-def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=False):
+def itkSeedingAlgConfig(
+    inputSpacePointsType: InputSpacePointsType, highOccupancyConfig=False
+):
     assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
     # variables that do not change for pixel and strip SPs:
@@ -441,11 +443,11 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
 
-        if fastSeeding == True:
+        if highOccupancyConfig == True:
             rMaxGridConfig = 250 * u.mm
             deltaRMax = 200 * u.mm
             zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
-            # variables that are only used for fast tracking:
+            # variables that are only used for highOccupancyConfig configuration:
             skipZMiddleBinSearch = 2
 
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
@@ -500,7 +502,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType, fastSeeding=
         maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
 
-    if fastSeeding == True:
+    if highOccupancyConfig == True:
         minPt = 1000 * u.MeV
         collisionRegionMin = -150 * u.mm
         collisionRegionMax = 150 * u.mm
