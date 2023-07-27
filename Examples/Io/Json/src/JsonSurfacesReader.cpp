@@ -44,7 +44,7 @@ JsonSurfacesReader::read(const JsonSurfacesReader::Options& options) {
     // Decode the surface identifier
     Acts::GeometryIdentifier geoId =
         GeometryIdHelper::decodeIdentifier(jSurface);
-    auto surface = Acts::surfaceFromJson(jSurface["value"]);
+    auto surface = Acts::SurfaceJsonConverter::fromJson(jSurface["value"]);
     surfaceElements.emplace_back(geoId, surface);
   }
   return SurfaceHierachyMap(std::move(surfaceElements));

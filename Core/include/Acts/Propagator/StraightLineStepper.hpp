@@ -79,7 +79,7 @@ class StraightLineStepper {
                    double stolerance = s_onSurfaceTolerance)
         : absCharge(std::abs(par.charge())),
           navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           tolerance(stolerance),
           geoContext(gctx) {
       (void)mctx;
@@ -395,7 +395,7 @@ class StraightLineStepper {
   Result<double> step(propagator_state_t& state,
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
-    const auto h = state.stepping.stepSize.value();
+    const auto h = state.stepping.stepSize.value() * state.stepping.navDir;
     const double p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);

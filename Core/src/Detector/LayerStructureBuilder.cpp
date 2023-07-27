@@ -51,15 +51,19 @@ namespace {
 template <Acts::detail::AxisBoundaryType aType>
 Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
     const Acts::GeometryContext& gctx,
-    const std::vector<std::shared_ptr<Acts::Surface>>& lSurfaces,
-    const std::vector<size_t>& assignToAll,
+    std::vector<std::shared_ptr<Acts::Surface>> lSurfaces,
+    std::vector<size_t> assignToAll,
     const Acts::Experimental::ProtoBinning& binning) {
   // The surface candidate updator & a generator for polyhedrons
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
-  Acts::Experimental::detail::IndexedSurfacesGenerator<decltype(lSurfaces)> isg{
-      lSurfaces, assignToAll, {binning.binValue}, {binning.expansion}};
+  Acts::Experimental::detail::IndexedSurfacesGenerator<
+      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
+      isg{std::move(lSurfaces),
+          std::move(assignToAll),
+          {binning.binValue},
+          {binning.expansion}};
   if (binning.axisType == Acts::detail::AxisType::Equidistant) {
     // Equidistant
     Acts::Experimental::detail::GridAxisGenerators::Eq<aType> aGenerator{
@@ -98,11 +102,12 @@ Acts::Experimental::SurfaceCandidatesUpdator createUpdator(
   Acts::Experimental::SurfaceCandidatesUpdator sfCandidates;
   Acts::Experimental::detail::PolyhedronReferenceGenerator rGenerator;
   // Indexed Surface generator for this case
-  Acts::Experimental::detail::IndexedSurfacesGenerator<decltype(lSurfaces)> isg{
-      lSurfaces,
-      assignToAll,
-      {aBinning.binValue, bBinning.binValue},
-      {aBinning.expansion, bBinning.expansion}};
+  Acts::Experimental::detail::IndexedSurfacesGenerator<
+      decltype(lSurfaces), Acts::Experimental::IndexedSurfacesImpl>
+      isg{lSurfaces,
+          assignToAll,
+          {aBinning.binValue, bBinning.binValue},
+          {aBinning.expansion, bBinning.expansion}};
   // Run through the cases
   if (aBinning.axisType == Acts::detail::AxisType::Equidistant and
       bBinning.axisType == Acts::detail::AxisType::Equidistant) {
@@ -204,10 +209,12 @@ Acts::Experimental::LayerStructureBuilder::construct(
     // Capture the binning
     auto binning = m_cfg.binnings[0u];
     if (binning.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+      ACTS_VERBOSE("-- closed binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Closed>(
               gctx, internalSurfaces, assignToAll, binning);
     } else {
+      ACTS_VERBOSE("-- closed binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound>(
               gctx, internalSurfaces, assignToAll, binning);
@@ -219,17 +226,20 @@ Acts::Experimental::LayerStructureBuilder::construct(
     const auto& binning1 = m_cfg.binnings[1u];
 
     if (binning0.boundaryType == Acts::detail::AxisBoundaryType::Closed) {
+      ACTS_VERBOSE("-- closed/bound binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Closed,
                         Acts::detail::AxisBoundaryType::Bound>(
               gctx, internalSurfaces, assignToAll, binning0, binning1);
     } else if (binning1.boundaryType ==
                Acts::detail::AxisBoundaryType::Closed) {
+      ACTS_VERBOSE("-- bound/closed binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound,
                         Acts::detail::AxisBoundaryType::Closed>(
               gctx, internalSurfaces, assignToAll, binning0, binning1);
     } else {
+      ACTS_VERBOSE("-- closed/closed binning option.");
       internalCandidatesUpdator =
           createUpdator<Acts::detail::AxisBoundaryType::Bound,
                         Acts::detail::AxisBoundaryType::Bound>(

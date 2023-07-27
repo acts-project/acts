@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   BOOST_CHECK_EQUAL(state.pVector[7], charge / absMom);
   BOOST_CHECK_EQUAL(state.navDir, navDir);
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(state.tolerance, tolerance);
 }
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   BOOST_CHECK_EQUAL(state.pVector[7], charge / absMom);
   BOOST_CHECK_EQUAL(state.navDir, navDir);
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(state.tolerance, tolerance);
 }
@@ -286,8 +286,8 @@ BOOST_AUTO_TEST_CASE(Step) {
 
   // extract the actual step size
   auto h = res.value();
-  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h * navDir);
 
   // check that the position has moved
   auto deltaPos = (stepper.position(state.stepping) - pos).eval();
@@ -319,8 +319,8 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 
   // extract the actual step size
   auto h = res.value();
-  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h * navDir);
 
   // check that the position has moved
   auto deltaPos = (stepper.position(state.stepping) - pos).eval();
@@ -551,12 +551,12 @@ BOOST_AUTO_TEST_CASE(StepSize) {
   // TODO figure out why this fails and what it should be
   // BOOST_CHECK_EQUAL(stepper.overstepLimit(state), tolerance);
 
-  stepper.setStepSize(state, 5_cm);
-  BOOST_CHECK_EQUAL(state.previousStepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), 5_cm);
+  stepper.setStepSize(state, -5_cm);
+  BOOST_CHECK_EQUAL(state.previousStepSize, stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), -5_cm);
 
   stepper.releaseStepSize(state);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), stepSize);
 }
 
 // test step size modification with target surfaces
@@ -572,8 +572,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       pos + navDir * distance * unitDir, unitDir);
 
   stepper.updateSurfaceStatus(state, *target, BoundaryCheck(false));
-  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor),
-                    navDir * distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value(ConstrainedStep::actor), distance);
 
   // test the step size modification in the context of a surface
   stepper.updateStepSize(
@@ -590,7 +589,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),
       true);
-  BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
