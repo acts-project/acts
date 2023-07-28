@@ -12,6 +12,7 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
