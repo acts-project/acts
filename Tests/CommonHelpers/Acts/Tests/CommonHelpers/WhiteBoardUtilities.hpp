@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,19 +19,19 @@ struct DummySequenceElement : public ActsExamples::SequenceElement {
   ActsExamples::ProcessCode initialize() override { return {}; };
   ActsExamples::ProcessCode finalize() override { return {}; };
   ActsExamples::ProcessCode internalExecute(
-      const ActsExamples::AlgorithmContext &/*context*/) override {
+      const ActsExamples::AlgorithmContext & /*context*/) override {
     return {};
   };
   std::string name() const override { return {}; };
 };
 
 template <typename T>
-void addToWhiteBoard(std::string name, T &&data, ActsExamples::WhiteBoard &wb) {
+void addToWhiteBoard(std::string name, T data, ActsExamples::WhiteBoard &wb) {
   DummySequenceElement dummyElement;
 
   ActsExamples::WriteDataHandle<T> handle(&dummyElement, name + "handle");
   handle.initialize(name);
-  handle(wb, std::forward<T>(data));
+  handle(wb, std::move(data));
 }
 
 template <typename T>
@@ -65,9 +65,9 @@ struct GenericReadWriteTool {
   }
 
   template <typename writer_t>
-  auto write(typename writer_t::Config cfg) {
+  auto write(writer_t &writer, std::size_t eventId = 0) {
     ActsExamples::WhiteBoard board;
-    ActsExamples::AlgorithmContext ctx(0, 0, board);
+    ActsExamples::AlgorithmContext ctx(0, eventId, board);
 
     auto add = [&](auto &self, auto N) {
       if constexpr (N() < kSize) {
@@ -78,19 +78,15 @@ struct GenericReadWriteTool {
 
     add(add, std::integral_constant<std::size_t, 0>{});
 
-    writer_t writer(cfg, Acts::Logging::Level::WARNING);
     writer.internalExecute(ctx);
-    writer.finalize();
   }
 
   template <typename reader_t>
-  auto read(typename reader_t::Config cfg) {
+  auto read(reader_t &reader, std::size_t eventId = 0) {
     ActsExamples::WhiteBoard board;
-    ActsExamples::AlgorithmContext ctx(0, 0, board);
+    ActsExamples::AlgorithmContext ctx(0, eventId, board);
 
-    reader_t reader(cfg, Acts::Logging::Level::WARNING);
     reader.internalExecute(ctx);
-    reader.finalize();
 
     auto get = [&](auto &self, auto res, auto N) {
       if constexpr (N() < kSize) {
