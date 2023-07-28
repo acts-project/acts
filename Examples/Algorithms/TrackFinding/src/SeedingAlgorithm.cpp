@@ -206,8 +206,8 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   m_cfg.seedFinderConfig.experimentCuts.connect(
-      [](const void*, const float& /*bottomRadius*/,
-         const float& /*cotTheta*/) -> bool { return false; });
+      [](const void*, const float /*bottomRadius*/,
+         const float /*cotTheta*/) -> bool { return false; });
 
   m_bottomBinFinder = std::make_shared<const Acts::BinFinder<SimSpacePoint>>(
       m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);
