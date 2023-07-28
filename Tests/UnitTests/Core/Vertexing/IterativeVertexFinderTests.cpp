@@ -264,10 +264,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     // find vertices
     auto res = finder.find(tracksPtr, vertexingOptions, state);
 
-    BOOST_CHECK(res.ok());
-
     if (!res.ok()) {
-      std::cout << res.error().message() << std::endl;
+      BOOST_FAIL(res.error().message());
     }
 
     // Retrieve vertices found by vertex finder
@@ -482,10 +480,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // find vertices
     auto res = finder.find(tracksPtr, vertexingOptionsUT, state);
 
-    BOOST_CHECK(res.ok());
-
     if (!res.ok()) {
-      std::cout << res.error().message() << std::endl;
+      BOOST_FAIL(res.error().message());
     }
 
     // Retrieve vertices found by vertex finder

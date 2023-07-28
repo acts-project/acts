@@ -111,10 +111,10 @@ BOOST_AUTO_TEST_CASE(SurfaceProperties) {
   RotationMatrix3 unitary;
   unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
   auto referenceFrame = surface.referenceFrame(
-      tgContext, reference, mom);  // need more complex case to test
+      tgContext, Vector3{1, 2, 3}, mom);  // need more complex case to test
   BOOST_CHECK_EQUAL(referenceFrame, unitary);
   // normal()
-  auto normal = surface.normal(tgContext, reference,
+  auto normal = surface.normal(tgContext, Vector3{1, 2, 3},
                                Vector3::UnitZ());  // needs more
                                                    // complex test
   Vector3 zero{0., 0., 0.};

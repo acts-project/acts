@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 namespace Acts {
 
@@ -39,7 +40,9 @@ class RegularSurface : public Surface {
   ///
   /// @return normal vector by value
   virtual Vector3 normal(const GeometryContext& gctx,
-                         const Vector3& /*position*/) const {
+                         const Vector3& position) const {
+    throw_assert(isOnSurface(gctx, position, Vector3::Zero(), false),
+                 "Not on surface");
     return normal(gctx, Vector2{Vector2::Zero()});
   }
 
@@ -55,7 +58,8 @@ class RegularSurface : public Surface {
   }
 
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
-                 const Vector3& /*direction*/) const override {
+                 const Vector3& direction) const override {
+    throw_assert(isOnSurface(gctx, pos, direction, false), "Not on surface");
     return normal(gctx, pos);
   };
 };
