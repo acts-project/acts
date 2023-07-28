@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTest) {
   RootSimHitWriter writer(writerConfig, Acts::Logging::WARNING);
 
   auto readWriteTool =
-      GenericReadWriteTool().add(writerConfig.inputSimHits, simhits1);
+      GenericReadWriteTool<>().add(writerConfig.inputSimHits, simhits1);
 
   // Write two different events
   readWriteTool.write(writer, 11);

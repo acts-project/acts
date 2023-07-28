@@ -87,10 +87,6 @@ class RootSimHitReader : public IReader {
   /// The input tree name
   TChain *m_inputChain = nullptr;
 
-  /// The entry numbers for accessing events in increased order (there could be
-  /// multiple entries corresponding to one event number)
-  std::vector<long long> m_entryNumbers = {};
-
   /// The keys we have in the ROOT file
   constexpr static std::array<const char *, 12> m_floatKeys = {
       "tx",  "ty", "tz",      "tt",      "tpx",     "tpy",
