@@ -14,8 +14,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -45,14 +44,14 @@ namespace {
 namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using AnyBoundTrackParameters = SingleBoundTrackParameters<AnyCharge>;
+using AnyBoundTrackParameters = GenericBoundTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const BoundSymMatrix cov = BoundSymMatrix::Identity();
 
 template <typename charge_t>
-void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
+void checkParameters(const GenericBoundTrackParameters<charge_t>& params,
                      double l0, double l1, double time, double phi,
                      double theta, double p, double q, const Vector3& pos,
                      const Vector3& unitDir) {
