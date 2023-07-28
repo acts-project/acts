@@ -81,13 +81,12 @@ int main(int argc, char** argv) {
   bool do_cpu(true);
   int nGroupToIterate = 500;
   int skip = 0;
-  int skipZBin = 0;
   int deviceID = 0;
   int nTrplPerSpBLimit = 100;
   int nAvgTrplPerSpBLimit = 2;
 
   int opt;
-  while ((opt = getopt(argc, argv, "haf:n:s:z:d:l:m:qG")) != -1) {
+  while ((opt = getopt(argc, argv, "haf:n:s:d:l:m:qG")) != -1) {
     switch (opt) {
       case 'a':
         allgroup = true;
@@ -100,9 +99,6 @@ int main(int argc, char** argv) {
         break;
       case 's':
         skip = atoi(optarg);
-        break;
-      case 'z':
-        skipZBin = atoi(optarg);
         break;
       case 'd':
         deviceID = atoi(optarg);
@@ -137,9 +133,6 @@ int main(int argc, char** argv) {
           std::cout << "      -s SKIP  : Number of groups to skip in seed "
                        "finding. Default is "
                     << skip << std::endl;
-          std::cout << "      -z SKIPZ  : Number of z bins to skip in seed "
-                       "finding. Default is "
-                    << skipZBin << std::endl;
           std::cout << "      -d DEVID : NVIDIA GPU device ID. Default is "
                     << deviceID << std::endl;
           std::cout << "      -l : A limit on the average number of triplets "
@@ -269,8 +262,7 @@ int main(int argc, char** argv) {
   auto start_cpu = std::chrono::system_clock::now();
 
   int group_count;
-  auto groupIt =
-      Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip, skipZBin);
+  auto groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip);
 
   //----------- CPU ----------//
   group_count = 0;
@@ -306,7 +298,7 @@ int main(int argc, char** argv) {
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
-  groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip, skipZBin);
+  groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip);
 
   Acts::SpacePointData spacePointData;
   spacePointData.resize(spVec.size());
