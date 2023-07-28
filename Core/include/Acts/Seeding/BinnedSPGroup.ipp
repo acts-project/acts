@@ -12,13 +12,10 @@
 
 template <typename external_spacepoint_t>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
-    Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index,
-    std::size_t skipZMiddleBin)
-    : m_group(group),
-      m_max_localBins(m_group->m_grid->numLocalBins()),
-      m_skipZMiddleBin(skipZMiddleBin) {
+    Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index)
+    : m_group(group), m_max_localBins(m_group->m_grid->numLocalBins()) {
   m_max_localBins[INDEX::PHI] += 1;
-  m_current_localBins[INDEX::Z] = m_skipZMiddleBin;
+  m_current_localBins[INDEX::Z] = m_group->skipZMiddleBin();
   if (index == m_group->m_grid->size()) {
     m_current_localBins = m_max_localBins;
   } else {
@@ -34,7 +31,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
   // if we were on the edge, go up one phi bin and reset z bin
   if (++m_current_localBins[INDEX::Z] == m_max_localBins[INDEX::Z]) {
     ++m_current_localBins[INDEX::PHI];
-    m_current_localBins[INDEX::Z] = m_skipZMiddleBin;
+    m_current_localBins[INDEX::Z] = m_group->skipZMiddleBin();
   }
 
   // Get the next not-empty bin in the grid
@@ -109,7 +106,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
       return;
     }
     // Reset z-index
-    m_current_localBins[INDEX::Z] = m_skipZMiddleBin;
+    m_current_localBins[INDEX::Z] = m_group->skipZMiddleBin();
   }
 
   // Could find nothing ... setting this to end()
@@ -242,11 +239,11 @@ inline size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::begin() {
-  return {*this, 0, m_skipZMiddleBin};
+  return {*this, 0};
 }
 
 template <typename external_spacepoint_t>
 inline Acts::BinnedSPGroupIterator<external_spacepoint_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::end() {
-  return {*this, m_grid->size(), 0};
+  return {*this, m_grid->size()};
 }
