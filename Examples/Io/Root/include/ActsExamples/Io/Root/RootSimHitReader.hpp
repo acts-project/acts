@@ -104,8 +104,8 @@ class RootSimHitReader : public IReader {
 
   std::unordered_map<std::string_view, float> m_floatColumns;
   std::unordered_map<std::string_view, unsigned long long> m_uint64Columns;
-  std::unordered_map<std::string_view, uint32_t> m_uint32Columns;
-  std::unordered_map<std::string_view, int32_t> m_int32Columns;
+  std::unordered_map<std::string_view, std::uint32_t> m_uint32Columns;
+  std::unordered_map<std::string_view, std::int32_t> m_int32Columns;
 };
 
 }  // namespace ActsExamples

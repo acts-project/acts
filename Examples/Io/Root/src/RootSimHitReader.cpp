@@ -83,7 +83,7 @@ ActsExamples::RootSimHitReader::RootSimHitReader(
 
     if (evtId != std::get<0>(m_eventMap.back())) {
       std::get<2>(m_eventMap.back()) = i;
-      m_eventMap.push_back({evtId, i, 0ul});
+      m_eventMap.push_back({evtId, i, i});
     }
   }
 
