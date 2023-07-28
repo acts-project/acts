@@ -113,7 +113,9 @@ class BinnedSPGroup {
     return *m_grid.get();
   }
 
-  std::size_t skipZMiddleBin() { return m_skipZMiddleBin; }
+  std::size_t skipZMiddleBin() {
+    return m_skipZMiddleBin;
+  }
 
  private:
   // grid with ownership of all InternalSpacePoint
