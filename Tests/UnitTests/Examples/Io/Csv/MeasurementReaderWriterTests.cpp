@@ -93,15 +93,28 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
     mapOriginal.insert(std::pair<Index, Index>{i, disti(gen)});
   }
 
-  //////////////////
-  // Write & Read //
-  //////////////////
+  ///////////
+  // Write //
+  ///////////
   CsvMeasurementWriter::Config writerConfig;
   writerConfig.inputClusters = "clusters";
   writerConfig.inputMeasurements = "meas";
   writerConfig.inputMeasurementSimHitsMap = "map";
   writerConfig.outputDir = "";
 
+  CsvMeasurementWriter writer(writerConfig, Acts::Logging::WARNING);
+
+  auto writeTool =
+      GenericReadWriteTool<>()
+          .add(writerConfig.inputMeasurements, measOriginal)
+          .add(writerConfig.inputClusters, clusterOriginal)
+          .add(writerConfig.inputMeasurementSimHitsMap, mapOriginal);
+
+  writeTool.write(writer);
+
+  //////////////////
+  // Write & Read //
+  //////////////////
   CsvMeasurementReader::Config readerConfig;
   readerConfig.inputDir = writerConfig.outputDir;
   readerConfig.outputMeasurements = writerConfig.inputMeasurements;
@@ -110,19 +123,13 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
   readerConfig.outputClusters = writerConfig.inputClusters;
   readerConfig.outputSourceLinks = "sourcelinks";
 
-  auto writeTool =
-      GenericReadWriteTool()
-          .add(writerConfig.inputMeasurements, measOriginal)
-          .add(writerConfig.inputClusters, clusterOriginal)
-          .add(writerConfig.inputMeasurementSimHitsMap, mapOriginal);
-
-  writeTool.write<CsvMeasurementWriter>(writerConfig);
+  CsvMeasurementReader reader(readerConfig, Acts::Logging::WARNING);
 
   auto readTool =
       writeTool.add(readerConfig.outputSourceLinks, sourceLinksOriginal);
 
   const auto [measRead, clusterRead, mapRead, sourceLinksRead] =
-      readTool.read<CsvMeasurementReader>(readerConfig);
+      readTool.read(reader);
 
   ///////////
   // Check //
