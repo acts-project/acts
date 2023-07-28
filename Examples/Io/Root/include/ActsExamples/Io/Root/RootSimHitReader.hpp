@@ -103,9 +103,12 @@ class RootSimHitReader : public IReader {
   constexpr static std::array<const char *, 1> m_int32Keys = {"index"};
 
   std::unordered_map<std::string_view, float> m_floatColumns;
-  std::unordered_map<std::string_view, unsigned long long> m_uint64Columns;
   std::unordered_map<std::string_view, std::uint32_t> m_uint32Columns;
   std::unordered_map<std::string_view, std::int32_t> m_int32Columns;
+
+  // For some reason I need to use here `unsigned long long` instead of
+  // `uint64_t` to prevent a internal ROOT type mismatch...
+  std::unordered_map<std::string_view, unsigned long long> m_uint64Columns;
 };
 
 }  // namespace ActsExamples
