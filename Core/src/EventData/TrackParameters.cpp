@@ -12,15 +12,17 @@
 
 namespace Acts {
 
-// explicitly instantiate templates
-template class SingleBoundTrackParameters<SinglyCharged>;
-template class SingleCurvilinearTrackParameters<SinglyCharged>;
-template class SingleFreeTrackParameters<SinglyCharged>;
-
 // ensure concrete classes satisfy the concepts
+
 static_assert(Concepts::BoundTrackParametersConcept<BoundTrackParameters>);
 static_assert(
     Concepts::BoundTrackParametersConcept<CurvilinearTrackParameters>);
 static_assert(Concepts::FreeTrackParametersConcept<FreeTrackParameters>);
+
+static_assert(
+    Concepts::BoundTrackParametersConcept<NeutralBoundTrackParameters>);
+static_assert(
+    Concepts::BoundTrackParametersConcept<NeutralCurvilinearTrackParameters>);
+static_assert(Concepts::FreeTrackParametersConcept<NeutralFreeTrackParameters>);
 
 }  // namespace Acts
