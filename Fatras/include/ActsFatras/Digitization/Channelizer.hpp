@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 
 #include <array>
+#include <utility>
 #include <vector>
 
 namespace Acts {

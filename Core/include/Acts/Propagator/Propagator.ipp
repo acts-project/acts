@@ -146,8 +146,7 @@ auto Acts::Propagator<S, N>::propagate(
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.direction, eOptions.maxStepSize,
-                          eOptions.tolerance),
+                          eOptions.direction, eOptions.maxStepSize),
       m_navigator.makeState(&start.referenceSurface(), nullptr)};
 
   static_assert(
@@ -233,8 +232,7 @@ auto Acts::Propagator<S, N>::propagate(
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.direction, eOptions.maxStepSize,
-                          eOptions.tolerance),
+                          eOptions.direction, eOptions.maxStepSize),
       m_navigator.makeState(&start.referenceSurface(), &target)};
 
   static_assert(
@@ -243,7 +241,7 @@ auto Acts::Propagator<S, N>::propagate(
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
-  // Apply the loop protection, it resets the interal path limit
+  // Apply the loop protection, it resets the internal path limit
   detail::setupLoopProtection(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
       logger());

@@ -18,7 +18,7 @@
 
 namespace Acts {
 
-/// This class is only a light wrapper arround a surface and a vector of
+/// This class is only a light wrapper around a surface and a vector of
 /// parameters. Its main purpose is to provide many constructors for the
 /// underlying vector. Most accessors are generated from the
 /// SingleBoundTrackParameters equivalent and thus may be expensive
@@ -110,7 +110,7 @@ class MultiComponentBoundTrackParameters {
   /// @param cov Bound parameters covariance matrix
   ///
   /// In principle, only the charge magnitude is needed her to allow
-  /// unambigous extraction of the absolute momentum. The particle charge is
+  /// unambiguous extraction of the absolute momentum. The particle charge is
   /// required as an input here to be consistent with the other constructors
   /// below that that also take the charge as an input. The charge sign is
   /// only used in debug builds to check for consistency with the q/p

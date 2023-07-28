@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Direction.hpp"
 
 #include <algorithm>
 #include <array>
@@ -21,7 +20,11 @@
 
 namespace Acts {
 
-/// A constrained step class for the steppers
+/// A constrained step class for the steppers.
+///
+/// This class is symmetrical for forward and backward propagation. The sign of
+/// the propagation direction should not enter here but rather be applied the
+/// step is actually taken.
 ///
 /// As simple as this class looks it hides a few very important details:
 /// - Overstepping handling. The step size sign will flip if we happened to pass
@@ -30,9 +33,8 @@ namespace Acts {
 /// order to converge on a target.
 ///
 /// Because of the points mentioned above, the update function will always
-/// prefer step sizes that point opposite the nagivation direction. A side
-/// effect of this is that we will propagate in the opposite direction if the
-/// target is "behind us".
+/// prefer negative step sizes. A side effect of this is that we will propagate
+/// in the opposite direction if the target is "behind us".
 ///
 /// The hierarchy is:
 /// - Overstepping resolution / backpropagation
@@ -56,12 +58,8 @@ class ConstrainedStep {
   constexpr ConstrainedStep() = default;
 
   /// constructor from Scalar
-  /// navigation direction is inferred by the sign of the step size
   /// @param value is the user given initial value
-  constexpr explicit ConstrainedStep(Scalar value) {
-    m_values[user] = std::abs(value);
-    m_direction = Direction::fromScalar(value);
-  }
+  constexpr explicit ConstrainedStep(Scalar value) { m_values[user] = value; }
 
   /// set accuracy by one Scalar
   ///
@@ -71,7 +69,7 @@ class ConstrainedStep {
   /// @param value is the new accuracy value
   constexpr void setValue(Scalar value) {
     /// set the accuracy value
-    m_values[accuracy] = value * m_direction;
+    m_values[accuracy] = value;
   }
 
   /// returns the min step size
@@ -80,9 +78,7 @@ class ConstrainedStep {
   /// Access a specific value
   ///
   /// @param type is the requested parameter type
-  constexpr Scalar value(Type type) const {
-    return m_values[type] * m_direction;
-  }
+  constexpr Scalar value(Type type) const { return m_values[type]; }
 
   /// Access the currently leading type
   constexpr Type currentType() const {
@@ -109,14 +105,14 @@ class ConstrainedStep {
     }
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
-    if (std::abs(value) <= std::abs(m_values[type])) {
-      m_values[type] = value * m_direction;
+    if (std::abs(value) < std::abs(m_values[type])) {
+      m_values[type] = value;
     }
   }
 
   constexpr void scale(Scalar factor) {
     assert(factor > 0 && "ConstrainedStep scale factor was zero or negative.");
-    m_values[accuracy] = value() * factor * m_direction;
+    m_values[accuracy] = value() * factor;
   }
 
   std::ostream& toStream(std::ostream& os) const {
@@ -154,11 +150,7 @@ class ConstrainedStep {
   inline static constexpr auto kNotSet = std::numeric_limits<Scalar>::max();
 
   /// the step size tuple
-  /// all values point in the `m_direction`
   std::array<Scalar, 4> m_values = {kNotSet, kNotSet, kNotSet, kNotSet};
-  /// the navigation direction
-  /// the direction is invariant after initialization
-  Direction m_direction = Direction::Forward;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const ConstrainedStep& step) {

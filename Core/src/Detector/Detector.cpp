@@ -8,18 +8,18 @@
 
 #include "Acts/Detector/Detector.hpp"
 
-#include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/Portal.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <iterator>
+#include <stdexcept>
+#include <utility>
+
 Acts::Experimental::Detector::Detector(
-    const std::string& name,
-    std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    DetectorVolumeUpdator&& detectorVolumeUpdator)
-    : m_name(name),
+    std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
+    DetectorVolumeUpdator detectorVolumeUpdator)
+    : m_name(std::move(name)),
       m_rootVolumes(std::move(rootVolumes)),
       m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)) {
   if (m_rootVolumes.internal.empty()) {
@@ -66,11 +66,11 @@ Acts::Experimental::Detector::Detector(
 
 std::shared_ptr<Acts::Experimental::Detector>
 Acts::Experimental::Detector::makeShared(
-    const std::string& name,
-    std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-    DetectorVolumeUpdator&& detectorVolumeUpdator) {
-  return std::shared_ptr<Detector>(new Detector(
-      name, std::move(rootVolumes), std::move(detectorVolumeUpdator)));
+    std::string name, std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
+    DetectorVolumeUpdator detectorVolumeUpdator) {
+  return std::shared_ptr<Detector>(
+      new Detector(std::move(name), std::move(rootVolumes),
+                   std::move(detectorVolumeUpdator)));
 }
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
@@ -94,7 +94,7 @@ Acts::Experimental::Detector::volumes() const {
 }
 
 void Acts::Experimental::Detector::updateDetectorVolumeFinder(
-    DetectorVolumeUpdator&& detectorVolumeUpdator) {
+    DetectorVolumeUpdator detectorVolumeUpdator) {
   m_detectorVolumeUpdator = std::move(detectorVolumeUpdator);
 }
 

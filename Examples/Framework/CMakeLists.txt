@@ -1,5 +1,8 @@
 include(ActsTargetLinkLibrariesSystem)
 
+set(ActsExamplesFramework_SOURCES)
+
+
 add_library(
   ActsExamplesFramework SHARED
   src/EventData/MeasurementCalibration.cpp
@@ -19,13 +22,14 @@ add_library(
   src/Validation/ResPlotTool.cpp
   src/Validation/TrackClassification.cpp
   src/Validation/TrackSummaryPlotTool.cpp
-)
+  )
+
 target_include_directories(
   ActsExamplesFramework
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesFramework
-  PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
+  PUBLIC ActsCore ActsFatras ActsPluginFpeMonitoring Boost::boost ROOT::Core ROOT::Hist
   PRIVATE std::filesystem)
 acts_target_link_libraries_system(
   ActsExamplesFramework
@@ -35,8 +39,8 @@ target_compile_definitions(
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
 
 if(ACTS_USE_EXAMPLES_TBB)
-  # newer DD4hep version require TBB and search interally for TBB in
-  # config-only mode. to avoid mismatches we explicitely search using
+  # newer DD4hep version require TBB and search internally for TBB in
+  # config-only mode. to avoid mismatches we explicitly search using
   # config-only mode first to be sure that we find the same version.
   find_package(TBB ${_acts_tbb_version} CONFIG)
   if(NOT TBB_FOUND)
@@ -65,3 +69,5 @@ install(
 install(
   DIRECTORY include/ActsExamples 
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+add_subdirectory_if(ML ACTS_BUILD_PLUGIN_ONNX)

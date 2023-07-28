@@ -8,16 +8,29 @@
 
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
+#include <functional>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
+#include <vector>
 
 ActsExamples::RefittingAlgorithm::RefittingAlgorithm(Config config,
                                                      Acts::Logging::Level level)

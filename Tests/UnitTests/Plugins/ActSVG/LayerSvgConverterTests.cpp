@@ -26,7 +26,7 @@
 #include <memory>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(LayerSvgConverter)
+BOOST_AUTO_TEST_SUITE(ActSvg)
 
 namespace {
 
@@ -48,7 +48,7 @@ std::shared_ptr<Acts::Layer> generateDiscLayer(Acts::ActsScalar rInner,
                                                unsigned int nSegments,
                                                unsigned int nRings,
                                                bool useTrapezoids = false) {
-  // Some preperations
+  // Some preparations
   setupTools();
   std::vector<std::shared_ptr<const Acts::Surface>> moduleSurfaces;
   Acts::ActsScalar phiStep = 2 * M_PI / nSegments;

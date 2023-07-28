@@ -287,6 +287,11 @@ class Grid final {
     return grid_helper::getUpperRightBinEdge(localBins, m_axes);
   }
 
+  /// @brief get bin width along each specific axis
+  ///
+  /// @return array giving the bin width alonf all axes
+  point_t binWidth() const { return grid_helper::getWidth(m_axes); }
+
   /// @brief get number of bins along each specific axis
   ///
   /// @return array giving the number of bins along all axes

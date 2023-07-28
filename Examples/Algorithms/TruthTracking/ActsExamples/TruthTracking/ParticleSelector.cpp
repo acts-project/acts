@@ -8,14 +8,15 @@
 
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
+#include <ostream>
 #include <stdexcept>
-#include <vector>
+#include <utility>
 
 ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
                                                  Acts::Logging::Level level)
@@ -48,6 +49,7 @@ ActsExamples::ParticleSelector::ParticleSelector(const Config& config,
                                       << ")");
   ACTS_DEBUG("remove charged particles " << m_cfg.removeCharged);
   ACTS_DEBUG("remove neutral particles " << m_cfg.removeNeutral);
+  ACTS_DEBUG("remove secondary particles " << m_cfg.removeSecondaries);
 }
 
 ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
@@ -57,14 +59,15 @@ ActsExamples::ProcessCode ActsExamples::ParticleSelector::execute(
     return (min <= x) and (x < max);
   };
   auto isValidParticle = [&](const ActsFatras::Particle& p) {
-    const auto eta = Acts::VectorHelpers::eta(p.unitDirection());
-    const auto phi = Acts::VectorHelpers::phi(p.unitDirection());
+    const auto eta = Acts::VectorHelpers::eta(p.direction());
+    const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // define charge selection
     const bool validNeutral = (p.charge() == 0) and not m_cfg.removeNeutral;
     const bool validCharged = (p.charge() != 0) and not m_cfg.removeCharged;
     const bool validCharge = validNeutral or validCharged;
-    return validCharge and
+    const bool validSecondary = not m_cfg.removeSecondaries or !p.isSecondary();
+    return validCharge and validSecondary and
            within(p.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and

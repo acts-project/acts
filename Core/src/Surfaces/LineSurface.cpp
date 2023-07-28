@@ -10,10 +10,24 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <utility>
+
+namespace Acts {
+class DetectorElementBase;
+}  // namespace Acts
 
 Acts::LineSurface::LineSurface(const Transform3& transform, double radius,
                                double halez)
@@ -49,13 +63,13 @@ Acts::LineSurface& Acts::LineSurface::operator=(const LineSurface& other) {
 
 Acts::Vector3 Acts::LineSurface::localToGlobal(const GeometryContext& gctx,
                                                const Vector2& lposition,
-                                               const Vector3& momentum) const {
+                                               const Vector3& direction) const {
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
   Vector3 lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 
-  // get the vector perpendicular to the momentum and the straw axis
-  Vector3 radiusAxisGlobal(lineDirection.cross(momentum));
+  // get the vector perpendicular to the momentum direction and the straw axis
+  Vector3 radiusAxisGlobal(lineDirection.cross(direction));
   Vector3 locZinGlobal = sTransform * Vector3(0., 0., lposition[eBoundLoc1]);
   // add eBoundLoc0 * radiusAxis
   return Vector3(locZinGlobal +
@@ -64,7 +78,7 @@ Acts::Vector3 Acts::LineSurface::localToGlobal(const GeometryContext& gctx,
 
 Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& momentum, double tolerance) const {
+    const Vector3& direction, double tolerance) const {
   using VectorHelpers::perp;
   const auto& sTransform = transform(gctx);
   const auto& tMatrix = sTransform.matrix();
@@ -76,11 +90,13 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
   Vector3 sCenter(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
   Vector3 decVec(position - sCenter);
   // assign the right sign
-  double sign = ((lineDirection.cross(momentum)).dot(decVec) < 0.) ? -1. : 1.;
+  double sign = ((lineDirection.cross(direction)).dot(decVec) < 0.) ? -1. : 1.;
   lposition[eBoundLoc0] *= sign;
 
-  if ((localToGlobal(gctx, lposition, momentum) - position).norm() >
-      tolerance) {
+  // TODO make intersection and local<->global tolerances sound. quick fixed
+  // this with a 50% tolerance increase for now
+  if ((localToGlobal(gctx, lposition, direction) - position).norm() >
+      tolerance * 1.5) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
 
@@ -93,11 +109,11 @@ std::string Acts::LineSurface::name() const {
 
 Acts::RotationMatrix3 Acts::LineSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*position*/,
-    const Vector3& momentum) const {
+    const Vector3& direction) const {
   RotationMatrix3 mFrame;
   const auto& tMatrix = transform(gctx).matrix();
   Vector3 measY(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
-  Vector3 measX(measY.cross(momentum).normalized());
+  Vector3 measX(measY.cross(direction).normalized());
   Vector3 measDepth(measX.cross(measY));
   // assign the columnes
   mFrame.col(0) = measX;
@@ -157,7 +173,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
                  : Intersection3D::Status::reachable;
     Vector3 result = (ma + u * ea);
     // Evaluate the boundary check if requested
-    // m_bounds == nullptr prevents unecessary calulations for PerigeeSurface
+    // m_bounds == nullptr prevents unnecessary calculations for PerigeeSurface
     if (bcheck and m_bounds) {
       // At closest approach: check inside R or and inside Z
       const Vector3 vecLocal(result - mb);
@@ -291,7 +307,7 @@ Acts::ActsMatrix<2, 3> Acts::LineSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lphi = phi(localPos);
   const double lcphi = std::cos(lphi);

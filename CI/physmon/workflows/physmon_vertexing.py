@@ -17,12 +17,9 @@ from acts.examples.simulation import (
 
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
-    ParticleSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -41,7 +38,12 @@ setup = makeSetup()
 def run_vertexing(fitter, mu, events):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=events, numThreads=-1, logLevel=acts.logging.INFO
+            events=events,
+            numThreads=-1,
+            logLevel=acts.logging.INFO,
+            fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
+                Path(__file__).parent.parent / "fpe_masks.yml"
+            ),
         )
 
         tp = Path(temp)
@@ -55,10 +57,13 @@ def run_vertexing(fitter, mu, events):
             s,
             MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
             EtaConfig(-3.0, 3.0),
+            PhiConfig(0.0, 360.0 * u.degree),
             ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
             vtxGen=acts.examples.GaussianVertexGenerator(
-                stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
                 mean=acts.Vector4(0, 0, 0, 0),
+                stddev=acts.Vector4(
+                    0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
+                ),
             ),
             multiplicity=mu,
             rnd=rnd,
@@ -68,6 +73,7 @@ def run_vertexing(fitter, mu, events):
             s,
             setup.trackingGeometry,
             setup.field,
+            enableInteractions=True,
             rnd=rnd,
         )
 
@@ -84,7 +90,7 @@ def run_vertexing(fitter, mu, events):
             setup.trackingGeometry,
             setup.field,
             SeedFinderConfigArg(
-                r=(None, 200 * u.mm),  # rMin=default, 33mm
+                r=(33 * u.mm, 200 * u.mm),
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
@@ -94,10 +100,9 @@ def run_vertexing(fitter, mu, events):
                 minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
+            SeedFinderOptionsArg(bFieldInZ=2 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
             geoSelectionConfigFile=setup.geoSel,
-            rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
         addCKFTracks(
@@ -105,9 +110,8 @@ def run_vertexing(fitter, mu, events):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
-                absEta=(None, 3.0),
+                pt=(500 * u.MeV, None),
                 nMeasurementsMin=6,
             ),
         )
@@ -136,18 +140,17 @@ def run_vertexing(fitter, mu, events):
         )
 
 
-with acts.FpeMonitor():
-    for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
-        for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
-            start = datetime.datetime.now()
+for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
+    for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
+        start = datetime.datetime.now()
 
-            events = 5
-            run_vertexing(fitter, mu, events)
+        events = 5
+        run_vertexing(fitter, mu, events)
 
-            delta = datetime.datetime.now() - start
+        delta = datetime.datetime.now() - start
 
-            duration = delta.total_seconds() / events
+        duration = delta.total_seconds() / events
 
-            (
-                setup.outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
-            ).write_text(str(duration))
+        (
+            setup.outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
+        ).write_text(str(duration))

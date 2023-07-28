@@ -11,10 +11,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "actsvg/core.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 #include <array>
 #include <optional>

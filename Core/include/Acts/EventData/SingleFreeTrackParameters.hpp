@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -38,7 +40,7 @@ class SingleFreeTrackParameters {
   /// @param q Particle charge
   /// @param cov Free parameters covariance matrix
   ///
-  /// In principle, only the charge magnitude is needed her to allow unambigous
+  /// In principle, only the charge magnitude is needed her to allow unambiguous
   /// extraction of the absolute momentum. The particle charge is required as
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
@@ -133,7 +135,7 @@ class SingleFreeTrackParameters {
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
-  /// Access a single parameter value indentified by its index.
+  /// Access a single parameter value identified by its index.
   ///
   /// @tparam kIndex Track parameter index
   template <FreeIndices kIndex>

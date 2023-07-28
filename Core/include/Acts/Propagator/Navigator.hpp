@@ -101,7 +101,7 @@ struct NavigationOptions {
 ///
 /// The current navigation stage is cached in the state struct and updated
 /// when necessary. If any surface in the extrapolation  flow is hit, it is
-/// set to the propagation satate, such that other actors can deal wit it.
+/// set to the propagation satate, such that other actors can deal with it.
 /// This navigation actor thus always needs to run first!
 /// It does two things: it figures out the order of volumes, layers and
 /// surfaces.
@@ -151,7 +151,7 @@ class Navigator {
     /// stop at every surface regardless what it is
     bool resolvePassive = false;
 
-    /// Wether to perform boundary checks for layer resolving (improves
+    /// Whether to perform boundary checks for layer resolving (improves
     /// navigation for bended tracks)
     BoundaryCheck boundaryCheckLayerResolving = true;
   };
@@ -187,7 +187,7 @@ class Navigator {
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};
 
-    /// Navigation sate: the world volume
+    /// Navigation state: the world volume
     const TrackingVolume* worldVolume = nullptr;
 
     /// Navigation state: the start volume
@@ -563,7 +563,7 @@ class Navigator {
           return;
         } else {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
-          // Forget the bounday information
+          // Forget the boundary information
           state.navigation.navBoundaries.clear();
           state.navigation.navBoundaryIndex =
               state.navigation.navBoundaries.size();
@@ -623,7 +623,8 @@ class Navigator {
     // If we are on the surface pointed at by the index, we can make
     // it the current one to pass it to the other actors
     auto surfaceStatus =
-        stepper.updateSurfaceStatus(state.stepping, *surface, true, logger());
+        stepper.updateSurfaceStatus(state.stepping, *surface, true, logger(),
+                                    state.options.targetTolerance);
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -712,8 +713,9 @@ class Navigator {
           break;
         }
       }
-      auto surfaceStatus = stepper.updateSurfaceStatus(state.stepping, *surface,
-                                                       boundaryCheck, logger());
+      auto surfaceStatus =
+          stepper.updateSurfaceStatus(state.stepping, *surface, boundaryCheck,
+                                      logger(), state.options.targetTolerance);
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
@@ -858,7 +860,7 @@ class Navigator {
         return true;
       }
     }
-    // loop over the available navigation layer candiates
+    // loop over the available navigation layer candidates
     while (state.navigation.navLayerIndex !=
            state.navigation.navLayers.size()) {
       // The layer surface
@@ -876,8 +878,9 @@ class Navigator {
         }
       }
       // Try to step towards it
-      auto layerStatus = stepper.updateSurfaceStatus(
-          state.stepping, *layerSurface, true, logger());
+      auto layerStatus =
+          stepper.updateSurfaceStatus(state.stepping, *layerSurface, true,
+                                      logger(), state.options.targetTolerance);
       if (layerStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state) << "Layer reachable, step size updated to "
                                     << stepper.outputStepSize(state.stepping));
@@ -1017,8 +1020,9 @@ class Navigator {
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundary().representation;
       // Step towards the boundary surfrace
-      auto boundaryStatus = stepper.updateSurfaceStatus(
-          state.stepping, *boundarySurface, true, logger());
+      auto boundaryStatus =
+          stepper.updateSurfaceStatus(state.stepping, *boundarySurface, true,
+                                      logger(), state.options.targetTolerance);
       if (boundaryStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Boundary reachable, step size updated to "
@@ -1169,7 +1173,7 @@ class Navigator {
         stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
     // No overstepping on start layer, otherwise ask the stepper
     navOpts.overstepLimit = (cLayer != nullptr)
-                                ? s_onSurfaceTolerance
+                                ? state.options.targetTolerance
                                 : stepper.overstepLimit(state.stepping);
 
     // get the surfaces
@@ -1315,7 +1319,8 @@ class Navigator {
         return true;
       }
       auto targetStatus = stepper.updateSurfaceStatus(
-          state.stepping, *state.navigation.targetSurface, true, logger());
+          state.stepping, *state.navigation.targetSurface, true, logger(),
+          state.options.targetTolerance);
       // the only advance could have been to the target
       if (targetStatus == Intersection3D::Status::onSurface) {
         // set the target surface

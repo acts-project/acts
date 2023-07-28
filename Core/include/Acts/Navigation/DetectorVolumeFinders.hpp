@@ -18,7 +18,7 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-#include <exception>
+#include <stdexcept>
 
 namespace Acts {
 namespace Experimental {

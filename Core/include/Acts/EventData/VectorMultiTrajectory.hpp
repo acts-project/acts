@@ -11,16 +11,33 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryBackendConcept.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
+#include <any>
+#include <cassert>
+#include <cstddef>
+#include <iosfwd>
+#include <memory>
+#include <optional>
+#include <stdexcept>
+#include <string>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
 #include <boost/histogram.hpp>
 
 namespace Acts {
+class Surface;
+template <typename T>
+struct IsReadOnlyMultiTrajectory;
 
 namespace detail_vmt {
 
@@ -141,7 +158,7 @@ class VectorMultiTrajectoryBase {
 
     IndexType iuncalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
-    IndexType measdim = 0;
+    IndexType measdim = kInvalid;
 
     TrackStatePropMask allocMask = TrackStatePropMask::None;
   };
@@ -312,6 +329,7 @@ class VectorMultiTrajectoryBase {
 }  // namespace detail_vmt
 
 class VectorMultiTrajectory;
+
 template <>
 struct IsReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
 
@@ -432,6 +450,9 @@ class VectorMultiTrajectory final
   }
 
   void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+    throw_assert(measdim > 0 && measdim <= eBoundSize,
+                 "Invalid measurement dimension detected");
+
     if (m_measOffset[istate] != kInvalid &&
         m_measCovOffset[istate] != kInvalid &&
         m_index[istate].measdim == measdim) {
@@ -462,6 +483,7 @@ class VectorMultiTrajectory final
 ACTS_STATIC_CHECK_CONCEPT(MutableMultiTrajectoryBackend, VectorMultiTrajectory);
 
 class ConstVectorMultiTrajectory;
+
 template <>
 struct IsReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
 };

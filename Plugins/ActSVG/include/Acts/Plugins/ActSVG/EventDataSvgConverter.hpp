@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "actsvg/core.hpp"
+#include <actsvg/core.hpp>
 
 namespace Acts {
 

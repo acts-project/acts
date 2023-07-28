@@ -9,6 +9,7 @@
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -23,6 +24,8 @@
 #include <memory>
 #include <ostream>
 #include <stdexcept>
+#include <type_traits>
+#include <utility>
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     const std::array<Acts::Vector3, 8>& vertices) noexcept(false)
