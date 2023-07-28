@@ -278,7 +278,7 @@ void EDM4hepUtil::writeTrajectory(
     edm4hep::TrackState trackState;
 
     // This makes the hard assumption that |q| = 1
-    Acts::SingleBoundTrackParameters<Acts::SinglyCharged> parObj{
+    Acts::GenericBoundTrackParameters<Acts::SinglyCharged> parObj{
         state.referenceSurface().getSharedPtr(), state.parameters(),
         state.covariance()};
 
