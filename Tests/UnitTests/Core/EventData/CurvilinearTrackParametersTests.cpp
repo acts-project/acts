@@ -13,8 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -34,14 +33,14 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using AnyCurvilinearTrackParameters =
-    SingleCurvilinearTrackParameters<AnyCharge>;
+    GenericCurvilinearTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const BoundSymMatrix cov = BoundSymMatrix::Identity();
 
 template <typename charge_t>
-void checkParameters(const SingleCurvilinearTrackParameters<charge_t>& params,
+void checkParameters(const GenericCurvilinearTrackParameters<charge_t>& params,
                      double phi, double theta, double p, double q,
                      const Vector4& pos4, const Vector3& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
