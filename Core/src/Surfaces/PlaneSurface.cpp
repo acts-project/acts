@@ -81,15 +81,14 @@ Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
 }
 
 Acts::Vector3 Acts::PlaneSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector2& lposition) const {
   return transform(gctx) *
          Vector3(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
 
 Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/, double tolerance) const {
+    double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -168,10 +167,10 @@ Acts::Vector3 Acts::PlaneSurface::binningPosition(
 }
 
 double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
-                                          const Vector3& position,
+                                          const Vector3& /*position*/,
                                           const Vector3& direction) const {
   // We can ignore the global position here
-  return 1. / std::abs(RegularSurface::normal(gctx, position).dot(direction));
+  return 1. / std::abs(normal(gctx).dot(direction));
 }
 
 Acts::SurfaceIntersection Acts::PlaneSurface::intersect(

@@ -83,7 +83,7 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
 
   // Bring the global position into the local frame. First remove the
   // translation then the rotation.
-  Vector3 localPosition = referenceFrame(gctx, position, direction).inverse() *
+  Vector3 localPosition = referenceFrame(gctx, direction).inverse() *
                           (position - transform(gctx).translation());
 
   // `localPosition.z()` is not the distance to the PCA but the smallest
@@ -107,8 +107,7 @@ std::string Acts::LineSurface::name() const {
 }
 
 Acts::RotationMatrix3 Acts::LineSurface::referenceFrame(
-    const GeometryContext& gctx, const Vector3& /*position*/,
-    const Vector3& direction) const {
+    const GeometryContext& gctx, const Vector3& direction) const {
   Vector3 unitZ0 = transform(gctx).rotation() * Vector3::UnitZ();
   Vector3 unitD0 = unitZ0.cross(direction).normalized();
   Vector3 unitDistance = unitD0.cross(unitZ0);
@@ -133,7 +132,7 @@ Acts::Vector3 Acts::LineSurface::binningPosition(
 }
 
 Acts::Vector3 Acts::LineSurface::normal(const GeometryContext& gctx,
-                                        const Vector3& pos,
+                                        const Vector2& pos,
                                         const Vector3& direction) const {
   auto ref = referenceFrame(gctx, pos, direction);
   return ref.col(2);
@@ -202,8 +201,6 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   // Transform from bound to free parameters
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
-  // The global position
-  Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   Vector3 direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
@@ -212,8 +209,7 @@ Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(
   double cosPhi = std::cos(boundParams[eBoundPhi]);
   double sinPhi = std::sin(boundParams[eBoundPhi]);
   // retrieve the reference frame
-  auto rframe = referenceFrame(gctx, position, direction);
-
+  const auto rframe = referenceFrame(gctx, direction);
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
 

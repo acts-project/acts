@@ -105,18 +105,17 @@ class ConeSurface : public RegularSurface {
   /// Return the surface type
   SurfaceType type() const override;
 
-  /// Return the measurement frame - this is needed for alignment, in particular
-  ///  for StraightLine and Perigee Surface
-  ///  - the default implementation is the RotationMatrix3 of the transform
+  /// Return the measurement frame.
+  /// @TODO: Add description of the reference frame
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the global position where the measurement frame is
+  /// @param position is the local position where the measurement frame is
   /// constructed
   /// @param direction is the momentum direction used for the measurement frame
   /// construction
   /// @return matrix that indicates the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
-                                 const Vector3& position,
+                                 const Vector2& position,
                                  const Vector3& direction) const final;
 
   /// Return method for surface normal information
@@ -126,14 +125,6 @@ class ConeSurface : public RegularSurface {
   /// @return Vector3 normal vector in global frame
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
-
-  /// Return method for surface normal information
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the global position as normal vector base
-  /// @return Vector3 normal vector in global frame
-  Vector3 normal(const GeometryContext& gctx,
-                 const Vector3& position) const final;
 
   /// Normal vector return without argument
   using RegularSurface::normal;
@@ -148,6 +139,8 @@ class ConeSurface : public RegularSurface {
   /// This method returns the ConeBounds by reference
   const ConeBounds& bounds() const final;
 
+  using RegularSurface::localToGlobal;
+
   /// Local to global transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -155,21 +148,21 @@ class ConeSurface : public RegularSurface {
   /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
+
+  using RegularSurface::globalToLocal;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction

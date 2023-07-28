@@ -17,6 +17,9 @@
 #include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -195,8 +198,23 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
       boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3 nvector =
-      bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
+
+  Vector3 nvector;
+  const Surface& surf = bSurfaceMine->surfaceRepresentation();
+  // need to ignore binning position for plane and disc surfaces
+  if (auto pSurf = dynamic_cast<const PlaneSurface*>(&surf); pSurf != nullptr) {
+    nvector = pSurf->normal(gctx);
+  } else if (auto dSurf = dynamic_cast<const DiscSurface*>(&surf);
+             dSurf != nullptr) {
+    nvector = dSurf->normal(gctx);
+  } else if (auto cSurf = dynamic_cast<const CylinderSurface*>(&surf);
+             cSurf != nullptr) {
+    // explicitly calculate cylinder normal
+    nvector = (cSurf->center(gctx) - bPosition).normalized();
+  } else {
+    throw std::runtime_error("Surface type not supported");
+  }
+
   // estimate the orientation
   Direction dir = Direction::fromScalar(nvector.dot(distance));
   // The easy case :
@@ -240,8 +258,21 @@ void Acts::TrackingVolume::glueTrackingVolumes(
       boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3 nvector =
-      bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
+  Vector3 nvector;
+  const Surface& surf = bSurfaceMine->surfaceRepresentation();
+  // need to ignore binning position for plane and disc surfaces
+  if (auto pSurf = dynamic_cast<const PlaneSurface*>(&surf); pSurf != nullptr) {
+    nvector = pSurf->normal(gctx);
+  } else if (auto dSurf = dynamic_cast<const DiscSurface*>(&surf);
+             dSurf != nullptr) {
+    nvector = dSurf->normal(gctx);
+  } else if (auto cSurf = dynamic_cast<const CylinderSurface*>(&surf);
+             cSurf != nullptr) {
+    // explicitly calculate cylinder normal
+    nvector = (cSurf->center(gctx) - bPosition).normalized();
+  } else {
+    throw std::runtime_error("Surface type not supported");
+  }
   // estimate the orientation
   Direction dir = Direction::fromScalar(nvector.dot(distance));
   // the easy case :

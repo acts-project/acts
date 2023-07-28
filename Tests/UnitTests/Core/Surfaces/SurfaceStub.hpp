@@ -32,7 +32,7 @@ class SurfaceStub : public Surface {
   SurfaceType type() const final { return Surface::Other; }
 
   /// Return method for the normal vector of the surface
-  Vector3 normal(const GeometryContext& /*gctx*/, const Vector3& /*position*/,
+  Vector3 normal(const GeometryContext& /*gctx*/, const Vector2& /*position*/,
                  const Vector3& /*direction*/) const final {
     return Vector3{0., 0., 0.};
   }

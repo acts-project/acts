@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -55,9 +56,9 @@ std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
       m_config.trackingGeometry->findSurface(slink.geometryId());
   Vector2 localPos(par[eBoundLoc0], par[eBoundLoc1]);
   SymMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
-  Vector3 globalPos = surface->localToGlobal(gctx, localPos, Vector3());
+  Vector3 globalPos = surface->localToGlobal(gctx, localPos, Vector3::Zero());
   RotationMatrix3 rotLocalToGlobal =
-      surface->referenceFrame(gctx, globalPos, Vector3());
+      surface->referenceFrame(gctx, localPos, Vector3::Zero());
 
   // the space point requires only the variance of the transverse and
   // longitudinal position. reduce computations by transforming the
@@ -116,12 +117,23 @@ Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
                                           const GeometryIdentifier& geoId,
                                           const Vector3& globalPos,
                                           const SymMatrix2& localCov) const {
+  // @TODO: This means de-facto we require *regular* surfaces
   Vector3 globalFakeMom(1, 1, 1);
 
-  const Surface* surface = m_config.trackingGeometry->findSurface(geoId);
+  const RegularSurface* surface = dynamic_cast<const RegularSurface*>(
+      m_config.trackingGeometry->findSurface(geoId));
+
+  if (surface == nullptr) {
+    throw std::runtime_error(
+        "SpacePointUtility::rhoZCovariance: "
+        "Surface is not regular");
+  }
+
+  auto localPos = surface->globalToLocal(gctx, globalPos, globalFakeMom)
+                      .value("Global position is not on surface");
 
   RotationMatrix3 rotLocalToGlobal =
-      surface->referenceFrame(gctx, globalPos, globalFakeMom);
+      surface->referenceFrame(gctx, localPos, globalFakeMom);
 
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];

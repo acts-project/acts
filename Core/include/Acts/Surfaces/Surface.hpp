@@ -187,7 +187,7 @@ class Surface : public virtual GeometryObject,
   /// @return center position by value
   virtual Vector3 center(const GeometryContext& gctx) const;
 
-  virtual Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
+  virtual Vector3 normal(const GeometryContext& gctx, const Vector2& pos,
                          const Vector3& direction) const = 0;
 
   /// Return method for SurfaceBounds
@@ -291,14 +291,14 @@ class Surface : public virtual GeometryObject,
   /// by all surfaces)
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position - considered to be on surface but not
+  /// @param position local position- considered to be on surface but not
   /// inside bounds (check is done)
   /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return RotationMatrix3 which defines the three axes of the measurement
   /// frame
   virtual Acts::RotationMatrix3 referenceFrame(const GeometryContext& gctx,
-                                               const Vector3& position,
+                                               const Vector2& position,
                                                const Vector3& direction) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,

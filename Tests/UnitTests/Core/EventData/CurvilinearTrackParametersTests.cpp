@@ -16,6 +16,7 @@
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RegularSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
@@ -48,10 +49,9 @@ void checkParameters(const GenericCurvilinearTrackParameters<charge_t>& params,
   const auto pos = pos4.segment<3>(ePos0);
 
   const auto* referenceSurface =
-      dynamic_cast<const RegularSurface*>(&params.referenceSurface());
-  if (referenceSurface == nullptr) {
-    BOOST_FAIL("Reference surface is not a regular surface");
-  }
+      dynamic_cast<const PlaneSurface*>(&params.referenceSurface());
+  BOOST_REQUIRE_MESSAGE(referenceSurface != nullptr,
+                        "Reference surface is not a plane");
 
   // native values
   CHECK_SMALL(params.template get<eBoundLoc0>(), eps);

@@ -31,6 +31,7 @@
 #include <initializer_list>
 #include <memory>
 #include <ostream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -113,6 +114,12 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
       cylinderSurfaceObject->binningPosition(testContext, BinningValue::binPhi),
       binningPosition, 1e-9);
   //
+
+  auto g2l = [&](const Vector3& globalPosition) {
+    return cylinderSurfaceObject->globalToLocal(testContext, globalPosition)
+        .value();
+  };
+
   /// Test referenceFrame
   double rootHalf = std::sqrt(0.5);
   Vector3 globalPosition{rootHalf, 1. - rootHalf, 0.};
@@ -123,27 +130,29 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   expectedFrame << rootHalf, 0., rootHalf, rootHalf, 0., -rootHalf, 0., 1., 0.;
   // check without shift
   CHECK_CLOSE_OR_SMALL(cylinderSurfaceObject->referenceFrame(
-                           testContext, globalPosition, momentum),
+                           testContext, g2l(globalPosition), momentum),
                        expectedFrame, 1e-6, 1e-9);
   // check with shift and different momentum
   CHECK_CLOSE_OR_SMALL(cylinderSurfaceObject->referenceFrame(
-                           testContext, globalPositionZ, momentum2),
+                           testContext, g2l(globalPositionZ), momentum2),
                        expectedFrame, 1e-6, 1e-9);
+
   //
   /// Test normal, given 3D position
-  Vector3 origin{0., 0., 0.};
+  Vector3 pos0deg =
+      cylinderSurfaceObject->localToGlobal(testContext, Vector2{-M_PI_2, 0});
   Vector3 normal3D = {0., -1., 0.};
-  CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, origin), normal3D,
-                  1e-9);
+  CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, g2l(pos0deg)),
+                  normal3D, 1e-9);
 
   Vector3 pos45deg = {rootHalf, 1 + rootHalf, 0.};
   Vector3 pos45degZ = {rootHalf, 1 + rootHalf, 4.};
   Vector3 normal45deg = {rootHalf, rootHalf, 0.};
   // test the normal vector
-  CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45deg),
+  CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, g2l(pos45deg)),
                   normal45deg, 1e-6 * rootHalf);
   // test that the normal vector is independent of z coordinate
-  CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45degZ),
+  CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, g2l(pos45degZ)),
                   normal45deg, 1e-6 * rootHalf);
   //
   /// Test normal given 2D rphi position
@@ -204,9 +213,10 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
 
   //
   /// Test pathCorrection
-  CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,
-                                                        momentum.normalized()),
-                  std::sqrt(3.), 0.01);
+
+  BOOST_CHECK_THROW(cylinderSurfaceObject->pathCorrection(
+                        testContext, offSurface, momentum.normalized()),
+                    std::runtime_error);
   //
   /// Test name
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->name(),

@@ -100,8 +100,9 @@ class AtlasStepper {
         covariance = new BoundSymMatrix(*pars.covariance());
         covTransport = true;
         useJacobian = true;
+
         const auto transform = pars.referenceSurface().referenceFrame(
-            geoContext, pos, pars.unitDirection());
+            geoContext, pars.localPosition(), pars.unitDirection());
 
         pVector[8] = transform(0, eBoundLoc0);
         pVector[16] = transform(0, eBoundLoc1);
@@ -575,7 +576,10 @@ class AtlasStepper {
     double Se = std::sin(boundParams[eBoundTheta]);
     double Ce = std::cos(boundParams[eBoundTheta]);
 
-    const auto transform = surface.referenceFrame(state.geoContext, pos, mom);
+    auto locPos = surface.globalToLocal(state.geoContext, pos, mom.normalized())
+                      .value("Bound state on surface is not on surface");
+    const auto transform =
+        surface.referenceFrame(state.geoContext, locPos, mom);
 
     state.pVector[8] = transform(0, eBoundLoc0);
     state.pVector[16] = transform(0, eBoundLoc1);
@@ -905,7 +909,9 @@ class AtlasStepper {
     P[45] *= p;
     P[46] *= p;
 
-    const auto fFrame = surface.referenceFrame(state.geoContext, gp, mom);
+    auto locPos = surface.globalToLocal(state.geoContext, gp, mom.normalized())
+                      .value("Bound state on surface is not on surface");
+    const auto fFrame = surface.referenceFrame(state.geoContext, locPos, mom);
 
     double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
     double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};

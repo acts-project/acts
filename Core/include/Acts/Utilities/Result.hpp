@@ -136,16 +136,16 @@ class Result {
   /// Retrieves the valid value from the result object.
   /// @note This is the lvalue version, returns a reference to the value
   /// @return The valid value as a reference
-  T& value() & {
+  T& value(std::string_view msg = "Value called on error value") & {
     if (m_var.index() != 0) {
       if constexpr (std::is_same_v<E, std::error_code>) {
         std::stringstream ss;
         const auto& e = std::get<E>(m_var);
-        ss << "Value called on error value: " << e.category().name() << ": "
-           << e.message() << " [" << e.value() << "]";
+        ss << msg << ": " << e.category().name() << ": " << e.message() << " ["
+           << e.value() << "]";
         throw std::runtime_error(ss.str());
       } else {
-        throw std::runtime_error("Value called on error value");
+        throw std::runtime_error(msg.data());
       }
     }
 
@@ -156,16 +156,16 @@ class Result {
   /// @note This is the rvalue version, returns the value
   /// by-value and moves out of the variant.
   /// @return The valid value by value, moved out of the variant.
-  T value() && {
+  T value(std::string_view msg = "Value called on error value") && {
     if (m_var.index() != 0) {
       if constexpr (std::is_same_v<E, std::error_code>) {
         std::stringstream ss;
         const auto& e = std::get<E>(m_var);
-        ss << "Value called on error value: " << e.category().name() << ": "
-           << e.message() << " [" << e.value() << "]";
+        ss << msg << ": " << e.category().name() << ": " << e.message() << " ["
+           << e.value() << "]";
         throw std::runtime_error(ss.str());
       } else {
-        throw std::runtime_error("Value called on error value");
+        throw std::runtime_error(msg.data());
       }
     }
 

@@ -146,11 +146,14 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
       line.localToGlobal(tgContext, localPosition, momentum.normalized());
   const Vector3 expectedGlobalPosition{0, 1, 0};
   CHECK_CLOSE_ABS(returnedGlobalPosition, expectedGlobalPosition, 1e-6);
-  //
+
   // referenceFrame
-  Vector3 globalPosition{0., 0., 0.};
-  auto returnedRotationMatrix =
-      line.referenceFrame(tgContext, globalPosition, momentum.normalized());
+  Vector3 globalPosition{0., 1., 2.};
+  auto returnedRotationMatrix = line.referenceFrame(
+      tgContext,
+      line.globalToLocal(tgContext, globalPosition, momentum.normalized())
+          .value(),
+      momentum.normalized());
   double v0 = std::cos(std::atan(2. / 3.));
   double v1 = std::sin(std::atan(2. / 3.));
   RotationMatrix3 expectedRotationMatrix;
@@ -167,25 +170,25 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   //
   // normal
   {
-    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector2 position{5, 5};  // should be irrelevant
     Vector3 direction{1, 0, 0};
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
                     1e-6);
   }
   {
-    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector2 position{5, 5};  // should be irrelevant
     Vector3 direction = Vector3{1, 0, 0.1}.normalized();
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction),
                     Vector3::UnitX(), 1e-6);
   }
   {
-    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector2 position{5, 5};  // should be irrelevant
     Vector3 direction{-1, 0, 0};
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
                     1e-6);
   }
   {
-    Vector3 position{5, 5, 5};  // should be irrelevant
+    Vector2 position{5, 5};  // should be irrelevant
     Vector3 direction{0, 1, 0};
     CHECK_CLOSE_ABS(line.normal(tgContext, position, direction), direction,
                     1e-6);

@@ -9,6 +9,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
@@ -81,8 +82,7 @@ Acts::Surface::SurfaceType Acts::DiscSurface::type() const {
 }
 
 Acts::Vector3 Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
-                                               const Vector2& lposition,
-                                               const Vector3& /*gmom*/) const {
+                                               const Vector2& lposition) const {
   // create the position in the local 3d frame
   Vector3 loc3Dframe(
       lposition[Acts::eBoundLoc0] * cos(lposition[Acts::eBoundLoc1]),
@@ -93,7 +93,7 @@ Acts::Vector3 Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
 
 Acts::Result<Acts::Vector2> Acts::DiscSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*gmom*/, double tolerance) const {
+    double tolerance) const {
   // transport it to the globalframe
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
@@ -214,7 +214,7 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
   FreeVector freeParams =
       detail::transformBoundToFreeParameters(*this, gctx, boundParams);
   // The global position
-  const Vector3 position = freeParams.segment<3>(eFreePos0);
+  const Vector2 localPosition = freeParams.segment<2>(eBoundLoc0);
   // The direction
   const Vector3 direction = freeParams.segment<3>(eFreeDir0);
   // Get the sines and cosines directly
@@ -228,7 +228,7 @@ Acts::BoundToFreeMatrix Acts::DiscSurface::boundToFreeJacobian(
   double lcos_phi = cos(lphi);
   double lsin_phi = sin(lphi);
   // retrieve the reference frame
-  const auto rframe = referenceFrame(gctx, position, direction);
+  const auto rframe = referenceFrame(gctx, localPosition, direction);
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - rotated from reference frame
@@ -257,6 +257,9 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
+  auto localPosition =
+      globalToLocal(gctx, position, direction).value("Position not on surface");
+
   // Optimized trigonometry on the propagation direction
   const double x = direction(0);  // == cos(phi) * sin(theta)
   const double y = direction(1);  // == sin(phi) * sin(theta)
@@ -269,7 +272,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   const double sinPhi = y * invSinTheta;
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
-      referenceFrame(gctx, position, direction).transpose();
+      referenceFrame(gctx, localPosition, direction).transpose();
   // calculate the transformation to local coordinates
   const Vector3 pos_loc = transform(gctx).inverse() * position;
   const double lr = perp(pos_loc);
@@ -375,8 +378,8 @@ double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
 }
 
 double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
-                                         const Vector3& position,
+                                         const Vector3& /*position*/,
                                          const Vector3& direction) const {
   /// we can ignore the global position here
-  return 1. / std::abs(RegularSurface::normal(gctx, position).dot(direction));
+  return 1. / std::abs(normal(gctx).dot(direction));
 }

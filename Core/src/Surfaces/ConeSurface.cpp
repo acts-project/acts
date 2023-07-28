@@ -8,6 +8,7 @@
 
 #include "Acts/Surfaces/ConeSurface.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
 #include "Acts/Surfaces/detail/AlignmentHelper.hpp"
@@ -91,14 +92,15 @@ Acts::Vector3 Acts::ConeSurface::rotSymmetryAxis(
 }
 
 Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
-    const GeometryContext& gctx, const Vector3& position,
+    const GeometryContext& gctx, const Vector2& position,
     const Vector3& /*direction*/) const {
   RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the local z axis
   Vector3 measY = rotSymmetryAxis(gctx);
   // measured z is the position transverse normalized
-  Vector3 measDepth = Vector3(position.x(), position.y(), 0.).normalized();
+  Vector3 glob = localToGlobal(gctx, position);
+  Vector3 measDepth = Vector3(glob.x(), glob.y(), 0.).normalized();
   // measured X is what comoes out of it
   Acts::Vector3 measX(measY.cross(measDepth).normalized());
   // the columnes
@@ -111,9 +113,8 @@ Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
   return mFrame;
 }
 
-Acts::Vector3 Acts::ConeSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+Acts::Vector3 Acts::ConeSurface::localToGlobal(const GeometryContext& gctx,
+                                               const Vector2& lposition) const {
   // create the position in the local 3d frame
   double r = lposition[Acts::eBoundLoc1] * bounds().tanAlpha();
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -123,7 +124,7 @@ Acts::Vector3 Acts::ConeSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::ConeSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/, double tolerance) const {
+    double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {
@@ -163,15 +164,6 @@ Acts::Vector3 Acts::ConeSurface::normal(const GeometryContext& gctx,
   double sinAlpha = std::sin(bounds().get(ConeBounds::eAlpha));
   Vector3 localNormal(cos(phi) * cosAlpha, sin(phi) * cosAlpha, sgn * sinAlpha);
   return Vector3(transform(gctx).linear() * localNormal);
-}
-
-Acts::Vector3 Acts::ConeSurface::normal(const GeometryContext& gctx,
-                                        const Acts::Vector3& position) const {
-  // get it into the cylinder frame if needed
-  // @todo respect opening angle
-  Vector3 pos3D = transform(gctx).inverse() * position;
-  pos3D.z() = 0;
-  return pos3D.normalized();
 }
 
 const Acts::ConeBounds& Acts::ConeSurface::bounds() const {

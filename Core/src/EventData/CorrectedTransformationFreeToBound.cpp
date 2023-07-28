@@ -61,8 +61,18 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
-  Vector3 normal =
-      surface.normal(geoContext, freeParams.segment<3>(eFreePos0), dir);
+
+  auto localPositionRes =
+      surface.globalToLocal(geoContext, freeParams.segment<3>(eFreePos0), dir);
+  if (!localPositionRes.ok()) {
+    ACTS_VERBOSE(
+        "Could not transform free to bound: " << localPositionRes.error());
+    return std::nullopt;
+  }
+
+  const Vector2& localPosition = *localPositionRes;
+
+  Vector3 normal = surface.normal(geoContext, localPosition, dir);
   ActsScalar absCosIncidenceAng = std::abs(dir.dot(normal));
   // No correction if the incidentAngle is small enough (not necessary ) or too
   // large (correction could be invalid). Fall back to nominal free to bound

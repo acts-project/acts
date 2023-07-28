@@ -122,7 +122,14 @@ void Acts::Experimental::Portal::updateDetectorVolume(
     const GeometryContext& gctx, NavigationState& nState) const {
   const auto& position = nState.position;
   const auto& direction = nState.direction;
-  const Vector3 normal = surface().normal(gctx, position);
+
+  auto localPositionRes = surface().globalToLocal(gctx, position, direction);
+  if (!localPositionRes.ok()) {
+    throw std::runtime_error(
+        "Portal: cannot convert global position to local.");
+  }
+
+  const Vector3 normal = surface().normal(gctx, *localPositionRes);
   Direction dir = Direction::fromScalar(normal.dot(direction));
   const auto& vUpdator = m_volumeUpdators[dir.index()];
   if (vUpdator.connected()) {

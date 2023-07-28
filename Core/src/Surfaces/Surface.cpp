@@ -247,7 +247,7 @@ bool Acts::Surface::insideBounds(const Vector2& lposition,
 }
 
 Acts::RotationMatrix3 Acts::Surface::referenceFrame(
-    const GeometryContext& gctx, const Vector3& /*position*/,
+    const GeometryContext& gctx, const Vector2& /*position*/,
     const Vector3& /*direction*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
@@ -261,11 +261,13 @@ Acts::BoundToFreeMatrix Acts::Surface::boundToFreeJacobian(
   const Vector3 position = freeParams.segment<3>(eFreePos0);
   // The direction
   const Vector3 direction = freeParams.segment<3>(eFreeDir0);
+  auto locPosition =
+      globalToLocal(gctx, position, direction).value("Position not on surface");
   // Use fast evaluation function of sin/cos
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
   // retrieve the reference frame
-  const auto rframe = referenceFrame(gctx, position, direction);
+  const auto rframe = referenceFrame(gctx, locPosition, direction);
   // Initialize the jacobian from local to global
   BoundToFreeMatrix jacToGlobal = BoundToFreeMatrix::Zero();
   // the local error components - given by reference frame
@@ -288,12 +290,14 @@ Acts::FreeToBoundMatrix Acts::Surface::freeToBoundJacobian(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
+  auto locPosition =
+      globalToLocal(gctx, position, direction).value("Position not on surface");
   // Use fast evaluation function of sin/cos
   auto [cosPhi, sinPhi, cosTheta, sinTheta, invSinTheta] =
       VectorHelpers::evaluateTrigonomics(direction);
   // The measurement frame of the surface
   RotationMatrix3 rframeT =
-      referenceFrame(gctx, position, direction).transpose();
+      referenceFrame(gctx, locPosition, direction).transpose();
   // Initialize the jacobian from global to local
   FreeToBoundMatrix jacToLocal = FreeToBoundMatrix::Zero();
   // Local position component given by the reference frame
@@ -316,8 +320,10 @@ Acts::FreeToPathMatrix Acts::Surface::freeToPathDerivative(
   const auto position = parameters.segment<3>(eFreePos0);
   // The direction
   const auto direction = parameters.segment<3>(eFreeDir0);
+  auto locPosition =
+      globalToLocal(gctx, position, direction).value("Position not on surface");
   // The measurement frame of the surface
-  const RotationMatrix3 rframe = referenceFrame(gctx, position, direction);
+  const RotationMatrix3 rframe = referenceFrame(gctx, locPosition, direction);
   // The measurement frame z axis
   const Vector3 refZAxis = rframe.col(2);
   // Cosine of angle between momentum direction and measurement frame z axis

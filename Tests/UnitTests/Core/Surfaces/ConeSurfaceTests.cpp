@@ -113,20 +113,19 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
       binningPosition, 1e-6);
   //
   /// Test referenceFrame
-  Vector3 globalPosition{2.0, 2.0, 2.0};
   Vector3 momentum{1.e6, 1.e6, 1.e6};
   double rootHalf = std::sqrt(0.5);
   RotationMatrix3 expectedFrame;
   expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1., 0.;
-  CHECK_CLOSE_OR_SMALL(
-      coneSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
-      expectedFrame, 1e-6, 1e-9);
-  //
-  /// Test normal, given 3D position
-  Vector3 origin{0., 0., 0.};
-  Vector3 normal3D = {0., -1., 0.};
-  CHECK_CLOSE_ABS(coneSurfaceObject->normal(tgContext, origin), normal3D, 1e-6);
-  //
+  CHECK_CLOSE_OR_SMALL(coneSurfaceObject->referenceFrame(
+                           tgContext,
+                           Vector2{
+                               0.0,
+                               3.07387 * M_PI / 4.  // magic number!
+                           },
+                           momentum),
+                       expectedFrame, 1e-6, 1e-9);
+
   /// Test normal given 2D rphi position
   Vector2 positionPiBy2(1.0, M_PI / 2.);
   Vector3 normalAtPiBy2{0.0312768, 0.92335, -0.382683};
@@ -143,8 +142,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceProperties) {
   BOOST_CHECK_EQUAL(coneSurfaceObject->bounds().type(), SurfaceBounds::eCone);
   //
   /// Test localToGlobal
-  Vector2 localPosition{1.0, M_PI / 2.0};
-  globalPosition =
+  Vector2 localPosition = {1.0, M_PI / 2.0};
+  Vector3 globalPosition =
       coneSurfaceObject->localToGlobal(tgContext, localPosition, momentum);
   // std::cout<<globalPosition<<std::endl;
   Vector3 expectedPosition{0.0220268, 1.65027, 3.5708};

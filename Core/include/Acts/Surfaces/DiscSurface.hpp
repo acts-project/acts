@@ -121,6 +121,8 @@ class DiscSurface : public RegularSurface {
   /// Return the surface type
   SurfaceType type() const override;
 
+  using RegularSurface::normal;
+
   /// Normal vector return
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -131,7 +133,9 @@ class DiscSurface : public RegularSurface {
                  const Vector2& lposition) const final;
 
   /// Normal vector return without argument
-  using RegularSurface::normal;
+  Vector3 normal(const GeometryContext& gctx) const {
+    return normal(gctx, Vector2::Zero());
+  }
 
   /// The binning position The position calculated
   /// for a certain binning type
@@ -146,6 +150,8 @@ class DiscSurface : public RegularSurface {
   /// This method returns the bounds by reference
   const SurfaceBounds& bounds() const final;
 
+  using RegularSurface::localToGlobal;
+
   /// Local to global transformation
   /// For planar surfaces the momentum direction is ignored in the local to
   /// global transformation
@@ -155,23 +161,22 @@ class DiscSurface : public RegularSurface {
   /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
+
+  using RegularSurface::globalToLocal;
 
   /// Global to local transformation
-  /// @note the direction is ignored for Disc surfaces in this calculateion
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param direction global 3D momentum direction (optionally ignored)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Special method for DiscSurface : local<->local transformations polar <->

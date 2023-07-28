@@ -87,7 +87,7 @@ Acts::Vector3 Acts::CylinderSurface::binningPosition(
 
 // return the measurement frame: it's the tangential plane
 Acts::RotationMatrix3 Acts::CylinderSurface::referenceFrame(
-    const GeometryContext& gctx, const Vector3& position,
+    const GeometryContext& gctx, const Vector2& position,
     const Vector3& /*direction*/) const {
   RotationMatrix3 mFrame;
   // construct the measurement frame
@@ -110,8 +110,7 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
 }
 
 Acts::Vector3 Acts::CylinderSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector2& lposition) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -121,7 +120,7 @@ Acts::Vector3 Acts::CylinderSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::CylinderSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/, double tolerance) const {
+    double tolerance) const {
   double inttol = tolerance;
   if (tolerance == s_onSurfaceTolerance) {
     // transform default value!
@@ -152,21 +151,13 @@ Acts::Vector3 Acts::CylinderSurface::normal(
   return Vector3(transform(gctx).matrix().block<3, 3>(0, 0) * localNormal);
 }
 
-Acts::Vector3 Acts::CylinderSurface::normal(
-    const GeometryContext& gctx, const Acts::Vector3& position) const {
-  const Transform3& sfTransform = transform(gctx);
-  // get it into the cylinder frame
-  Vector3 pos3D = sfTransform.inverse() * position;
-  // set the z coordinate to 0
-  pos3D.z() = 0.;
-  // normalize and rotate back into global if needed
-  return sfTransform.linear() * pos3D.normalized();
-}
-
 double Acts::CylinderSurface::pathCorrection(
     const GeometryContext& gctx, const Acts::Vector3& position,
     const Acts::Vector3& direction) const {
-  Vector3 normalT = normal(gctx, position);
+  auto locPosition =
+      globalToLocal(gctx, position).value("Position not on surfce");
+
+  Vector3 normalT = normal(gctx, locPosition);
   double cosAlpha = normalT.dot(direction);
   return std::fabs(1. / cosAlpha);
 }

@@ -184,8 +184,18 @@ const volume_t* BoundarySurfaceT<volume_t>::attachedVolume(
     const GeometryContext& gctx, const Vector3& pos, const Vector3& mom,
     Direction dir) const {
   const volume_t* attVolume = nullptr;
+
+  auto localPositionRes =
+      surfaceRepresentation().globalToLocal(gctx, pos, dir * mom.normalized());
+  if (!localPositionRes.ok()) {
+    throw std::runtime_error(
+        "BoundarySurfaceT::attachedVolume: "
+        "surfaceRepresentation().localToGlobal failed");
+  }
+
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(gctx, pos)).dot(dir * mom) > 0.) {
+  if ((surfaceRepresentation().normal(gctx, *localPositionRes)).dot(dir * mom) >
+      0.) {
     attVolume = m_alongVolumeArray ? m_alongVolumeArray->object(pos).get()
                                    : m_alongVolume;
   } else {

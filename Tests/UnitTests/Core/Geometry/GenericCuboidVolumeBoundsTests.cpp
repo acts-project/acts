@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -225,7 +226,11 @@ BOOST_AUTO_TEST_CASE(GenericCuboidVolumeBoundarySurfaces) {
   for (auto& os : gcvbOrientedSurfaces) {
     auto geoCtx = GeometryContext();
     auto osCenter = os.first->center(geoCtx);
-    auto osNormal = os.first->normal(geoCtx);
+    const auto* pSurface =
+        dynamic_cast<const Acts::PlaneSurface*>(os.first.get());
+    BOOST_REQUIRE_MESSAGE(pSurface != nullptr,
+                          "The surface is not a plane surface");
+    auto osNormal = pSurface->normal(geoCtx);
     // Check if you step inside the volume with the oriented normal
     Vector3 insideGcvb = osCenter + os.second * osNormal;
     Vector3 outsideGcvb = osCenter - os.second * osNormal;

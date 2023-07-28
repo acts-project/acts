@@ -115,7 +115,7 @@ class CylinderSurface : public RegularSurface {
   /// @param direction is the momentum direction vector (ignored)
   /// @return rotation matrix that defines the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
-                                 const Vector3& position,
+                                 const Vector2& position,
                                  const Vector3& direction) const final;
 
   /// Return the surface type
@@ -133,18 +133,6 @@ class CylinderSurface : public RegularSurface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 
-  /// Return method for surface normal information
-  /// @note for a Cylinder a local position is always required for the normal
-  /// vector
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the global position for which the normal vector is
-  /// requested
-  ///
-  /// @return normal vector at the global position by value
-  Vector3 normal(const GeometryContext& gctx,
-                 const Vector3& position) const final;
-
   /// Normal vector return without argument
   using RegularSurface::normal;
 
@@ -158,6 +146,8 @@ class CylinderSurface : public RegularSurface {
   /// This method returns the CylinderBounds by reference
   const CylinderBounds& bounds() const final;
 
+  using RegularSurface::localToGlobal;
+
   /// Local to global transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -165,21 +155,21 @@ class CylinderSurface : public RegularSurface {
   /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
+
+  using RegularSurface::globalToLocal;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction

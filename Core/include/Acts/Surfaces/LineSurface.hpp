@@ -90,7 +90,7 @@ class LineSurface : public Surface {
   /// @param other is the source surface dor copying
   LineSurface& operator=(const LineSurface& other);
 
-  Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
+  Vector3 normal(const GeometryContext& gctx, const Vector2& pos,
                  const Vector3& direction) const override;
 
   /// The binning position is the position calculated
@@ -103,21 +103,24 @@ class LineSurface : public Surface {
   Vector3 binningPosition(const GeometryContext& gctx,
                           BinningValue bValue) const final;
 
-  /// Return the measurement frame - this is needed for alignment, in particular
-  ///
-  /// for StraightLine and Perigee Surface
-  ///  - the default implementation is the RotationMatrix3 of the transform
+  /// Return the measurement frame
+  /// @TODO: Add description of the reference frame
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position is the global position where the measurement frame is
+  /// @param position is the local position where the measurement frame is
   /// constructed
   /// @param direction is the momentum direction used for the measurement frame
   /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
-                                 const Vector3& position,
-                                 const Vector3& direction) const final;
+                                 const Vector2& /*position*/,
+                                 const Vector3& direction) const final {
+    return referenceFrame(gctx, direction);
+  }
+
+  RotationMatrix3 referenceFrame(const GeometryContext& gctx,
+                                 const Vector3& direction) const;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.

@@ -75,7 +75,10 @@ void ProtoLayer::measure(const GeometryContext& gctx,
       // Take the thickness in account if necessary
       double thickness = element->thickness();
       // We need a translation along and opposite half thickness
-      Vector3 sfNormal = regSurface->normal(gctx, sf->center(gctx));
+      // We assume the normal at (0,0) is ok. For CyinderSurfaces, the normal
+      // depends on the local position, but any normal is ok since we determine
+      // the extent along the radial direction anyway.
+      Vector3 sfNormal = regSurface->normal(gctx, Vector2::Zero());
       std::vector<double> deltaT = {-0.5 * thickness, 0.5 * thickness};
       for (const auto& dT : deltaT) {
         Transform3 dtransform = Transform3::Identity();
