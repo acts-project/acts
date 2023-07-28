@@ -374,7 +374,6 @@ def itkSeedingAlgConfig(
     phiMax = 2 * math.pi
     phiBinDeflectionCoverage = 3
     numPhiNeighbors = 1
-    maxPhiBins = 200
     # only used in orthogonal seeding
     deltaPhiMax = 0.025
 
@@ -576,7 +575,6 @@ def itkSeedingAlgConfig(
         phiBinDeflectionCoverage=phiBinDeflectionCoverage,
         phi=(phiMin, phiMax),
         impactMax=impactMax,
-        maxPhiBins=maxPhiBins,
     )
     seedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(
         allowSeparateRMax=allowSeparateRMax,

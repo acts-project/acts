@@ -150,11 +150,11 @@ template <typename external_spacepoint_t>
 bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     const SeedFinderOptions &options, const internal_sp_t &low,
     const internal_sp_t &high, bool isMiddleInverted) const {
-  const float &rL = low.radius();
-  const float &rH = high.radius();
+  float rL = low.radius();
+  float rH = high.radius();
 
-  const float &zL = low.z();
-  const float &zH = high.z();
+  float zL = low.z();
+  float zH = high.z();
 
   float deltaR = rH - rL;
 
@@ -223,15 +223,6 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * Cut: Ensure that z-distance between SPs is within max and min values.
    */
   if (std::abs(deltaZ) > m_config.deltaZMax) {
-    return false;
-  }
-
-  /*
-   * Cut: Ensure that inner-middle dublet is in a certain (r, eta) region of the
-   * detector according to detector specific cuts.
-   */
-  const float &rInner = (isMiddleInverted) ? rH : rL;
-  if (!m_config.experimentCuts(rInner, cotTheta)) {
     return false;
   }
 

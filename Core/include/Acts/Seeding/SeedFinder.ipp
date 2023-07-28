@@ -374,14 +374,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         const float iDeltaR = std::sqrt(iDeltaR2);
         const float cotTheta = deltaZ * iDeltaR;
 
-        // discard bottom-middle dublets in a certain (r, eta) region according
-        // to detector specific cuts
-        if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
-          if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
-            continue;
-          }
-        }
-
         const float Er =
             ((varianceZM + otherSP->varianceZ()) +
              (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
@@ -422,14 +414,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       const float iDeltaR = std::sqrt(iDeltaR2);
       const float cotTheta = deltaZ * iDeltaR;
-
-      // discard bottom-middle dublets in a certain (r, eta) region according to
-      // detector specific cuts
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
-        if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
-          continue;
-        }
-      }
 
       const float Er =
           ((varianceZM + otherSP->varianceZ()) +
