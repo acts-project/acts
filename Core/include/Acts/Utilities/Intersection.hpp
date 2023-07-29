@@ -94,6 +94,30 @@ struct Intersection {
     // The current one wins, no re-ordering
     return true;
   }
+
+  static bool navigationOrder(const Intersection<DIM>& aIntersection,
+                              const Intersection<DIM>& bIntersection) {
+    if ((aIntersection.status == Status::unreachable) &&
+        (bIntersection.status != Status::unreachable)) {
+      return false;
+    }
+    if ((aIntersection.status != Status::unreachable) &&
+        (bIntersection.status == Status::unreachable)) {
+      return true;
+    }
+    // both are reachable or onSurface now
+
+    auto a = aIntersection.pathLength;
+    auto b = bIntersection.pathLength;
+
+    if ((a >= 0 && b >= 0) || (a <= 0 && b <= 0)) {
+      return a < b;
+    }
+    if (a > 0) {  // b < 0
+      return true;
+    }
+    return false;
+  }
 };
 
 using Intersection2D = Intersection<2>;
@@ -148,7 +172,7 @@ class ObjectIntersection {
   /// @param oi is the source intersection for comparison
   bool operator<(
       const ObjectIntersection<object_t, representation_t>& oi) const {
-    return (intersection < oi.intersection);
+    return intersection < oi.intersection;
   }
 
   /// @brief Greater operator for ordering & sorting
@@ -159,11 +183,19 @@ class ObjectIntersection {
   /// @param oi is the source intersection for comparison
   bool operator>(
       const ObjectIntersection<object_t, representation_t>& oi) const {
-    return (intersection > oi.intersection);
+    return intersection > oi.intersection;
   }
 
-  /// Allow swapping the intersection and the alternative
+  /// Swap `intersection` and `alternative`
   void swapSolutions() { std::swap(intersection, alternative); }
+
+  /// Apply the navigation order defined in `Intersection` by swapping the
+  /// solutions if necessary.
+  void applyNavigationOrder() {
+    if (!Intersection3D::navigationOrder(intersection, alternative)) {
+      swapSolutions();
+    }
+  }
 };
 
 struct SameSurfaceIntersection {

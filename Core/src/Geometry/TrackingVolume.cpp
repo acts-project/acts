@@ -581,21 +581,10 @@ Acts::TrackingVolume::compatibleBoundaries(
     processBoundaries(bSurfacesConfined);
   }
 
-  auto comparator = [](double a, double b) {
-    // sign function would be nice but ...
-    if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
-      return a < b;
-    }
-    if (a > 0) {  // b < 0
-      return true;
-    }
-    return false;
-  };
-
   std::sort(bIntersections.begin(), bIntersections.end(),
             [&](const auto& a, const auto& b) {
-              return comparator(a.intersection.pathLength,
-                                b.intersection.pathLength);
+              return Intersection3D::navigationOrder(a.intersection.pathLength,
+                                                     b.intersection.pathLength);
             });
   return bIntersections;
 }
