@@ -582,9 +582,9 @@ Acts::TrackingVolume::compatibleBoundaries(
   }
 
   std::sort(bIntersections.begin(), bIntersections.end(),
-            [&](const auto& a, const auto& b) {
-              return Intersection3D::navigationOrder(a.intersection.pathLength,
-                                                     b.intersection.pathLength);
+            [](const auto& a, const auto& b) {
+              return Intersection3D::navigationOrder(a.intersection,
+                                                     b.intersection);
             });
   return bIntersections;
 }
