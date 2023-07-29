@@ -10,8 +10,8 @@
 
 #include "Acts/Detector/detail/GridAxisGenerators.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Plugins/Json/GridJsonConverter.hpp"
+#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
 #include <array>
 #include <memory>
