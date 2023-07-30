@@ -279,20 +279,8 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   // Check first solution for boundary compatibility
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);
-  // Check one if its valid or neither is valid
-  bool check1 = status1 != Intersection3D::Status::missed or
-                (status1 == Intersection3D::Status::missed and
-                 status2 == Intersection3D::Status::missed);
-  // Check and (eventually) go with the first solution
-  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
-      status2 == Intersection3D::Status::missed) {
-    // And add the alternative
-    cIntersection.alternative = second;
-  } else {
-    // And add the alternative
-    cIntersection.alternative = first;
-    cIntersection.intersection = second;
-  }
+  cIntersection.alternative = second;
+  cIntersection.applyNavigationOrder();
   return cIntersection;
 }
 
