@@ -110,8 +110,11 @@ struct Intersection {
     auto a = aIntersection.pathLength;
     auto b = bIntersection.pathLength;
 
-    if ((a >= 0 && b >= 0) || (a <= 0 && b <= 0)) {
+    if (a >= 0 && b >= 0) {
       return a < b;
+    }
+    if (a <= 0 && b <= 0) {
+      return a > b;
     }
     if (a > 0) {  // b < 0
       return true;
