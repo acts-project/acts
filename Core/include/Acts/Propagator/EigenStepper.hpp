@@ -16,6 +16,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
@@ -75,12 +76,12 @@ class EigenStepper {
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    MagneticFieldProvider::Cache fieldCacheIn,
-                   const SingleBoundTrackParameters<charge_t>& par,
+                   const GenericBoundTrackParameters<charge_t>& par,
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max())
         : absCharge(std::abs(par.charge())),
           navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
       pars.template segment<3>(eFreePos0) = par.position(gctx);
@@ -166,7 +167,7 @@ class EigenStepper {
   template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const GenericBoundTrackParameters<charge_t>& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max()) const;
 
