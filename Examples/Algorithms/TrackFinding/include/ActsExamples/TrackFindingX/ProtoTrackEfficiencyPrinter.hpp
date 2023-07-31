@@ -20,7 +20,7 @@
 
 namespace ActsExamples {
 
-class ProtoTrackEfficencyPrinter final : public IAlgorithm {
+class ProtoTrackEfficiencyPrinter final : public IAlgorithm {
  public:
   struct Config {
     std::string testProtoTracks;
@@ -28,7 +28,7 @@ class ProtoTrackEfficencyPrinter final : public IAlgorithm {
     // std::string spacePoints;
   };
 
-  ProtoTrackEfficencyPrinter(Config cfg, Acts::Logging::Level lvl)
+  ProtoTrackEfficiencyPrinter(Config cfg, Acts::Logging::Level lvl)
       : IAlgorithm("ProtoTrackEfficencyPrinter", lvl), m_cfg(cfg) {
     m_testProtoTracks.initialize(m_cfg.testProtoTracks);
     m_refProtoTracks.initialize(m_cfg.refProtoTracks);
@@ -36,51 +36,7 @@ class ProtoTrackEfficencyPrinter final : public IAlgorithm {
   }
 
   ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext &context) const override {
-    const auto testTracks = m_testProtoTracks(context);
-    const auto refTracks = m_refProtoTracks(context);
-
-    std::vector<double> effs(testTracks.size(), 0.0);
-
-    for (auto [refTrack, eff] : Acts::zip(refTracks, effs)) {
-      ProtoTrack intersection;
-      for (const auto &testTrack : testTracks) {
-        std::set_intersection(refTrack.begin(), refTrack.end(),
-                              testTrack.begin(), testTrack.end(),
-                              intersection.begin());
-        eff = std::max(
-            eff, static_cast<double>(intersection.size()) / refTrack.size());
-        intersection.clear();
-      }
-    }
-
-    std::sort(effs.begin(), effs.end());
-
-    const static std::vector<double> thresholds = {0., .1, .2, .3, .4,
-                                                   .5, .6, .7, .8, .9};
-
-    auto it = effs.begin();
-    std::vector<std::size_t> hist;
-    for (double threshold : thresholds) {
-      auto endIt = std::find_if(it, effs.end(),
-                                [&](double eff) { return eff >= threshold; });
-      hist.push_back(std::distance(it, endIt));
-      it = endIt;
-    }
-
-    const auto max = *std::max_element(hist.begin(), hist.end());
-    const int colMax = 40;
-
-    ACTS_INFO("Prototrack efficiency histogram:");
-    for (const auto &[v, th] : Acts::zip(hist, thresholds)) {
-      auto rel = v / static_cast<float>(max);
-      auto l = std::round(rel * colMax);
-      std::string str(l, '#');
-      ACTS_INFO(">=" << th << " | " << str);
-    }
-
-    return {};
-  }
+      const ActsExamples::AlgorithmContext &context) const override;
 
   const Config &config() const { return m_cfg; }
 

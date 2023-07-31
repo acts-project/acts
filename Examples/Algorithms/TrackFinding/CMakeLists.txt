@@ -8,6 +8,7 @@ add_library(
   src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
   src/TrackFindingFromPrototrackAlgorithm.cpp
+  src/ProtoTrackEfficiencyPrinter.cpp
 )
 
 target_include_directories(
