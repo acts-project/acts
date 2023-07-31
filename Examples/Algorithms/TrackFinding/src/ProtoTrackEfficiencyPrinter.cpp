@@ -27,6 +27,13 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
   for (auto [refTrack, eff] : Acts::zip(refTracks, effs)) {
     ProtoTrack intersection;
     for (const auto &testTrack : testTracks) {
+
+      std::cout << "\nref: ";
+      std::copy(refTrack.begin(), refTrack.end(), std::ostream_iterator<std::size_t>(std::cout, ","));
+      std::cout << "\ntest: ";
+      std::copy(testTrack.begin(), testTrack.end(), std::ostream_iterator<std::size_t>(std::cout, ","));
+      std::cout << "\n-----------------------" << std::endl;
+
       std::set_intersection(refTrack.begin(), refTrack.end(), testTrack.begin(),
                             testTrack.end(), intersection.begin());
       eff = std::max(
