@@ -10,8 +10,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
@@ -53,9 +53,9 @@ void packCovariance(const ActsSymMatrix<6>& from, float* to);
 
 Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
-    const SingleBoundTrackParameters<SinglyCharged>& params);
+    const GenericBoundTrackParameters<SinglyCharged>& params);
 
-SingleBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
+GenericBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
@@ -102,7 +102,7 @@ void writeTrack(
     trackState.location = edm4hep::TrackState::AtOther;
 
     // This makes the hard assumption that |q| = 1
-    SingleBoundTrackParameters<SinglyCharged> params{
+    GenericBoundTrackParameters<SinglyCharged> params{
         state.referenceSurface().getSharedPtr(), state.parameters(),
         state.covariance()};
 
@@ -133,7 +133,7 @@ void writeTrack(
   auto& ipState = outTrackStates.emplace_back();
 
   // Convert the track parameters at the IP
-  SingleBoundTrackParameters<SinglyCharged> trackParams{
+  GenericBoundTrackParameters<SinglyCharged> trackParams{
       track.referenceSurface().getSharedPtr(), track.parameters(),
       track.covariance()};
 

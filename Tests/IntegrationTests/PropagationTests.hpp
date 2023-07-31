@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -99,8 +98,8 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
 /// \warning Does not check that they are defined on the same surface.
 template <typename charge_t>
 inline void checkParametersConsistency(
-    const Acts::SingleBoundTrackParameters<charge_t>& cmp,
-    const Acts::SingleBoundTrackParameters<charge_t>& ref,
+    const Acts::GenericBoundTrackParameters<charge_t>& cmp,
+    const Acts::GenericBoundTrackParameters<charge_t>& ref,
     const Acts::GeometryContext& geoCtx, double epsPos, double epsDir,
     double epsMom) {
   using namespace Acts;
@@ -134,8 +133,8 @@ inline void checkParametersConsistency(
 /// \warning Does not check that the parameters value itself are consistent.
 template <typename charge_t>
 inline void checkCovarianceConsistency(
-    const Acts::SingleBoundTrackParameters<charge_t>& cmp,
-    const Acts::SingleBoundTrackParameters<charge_t>& ref,
+    const Acts::GenericBoundTrackParameters<charge_t>& cmp,
+    const Acts::GenericBoundTrackParameters<charge_t>& ref,
     double relativeTolerance) {
   // either both or none have covariance set
   if (cmp.covariance().has_value()) {
@@ -157,7 +156,7 @@ inline void checkCovarianceConsistency(
 /// Construct the transformation from the curvilinear to the global coordinates.
 template <typename charge_t>
 inline Acts::Transform3 makeCurvilinearTransform(
-    const Acts::SingleBoundTrackParameters<charge_t>& params,
+    const Acts::GenericBoundTrackParameters<charge_t>& params,
     const Acts::GeometryContext& geoCtx) {
   Acts::Vector3 unitW = params.unitDirection();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
@@ -176,7 +175,7 @@ inline Acts::Transform3 makeCurvilinearTransform(
 struct ZCylinderSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::CylinderSurface> operator()(
-      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::GenericBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     auto radius = params.position(geoCtx).template head<2>().norm();
     auto halfz = std::numeric_limits<double>::max();
@@ -189,7 +188,7 @@ struct ZCylinderSurfaceBuilder {
 struct DiscSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::DiscSurface> operator()(
-      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::GenericBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
     using namespace Acts::UnitLiterals;
@@ -213,7 +212,7 @@ struct DiscSurfaceBuilder {
 struct PlaneSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::PlaneSurface> operator()(
-      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::GenericBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::PlaneSurface>(
         makeCurvilinearTransform(params, geoCtx));
@@ -224,7 +223,7 @@ struct PlaneSurfaceBuilder {
 struct ZStrawSurfaceBuilder {
   template <typename charge_t>
   std::shared_ptr<Acts::StrawSurface> operator()(
-      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::GenericBoundTrackParameters<charge_t>& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::StrawSurface>(
         Acts::Transform3(Acts::Translation3(params.position(geoCtx))));
@@ -242,7 +241,7 @@ template <typename propagator_t, typename charge_t,
 inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    const Acts::GenericCurvilinearTrackParameters<charge_t>& initialParams,
     double pathLength) {
   using namespace Acts::UnitLiterals;
 
@@ -270,7 +269,7 @@ template <typename propagator_t, typename charge_t,
 inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    const Acts::GenericCurvilinearTrackParameters<charge_t>& initialParams,
     const Acts::Surface& targetSurface, double pathLimit) {
   using namespace Acts::UnitLiterals;
 
@@ -302,7 +301,7 @@ template <typename propagator_t, typename charge_t,
 inline void runForwardBackwardTest(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    const Acts::GenericCurvilinearTrackParameters<charge_t>& initialParams,
     double pathLength, double epsPos, double epsDir, double epsMom) {
   // propagate parameters Acts::Direction::Forward
   auto [fwdParams, fwdPathLength] =
@@ -329,7 +328,7 @@ template <typename propagator_t, typename charge_t, typename surface_builder_t,
 inline void runToSurfaceTest(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    const Acts::GenericCurvilinearTrackParameters<charge_t>& initialParams,
     double pathLength, surface_builder_t&& buildTargetSurface, double epsPos,
     double epsDir, double epsMom) {
   // free propagation for the given path length
@@ -371,7 +370,7 @@ inline void runForwardComparisonTest(
     const cmp_propagator_t& cmpPropagator,
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    const Acts::GenericCurvilinearTrackParameters<charge_t>& initialParams,
     double pathLength, double epsPos, double epsDir, double epsMom,
     double tolCov) {
   // propagate twice using the two different propagators
@@ -402,7 +401,7 @@ inline void runToSurfaceComparisonTest(
     const cmp_propagator_t& cmpPropagator,
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    const Acts::GenericCurvilinearTrackParameters<charge_t>& initialParams,
     double pathLength, surface_builder_t&& buildTargetSurface, double epsPos,
     double epsDir, double epsMom, double tolCov) {
   // free propagation with the reference propagator for the given path length
