@@ -9,10 +9,11 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 // #include "Acts/Utilities/KDTree.hpp"
 
 #include <string>
