@@ -41,3 +41,9 @@ build*
 !.gitlab-ci.yml
 !.clang-tidy
 !.oclint
+
+Examples/Scripts/Python/csv
+Examples/Scripts/Python/onnx_models
+Examples/Scripts/Python/torchscript_models/
+*.old
+*.old2

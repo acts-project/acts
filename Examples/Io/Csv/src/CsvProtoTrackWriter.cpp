@@ -53,14 +53,13 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
 
   for (auto trackId = 0ul; trackId < tracks.size(); ++trackId) {
     for (Index hit : tracks[trackId]) {
-      const auto sp = findSpacePointForIndex(hit, spacepoints);
-
-      if (not sp) {
+      const auto spr = findSpacePointForIndex(hit, spacepoints);
+      if (not spr) {
         ACTS_WARNING("Could not convert index " << hit << " to spacepoint");
         continue;
       }
-
-      writer.append({trackId, sp->x(), sp->y(), sp->z()});
+      const auto &sp = *spr;
+      writer.append({trackId, sp.x(), sp.y(), sp.z()});
     }
   }
   return ActsExamples::ProcessCode::SUCCESS;

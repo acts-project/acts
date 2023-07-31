@@ -144,6 +144,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Run the pipeline
   const auto trackCandidates = runPipeline(features, spacepointIDs);
 
+  ACTS_DEBUG("Done with pipeline");
+
   // Make the prototracks
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
