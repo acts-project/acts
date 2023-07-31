@@ -73,7 +73,7 @@ class ProtoTrackEfficencyPrinter final : public IAlgorithm {
 
     ACTS_INFO("Prototrack efficiency histogram:");
     for (const auto &[v, th] : Acts::zip(hist, thresholds)) {
-      auto rel = v / static_cast<float>(max));
+      auto rel = v / static_cast<float>(max);
       auto l = std::round(rel * colMax);
       std::string str(l, '#');
       ACTS_INFO(">=" << th << " | " << str);
