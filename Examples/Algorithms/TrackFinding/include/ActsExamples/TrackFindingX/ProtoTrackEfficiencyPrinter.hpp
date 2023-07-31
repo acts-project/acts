@@ -82,6 +82,8 @@ class ProtoTrackEfficencyPrinter final : public IAlgorithm {
     return {};
   }
 
+  const Config &config() const { return m_cfg; }
+
  private:
   Config m_cfg;
 
