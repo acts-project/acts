@@ -4,10 +4,22 @@
 
 ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
     const ActsExamples::AlgorithmContext &context) const {
-  const auto testTracks = m_testProtoTracks(context);
-  const auto refTracks = m_refProtoTracks(context);
+  auto testTracks = m_testProtoTracks(context);
+  auto refTracks = m_refProtoTracks(context);
 
-  std::vector<double> effs(testTracks.size(), 0.0);
+  std::for_each(testTracks.begin(), testTracks.end(),
+                [](auto &t) { std::sort(t.begin(), t.end()); });
+  std::for_each(refTracks.begin(), refTracks.end(),
+                [](auto &t) { std::sort(t.begin(), t.end()); });
+
+  ACTS_INFO("Receiving " << refTracks.size() << " reference tracks");
+  refTracks.erase(std::remove_if(refTracks.begin(), refTracks.end(),
+                                 [](const auto &t) { return t.size() < 3; }),
+                  refTracks.end());
+  ACTS_INFO(" -> " << refTracks.size() << " tracks with size >= 3");
+  ACTS_INFO("Receiving " << testTracks.size() << " test tracks");
+
+  std::vector<double> effs(refTracks.size(), 0.0);
 
   for (auto [refTrack, eff] : Acts::zip(refTracks, effs)) {
     ProtoTrack intersection;
@@ -34,7 +46,7 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
   std::vector<std::size_t> hist;
   for (double threshold : thresholds) {
     auto endIt = std::find_if(it, effs.end(),
-                              [&](double eff) { return eff >= threshold; });
+                              [&](double eff) { return eff > threshold; });
     hist.push_back(std::distance(it, endIt));
     it = endIt;
   }
@@ -47,7 +59,11 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
     auto rel = v / static_cast<float>(max);
     auto l = std::round(rel * colMax);
     std::string str(l, '#');
-    ACTS_INFO(">=" << th << " | " << str);
+
+    auto label = std::to_string(th);
+    label.resize(7, ' ');
+
+    ACTS_INFO(">" << label << " | " << str);
   }
 
   return {};
