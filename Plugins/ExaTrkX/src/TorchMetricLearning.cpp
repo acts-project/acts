@@ -60,7 +60,10 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   const int64_t numAllFeatures = inputValues.shape()[1];
 
   auto opts = torch::TensorOptions().dtype(torch::kFloat32);
-  torch::Tensor inputTensor = torch::from_blob(inputValues.data(), {numSpacepoints, numAllFeatures}, opts).to(device);
+  torch::Tensor inputTensor =
+      torch::from_blob(inputValues.data(), {numSpacepoints, numAllFeatures},
+                       opts)
+          .to(device);
 
   // **********
   // Embedding
@@ -80,8 +83,9 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
           ? inputTensor.index({Slice{}, Slice{None, m_cfg.numFeatures}})
           : std::move(inputTensor));
 
-
-  ACTS_DEBUG("embedding input tensor shape " << inputTensors[0].toTensor().size(0) << ", " << inputTensors[0].toTensor().size(1));
+  ACTS_DEBUG("embedding input tensor shape "
+             << inputTensors[0].toTensor().size(0) << ", "
+             << inputTensors[0].toTensor().size(1));
 
   auto output = model.forward(inputTensors).toTensor();
 

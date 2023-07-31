@@ -68,13 +68,15 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
   std::any edge_weights;
 
   for (auto edgeClassifier : m_cfg.edgeClassifiers) {
-    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(std::move(nodes), std::move(edges));
+    auto [newNodes, newEdges, newWeights] =
+        (*edgeClassifier)(std::move(nodes), std::move(edges));
     nodes = std::move(newNodes);
     edges = std::move(newEdges);
     edge_weights = std::move(newWeights);
   }
 
-  return (*m_cfg.trackBuilder)(std::move(nodes), std::move(edges), std::move(edge_weights), spacepointIDs);
+  return (*m_cfg.trackBuilder)(std::move(nodes), std::move(edges),
+                               std::move(edge_weights), spacepointIDs);
 }
 
 enum feat : std::size_t {
@@ -103,14 +105,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   const std::size_t numFeatures = clusters ? 7 : 3;
   ACTS_INFO("Received " << num_spacepoints << " spacepoints");
 
-  boost::multi_array<float, 2> features(std::array<std::size_t,2>{num_spacepoints, numFeatures});
+  boost::multi_array<float, 2> features(
+      std::array<std::size_t, 2>{num_spacepoints, numFeatures});
   std::vector<int> spacepointIDs;
 
   spacepointIDs.reserve(spacepoints.size());
 
-  double sumCells=0.0;
-  double sumActivation=0.0;
-  
+  double sumCells = 0.0;
+  double sumActivation = 0.0;
+
   for (auto i = 0ul; i < num_spacepoints; ++i) {
     const auto& sp = spacepoints[i];
     // For now just take the first index since does require one single index per
@@ -138,8 +141,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     }
   }
 
-  ACTS_DEBUG("Avg cell count: " << sumCells/spacepoints.size());
-  ACTS_DEBUG("Avg activation: " << sumActivation/sumCells);
+  ACTS_DEBUG("Avg cell count: " << sumCells / spacepoints.size());
+  ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
 
   // Run the pipeline
   const auto trackCandidates = runPipeline(features, spacepointIDs);
@@ -156,9 +159,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     ProtoTrack onetrack;
     std::copy(x.begin(), x.end(), std::back_inserter(onetrack));
 
-    if( onetrack.size() < 3 ) {
-        nShortTracks++;
-        continue;
+    if (onetrack.size() < 3) {
+      nShortTracks++;
+      continue;
     }
     protoTracks.push_back(std::move(onetrack));
   }

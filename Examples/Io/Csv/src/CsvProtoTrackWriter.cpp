@@ -58,7 +58,7 @@ ActsExamples::ProcessCode ActsExamples::CsvProtoTrackWriter::writeT(
         ACTS_WARNING("Could not convert index " << hit << " to spacepoint");
         continue;
       }
-      const auto &sp = *spr;
+      const auto& sp = *spr;
       writer.append({trackId, sp.x(), sp.y(), sp.z()});
     }
   }
