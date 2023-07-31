@@ -384,8 +384,8 @@ void addTrackFinding(Context& ctx) {
         "MeasurementMapSelectorAlgorithm", inputMeasurementParticleMap,
         inputSourceLinks, outputMeasurementParticleMap, geometrySelection);
 
-    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ProtoTrackEfficiencyPrinter, mex,
-                                  "ProtoTrackEfficiencyPrinter",
+    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ProtoTrackEfficiencyPrinter,
+                                  mex, "ProtoTrackEfficiencyPrinter",
                                   testProtoTracks, refProtoTracks);
   }
 }

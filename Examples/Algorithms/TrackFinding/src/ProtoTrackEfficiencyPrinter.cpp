@@ -2,6 +2,9 @@
 
 #include <Acts/Utilities/Zip.hpp>
 
+#include <boost/histogram.hpp>
+#include <boost/histogram/ostream.hpp>
+
 ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
     const ActsExamples::AlgorithmContext &context) const {
   auto testTracks = m_testProtoTracks(context);
@@ -37,34 +40,11 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
   }
   std::cout << std::endl;
 
-  std::sort(effs.begin(), effs.end());
+  namespace bh = boost::histogram;
+  auto h = bh::make_histogram(bh::axis::regular<>(10, 0.0, 1.0));
+  h.fill(effs);
 
-  const static std::vector<double> thresholds = {0., .1, .2, .3, .4,
-                                                 .5, .6, .7, .8, .9};
-
-  auto it = effs.begin();
-  std::vector<std::size_t> hist;
-  for (double threshold : thresholds) {
-    auto endIt = std::find_if(it, effs.end(),
-                              [&](double eff) { return eff > threshold; });
-    hist.push_back(std::distance(it, endIt));
-    it = endIt;
-  }
-
-  const auto max = *std::max_element(hist.begin(), hist.end());
-  const int colMax = 40;
-
-  ACTS_INFO("Prototrack efficiency histogram:");
-  for (const auto &[v, th] : Acts::zip(hist, thresholds)) {
-    auto rel = v / static_cast<float>(max);
-    auto l = std::round(rel * colMax);
-    std::string str(l, '#');
-
-    auto label = std::to_string(th);
-    label.resize(7, ' ');
-
-    ACTS_INFO(">" << label << " | " << str);
-  }
+  ACTS_INFO("Prototrack efficiency histogram:\n" << h);
 
   return {};
 }
