@@ -32,9 +32,7 @@ class LineBounds;
 /// @image html figures/LineSurface.png
 ///
 class StrawSurface : public LineSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from Transform3 and bounds

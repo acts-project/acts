@@ -42,9 +42,7 @@ class DetectorElementBase;
 /// @image html figures/CylinderSurface.png
 
 class CylinderSurface : public RegularSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor from DetectorElementBase: Element proxy

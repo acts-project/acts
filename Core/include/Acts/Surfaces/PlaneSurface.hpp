@@ -41,9 +41,7 @@ class SurfaceBounds;
 /// @image html figures/PlaneSurface.png
 ///
 class PlaneSurface : public RegularSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Copy Constructor

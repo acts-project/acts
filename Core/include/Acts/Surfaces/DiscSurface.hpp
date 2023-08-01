@@ -53,9 +53,7 @@ class SurfaceBounds;
 /// @image html figures/DiscSurface.png
 ///
 class DiscSurface : public RegularSurface {
-#ifndef DOXYGEN
-  friend Surface;
-#endif
+  friend class Surface;
 
  protected:
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max} \f$
