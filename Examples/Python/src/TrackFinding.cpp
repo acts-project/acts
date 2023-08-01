@@ -37,6 +37,7 @@
 // #include "ActsExamples/TrackFindingX/SourceLinkSelectorAlgorithm.hpp"
 #include "ActsExamples/TrackFindingX/ProtoTrackEfficiencyPrinter.hpp"
 #include "ActsExamples/TrackFindingX/TrackFindingFromPrototrackAlgorithm.hpp"
+#include "ActsExamples/Utilities/MakeMeasurmentParticlesMap.hpp"
 
 #include <array>
 #include <cstddef>
@@ -387,6 +388,11 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ProtoTrackEfficiencyPrinter,
                                   mex, "ProtoTrackEfficiencyPrinter",
                                   testProtoTracks, refProtoTracks);
+
+    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MakeMeasurmentParticlesMap, mex,
+                                  "MakeMeasurmentParticlesMap",
+                                  inputMeasurmentSimhitMap, inputSimHits,
+                                  outputMeasurmentParticlesMap);
   }
 }
 

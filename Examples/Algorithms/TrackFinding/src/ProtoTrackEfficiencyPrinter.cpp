@@ -29,14 +29,18 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
     for (const auto &testTrack : testTracks) {
       intersection.resize(std::max(testTrack.size(), refTrack.size()));
       // std::cout << "\nref: ";
-      // std::copy(refTrack.begin(), refTrack.end(), std::ostream_iterator<std::size_t>(std::cout, ","));
+      // std::copy(refTrack.begin(), refTrack.end(),
+      // std::ostream_iterator<std::size_t>(std::cout, ","));
       // std::cout << "\ntest: ";
-      // std::copy(testTrack.begin(), testTrack.end(), std::ostream_iterator<std::size_t>(std::cout, ","));
+      // std::copy(testTrack.begin(), testTrack.end(),
+      // std::ostream_iterator<std::size_t>(std::cout, ","));
       // std::cout << "\n-----------------------" << std::endl;
 
-      const auto it = std::set_intersection(refTrack.begin(), refTrack.end(), testTrack.begin(),
-                            testTrack.end(), intersection.begin());
-      const auto size = static_cast<double>(std::distance(intersection.begin(), it));
+      const auto it = std::set_intersection(refTrack.begin(), refTrack.end(),
+                                            testTrack.begin(), testTrack.end(),
+                                            intersection.begin());
+      const auto size =
+          static_cast<double>(std::distance(intersection.begin(), it));
 
       eff = std::max(eff, size / refTrack.size());
       intersection.clear();
