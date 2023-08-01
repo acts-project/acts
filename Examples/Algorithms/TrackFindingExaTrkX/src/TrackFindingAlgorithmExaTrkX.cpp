@@ -121,7 +121,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
     spacepointIDs.push_back(sl.index());
 
-    features[i][eR] = sp.r() / m_cfg.rScale;
+    features[i][eR] = std::hypot(sp.x(), sp.y(), sp.z()) / m_cfg.rScale;
     features[i][ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
     features[i][eZ] = sp.z() / m_cfg.zScale;
 
