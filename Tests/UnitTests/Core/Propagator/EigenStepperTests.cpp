@@ -13,9 +13,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
@@ -207,7 +206,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
   BOOST_CHECK_EQUAL(esState.navDir, navDir);
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esState.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
 
   // Test without charge and covariance matrix
@@ -264,12 +263,12 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = esState.stepSize.toString();
 
-  es.setStepSize(esState, 1337.);
-  BOOST_CHECK_EQUAL(esState.previousStepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(esState.stepSize.value(), 1337.);
+  es.setStepSize(esState, -1337.);
+  BOOST_CHECK_EQUAL(esState.previousStepSize, stepSize);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), -1337.);
 
   es.releaseStepSize(esState);
-  BOOST_CHECK_EQUAL(esState.stepSize.value(), -123.);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
   // Test the curvilinear state construction

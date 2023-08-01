@@ -313,7 +313,7 @@ void addOutput(Context& ctx) {
       inputAllTruthParticles, inputSelectedTruthParticles, inputTrackParameters,
       inputAssociatedTruthParticles, inputTrackParameters, inputTrajectories,
       inputMeasurementParticlesMap, inputVertices, bField, filePath, treeName,
-      fileMode, minTrackVtxMatchFraction, truthMatchProbMin);
+      fileMode, minTrackVtxMatchFraction, truthMatchProbMin, useTracks);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,

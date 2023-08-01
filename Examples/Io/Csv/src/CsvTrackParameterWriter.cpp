@@ -9,7 +9,7 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"

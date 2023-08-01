@@ -18,6 +18,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -611,7 +612,7 @@ class MultiEigenStepperLoop
   /// the component number is again modified
   template <typename charge_t>
   Result<ComponentProxy> addComponent(
-      State& state, const SingleBoundTrackParameters<charge_t>& pars,
+      State& state, const GenericBoundTrackParameters<charge_t>& pars,
       double weight) const {
     state.components.push_back(
         {SingleState(state.geoContext,

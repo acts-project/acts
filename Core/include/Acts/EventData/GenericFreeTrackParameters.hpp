@@ -28,7 +28,7 @@ namespace Acts {
 /// Parameters and covariance matrix are stored using the free parametrization
 /// defined in `enum FreeIndices`.
 template <class charge_t>
-class SingleFreeTrackParameters {
+class GenericFreeTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
@@ -45,8 +45,8 @@ class SingleFreeTrackParameters {
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
-  SingleFreeTrackParameters(const ParametersVector& params, Scalar q,
-                            std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericFreeTrackParameters(const ParametersVector& params, Scalar q,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(params),
         m_cov(std::move(cov)),
         m_chargeInterpreter(std::abs(q)) {
@@ -63,8 +63,8 @@ class SingleFreeTrackParameters {
   /// ambiguities, i.e. the charge interpretation type is default-constructible.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  SingleFreeTrackParameters(const ParametersVector& params,
-                            std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericFreeTrackParameters(const ParametersVector& params,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(params), m_cov(std::move(cov)) {}
 
   /// Construct from four-position, angles, absolute momentum, and charge.
@@ -75,9 +75,9 @@ class SingleFreeTrackParameters {
   /// @param p Absolute momentum
   /// @param q Particle charge
   /// @param cov Free parameters covariance matrix
-  SingleFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
-                            Scalar p, Scalar q,
-                            std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
+                             Scalar p, Scalar q,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
         m_chargeInterpreter(std::abs(q)) {
@@ -106,9 +106,9 @@ class SingleFreeTrackParameters {
   /// ambiguities, i.e. the charge interpretation type is default-constructible.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  SingleFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
-                            Scalar qOverP,
-                            std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
+                             Scalar qOverP,
+                             std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(FreeVector::Zero()), m_cov(std::move(cov)) {
     auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];
@@ -122,13 +122,13 @@ class SingleFreeTrackParameters {
   }
 
   /// Parameters are not default constructible due to the charge type.
-  SingleFreeTrackParameters() = delete;
-  SingleFreeTrackParameters(const SingleFreeTrackParameters&) = default;
-  SingleFreeTrackParameters(SingleFreeTrackParameters&&) = default;
-  ~SingleFreeTrackParameters() = default;
-  SingleFreeTrackParameters& operator=(const SingleFreeTrackParameters&) =
+  GenericFreeTrackParameters() = delete;
+  GenericFreeTrackParameters(const GenericFreeTrackParameters&) = default;
+  GenericFreeTrackParameters(GenericFreeTrackParameters&&) = default;
+  ~GenericFreeTrackParameters() = default;
+  GenericFreeTrackParameters& operator=(const GenericFreeTrackParameters&) =
       default;
-  SingleFreeTrackParameters& operator=(SingleFreeTrackParameters&&) = default;
+  GenericFreeTrackParameters& operator=(GenericFreeTrackParameters&&) = default;
 
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
@@ -194,7 +194,7 @@ class SingleFreeTrackParameters {
 
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
-                                  const SingleFreeTrackParameters& tp) {
+                                  const GenericFreeTrackParameters& tp) {
     detail::printFreeParameters(
         os, tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);

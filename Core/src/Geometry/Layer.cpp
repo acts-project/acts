@@ -289,15 +289,12 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
 
     if (detail::checkIntersection(isection.intersection, pLimit, oLimit,
                                   s_onSurfaceTolerance)) {
-      isection.intersection.pathLength *= options.navDir;
       return isection;
     }
 
     if (isection.alternative and
         detail::checkIntersection(isection.alternative, pLimit, oLimit,
                                   s_onSurfaceTolerance)) {
-      // Set the right sign for the path length
-      isection.alternative.pathLength *= options.navDir;
       return SurfaceIntersection(isection.alternative, isection.object);
     }
 

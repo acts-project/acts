@@ -37,7 +37,7 @@
 
 namespace Acts {
 template <class charge_t>
-class SingleBoundTrackParameters;
+class GenericBoundTrackParameters;
 
 /// @brief straight line stepper based on Surface intersection
 ///
@@ -73,13 +73,13 @@ class StraightLineStepper {
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
-                   const SingleBoundTrackParameters<charge_t>& par,
+                   const GenericBoundTrackParameters<charge_t>& par,
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : absCharge(std::abs(par.charge())),
           navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           tolerance(stolerance),
           geoContext(gctx) {
       (void)mctx;
@@ -147,7 +147,7 @@ class StraightLineStepper {
   template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const GenericBoundTrackParameters<charge_t>& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
@@ -395,7 +395,7 @@ class StraightLineStepper {
   Result<double> step(propagator_state_t& state,
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
-    const auto h = state.stepping.stepSize.value();
+    const auto h = state.stepping.stepSize.value() * state.stepping.navDir;
     const double p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
