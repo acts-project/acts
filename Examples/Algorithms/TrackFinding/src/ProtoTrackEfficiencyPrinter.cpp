@@ -5,9 +5,18 @@
 #include <boost/histogram.hpp>
 #include <boost/histogram/ostream.hpp>
 
+#include <list>
+
+namespace {
+  template<typename T>
+  std::list<T> vecToList(const std::vector<T> &v) {
+    return std::list<T>(v.begin(), v.end());
+  }
+}
+
 ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
     const ActsExamples::AlgorithmContext &context) const {
-  auto testTracks = m_testProtoTracks(context);
+  auto testTracks = vecToList(m_testProtoTracks(context));
   auto refTracks = m_refProtoTracks(context);
 
   std::for_each(testTracks.begin(), testTracks.end(),
@@ -26,34 +35,31 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
 
   for (auto [refTrack, eff] : Acts::zip(refTracks, effs)) {
     ProtoTrack intersection;
-    for (const auto &testTrack : testTracks) {
-      intersection.resize(std::max(testTrack.size(), refTrack.size()));
-      // std::cout << "\nref: ";
-      // std::copy(refTrack.begin(), refTrack.end(),
-      // std::ostream_iterator<std::size_t>(std::cout, ","));
-      // std::cout << "\ntest: ";
-      // std::copy(testTrack.begin(), testTrack.end(),
-      // std::ostream_iterator<std::size_t>(std::cout, ","));
-      // std::cout << "\n-----------------------" << std::endl;
+    std::optional<typename decltype(testTracks)::iterator> toDelete;
 
-      const auto it = std::set_intersection(refTrack.begin(), refTrack.end(),
-                                            testTrack.begin(), testTrack.end(),
-                                            intersection.begin());
-      const auto size =
-          static_cast<double>(std::distance(intersection.begin(), it));
+    for (auto testTrackIt = testTracks.begin(); testTrackIt != testTracks.end(); ++testTrackIt) {
+      const auto &testTrack = *testTrackIt;
+      intersection.resize(std::max(testTrack.size(), refTrack.size()));
+      const auto it = std::set_intersection(refTrack.begin(), refTrack.end(), testTrack.begin(),
+                            testTrack.end(), intersection.begin());
+      const auto size = static_cast<double>(std::distance(intersection.begin(), it));
+      intersection.clear();
 
       eff = std::max(eff, size / refTrack.size());
-      intersection.clear();
+
+      if( eff > 0.50001) {
+        toDelete = testTrackIt;
+        break;
+      }
+    }
+
+    if( toDelete ) {
+      testTracks.erase(*toDelete);
     }
   }
 
-  for (auto eff : effs) {
-    std::cout << eff << " ";
-  }
-  std::cout << std::endl;
-
   namespace bh = boost::histogram;
-  auto h = bh::make_histogram(bh::axis::regular<>(10, 0.0, 1.0));
+  auto h = bh::make_histogram(bh::axis::regular<>(11, 0.0, 1.1));
   h.fill(effs);
 
   ACTS_INFO("Prototrack efficiency histogram:\n" << h);
