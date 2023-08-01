@@ -126,6 +126,64 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
   return measurements;
 }
 
+// Build clusters from the cell data vector. Assumes the cell data to be sorted
+// by measurment id!
+ActsExamples::ClusterContainer makeClusters(
+    const std::vector<ActsExamples::CellData>& cellData,
+    std::size_t nMeasurments) {
+  using namespace ActsExamples;
+  ClusterContainer clusters;
+
+  auto cellDataIt = cellData.begin();
+  for (auto index = 0ul; index < nMeasurments; ++index) {
+    // Search for the range containing the index
+    cellDataIt = std::find_if(cellDataIt, cellData.end(), [&](const auto& cd) {
+      return cd.measurement_id == index;
+    });
+
+    auto nextCellDataIt = std::find_if(
+        cellDataIt, cellData.end(),
+        [&](const auto& cd) { return cd.measurement_id != index; });
+
+    // Fill the channels with the iterators
+    Cluster cluster;
+    cluster.channels.reserve(std::distance(cellDataIt, nextCellDataIt));
+
+    for (auto it = cellDataIt; it != nextCellDataIt; ++it) {
+      ActsFatras::Channelizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
+                                                         Acts::Vector2::Zero()};
+
+      ActsFatras::Channelizer::Bin2D bin{
+          static_cast<unsigned int>(it->channel0),
+          static_cast<unsigned int>(it->channel1)};
+
+      cluster.channels.emplace_back(bin, dummySegment, it->value);
+    }
+
+    // update the iterator
+
+    // Compute cluster size
+    if (not cluster.channels.empty()) {
+      auto compareX = [](const auto& a, const auto& b) {
+        return a.bin[0] < b.bin[0];
+      };
+      auto compareY = [](const auto& a, const auto& b) {
+        return a.bin[1] < b.bin[1];
+      };
+
+      auto [minX, maxX] = std::minmax_element(cluster.channels.begin(),
+                                              cluster.channels.end(), compareX);
+      auto [minY, maxY] = std::minmax_element(cluster.channels.begin(),
+                                              cluster.channels.end(), compareY);
+      cluster.sizeLoc0 = 1 + maxX->bin[0] - minX->bin[0];
+      cluster.sizeLoc1 = 1 + maxY->bin[1] - minY->bin[1];
+    }
+
+    clusters.push_back(cluster);
+  }
+  return clusters;
+}
+
 }  // namespace
 
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
@@ -140,37 +198,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   auto measurementData =
       readMeasurementsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
 
-  std::vector<ActsExamples::CellData> cellData = {};
-  if (not m_cfg.outputClusters.empty()) {
-    // This allows seamless import of files created with a older version where
-    // the measurment_id-column is still named hit_id
-    try {
-      cellData = readEverything<ActsExamples::CellData>(
-          m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
-    } catch (std::runtime_error& e) {
-      // Rethrow exception if it is not about the measurement_id-column
-      if (std::string(e.what()).find(
-              "Missing header column 'measurement_id'") == std::string::npos) {
-        throw;
-      }
-
-      const auto oldCellData = readEverything<ActsExamples::CellDataLegacy>(
-          m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
-
-      auto fromLegacy = [](const CellDataLegacy& old) {
-        return CellData{old.geometry_id, old.hit_id,    old.channel0,
-                        old.channel1,    old.timestamp, old.value};
-      };
-
-      cellData.resize(oldCellData.size());
-      std::transform(oldCellData.begin(), oldCellData.end(), cellData.begin(),
-                     fromLegacy);
-    }
-  }
-
   // Prepare containers for the hit data using the framework event data types
   GeometryIdMultimap<Measurement> orderedMeasurements;
-  ClusterContainer clusters;
   IndexMultimap<Index> measurementSimHitsMap;
   IndexSourceLinkContainer sourceLinks;
   // need list here for stable addresses
@@ -242,43 +271,6 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     }
 
     sourceLinks.insert(sourceLinks.end(), std::cref(sourceLink));
-
-    // Get all cell data for this measurement
-    std::vector<ActsExamples::CellData> thisCellData;
-    std::copy_if(cellData.begin(), cellData.end(),
-                 std::back_inserter(thisCellData),
-                 [&](const auto& cd) { return cd.measurement_id == index; });
-
-    // Fill the channels
-    Cluster cluster;
-    cluster.channels.reserve(thisCellData.size());
-    for (const auto& cd : thisCellData) {
-      ActsFatras::Channelizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
-                                                         Acts::Vector2::Zero()};
-      ActsFatras::Channelizer::Bin2D bin{
-          static_cast<unsigned int>(cd.channel0),
-          static_cast<unsigned int>(cd.channel1)};
-      cluster.channels.emplace_back(bin, dummySegment, cd.value);
-    }
-
-    // Compute cluster size
-    if (not cluster.channels.empty()) {
-      auto compareX = [](const auto& a, const auto& b) {
-        return a.bin[0] < b.bin[0];
-      };
-      auto compareY = [](const auto& a, const auto& b) {
-        return a.bin[1] < b.bin[1];
-      };
-
-      auto [minX, maxX] = std::minmax_element(cluster.channels.begin(),
-                                              cluster.channels.end(), compareX);
-      auto [minY, maxY] = std::minmax_element(cluster.channels.begin(),
-                                              cluster.channels.end(), compareY);
-      cluster.sizeLoc0 = 1 + maxX->bin[0] - minX->bin[0];
-      cluster.sizeLoc1 = 1 + maxY->bin[1] - minY->bin[1];
-    }
-
-    clusters.push_back(cluster);
   }
 
   MeasurementContainer measurements;
@@ -290,9 +282,49 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   m_outputMeasurements(ctx, std::move(measurements));
   m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
   m_outputSourceLinks(ctx, std::move(sourceLinks));
-  if (not clusters.empty()) {
-    m_outputClusters(ctx, std::move(clusters));
+
+  /////////////////////////
+  // Cluster information //
+  /////////////////////////
+
+  if (m_cfg.outputClusters.empty()) {
+    return ActsExamples::ProcessCode::SUCCESS;
   }
+
+  std::vector<ActsExamples::CellData> cellData;
+
+  // This allows seamless import of files created with a older version where
+  // the measurment_id-column is still named hit_id
+  try {
+    cellData = readEverything<ActsExamples::CellData>(
+        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
+  } catch (std::runtime_error& e) {
+    // Rethrow exception if it is not about the measurement_id-column
+    if (std::string(e.what()).find("Missing header column 'measurement_id'") ==
+        std::string::npos) {
+      throw;
+    }
+
+    const auto oldCellData = readEverything<ActsExamples::CellDataLegacy>(
+        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
+
+    auto fromLegacy = [](const CellDataLegacy& old) {
+      return CellData{old.geometry_id, old.hit_id,    old.channel0,
+                      old.channel1,    old.timestamp, old.value};
+    };
+
+    cellData.resize(oldCellData.size());
+    std::transform(oldCellData.begin(), oldCellData.end(), cellData.begin(),
+                   fromLegacy);
+  }
+
+  // Sort cell data so we can go trough the cell data efficiently afterwards
+  std::sort(cellData.begin(), cellData.end(), [](const auto& a, const auto& b) {
+    return a.measurement_id < b.measurement_id;
+  });
+
+  auto clusters = makeClusters(cellData, orderedMeasurements.size());
+  m_outputClusters(ctx, std::move(clusters));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
