@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -320,7 +320,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
     // case. Equivalently, one could say that not all tracksAtVertex will be
     // assigned to a truth particle.
     else {
-      // get active tips
+      // Get active tips
       const auto& inputTrajectories = m_inputTrajectories(ctx);
 
       std::vector<ParticleHitCount> particleHitCounts;
