@@ -77,6 +77,8 @@ class AdaptiveGridTrackDensity {
   Result<float> getMaxZPosition(std::vector<float>& mainGridDensity,
                                 const std::vector<int>& mainGridZValues) const;
 
+  Result<float> getMaxZPosition(DensityMap& densityMap) const;
+
   /// @brief Returns the z position of maximum track density and
   /// the estimated width
   ///
@@ -88,6 +90,9 @@ class AdaptiveGridTrackDensity {
   Result<std::pair<float, float>> getMaxZPositionAndWidth(
       std::vector<float>& mainGridDensity,
       const std::vector<int>& mainGridZValues) const;
+
+  Result<std::pair<float, float>> getMaxZPositionAndWidth(
+      DensityMap& densityMap) const;
 
   /// @brief Adds a single track to the overall grid density
   ///
@@ -103,6 +108,9 @@ class AdaptiveGridTrackDensity {
       const BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
       std::vector<int>& mainGridZValues) const;
 
+  DensityMap addTrack(
+      const BoundTrackParameters& trk, DensityMap& mainDensityMap) const;
+
   /// @brief Removes a track from the overall grid density
   ///
   /// @param zBin The center z-bin position the track needs to be
@@ -115,6 +123,8 @@ class AdaptiveGridTrackDensity {
       int zBin, const TrackGridVector& trkGrid,
       std::vector<float>& mainGridDensity,
       const std::vector<int>& mainGridZValues) const;
+
+  void subtractTrack(const DensityMap& trackDensityMap, DensityMap& mainDensityMap) const;
 
  private:
   /// @brief Function that creates a track density map, i.e., a map of z bins to corresponding density values coming from a single track.
@@ -141,6 +151,9 @@ class AdaptiveGridTrackDensity {
   /// @return The width
   Result<float> estimateSeedWidth(const std::vector<float>& mainGridDensity,
                                   const std::vector<int>& mainGridZValues,
+                                  float maxZ) const;
+
+  Result<float> estimateSeedWidth(const DensityMap& densityMap,
                                   float maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
