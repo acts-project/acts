@@ -84,10 +84,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     ndf = 1;
   }
 
-  // Determine if we do a constraint fit or not
+  // Since we add a term to the chi2 when adding a vertex constraint (see Ref.
+  // (1)), the number of degrees of freedom increases
   if (vertexingOptions.useBeamSpotConstraint) {
-    // Since we add a term to the chi2 when adding a vertex constraint (see Ref.
-    // (1)), the number of degrees of freedom increases
     ndf += 3;
   }
 
