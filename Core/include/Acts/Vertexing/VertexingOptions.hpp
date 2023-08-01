@@ -38,9 +38,11 @@ struct VertexingOptions {
         magFieldContext(mctx),
         beamSpotConstraint(bsConstr),
         useBeamSpotConstraint(useConstr) {
-    assert((!useBeamSpotConstraint ||
-            beamSpotConstraint.covariance().determinant() != 0.) &&
-           "Vertex constraint covariance matrix must be invertible.");
+    if (useBeamSpotConstraint &&
+        beamSpotConstraint.covariance().determinant() == 0.) {
+      throw std::invalid_argument(
+          "Vertex constraint covariance matrix must be invertible.");
+    }
   }
 
   /// VertexingOptions with context and without beam spot constraint
