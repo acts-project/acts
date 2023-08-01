@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 
 #include <cmath>
 #include <functional>
