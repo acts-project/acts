@@ -157,6 +157,10 @@ Acts::Polyhedron Acts::PlaneSurface::polyhedronRepresentation(
 
 Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
                                          const Vector2& /*lpos*/) const {
+  return normal(gctx);
+}
+
+Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
@@ -177,10 +181,10 @@ Acts::Vector3 Acts::PlaneSurface::coerceToSurface(
 }
 
 double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
-                                          const Vector3& position,
+                                          const Vector3& /*position*/,
                                           const Vector3& direction) const {
   // We can ignore the global position here
-  return 1. / std::abs(RegularSurface::normal(gctx, position).dot(direction));
+  return 1. / std::abs(normal(gctx).dot(direction));
 }
 
 Acts::SurfaceIntersection Acts::PlaneSurface::intersect(

@@ -15,11 +15,11 @@ namespace Acts {
 
 class RegularSurface : public Surface {
  public:
+  // Reuse all constructors from the base class
   using Surface::Surface;
 
-  /// Return method for the normal vector of the surface
-  /// The normal vector can only be generally defined at a given local position
-  /// It requires a local position to be given (in general)
+  /// Calculate the normal vector of the surface
+  /// This overload requires an on-surface local position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position where the normal vector is
@@ -29,28 +29,26 @@ class RegularSurface : public Surface {
   virtual Vector3 normal(const GeometryContext& gctx,
                          const Vector2& lposition) const = 0;
 
-  /// Return method for the normal vector of the surface
-  /// The normal vector can only be generally defined at a given local position
-  /// It requires a local position to be given (in general)
+  /// Calculate the normal vector of the surface
+  /// This overload accepts a global position
   ///
   /// @param position is the global position where the normal vector is
   /// constructed
+  /// @note The @p position is required to be on-surface.
+  /// 			Use @ref Surface::coerceToSurface(const GeometryContext&, const Vector3&, const Vector3&)
   /// @param gctx The current geometry context object, e.g. alignment
-
-  ///
   /// @return normal vector by value
   virtual Vector3 normal(const GeometryContext& gctx,
                          const Vector3& position) const;
 
-  /// Return method for the normal vector of the surface
-  ///
-  /// It will return a normal vector at the center() position
-  ///
+  /// Calculate the normal vector of the surface
+  /// This overload is fully generic, fulfills the @ref Surface interface and
+  /// accepts a global position and a direction. For @c RegularSurface this is
+  /// equivalent to the @ref normal(const GeometryContext&, const Vector3&)
+  /// overload, ignoring the @p direction
   /// @param gctx The current geometry context object, e.g. alignment
-  //
-  /// @return normal vector by value
-  virtual Vector3 normal(const GeometryContext& gctx) const;
-
+  /// @param pos is the global position where the normal vector is constructed
+  /// @param direction is the direction of the normal vector (ignored for @c RegularSurface)
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
                  const Vector3& direction) const override;
 };

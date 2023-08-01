@@ -88,7 +88,7 @@ std::vector<nlohmann::json> Acts::PortalJsonConverter::toJsonDetray(
     // Get the two volume center
     const auto volumeCenter = volume.transform(gctx).translation();
     const auto surfaceCenter = surface.center(gctx);
-    const auto surfaceNormal = surface.normal(gctx);
+    const auto surfaceNormal = surface.normal(gctx, surfaceCenter);
     // Get the direction from the volume to the surface, correct link
     const auto volumeToSurface = surfaceCenter - volumeCenter;
     if (volumeToSurface.dot(surfaceNormal) < 0) {

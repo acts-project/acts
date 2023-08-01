@@ -130,6 +130,11 @@ class DiscSurface : public RegularSurface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 
+  /// Get the normal vector, indepdendent of the location
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @return The normal vector
+  Vector3 normal(const GeometryContext& gctx) const;
+
   /// Normal vector return without argument
   using RegularSurface::normal;
 

@@ -187,6 +187,14 @@ class Surface : public virtual GeometryObject,
   /// @return center position by value
   virtual Vector3 center(const GeometryContext& gctx) const;
 
+  /// Return the surface normal at a given @p position and @p direction.
+  /// This method is fully generic, and valid for all surface types.
+  /// @note For some surface types, the @p direction is ignored, but
+  ///       it is **not safe** to pass in a zero vector!
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param pos The position at which to calculate the normal
+  /// @param direction The direction at which to calculate the normal
+  /// @return The normal vector at the given position and direction
   virtual Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
                          const Vector3& direction) const = 0;
 

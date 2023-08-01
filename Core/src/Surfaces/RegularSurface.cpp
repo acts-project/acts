@@ -21,9 +21,6 @@ Vector3 RegularSurface::normal(const GeometryContext& gctx,
   return normal(gctx, Vector2{Vector2::Zero()});
 }
 
-Vector3 RegularSurface::normal(const GeometryContext& gctx) const {
-  return normal(gctx, center(gctx));
-}
 
 Vector3 RegularSurface::normal(const GeometryContext& gctx, const Vector3& pos,
                                const Vector3& direction) const {
