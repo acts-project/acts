@@ -59,9 +59,11 @@ struct VertexingOptions {
   std::reference_wrapper<const GeometryContext> geoContext;
   /// Context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-  /// The vertex constraint for the fitting
+  /// Beam spot information. The corresponding position will be the first
+  /// estimate of each vertex position.
   Vertex<input_track_t> beamSpot;
-  /// Boolean indicating whether we use the vertex constraint
+  /// Boolean indicating whether we use the beam spot information during the
+  /// vertex fit. If set to true, the covariance matrix of beamSpot must be set.
   bool useBeamSpotConstraint;
 };
 
