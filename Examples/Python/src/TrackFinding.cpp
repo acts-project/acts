@@ -389,8 +389,8 @@ void addTrackFinding(Context& ctx) {
                                   mex, "ProtoTrackEfficiencyPrinter",
                                   testProtoTracks, refProtoTracks);
 
-    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MakeMeasurementParticlesMap, mex,
-                                  "MakeMeasurementParticlesMap",
+    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MakeMeasurementParticlesMap,
+                                  mex, "MakeMeasurementParticlesMap",
                                   inputMeasurementSimhitMap, inputSimHits,
                                   outputMeasurementParticlesMap);
   }

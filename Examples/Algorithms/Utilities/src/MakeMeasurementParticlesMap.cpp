@@ -7,6 +7,7 @@ ActsExamples::MakeMeasurementParticlesMap::MakeMeasurementParticlesMap(
     : IAlgorithm("MakeMeasurementParticlesMap", lvl), m_cfg(cfg) {
   m_inputHitMap.initialize(m_cfg.inputMeasurementSimhitMap);
   m_inputHits.initialize(m_cfg.inputSimHits);
+  m_outputParticleMap.initialize(m_cfg.outputMeasurementParticlesMap);
 }
 
 ProcessCode ActsExamples::MakeMeasurementParticlesMap::execute(
