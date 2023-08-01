@@ -32,8 +32,7 @@ struct VertexingOptions {
   /// @param useConstr Boolean indicating whether vertex constraint should be used
   VertexingOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
-                   const Vertex<input_track_t>& bsConstr,
-                   const bool useConstr = true)
+                   std::optional<Vertex<input_track_t>> bsConstr)
       : geoContext(gctx),
         magFieldContext(mctx),
         beamSpotConstraint(bsConstr),
