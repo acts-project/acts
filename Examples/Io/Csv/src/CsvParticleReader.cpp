@@ -60,7 +60,7 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleReader::read(
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   ACTS_DEBUG("Read '" << path << "'");
-  
+
   // vt and m are an optional columns
   dfe::NamedTupleCsvReader<ParticleData> reader(path, {"vt", "m"});
   ParticleData data;

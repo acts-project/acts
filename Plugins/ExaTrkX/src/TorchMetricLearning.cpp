@@ -54,9 +54,9 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   const int64_t numAllFeatures = inputValues.shape()[1];
 
   // printout the r,phi,z of the first spacepoint
-  ACTS_VERBOSE("First spacepoint information: " << [&](){
+  ACTS_VERBOSE("First spacepoint information: " << [&]() {
     std::stringstream ss;
-    for(int i=0; i<numAllFeatures; ++i) {
+    for (int i = 0; i < numAllFeatures; ++i) {
       ss << inputValues[0][i] << "  ";
     }
     return ss.str();

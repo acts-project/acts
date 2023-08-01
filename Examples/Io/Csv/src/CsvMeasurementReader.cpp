@@ -103,7 +103,8 @@ struct CompareGeometryId {
 template <typename Data>
 inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
-    const std::vector<std::string>& optionalColumns, size_t event, const Acts::Logger &logger) {
+    const std::vector<std::string>& optionalColumns, size_t event,
+    const Acts::Logger& logger) {
   std::string path = ActsExamples::perEventFilepath(inputDir, filename, event);
   ACTS_DEBUG("Read '" << path << "'");
 
@@ -119,7 +120,7 @@ inline std::vector<Data> readEverything(
 }
 
 std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
-    const std::string& inputDir, size_t event, const Acts::Logger &logger) {
+    const std::string& inputDir, size_t event, const Acts::Logger& logger) {
   // geometry_id and t are optional columns
   auto measurements = readEverything<ActsExamples::MeasurementData>(
       inputDir, "measurements.csv", {"geometry_id", "t"}, event, logger);
@@ -213,7 +214,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   auto measurementSimHitLinkData =
       readEverything<ActsExamples::MeasurementSimHitLink>(
-          m_cfg.inputDir, "measurement-simhit-map.csv", {}, ctx.eventNumber, logger());
+          m_cfg.inputDir, "measurement-simhit-map.csv", {}, ctx.eventNumber,
+          logger());
   for (auto mshLink : measurementSimHitLinkData) {
     measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                        mshLink.measurement_id, mshLink.hit_id);
