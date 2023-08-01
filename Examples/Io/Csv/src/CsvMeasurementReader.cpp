@@ -37,7 +37,6 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
     const ActsExamples::CsvMeasurementReader::Config& config,
     Acts::Logging::Level level)
     : m_cfg(config),
-      // TODO check that all files (hits,cells,truth) exists
       m_eventsRange(
           determineEventFilesRange(m_cfg.inputDir, "measurements.csv")),
       m_logger(Acts::getDefaultLogger("CsvMeasurementReader", level)) {
@@ -49,6 +48,21 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
   m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
+
+  // Check if event ranges match (should also catch missing files)
+  auto checkRange = [&](const std::string& fileStem) {
+    const auto hitmapRange = determineEventFilesRange(m_cfg.inputDir, fileStem);
+    if (hitmapRange.first > m_eventsRange.first or
+        hitmapRange.second < m_eventsRange.second) {
+      throw std::runtime_error("event range mismatch for 'event**-" + fileStem +
+                               "'");
+    }
+  };
+
+  checkRange("measurement-simhit-map.csv");
+  if (not m_cfg.outputClusters.empty()) {
+    checkRange("cells.csv");
+  }
 }
 
 std::string ActsExamples::CsvMeasurementReader::CsvMeasurementReader::name()
@@ -128,8 +142,30 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   std::vector<ActsExamples::CellData> cellData = {};
   if (not m_cfg.outputClusters.empty()) {
-    cellData = readEverything<ActsExamples::CellData>(
-        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
+    // This allows seamless import of files created with a older version where
+    // the measurment_id-column is still named hit_id
+    try {
+      cellData = readEverything<ActsExamples::CellData>(
+          m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
+    } catch (std::runtime_error& e) {
+      // Rethrow exception if it is not about the measurement_id-column
+      if (not std::string(e.what()).find(
+              "Missing header column 'measurement_id'")) {
+        throw;
+      }
+
+      const auto oldCellData = readEverything<ActsExamples::CellDataLegacy>(
+          m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
+
+      auto fromLegacy = [](const CellDataLegacy& old) {
+        return CellData{old.geometry_id, old.hit_id,    old.channel0,
+                        old.channel1,    old.timestamp, old.value};
+      };
+
+      cellData.resize(oldCellData.size());
+      std::transform(oldCellData.begin(), oldCellData.end(), cellData.begin(),
+                     fromLegacy);
+    }
   }
 
   // Prepare containers for the hit data using the framework event data types
@@ -207,7 +243,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
     sourceLinks.insert(sourceLinks.end(), std::cref(sourceLink));
 
-    // Get all cell data for this measurment
+    // Get all cell data for this measurement
     std::vector<ActsExamples::CellData> thisCellData;
     std::copy_if(cellData.begin(), cellData.end(),
                  std::back_inserter(thisCellData),
