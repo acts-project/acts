@@ -65,13 +65,13 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       perEventFilepath(m_cfg.outputDir, "truth.csv", ctx.eventNumber);
 
   dfe::NamedTupleCsvWriter<HitData> writerHits(pathHits, m_cfg.outputPrecision);
-  dfe::NamedTupleCsvWriter<CellData> writerCells(pathCells,
-                                                 m_cfg.outputPrecision);
+  dfe::NamedTupleCsvWriter<CellDataLegacy> writerCells(pathCells,
+                                                       m_cfg.outputPrecision);
   dfe::NamedTupleCsvWriter<TruthHitData> writerTruth(pathTruth,
                                                      m_cfg.outputPrecision);
 
   HitData hit;
-  CellData cell;
+  CellDataLegacy cell;
   TruthHitData truth;
   // will be reused as hit counter
   hit.hit_id = 0;
