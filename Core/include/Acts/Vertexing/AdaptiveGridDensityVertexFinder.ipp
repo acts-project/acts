@@ -31,8 +31,7 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
       // No tracks were removed anymore
       // Return empty seed, i.e. vertex at constraint position
       // (Note: Upstream finder should check for this break condition)
-      std::vector<Vertex<InputTrack_t>> seedVec{
-          vertexingOptions.beamSpotConstraint};
+      std::vector<Vertex<InputTrack_t>> seedVec{vertexingOptions.beamSpot};
       return seedVec;
     }
   } else {
@@ -85,12 +84,11 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
   }
 
   // Construct output vertex
-  Vector3 seedPos =
-      vertexingOptions.beamSpotConstraint.position() + Vector3(0., 0., z);
+  Vector3 seedPos = vertexingOptions.beamSpot.position() + Vector3(0., 0., z);
 
   Vertex<InputTrack_t> returnVertex = Vertex<InputTrack_t>(seedPos);
 
-  SymMatrix4 seedCov = vertexingOptions.beamSpotConstraint.fullCovariance();
+  SymMatrix4 seedCov = vertexingOptions.beamSpot.fullCovariance();
 
   if (width != 0.) {
     // Use z-constraint from seed width

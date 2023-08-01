@@ -611,10 +611,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
     tracksPtr.push_back(&trk);
   }
 
-  Vertex<BoundTrackParameters> beamSpotConstraint =
-      std::get<BeamSpotData>(csvData);
+  Vertex<BoundTrackParameters> beamSpot = std::get<BeamSpotData>(csvData);
   VertexingOptions<BoundTrackParameters> vertexingOptions(
-      geoContext, magFieldContext, beamSpotConstraint);
+      geoContext, magFieldContext, beamSpot);
 
   // find vertices
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);

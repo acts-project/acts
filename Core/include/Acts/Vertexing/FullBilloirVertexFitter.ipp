@@ -93,7 +93,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
   std::vector<BilloirTrack<input_track_t>> billoirTracks;
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
-  Vector4 linPoint = vertexingOptions.beamSpotConstraint.fullPosition();
+  Vector4 linPoint = vertexingOptions.beamSpot.fullPosition();
   Vertex<input_track_t> fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
@@ -190,16 +190,15 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // != 0 from second on since our first guess for the vertex position is
       // the vertex constraint position.
       Vector4 posInBilloirFrame =
-          vertexingOptions.beamSpotConstraint.fullPosition() - linPoint;
+          vertexingOptions.beamSpot.fullPosition() - linPoint;
 
       // For vertex constraint: T -> T + Cb^-1 (b - V0) where Cb is the
       // covariance matrix of the constraint, b is the constraint position, and
       // V0 is the vertex estimate (see Ref. (1)).
-      deltaVFac +=
-          vertexingOptions.beamSpotConstraint.fullCovariance().inverse() *
-          posInBilloirFrame;
+      deltaVFac += vertexingOptions.beamSpot.fullCovariance().inverse() *
+                   posInBilloirFrame;
       // For vertex constraint: A -> A + Cb^-1
-      invCovV += vertexingOptions.beamSpotConstraint.fullCovariance().inverse();
+      invCovV += vertexingOptions.beamSpot.fullCovariance().inverse();
     }
 
     // Covariance matrix of the 4D vertex position
@@ -283,11 +282,10 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // Position of vertex constraint in Billoir frame (i.e., in coordinate
       // system with origin at linPoint).
       Vector4 posInBilloirFrame =
-          vertexingOptions.beamSpotConstraint.fullPosition() - linPoint;
+          vertexingOptions.beamSpot.fullPosition() - linPoint;
 
       newChi2 += (posInBilloirFrame.transpose())
-                     .dot(vertexingOptions.beamSpotConstraint.fullCovariance()
-                              .inverse() *
+                     .dot(vertexingOptions.beamSpot.fullCovariance().inverse() *
                           posInBilloirFrame);
     }
 

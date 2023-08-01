@@ -13,7 +13,7 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
     State& /*state*/) const -> Result<std::vector<Vertex<InputTrack_t>>> {
   // Determine if we use constraint or not
   bool useConstraint = false;
-  if (vertexingOptions.beamSpotConstraint.fullCovariance().determinant() != 0) {
+  if (vertexingOptions.beamSpot.fullCovariance().determinant() != 0) {
     useConstraint = true;
   }
 
@@ -28,11 +28,10 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
 
     std::pair<double, double> z0AndWeight;
     ImpactParametersAndSigma ipas;
-    if (useConstraint &&
-        vertexingOptions.beamSpotConstraint.covariance()(0, 0) != 0) {
+    if (useConstraint && vertexingOptions.beamSpot.covariance()(0, 0) != 0) {
       auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
-          params, vertexingOptions.beamSpotConstraint,
-          vertexingOptions.geoContext, vertexingOptions.magFieldContext);
+          params, vertexingOptions.beamSpot, vertexingOptions.geoContext,
+          vertexingOptions.magFieldContext);
       if (estRes.ok()) {
         ipas = *estRes;
       } else {
@@ -42,8 +41,7 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
 
     if (ipas.sigmad0 > 0) {
       // calculate z0
-      z0AndWeight.first =
-          ipas.IPz0 + vertexingOptions.beamSpotConstraint.position().z();
+      z0AndWeight.first = ipas.IPz0 + vertexingOptions.beamSpot.position().z();
 
       // calculate chi2 of IP
       double chi2IP = std::pow(ipas.IPd0 / ipas.sigmad0, 2);
@@ -98,9 +96,9 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
   }
 
   // constraint x()/y() equals 0 if no constraint
-  Vector4 output(vertexingOptions.beamSpotConstraint.position().x(),
-                 vertexingOptions.beamSpotConstraint.position().y(), ZResult,
-                 vertexingOptions.beamSpotConstraint.time());
+  Vector4 output(vertexingOptions.beamSpot.position().x(),
+                 vertexingOptions.beamSpot.position().y(), ZResult,
+                 vertexingOptions.beamSpot.time());
   Vertex<InputTrack_t> vtxResult = Vertex<InputTrack_t>(output);
 
   // Vector to be filled with one single vertex

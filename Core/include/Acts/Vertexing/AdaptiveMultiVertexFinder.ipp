@@ -44,8 +44,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     } else {
       searchTracks = seedTracks;
     }
-    Vertex<InputTrack_t> currentConstraint =
-        vertexingOptions.beamSpotConstraint;
+    Vertex<InputTrack_t> currentConstraint = vertexingOptions.beamSpot;
     // Retrieve seed vertex from all remaining seedTracks
     auto seedResult = doSeeding(seedTracks, currentConstraint, vertexingOptions,
                                 seedFinderState, removedSeedTracks);
@@ -60,7 +59,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
                << vtxCandidate.fullPosition().transpose());
     if (vtxCandidate.position().z() ==
-        vertexingOptions.beamSpotConstraint.position().z()) {
+        vertexingOptions.beamSpot.position().z()) {
       ACTS_DEBUG(
           "No seed found anymore. Break and stop primary vertex finding.");
       allVertices.pop_back();
@@ -145,7 +144,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
     const std::vector<const InputTrack_t*>& removedSeedTracks) const
     -> Result<Vertex<InputTrack_t>> {
   VertexingOptions<InputTrack_t> seedOptions = vertexingOptions;
-  seedOptions.beamSpotConstraint = currentConstraint;
+  seedOptions.beamSpot = currentConstraint;
 
   if constexpr (NeedsRemovedTracks<typename sfinder_t::State>::value) {
     seedFinderState.tracksToRemove = removedSeedTracks;

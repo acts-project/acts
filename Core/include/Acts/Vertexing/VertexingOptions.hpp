@@ -36,10 +36,9 @@ struct VertexingOptions {
                    const bool useConstr = true)
       : geoContext(gctx),
         magFieldContext(mctx),
-        beamSpotConstraint(bsConstr),
+        beamSpot(bsConstr),
         useBeamSpotConstraint(useConstr) {
-    if (useBeamSpotConstraint &&
-        beamSpotConstraint.covariance().determinant() == 0.) {
+    if (useBeamSpotConstraint && beamSpot.covariance().determinant() == 0.) {
       throw std::invalid_argument(
           "Vertex constraint covariance matrix must be invertible.");
     }
@@ -52,7 +51,7 @@ struct VertexingOptions {
   VertexingOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx)
       : geoContext(gctx), magFieldContext(mctx) {
-    beamSpotConstraint = Vertex<input_track_t>();
+    beamSpot = Vertex<input_track_t>();
     useBeamSpotConstraint = false;
   }
 
@@ -61,7 +60,7 @@ struct VertexingOptions {
   /// Context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   /// The vertex constraint for the fitting
-  Vertex<input_track_t> beamSpotConstraint;
+  Vertex<input_track_t> beamSpot;
   /// Boolean indicating whether we use the vertex constraint
   bool useBeamSpotConstraint;
 };

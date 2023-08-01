@@ -32,7 +32,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     const auto& seedVertex = *seedRes;
 
     if (seedVertex.fullPosition()[eZ] ==
-        vertexingOptions.beamSpotConstraint.position().z()) {
+        vertexingOptions.beamSpot.position().z()) {
       ACTS_DEBUG("No more seed found. Break and stop primary vertex finding.");
       break;
     }
