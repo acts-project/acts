@@ -16,6 +16,7 @@ namespace Acts {
 Vector3 RegularSurface::normal(const GeometryContext& gctx, const Vector3& pos,
                                const Vector3& direction) const {
   assert(isOnSurface(gctx, pos, direction, false) && "Not on surface");
+  (void)direction;
   return normal(gctx, pos);
 }
 
