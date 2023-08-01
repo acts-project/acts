@@ -170,7 +170,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
-                              const bool& useBeamSpotConstraint,
+                              bool useBeamSpotConstraint,
                               Vertex<InputTrack_t>& seedVertex) const -> void {
   if (useBeamSpotConstraint) {
     if (not m_cfg.useSeedConstraint) {
@@ -350,7 +350,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     checkVertexAndCompatibleTracks(
         Vertex<InputTrack_t>& vtx,
         const std::vector<const InputTrack_t*>& seedTracks,
-        FitterState_t& fitterState, const bool& useBeamSpotConstraint) const
+        FitterState_t& fitterState, bool useBeamSpotConstraint) const
     -> std::pair<int, bool> {
   bool isGoodVertex = false;
   int nCompatibleTracks = 0;

@@ -248,7 +248,7 @@ class AdaptiveMultiVertexFinder {
   /// @param useBeamSpotConstraint Indicates whether beam spot constrain is used
   /// @param seedVertex Seed vertex
   void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
-                                 const bool& useBeamSpotConstraint,
+                                 bool useBeamSpotConstraint,
                                  Vertex<InputTrack_t>& seedVertex) const;
 
   /// @brief Calculates the IP significance of a track to a given vertex
@@ -322,7 +322,7 @@ class AdaptiveMultiVertexFinder {
   std::pair<int, bool> checkVertexAndCompatibleTracks(
       Vertex<InputTrack_t>& vtx,
       const std::vector<const InputTrack_t*>& seedTracks,
-      FitterState_t& fitterState, const bool& useBeamSpotConstraint) const;
+      FitterState_t& fitterState, bool useBeamSpotConstraint) const;
 
   /// @brief Method that removes all tracks that are compatible with
   /// current vertex from seedTracks
