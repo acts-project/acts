@@ -87,8 +87,8 @@ which either is a `ChargedPolicy` class for charged track parameter representati
 ```cpp
 namespace Acts {
     typedef SingleTrackParameters<ChargedPolicy>            TrackParameters;
-    typedef SingleCurvilinearTrackParameters<ChargedPolicy> CurvilinearTrackParameters;
-    typedef SingleBoundTrackParameters<ChargedPolicy>       BoundTrackParameters;
+    typedef GenericCurvilinearTrackParameters<ChargedPolicy> CurvilinearTrackParameters;
+    typedef GenericBoundTrackParameters<ChargedPolicy>       BoundTrackParameters;
 }  // end of namespace Acts
 ```
 
@@ -97,9 +97,9 @@ Or, respectively, a `NeutralPolicy` object
 ```cpp
 namespace Acts {
     typedef SingleTrackParameters<NeutralPolicy> NeutralParameters;
-    typedef SingleCurvilinearTrackParameters<NeutralPolicy>
+    typedef GenericCurvilinearTrackParameters<NeutralPolicy>
                                               NeutralCurvilinearTrackParameters;
-    typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundTrackParameters;
+    typedef GenericBoundTrackParameters<NeutralPolicy> NeutralBoundTrackParameters;
 } // end of namespace Acts  
 ```
 

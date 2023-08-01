@@ -17,12 +17,9 @@ from acts.examples.simulation import (
 
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
-    ParticleSmearingSigmas,
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
@@ -76,6 +73,7 @@ def run_vertexing(fitter, mu, events):
             s,
             setup.trackingGeometry,
             setup.field,
+            enableInteractions=True,
             rnd=rnd,
         )
 
@@ -92,7 +90,7 @@ def run_vertexing(fitter, mu, events):
             setup.trackingGeometry,
             setup.field,
             SeedFinderConfigArg(
-                r=(None, 200 * u.mm),  # rMin=default, 33mm
+                r=(33 * u.mm, 200 * u.mm),
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
@@ -102,10 +100,9 @@ def run_vertexing(fitter, mu, events):
                 minPt=500 * u.MeV,
                 impactMax=3 * u.mm,
             ),
-            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
+            SeedFinderOptionsArg(bFieldInZ=2 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
             geoSelectionConfigFile=setup.geoSel,
-            rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
         addCKFTracks(
@@ -113,9 +110,8 @@ def run_vertexing(fitter, mu, events):
             setup.trackingGeometry,
             setup.field,
             TrackSelectorConfig(
-                pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
-                absEta=(None, 3.0),
+                pt=(500 * u.MeV, None),
                 nMeasurementsMin=6,
             ),
         )

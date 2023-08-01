@@ -22,7 +22,7 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_SUITE(SurfaceBoundsJsonConverter)
+BOOST_AUTO_TEST_SUITE(SurfaceBoundsJsonConversion)
 
 BOOST_AUTO_TEST_CASE(SurfaceBoundsRoundTripTests) {
   std::ofstream out;
@@ -31,9 +31,8 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsRoundTripTests) {
   // tested here, all others are tests are identical
 
   auto rectangeRef = std::make_shared<const RectangleBounds>(4., 6.);
-  // Test a rectangle
-  nlohmann::json rectangleOut;
-  to_json(rectangleOut, *rectangeRef);
+  nlohmann::json rectangleOut =
+      SurfaceBoundsJsonConverter::toJson(*rectangeRef);
   out.open("RectangleBounds.json");
   out << rectangleOut.dump(2);
   out.close();
@@ -45,9 +44,21 @@ BOOST_AUTO_TEST_CASE(SurfaceBoundsRoundTripTests) {
   in >> rectangleIn;
   in.close();
 
-  auto rectangleTest = surfaceBoundsFromJson<RectangleBounds>(rectangleIn);
+  auto rectangleTest =
+      SurfaceBoundsJsonConverter::fromJson<RectangleBounds>(rectangleIn);
 
   BOOST_CHECK(rectangeRef->values() == rectangleTest->values());
+}
+
+BOOST_AUTO_TEST_CASE(SurfaceBoundsDetrayConversion) {
+  auto rectangeRef = std::make_shared<const RectangleBounds>(4., 6.);
+  nlohmann::json rectangleOutDetray =
+      SurfaceBoundsJsonConverter::toJsonDetray(*rectangeRef);
+
+  std::vector<ActsScalar> boundariesRef = {4, 6};
+  BOOST_CHECK(rectangleOutDetray["shape"].get<unsigned int>() == 5u);
+  BOOST_CHECK(rectangleOutDetray["boundaries"].get<std::vector<ActsScalar>>() ==
+              boundariesRef);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, argparse, pathlib, contextlib, acts, acts.examples
+import os, argparse, pathlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -111,16 +111,16 @@ if g4_simulation:
         trackingGeometry,
         field,
         preSelectParticles=ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
-            absZ=(0, 1e4),
-            rho=(0, 1e3),
             pt=(150 * u.MeV, None),
             removeNeutral=True,
         ),
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
         rnd=rnd,
-        killVolume=acts.Volume.makeCylinderVolume(r=1.1 * u.m, halfZ=3.0 * u.m),
+        killVolume=trackingGeometry.worldVolume,
         killAfterTime=25 * u.ns,
     )
 else:
@@ -129,12 +129,15 @@ else:
         trackingGeometry,
         field,
         preSelectParticles=ParticleSelectorConfig(
+            rho=(0.0, 24 * u.mm),
+            absZ=(0.0, 1.0 * u.m),
             eta=(-3.0, 3.0),
             pt=(150 * u.MeV, None),
             removeNeutral=True,
         )
         if ttbar
         else ParticleSelectorConfig(),
+        enableInteractions=True,
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
         rnd=rnd,

@@ -948,6 +948,27 @@ def addCKFTracks(
         measurementSelectorCfg=acts.MeasurementSelector.Config(
             [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
+        trackSelectorCfg=acts.TrackSelector.Config(
+            **acts.examples.defaultKWArgs(
+                loc0Min=trackSelectorConfig.loc0[0],
+                loc0Max=trackSelectorConfig.loc0[1],
+                loc1Min=trackSelectorConfig.loc1[0],
+                loc1Max=trackSelectorConfig.loc1[1],
+                timeMin=trackSelectorConfig.time[0],
+                timeMax=trackSelectorConfig.time[1],
+                phiMin=trackSelectorConfig.phi[0],
+                phiMax=trackSelectorConfig.phi[1],
+                etaMin=trackSelectorConfig.eta[0],
+                etaMax=trackSelectorConfig.eta[1],
+                absEtaMin=trackSelectorConfig.absEta[0],
+                absEtaMax=trackSelectorConfig.absEta[1],
+                ptMin=trackSelectorConfig.pt[0],
+                ptMax=trackSelectorConfig.pt[1],
+                minMeasurements=trackSelectorConfig.nMeasurementsMin,
+            )
+        )
+        if trackSelectorConfig is not None
+        else None,
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
@@ -966,26 +987,6 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
-
-    if trackSelectorConfig is not None:
-        trackSelector = addTrackSelection(
-            s,
-            trackSelectorConfig,
-            inputTracks=trackFinder.config.outputTracks,
-            outputTracks="selectedTracks",
-            logLevel=customLogLevel(),
-        )
-        s.addWhiteboardAlias("tracks", trackSelector.config.outputTracks)
-
-        selectedTrackConverter = acts.examples.TracksToTrajectories(
-            level=customLogLevel(),
-            inputTracks=trackSelector.config.outputTracks,
-            outputTrajectories="trajectories-from-selected-tracks",
-        )
-        s.addAlgorithm(selectedTrackConverter)
-        s.addWhiteboardAlias(
-            "trajectories", selectedTrackConverter.config.outputTrajectories
-        )
 
     addTrajectoryWriters(
         s,
@@ -1120,13 +1121,10 @@ def addTrackSelection(
     inputTracks: str,
     outputTracks: str,
     logLevel: Optional[acts.logging.Level] = None,
-) -> acts.examples.TrackSelector:
+) -> acts.examples.TrackSelectorAlgorithm:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    trackSelector = acts.examples.TrackSelector(
-        level=customLogLevel(),
-        inputTracks=inputTracks,
-        outputTracks=outputTracks,
+    selectorConfig = acts.TrackSelector.Config(
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorConfig.loc0[0],
             loc0Max=trackSelectorConfig.loc0[1],
@@ -1143,7 +1141,14 @@ def addTrackSelection(
             ptMin=trackSelectorConfig.pt[0],
             ptMax=trackSelectorConfig.pt[1],
             minMeasurements=trackSelectorConfig.nMeasurementsMin,
-        ),
+        )
+    )
+
+    trackSelector = acts.examples.TrackSelectorAlgorithm(
+        level=customLogLevel(),
+        inputTracks=inputTracks,
+        outputTracks=outputTracks,
+        selectorConfig=selectorConfig,
     )
 
     s.addAlgorithm(trackSelector)
@@ -1548,6 +1553,51 @@ def addVertexFitting(
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
+            )
+        )
+
+    return s
+
+
+def addSingleSeedVertexFinding(
+    s,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+    inputSpacePoints: Optional[str] = "spacepoints",
+    outputVertices: Optional[str] = "fittedSeedVertices",
+) -> None:
+
+    from acts.examples import (
+        SingleSeedVertexFinderAlgorithm,
+        VertexPerformanceWriter,
+    )
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    findSingleSeedVertex = SingleSeedVertexFinderAlgorithm(
+        level=customLogLevel(),
+        inputSpacepoints=inputSpacePoints,
+        outputVertices=outputVertices,
+    )
+    s.addAlgorithm(findSingleSeedVertex)
+
+    inputParticles = "particles_input"
+    selectedParticles = "particles_selected"
+
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        s.addWriter(
+            VertexPerformanceWriter(
+                level=customLogLevel(),
+                inputAllTruthParticles=inputParticles,
+                inputSelectedTruthParticles=selectedParticles,
+                useTracks=False,
+                inputVertices=outputVertices,
+                treeName="seedvertexing",
+                filePath=str(outputDirRoot / "performance_seedvertexing.root"),
             )
         )
 
