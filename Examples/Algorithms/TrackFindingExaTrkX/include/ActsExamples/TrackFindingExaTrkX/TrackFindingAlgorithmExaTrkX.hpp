@@ -49,6 +49,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     float rScale = 1.f;
     float phiScale = 1.f;
     float zScale = 1.f;
+
+    /// Allows to pass negative cluster sizes to the framework
+    /// Necessary because of a bug in the GNN4ITK reader
+    bool invertClusterSizeSign = false;
   };
 
   /// Constructor of the track finding algorithm

@@ -136,6 +136,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
       features[i][eClusterX] = cluster.sizeLoc0;
       features[i][eClusterY] = cluster.sizeLoc1;
 
+      if (m_cfg.invertClusterSizeSign) {
+        features[i][eClusterX] *= -1.f;
+        features[i][eClusterY] *= -1.f;
+      }
+
       sumCells += features[i][eCellCount];
       sumActivation += features[i][eCellSum];
     }
