@@ -295,11 +295,10 @@ class AtlasStepper {
   template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
+                  const GenericBoundTrackParameters<charge_t>& par,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx,      m_bField->makeCache(mctx), par, ssize,
-                 stolerance};
+    return State{gctx, m_bField->makeCache(mctx), par, ssize, stolerance};
   }
 
   /// @brief Resets the state

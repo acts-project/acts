@@ -40,6 +40,8 @@ BOOST_AUTO_TEST_CASE(PortalUnconnected) {
 
   auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
 
+  BOOST_CHECK_NE(portal, nullptr);
+
   auto jPortal = Acts::PortalJsonConverter::toJson(tContext, *portal, {});
 
   out.open("portal.json");
@@ -55,6 +57,8 @@ BOOST_AUTO_TEST_CASE(PortalUnconnected) {
   in.close();
 
   auto portalIn = Acts::PortalJsonConverter::fromJson(tContext, jPortalIn, {});
+
+  BOOST_CHECK_NE(portalIn, nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
@@ -67,6 +71,7 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
       Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
 
   auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
+  BOOST_CHECK_NE(portal, nullptr);
   // Attaching the portals
   Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(
       *portal, forwardVolume, Acts::Direction::Forward);
@@ -75,7 +80,7 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
 
   std::vector<const Acts::Experimental::DetectorVolume*> detectorVolumes = {
       forwardVolume.get(), backwardVolume.get()};
-  // No voluems provided, must bail
+  // No volumes provided, must bail
   BOOST_CHECK_THROW(Acts::PortalJsonConverter::toJson(tContext, *portal, {}),
                     std::runtime_error);
   auto jPortal =
@@ -95,6 +100,7 @@ BOOST_AUTO_TEST_CASE(PortalSingleConnected) {
 
   auto portalIn = Acts::PortalJsonConverter::fromJson(
       tContext, jPortalIn, {forwardVolume, backwardVolume});
+  BOOST_CHECK_NE(portalIn, nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
@@ -110,6 +116,7 @@ BOOST_AUTO_TEST_CASE(PortalMultiConnected) {
       Acts::Vector3(0., 0., 0.), Acts::Vector3(0., 1., 0.));
 
   auto portal = Acts::Experimental::Portal::makeShared(std::move(surface));
+  BOOST_CHECK_NE(portal, nullptr);
 
   // Attaching the portals
   Acts::Experimental::detail::PortalHelper::attachDetectorVolumeUpdator(

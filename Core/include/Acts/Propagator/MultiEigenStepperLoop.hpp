@@ -612,7 +612,7 @@ class MultiEigenStepperLoop
   /// the component number is again modified
   template <typename charge_t>
   Result<ComponentProxy> addComponent(
-      State& state, const SingleBoundTrackParameters<charge_t>& pars,
+      State& state, const GenericBoundTrackParameters<charge_t>& pars,
       double weight) const {
     state.components.push_back(
         {SingleState(state.geoContext,
