@@ -202,15 +202,16 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   // intersect is a struct of (Vector3) position, pathLength, distance and
   // (bool) valid, it's contained in a Surface intersection
   auto sfIntersection =
-      discSurfaceObject->intersect(tgContext, globalPosition, direction, false);
+      discSurfaceObject->intersect(tgContext, globalPosition, direction, false)
+          .closest();
   Intersection3D expectedIntersect{Vector3{1.2, 0., 0.}, 10.,
                                    Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position,
-                  expectedIntersect.position, 1e-9);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.pathLength,
-                  expectedIntersect.pathLength, 1e-9);
-  BOOST_CHECK_EQUAL(sfIntersection.object, discSurfaceObject.get());
+  CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersect.position(),
+                  1e-9);
+  CHECK_CLOSE_ABS(sfIntersection.pathLength(), expectedIntersect.pathLength(),
+                  1e-9);
+  BOOST_CHECK_EQUAL(sfIntersection.object(), discSurfaceObject.get());
 
   //
   /// Test name

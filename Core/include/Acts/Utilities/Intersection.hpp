@@ -136,9 +136,9 @@ class ObjectIntersection {
 
   /// Object intersection
   ///
-  /// @param sIntersection is the intersection
-  /// @param sObject is the object to be instersected
-  /// @param sRepresentation is the object representation
+  /// @param intersection is the intersection
+  /// @param object is the object to be instersected
+  /// @param representation is the object representation
   /// @param index is the intersection index
   ObjectIntersection(const Intersection3D& intersection, const object_t* object,
                      const representation_t* representation,

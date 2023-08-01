@@ -577,8 +577,10 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   // test the step size modification in the context of a surface
   stepper.updateStepSize(
       state,
-      target->intersect(state.geoContext, stepper.position(state),
-                        state.navDir * stepper.direction(state), false),
+      target
+          ->intersect(state.geoContext, stepper.position(state),
+                      state.navDir * stepper.direction(state), false)
+          .closest(),
       false);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
@@ -586,8 +588,10 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
   state.stepSize.setValue(navDir * stepSize);
   stepper.updateStepSize(
       state,
-      target->intersect(state.geoContext, stepper.position(state),
-                        state.navDir * stepper.direction(state), false),
+      target
+          ->intersect(state.geoContext, stepper.position(state),
+                      state.navDir * stepper.direction(state), false)
+          .closest(),
       true);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }

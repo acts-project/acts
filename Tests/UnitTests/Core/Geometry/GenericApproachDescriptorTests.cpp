@@ -79,8 +79,7 @@ BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties) {
   SurfaceIntersection surfIntersection =
       approachDescriptor.approachSurface(tgContext, origin, zDir, bcheck);
   double expectedIntersection = 20.0;  // property of SurfaceStub
-  CHECK_CLOSE_REL(surfIntersection.intersection.pathLength,
-                  expectedIntersection, 1e-6);
+  CHECK_CLOSE_REL(surfIntersection.pathLength(), expectedIntersection, 1e-6);
   // containedSurfaces()
   BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
                     someSurfaces.size());
@@ -110,15 +109,10 @@ BOOST_AUTO_TEST_CASE(GenericApproachNoOverstepping) {
       gad.approachSurface(GeometryContext(), origin, direction, bcheck);
 
   // No overstepping allowed, the preferred solution should be the forward one
-  CHECK_CLOSE_ABS(sfIntersection.intersection.pathLength, 10.5, s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position.x(), 0., s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position.y(), 10., s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position.z(), 1., s_epsilon);
-
-  CHECK_CLOSE_ABS(sfIntersection.alternative.pathLength, -9.5, s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.alternative.position.x(), 0., s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.alternative.position.y(), -10., s_epsilon);
-  CHECK_CLOSE_ABS(sfIntersection.alternative.position.z(), 1., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.pathLength(), 10.5, s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.position().x(), 0., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.position().y(), 10., s_epsilon);
+  CHECK_CLOSE_ABS(sfIntersection.position().z(), 1., s_epsilon);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

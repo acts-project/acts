@@ -76,9 +76,9 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
 
   // the intersection of the track with the end surface
   SurfaceIntersection intersection =
-      eSurface->intersect(geoCtx, Vector3(0, 0, 0), dir, true);
-  Vector3 tpos = intersection.intersection.position;
-  auto s = intersection.intersection.pathLength;
+      eSurface->intersect(geoCtx, Vector3(0, 0, 0), dir, true).closest();
+  Vector3 tpos = intersection.position();
+  auto s = intersection.pathLength();
 
   BOOST_CHECK_EQUAL(s, distance * std::sqrt(2));
 
