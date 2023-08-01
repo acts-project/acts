@@ -286,11 +286,10 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       Vector4 posInBilloirFrame =
           vertexingOptions.beamSpotConstraint.fullPosition() - linPoint;
 
-      newChi2 +=
-          (posInBilloirFrame.transpose())
-              .dot(
-                  vertexingOptions.beamSpotConstraint.fullCovariance().inverse() *
-                  posInBilloirFrame);
+      newChi2 += (posInBilloirFrame.transpose())
+                     .dot(vertexingOptions.beamSpotConstraint.fullCovariance()
+                              .inverse() *
+                          posInBilloirFrame);
     }
 
     if (!std::isnormal(newChi2)) {
