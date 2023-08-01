@@ -192,7 +192,7 @@ class CylinderSurface : public Surface {
   /// If possible returns both solutions for the cylinder
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceIntersection intersect(
+  SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
       ActsScalar tolerance = s_onSurfaceTolerance) const final;

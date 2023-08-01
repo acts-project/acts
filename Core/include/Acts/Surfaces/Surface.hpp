@@ -45,7 +45,7 @@ class IVisualization3D;
 class Surface;
 
 /// Typedef of the surface intersection
-using SurfaceIntersection = ObjectIntersection<Surface>;
+using SurfaceMultiIntersection = ObjectMultiIntersection<Surface>;
 
 /// @class Surface
 ///
@@ -408,7 +408,7 @@ class Surface : public virtual GeometryObject,
   /// @param tolerance the tolerance used for the intersection
   ///
   /// @return SurfaceIntersection object (contains intersection & surface)
-  virtual SurfaceIntersection intersect(
+  virtual SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
       ActsScalar tolerance = s_onSurfaceTolerance) const = 0;

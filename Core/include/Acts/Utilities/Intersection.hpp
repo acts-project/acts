@@ -1,21 +1,19 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// Intersection.hpp, Acts project
-///////////////////////////////////////////////////////////////////
-
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
 #include <limits>
+
 namespace Acts {
 
 /// Status enum
@@ -46,54 +44,26 @@ struct Intersection {
   /// Position of the intersection
   ActsVector<DIM> position = ActsVector<DIM>::Zero();
   /// Signed path length to the intersection (if valid)
-  typename ActsVector<DIM>::Scalar pathLength{
-      std::numeric_limits<double>::infinity()};
+  ActsScalar pathLength{std::numeric_limits<double>::infinity()};
   /// The Status of the intersection
   Status status{Status::unreachable};
+  /// The intersection index
+  std::uint8_t index{0};
+
+  /// Default constructor
+  Intersection() = default;
 
   /// Constructor with arguments
   ///
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
   /// @param sstatus is an enum indicating the status of the intersection
-  Intersection(const ActsVector<DIM>& sinter, double slength, Status sstatus)
-      : position(sinter), pathLength(slength), status(sstatus) {}
+  Intersection(const ActsVector<DIM>& sinter, double slength, Status sstatus,
+               std::uint8_t sindex = 0)
+      : position(sinter), pathLength(slength), status(sstatus), index(sindex) {}
 
-  /// Default constructor
-  Intersection() = default;
-
-  /// Bool() operator for validity checking
-  explicit operator bool() const { return (status != Status::missed); }
-
-  /// Smaller operator for sorting,
-  /// - it respects the validity of the intersection
-  /// @param si is the intersection for testing
-  bool operator<(const Intersection<DIM>& si) const {
-    if (status == Status::unreachable) {
-      return false;
-    }
-    // Now check the pathLength
-    if (si.status != Status::unreachable) {
-      return (pathLength < si.pathLength);
-    }
-    // The current one wins, no re-ordering
-    return true;
-  }
-
-  /// Greater operator for sorting,
-  /// - it respects the validity of the intersection
-  /// @param si is the intersection for testing
-  bool operator>(const Intersection<DIM>& si) const {
-    if (status == Status::unreachable) {
-      return false;
-    }
-    // Now check the pathLength
-    if (si.status != Status::unreachable) {
-      return (pathLength > si.pathLength);
-    }
-    // The current one wins, no re-ordering
-    return true;
-  }
+  /// Returns wheter the intersection was successful or not
+  explicit operator bool() const { return status != Status::missed; }
 };
 
 using Intersection2D = Intersection<2>;
@@ -111,72 +81,87 @@ class ObjectIntersection {
   /// The representation of this object
   const representation_t* representation{nullptr};
 
-  /// The alternative intersections
-  Intersection3D alternative{};
-
   /// Default constructor
   ObjectIntersection() = default;
 
   /// Object intersection - symmetric setup
   ///
-  /// @param sInter is the intersection
+  /// @param sIntersection is the intersection
   /// @param sObject is the object to be instersected
   template <typename T = representation_t,
             std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
-  ObjectIntersection(const Intersection3D& sInter, const object_t* sObject)
-      : intersection(sInter), object(sObject), representation(sObject) {}
+  ObjectIntersection(const Intersection3D& sIntersection,
+                     const object_t* sObject)
+      : intersection(sIntersection), object(sObject), representation(sObject) {}
 
   /// Object intersection
   ///
-  /// @param sInter is the intersection
+  /// @param sIntersection is the intersection
   /// @param sObject is the object to be instersected
   /// @param sRepresentation is the object representation
-  ObjectIntersection(const Intersection3D& sInter, const object_t* sObject,
+  ObjectIntersection(const Intersection3D& sIntersection,
+                     const object_t* sObject,
                      const representation_t* sRepresentation)
-      : intersection(sInter),
+      : intersection(sIntersection),
         object(sObject),
         representation(sRepresentation) {}
 
-  /// Bool() operator for validity checking
-  explicit operator bool() const { return bool(intersection); }
-
-  /// @brief Smaller operator for ordering & sorting
-  ///
-  /// This operator will ignore the alternative, but simply
-  /// order the representing intersection
-  ///
-  /// @param oi is the source intersection for comparison
-  bool operator<(
-      const ObjectIntersection<object_t, representation_t>& oi) const {
-    return (intersection < oi.intersection);
-  }
-
-  /// @brief Greater operator for ordering & sorting
-  ///
-  /// This operator will ignore the alternative, but simply
-  /// order the representing intersection
-  ///
-  /// @param oi is the source intersection for comparison
-  bool operator>(
-      const ObjectIntersection<object_t, representation_t>& oi) const {
-    return (intersection > oi.intersection);
-  }
-
-  /// Allow swapping the intersection and the alternative
-  void swapSolutions() { std::swap(intersection, alternative); }
+  /// Returns wheter the intersection was successful or not
+  explicit operator bool() const { return intersection.operator bool(); }
 };
 
-struct SameSurfaceIntersection {
-  /// @brief comparison operator
+/// @brief class extensions to return also the object and a representation
+template <typename object_t, typename representation_t = object_t>
+class ObjectMultiIntersection {
+ public:
+  /// The intersections
+  std::array<Intersection3D, 2> intersections;
+  /// The object that was (tried to be) intersected
+  const object_t* object{nullptr};
+  /// The representation of this object
+  const representation_t* representation{nullptr};
+
+  /// Default constructor
+  ObjectMultiIntersection() = default;
+
+  /// Object intersection - symmetric setup
   ///
-  /// This is a struct to pick out intersection with identical surfaces
+  /// @param sIntersections are the intersections
+  /// @param sObject is the object to be instersected
+  template <typename T = representation_t,
+            std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
+  ObjectMultiIntersection(const std::array<Intersection3D, 2>& sIntersections,
+                          const object_t* sObject)
+      : intersections(sIntersections),
+        object(sObject),
+        representation(sObject) {
+    assert(checkOrder());
+  }
+
+  /// Object intersection
   ///
-  /// @tparam intersection_t Type of the intersection object
-  /// @param i1 First intersection to test
-  /// @param i2 Second intersection to test
-  template <typename intersection_t>
-  bool operator()(const intersection_t& i1, const intersection_t& i2) const {
-    return (i1.object == i2.object);
+  /// @param sIntersections are the intersections
+  /// @param sObject is the object to be instersected
+  /// @param sRepresentation is the object representation
+  ObjectMultiIntersection(const std::array<Intersection3D, 2>& sIntersections,
+                          const object_t* sObject,
+                          const representation_t* sRepresentation)
+      : intersections(sIntersections),
+        object(sObject),
+        representation(sRepresentation) {
+    assert(checkOrder());
+  }
+
+  bool checkOrder() const {
+    return intersections[0].pathLength <= intersections[1].pathLength;
+  }
+
+  ObjectIntersection<object_t, representation_t> first() const {
+    return {intersections[0], object, representation};
+  }
+
+  ObjectIntersection<object_t, representation_t> second() const {
+    return {intersections[1], object, representation};
   }
 };
 
