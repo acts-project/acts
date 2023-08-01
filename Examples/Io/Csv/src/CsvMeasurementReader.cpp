@@ -207,7 +207,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
     sourceLinks.insert(sourceLinks.end(), std::cref(sourceLink));
 
-    // Get all cell data for this measurment
+    // Get all cell data for this measurement
     std::vector<ActsExamples::CellData> thisCellData;
     std::copy_if(cellData.begin(), cellData.end(),
                  std::back_inserter(thisCellData),
