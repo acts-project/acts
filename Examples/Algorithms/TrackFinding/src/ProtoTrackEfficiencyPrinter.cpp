@@ -2,17 +2,16 @@
 
 #include <Acts/Utilities/Zip.hpp>
 
-#include <boost/histogram.hpp>
-#include <boost/histogram/ostream.hpp>
-
 #include <list>
 
+#include <boost/histogram/ostream.hpp>
+
 namespace {
-  template<typename T>
-  std::list<T> vecToList(const std::vector<T> &v) {
-    return std::list<T>(v.begin(), v.end());
-  }
+template <typename T>
+std::list<T> vecToList(const std::vector<T> &v) {
+  return std::list<T>(v.begin(), v.end());
 }
+}  // namespace
 
 ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
     const ActsExamples::AlgorithmContext &context) const {
@@ -37,32 +36,38 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
     ProtoTrack intersection;
     std::optional<typename decltype(testTracks)::iterator> toDelete;
 
-    for (auto testTrackIt = testTracks.begin(); testTrackIt != testTracks.end(); ++testTrackIt) {
+    for (auto testTrackIt = testTracks.begin(); testTrackIt != testTracks.end();
+         ++testTrackIt) {
       const auto &testTrack = *testTrackIt;
       intersection.resize(std::max(testTrack.size(), refTrack.size()));
-      const auto it = std::set_intersection(refTrack.begin(), refTrack.end(), testTrack.begin(),
-                            testTrack.end(), intersection.begin());
-      const auto size = static_cast<double>(std::distance(intersection.begin(), it));
+      const auto it = std::set_intersection(refTrack.begin(), refTrack.end(),
+                                            testTrack.begin(), testTrack.end(),
+                                            intersection.begin());
+      const auto size =
+          static_cast<double>(std::distance(intersection.begin(), it));
       intersection.clear();
 
       eff = std::max(eff, size / refTrack.size());
 
-      if( eff > 0.50001) {
+      if (eff > 0.50001) {
         toDelete = testTrackIt;
         break;
       }
     }
 
-    if( toDelete ) {
+    if (toDelete) {
       testTracks.erase(*toDelete);
     }
   }
 
-  namespace bh = boost::histogram;
-  auto h = bh::make_histogram(bh::axis::regular<>(11, 0.0, 1.1));
-  h.fill(effs);
+  std::lock_guard<std::mutex>{m_histogramMutex};
+  m_histogram.fill(effs);
 
-  ACTS_INFO("Prototrack efficiency histogram:\n" << h);
+  return {};
+}
 
+ActsExamples::ProcessCode
+ActsExamples::ProtoTrackEfficiencyPrinter::finalize() {
+  ACTS_INFO("Efficiency histogram:\n" << m_histogram);
   return {};
 }

@@ -14,10 +14,12 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
-// #include "Acts/Utilities/KDTree.hpp"
 
+#include <mutex>
 #include <string>
 #include <vector>
+
+#include <boost/histogram.hpp>
 
 namespace ActsExamples {
 
@@ -30,7 +32,10 @@ class ProtoTrackEfficiencyPrinter final : public IAlgorithm {
   };
 
   ProtoTrackEfficiencyPrinter(Config cfg, Acts::Logging::Level lvl)
-      : IAlgorithm("ProtoTrackEfficencyPrinter", lvl), m_cfg(cfg) {
+      : IAlgorithm("ProtoTrackEfficencyPrinter", lvl),
+        m_cfg(cfg),
+        m_histogram(boost::histogram::make_histogram(
+            boost::histogram::axis::regular<>(10, 0.0, 1.0))) {
     m_testProtoTracks.initialize(m_cfg.testProtoTracks);
     m_refProtoTracks.initialize(m_cfg.refProtoTracks);
     // m_inputSpacePoints.initialize(m_cfg.spacePoints);
@@ -38,6 +43,8 @@ class ProtoTrackEfficiencyPrinter final : public IAlgorithm {
 
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext &context) const override;
+
+  ActsExamples::ProcessCode finalize() override;
 
   const Config &config() const { return m_cfg; }
 
@@ -48,8 +55,12 @@ class ProtoTrackEfficiencyPrinter final : public IAlgorithm {
                                                         "InputTestProtoTracks"};
   ReadDataHandle<ProtoTrackContainer> m_refProtoTracks{this,
                                                        "InputRefProtoTracks"};
-  // ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{
-  // this, "InputSpacePoints"};
+
+  using Hist = decltype(boost::histogram::make_histogram(
+      std::declval<boost::histogram::axis::regular<>>()));
+  mutable Hist m_histogram;
+
+  mutable std::mutex m_histogramMutex;
 };
 
 }  // namespace ActsExamples
