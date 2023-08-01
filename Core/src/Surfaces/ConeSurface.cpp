@@ -135,7 +135,7 @@ Acts::Vector3 Acts::ConeSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::ConeSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/, double tolerance) const {
+    double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {

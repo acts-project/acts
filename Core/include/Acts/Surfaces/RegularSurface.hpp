@@ -39,7 +39,7 @@ class RegularSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return normal vector by value
   virtual Vector3 normal(const GeometryContext& gctx,
-                         const Vector3& position) const;
+                         const Vector3& position) const = 0;
 
   /// Calculate the normal vector of the surface
   /// This overload is fully generic, fulfills the @ref Surface interface and
@@ -50,6 +50,31 @@ class RegularSurface : public Surface {
   /// @param pos is the global position where the normal vector is constructed
   /// @param direction is the direction of the normal vector (ignored for @c RegularSurface)
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
-                 const Vector3& direction) const override;
+                 const Vector3& direction) const final;
+
+  /// Convert a global position to a local one this is the most generic
+  /// interface, which is implemented by all surfaces
+  /// @note The @p position is required to be on-surface, which is indicated by
+  ///       the `Result` return value.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global position to be converted
+  /// @param direction is the direction of the local position (ignored for @c RegularSurface)
+  /// @param tolerance is the tolerance for the on-surface check
+  /// @return Result type containing local position by value
+  Result<Vector2> globalToLocal(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction,
+      double tolerance = s_onSurfaceTolerance) const final;
+
+  /// Convert a global position to a local one.
+  /// @note The @p position is required to be on-surface, which is indicated by
+  ///       the `Result` return value.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global position to be converted
+  /// @param tolerance is the tolerance for the on-surface check
+  /// @return Result type containing local position by value
+  virtual Result<Vector2> globalToLocal(
+      const GeometryContext& gctx, const Vector3& position,
+      double tolerance = s_onSurfaceTolerance) const = 0;
 };
 }  // namespace Acts

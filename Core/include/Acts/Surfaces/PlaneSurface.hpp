@@ -89,7 +89,11 @@ class PlaneSurface : public RegularSurface {
   /// @param other The source PlaneSurface for assignment
   PlaneSurface& operator=(const PlaneSurface& other);
 
-  /// Normal vector return
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::normal;
+
+  /// Get the normal vector of this surface at a given local position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
@@ -98,13 +102,18 @@ class PlaneSurface : public RegularSurface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 
+  /// Get the normal vector of this surface at a given global position
+  /// @note The @p position is required to be on-surface.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global positiono (for @ref PlaneSurface this is ignored)
+  /// @return The normal vector
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector3& position) const final;
+
   /// Get the normal vector, indepdendent of the location
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return The normal vector
   Vector3 normal(const GeometryContext& gctx) const;
-
-  /// Normal vector return without argument
-  using RegularSurface::normal;
 
   /// Force a global position to be on the plane surface.
   /// This is done by projecting the position onto the plane, and discarding the
@@ -161,17 +170,13 @@ class PlaneSurface : public RegularSurface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position - considered to be on surface but not
-  /// inside bounds (check is done)
-  /// @param direction global 3D momentum direction (ignored for PlaneSurface)
-  /// @note this is the final implementation of the pathCorrection function
-  ///
+  /// @param position global 3D position (ignored for @ref PlaneSurface)
+  /// @param direction global 3D momentum direction (ignored for @ref PlaneSurface)
   /// @return a double representing the scaling factor
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
                         const Vector3& direction) const final;

@@ -89,7 +89,7 @@ Acts::Vector3 Acts::PlaneSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/, double tolerance) const {
+    double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
@@ -160,10 +160,13 @@ Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
   return normal(gctx);
 }
 
+Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx,
+                                         const Vector3& /*pos*/) const {
+  return normal(gctx);
+}
+
 Acts::Vector3 Acts::PlaneSurface::normal(const GeometryContext& gctx) const {
-  // fast access via transform matrix (and not rotation())
-  const auto& tMatrix = transform(gctx).matrix();
-  return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
+  return transform(gctx).linear().col(2);
 }
 
 Acts::Vector3 Acts::PlaneSurface::binningPosition(

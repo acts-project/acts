@@ -121,6 +121,10 @@ class DiscSurface : public RegularSurface {
   /// Return the surface type
   SurfaceType type() const override;
 
+  // User overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::normal;
+
   /// Normal vector return
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -130,13 +134,18 @@ class DiscSurface : public RegularSurface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 
+  /// Get the normal vector of this surface at a given global position
+  /// @note The @p position is required to be on-surface.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global positiono (for @ref DiscSurface this is ignored)
+  /// @return The normal vector
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector3& position) const final;
+
   /// Get the normal vector, indepdendent of the location
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return The normal vector
   Vector3 normal(const GeometryContext& gctx) const;
-
-  /// Normal vector return without argument
-  using RegularSurface::normal;
 
   /// Force a global position to be on the disc surface.
   /// This is done by projecting the position onto the disc, and discarding the
@@ -186,7 +195,6 @@ class DiscSurface : public RegularSurface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Special method for DiscSurface : local<->local transformations polar <->

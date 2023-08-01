@@ -13,18 +13,16 @@
 
 namespace Acts {
 
-Vector3 RegularSurface::normal(const GeometryContext& gctx,
-                               const Vector3& position) const {
-  if (!isOnSurface(gctx, position, Vector3::Zero(), false)) {
-    throw std::runtime_error("Not on surface");
-  }
-  return normal(gctx, Vector2{Vector2::Zero()});
-}
-
-
 Vector3 RegularSurface::normal(const GeometryContext& gctx, const Vector3& pos,
                                const Vector3& direction) const {
-  throw_assert(isOnSurface(gctx, pos, direction, false), "Not on surface");
+  assert(isOnSurface(gctx, pos, direction, false) && "Not on surface");
   return normal(gctx, pos);
-};
+}
+
+Result<Vector2> RegularSurface::globalToLocal(const GeometryContext& gctx,
+                                              const Vector3& position,
+                                              const Vector3& /*direction*/,
+                                              double tolerance) const {
+  return globalToLocal(gctx, position, tolerance);
+}
 }  // namespace Acts

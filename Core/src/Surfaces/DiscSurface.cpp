@@ -93,7 +93,7 @@ Acts::Vector3 Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
 
 Acts::Result<Acts::Vector2> Acts::DiscSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*gmom*/, double tolerance) const {
+    double tolerance) const {
   // transport it to the globalframe
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
@@ -350,6 +350,11 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
   return normal(gctx);
 }
 
+Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
+                                        const Vector3& /*position*/) const {
+  return normal(gctx);
+}
+
 Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
   // fast access via transform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
@@ -388,8 +393,8 @@ double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
 }
 
 double Acts::DiscSurface::pathCorrection(const GeometryContext& gctx,
-                                         const Vector3& position,
+                                         const Vector3& /*position*/,
                                          const Vector3& direction) const {
   /// we can ignore the global position here
-  return 1. / std::abs(RegularSurface::normal(gctx, position).dot(direction));
+  return 1. / std::abs(normal(gctx).dot(direction));
 }

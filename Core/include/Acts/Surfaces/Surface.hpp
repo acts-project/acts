@@ -369,8 +369,9 @@ class Surface : public virtual GeometryObject,
   /// Calucation of the path correction for incident
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position global 3D position - considered to be on surface but not
-  /// inside bounds (check is done)
+  /// @param position global 3D position
+  /// @note The @p position is either ignored, or it is coerced to be on the surface,
+  ///       depending on the surface type.
   /// @param direction global 3D momentum direction
   ///
   /// @return Path correction with respect to the nominal incident.

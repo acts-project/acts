@@ -145,7 +145,8 @@ class CylinderSurface : public RegularSurface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector3& position) const final;
 
-  /// Normal vector return without argument
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
   using RegularSurface::normal;
 
   /// Forces a global position to be on the cylinder surface
@@ -188,7 +189,6 @@ class CylinderSurface : public RegularSurface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction

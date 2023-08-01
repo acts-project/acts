@@ -135,9 +135,6 @@ class ConeSurface : public RegularSurface {
   Vector3 normal(const GeometryContext& gctx,
                  const Vector3& position) const final;
 
-  /// Normal vector return without argument
-  using RegularSurface::normal;
-
   /// Force a global position to a 3D position that is on surface
   /// For Cone surfaces, the @c r value expected for the given @c z position is
   /// used along with the @f$ \phi @f$ value
@@ -168,6 +165,10 @@ class ConeSurface : public RegularSurface {
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
                         const Vector3& direction) const final;
 
+  // Use overloads from `RegularSurface`
+  using RegularSurface::globalToLocal;
+  using RegularSurface::normal;
+
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -179,7 +180,6 @@ class ConeSurface : public RegularSurface {
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
