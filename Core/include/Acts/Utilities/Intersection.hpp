@@ -46,15 +46,6 @@ class Intersection {
   /// Status enum
   using Status = IntersectionStatus;
 
- private:
-  /// Position of the intersection
-  Position m_position = Position::Zero();
-  /// Signed path length to the intersection (if valid)
-  ActsScalar m_pathLength = std::numeric_limits<double>::infinity();
-  /// The Status of the intersection
-  Status m_status = Status::unreachable;
-
- public:
   /// Default constructor
   Intersection() = default;
 
@@ -66,7 +57,7 @@ class Intersection {
   Intersection(const Position& position, double pathLength, Status status)
       : m_position(position), m_pathLength(pathLength), m_status(status) {}
 
-  /// Returns wheter the intersection was successful or not
+  /// Returns whether the intersection was successful or not
   explicit operator bool() const { return m_status != Status::missed; }
 
   const Position& position() const { return m_position; }
@@ -97,6 +88,14 @@ class Intersection {
     auto b = bIntersection.pathLength();
     return std::abs(a) < std::abs(b);
   }
+
+ private:
+  /// Position of the intersection
+  Position m_position = Position::Zero();
+  /// Signed path length to the intersection (if valid)
+  ActsScalar m_pathLength = std::numeric_limits<double>::infinity();
+  /// The Status of the intersection
+  Status m_status = Status::unreachable;
 };
 
 using Intersection2D = Intersection<2>;
@@ -107,15 +106,6 @@ using MultiIntersection3D = std::array<Intersection3D, 2>;
 /// @brief class extensions to return also the object and a representation
 template <typename object_t, typename representation_t = object_t>
 class ObjectIntersection {
-  /// The intersection itself
-  Intersection3D m_intersection{};
-  /// The object that was (tried to be) intersected
-  const object_t* m_object{nullptr};
-  /// The representation of this object
-  const representation_t* m_representation{nullptr};
-  /// The intersection index
-  std::uint8_t m_index{0};
-
  public:
   /// Default constructor
   ObjectIntersection() = default;
@@ -148,7 +138,7 @@ class ObjectIntersection {
         m_representation(representation),
         m_index(index) {}
 
-  /// Returns wheter the intersection was successful or not
+  /// Returns whether the intersection was successful or not
   explicit operator bool() const { return m_intersection.operator bool(); }
 
   const Intersection3D& intersection() const { return m_intersection; }
@@ -178,6 +168,16 @@ class ObjectIntersection {
     return Intersection3D::closestOrder(aIntersection.intersection(),
                                         bIntersection.intersection());
   }
+
+ private:
+  /// The intersection itself
+  Intersection3D m_intersection;
+  /// The object that was (tried to be) intersected
+  const object_t* m_object = nullptr;
+  /// The representation of this object
+  const representation_t* m_representation = nullptr;
+  /// The intersection index
+  std::uint8_t m_index = 0;
 };
 
 /// @brief class extensions to return also the object and a representation
