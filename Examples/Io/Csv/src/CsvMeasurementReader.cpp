@@ -103,8 +103,10 @@ struct CompareGeometryId {
 template <typename Data>
 inline std::vector<Data> readEverything(
     const std::string& inputDir, const std::string& filename,
-    const std::vector<std::string>& optionalColumns, size_t event) {
+    const std::vector<std::string>& optionalColumns, size_t event, const Acts::Logger &logger) {
   std::string path = ActsExamples::perEventFilepath(inputDir, filename, event);
+  ACTS_DEBUG("Read '" << path << "'");
+
   dfe::NamedTupleCsvReader<Data> reader(path, optionalColumns);
 
   std::vector<Data> everything;
@@ -117,10 +119,10 @@ inline std::vector<Data> readEverything(
 }
 
 std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
-    const std::string& inputDir, size_t event) {
+    const std::string& inputDir, size_t event, const Acts::Logger &logger) {
   // geometry_id and t are optional columns
   auto measurements = readEverything<ActsExamples::MeasurementData>(
-      inputDir, "measurements.csv", {"geometry_id", "t"}, event);
+      inputDir, "measurements.csv", {"geometry_id", "t"}, event, logger);
   // sort same way they will be sorted in the output container
   std::sort(measurements.begin(), measurements.end(), CompareGeometryId{});
   return measurements;
@@ -196,7 +198,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   //
   // Note: the cell data is optional
   auto measurementData =
-      readMeasurementsByGeometryId(m_cfg.inputDir, ctx.eventNumber);
+      readMeasurementsByGeometryId(m_cfg.inputDir, ctx.eventNumber, logger());
 
   // Prepare containers for the hit data using the framework event data types
   GeometryIdMultimap<Measurement> orderedMeasurements;
@@ -211,7 +213,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
 
   auto measurementSimHitLinkData =
       readEverything<ActsExamples::MeasurementSimHitLink>(
-          m_cfg.inputDir, "measurement-simhit-map.csv", {}, ctx.eventNumber);
+          m_cfg.inputDir, "measurement-simhit-map.csv", {}, ctx.eventNumber, logger());
   for (auto mshLink : measurementSimHitLinkData) {
     measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
                                        mshLink.measurement_id, mshLink.hit_id);
@@ -297,7 +299,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   // the measurment_id-column is still named hit_id
   try {
     cellData = readEverything<ActsExamples::CellData>(
-        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
+        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber, logger());
   } catch (std::runtime_error& e) {
     // Rethrow exception if it is not about the measurement_id-column
     if (std::string(e.what()).find("Missing header column 'measurement_id'") ==
@@ -306,7 +308,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     }
 
     const auto oldCellData = readEverything<ActsExamples::CellDataLegacy>(
-        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
+        m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber, logger());
 
     auto fromLegacy = [](const CellDataLegacy& old) {
       return CellData{old.geometry_id, old.hit_id,    old.channel0,

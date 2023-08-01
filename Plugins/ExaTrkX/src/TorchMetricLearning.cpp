@@ -50,14 +50,18 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
-  // printout the r,phi,z of the first spacepoint
-  ACTS_VERBOSE("First spacepoint information [r, phi, z]: "
-               << inputValues[0][0] << ", " << inputValues[0][1] << ", "
-               << inputValues[0][2]);
-  printCudaMemInfo(logger());
-
   const int64_t numSpacepoints = inputValues.shape()[0];
   const int64_t numAllFeatures = inputValues.shape()[1];
+
+  // printout the r,phi,z of the first spacepoint
+  ACTS_VERBOSE("First spacepoint information: " << [&](){
+    std::stringstream ss;
+    for(int i=0; i<numAllFeatures; ++i) {
+      ss << inputValues[0][i] << "  ";
+    }
+    return ss.str();
+  }());
+  printCudaMemInfo(logger());
 
   auto opts = torch::TensorOptions().dtype(torch::kFloat32);
   torch::Tensor inputTensor =

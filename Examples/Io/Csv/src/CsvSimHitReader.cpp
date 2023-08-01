@@ -54,6 +54,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
+  ACTS_DEBUG("Read '" << path << "'");
 
   dfe::NamedTupleCsvReader<SimHitData> reader(path);
 
