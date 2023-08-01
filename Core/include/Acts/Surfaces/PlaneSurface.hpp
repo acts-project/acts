@@ -101,6 +101,16 @@ class PlaneSurface : public RegularSurface {
   /// Normal vector return without argument
   using RegularSurface::normal;
 
+  /// Force a global position to be on the plane surface.
+  /// This is done by projecting the position onto the plane, and discarding the
+  /// distance to the surface.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The global position to be projected
+  /// @param direction The global direction (ignored for plane surfaces)
+  /// @return The projected position by value
+  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
+                          const Vector3& direction) const final;
+
   /// The binning position is the position calculated
   /// for a certain binning type
   ///

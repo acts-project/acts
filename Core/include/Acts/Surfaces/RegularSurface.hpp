@@ -40,11 +40,7 @@ class RegularSurface : public Surface {
   ///
   /// @return normal vector by value
   virtual Vector3 normal(const GeometryContext& gctx,
-                         const Vector3& position) const {
-    throw_assert(isOnSurface(gctx, position, Vector3::Zero(), false),
-                 "Not on surface");
-    return normal(gctx, Vector2{Vector2::Zero()});
-  }
+                         const Vector3& position) const;
 
   /// Return method for the normal vector of the surface
   ///
@@ -53,15 +49,9 @@ class RegularSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   //
   /// @return normal vector by value
-  virtual Vector3 normal(const GeometryContext& gctx) const {
-    return normal(gctx, center(gctx));
-  }
+  virtual Vector3 normal(const GeometryContext& gctx) const;
 
   Vector3 normal(const GeometryContext& gctx, const Vector3& pos,
-                 const Vector3& direction) const override {
-    throw_assert(isOnSurface(gctx, pos, direction, false), "Not on surface");
-    return normal(gctx, pos);
-  };
+                 const Vector3& direction) const override;
 };
-
 }  // namespace Acts

@@ -246,6 +246,10 @@ class Surface : public virtual GeometryObject,
                    const Vector3& direction,
                    const BoundaryCheck& bcheck = true) const;
 
+  virtual Vector3 coerceToSurface(const GeometryContext& gctx,
+                                  const Vector3& position,
+                                  const Vector3& direction) const = 0;
+
   /// The insideBounds method for local positions
   ///
   /// @param lposition The local position to check

@@ -146,8 +146,10 @@ Acts::Layer::compatibleSurfaces(
     // i.e. the maximum path limit is given by the layer thickness times
     // path correction, we take a safety factor of 1.5
     // -> this avoids punch through for cylinders
-    double pCorrection =
-        surfaceRepresentation().pathCorrection(gctx, position, direction);
+    Vector3 coercedPosition =
+        surfaceRepresentation().coerceToSurface(gctx, position, direction);
+    double pCorrection = surfaceRepresentation().pathCorrection(
+        gctx, coercedPosition, direction);
     pathLimit = 1.5 * thickness() * pCorrection * options.navDir;
   }
 

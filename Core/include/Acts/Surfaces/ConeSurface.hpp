@@ -138,6 +138,16 @@ class ConeSurface : public RegularSurface {
   /// Normal vector return without argument
   using RegularSurface::normal;
 
+  /// Force a global position to a 3D position that is on surface
+  /// For Cone surfaces, the @c r value expected for the given @c z position is
+  /// used along with the @f$ \phi @f$ value
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position is the global position to be coerced
+  /// @param direction is the global momentum direction
+  /// @return The coerced global position by value
+  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
+                          const Vector3& direction) const final;
+
   // Return method for the rotational symmetry axis
   ///
   /// @param gctx The current geometry context object, e.g. alignment

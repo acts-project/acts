@@ -195,6 +195,10 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
       boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
+  // Coerce the arbitrary position bPosition to be on the surface repr so we can
+  // get a normal
+  bPosition = bSurfaceMine->surfaceRepresentation().coerceToSurface(
+      gctx, bPosition, distance.normalized());
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
@@ -240,6 +244,10 @@ void Acts::TrackingVolume::glueTrackingVolumes(
       boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
+  // Coerce the arbitrary position bPosition to be on the surface repr so we can
+  // get a normal
+  bPosition = bSurfaceMine->surfaceRepresentation().coerceToSurface(
+      gctx, bPosition, distance.normalized());
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation

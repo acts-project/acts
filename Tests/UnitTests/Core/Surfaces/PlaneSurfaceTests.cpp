@@ -30,6 +30,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -173,8 +174,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties) {
   //
 
   /// Test pathCorrection
-  CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(tgContext, offSurface,
-                                                     momentum.normalized()),
+  BOOST_CHECK_THROW(planeSurfaceObject->pathCorrection(tgContext, offSurface,
+                                                       momentum.normalized()),
+                    std::runtime_error);
+  CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(
+                      tgContext,
+                      planeSurfaceObject->coerceToSurface(
+                          tgContext, offSurface, momentum.normalized()),
+                      momentum.normalized()),
                   std::sqrt(3), 0.01);
   //
   /// Test name

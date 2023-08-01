@@ -85,6 +85,21 @@ Acts::Vector3 Acts::CylinderSurface::binningPosition(
   return center(gctx);
 }
 
+Acts::Vector3 Acts::CylinderSurface::coerceToSurface(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& /*direction*/) const {
+  Vector3 local = transform(gctx).inverse() * position;
+
+  double phi = VectorHelpers::phi(local);
+  const double r = bounds().get(CylinderBounds::eR);
+
+  // reset x/y so that they are on surface, but keep z
+  local[eFreePos0] = r * std::cos(phi);
+  local[eFreePos1] = r * std::sin(phi);
+
+  return transform(gctx) * local;
+}
+
 // return the measurement frame: it's the tangential plane
 Acts::RotationMatrix3 Acts::CylinderSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
@@ -154,6 +169,10 @@ Acts::Vector3 Acts::CylinderSurface::normal(
 
 Acts::Vector3 Acts::CylinderSurface::normal(
     const GeometryContext& gctx, const Acts::Vector3& position) const {
+  if (!isOnSurface(gctx, position, Vector3::Zero(), false)) {
+    throw std::runtime_error("Not on surface");
+  }
+
   const Transform3& sfTransform = transform(gctx);
   // get it into the cylinder frame
   Vector3 pos3D = sfTransform.inverse() * position;

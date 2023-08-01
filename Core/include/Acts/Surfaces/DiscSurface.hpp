@@ -133,6 +133,16 @@ class DiscSurface : public RegularSurface {
   /// Normal vector return without argument
   using RegularSurface::normal;
 
+  /// Force a global position to be on the disc surface.
+  /// This is done by projecting the position onto the disc, and discarding the
+  /// distance to the surface.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The global position to be projected
+  /// @param direction The global direction (ignored for disc surfaces)
+  /// @return The projected position by value
+  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
+                          const Vector3& direction) const final;
+
   /// The binning position The position calculated
   /// for a certain binning type
   ///
