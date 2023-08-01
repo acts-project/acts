@@ -31,7 +31,6 @@
 #include <initializer_list>
 #include <memory>
 #include <ostream>
-#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -205,9 +204,9 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
 
   //
   /// Test pathCorrection
-  BOOST_CHECK_THROW(cylinderSurfaceObject->pathCorrection(
-                        testContext, offSurface, momentum.normalized()),
-                    std::runtime_error);
+  CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(testContext, offSurface,
+                                                        momentum.normalized()),
+                  std::sqrt(3.), 0.01);
   //
   /// Test name
   BOOST_CHECK_EQUAL(cylinderSurfaceObject->name(),

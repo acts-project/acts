@@ -185,7 +185,8 @@ Acts::Vector3 Acts::CylinderSurface::normal(
 double Acts::CylinderSurface::pathCorrection(
     const GeometryContext& gctx, const Acts::Vector3& position,
     const Acts::Vector3& direction) const {
-  Vector3 normalT = normal(gctx, position);
+  Vector3 coercedPosition = coerceToSurface(gctx, position, direction);
+  Vector3 normalT = normal(gctx, coercedPosition);
   double cosAlpha = normalT.dot(direction);
   return std::fabs(1. / cosAlpha);
 }
