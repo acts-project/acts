@@ -149,8 +149,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
           m_cfg.inputDir, "cells.csv", {"timestamp"}, ctx.eventNumber);
     } catch (std::runtime_error& e) {
       // Rethrow exception if it is not about the measurement_id-column
-      if (not std::string(e.what()).find(
-              "Missing header column 'measurement_id'")) {
+      if (std::string(e.what()).find(
+              "Missing header column 'measurement_id'") == std::string::npos) {
         throw;
       }
 
