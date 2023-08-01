@@ -1,12 +1,15 @@
-#include "ActsExamples/Utilities/MakeMeasurmentParticlesMap.hpp"
+#include "ActsExamples/Utilities/MakeMeasurementParticlesMap.hpp"
 
 using namespace ActsExamples;
 
-ActsExamples::MakeMeasurmentParticlesMap::MakeMeasurmentParticlesMap(
+ActsExamples::MakeMeasurementParticlesMap::MakeMeasurementParticlesMap(
     Config cfg, Acts::Logging::Level lvl)
-    : IAlgorithm("MakeMeasurmentParticlesMap", lvl), m_cfg(cfg) {}
+    : IAlgorithm("MakeMeasurementParticlesMap", lvl), m_cfg(cfg) {
+  m_inputHitMap.initialize(m_cfg.inputMeasurementSimhitMap);
+  m_inputHits.initialize(m_cfg.inputSimHits);
+}
 
-ProcessCode ActsExamples::MakeMeasurmentParticlesMap::execute(
+ProcessCode ActsExamples::MakeMeasurementParticlesMap::execute(
     const AlgorithmContext &ctx) const {
   const auto hits = m_inputHits(ctx);
   const auto hitMeasMap = m_inputHitMap(ctx);

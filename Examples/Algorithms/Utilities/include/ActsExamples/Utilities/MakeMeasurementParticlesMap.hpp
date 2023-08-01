@@ -16,19 +16,19 @@
 
 namespace ActsExamples {
 
-class MakeMeasurmentParticlesMap final : public IAlgorithm {
+class MakeMeasurementParticlesMap final : public IAlgorithm {
  public:
   struct Config {
     std::string inputSimHits;
-    std::string inputMeasurmentSimhitMap;
-    std::string outputMeasurmentParticlesMap;
+    std::string inputMeasurementSimhitMap;
+    std::string outputMeasurementParticlesMap;
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  MakeMeasurmentParticlesMap(Config cfg, Acts::Logging::Level lvl);
+  MakeMeasurementParticlesMap(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///
@@ -43,9 +43,9 @@ class MakeMeasurmentParticlesMap final : public IAlgorithm {
   Config m_cfg;
 
   WriteDataHandle<IndexMultimap<ActsFatras::Barcode>> m_outputParticleMap{
-      this, "OutputMeasurmentParticlesMap"};
+      this, "OutputMeasurementParticlesMap"};
   ReadDataHandle<IndexMultimap<Index>> m_inputHitMap{
-      this, "InputMeasurmentSimhitMap"};
+      this, "InputMeasurementSimhitMap"};
   ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
 };
 

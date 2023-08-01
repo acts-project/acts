@@ -5,7 +5,7 @@ add_library(
   src/TrajectoriesToPrototracks.cpp
   src/TrackSelectorAlgorithm.cpp
   src/TracksToTrajectories.cpp
-  src/MakeMeasurmentParticlesMap.cpp)
+  src/MakeMeasurementParticlesMap.cpp)
 target_include_directories(
   ActsExamplesUtilities
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
