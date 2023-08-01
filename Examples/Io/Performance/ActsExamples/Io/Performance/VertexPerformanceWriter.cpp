@@ -430,13 +430,13 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
         if (!foundMatchingParams) {
           ACTS_VERBOSE("Track has no matching truth particle.");
         }
-      }
+      }  // end loop tracksAtVtx
     } else {
       for (const auto& particle : allTruthParticles) {
         int priVtxId = particle.particleId().vertexPrimary();
         contributingTruthVertices.push_back(priVtxId);
       }
-    }  // end loop tracksAtVtx
+    }
 
     // Find true vertex that contributes most to the reconstructed vertex
     std::map<int, int> fmap;
