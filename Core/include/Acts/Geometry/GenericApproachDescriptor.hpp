@@ -29,10 +29,6 @@ class Surface;
 ///
 /// Class to decide and return which approaching surface to be taken,
 /// it's a generic descriptor for n surfaces
-///
-/// It is templated in order to allow for BoundarySurfaces from
-/// representing volumes of layers to be re-used
-
 class GenericApproachDescriptor : public ApproachDescriptor {
  public:
   /// A generic approach descriptor for new Acts::Surface objects
@@ -62,7 +58,7 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param direction The momentum vector
   /// @param bcheck The boundary check prescription
   ///
-  /// @return : a SurfaceIntersection
+  /// @return : a @c SurfaceIntersection
   SurfaceIntersection approachSurface(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck) const override;

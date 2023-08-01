@@ -32,10 +32,13 @@ Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
   for (auto sf : m_surfaceCache) {
     auto sfIntersection = sf->intersect(gctx, position, direction, bcheck);
     for (const auto& intersection : sfIntersection.split()) {
-      if (intersection) {
+      if (intersection && intersection.pathLength() >= 0) {
         sIntersections.push_back(intersection);
       }
     }
+  }
+  if (sIntersections.empty()) {
+    return SurfaceIntersection();
   }
   return *std::min_element(sIntersections.begin(), sIntersections.end(),
                            SurfaceIntersection::forwardOrder);
