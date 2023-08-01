@@ -122,8 +122,8 @@ Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectCircleSegment(
     const Vector2& dir) {
   auto intersections = intersectCircle(R, origin, dir);
   for (const auto& candidate : intersections) {
-    if (candidate.pathLength > 0.) {
-      ActsScalar phi = Acts::VectorHelpers::phi(candidate.position);
+    if (candidate.pathLength() > 0.) {
+      ActsScalar phi = Acts::VectorHelpers::phi(candidate.position());
       if (phi > phiMin and phi < phiMax) {
         return candidate;
       }

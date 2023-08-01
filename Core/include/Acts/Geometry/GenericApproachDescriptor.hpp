@@ -12,6 +12,7 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -62,7 +63,7 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param bcheck The boundary check prescription
   ///
   /// @return : a SurfaceIntersection
-  ObjectIntersection<Surface> approachSurface(
+  SurfaceIntersection approachSurface(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck) const override;
 

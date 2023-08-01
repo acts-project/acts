@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <vector>
@@ -44,7 +45,7 @@ class ApproachDescriptor {
   /// @param bcheck is the boundary check directive
   ///
   /// @return is a surface intersection
-  virtual ObjectIntersection<Surface> approachSurface(
+  virtual SurfaceIntersection approachSurface(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck) const = 0;
 

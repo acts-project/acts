@@ -222,7 +222,8 @@ struct GaussianSumFitter {
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
                        sParameters.unitDirection(), true)
-            .intersection.status;
+            .closest()
+            .status();
 
     if (intersectionStatusStartSurface != Intersection3D::Status::onSurface) {
       ACTS_ERROR(

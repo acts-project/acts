@@ -22,12 +22,14 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <functional>
 #include <limits>
 #include <numeric>
@@ -767,23 +769,24 @@ class MultiEigenStepperLoop
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
                       bool release = true) const {
-    const Surface& surface = *oIntersection.representation;
+    const Surface& surface = *oIntersection.representation();
 
     for (auto& component : state.components) {
-      auto intersection = surface.intersect(
-          component.state.geoContext, SingleStepper::position(component.state),
-          SingleStepper::direction(component.state), true);
+      auto intersection =
+          surface
+              .intersect(component.state.geoContext,
+                         SingleStepper::position(component.state),
+                         SingleStepper::direction(component.state), true)
+              .get(oIntersection.index());
 
       // We don't know whatever was done to manipulate the intersection before
       // (e.g. in Layer.ipp:240), so we trust and just adjust the sign
-      if (std::signbit(oIntersection.intersection.pathLength) !=
-          std::signbit(intersection.intersection.pathLength)) {
-        intersection.intersection.pathLength *= -1;
-      }
-
-      if (std::signbit(oIntersection.alternative.pathLength) !=
-          std::signbit(intersection.alternative.pathLength)) {
-        intersection.alternative.pathLength *= -1;
+      if (std::signbit(oIntersection.pathLength()) !=
+          std::signbit(intersection.pathLength())) {
+        intersection = SurfaceIntersection(
+            Intersection3D(intersection.position(), -intersection.pathLength(),
+                           intersection.status()),
+            intersection.object(), intersection.representation());
       }
 
       SingleStepper::updateStepSize(component.state, intersection, release);

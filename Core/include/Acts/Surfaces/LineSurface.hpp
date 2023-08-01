@@ -239,7 +239,7 @@ class LineSurface : public Surface {
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
   ///
   /// @return is the intersection object
-  SurfaceIntersection intersect(
+  SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
       ActsScalar tolerance = s_onSurfaceTolerance) const final;

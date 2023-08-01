@@ -1171,10 +1171,12 @@ class CombinatorialKalmanFilter {
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
-        return targetSurface->intersect(
-            state.geoContext, freeVector.segment<3>(eFreePos0),
-            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
-            state.options.targetTolerance);
+        return targetSurface
+            ->intersect(
+                state.geoContext, freeVector.segment<3>(eFreePos0),
+                state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
+                state.options.targetTolerance)
+            .closest();
       };
 
       // The smoothed free params at the first/last measurement state
@@ -1197,20 +1199,20 @@ class CombinatorialKalmanFilter {
       // surface is not checked here.
       bool reverseDirection = false;
       bool closerToFirstCreatedState =
-          (std::abs(firstIntersection.intersection.pathLength) <=
-           std::abs(lastIntersection.intersection.pathLength));
+          (std::abs(firstIntersection.pathLength()) <=
+           std::abs(lastIntersection.pathLength()));
       if (closerToFirstCreatedState) {
         stepper.update(state.stepping, firstParams,
                        firstCreatedState.smoothed(),
                        firstCreatedState.smoothedCovariance(),
                        firstCreatedState.referenceSurface());
-        reverseDirection = (firstIntersection.intersection.pathLength < 0);
+        reverseDirection = firstIntersection.pathLength() < 0;
       } else {
         stepper.update(state.stepping, lastParams,
                        lastCreatedMeasurement.smoothed(),
                        lastCreatedMeasurement.smoothedCovariance(),
                        lastCreatedMeasurement.referenceSurface());
-        reverseDirection = (lastIntersection.intersection.pathLength < 0);
+        reverseDirection = lastIntersection.pathLength() < 0;
       }
       const auto& surface = closerToFirstCreatedState
                                 ? firstCreatedState.referenceSurface()

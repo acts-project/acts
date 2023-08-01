@@ -68,13 +68,18 @@ using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
-// Intersection with Layer
+/// Intersection with @c Layer
 using LayerIntersection = ObjectIntersection<Layer, Surface>;
+/// Multi-intersection with @c Layer
+using LayerMultiIntersection = ObjectMultiIntersection<Layer, Surface>;
 
 /// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
 /// Intersection with a @c BoundarySurface
 using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
+/// Multi-intersection with a @c BoundarySurface
+using BoundaryMultiIntersection =
+    ObjectMultiIntersection<BoundarySurface, Surface>;
 
 /// @class TrackingVolume
 ///
