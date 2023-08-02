@@ -34,7 +34,7 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
- // TODO: go back to ordered map
+ // TODO: go back to unordered map
   using DensityMap = std::map<int, float>;
   using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
