@@ -186,7 +186,6 @@ class DiscSurface : public RegularSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param direction global 3D momentum direction (optionally ignored)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///

@@ -35,7 +35,7 @@ class RegularSurface : public Surface {
   /// @param position is the global position where the normal vector is
   /// constructed
   /// @note The @p position is required to be on-surface.
-  /// 			Use @ref Surface::coerceToSurface(const GeometryContext&, const Vector3&, const Vector3&)
+  /// 			Use @ref Surface::coerceToSurface
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return normal vector by value
   virtual Vector3 normal(const GeometryContext& gctx,
@@ -44,7 +44,7 @@ class RegularSurface : public Surface {
   /// Calculate the normal vector of the surface
   /// This overload is fully generic, fulfills the @ref Surface interface and
   /// accepts a global position and a direction. For @c RegularSurface this is
-  /// equivalent to the @ref normal(const GeometryContext&, const Vector3&)
+  /// equivalent to the @ref normal
   /// overload, ignoring the @p direction
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos is the global position where the normal vector is constructed
@@ -99,7 +99,7 @@ class RegularSurface : public Surface {
 
   /// Force a position to be on the surface. This is the most generic overload
   /// which is implemented by all surfaces.
-  /// @ref Surface::coerceToSurface(const GeometryContext&, const Vector3&, const Vector3&)
+  /// @ref Surface::coerceToSurface
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to coerce onto the surface
   /// @param direction The direction to use for the coercion (ignored for @c RegularSurface)
@@ -108,7 +108,7 @@ class RegularSurface : public Surface {
                           const Vector3& direction) const final;
 
   /// Force a position to be on the surface.
-  /// @ref Surface::coerceToSurface(const GeometryContext&, const Vector3&, const Vector3&)
+  /// @ref Surface::coerceToSurface
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position to coerce onto the surface
   /// @return The coerced position
