@@ -48,7 +48,10 @@ using Jacobian = BoundMatrix;
 /// @brief Simplified propagator state
 struct PropState {
   /// @brief Constructor
-  PropState(StraightLineStepper::State sState) : stepping(std::move(sState)) {}
+  PropState(Direction direction, StraightLineStepper::State sState)
+      : stepping(std::move(sState)) {
+    options.direction = direction;
+  }
   /// State of the straight line stepper
   StraightLineStepper::State stepping;
   /// Propagator options which only carry the particle's mass
@@ -199,7 +202,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   // Perform a step without and with covariance transport
   slsState.cov = cov;
-  PropState ps(slsState);
+  PropState ps(navDir, slsState);
 
   ps.stepping.covTransport = false;
   double h = sls.step(ps, mockNavigator).value();

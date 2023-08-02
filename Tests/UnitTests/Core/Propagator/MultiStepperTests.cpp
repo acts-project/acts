@@ -91,11 +91,13 @@ struct DummyPropState {
   Navigation navigation;
   GeometryContext geoContext;
 
-  DummyPropState(stepper_state_t &ss)
+  DummyPropState(Direction direction, stepper_state_t &ss)
       : stepping(ss),
         options(Options{}),
         navigation(Navigation{}),
-        geoContext(geoCtx) {}
+        geoContext(geoCtx) {
+    options.direction = direction;
+  }
 };
 
 template <typename T>
@@ -165,18 +167,13 @@ void test_multi_stepper_state() {
     BOOST_CHECK_EQUAL(cmp.pathAccumulated(), 0.);
   }
 
-  // navDir and the covTransport in the MultiEigenStepperLoop are redundant and
+  // covTransport in the MultiEigenStepperLoop is redundant and
   // thus not part of the interface. However, we want to check them for
   // consistency.
   if constexpr (Acts::Concepts::exists<components_t, MultiState>) {
     BOOST_CHECK(not state.covTransport);
     for (const auto &cmp : state.components) {
       BOOST_CHECK(cmp.state.covTransport == Cov);
-    }
-
-    BOOST_CHECK_EQUAL(state.navDir, defaultNDir);
-    for (const auto &cmp : state.components) {
-      BOOST_CHECK_EQUAL(cmp.state.navDir, defaultNDir);
     }
   }
 }
@@ -244,12 +241,12 @@ void test_multi_stepper_vs_eigen_stepper() {
   // Do some steps and check that the results match
   for (int i = 0; i < 10; ++i) {
     // Single stepper
-    auto single_prop_state = DummyPropState(single_state);
+    auto single_prop_state = DummyPropState(defaultNDir, single_state);
     auto single_result = single_stepper.step(single_prop_state, mockNavigator);
     single_stepper.transportCovarianceToCurvilinear(single_state);
 
     // Multi stepper;
-    auto multi_prop_state = DummyPropState(multi_state);
+    auto multi_prop_state = DummyPropState(defaultNDir, multi_state);
     auto multi_result = multi_stepper.step(multi_prop_state, mockNavigator);
     multi_stepper.transportCovarianceToCurvilinear(multi_state);
 
@@ -407,7 +404,7 @@ void test_multi_stepper_surface_status_update() {
   // Update surface status and check
   {
     auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
-                                                    defaultNDir, false);
+                                                    Direction::Forward, false);
 
     BOOST_CHECK(status == Intersection3D::Status::reachable);
 
@@ -421,18 +418,18 @@ void test_multi_stepper_surface_status_update() {
 
   // Step forward now
   {
-    auto multi_prop_state = DummyPropState(multi_state);
+    auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
-    auto single_prop_state = DummyPropState(single_state);
+    auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }
 
   // Update surface status and check again
   {
     auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
-                                                    defaultNDir, false);
+                                                    Direction::Forward, false);
 
     BOOST_CHECK(status == Intersection3D::Status::onSurface);
 
@@ -447,7 +444,7 @@ void test_multi_stepper_surface_status_update() {
   // Start surface should be unreachable
   {
     auto status = multi_stepper.updateSurfaceStatus(multi_state, *start_surface,
-                                                    defaultNDir, false);
+                                                    Direction::Forward, false);
 
     BOOST_CHECK(status == Intersection3D::Status::unreachable);
 
@@ -506,15 +503,15 @@ void test_component_bound_state() {
 
   // Step forward now
   {
-    multi_stepper.updateSurfaceStatus(multi_state, *right_surface, defaultNDir,
+    multi_stepper.updateSurfaceStatus(multi_state, *right_surface, Direction::Forward,
                                       false);
-    auto multi_prop_state = DummyPropState(multi_state);
+    auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
     single_stepper.updateSurfaceStatus(single_state, *right_surface,
-                                       defaultNDir, false);
-    auto single_prop_state = DummyPropState(single_state);
+                                       Direction::Forward, false);
+    auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }
 
@@ -654,7 +651,7 @@ void test_single_component_interface_function() {
 
   MultiStepper multi_stepper(defaultBField);
 
-  DummyPropState multi_prop_state(multi_state);
+  DummyPropState multi_prop_state(defaultNDir, multi_state);
 
   // Check at least some properties at the moment
   auto check = [&](auto cmp) {

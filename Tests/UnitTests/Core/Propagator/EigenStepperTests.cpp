@@ -89,7 +89,10 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 template <typename stepper_state_t>
 struct PropState {
   /// @brief Constructor
-  PropState(stepper_state_t sState) : stepping(std::move(sState)) {}
+  PropState(Direction direction, stepper_state_t sState)
+      : stepping(std::move(sState)) {
+    options.direction = direction;
+  }
   /// State of the eigen stepper
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
@@ -305,7 +308,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Perform a step without and with covariance transport
   esState.cov = cov;
-  PropState ps(std::move(esState));
+  PropState ps(navDir, std::move(esState));
 
   ps.stepping.covTransport = false;
   es.step(ps, mockNavigator).value();
@@ -520,7 +523,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   EigenStepper<> nes(nBfield);
   EigenStepper<>::State nesState(tgContext, nBfield->makeCache(mfContext), cp,
                                  stepSize);
-  PropState nps(copyState(*nBfield, nesState));
+  PropState nps(navDir, copyState(*nBfield, nesState));
   // Test that we can reach the minimum step size
   nps.options.tolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;
