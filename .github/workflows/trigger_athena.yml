@@ -12,4 +12,5 @@ jobs:
           curl -X POST --fail
           -F token=${{ secrets.GITLAB_ATHENA_BUILD_TRIGGER_TOKEN}}
           -F ref=main
+          --form variables[SOURCE_SHA]="${{ github.sha }}"
           https://gitlab.cern.ch/api/v4/projects/153873/trigger/pipeline

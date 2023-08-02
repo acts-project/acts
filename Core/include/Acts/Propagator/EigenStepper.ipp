@@ -19,7 +19,7 @@ template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const SingleBoundTrackParameters<charge_t>& par, Direction navDir,
+    const GenericBoundTrackParameters<charge_t>& par, Direction navDir,
     double ssize) const -> State {
   return State{gctx, m_bField->makeCache(mctx), par, navDir, ssize};
 }
