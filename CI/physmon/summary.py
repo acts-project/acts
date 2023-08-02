@@ -9,6 +9,7 @@ import os
 
 parser = argparse.ArgumentParser()
 parser.add_argument("inputs", nargs="+")
+parser.add_argument("--base", required=True)
 parser.add_argument("--html")
 parser.add_argument("--md")
 args = parser.parse_args()
@@ -37,7 +38,7 @@ for h in args.inputs:
 
 output = "# physmon summary\n"
 for h, s in summary.items():
-    path = os.path.relpath(h, os.path.dirname(args.output))
+    path = os.path.relpath(h, args.base)
     output += f"  - {'✅' if s['total'] else '🔴'} [{s['title']}]({path})\n"
 
 if args.html:
