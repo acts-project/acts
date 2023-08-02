@@ -52,7 +52,6 @@ class AtlasStepper {
     /// @param [in] gctx The geometry context tof this call
     /// @param [in] fieldCacheIn The magnetic field cache for this call
     /// @param [in] pars Input parameters
-    /// @param [in] ndir The navigation direction w.r.t. parameters
     /// @param [in] ssize the steps size limitation
     /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>

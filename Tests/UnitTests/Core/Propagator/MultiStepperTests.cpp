@@ -503,8 +503,8 @@ void test_component_bound_state() {
 
   // Step forward now
   {
-    multi_stepper.updateSurfaceStatus(multi_state, *right_surface, Direction::Forward,
-                                      false);
+    multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
+                                      Direction::Forward, false);
     auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
