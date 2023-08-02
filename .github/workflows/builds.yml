@@ -257,6 +257,11 @@ jobs:
 
       - name: Python level tests
         shell: bash
+        env:
+          PYTEST_MD_REPORT: true
+          PYTEST_MD_REPORT_COLOR: text
+          PYTEST_MD_REPORT_VERBOSE: 0
+          PYTEST_MD_REPORT_OUTPUT: pytest.md
         run: >
           /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
@@ -267,8 +272,8 @@ jobs:
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
           && pip3 install pytest-md-report
-          && pytest -rFsv -k "not exatrkx" -v --md-report --md-report-output=pytest.md
-          && cat pytest.md >> $GITHUB_STEP_SUMMARY
+          && pytest -rFsv -k "not exatrkx" -v
+          && cat ${PYTEST_MD_REPORT_OUTPUT} >> $GITHUB_STEP_SUMMARY
 
   linux_physmon:
     runs-on: ubuntu-latest
