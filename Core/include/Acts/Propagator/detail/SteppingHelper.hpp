@@ -55,7 +55,8 @@ Acts::Intersection3D::Status updateSingleSurfaceStatus(
   const double oLimit = stepper.overstepLimit(state);
 
   for (const auto& intersection : sIntersection.split()) {
-    if (detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
+    if (intersection &&
+        detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
                                   surfaceTolerance, logger)) {
       ACTS_VERBOSE("Surface is reachable");
       stepper.setStepSize(state, intersection.pathLength());
