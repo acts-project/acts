@@ -539,7 +539,7 @@ class KalmanFitter {
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
           stepper.direction(state.stepping), state.stepping.navDir,
-          &st.referenceSurface(), targetSurface);
+          &st.referenceSurface(), nullptr);
 
       // Update material effects for last measurement state in reversed
       // direction
@@ -954,12 +954,14 @@ class KalmanFitter {
       if (closerTofirstCreatedState) {
         stepper.resetState(state.stepping, firstCreatedState.smoothed(),
                            firstCreatedState.smoothedCovariance(),
-                           firstCreatedState.referenceSurface());
+                           firstCreatedState.referenceSurface(),
+                           state.stepping.navDir, state.options.maxStepSize);
         reverseDirection = firstIntersection.pathLength() < 0;
       } else {
         stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
                            lastCreatedMeasurement.smoothedCovariance(),
-                           lastCreatedMeasurement.referenceSurface());
+                           lastCreatedMeasurement.referenceSurface(),
+                           state.stepping.navDir, state.options.maxStepSize);
         reverseDirection = lastIntersection.pathLength() < 0;
       }
       const auto& surface = closerTofirstCreatedState

@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   Vector3 direction{-1., 0, 0};
   auto sfIntersection = cylinderSurfaceObject->intersect(
       testContext, offSurface, direction, false);
-  Intersection3D expectedIntersect{Vector3{-1, 1, 2}, 101.,
+  Intersection3D expectedIntersect{Vector3{1, 1, 2}, 99.,
                                    Intersection3D::Status::reachable};
   BOOST_CHECK(sfIntersection.get<0>());
   CHECK_CLOSE_ABS(sfIntersection.get<0>().position(),
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   // And it's path should be further away then the primary solution
   double pn = sfIntersection.get<0>().pathLength();
   double pa = sfIntersection.get<1>().pathLength();
-  BOOST_CHECK(std::abs(pn) > std::abs(pa));
+  BOOST_CHECK(std::abs(pn) < std::abs(pa));
   BOOST_CHECK_EQUAL(sfIntersection.object(), cylinderSurfaceObject.get());
 
   //
