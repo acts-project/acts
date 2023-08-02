@@ -97,10 +97,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   Finder1 finder1(cfg1);
   Finder1::State state1;
 
-  using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
+  using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
-  AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
+  AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
@@ -210,11 +210,11 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   cfg.cacheGridStateForTrackRemoval = true;
   Finder1 finder1(cfg);
 
-  using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
+  using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
   adaptiveDensityConfig.useHighestSumZPosition = true;
-  AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
+  AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
@@ -373,10 +373,10 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   Finder1 finder1(cfg1);
   Finder1::State state1;
 
-  using AdapticeGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
+  using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdapticeGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
-  AdapticeGridDensity adaptiveDensity(adaptiveDensityConfig);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
+  AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
   Finder2::Config cfg2(adaptiveDensity);
