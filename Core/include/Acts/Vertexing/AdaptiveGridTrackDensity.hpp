@@ -34,8 +34,7 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
- // TODO: go back to unordered map
-  using DensityMap = std::map<int, float>;
+  using DensityMap = std::unordered_map<int, float>;
 
   /// The configuration struct
   struct Config {

@@ -20,7 +20,6 @@ typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap::const_iterator
   );
   return maxEntry;
 }
-/// TODO use .at() function to retrieve/modify map elems
 template <int trkGridSize>
 Acts::Result<float>
 Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(DensityMap& densityMap) const {
