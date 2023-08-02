@@ -60,8 +60,6 @@ struct SteppingState {
   Vector3 pos = Vector3(0., 0., 0.);
   Vector3 dir = Vector3(0., 0., 1);
   double p = 100_MeV;
-
-  Direction navDir = Direction::Forward;
 };
 
 /// @brief mockup of stepping state
@@ -102,6 +100,7 @@ struct Options {
   double pathLimit = std::numeric_limits<double>::max();
   bool loopProtection = true;
   double loopFraction = 0.5;
+  Direction direction = Direction::Forward;
 
   bool debug = false;
   std::string debugString;

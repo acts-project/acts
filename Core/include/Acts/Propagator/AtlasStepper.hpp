@@ -58,7 +58,6 @@ class AtlasStepper {
     template <typename Parameters>
     State(const GeometryContext& gctx,
           MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
-          Direction ndir = Direction::Forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
         : field(0., 0., 0.),
@@ -377,15 +376,17 @@ class AtlasStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
-  /// @param [in] logger Logger instance to use
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] logger Logger instance to use
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      const Logger& logger = getDummyLogger(),
-      ActsScalar surfaceTolerance = s_onSurfaceTolerance) const {
+      State& state, const Surface& surface, Direction navDir,
+      const BoundaryCheck& bcheck,
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance,
+      const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
-        *this, state, surface, bcheck, logger, surfaceTolerance);
+        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size

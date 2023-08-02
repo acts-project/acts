@@ -74,7 +74,6 @@ class StraightLineStepper {
     explicit State(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
                    const GenericBoundTrackParameters<charge_t>& par,
-                   Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : absCharge(std::abs(par.charge())),
@@ -236,15 +235,17 @@ class StraightLineStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
-  /// @param [in] logger A logger instance
   /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] logger A logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      const Logger& logger = getDummyLogger(),
-      ActsScalar surfaceTolerance = s_onSurfaceTolerance) const {
+      State& state, const Surface& surface, Direction navDir,
+      const BoundaryCheck& bcheck,
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance,
+      const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
-        *this, state, surface, bcheck, logger, surfaceTolerance);
+        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size

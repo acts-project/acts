@@ -22,7 +22,6 @@ auto Acts::EigenStepper<E, A>::makeState(
     const GenericBoundTrackParameters<charge_t>& par, double ssize) const
     -> State {
   return State{gctx, m_bField->makeCache(mctx), par, ssize};
->>>>>>> 6527cda2c86816372f14ce732a6899bbf267b334
 }
 
 template <typename E, typename A>
