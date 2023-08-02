@@ -185,7 +185,8 @@ const volume_t* BoundarySurfaceT<volume_t>::attachedVolume(
     Direction dir) const {
   const volume_t* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(gctx, pos)).dot(dir * mom) > 0.) {
+  Vector3 coerced = surfaceRepresentation().coerceToSurface(gctx, pos);
+  if ((surfaceRepresentation().normal(gctx, coerced)).dot(dir * mom) > 0.) {
     attVolume = m_alongVolumeArray ? m_alongVolumeArray->object(pos).get()
                                    : m_alongVolume;
   } else {
