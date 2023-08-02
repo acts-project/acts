@@ -36,7 +36,6 @@ class AdaptiveGridTrackDensity {
  public:
  // TODO: go back to unordered map
   using DensityMap = std::map<int, float>;
-  using TrackGridVector = Eigen::Matrix<float, trkGridSize, 1>;
 
   /// The configuration struct
   struct Config {
@@ -62,68 +61,40 @@ class AdaptiveGridTrackDensity {
 
   AdaptiveGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
-  /// @brief TODO
+  /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between z bins and corresponding density value
-  /// @return 
+  /// @return Iterator of the map entry with the highest density value
   DensityMap::const_iterator highestDensityEntry(const DensityMap& densityMap) const;
 
   /// @brief Returns the z position of maximum (surrounding) track density
   ///
-  /// @param mainGridDensity The main 1-dim density grid along the z-axis
-  /// @param mainGridZValues The corresponding z-bin values of the track
-  /// densities along the z-axis
+  /// @param densityMap Map from z bins to corresponding track density
   ///
   /// @return The z position of maximum track density
-  Result<float> getMaxZPosition(std::vector<float>& mainGridDensity,
-                                const std::vector<int>& mainGridZValues) const;
-
   Result<float> getMaxZPosition(DensityMap& densityMap) const;
 
   /// @brief Returns the z position of maximum track density and
   /// the estimated width
   ///
-  /// @param mainGridDensity The main 1-dim density grid along the z-axis
-  /// @param mainGridZValues The corresponding z-bin values of the track
-  /// densities along the z-axis
+  /// @param densityMap Map from z bins to corresponding track density
   ///
   /// @return The z position of maximum track density and width
-  Result<std::pair<float, float>> getMaxZPositionAndWidth(
-      std::vector<float>& mainGridDensity,
-      const std::vector<int>& mainGridZValues) const;
-
   Result<std::pair<float, float>> getMaxZPositionAndWidth(
       DensityMap& densityMap) const;
 
   /// @brief Adds a single track to the overall grid density
   ///
-  /// @param trk The track to be added
-  /// @param mainGridDensity The main 1-dim density grid along the z-axis
-  /// @param mainGridZValues The corresponding z-bin values of the track
-  /// densities along the z-axis
+  /// @param trk The track to be added.
+  /// @param mainDensityMap Map from z bins to corresponding track density.
   ///
-  /// @return A pair storing information about the z-bin position
-  /// the track was added (int) and the 1-dim density contribution
-  /// of the track itself
-  std::pair<int, TrackGridVector> addTrack(
-      const BoundTrackParameters& trk, std::vector<float>& mainGridDensity,
-      std::vector<int>& mainGridZValues) const;
-
+  /// @return The density map of the track that was added
   DensityMap addTrack(
       const BoundTrackParameters& trk, DensityMap& mainDensityMap) const;
 
   /// @brief Removes a track from the overall grid density
   ///
-  /// @param zBin The center z-bin position the track needs to be
-  /// removed from
-  /// @param trkGrid The 1-dim density contribution of the track
-  /// @param mainGridDensity The main 1-dim density grid along the z-axis
-  /// @param mainGridZValues The corresponding z-bin values of the track
-  /// densities along the z-axis
-  void removeTrackGridFromMainGrid(
-      int zBin, const TrackGridVector& trkGrid,
-      std::vector<float>& mainGridDensity,
-      const std::vector<int>& mainGridZValues) const;
-
+  /// @param trackDensityMap Map from z bins to corresponding track density. The track density comes from a single track.
+  /// @param mainDensityMap Map from z bins to corresponding track density. The track density comes an arbitrary number of tracks.
   void subtractTrack(const DensityMap& trackDensityMap, DensityMap& mainDensityMap) const;
 
  private:
@@ -143,16 +114,10 @@ class AdaptiveGridTrackDensity {
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak
   ///
-  /// @param mainGridDensity The main 1-dim density grid along the z-axis
-  /// @param mainGridZValues The corresponding z-bin values of the track
-  ///                        densities along the z-axis
+  /// @param densityMap Map from z bins to corresponding track density
   /// @param maxZ z-position of the maximum density value
   ///
   /// @return The width
-  Result<float> estimateSeedWidth(const std::vector<float>& mainGridDensity,
-                                  const std::vector<int>& mainGridZValues,
-                                  float maxZ) const;
-
   Result<float> estimateSeedWidth(const DensityMap& densityMap,
                                   float maxZ) const;
 

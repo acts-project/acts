@@ -41,7 +41,6 @@ class AdaptiveGridDensityVertexFinder {
   using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
 
  public:
-  using TrackGridVector = typename GridDensity::TrackGridVector;
   using DensityMap = typename GridDensity::DensityMap;
 
   /// @brief The Config struct
