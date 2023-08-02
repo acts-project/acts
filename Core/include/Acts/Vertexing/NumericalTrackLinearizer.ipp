@@ -114,11 +114,11 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
                                                        paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
-        paramVecCopy.head(eLinPosSize), wiggledDir, paramVecCopy(eLinQOverP));
+        paramVecCopy.template head<4>(), wiggledDir, paramVecCopy(eLinQOverP));
 
     // Obtain propagation direction
     intersection = perigeeSurface
-                       ->intersect(gctx, paramVecCopy.head(eLinPosSize - 1),
+                       ->intersect(gctx, paramVecCopy.template head<3>(),
                                    wiggledDir, false)
                        .closest();
     pOptions.direction =

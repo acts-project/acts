@@ -230,7 +230,7 @@ class StraightLineStepper {
   /// @param state The stepping state (thread-local cache)
   double overstepLimit(const State& state) const {
     (void)state;
-    return s_onSurfaceTolerance;
+    return -m_overstepLimit;
   }
 
   /// Update surface status
@@ -424,6 +424,9 @@ class StraightLineStepper {
     // return h
     return h;
   }
+
+ private:
+  double m_overstepLimit = 100 * UnitConstants::um;
 };
 
 }  // namespace Acts
