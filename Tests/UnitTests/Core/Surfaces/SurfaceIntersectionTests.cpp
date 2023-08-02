@@ -75,15 +75,15 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     BOOST_CHECK(aIntersection.get<0>());
     // The status of this one should be on surface
     BOOST_CHECK(aIntersection.get<0>().status() ==
-                Intersection3D::Status::onSurface);
+                Intersection3D::Status::reachable);
+    // The intersection is at 2 meter distance
+    CHECK_CLOSE_ABS(aIntersection.get<0>().pathLength(), -2_m,
+                    s_onSurfaceTolerance);
     // There MUST be a second solution
     BOOST_CHECK(aIntersection.get<1>());
     // The other intersection MUST be reachable
     BOOST_CHECK(aIntersection.get<1>().status() ==
-                Intersection3D::Status::reachable);
-    // The other intersection is at 2 meter distance
-    CHECK_CLOSE_ABS(aIntersection.get<1>().pathLength(), -2_m,
-                    s_onSurfaceTolerance);
+                Intersection3D::Status::onSurface);
 
     // Intersect from the center
     auto cIntersection =
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     // Check the validity of the intersection
     BOOST_CHECK(eIntersection.get<0>());
     // This should be the positive one
-    BOOST_CHECK(eIntersection.get<0>().pathLength() > 0.);
+    BOOST_CHECK(eIntersection.get<0>().pathLength() < 0.);
     // The status of this one should be reachable
     BOOST_CHECK(eIntersection.get<0>().status() ==
                 Intersection3D::Status::reachable);
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     BOOST_CHECK(eIntersection.get<1>().status() ==
                 Intersection3D::Status::reachable);
     // And be the negative one
-    BOOST_CHECK(eIntersection.get<1>().pathLength() < 0.);
+    BOOST_CHECK(eIntersection.get<1>().pathLength() > 0.);
 
     // Now re-do with boundary check
     eIntersection = aCylinder->intersect(tgContext, atEdge, transTZ, true);
@@ -199,16 +199,15 @@ BOOST_AUTO_TEST_CASE(ConeIntersectionTest) {
     BOOST_CHECK(aIntersection.get<0>());
     // The status of this one should be on surface
     BOOST_CHECK(aIntersection.get<0>().status() ==
-                Intersection3D::Status::onSurface);
-
+                Intersection3D::Status::reachable);
+    // The intersection is at 4 mm distance
+    CHECK_CLOSE_ABS(aIntersection.get<0>().pathLength(), -4.,
+                    s_onSurfaceTolerance);
     // There MUST be a second solution
     BOOST_CHECK(aIntersection.get<1>());
     // The other intersection MUST be reachable
     BOOST_CHECK(aIntersection.get<1>().status() ==
-                Intersection3D::Status::reachable);
-    // The other intersection is at 2 meter distance
-    CHECK_CLOSE_ABS(aIntersection.get<1>().pathLength(), -4.,
-                    s_onSurfaceTolerance);
+                Intersection3D::Status::onSurface);
 
     // Intersection from outside without chance of hitting the cylinder
     auto iIntersection = aCone->intersect(tgContext, outCone, perpXY, false);

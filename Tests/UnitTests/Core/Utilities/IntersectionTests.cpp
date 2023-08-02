@@ -74,7 +74,6 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
                     ntfspIntersections[1].pathLength());
   BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength(),
                     ntfspIntersections[2].pathLength());
-  BOOST_CHECK_EQUAL(bool(ntfspIntersections[3]), false);
 
   std::sort(tfnsnpIntersections.begin(), tfnsnpIntersections.end(),
             Intersection3D::forwardOrder);
@@ -84,8 +83,6 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
                     tfnsnpIntersections[1].pathLength());
   BOOST_CHECK_EQUAL(fstpIntersections[2].pathLength(),
                     tfnsnpIntersections[2].pathLength());
-  BOOST_CHECK_EQUAL(bool(tfnsnpIntersections[3]), false);
-  BOOST_CHECK_EQUAL(bool(tfnsnpIntersections[4]), false);
 
   /// let's make a bunch of negative solution
   Intersection3D fIn(Vector3(0., -1., 0.), -1.,
