@@ -13,6 +13,8 @@ target_link_libraries(
   PUBLIC
     ActsPluginExaTrkX
     ActsExamplesFramework
+  PRIVATE
+    ${TORCH_LIBRARIES}
 )
 
 install(

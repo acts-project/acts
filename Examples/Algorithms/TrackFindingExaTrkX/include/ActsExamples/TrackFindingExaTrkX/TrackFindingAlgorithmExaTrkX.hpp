@@ -11,6 +11,7 @@
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -19,6 +20,8 @@
 #include <vector>
 
 #include <boost/multi_array.hpp>
+
+class TruthGraph;
 
 namespace ActsExamples {
 
@@ -36,6 +39,14 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     /// * cluster size in local y
     std::string inputClusters;
 
+    /// Input simhits (Optional). If given together with measurementSimhitMap,
+    /// the truth graph is computed and metrics can be printed.
+    std::string inputSimhits;
+
+    /// Input measurement simhit map (Optional). If given together with simhits,
+    /// the truth graph is computed and metrics can be printed.
+    std::string inputMeasurementSimhitMap;
+
     /// Output protoTracks collection.
     std::string outputProtoTracks;
 
@@ -49,10 +60,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     float rScale = 1.f;
     float phiScale = 1.f;
     float zScale = 1.f;
-
-    /// Allows to pass negative cluster sizes to the framework
-    /// Necessary because of a bug in the GNN4ITK reader
-    bool invertClusterSizeSign = false;
+    float cellCountScale = 1.f;
+    float cellSumScale = 1.f;
+    float clusterXScale = 1.f;
+    float clusterYScale = 1.f;
   };
 
   /// Constructor of the track finding algorithm
@@ -74,8 +85,8 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
  private:
   std::vector<std::vector<int>> runPipeline(
-      boost::multi_array<float, 2>& features,
-      std::vector<int>& spacepointIDs) const;
+      boost::multi_array<float, 2>& features, std::vector<int>& spacepointIDs,
+      const TruthGraph* truthGraph = nullptr) const;
 
   // configuration
   Config m_cfg;
@@ -83,6 +94,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementMap{
+      this, "InputMeasurementMap"};
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};

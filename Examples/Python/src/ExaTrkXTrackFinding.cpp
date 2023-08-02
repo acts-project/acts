@@ -168,7 +168,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputClusters,
       outputProtoTracks, graphConstructor, edgeClassifiers, trackBuilder,
-      rScale, phiScale, zScale, invertClusterSizeSign);
+      rScale, phiScale, zScale, cellCountScale, cellSumScale, clusterXScale,
+      clusterYScale);
 }
 
 }  // namespace Acts::Python
