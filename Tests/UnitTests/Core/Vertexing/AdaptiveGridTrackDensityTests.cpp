@@ -190,8 +190,8 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
 
   // Add small density values around the maximum of track 1
   const float densityToAdd = 5e-4;
-  mainDensityMap[1] += densityToAdd;
-  mainDensityMap[3] += densityToAdd;
+  mainDensityMap.at(1) += densityToAdd;
+  mainDensityMap.at(3) += densityToAdd;
 
   auto res3 = grid.getMaxZPosition(mainDensityMap);
   BOOST_CHECK(res3.ok());

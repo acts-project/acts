@@ -100,7 +100,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     float trackDensity = densityEntry.second;
     // Check if z bin is already part of the main grid
     if (mainDensityMap.count(zBin2) == 1) {
-      mainDensityMap[zBin2] += trackDensity;
+      mainDensityMap.at(zBin2) += trackDensity;
     }
     else {
       mainDensityMap[zBin2] = trackDensity;
@@ -225,7 +225,7 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::highestDensitySumBin(
   float densityDeviation = valueFirstMax * m_cfg.maxRelativeDensityDev;
 
   // Get the second highest maximum
-  densityMap[zFirstMax] = 0;
+  densityMap.at(zFirstMax) = 0;
   auto secondMax = highestDensityEntry(densityMap);
   int zSecondMax = secondMax->first;
   float valueSecondMax = secondMax->second;
@@ -235,7 +235,7 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::highestDensitySumBin(
   }
 
   // Get the third highest maximum
-  densityMap[zSecondMax] = 0;
+  densityMap.at(zSecondMax) = 0;
   auto thirdMax = highestDensityEntry(densityMap);
   int zThirdMax = thirdMax->first;
   float valueThirdMax = thirdMax->second;
@@ -245,8 +245,8 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::highestDensitySumBin(
   }
 
   // Revert back to original values
-  densityMap[zFirstMax] = valueFirstMax;
-  densityMap[zSecondMax] = valueSecondMax;
+  densityMap.at(zFirstMax) = valueFirstMax;
+  densityMap.at(zSecondMax) = valueSecondMax;
 
   // Return the z-bin position of the highest density sum
   if (secondSum > firstSum && secondSum > thirdSum) {
