@@ -76,6 +76,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   std::optional<Acts::Vector4> lastVertex;
 
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
+  constexpr double convertTime = CLHEP::ns / Acts::UnitConstants::ns;
   constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
 
   unsigned int pCounter = 0;
@@ -95,7 +96,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
       lastVertex = currentVertex;
       pVertex = new G4PrimaryVertex(
           currentVertex[0] * convertLength, currentVertex[1] * convertLength,
-          currentVertex[2] * convertLength, currentVertex[3]);
+          currentVertex[2] * convertLength, currentVertex[3] * convertTime);
     }
 
     // Add a new primary to the vertex

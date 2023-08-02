@@ -19,9 +19,9 @@ template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const SingleBoundTrackParameters<charge_t>& par, Direction navDir,
-    double ssize, double stolerance) const -> State {
-  return State{gctx, m_bField->makeCache(mctx), par, navDir, ssize, stolerance};
+    const GenericBoundTrackParameters<charge_t>& par, Direction navDir,
+    double ssize) const -> State {
+  return State{gctx, m_bField->makeCache(mctx), par, navDir, ssize};
 }
 
 template <typename E, typename A>
@@ -147,7 +147,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     constexpr auto success = &Result<bool>::success;
     constexpr auto failure = &Result<bool>::failure;
 
-    const double h = step.value();
+    const double h = step.value() * state.stepping.navDir;
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
@@ -230,7 +230,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   // use the adjusted step size
-  const double h = state.stepping.stepSize.value();
+  const double h = state.stepping.stepSize.value() * state.stepping.navDir;
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {

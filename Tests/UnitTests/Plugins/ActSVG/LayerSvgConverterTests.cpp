@@ -26,7 +26,7 @@
 #include <memory>
 #include <vector>
 
-BOOST_AUTO_TEST_SUITE(LayerSvgConverter)
+BOOST_AUTO_TEST_SUITE(ActSvg)
 
 namespace {
 

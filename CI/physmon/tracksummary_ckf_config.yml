@@ -1,5 +1,5 @@
 histograms:
-  "chi2Sum":
+  chi2Sum:
     min: 0
     max: 100
 
@@ -8,13 +8,17 @@ histograms:
     min: -6
     max: 6
 
-  "eLOC0_fit":
-    min: -5
-    max: 5
+  eLOC0_fit:
+    min: -1
+    max: 1
 
   eLOC1_fit:
     min: -200
     max: 200
+
+  ePHI_fit:
+    min: -3.14
+    max: 3.14
 
   eQOP_fit:
     min: -2
@@ -25,8 +29,8 @@ histograms:
     max: 3.14
 
   eT_fit:
-    min: -150
-    max: 150
+    min: -2000
+    max: 2000
 
   err_eLOC0_fit:
     min: 0
@@ -34,11 +38,11 @@ histograms:
 
   err_eLOC1_fit:
     min: 0
-    max: 0.8
+    max: 0.2
 
   err_ePHI_fit:
     min: 0
-    max: 0.008
+    max: 0.004
 
   err_eQOP_fit:
     min: 0
@@ -46,11 +50,11 @@ histograms:
 
   err_eT_fit:
     min: 0
-    max: 1
+    max: 2000
 
   err_eTHETA_fit:
     min: 0
-    max: 0.0004
+    max: 0.004
 
   ".*Chi2":
     min: 0
@@ -72,10 +76,9 @@ histograms:
     max: 50
 
   nHoles|nMajorityHits|nMeasurements|nOutliers|nSharedHits|nStates:
-    nbins: 10
+    nbins: 30
     min: 0
-    max: 10
-
+    max: 30
 
   "res_eLOC0_fit|res_eLOC1_fit":
     nbins: 80
@@ -99,7 +102,7 @@ histograms:
 
   res_eT_fit:
     nbins: 80
-    min: -100.0
+    min: -100
     max: 100
 
   t_charge:
@@ -109,8 +112,8 @@ histograms:
 
   t_time:
     nbins: 100
-    min: -1.0
-    max: 1.0
+    min: -2000
+    max: 2000
 
   "t_vx|t_vy":
     nbins: 100
@@ -119,12 +122,12 @@ histograms:
 
   t_vz:
     nbins: 100
-    min: -200.0
+    min: -200
     max: 200
 
   "t_px|t_py|t_pz":
     nbins: 100
-    min: -10.0
+    min: -10
     max: 10
 
   t_theta:
@@ -159,7 +162,7 @@ histograms:
 
   t_z0:
     nbins: 100
-    min: -200.0
+    min: -200
     max: 200
 
 exclude:
@@ -168,6 +171,3 @@ exclude:
   - majorityParticleId
   - multiTraj_nr
   - subTraj_nr
-
-                
-

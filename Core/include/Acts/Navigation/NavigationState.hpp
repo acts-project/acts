@@ -80,7 +80,7 @@ struct NavigationState {
 
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
-  SurfaceCandidates::iterator surfaceCandidate = surfaceCandidates.end();
+  SurfaceCandidates::const_iterator surfaceCandidate = surfaceCandidates.cend();
 
   /// Boundary directives for surfaces
   BoundaryCheck surfaceBoundaryCheck = true;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,5 +42,15 @@ void from_json(const nlohmann::json& j, Range1D<Type>& r) {
   r.setMin(static_cast<Type>(j["min"]));
   r.setMax(static_cast<Type>(j["max"]));
 }
+
+NLOHMANN_JSON_SERIALIZE_ENUM(BinningValue, {{BinningValue::binX, "binX"},
+                                            {BinningValue::binY, "binY"},
+                                            {BinningValue::binZ, "binZ"},
+                                            {BinningValue::binR, "binR"},
+                                            {BinningValue::binPhi, "binPhi"},
+                                            {BinningValue::binRPhi, "binRPhi"},
+                                            {BinningValue::binH, "binH"},
+                                            {BinningValue::binEta, "binEta"},
+                                            {BinningValue::binMag, "binMag"}})
 
 }  // namespace Acts

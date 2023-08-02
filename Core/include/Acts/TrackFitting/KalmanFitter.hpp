@@ -515,9 +515,7 @@ class KalmanFitter {
       state.stepping.navDir = state.stepping.navDir.invert();
 
       // Reset propagator options
-      state.options.maxStepSize =
-          state.stepping.navDir * std::abs(state.options.maxStepSize);
-      // Not sure if reset of pathLimit during propagation makes any sense
+      // TODO Not sure if reset of pathLimit during propagation makes any sense
       state.options.pathLimit =
           state.stepping.navDir * std::abs(state.options.pathLimit);
 
@@ -924,7 +922,8 @@ class KalmanFitter {
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
         return targetSurface->intersect(
             state.geoContext, freeVector.segment<3>(eFreePos0),
-            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true);
+            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
+            state.options.targetTolerance);
       };
 
       // The smoothed free params at the first/last measurement state.
@@ -977,8 +976,7 @@ class KalmanFitter {
         state.stepping.navDir = state.stepping.navDir.invert();
       }
       // Reset the step size
-      state.stepping.stepSize = ConstrainedStep(
-          state.stepping.navDir * std::abs(state.options.maxStepSize));
+      state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
       // Set accumulatd path to zero before targeting surface
       state.stepping.pathAccumulated = 0.;
 
