@@ -247,10 +247,7 @@ if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
     simulation geant4
 fi
 
-CI/physmon/summary.py $outdir/*.html summary.md
+CI/physmon/summary.py $outdir/*.html --md summary.md --html $outdir/summary.html
 ec=$(($ec | $?))
-echo '<!DOCTYPE html><script src="https://cdn.jsdelivr.net/npm/texme@1.2.2"></script><textarea>' >> \
-    $outdir/summary.html
-cat summary.md >> $outdir/summary.html
 
 exit $ec

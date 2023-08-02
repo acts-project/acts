@@ -8,8 +8,9 @@ import os
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("html", nargs="+")
-parser.add_argument("output")
+parser.add_argument("inputs", nargs="+")
+parser.add_argument("--html")
+parser.add_argument("--md")
 args = parser.parse_args()
 
 re_title = re.compile(r'<p class="title">\s*(.*)\s*<\/p>', re.RegexFlag.MULTILINE)
@@ -17,7 +18,7 @@ re_check = re.compile(r'<a.*title="(.*)">\s*(.)\s*<\/a>', re.RegexFlag.MULTILINE
 
 summary = {}
 
-for h in args.html:
+for h in args.inputs:
     with open(h, mode="r", encoding="utf-8") as f:
         try:
             content = f.read()
@@ -34,9 +35,23 @@ for h in args.html:
         except Exception as e:
             print(r"could not parse {h}", e)
 
-with open(args.output, mode="w", encoding="utf-8") as f:
-    f.write("# physmon summary\n")
+output = "# physmon summary\n"
+for h, s in summary.items():
+    path = os.path.relpath(h, os.path.dirname(args.output))
+    output += f"  - {'✅' if s['total'] else '🔴'} [{s['title']}]({path})\n"
 
-    for h, s in summary.items():
-        path = os.path.relpath(h, os.path.dirname(args.output))
-        f.write(f"  - {'✅' if s['total'] else '🔴'} [{path}]({s['title']})\n")
+if args.html:
+    with open(args.html, mode="w", encoding="utf-8") as f:
+        f.write(
+            """
+<!DOCTYPE html>
+<script>window.texme = { style: 'plain' }</script>
+<script src="https://cdn.jsdelivr.net/npm/texme@1.2.2"></script><textarea>
+
+                """
+        )
+        f.write(output)
+
+if args.md:
+    with open(args.md, mode="w", encoding="utf-8") as f:
+        f.write(output)
