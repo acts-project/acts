@@ -144,17 +144,18 @@ class CylinderSurface : public RegularSurface {
                  const Vector3& position) const final;
 
   // Use overloads from `RegularSurface`
+  using RegularSurface::coerceToSurface;
   using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
   using RegularSurface::normal;
 
   /// Forces a global position to be on the cylinder surface
   /// For cylinder surface, the normal is defined to only depend on the @f$ \phi @f$ coordinate
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Is the global position to be coerced
-  /// @param direction Is the global momentum direction (ignored for cylinder surface)
   /// @return The coerced global position by value
-  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
-                          const Vector3& direction) const final;
+  Vector3 coerceToSurface(const GeometryContext& gctx,
+                          const Vector3& position) const final;
 
   /// Return method for the rotational symmetry axis
   ///
@@ -170,11 +171,10 @@ class CylinderSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
 
   /// Global to local transformation
   ///

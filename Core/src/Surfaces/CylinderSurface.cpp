@@ -86,8 +86,7 @@ Acts::Vector3 Acts::CylinderSurface::binningPosition(
 }
 
 Acts::Vector3 Acts::CylinderSurface::coerceToSurface(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector3& position) const {
   Vector3 local = transform(gctx).inverse() * position;
 
   double phi = VectorHelpers::phi(local);
@@ -125,8 +124,7 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
 }
 
 Acts::Vector3 Acts::CylinderSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector2& lposition) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eBoundLoc0] / r;

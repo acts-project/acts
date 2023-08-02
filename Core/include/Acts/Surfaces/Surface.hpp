@@ -254,6 +254,13 @@ class Surface : public virtual GeometryObject,
                    const Vector3& direction,
                    const BoundaryCheck& bcheck = true) const;
 
+  /// Force a position to be on the surface. The exact way this is done
+  /// depends on the surface type. For example, for a plane, the position
+  /// is simply projected onto the plane.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position to coerce onto the surface
+  /// @param direction The direction to use for the coercion
+  /// @return The coerced position
   virtual Vector3 coerceToSurface(const GeometryContext& gctx,
                                   const Vector3& position,
                                   const Vector3& direction) const = 0;

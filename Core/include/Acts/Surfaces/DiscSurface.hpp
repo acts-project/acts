@@ -120,7 +120,9 @@ class DiscSurface : public RegularSurface {
   SurfaceType type() const override;
 
   // User overloads from `RegularSurface`
+  using RegularSurface::coerceToSurface;
   using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
   using RegularSurface::normal;
 
   /// Normal vector return
@@ -150,10 +152,9 @@ class DiscSurface : public RegularSurface {
   /// distance to the surface.
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position to be projected
-  /// @param direction The global direction (ignored for disc surfaces)
   /// @return The projected position by value
-  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
-                          const Vector3& direction) const final;
+  Vector3 coerceToSurface(const GeometryContext& gctx,
+                          const Vector3& position) const final;
 
   /// The binning position The position calculated
   /// for a certain binning type
@@ -174,11 +175,10 @@ class DiscSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
-  /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
 
   /// Global to local transformation
   /// @note the direction is ignored for Disc surfaces in this calculateion

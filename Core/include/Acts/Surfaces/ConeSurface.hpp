@@ -138,10 +138,9 @@ class ConeSurface : public RegularSurface {
   /// used along with the @f$ \phi @f$ value
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be coerced
-  /// @param direction is the global momentum direction
   /// @return The coerced global position by value
-  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
-                          const Vector3& direction) const final;
+  Vector3 coerceToSurface(const GeometryContext& gctx,
+                          const Vector3& position) const final;
 
   // Return method for the rotational symmetry axis
   ///
@@ -157,14 +156,15 @@ class ConeSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const final;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const final;
 
   // Use overloads from `RegularSurface`
+  using RegularSurface::coerceToSurface;
   using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
   using RegularSurface::normal;
 
   /// Global to local transformation

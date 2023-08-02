@@ -88,7 +88,9 @@ class PlaneSurface : public RegularSurface {
   PlaneSurface& operator=(const PlaneSurface& other);
 
   // Use overloads from `RegularSurface`
+  using RegularSurface::coerceToSurface;
   using RegularSurface::globalToLocal;
+  using RegularSurface::localToGlobal;
   using RegularSurface::normal;
 
   /// Get the normal vector of this surface at a given local position
@@ -118,10 +120,9 @@ class PlaneSurface : public RegularSurface {
   /// distance to the surface.
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position to be projected
-  /// @param direction The global direction (ignored for plane surfaces)
   /// @return The projected position by value
-  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
-                          const Vector3& direction) const final;
+  Vector3 coerceToSurface(const GeometryContext& gctx,
+                          const Vector3& position) const final;
 
   /// The binning position is the position calculated
   /// for a certain binning type
@@ -146,11 +147,10 @@ class PlaneSurface : public RegularSurface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition local 2D position in specialized surface frame
-  /// @param direction global 3D momentum direction (optionally ignored)
   ///
   /// @return the global position by value
-  Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& direction) const override;
+  Vector3 localToGlobal(const GeometryContext& gctx,
+                        const Vector2& lposition) const override;
 
   /// Global to local transformation
   ///

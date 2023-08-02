@@ -26,4 +26,16 @@ Result<Vector2> RegularSurface::globalToLocal(const GeometryContext& gctx,
                                               double tolerance) const {
   return globalToLocal(gctx, position, tolerance);
 }
+
+Vector3 RegularSurface::localToGlobal(const GeometryContext& gctx,
+                                      const Vector2& lposition,
+                                      const Vector3& /*direction*/) const {
+  return localToGlobal(gctx, lposition);
+}
+
+Vector3 RegularSurface::coerceToSurface(const GeometryContext& gctx,
+                                        const Vector3& position,
+                                        const Vector3& /*direction*/) const {
+  return coerceToSurface(gctx, position);
+}
 }  // namespace Acts

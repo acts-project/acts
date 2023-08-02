@@ -81,8 +81,7 @@ Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
 }
 
 Acts::Vector3 Acts::PlaneSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector2& lposition) const {
   return transform(gctx) *
          Vector3(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
@@ -175,8 +174,7 @@ Acts::Vector3 Acts::PlaneSurface::binningPosition(
 }
 
 Acts::Vector3 Acts::PlaneSurface::coerceToSurface(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector3& position) const {
   // @TODO: Bypass the transform matrix multiplication
   Vector3 local = transform(gctx).inverse() * position;
   local.z() = 0;

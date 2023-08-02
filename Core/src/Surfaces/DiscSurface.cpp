@@ -81,8 +81,7 @@ Acts::Surface::SurfaceType Acts::DiscSurface::type() const {
 }
 
 Acts::Vector3 Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
-                                               const Vector2& lposition,
-                                               const Vector3& /*gmom*/) const {
+                                               const Vector2& lposition) const {
   // create the position in the local 3d frame
   Vector3 loc3Dframe(
       lposition[Acts::eBoundLoc0] * cos(lposition[Acts::eBoundLoc1]),
@@ -362,8 +361,7 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
 }
 
 Acts::Vector3 Acts::DiscSurface::coerceToSurface(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*direction*/) const {
+    const GeometryContext& gctx, const Vector3& position) const {
   // @TODO: Bypass the transform matrix multiplication
   Vector3 local = transform(gctx).inverse() * position;
   local[eFreePos2] = 0;

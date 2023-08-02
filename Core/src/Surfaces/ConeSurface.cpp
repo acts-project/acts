@@ -91,15 +91,14 @@ Acts::Vector3 Acts::ConeSurface::rotSymmetryAxis(
 }
 
 Acts::Vector3 Acts::ConeSurface::coerceToSurface(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction) const {
+    const GeometryContext& gctx, const Vector3& position) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
 
   // calculate what the radius should be based on the z position
   double r = loc3Dframe.z() * bounds().tanAlpha();
 
   Vector2 local{r * VectorHelpers::phi(loc3Dframe), loc3Dframe.z()};
-  return localToGlobal(gctx, local, direction);
+  return localToGlobal(gctx, local);
 }
 
 Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
@@ -123,9 +122,8 @@ Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
   return mFrame;
 }
 
-Acts::Vector3 Acts::ConeSurface::localToGlobal(
-    const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*direction*/) const {
+Acts::Vector3 Acts::ConeSurface::localToGlobal(const GeometryContext& gctx,
+                                               const Vector2& lposition) const {
   // create the position in the local 3d frame
   double r = lposition[Acts::eBoundLoc1] * bounds().tanAlpha();
   double phi = lposition[Acts::eBoundLoc0] / r;
