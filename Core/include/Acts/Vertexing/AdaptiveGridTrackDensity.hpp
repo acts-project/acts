@@ -11,6 +11,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 
+#include <unordered_map>
+
 namespace Acts {
 
 /// @class AdaptiveGridTrackDensity
