@@ -167,9 +167,9 @@ void addExaTrkXTrackFinding(Context &ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputClusters,
-      outputProtoTracks, graphConstructor, edgeClassifiers, trackBuilder,
-      rScale, phiScale, zScale, cellCountScale, cellSumScale, clusterXScale,
-      clusterYScale);
+      inputSimhits, inputMeasurementSimhitMap, outputProtoTracks,
+      graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale, zScale,
+      cellCountScale, cellSumScale, clusterXScale, clusterYScale);
 }
 
 }  // namespace Acts::Python
