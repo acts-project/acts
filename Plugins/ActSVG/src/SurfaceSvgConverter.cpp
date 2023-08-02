@@ -15,15 +15,10 @@
 Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
     const GeometryContext& gctx, const Surface& surface,
     const SurfaceConverter::Options& cOptions) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("SurfaceArraySvgConverter", cOptions.logLevel));
-
   ProtoSurface pSurface;
 
   // In case of non-template surfaces, the polyhedron does the trick
   if (not cOptions.templateSurface) {
-    ACTS_DEBUG("Not building template surface!");
     // Polyhedron surface for vertices needed anyways
     Polyhedron surfaceHedron =
         surface.polyhedronRepresentation(gctx, cOptions.style.nSegments);
@@ -111,7 +106,9 @@ Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
     // Set the openings
     actsvg::scalar ri = static_cast<actsvg::scalar>(boundValues[0]);
     actsvg::scalar ro = static_cast<actsvg::scalar>(boundValues[1]);
+    actsvg::scalar zp = static_cast<actsvg::scalar>(surface.center(gctx).z());
     pSurface._radii = {ri, ro};
+    pSurface._zparameters = {zp, zp};
     pSurface._opening = {
         static_cast<actsvg::scalar>(boundValues[3] - boundValues[2]),
         static_cast<actsvg::scalar>(boundValues[3] + boundValues[2])};

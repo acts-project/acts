@@ -526,7 +526,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   /// @param [in] externalBounds are (optional) external confinement
   ///             constraints
   /// @return a mutable pointer to a new TrackingVolume which includes the
-  ///         optionally provided exisitingVolume consistently for further
+  ///         optionally provided existingVolume consistently for further
   ///         processing
   MutableTrackingVolumePtr trackingVolume(
       const GeometryContext& gctx, TrackingVolumePtr existingVolume = nullptr,

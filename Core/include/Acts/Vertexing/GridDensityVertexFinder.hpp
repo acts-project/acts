@@ -11,13 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/DummyVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
 #include <map>
+<<<<<<< HEAD
 
 #include "DummyVertexFitter.hpp"
+=======
+>>>>>>> 271cbf8ba0af2dd0902a6f0a21f5dd3ba9879e37
 
 namespace Acts {
 

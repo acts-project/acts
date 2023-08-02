@@ -58,6 +58,9 @@ class ParticleSelector final : public IAlgorithm {
     bool removeCharged = false;
     /// Remove neutral particles.
     bool removeNeutral = false;
+
+    /// Remove secondaries.
+    bool removeSecondaries = false;
   };
 
   ParticleSelector(const Config& config, Acts::Logging::Level level);

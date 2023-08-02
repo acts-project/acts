@@ -489,7 +489,7 @@ Acts::TrackingVolume::compatibleBoundaries(
     }
 
     if (options.forceIntersectBoundaries and
-        sIntersection.intersection.pathLength * options.navDir > 0) {
+        sIntersection.intersection.pathLength > 0) {
       const bool coCriterion =
           std::abs(sIntersection.intersection.pathLength) < std::abs(oLimit);
       ACTS_VERBOSE("Forcing intersection with surface "
@@ -499,7 +499,6 @@ Acts::TrackingVolume::compatibleBoundaries(
         ACTS_VERBOSE("- intersection path length "
                      << std::abs(sIntersection.intersection.pathLength)
                      << " < overstep limit " << std::abs(oLimit));
-        sIntersection.intersection.pathLength *= options.navDir;
         return BoundaryIntersection(sIntersection.intersection, bSurface,
                                     sIntersection.object);
       }
@@ -515,7 +514,6 @@ Acts::TrackingVolume::compatibleBoundaries(
                                   decltype(logger)>(
             sIntersection.intersection, pLimit, oLimit, s_onSurfaceTolerance,
             logger)) {
-      sIntersection.intersection.pathLength *= options.navDir;
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
     }
@@ -526,7 +524,6 @@ Acts::TrackingVolume::compatibleBoundaries(
                                     decltype(logger)>(
               sIntersection.alternative, pLimit, oLimit, s_onSurfaceTolerance,
               logger)) {
-        sIntersection.alternative.pathLength *= options.navDir;
         return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);
         ;
@@ -595,20 +592,11 @@ Acts::TrackingVolume::compatibleBoundaries(
     return false;
   };
 
-  // Sort them accordingly to the navigation direction
-  if (options.navDir == Direction::Forward) {
-    std::sort(bIntersections.begin(), bIntersections.end(),
-              [&](const auto& a, const auto& b) {
-                return comparator(a.intersection.pathLength,
-                                  b.intersection.pathLength);
-              });
-  } else {
-    std::sort(bIntersections.begin(), bIntersections.end(),
-              [&](const auto& a, const auto& b) {
-                return comparator(-a.intersection.pathLength,
-                                  -b.intersection.pathLength);
-              });
-  }
+  std::sort(bIntersections.begin(), bIntersections.end(),
+            [&](const auto& a, const auto& b) {
+              return comparator(a.intersection.pathLength,
+                                b.intersection.pathLength);
+            });
   return bIntersections;
 }
 
@@ -652,12 +640,7 @@ Acts::TrackingVolume::compatibleLayers(
               ? nullptr
               : tLayer->nextLayer(gctx, position, options.navDir * direction);
     }
-    // sort them accordingly to the navigation direction
-    if (options.navDir == Direction::Forward) {
-      std::sort(lIntersections.begin(), lIntersections.end());
-    } else {
-      std::sort(lIntersections.begin(), lIntersections.end(), std::greater<>());
-    }
+    std::sort(lIntersections.begin(), lIntersections.end());
   }
   // and return
   return lIntersections;
