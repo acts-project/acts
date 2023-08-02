@@ -49,9 +49,9 @@ ActsExamples::ProcessCode ActsExamples::CsvParticleWriter::writeT(
     data.vz = particle.position().z() / Acts::UnitConstants::mm;
     data.vt = particle.time() / Acts::UnitConstants::ns;
     const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
-    data.px = p * particle.unitDirection().x();
-    data.py = p * particle.unitDirection().y();
-    data.pz = p * particle.unitDirection().z();
+    data.px = p * particle.direction().x();
+    data.py = p * particle.direction().y();
+    data.pz = p * particle.direction().z();
     data.m = particle.mass() / Acts::UnitConstants::GeV;
     data.q = particle.charge() / Acts::UnitConstants::e;
     writer.append(data);

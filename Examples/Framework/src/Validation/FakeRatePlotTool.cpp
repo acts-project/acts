@@ -111,7 +111,7 @@ void ActsExamples::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const ActsFatras::Particle& truthParticle, size_t nTruthMatchedTracks,
     size_t nFakeTracks) const {
-  const auto t_eta = eta(truthParticle.unitDirection());
+  const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
   PlotHelpers::fillHisto(fakeRatePlotCache.nReco_vs_pT, t_pT,

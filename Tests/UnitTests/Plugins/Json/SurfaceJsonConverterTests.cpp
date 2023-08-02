@@ -38,7 +38,7 @@ std::ofstream out;
 
 Acts::GeometryContext gctx;
 
-BOOST_AUTO_TEST_SUITE(SurfaceJsonConverter)
+BOOST_AUTO_TEST_SUITE(SurfaceJsonConversion)
 
 BOOST_AUTO_TEST_CASE(ConeSurfaceRoundTripTests) {
   Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
@@ -46,9 +46,8 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceRoundTripTests) {
   auto coneRef = Surface::makeShared<ConeSurface>(trf, cone);
   coneRef->assignGeometryId(GeometryIdentifier(13u));
 
-  // Test a rectangle
-  nlohmann::json coneOut;
-  to_json(coneOut, *coneRef);
+  // Test a cone
+  nlohmann::json coneOut = SurfaceJsonConverter::toJson(gctx, *coneRef);
   out.open("ConeSurface.json");
   out << coneOut.dump(2);
   out.close();
@@ -60,7 +59,7 @@ BOOST_AUTO_TEST_CASE(ConeSurfaceRoundTripTests) {
   in >> coneIn;
   in.close();
 
-  auto coneTest = surfaceFromJson(coneIn);
+  auto coneTest = SurfaceJsonConverter::fromJson(coneIn);
 
   BOOST_CHECK(coneTest->transform(gctx).isApprox(coneRef->transform(gctx)));
   BOOST_CHECK(coneTest->geometryId() == coneRef->geometryId());
@@ -73,9 +72,8 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceRoundTripTests) {
   auto ringDiscRef = Surface::makeShared<DiscSurface>(trf, ring);
   ringDiscRef->assignGeometryId(GeometryIdentifier(10u));
 
-  // Test a rectangle
-  nlohmann::json discOut;
-  to_json(discOut, *ringDiscRef);
+  // Test a disc
+  nlohmann::json discOut = SurfaceJsonConverter::toJson(gctx, *ringDiscRef);
   out.open("DiscSurface.json");
   out << discOut.dump(2);
   out.close();
@@ -87,7 +85,7 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceRoundTripTests) {
   in >> discIn;
   in.close();
 
-  auto ringDiscTest = surfaceFromJson(discIn);
+  auto ringDiscTest = SurfaceJsonConverter::fromJson(discIn);
 
   BOOST_CHECK(
       ringDiscTest->transform(gctx).isApprox(ringDiscRef->transform(gctx)));
@@ -101,9 +99,8 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceRoundTripTests) {
   auto cylinderRef = Surface::makeShared<CylinderSurface>(trf, tube);
   cylinderRef->assignGeometryId(GeometryIdentifier(11u));
 
-  // Test a rectangle
-  nlohmann::json cylinderOut;
-  to_json(cylinderOut, *cylinderRef);
+  // Test a cyoinder
+  nlohmann::json cylinderOut = SurfaceJsonConverter::toJson(gctx, *cylinderRef);
   out.open("CylinderSurface.json");
   out << cylinderOut.dump(2);
   out.close();
@@ -115,7 +112,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceRoundTripTests) {
   in >> cylinderIn;
   in.close();
 
-  auto cylinderTest = surfaceFromJson(cylinderIn);
+  auto cylinderTest = SurfaceJsonConverter::fromJson(cylinderIn);
 
   BOOST_CHECK(
       cylinderTest->transform(gctx).isApprox(cylinderRef->transform(gctx)));
@@ -129,8 +126,9 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceRoundTripTests) {
   auto trapezoidPlaneRef = Surface::makeShared<PlaneSurface>(trf, trapezoid);
   trapezoidPlaneRef->assignGeometryId(GeometryIdentifier(9u));
 
-  // Test a rectangle
-  nlohmann::json planeOut;
+  // Test a plane
+  nlohmann::json planeOut =
+      SurfaceJsonConverter::toJson(gctx, *trapezoidPlaneRef);
   to_json(planeOut, *trapezoidPlaneRef);
   out.open("PlaneSurface.json");
   out << planeOut.dump(2);
@@ -143,7 +141,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfaceRoundTripTests) {
   in >> planeIn;
   in.close();
 
-  auto trapezoidPlaneTest = surfaceFromJson(planeIn);
+  auto trapezoidPlaneTest = SurfaceJsonConverter::fromJson(planeIn);
 
   BOOST_CHECK(trapezoidPlaneTest->transform(gctx).isApprox(
       trapezoidPlaneRef->transform(gctx)));
@@ -158,9 +156,8 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceRoundTripTests) {
   auto strawRef = Surface::makeShared<StrawSurface>(trf, straw);
   strawRef->assignGeometryId(GeometryIdentifier(12u));
 
-  // Test a rectangle
-  nlohmann::json strawOut;
-  to_json(strawOut, *strawRef);
+  // Test a straw
+  nlohmann::json strawOut = SurfaceJsonConverter::toJson(gctx, *strawRef);
   out.open("StrawSurface.json");
   out << strawOut.dump(2);
   out.close();
@@ -172,7 +169,7 @@ BOOST_AUTO_TEST_CASE(StrawSurfaceRoundTripTests) {
   in >> strawIn;
   in.close();
 
-  auto strawTest = surfaceFromJson(strawIn);
+  auto strawTest = SurfaceJsonConverter::fromJson(strawIn);
 
   BOOST_CHECK(strawTest->transform(gctx).isApprox(strawRef->transform(gctx)));
   BOOST_CHECK(strawTest->geometryId() == strawRef->geometryId());
@@ -184,9 +181,8 @@ BOOST_AUTO_TEST_CASE(PerigeeRoundTripTests) {
   auto perigeeRef = Surface::makeShared<PerigeeSurface>(trf);
   perigeeRef->assignGeometryId(GeometryIdentifier(99u));
 
-  // Test a rectangle
-  nlohmann::json perigeeOut;
-  to_json(perigeeOut, *perigeeRef);
+  // Test a perigee
+  nlohmann::json perigeeOut = SurfaceJsonConverter::toJson(gctx, *perigeeRef);
   out.open("PerigeeSurface.json");
   out << perigeeOut.dump(2);
   out.close();
@@ -198,11 +194,25 @@ BOOST_AUTO_TEST_CASE(PerigeeRoundTripTests) {
   in >> perigeeIn;
   in.close();
 
-  auto perigeeTest = surfaceFromJson(perigeeIn);
+  auto perigeeTest = SurfaceJsonConverter::fromJson(perigeeIn);
 
   BOOST_CHECK(
       perigeeTest->transform(gctx).isApprox(perigeeRef->transform(gctx)));
   BOOST_CHECK(perigeeTest->geometryId() == perigeeRef->geometryId());
+}
+
+BOOST_AUTO_TEST_CASE(SurfacesDetrayTests) {
+  Transform3 trf(Transform3::Identity() * Translation3(0., 0., -7.));
+  auto trapezoid = std::make_shared<TrapezoidBounds>(2., 3., 4.);
+  auto trapezoidPlaneRef = Surface::makeShared<PlaneSurface>(trf, trapezoid);
+  trapezoidPlaneRef->assignGeometryId(GeometryIdentifier(9u));
+
+  // Test a rectangle
+  nlohmann::json trapOut =
+      SurfaceJsonConverter::toJsonDetray(gctx, *trapezoidPlaneRef);
+  out.open("Surfaces-detray.json");
+  out << trapOut.dump(2);
+  out.close();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

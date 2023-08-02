@@ -165,7 +165,7 @@ void ActsExamples::ResPlotTool::fill(
 
   // get the truth perigee parameter
   auto lpResult = pSurface->globalToLocal(gctx, truthParticle.position(),
-                                          truthParticle.unitDirection());
+                                          truthParticle.direction());
   if (lpResult.ok()) {
     truthParameter[Acts::BoundIndices::eBoundLoc0] =
         lpResult.value()[Acts::BoundIndices::eBoundLoc0];
@@ -175,15 +175,15 @@ void ActsExamples::ResPlotTool::fill(
     ACTS_ERROR("Global to local transformation did not succeed.");
   }
   truthParameter[Acts::BoundIndices::eBoundPhi] =
-      phi(truthParticle.unitDirection());
+      phi(truthParticle.direction());
   truthParameter[Acts::BoundIndices::eBoundTheta] =
-      theta(truthParticle.unitDirection());
+      theta(truthParticle.direction());
   truthParameter[Acts::BoundIndices::eBoundQOverP] =
       truthParticle.charge() / truthParticle.absoluteMomentum();
   truthParameter[Acts::BoundIndices::eBoundTime] = truthParticle.time();
 
   // get the truth eta and pT
-  const auto truthEta = eta(truthParticle.unitDirection());
+  const auto truthEta = eta(truthParticle.direction());
   const auto truthPt = truthParticle.transverseMomentum();
 
   // fill the histograms for residual and pull

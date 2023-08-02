@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <vector>
@@ -123,7 +124,7 @@ class MaterialComposition {
   /// Check if the composed material is valid, i.e. it is not vacuum.
   operator bool() const { return !m_elements.empty(); }
   /// Return the number of elements.
-  size_t size() const { return m_elements.size(); }
+  std::size_t size() const { return m_elements.size(); }
 
  private:
   std::vector<ElementFraction> m_elements;

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <type_traits>
+
 namespace Acts::detail {
 
 template <template <typename...> class, template <typename...> class>

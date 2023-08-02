@@ -4,8 +4,8 @@ set -e
 
 
 mode=${1:all}
-if ! [[ $mode = @(all|kalman|gsf|fullchains|vertexing) ]]; then
-    echo "Usage: $0 <all|kalman|gsf|fullchains|vertexing> (outdir)"
+if ! [[ $mode = @(all|kalman|gsf|fullchains|vertexing|simulation) ]]; then
+    echo "Usage: $0 <all|kalman|gsf|fullchains|vertexing|simulation> (outdir)"
     exit 1
 fi
 
@@ -18,13 +18,35 @@ refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
+SPYRAL_BIN="spyral"
+SPYRAL="${SPYRAL_BIN} run -i 0.1 --summary"
+
+mkdir ${outdir}/memory
+
 source $SCRIPT_DIR/setup.sh
 echo "::group::Generate validation dataset"
-CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
-CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
-CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
-CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
+if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
+    $SPYRAL -l "Truth Tracking KF" -o "$outdir/memory/mem_truth_tracking_kalman.csv" -- CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
+fi
+if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
+    $SPYRAL -l "Truth Tracking GSF" -o "$outdir/memory/mem_truth_tracking_gsf.csv" -- CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
+fi
+if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
+    $SPYRAL -l "CKF Tracking" -o "$outdir/memory/mem_ckf_tracking.csv" -- CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
+fi
+if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
+    $SPYRAL -l "Vertexing" -o "$outdir/memory/mem_vertexing.csv" -- CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
+fi
+if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
+    $SPYRAL -l "Simulation" -o "$outdir/memory/mem_simulation.csv" -- CI/physmon/workflows/physmon_simulation.py $outdir 2>&1 > $outdir/run_simulation.log
+fi
 echo "::endgroup::"
+
+$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_kalman.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_gsf.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_ckf_tracking.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_vertexing.csv --output $outdir/memory
+$SPYRAL_BIN plot $outdir/memory/mem_simulation.csv --output $outdir/memory
 
 set +e
 
@@ -127,8 +149,48 @@ function full_chain() {
         --title "Track Summary CKF ${suffix}" \
         -o $outdir/tracksummary_ckf_${suffix}.html \
         -p $outdir/tracksummary_ckf_${suffix}_plots
+}
 
+function simulation() {
+    suffix=$1
 
+    config="CI/physmon/simulation_config.yml"
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/particles_initial_${suffix}.root \
+        particles \
+        $outdir/particles_initial_${suffix}_hist.root \
+        --silent \
+        --config CI/physmon/particles_initial_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/particles_initial_${suffix}.root
+
+    run \
+        $outdir/particles_initial_${suffix}_hist.root \
+        $refdir/particles_initial_${suffix}_hist.root \
+        --title "Particles inital ${suffix}" \
+        -o $outdir/particles_initial_${suffix}.html \
+        -p $outdir/particles_initial_${suffix}_plots
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/particles_final_${suffix}.root \
+        particles \
+        $outdir/particles_final_${suffix}_hist.root \
+        --silent \
+        --config CI/physmon/particles_final_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/particles_final_${suffix}.root
+
+    run \
+        $outdir/particles_final_${suffix}_hist.root \
+        $refdir/particles_final_${suffix}_hist.root \
+        --title "Particles final ${suffix}" \
+        -o $outdir/particles_final_${suffix}.html \
+        -p $outdir/particles_final_${suffix}_plots
 }
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
@@ -178,6 +240,11 @@ if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
         $outdir/vertexing_mu_scan.pdf
 
     rm $outdir/performance_vertexing_*mu*
+fi
+
+if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
+    simulation fatras
+    simulation geant4
 fi
 
 CI/physmon/summary.py $outdir/*.html $outdir/summary.html
