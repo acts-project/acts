@@ -80,7 +80,7 @@ class AdaptiveGridDensityVertexFinder {
     DensityMap mainDensityMap;
 
     // Map from input track to corresponding track density map
-    std::map<const InputTrack_t*, DensityMap> trackDensities; 
+    std::map<const InputTrack_t*, DensityMap> trackDensities;
 
     // Map to store bool if track has passed track selection or not
     std::map<const InputTrack_t*, bool> trackSelectionMap;

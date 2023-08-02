@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
 
   // Empty map
   AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
-  
+
   // Track is too far away from z axis and was not added
   auto trackDensityMap = grid.addTrack(params0, mainDensityMap);
   BOOST_CHECK(mainDensityMap.empty());
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat(Covariance::Identity()*0.005);
+  Covariance covMat(Covariance::Identity() * 0.005);
 
   float z0Trk1 = 0.25;
   float z0Trk2 = -10.95;
@@ -134,8 +134,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   // New maximum is therefore at z0Trk2
   BOOST_CHECK_EQUAL(*res2, z0Trk2);
 
-  auto resWidth1 =
-    grid.getMaxZPositionAndWidth(mainDensityMap);
+  auto resWidth1 = grid.getMaxZPositionAndWidth(mainDensityMap);
   BOOST_CHECK(resWidth1.ok());
   BOOST_CHECK_EQUAL((*resWidth1).first, z0Trk2);
   BOOST_CHECK((*resWidth1).second > 0);
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
 
   // Calculate total density
   float densitySum0 = 0;
-  for (auto it = mainDensityMap.begin(); it!= mainDensityMap.end(); it++) {
+  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
     densitySum0 += it->second;
   }
 
@@ -252,7 +251,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
 
   // Calculate new total density
   float densitySum1 = 0;
-  for (auto it = mainDensityMap.begin(); it!= mainDensityMap.end(); it++) {
+  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
     densitySum1 += it->second;
   }
 
@@ -263,7 +262,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
 
   // Calculate new total density
   float densitySum2 = 0;
-  for (auto it = mainDensityMap.begin(); it!= mainDensityMap.end(); it++) {
+  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
     densitySum2 += it->second;
   }
 
@@ -279,7 +278,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize + nNonOverlappingBins);
 
   float densitySum3 = 0;
-  for (auto it = mainDensityMap.begin(); it!= mainDensityMap.end(); it++) {
+  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
     densitySum3 += it->second;
   }
 
@@ -287,7 +286,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   grid.subtractTrack(trackDensityMap0, mainDensityMap);
 
   float densitySum4 = 0;
-  for (auto it = mainDensityMap.begin(); it!= mainDensityMap.end(); it++) {
+  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
     densitySum4 += it->second;
   }
 
@@ -301,7 +300,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize + nNonOverlappingBins);
 
   float densitySum5 = 0;
-  for (auto it = mainDensityMap.begin(); it!= mainDensityMap.end(); it++) {
+  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
     densitySum5 += it->second;
   }
 

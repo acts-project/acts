@@ -63,7 +63,8 @@ class AdaptiveGridTrackDensity {
   /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between z bins and corresponding density value
   /// @return Iterator of the map entry with the highest density value
-  DensityMap::const_iterator highestDensityEntry(const DensityMap& densityMap) const;
+  DensityMap::const_iterator highestDensityEntry(
+      const DensityMap& densityMap) const;
 
   /// @brief Returns the z position of maximum (surrounding) track density
   ///
@@ -87,14 +88,15 @@ class AdaptiveGridTrackDensity {
   /// @param mainDensityMap Map from z bins to corresponding track density.
   ///
   /// @return The density map of the track that was added
-  DensityMap addTrack(
-      const BoundTrackParameters& trk, DensityMap& mainDensityMap) const;
+  DensityMap addTrack(const BoundTrackParameters& trk,
+                      DensityMap& mainDensityMap) const;
 
   /// @brief Removes a track from the overall grid density
   ///
   /// @param trackDensityMap Map from z bins to corresponding track density. The track density comes from a single track.
   /// @param mainDensityMap Map from z bins to corresponding track density. The track density comes an arbitrary number of tracks.
-  void subtractTrack(const DensityMap& trackDensityMap, DensityMap& mainDensityMap) const;
+  void subtractTrack(const DensityMap& trackDensityMap,
+                     DensityMap& mainDensityMap) const;
 
  private:
   /// @brief Function that creates a track density map, i.e., a map of z bins to corresponding density values coming from a single track.
@@ -106,9 +108,9 @@ class AdaptiveGridTrackDensity {
   /// bin center in the 2-dim grid
   /// @param centralZBin Central z bin of the track (where its density is the highest)
   /// @param distCtrZ The distance in z0 from the track position to its
-  /// bin center in the 2-dim grid                               
-  DensityMap createTrackGrid(int offset, const SymMatrix2& cov,
-                                  float distCtrD, int centralZBin, float distCtrZ) const;
+  /// bin center in the 2-dim grid
+  DensityMap createTrackGrid(int offset, const SymMatrix2& cov, float distCtrD,
+                             int centralZBin, float distCtrZ) const;
 
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak

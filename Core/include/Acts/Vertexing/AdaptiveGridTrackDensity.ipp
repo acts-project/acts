@@ -10,20 +10,20 @@
 #include <algorithm>
 
 template <int trkGridSize>
-typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap::const_iterator Acts::AdaptiveGridTrackDensity<trkGridSize>::highestDensityEntry(const DensityMap& densityMap) const {
-  auto maxEntry = std::max_element
-  (
+typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap::const_iterator
+Acts::AdaptiveGridTrackDensity<trkGridSize>::highestDensityEntry(
+    const DensityMap& densityMap) const {
+  auto maxEntry = std::max_element(
       std::begin(densityMap), std::end(densityMap),
-      [] (const auto& densityEntry1, const auto& densityEntry2) {
-          return densityEntry1.second < densityEntry2.second;
-      }
-  );
+      [](const auto& densityEntry1, const auto& densityEntry2) {
+        return densityEntry1.second < densityEntry2.second;
+      });
   return maxEntry;
 }
 template <int trkGridSize>
 Acts::Result<float>
-Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(DensityMap& densityMap) const {
-
+Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
+    DensityMap& densityMap) const {
   if (densityMap.empty()) {
     return VertexingError::EmptyInput;
   }
@@ -44,7 +44,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(DensityMap& density
 
 template <int trkGridSize>
 Acts::Result<std::pair<float, float>>
-Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(DensityMap& densityMap) const {
+Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPositionAndWidth(
+    DensityMap& densityMap) const {
   // Get z maximum value
   auto maxZRes = getMaxZPosition(densityMap);
   if (not maxZRes.ok()) {
@@ -92,7 +93,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float distCtrD = d0 - binCtrD;
   float distCtrZ = z0 - binCtrZ;
 
-  DensityMap trackDensityMap = createTrackGrid(dOffset, cov, distCtrD, zBin, distCtrZ);
+  DensityMap trackDensityMap =
+      createTrackGrid(dOffset, cov, distCtrD, zBin, distCtrZ);
 
   for (const auto& densityEntry : trackDensityMap) {
     int zBin2 = densityEntry.first;
@@ -100,8 +102,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     // Check if z bin is already part of the main grid
     if (mainDensityMap.count(zBin2) == 1) {
       mainDensityMap.at(zBin2) += trackDensity;
-    }
-    else {
+    } else {
       mainDensityMap[zBin2] = trackDensity;
     }
   }
@@ -110,8 +111,9 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
 }
 
 template <int trkGridSize>
-void Acts::AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(const DensityMap& trackDensityMap, DensityMap& mainDensityMap) const {
-  for (auto it = trackDensityMap.begin(); it != trackDensityMap.end(); it ++) {
+void Acts::AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(
+    const DensityMap& trackDensityMap, DensityMap& mainDensityMap) const {
+  for (auto it = trackDensityMap.begin(); it != trackDensityMap.end(); it++) {
     mainDensityMap.at(it->first) -= it->second;
   }
 }
@@ -119,8 +121,8 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(const DensityMap
 template <int trkGridSize>
 typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2& cov, float distCtrD,
-    int centralZBin, float distCtrZ) const {
+    int offset, const Acts::SymMatrix2& cov, float distCtrD, int centralZBin,
+    float distCtrZ) const {
   DensityMap trackDensityMap;
 
   int halfTrkGridSize = (trkGridSize - 1) / 2;
@@ -139,8 +141,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
 
 template <int trkGridSize>
 Acts::Result<float>
-Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(const DensityMap& densityMap, float maxZ) const {
-
+Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
+    const DensityMap& densityMap, float maxZ) const {
   if (densityMap.empty()) {
     return VertexingError::EmptyInput;
   }
@@ -154,8 +156,10 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(const DensityMap&
   float gridValue = maxValue;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if (densityMap.count(rhmBin+1) == 0) {
-      // TODO: I think in this case the linear approximation does not work, we would need to use 0 instead of densityMap.at(rhmBin) in the computation of deltaZ1
+    if (densityMap.count(rhmBin + 1) == 0) {
+      // TODO: I think in this case the linear approximation does not work, we
+      // would need to use 0 instead of densityMap.at(rhmBin) in the computation
+      // of deltaZ1
       break;
     }
     rhmBin += 1;
@@ -169,12 +173,13 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(const DensityMap&
   // TODO: I think we should have here:
   // float deltaZ1 =
   //       (maxValue / 2 - densityMap.at(rhmBin)) *
-  //       (m_cfg.binSize / (densityMap.at(rhmBin - 1) - densityMap.at(rhmBin)));
+  //       (m_cfg.binSize / (densityMap.at(rhmBin - 1) -
+  //       densityMap.at(rhmBin)));
   int lhmBin = zMaxBin;
   gridValue = maxValue;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
-    if (densityMap.count(lhmBin-1) == 0) {
+    if (densityMap.count(lhmBin - 1) == 0) {
       // TODO: I think in this case the linear approximation does not work
       break;
     }
@@ -259,10 +264,11 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::highestDensitySumBin(
 
 template <int trkGridSize>
 float Acts::AdaptiveGridTrackDensity<trkGridSize>::getDensitySum(
-     const DensityMap& densityMap, int zBin) const {
+    const DensityMap& densityMap, int zBin) const {
   float sum = densityMap.at(zBin);
-  // Check if neighboring bins are part of the densityMap and add them (if they are not part of the map, we assume them to be 0)
-  // Note that each key in a map is unique; the .count() function therefore returns either 0 or 1
+  // Check if neighboring bins are part of the densityMap and add them (if they
+  // are not part of the map, we assume them to be 0) Note that each key in a
+  // map is unique; the .count() function therefore returns either 0 or 1
   if (densityMap.count(zBin - 1) == 1) {
     sum += densityMap.at(zBin - 1);
   }
