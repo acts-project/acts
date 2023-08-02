@@ -320,7 +320,11 @@ Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
   // Set the intersection
   Intersection3D first(tf * solution1, qe.first, status1);
   Intersection3D second(tf * solution2, qe.second, status2);
-  return {{first, second}, this};
+  // Order based on path length
+  if (first.pathLength() <= second.pathLength()) {
+    return {{first, second}, this};
+  }
+  return {{second, first}, this};
 }
 
 Acts::AlignmentToPathMatrix Acts::ConeSurface::alignmentToPathDerivative(

@@ -278,7 +278,11 @@ Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
   // Check first solution for boundary compatibility
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);
-  return {{first, second}, this};
+  // Order based on path length
+  if (first.pathLength() <= second.pathLength()) {
+    return {{first, second}, this};
+  }
+  return {{second, first}, this};
 }
 
 Acts::AlignmentToPathMatrix Acts::CylinderSurface::alignmentToPathDerivative(
