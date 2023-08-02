@@ -80,13 +80,13 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     return emptyTrackDensityMap;
   }
   // Calculate bin in z
-  int zBin = int(z0 / m_cfg.binSize);
+  int centralZBin = int(z0 / m_cfg.binSize);
 
   // Calculate the positions of the bin centers
   float binCtrD = dOffset * m_cfg.binSize;
 
   int sign = (z0 > 0) ? +1 : -1;
-  float binCtrZ = (zBin + sign * 0.5f) * m_cfg.binSize;
+  float binCtrZ = (centralZBin + sign * 0.5f) * m_cfg.binSize;
 
   // Calculate the distance between IP values and their
   // corresponding bin centers
@@ -94,16 +94,16 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float distCtrZ = z0 - binCtrZ;
 
   DensityMap trackDensityMap =
-      createTrackGrid(dOffset, cov, distCtrD, zBin, distCtrZ);
+      createTrackGrid(dOffset, cov, distCtrD, centralZBin, distCtrZ);
 
   for (const auto& densityEntry : trackDensityMap) {
-    int zBin2 = densityEntry.first;
+    int zBin = densityEntry.first;
     float trackDensity = densityEntry.second;
     // Check if z bin is already part of the main grid
-    if (mainDensityMap.count(zBin2) == 1) {
-      mainDensityMap.at(zBin2) += trackDensity;
+    if (mainDensityMap.count(zBin) == 1) {
+      mainDensityMap.at(zBin) += trackDensity;
     } else {
-      mainDensityMap[zBin2] = trackDensity;
+      mainDensityMap[zBin] = trackDensity;
     }
   }
 
