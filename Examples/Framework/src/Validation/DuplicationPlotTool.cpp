@@ -99,8 +99,8 @@ void ActsExamples::DuplicationPlotTool::fill(
 void ActsExamples::DuplicationPlotTool::fill(
     DuplicationPlotTool::DuplicationPlotCache& duplicationPlotCache,
     const ActsFatras::Particle& truthParticle, size_t nDuplicatedTracks) const {
-  const auto t_phi = phi(truthParticle.unitDirection());
-  const auto t_eta = eta(truthParticle.unitDirection());
+  const auto t_phi = phi(truthParticle.direction());
+  const auto t_eta = eta(truthParticle.direction());
   const auto t_pT = truthParticle.transverseMomentum();
 
   PlotHelpers::fillProf(duplicationPlotCache.nDuplicated_vs_pT, t_pT,

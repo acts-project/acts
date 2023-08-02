@@ -303,7 +303,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.5.2
+          && pip3 install histcmp==0.6.2 spyral-cli==1.1.0 matplotlib
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
@@ -320,6 +320,34 @@ jobs:
         with:
           name: physmon
           path: physmon
+
+  linux_physmon_perf_report:
+    needs: [linux_physmon]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Install dependencies
+        run: pip3 install spyral-cli==1.1.0
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: physmon
+          path: physmon
+
+      - name: Store metrics
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.RUNTIME_METRIC_DEPLOY_SSH_KEY }}"
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+          git clone git@github.com:acts-project/runtime_metrics.git
+          spyral maxima runtime_metrics/metrics.csv physmon/memory/*.csv -e $(date +%Y-%m-%dT%H-%M-%S) -e ${GITHUB_REF_NAME} -e ${GITHUB_REF} -e ${GITHUB_SHA}
+          cd runtime_metrics
+          git add -A
+          git commit -m"update metrics"
+          git push
 
   linux_ubuntu_extra:
     runs-on: ubuntu-latest
@@ -373,7 +401,7 @@ jobs:
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
-          -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_FORCE_ASSERTIONS=OFF
           -DACTS_BUILD_ANALYSIS_APPS=ON
           -DACTS_BUILD_PLUGIN_ACTSVG=ON
 

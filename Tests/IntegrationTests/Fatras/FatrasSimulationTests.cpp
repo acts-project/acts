@@ -10,7 +10,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/ParticleData.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"

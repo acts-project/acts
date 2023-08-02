@@ -157,6 +157,7 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
   bool toCenter = m_bounds->rMin() < s_onSurfaceTolerance;
   // If you have bounds you can create a polyhedron representation
   bool exactPolyhedron = (m_bounds->type() == SurfaceBounds::eDiscTrapezoid);
+  bool addCentreFromConvexFace = (m_bounds->type() != SurfaceBounds::eAnnulus);
   if (m_bounds) {
     auto vertices2D = m_bounds->vertices(lseg);
     vertices.reserve(vertices2D.size() + 1);
@@ -167,11 +168,12 @@ Acts::Polyhedron Acts::DiscSurface::polyhedronRepresentation(
     }
     // These are convex shapes, use the helper method
     // For rings there's a sweet spot when this stops working
-    if (m_bounds->type() == SurfaceBounds::eDiscTrapezoid or toCenter or
-        not fullDisc) {
+    if (exactPolyhedron or toCenter or not fullDisc) {
       // Transform them into the vertex frame
       wCenter *= 1. / vertices.size();
-      vertices.push_back(wCenter);
+      if (addCentreFromConvexFace) {
+        vertices.push_back(wCenter);
+      }
       auto facesMesh = detail::FacesHelper::convexFaceMesh(vertices, true);
       faces = facesMesh.first;
       triangularMesh = facesMesh.second;

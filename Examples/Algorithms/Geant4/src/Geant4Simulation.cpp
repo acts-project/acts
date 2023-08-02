@@ -154,12 +154,12 @@ ActsExamples::ProcessCode ActsExamples::Geant4SimulationBase::execute(
   }
 
   if (eventStore().hits.empty()) {
-    ACTS_INFO("Step merging: No steps recorded");
+    ACTS_DEBUG("Step merging: No steps recorded");
   } else {
-    ACTS_INFO("Step merging: mean hits per hit: "
-              << static_cast<double>(eventStore().numberGeantSteps) /
-                     eventStore().hits.size());
-    ACTS_INFO(
+    ACTS_DEBUG("Step merging: mean hits per hit: "
+               << static_cast<double>(eventStore().numberGeantSteps) /
+                      eventStore().hits.size());
+    ACTS_DEBUG(
         "Step merging: max hits per hit: " << eventStore().maxStepsForHit);
   }
 
@@ -225,6 +225,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
       delete runManager().GetUserSteppingAction();
     }
 
+    ParticleKillAction::Config particleKillCfg;
+    particleKillCfg.volume = cfg.killVolume;
+    particleKillCfg.maxTime = cfg.killAfterTime;
+    particleKillCfg.secondaries = cfg.killSecondaries;
+
     SensitiveSteppingAction::Config stepCfg;
     stepCfg.eventStore = m_eventStore;
     stepCfg.charged = true;
@@ -232,15 +237,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(const Config& cfg,
     stepCfg.primary = true;
     stepCfg.secondary = cfg.recordHitsOfSecondaries;
 
-    ParticleKillAction::Config particleKillCfg;
-    particleKillCfg.volume = cfg.killVolume;
-    particleKillCfg.maxTime = cfg.killAfterTime;
-
     SteppingActionList::Config steppingCfg;
-    steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(
-        stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
     steppingCfg.actions.push_back(std::make_unique<ParticleKillAction>(
         particleKillCfg, m_logger->cloneWithSuffix("Killer")));
+    steppingCfg.actions.push_back(std::make_unique<SensitiveSteppingAction>(
+        stepCfg, m_logger->cloneWithSuffix("SensitiveStepping")));
 
     // G4RunManager will take care of deletion
     auto steppingAction = new SteppingActionList(steppingCfg);

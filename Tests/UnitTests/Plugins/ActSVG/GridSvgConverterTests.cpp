@@ -44,7 +44,7 @@ std::string localToString(const local_bin_t& lBin) {
 }
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(GridSvgConverter)
+BOOST_AUTO_TEST_SUITE(ActSvg)
 
 BOOST_AUTO_TEST_CASE(BoundGridXY) {
   using GlobalBin = size_t;

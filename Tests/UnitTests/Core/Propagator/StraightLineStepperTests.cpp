@@ -12,9 +12,8 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
@@ -99,7 +98,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), time, eps, eps);
   BOOST_CHECK_EQUAL(slsState.navDir, navDir);
   BOOST_CHECK_EQUAL(slsState.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(slsState.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(slsState.tolerance, tolerance);
 
@@ -158,12 +157,12 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Step size modifies
   const std::string originalStepSize = slsState.stepSize.toString();
 
-  sls.setStepSize(slsState, 1337.);
-  BOOST_CHECK_EQUAL(slsState.previousStepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(slsState.stepSize.value(), 1337.);
+  sls.setStepSize(slsState, -1337.);
+  BOOST_CHECK_EQUAL(slsState.previousStepSize, stepSize);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), -1337.);
 
   sls.releaseStepSize(slsState);
-  BOOST_CHECK_EQUAL(slsState.stepSize.value(), -123.);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 
   // Test the curvilinear state construction
@@ -205,8 +204,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   ps.stepping.covTransport = false;
   double h = sls.step(ps, mockNavigator).value();
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), navDir * stepSize);
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), h);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), stepSize);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), h * navDir);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(ps.stepping), newMom.normalized(), 1e-6);
@@ -218,7 +217,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   ps.stepping.covTransport = true;
   double h2 = sls.step(ps, mockNavigator).value();
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());

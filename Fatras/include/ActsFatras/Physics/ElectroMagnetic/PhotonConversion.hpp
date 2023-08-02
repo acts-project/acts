@@ -244,7 +244,7 @@ Particle::Vector3 PhotonConversion::generateChildDirection(
   const auto psi =
       std::uniform_real_distribution<double>(-M_PI, M_PI)(generator);
 
-  Acts::Vector3 direction = particle.unitDirection();
+  Acts::Vector3 direction = particle.direction();
   // construct the combined rotation to the scattered direction
   Acts::RotationMatrix3 rotation(
       // rotation of the scattering deflector axis relative to the reference
