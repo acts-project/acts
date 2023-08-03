@@ -13,7 +13,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -88,7 +88,7 @@ struct Stepper {
   Vector3 direction(const SteppingState& state) const { return state.dir; }
 
   /// Access method - momentum
-  double momentum(const SteppingState& state) const { return state.p; }
+  double absoluteMomentum(const SteppingState& state) const { return state.p; }
 };
 
 /// @brief mockup of navigation state

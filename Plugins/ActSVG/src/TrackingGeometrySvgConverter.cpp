@@ -42,10 +42,6 @@ void Acts::Svg::TrackingGeometryConverter::convert(
     const GeometryContext& gctx, const TrackingVolume& tVolume,
     const TrackingGeometryConverter::Options& cOptions,
     TrackingGeometryConverter::State& cState) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("TrackingGeometrySvgConverter", cOptions.logLevel));
-
   // Process confined layers first
   if (tVolume.confinedLayers() != nullptr) {
     for (const auto& layer : tVolume.confinedLayers()->arrayObjects()) {

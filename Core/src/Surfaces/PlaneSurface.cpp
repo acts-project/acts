@@ -82,14 +82,14 @@ Acts::Surface::SurfaceType Acts::PlaneSurface::type() const {
 
 Acts::Vector3 Acts::PlaneSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*momentum*/) const {
+    const Vector3& /*direction*/) const {
   return transform(gctx) *
          Vector3(lposition[Acts::eBoundLoc0], lposition[Acts::eBoundLoc1], 0.);
 }
 
 Acts::Result<Acts::Vector2> Acts::PlaneSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*momentum*/, double tolerance) const {
+    const Vector3& /*direction*/, double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);

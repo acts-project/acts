@@ -8,8 +8,8 @@
 
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"

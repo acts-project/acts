@@ -146,8 +146,7 @@ auto Acts::Propagator<S, N>::propagate(
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.direction, eOptions.maxStepSize,
-                          eOptions.tolerance),
+                          eOptions.direction, eOptions.maxStepSize),
       m_navigator.makeState(&start.referenceSurface(), nullptr)};
 
   static_assert(
@@ -233,8 +232,7 @@ auto Acts::Propagator<S, N>::propagate(
   StateType state{
       eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
-                          eOptions.direction, eOptions.maxStepSize,
-                          eOptions.tolerance),
+                          eOptions.direction, eOptions.maxStepSize),
       m_navigator.makeState(&start.referenceSurface(), &target)};
 
   static_assert(

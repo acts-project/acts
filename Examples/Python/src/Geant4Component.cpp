@@ -112,6 +112,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(materialMappings);
     ACTS_PYTHON_MEMBER(killVolume);
     ACTS_PYTHON_MEMBER(killAfterTime);
+    ACTS_PYTHON_MEMBER(killSecondaries);
     ACTS_PYTHON_MEMBER(recordHitsOfSecondaries);
     ACTS_PYTHON_MEMBER(keepParticlesWithoutHits);
     ACTS_PYTHON_STRUCT_END();

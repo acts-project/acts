@@ -14,10 +14,10 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -98,14 +98,14 @@ auto makeDefaultGsfOptions() {
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
-// the function so that it can also be used as SingleBoundTrackParameters for
+// the function so that it can also be used as GenericBoundTrackParameters for
 // the MeasurementsCreator
 template <typename charge_t>
-struct MultiCmpsParsInterface : public SingleBoundTrackParameters<charge_t> {
+struct MultiCmpsParsInterface : public GenericBoundTrackParameters<charge_t> {
   MultiComponentBoundTrackParameters<charge_t> multi_pars;
 
   MultiCmpsParsInterface(const MultiComponentBoundTrackParameters<charge_t> &p)
-      : SingleBoundTrackParameters<charge_t>(
+      : GenericBoundTrackParameters<charge_t>(
             p.referenceSurface().getSharedPtr(), p.parameters(),
             p.covariance()),
         multi_pars(p) {}

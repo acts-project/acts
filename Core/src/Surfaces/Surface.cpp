@@ -45,10 +45,10 @@ Acts::Surface::~Surface() = default;
 
 bool Acts::Surface::isOnSurface(const GeometryContext& gctx,
                                 const Vector3& position,
-                                const Vector3& momentum,
+                                const Vector3& direction,
                                 const BoundaryCheck& bcheck) const {
   // global to local transformation
-  auto lpResult = globalToLocal(gctx, position, momentum);
+  auto lpResult = globalToLocal(gctx, position, direction);
   if (lpResult.ok()) {
     return bcheck ? bounds().inside(lpResult.value(), bcheck) : true;
   }
@@ -253,7 +253,7 @@ bool Acts::Surface::insideBounds(const Vector2& lposition,
 
 Acts::RotationMatrix3 Acts::Surface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*position*/,
-    const Vector3& /*momentum*/) const {
+    const Vector3& /*direction*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 

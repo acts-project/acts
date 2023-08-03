@@ -60,8 +60,8 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
     return (min <= x) and (x < max);
   };
   auto isValidparticle = [&](const auto& p) {
-    const auto eta = Acts::VectorHelpers::eta(p.unitDirection());
-    const auto phi = Acts::VectorHelpers::phi(p.unitDirection());
+    const auto eta = Acts::VectorHelpers::eta(p.direction());
+    const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // find the corresponding hits for this particle
     const auto& hits = makeRange(particleHitsMap.equal_range(p.particleId()));

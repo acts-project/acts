@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <cmath>
@@ -21,7 +21,7 @@ namespace Acts {
 /// This class is only a light wrapper around a surface and a vector of
 /// parameters. Its main purpose is to provide many constructors for the
 /// underlying vector. Most accessors are generated from the
-/// SingleBoundTrackParameters equivalent and thus may be expensive
+/// GenericBoundTrackParameters equivalent and thus may be expensive
 /// @tparam charge_t Helper type to interpret the particle charge/momentum
 /// @note This class holds shared ownership on its reference surface.
 /// @note The accessors for parameters, covariance, position, etc.
@@ -31,7 +31,7 @@ namespace Acts {
 /// TODO Add constructor from range and projector maybe?
 template <typename charge_t>
 class MultiComponentBoundTrackParameters {
-  using SingleParameters = SingleBoundTrackParameters<charge_t>;
+  using SingleParameters = GenericBoundTrackParameters<charge_t>;
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       m_components;
@@ -157,7 +157,7 @@ class MultiComponentBoundTrackParameters {
   /// Reference surface onto which the parameters are bound.
   const Surface& referenceSurface() const { return *m_surface; }
 
-  /// Get the weight and a SingleBoundTrackParameters object for one component
+  /// Get the weight and a GenericBoundTrackParameters object for one component
   std::pair<double, SingleParameters> operator[](std::size_t i) const {
     return std::make_pair(
         std::get<double>(m_components[i]),

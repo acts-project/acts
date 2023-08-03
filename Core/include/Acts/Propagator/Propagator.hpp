@@ -14,6 +14,7 @@
 // clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -23,7 +24,6 @@
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <optional>
@@ -136,7 +136,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
     eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
-    eoptions.maxStepSize = direction * std::abs(maxStepSize);
+    eoptions.maxStepSize = maxStepSize;
     eoptions.targetTolerance = targetTolerance;
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
@@ -162,7 +162,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     mass = pOptions.mass;
     maxSteps = pOptions.maxSteps;
     maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
-    maxStepSize = direction * std::abs(pOptions.maxStepSize);
+    maxStepSize = pOptions.maxStepSize;
     targetTolerance = pOptions.targetTolerance;
     pathLimit = direction * std::abs(pOptions.pathLimit);
     loopProtection = pOptions.loopProtection;
