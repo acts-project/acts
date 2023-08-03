@@ -21,45 +21,61 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  
 # File to accumulate the histcmp results
 histcmp_results=$outdir/histcmp_results.csv
 
-SPYRAL_BIN="spyral"
+SPYRAL_BIN=${SPYRAL_BIN:=spyral}
 SPYRAL="${SPYRAL_BIN} run -i 0.05 --summary"
 
-mkdir ${outdir}/memory
+mkdir -p ${outdir}/memory
+
+set +e
+ec=0
 
 source $SCRIPT_DIR/setup.sh
+
+function run_physmon_gen() {
+    title=$1
+    slug=$2
+
+    script=CI/physmon/workflows/physmon_${slug}.py
+
+    $SPYRAL -l "$title" -o "$outdir/memory/mem_${slug}.csv" -- ${script} $outdir 2>&1 > $outdir/run_${slug}.log
+
+    this_ec=$?
+    ec=$(($ec | $this_ec))
+
+    if [ $this_ec -ne 0 ]; then
+      echo "::error::🟥 Dataset generation failed: ${script} -> ec=$this_ec"
+    else
+      echo "::notice::✅ Dataset generation succeeded: ${script}"   
+    fi
+
+    $SPYRAL_BIN plot $outdir/memory/mem_${slug}.csv --output $outdir/memory
+}
+
 echo "::group::Generate validation dataset"
 if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
-    $SPYRAL -l "Truth Tracking KF" -o "$outdir/memory/mem_truth_tracking_kalman.csv" -- CI/physmon/workflows/physmon_truth_tracking_kalman.py $outdir 2>&1 > $outdir/run_truth_tracking_kalman.log
+    run_physmon_gen "Truth Tracking KF" "truth_tracking_kalman"
 fi
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
-    $SPYRAL -l "Truth Tracking GSF" -o "$outdir/memory/mem_truth_tracking_gsf.csv" -- CI/physmon/workflows/physmon_truth_tracking_gsf.py $outdir 2>&1 > $outdir/run_truth_tracking_gsf.log
+    run_physmon_gen "Truth Tracking GSF" "truth_tracking_gsf"
 fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
-    $SPYRAL -l "CKF Tracking" -o "$outdir/memory/mem_ckf_tracking.csv" -- CI/physmon/workflows/physmon_ckf_tracking.py $outdir 2>&1 > $outdir/run_ckf_tracking.log
+    run_physmon_gen "CKF Tracking" "ckf_tracking"
 fi
 if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
-    $SPYRAL -l "Vertexing" -o "$outdir/memory/mem_vertexing.csv" -- CI/physmon/workflows/physmon_vertexing.py $outdir 2>&1 > $outdir/run_vertexing.log
+    run_physmon_gen "Vertexing" "vertexing"
 fi
 if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
-    $SPYRAL -l "Simulation" -o "$outdir/memory/mem_simulation.csv" -- CI/physmon/workflows/physmon_simulation.py $outdir 2>&1 > $outdir/run_simulation.log
+    run_physmon_gen "Simulation" "simulation"
 fi
 echo "::endgroup::"
 
-$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_kalman.csv --output $outdir/memory
-$SPYRAL_BIN plot $outdir/memory/mem_truth_tracking_gsf.csv --output $outdir/memory
-$SPYRAL_BIN plot $outdir/memory/mem_ckf_tracking.csv --output $outdir/memory
-$SPYRAL_BIN plot $outdir/memory/mem_vertexing.csv --output $outdir/memory
-$SPYRAL_BIN plot $outdir/memory/mem_simulation.csv --output $outdir/memory
-
-set +e
-
-ec=0
 
 function run_histcmp() {
     a=$1
     b=$2
     title=$3
     slug=$4
+    shift 4
 
     echo "::group::Comparing $a vs. $b"
 
@@ -73,7 +89,7 @@ function run_histcmp() {
       ec=1
     fi
 
-    histcmp \
+    histcmp $a $b \
         --label-reference=reference \
         --label-monitored=monitored \
         --title="$title" \
@@ -108,7 +124,7 @@ function full_chain() {
         $outdir/performance_seeding_${suffix}.root \
         $refdir/performance_seeding_${suffix}.root \
         "Seeding ${suffix}" \
-        -c $config \
+        -c $config
     fi
     
     run_histcmp \
@@ -168,6 +184,7 @@ function full_chain() {
         $refdir/tracksummary_ckf_${suffix}_hist.root \
         "Track Summary CKF ${suffix}" \
         tracksummary_ckf_${suffix}
+
 }
 
 function simulation() {

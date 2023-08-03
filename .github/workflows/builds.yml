@@ -309,7 +309,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.6.2 spyral-cli==1.1.0 matplotlib
+          && pip3 install histcmp==0.6.3 spyral-cli==1.1.1 matplotlib
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
