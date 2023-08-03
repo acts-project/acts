@@ -11,6 +11,13 @@ template <typename T>
 std::list<T> vecToList(const std::vector<T> &v) {
   return std::list<T>(v.begin(), v.end());
 }
+
+std::ostream &operator<<(std::ostream &os, const ActsExamples::ProtoTrack &track) {
+  for(auto u : track) {
+    os << u << " ";
+  }
+  return os;
+}
 }  // namespace
 
 ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
@@ -39,10 +46,17 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
     for (auto testTrackIt = testTracks.begin(); testTrackIt != testTracks.end();
          ++testTrackIt) {
       const auto &testTrack = *testTrackIt;
+      ACTS_VERBOSE("ref track: " << refTrack);
+      ACTS_VERBOSE("test track: " << testTrack);
+
+
       intersection.resize(std::max(testTrack.size(), refTrack.size()));
       const auto it = std::set_intersection(refTrack.begin(), refTrack.end(),
                                             testTrack.begin(), testTrack.end(),
                                             intersection.begin());
+
+      ACTS_VERBOSE("intersection: " << intersection);
+
       const auto size =
           static_cast<double>(std::distance(intersection.begin(), it));
       intersection.clear();
