@@ -80,9 +80,31 @@ struct WeightedComponentReducerLoop {
   static ActsScalar absoluteMomentum(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * std::abs(cmp.state.absCharge /
-                                             cmp.state.pars[eFreeQOverP]);
+        [&s](const auto& sum, const auto& cmp) -> ActsScalar {
+          return sum + cmp.weight * s.particleHypothesis.extractMomentum(
+                                        cmp.state.pars[eFreeQOverP]);
+        });
+  }
+
+  template <typename stepper_state_t>
+  static Vector3 momentum(const stepper_state_t& s) {
+    return std::accumulate(
+        s.components.begin(), s.components.end(), Vector3::Zero().eval(),
+        [&s](const auto& sum, const auto& cmp) -> Vector3 {
+          return sum + cmp.weight *
+                           s.particleHypothesis.extractMomentum(
+                               cmp.state.pars[eFreeQOverP]) *
+                           cmp.state.pars.template segment<3>(eFreeDir0);
+        });
+  }
+
+  template <typename stepper_state_t>
+  static ActsScalar charge(const stepper_state_t& s) {
+    return std::accumulate(
+        s.components.begin(), s.components.end(), ActsScalar{0.},
+        [&s](const auto& sum, const auto& cmp) -> ActsScalar {
+          return sum + cmp.weight * s.particleHypothesis.extractCharge(
+                                        cmp.state.pars[eFreeQOverP]);
         });
   }
 

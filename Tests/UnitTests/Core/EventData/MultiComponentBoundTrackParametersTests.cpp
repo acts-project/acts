@@ -64,8 +64,8 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Vector3::Ones(), Vector3::Ones().normalized());
 
-    const GenericBoundTrackParameters single_pars(surface, BoundVector::Ones(),
-                                                  cov, particleHypothesis);
+    const BoundTrackParameters single_pars(surface, BoundVector::Ones(), cov,
+                                           particleHypothesis);
 
     const auto multi_pars = [&]() {
       std::vector<

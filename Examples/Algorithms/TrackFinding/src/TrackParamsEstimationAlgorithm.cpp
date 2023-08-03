@@ -120,8 +120,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       continue;
     } else {
       const auto& params = optParams.value();
-      double charge = std::copysign(1, params[Acts::eBoundQOverP]);
-      trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
+      trackParameters.emplace_back(surface->getSharedPtr(), params,
                                    m_covariance,
                                    Acts::ParticleHypothesis::pion());
     }

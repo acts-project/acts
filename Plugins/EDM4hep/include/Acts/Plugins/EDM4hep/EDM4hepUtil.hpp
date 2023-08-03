@@ -104,10 +104,9 @@ void writeTrack(
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
 
-    // This makes the hard assumption that |q| = 1
-    GenericBoundTrackParameters<SinglyCharged> params{
-        state.referenceSurface().getSharedPtr(), state.parameters(),
-        state.covariance(), track.particleHypothesis()};
+    BoundTrackParameters params{state.referenceSurface().getSharedPtr(),
+                                state.parameters(), state.covariance(),
+                                track.particleHypothesis()};
 
     // Convert to LCIO track parametrization expected by EDM4hep
     detail::Parameters converted =
@@ -136,9 +135,9 @@ void writeTrack(
   auto& ipState = outTrackStates.emplace_back();
 
   // Convert the track parameters at the IP
-  GenericBoundTrackParameters<SinglyCharged> trackParams{
-      track.referenceSurface().getSharedPtr(), track.parameters(),
-      track.covariance(), track.particleHypothesis()};
+  BoundTrackParameters trackParams{track.referenceSurface().getSharedPtr(),
+                                   track.parameters(), track.covariance(),
+                                   track.particleHypothesis()};
 
   // Convert to LCIO track parametrization expected by EDM4hep
   auto converted =
@@ -167,6 +166,7 @@ void writeTrack(
     to.addToTrackStates(trackState);
   }
 }
+
 template <typename track_container_t, typename track_state_container_t,
           template <typename> class holder_t>
 void readTrack(const edm4hep::Track& from,
@@ -248,5 +248,6 @@ void readTrack(const edm4hep::Track& from,
   track.nDoF() = from.getNdf();
   track.nMeasurements() = track.nTrackStates();
 }
+
 }  // namespace EDM4hepUtil
 }  // namespace Acts

@@ -36,8 +36,6 @@
 #include <tuple>
 
 namespace Acts {
-template <class charge_t>
-class GenericBoundTrackParameters;
 
 /// @brief straight line stepper based on Surface intersection
 ///
@@ -141,10 +139,9 @@ class StraightLineStepper {
 
   StraightLineStepper() = default;
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const GenericBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {

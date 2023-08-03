@@ -123,13 +123,15 @@ BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
 // `get3dVertexCompatibility`.
 BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
                      l0, t0, phi, theta, p, q) {
+  auto particleHypothesis = ParticleHypothesis::pion();
+
   BoundVector par;
   par[eBoundLoc0] = d0;
   par[eBoundLoc1] = l0;
   par[eBoundTime] = t0;
   par[eBoundPhi] = phi;
   par[eBoundTheta] = theta;
-  par[eBoundQOverP] = q / p;
+  par[eBoundQOverP] = particleHypothesis.qOverP(p, q);
 
   Estimator ipEstimator = makeEstimator(2_T);
   Estimator::State state(magFieldCache());
@@ -137,8 +139,8 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   Vector3 refPosition(0., 0., 0.);
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
   // create the track
-  BoundTrackParameters myTrack(perigeeSurface, par,
-                               makeBoundParametersCovariance());
+  BoundTrackParameters myTrack(
+      perigeeSurface, par, makeBoundParametersCovariance(), particleHypothesis);
 
   // initial distance to the reference position in the perigee frame
   double distT = std::hypot(d0, l0);
@@ -197,8 +199,9 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
       Surface::makeShared<PerigeeSurface>(pos1.segment<3>(ePos0));
   // Some fixed track parameter values
   auto params1 = BoundTrackParameters::create(
-                     perigeeSurface, geoContext, pos1, mom1, mom1.norm(), 1_e,
-                     BoundTrackParameters::CovarianceMatrix::Identity())
+                     perigeeSurface, geoContext, pos1, mom1, 1_e / mom1.norm(),
+                     BoundTrackParameters::CovarianceMatrix::Identity(),
+                     ParticleHypothesis::pion())
                      .value();
 
   // Compare w/ desired result from Athena unit test
@@ -237,7 +240,8 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   // Form the bound track parameters at the ip
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(ip_pos.head<3>());
   BoundTrackParameters track(perigeeSurface, trk_par,
-                             makeBoundParametersCovariance());
+                             makeBoundParametersCovariance(),
+                             ParticleHypothesis::pion());
 
   Vector3 direction{0., 1., 0.};
   auto lifetimes_signs = ipEstimator.getLifetimesSignOfTrack(
@@ -288,7 +292,8 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(refPosition);
   // create track and vertex
   BoundTrackParameters track(perigeeSurface, par,
-                             makeBoundParametersCovariance());
+                             makeBoundParametersCovariance(),
+                             ParticleHypothesis::pionLike(std::abs(q)));
   Vertex<BoundTrackParameters> myConstraint(vtxPos, makeVertexCovariance(), {});
 
   // check that computed impact parameters are meaningful

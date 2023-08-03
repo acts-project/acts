@@ -132,7 +132,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
           m_cfg.initialVarInflation[Acts::eBoundQOverP] * sigmaQOverP *
           sigmaQOverP;
 
-      parameters.emplace_back(perigee, params, q, cov, particleHypothesis);
+      parameters.emplace_back(perigee, params, cov, particleHypothesis);
     }
   }
 

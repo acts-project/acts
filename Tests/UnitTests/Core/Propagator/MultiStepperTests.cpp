@@ -593,8 +593,7 @@ void test_combined_curvilinear_state_function() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, pars, cov});
-  GenericBoundTrackParameters check_pars(surface, pars, cov,
-                                         particleHypothesis);
+  BoundTrackParameters check_pars(surface, pars, cov, particleHypothesis);
 
   MultiComponentBoundTrackParameters multi_pars(surface, cmps,
                                                 particleHypothesis);

@@ -82,8 +82,6 @@ struct SingleParticleSimulation {
 
     // Construct per-call options.
     PropagatorOptions options(geoCtx, magCtx);
-    options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
-    options.mass = particle.mass();
     // setup the interactor as part of the propagator options
     auto &actor = options.actionList.template get<Actor>();
     actor.generator = &generator;

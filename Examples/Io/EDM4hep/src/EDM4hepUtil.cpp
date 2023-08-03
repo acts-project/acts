@@ -278,10 +278,9 @@ void EDM4hepUtil::writeTrajectory(
 
     edm4hep::TrackState trackState;
 
-    // This makes the hard assumption that |q| = 1
-    Acts::GenericBoundTrackParameters<Acts::SinglyCharged> parObj{
-        state.referenceSurface().getSharedPtr(), state.parameters(),
-        state.covariance(), particleHypothesis};
+    Acts::BoundTrackParameters parObj{state.referenceSurface().getSharedPtr(),
+                                      state.parameters(), state.covariance(),
+                                      particleHypothesis};
 
     // Convert to LCIO track parametrization expected by EDM4hep
     // This will create an ad-hoc perigee surface if the input parameters are

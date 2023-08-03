@@ -161,10 +161,9 @@ class EigenStepper {
   EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
                double overstepLimit = 100 * UnitConstants::um);
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const GenericBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max()) const;
 
@@ -215,7 +214,7 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double absoluteMomentum(const State& state) const {
-    return particleHypothesis(state).pFromQOP(qOverP(state));
+    return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
   /// Momentum accessor
@@ -229,7 +228,7 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return particleHypothesis(state).qFromQOP(qOverP(state));
+    return particleHypothesis(state).extractCharge(qOverP(state));
   }
 
   /// Particle hypothesis

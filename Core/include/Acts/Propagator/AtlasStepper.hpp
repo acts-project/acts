@@ -297,10 +297,9 @@ class AtlasStepper {
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_bField(std::move(bField)){};
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const GenericBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   Direction navDir = Direction::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
