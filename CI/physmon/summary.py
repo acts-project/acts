@@ -6,6 +6,8 @@ import re
 import functools
 import os
 
+HERALD_URL = "https://herald.dokku.paulgessinger.com/view/{repo}/runs/{run_id}/artifacts/{artifact_name}/{path}"
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("inputs", nargs="+")
@@ -68,8 +70,18 @@ if args.html:
             """
         )
 
+is_ci = "CI" in os.environ
 if args.md:
     with open(args.md, mode="w", encoding="utf-8") as f:
         f.write("# physmon summary\n")
         for h, s in summary.items():
-            f.write(f"  - {'✅' if s['total'] else '🔴'} {s['title']}\n")
+            if is_ci:
+                url = HERALD_URL.format(
+                    repo=os.environ["GITHUB_REPOSITORY"],
+                    run_id=os.environ["GITHUB_RUN_ID"],
+                    artifact_name="physmon",
+                    path=os.path.relpath(h, args.base),
+                )
+                f.write(f"  - {'✅' if s['total'] else '🔴'} [{s['title']}]({url})\n")
+            else:
+                f.write(f"  - {'✅' if s['total'] else '🔴'} {s['title']}\n")
