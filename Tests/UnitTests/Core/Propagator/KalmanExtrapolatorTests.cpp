@@ -133,7 +133,8 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
       0, 0;
   // The start parameters
   CurvilinearTrackParameters start(Vector4(-3_m, 0, 0, 42_ns), 0_degree,
-                                   90_degree, 1_GeV, 1_e, cov);
+                                   90_degree, 1_e / 1_GeV, cov,
+                                   ParticleHypothesis::pion());
 
   // Create the ActionList and AbortList
   using StepWiseResult = StepWiseActor::result_type;

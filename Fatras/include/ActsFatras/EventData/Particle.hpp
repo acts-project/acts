@@ -153,6 +153,10 @@ class Particle {
   constexpr ProcessType process() const { return m_process; }
   /// PDG particle number that identifies the type.
   constexpr Acts::PdgParticle pdg() const { return m_pdg; }
+  /// Absolute PDG particle number that identifies the type.
+  constexpr Acts::PdgParticle absolutePdg() const {
+    return Acts::makeAbsolutePdgParticle(pdg());
+  }
   /// Particle charge.
   constexpr Scalar charge() const { return m_charge; }
   /// Particle absolute charge.
@@ -162,8 +166,7 @@ class Particle {
 
   /// Particle hypothesis.
   constexpr Acts::ParticleHypothesis hypothesis() const {
-    return Acts::ParticleHypothesis(Acts::makeAbsolutePdgParticle(pdg()),
-                                    mass(), absoluteCharge());
+    return Acts::ParticleHypothesis(absolutePdg(), mass(), absoluteCharge());
   }
   /// Particl qOverP.
   constexpr Scalar qOverP() const {

@@ -15,6 +15,7 @@
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
@@ -94,7 +95,6 @@ struct PropState {
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
   struct {
-    double mass = 42.;
     double tolerance = 1e-4;
     double stepSizeCutOff = 0.;
     unsigned int maxRungeKuttaStepTrials = 10000;
@@ -192,7 +192,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   double charge = -1.;
 
   // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom);
+  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
+                                std::nullopt, ParticleHypothesis::pion());
   EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
                                 navDir, stepSize);
 
@@ -210,16 +211,16 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
-                                        1 / absMom);
+  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
+                                 std::nullopt, ParticleHypothesis::pion0());
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
                                   navDir, stepSize);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
-                                          1 / absMom, cov);
+  ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom,
+                                   std::nullopt, ParticleHypothesis::pion0());
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
                                   navDir, stepSize);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -244,7 +245,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                cov);
+                                cov, ParticleHypothesis::pion());
 
   // Build the state and the stepper
   EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
@@ -336,8 +337,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
-                                 charge2, cov2);
+  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
+                                 charge2 / absMom2, cov2,
+                                 ParticleHypothesis::pion());
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
   navDir = Direction::Forward;
@@ -348,7 +350,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
     std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
                                        cp, navDir, stepSize);
     copy.pars = state.pars;
-    copy.absCharge = state.absCharge;
     copy.covTransport = state.covTransport;
     copy.cov = state.cov;
     copy.navDir = state.navDir;
@@ -449,10 +450,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir.normalized());
-  auto bp =
-      BoundTrackParameters::create(plane, tgContext, makeVector4(pos, time),
-                                   dir, charge / absMom, cov)
-          .value();
+  auto bp = BoundTrackParameters::create(
+                plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
+                cov, ParticleHypothesis::pion())
+                .value();
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), cp,
                                   navDir, stepSize);
 
@@ -580,8 +581,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   Covariance cov = Covariance::Identity();
   const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 1_GeV * startDir;
-  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_GeV, 1_e,
-                                        cov);
+  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 1_GeV,
+                                        cov, ParticleHypothesis::pion());
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -687,8 +688,8 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   Covariance cov = Covariance::Identity();
   const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 5_GeV * startDir;
-  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 5_GeV, 1_e,
-                                        cov);
+  const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 5_GeV,
+                                        cov, ParticleHypothesis::pion());
 
   // Create action list for surface collection
   ActionList<StepCollector> aList;
@@ -848,8 +849,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   Navigator naviDet({det, true, true, true});
 
   // Set initial parameters for the particle track
-  CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree, 5_GeV,
-                                  1_e, Covariance::Identity());
+  CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,
+                                  1_e / 5_GeV, Covariance::Identity(),
+                                  ParticleHypothesis::pion());
 
   // Create action list for surface collection
   AbortList<EndOfWorld> abortList;
@@ -961,9 +963,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Build launcher through material
   // Set initial parameters for the particle track by using the result of the
   // first volume
-  CurvilinearTrackParameters sbtpPiecewise(makeVector4(endParams.first, 0),
-                                           endParams.second,
-                                           1 / endParams.second.norm());
+  CurvilinearTrackParameters sbtpPiecewise(
+      makeVector4(endParams.first, 0), endParams.second,
+      1_e / endParams.second.norm(), std::nullopt, ParticleHypothesis::pion());
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
@@ -1092,7 +1094,8 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
 
   // Set initial parameters for the particle track
   CurvilinearTrackParameters sbtp(Vector4::Zero(), 0_degree, 90_degree,
-                                  1_e / 1_GeV, Covariance::Identity());
+                                  1_e / 1_GeV, Covariance::Identity(),
+                                  ParticleHypothesis::pion());
 
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,

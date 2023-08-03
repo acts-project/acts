@@ -252,6 +252,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
 void EDM4hepUtil::writeTrajectory(
     const Acts::GeometryContext& gctx, double Bz, const Trajectories& from,
     edm4hep::MutableTrack to, std::size_t fromIndex,
+    const Acts::ParticleHypothesis& particleHypothesis,
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap) {
   const auto& multiTrajectory = from.multiTrajectory();
   auto trajectoryState =
@@ -280,7 +281,7 @@ void EDM4hepUtil::writeTrajectory(
     // This makes the hard assumption that |q| = 1
     Acts::GenericBoundTrackParameters<Acts::SinglyCharged> parObj{
         state.referenceSurface().getSharedPtr(), state.parameters(),
-        state.covariance()};
+        state.covariance(), particleHypothesis};
 
     // Convert to LCIO track parametrization expected by EDM4hep
     // This will create an ad-hoc perigee surface if the input parameters are

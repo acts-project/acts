@@ -278,8 +278,8 @@ struct FitterTester {
     Acts::Vector4 posOuter = start.fourPosition(geoCtx);
     posOuter[Acts::ePos0] = 3_m;
     Acts::CurvilinearTrackParameters startOuter(
-        posOuter, start.unitDirection(), start.absoluteMomentum(),
-        start.charge(), start.covariance());
+        posOuter, start.unitDirection(), start.qOverP(), start.covariance(),
+        Acts::ParticleHypothesis::pion());
 
     options.referenceSurface = &startOuter.referenceSurface();
     options.propagatorPlainOptions.direction = Acts::Direction::Backward;

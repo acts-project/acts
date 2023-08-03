@@ -13,6 +13,7 @@
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
@@ -40,6 +41,8 @@ static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 namespace detail {
 struct Parameters {
   Acts::ActsVector<6> values;
+  // Dummy default
+  ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
   std::optional<Acts::ActsSymMatrix<6>> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
@@ -51,11 +54,11 @@ ActsSymMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega, double Bz);
 void unpackCovariance(const float* from, ActsSymMatrix<6>& to);
 void packCovariance(const ActsSymMatrix<6>& from, float* to);
 
-Parameters convertTrackParametersToEdm4hep(
-    const Acts::GeometryContext& gctx, double Bz,
-    const GenericBoundTrackParameters<SinglyCharged>& params);
+Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
+                                           double Bz,
+                                           const BoundTrackParameters& params);
 
-GenericBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
+BoundTrackParameters convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
@@ -104,7 +107,7 @@ void writeTrack(
     // This makes the hard assumption that |q| = 1
     GenericBoundTrackParameters<SinglyCharged> params{
         state.referenceSurface().getSharedPtr(), state.parameters(),
-        state.covariance()};
+        state.covariance(), track.particleHypothesis()};
 
     // Convert to LCIO track parametrization expected by EDM4hep
     detail::Parameters converted =
@@ -135,7 +138,7 @@ void writeTrack(
   // Convert the track parameters at the IP
   GenericBoundTrackParameters<SinglyCharged> trackParams{
       track.referenceSurface().getSharedPtr(), track.parameters(),
-      track.covariance()};
+      track.covariance(), track.particleHypothesis()};
 
   // Convert to LCIO track parametrization expected by EDM4hep
   auto converted =

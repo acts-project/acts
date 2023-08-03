@@ -53,7 +53,6 @@ struct PropState {
   StraightLineStepper::State stepping;
   /// Propagator options which only carry the particle's mass
   struct {
-    double mass = 42.;
   } options;
 };
 
@@ -79,7 +78,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   double charge = -1.;
 
   // Test charged parameters without covariance matrix
-  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, absMom, charge);
+  CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
+                                std::nullopt, ParticleHypothesis::pion());
   StraightLineStepper::State slsState(tgContext, mfContext, cp, navDir,
                                       stepSize, tolerance);
 
@@ -103,16 +103,15 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   BOOST_CHECK_EQUAL(slsState.tolerance, tolerance);
 
   // Test without charge and covariance matrix
-  NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
-                                        1 / absMom);
+  CurvilinearTrackParameters ncp(makeVector4(pos, time), dir, 1 / absMom,
+                                 std::nullopt, ParticleHypothesis::pion0());
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, navDir,
                                         stepSize, tolerance);
-  BOOST_CHECK_EQUAL(slsState.absCharge, 0.);
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
-                                          1 / absMom, cov);
+  ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
+                                   ParticleHypothesis::pion0());
   slsState = StraightLineStepper::State(tgContext, mfContext, ncp, navDir,
                                         stepSize, tolerance);
   BOOST_CHECK_NE(slsState.jacToGlobal, BoundToFreeMatrix::Zero());
@@ -138,7 +137,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double charge = -1.;
   Covariance cov = 8. * Covariance::Identity();
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom,
-                                cov);
+                                cov, ParticleHypothesis::pion());
 
   // Build the state and the stepper
   StraightLineStepper::State slsState(tgContext, mfContext, cp, navDir,
@@ -236,8 +235,9 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double absMom2 = 8.5;
   double charge2 = 1.;
   BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
-  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
-                                 charge2, cov2);
+  CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
+                                 charge2 / absMom2, cov2,
+                                 ParticleHypothesis::pion());
   BOOST_CHECK(cp2.covariance().has_value());
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
@@ -326,10 +326,10 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   /// Repeat with surface related methods
   auto plane = Surface::makeShared<PlaneSurface>(pos, dir);
-  auto bp =
-      BoundTrackParameters::create(plane, tgContext, makeVector4(pos, time),
-                                   dir, charge / absMom, cov)
-          .value();
+  auto bp = BoundTrackParameters::create(
+                plane, tgContext, makeVector4(pos, time), dir, charge / absMom,
+                cov, ParticleHypothesis::pion())
+                .value();
   slsState = StraightLineStepper::State(tgContext, mfContext, cp, navDir,
                                         stepSize, tolerance);
 

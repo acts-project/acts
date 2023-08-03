@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
@@ -29,6 +31,7 @@ namespace Test {
 
 /// @brief Simplified stepper state
 struct StepperState {
+  ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
   Vector3 pos, dir;
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
@@ -43,8 +46,6 @@ struct NaivgatorState {
 /// @brief Simplified propgator state
 struct State {
   struct {
-    double mass = 0;
-    int absPdgCode = 0;
   } options;
 
   StepperState stepping;
@@ -85,6 +86,8 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Create a propagator state
   State state;
+  state.stepping.particleHypothesis =
+      ParticleHypothesis(static_cast<PdgParticle>(11), 10., 9.);
   state.stepping.pos = Vector3(1., 2., 3.);
   state.stepping.dir = Vector3(4., 5., 6.);
   state.stepping.t = 7.;
@@ -92,8 +95,6 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.q = 9.;
   state.stepping.covTransport = true;
   state.stepping.navDir = Direction::Backward;
-  state.options.mass = 10.;
-  state.options.absPdgCode = 11;
   state.navigation.currentVolume = volume.get();
 
   Stepper stepper;
@@ -109,8 +110,9 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
                     stepper.absoluteMomentum(state.stepping));
   BOOST_CHECK_EQUAL(volMatInt.absQ, std::abs(stepper.charge(state.stepping)));
   CHECK_CLOSE_ABS(volMatInt.qOverP, stepper.qOverP(state.stepping), 1e-6);
-  BOOST_CHECK_EQUAL(volMatInt.mass, state.options.mass);
-  BOOST_CHECK_EQUAL(volMatInt.pdg, state.options.absPdgCode);
+  BOOST_CHECK_EQUAL(volMatInt.mass, state.stepping.particleHypothesis.mass());
+  BOOST_CHECK_EQUAL(volMatInt.absPdg,
+                    state.stepping.particleHypothesis.absPdg());
   BOOST_CHECK_EQUAL(volMatInt.performCovarianceTransport,
                     state.stepping.covTransport);
   BOOST_CHECK_EQUAL(volMatInt.navDir, state.stepping.navDir);

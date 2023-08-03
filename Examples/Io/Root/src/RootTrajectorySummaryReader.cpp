@@ -204,8 +204,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
 
+      // TODO we do not have a hypothesis at hand here. defaulting to pion
       trackParameterCollection.push_back(Acts::BoundTrackParameters(
-          perigeeSurface, paramVec, std::move(covMat)));
+          perigeeSurface, paramVec, std::move(covMat),
+          Acts::ParticleHypothesis::pion()));
     }
 
     unsigned int nTruthParticles = m_t_vx->size();
