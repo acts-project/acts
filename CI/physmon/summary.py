@@ -26,11 +26,13 @@ with open(args.results) as f:
     reader = csv.reader(f)
     for row in reader:
         title, slug, ec = row
-        summary.append( {
-            "title": title,
-            "total": ec == "0",
-            "path": f"{slug}.html",
-        })
+        summary.append(
+            {
+                "title": title,
+                "total": ec == "0",
+                "path": f"{slug}.html",
+            }
+        )
 
 if args.html:
     with open(args.html, mode="w", encoding="utf-8") as f:
