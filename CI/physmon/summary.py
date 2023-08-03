@@ -75,13 +75,14 @@ if args.md:
     with open(args.md, mode="w", encoding="utf-8") as f:
         f.write("# physmon summary\n")
         for h, s in summary.items():
+            path = os.path.relpath(h, args.base)
             if is_ci:
                 url = HERALD_URL.format(
                     repo=os.environ["GITHUB_REPOSITORY"],
                     run_id=os.environ["GITHUB_RUN_ID"],
                     artifact_name="physmon",
-                    path=os.path.relpath(h, args.base),
+                    path=path,
                 )
-                f.write(f"  - {'✅' if s['total'] else '🔴'} [{s['title']}]({url})\n")
             else:
-                f.write(f"  - {'✅' if s['total'] else '🔴'} {s['title']}\n")
+                url = path
+            f.write(f"  - {'✅' if s['total'] else '🔴'} [{s['title']}]({url})\n")
