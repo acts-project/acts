@@ -147,11 +147,12 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     FreeVector correctedFreeParams = params;
 
     // Reintersect to get the corrected free params without boundary check
-    SurfaceMultiIntersection intersection =
-        surface.intersect(geoContext, params.segment<3>(eFreePos0),
-                          navDir * params.segment<3>(eFreeDir0), false);
-    correctedFreeParams.segment<3>(eFreePos0) =
-        intersection.closest().position();
+    SurfaceIntersection intersection =
+        surface
+            .intersect(geoContext, params.segment<3>(eFreePos0),
+                       navDir * params.segment<3>(eFreeDir0), false)
+            .closest();
+    correctedFreeParams.segment<3>(eFreePos0) = intersection.position();
 
     // Transform the free to bound
     auto result = detail::transformFreeToBoundParameters(correctedFreeParams,
