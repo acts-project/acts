@@ -57,12 +57,6 @@ class SurfaceStub : public Surface {
     return Result<Vector2>::success(Vector2{20., 20.});
   }
 
-  Vector3 coerceToSurface(const GeometryContext& /*gctx*/,
-                          const Vector3& /*position*/,
-                          const Vector3& /*direction*/) const final {
-    return Vector3{20., 20., 0.0};
-  }
-
   /// Calculation of the path correction for incident
   double pathCorrection(const GeometryContext& /*cxt*/, const Vector3& /*gpos*/,
                         const Vector3& /*gmom*/) const final {

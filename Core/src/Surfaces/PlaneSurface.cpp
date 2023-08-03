@@ -173,14 +173,6 @@ Acts::Vector3 Acts::PlaneSurface::binningPosition(
   return center(gctx);
 }
 
-Acts::Vector3 Acts::PlaneSurface::coerceToSurface(
-    const GeometryContext& gctx, const Vector3& position) const {
-  // @TODO: Bypass the transform matrix multiplication
-  Vector3 local = transform(gctx).inverse() * position;
-  local.z() = 0;
-  return transform(gctx) * local;
-}
-
 double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
                                           const Vector3& /*position*/,
                                           const Vector3& direction) const {

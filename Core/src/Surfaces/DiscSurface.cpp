@@ -360,14 +360,6 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx) const {
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-Acts::Vector3 Acts::DiscSurface::coerceToSurface(
-    const GeometryContext& gctx, const Vector3& position) const {
-  // @TODO: Bypass the transform matrix multiplication
-  Vector3 local = transform(gctx).inverse() * position;
-  local[eFreePos2] = 0;
-  return transform(gctx) * local;
-}
-
 Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
                                                  BinningValue bValue) const {
   if (bValue == binR || bValue == binPhi) {

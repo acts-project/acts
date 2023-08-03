@@ -14,9 +14,7 @@
 namespace Acts {
 
 Vector3 RegularSurface::normal(const GeometryContext& gctx, const Vector3& pos,
-                               const Vector3& direction) const {
-  assert(isOnSurface(gctx, pos, direction, false) && "Not on surface");
-  (void)direction;
+                               const Vector3& /*direction*/) const {
   return normal(gctx, pos);
 }
 
@@ -33,9 +31,4 @@ Vector3 RegularSurface::localToGlobal(const GeometryContext& gctx,
   return localToGlobal(gctx, lposition);
 }
 
-Vector3 RegularSurface::coerceToSurface(const GeometryContext& gctx,
-                                        const Vector3& position,
-                                        const Vector3& /*direction*/) const {
-  return coerceToSurface(gctx, position);
-}
 }  // namespace Acts
