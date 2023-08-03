@@ -5,13 +5,14 @@ import argparse
 import re
 import functools
 import os
+import csv
 
 HERALD_URL = "https://herald.dokku.paulgessinger.com/view/{repo}/runs/{run_id}/artifacts/{artifact_name}/{path}"
 IS_CI = "GITHUB_ACTIONS" in os.environ
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("inputs", nargs="+")
+parser.add_argument("results")
 parser.add_argument("--base", required=True)
 parser.add_argument("--html")
 parser.add_argument("--md")
@@ -22,7 +23,12 @@ re_check = re.compile(r'<a.*title="(.*)">\s*(.)\s*<\/a>', re.RegexFlag.MULTILINE
 
 summary = {}
 
-for h in args.inputs:
+with open(args.results) as f:
+    reader = csv.reader(f)
+    for row in reader:
+        title, slug, ec = row
+
+for h in args.results:
     with open(h, mode="r", encoding="utf-8") as f:
         try:
             content = f.read()

@@ -18,8 +18,11 @@ refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  )
 
+# File to accumulate the histcmp results
+histcmp_results=$outdir/histcmp_results.csv
+
 SPYRAL_BIN="spyral"
-SPYRAL="${SPYRAL_BIN} run -i 0.1 --summary"
+SPYRAL="${SPYRAL_BIN} run -i 0.05 --summary"
 
 mkdir ${outdir}/memory
 
@@ -52,18 +55,40 @@ set +e
 
 ec=0
 
-function run() {
+function run_histcmp() {
     a=$1
     b=$2
+    title=$3
+    slug=$4
 
     echo "::group::Comparing $a vs. $b"
+
+    if [ ! -f "$a" ]; then
+      echo "::error::histcmp failed: File $a does not exist"
+      ec=1
+    fi
+
+    if [ ! -f "$b" ]; then
+      echo "::error::histcmp failed: File $b does not exist"
+      ec=1
+    fi
 
     histcmp \
         --label-reference=reference \
         --label-monitored=monitored \
+        --title="$title" \
+        -o $outdir/${slug}.html \
+        -p $outdir/${slug}_plots \
         "$@"
 
-    ec=$(($ec | $?))
+    this_ec=$?
+    ec=$(($ec | $this_ec))
+
+    if [ $this_ec -ne 0 ]; then
+      echo "::error::histcmp failed (${slug}): ec=$this_ec"
+    fi
+
+    echo "\"${title}\",${slug},${this_ec}" >> $histcmp_results
 
     echo "::endgroup::"
 }
@@ -79,22 +104,19 @@ function full_chain() {
     echo $config
     
     if [ $suffix != truth_smeared ]; then
-	    run \
-  	      $outdir/performance_seeding_${suffix}.root \
-    	    $refdir/performance_seeding_${suffix}.root \
-      	  --title "Seeding ${suffix}" \
-        	-c $config \
-        	-o $outdir/seeding_${suffix}.html \
-        	-p $outdir/seeding_${suffix}_plots
+      run_histcmp \
+        $outdir/performance_seeding_${suffix}.root \
+        $refdir/performance_seeding_${suffix}.root \
+        "Seeding ${suffix}" \
+        -c $config \
     fi
     
-    run \
+    run_histcmp \
         $outdir/performance_ckf_${suffix}.root \
         $refdir/performance_ckf_${suffix}.root \
-        --title "CKF ${suffix}" \
-        -c $config \
-        -o $outdir/ckf_${suffix}.html \
-        -p $outdir/ckf_${suffix}_plots
+        "CKF ${suffix}" \
+        ckf_${suffix} \
+        -c $config
 
     Examples/Scripts/generic_plotter.py \
         $outdir/performance_ivf_${suffix}.root \
@@ -107,12 +129,11 @@ function full_chain() {
     # remove ntuple file because it's large
     rm $outdir/performance_ivf_${suffix}.root
 
-    run \
+    run_histcmp \
         $outdir/performance_ivf_${suffix}_hist.root \
         $refdir/performance_ivf_${suffix}_hist.root \
-        --title "IVF ${suffix}" \
-        -o $outdir/ivf_${suffix}.html \
-        -p $outdir/ivf_${suffix}_plots
+        "IVF ${suffix}" \
+        ivf_${suffix}
 
     Examples/Scripts/generic_plotter.py \
         $outdir/performance_amvf_${suffix}.root \
@@ -125,12 +146,11 @@ function full_chain() {
     # remove ntuple file because it's large
     rm $outdir/performance_amvf_${suffix}.root
 
-    run \
+    run_histcmp \
         $outdir/performance_amvf_${suffix}_hist.root \
         $refdir/performance_amvf_${suffix}_hist.root \
-        --title "AMVF ${suffix}" \
-        -o $outdir/amvf_${suffix}.html \
-        -p $outdir/amvf_${suffix}_plots
+        "AMVF ${suffix}" \
+        amvf_${suffix}
 
     Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_ckf_${suffix}.root \
@@ -143,12 +163,11 @@ function full_chain() {
     # remove ntuple file because it's large
     rm $outdir/tracksummary_ckf_${suffix}.root
 
-    run \
+    run_histcmp \
         $outdir/tracksummary_ckf_${suffix}_hist.root \
         $refdir/tracksummary_ckf_${suffix}_hist.root \
-        --title "Track Summary CKF ${suffix}" \
-        -o $outdir/tracksummary_ckf_${suffix}.html \
-        -p $outdir/tracksummary_ckf_${suffix}_plots
+        "Track Summary CKF ${suffix}" \
+        tracksummary_ckf_${suffix}
 }
 
 function simulation() {
@@ -167,12 +186,11 @@ function simulation() {
     # remove ntuple file because it's large
     rm $outdir/particles_initial_${suffix}.root
 
-    run \
+    run_histcmp \
         $outdir/particles_initial_${suffix}_hist.root \
         $refdir/particles_initial_${suffix}_hist.root \
-        --title "Particles inital ${suffix}" \
-        -o $outdir/particles_initial_${suffix}.html \
-        -p $outdir/particles_initial_${suffix}_plots
+        "Particles inital ${suffix}" \
+        particles_initial_${suffix}
 
     Examples/Scripts/generic_plotter.py \
         $outdir/particles_final_${suffix}.root \
@@ -185,12 +203,11 @@ function simulation() {
     # remove ntuple file because it's large
     rm $outdir/particles_final_${suffix}.root
 
-    run \
+    run_histcmp \
         $outdir/particles_final_${suffix}_hist.root \
         $refdir/particles_final_${suffix}_hist.root \
-        --title "Particles final ${suffix}" \
-        -o $outdir/particles_final_${suffix}.html \
-        -p $outdir/particles_final_${suffix}_plots
+        "Particles final ${suffix}" \
+        particles_final_${suffix}
 }
 
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
@@ -199,14 +216,13 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     full_chain seeded
     full_chain orthogonal
 
-    run \
+    run_histcmp \
         $outdir/performance_ambi_seeded.root \
         $refdir/performance_ambi_seeded.root \
-        --title "Ambisolver seeded" \
-        -o $outdir/ambi_seeded.html \
-        -p $outdir/ambi_seeded_plots
+        "Ambisolver seeded"
+        ambi_seeded
 
-    run \
+    run_histcmp \
         $outdir/performance_ambi_orthogonal.root \
         $refdir/performance_ambi_orthogonal.root \
         --title "Ambisolver orthogonal" \
@@ -215,23 +231,21 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
-    run \
+    run_histcmp \
         $outdir/performance_gsf.root \
         $refdir/performance_gsf.root \
-        --title "Truth tracking (GSF)" \
-        -c CI/physmon/gsf.yml \
-        -o $outdir/gsf.html \
-        -p $outdir/gsf_plots
+        "Truth tracking (GSF)" \
+        gsf \
+        -c CI/physmon/gsf.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "kalman" ]]; then
-    run \
+    run_histcmp \
         $outdir/performance_truth_tracking.root \
         $refdir/performance_truth_tracking.root \
-        --title "Truth tracking" \
-        -c CI/physmon/truth_tracking.yml \
-        -o $outdir/truth_tracking.html \
-        -p $outdir/truth_tracking_plots
+        "Truth tracking" \
+        truth_tracking \
+        -c CI/physmon/truth_tracking.yml
 fi
 
 if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
@@ -247,7 +261,7 @@ if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
     simulation geant4
 fi
 
-CI/physmon/summary.py $outdir/*.html \
+CI/physmon/summary.py $histcmp_results \
   --base $outdir \
   --md $outdir/summary.md \
   --html $outdir/summary.html
