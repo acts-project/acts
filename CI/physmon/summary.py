@@ -37,22 +37,39 @@ for h in args.inputs:
             print(r"could not parse {h}", e)
 
 output = "# physmon summary\n"
-for h, s in summary.items():
-    path = os.path.relpath(h, args.base)
-    output += f"  - {'✅' if s['total'] else '🔴'} [{s['title']}]({path})\n"
 
 if args.html:
     with open(args.html, mode="w", encoding="utf-8") as f:
         f.write(
+            """<!DOCTYPE html>
+<html>
+<head>
+  <title>physmon summary</title>
+  <meta charset="UTF-8">
+</head>
+<body>
+  <h1>physmon summary</h1>
+  <ul>
             """
-<!DOCTYPE html>
-<script>window.texme = { style: 'plain' }</script>
-<script src="https://cdn.jsdelivr.net/npm/texme@1.2.2"></script><textarea>
-
-                """
         )
-        f.write(output)
+
+        for h, s in summary.items():
+            path = os.path.relpath(h, args.base)
+            f.write(
+                f"""
+        <li>{"✅" if s["total"] else "🔴"} <a href="{path}">{s["title"]}</a></li>"""
+            )
+
+        f.write(
+            """
+      </ul>
+    </body>
+    </html>
+            """
+        )
 
 if args.md:
     with open(args.md, mode="w", encoding="utf-8") as f:
-        f.write(output)
+        f.write("# physmon summary\n")
+        for h, s in summary.items():
+            f.write(f"  - {'✅' if s['total'] else '🔴'} {s['title']}\n")
