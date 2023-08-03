@@ -70,7 +70,7 @@ void checkParameters(const GenericBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
                        eps);

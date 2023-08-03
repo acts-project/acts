@@ -35,7 +35,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
   auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.unitDirection(), false);
+                                                params.direction(), false);
 
   // Setting the propagation direction using the intersection length from
   // above.

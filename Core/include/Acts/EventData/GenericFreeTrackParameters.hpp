@@ -158,7 +158,7 @@ class GenericFreeTrackParameters {
   Scalar time() const { return m_params[eFreeTime]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
-  Vector3 unitDirection() const {
+  Vector3 direction() const {
     return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
@@ -179,7 +179,7 @@ class GenericFreeTrackParameters {
     return (transverseMagnitude / magnitude) * absoluteMomentum();
   }
   /// Momentum three-vector.
-  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
+  Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
   Scalar charge() const {

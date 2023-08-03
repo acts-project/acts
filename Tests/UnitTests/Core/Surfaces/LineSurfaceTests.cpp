@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 
   auto intersection =
       surface->intersect(tgContext, displacedParameters.position(tgContext),
-                         displacedParameters.unitDirection());
+                         displacedParameters.direction());
   CHECK_CLOSE_ABS(intersection.intersection.pathLength, pathLimit, eps);
 
   BoundTrackParameters endParameters{surface, BoundVector::Zero(), 1};

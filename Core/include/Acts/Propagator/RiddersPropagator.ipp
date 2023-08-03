@@ -41,7 +41,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     // replace the covariance of the nominal result w/ the ridders covariance
     nominalResult.endParameters = CurvilinearTrackParameters(
         nominalFinalParameters.fourPosition(options.geoContext),
-        nominalFinalParameters.unitDirection(),
+        nominalFinalParameters.direction(),
         nominalFinalParameters.absoluteMomentum(),
         nominalFinalParameters.charge(), std::move(cov));
   }
