@@ -82,14 +82,14 @@ BOOST_DATA_TEST_CASE(
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  NeutralFreeTrackParameters params(pos4, phi, theta, 1 / p, std::nullopt,
-                                    ParticleHypothesis::pion0());
+  FreeTrackParameters params(pos4, phi, theta, 1 / p, std::nullopt,
+                             ParticleHypothesis::pion0());
   checkParameters(params, pos4, dir, p, 0_e);
   BOOST_CHECK(not params.covariance());
 
   // reassign w/ covariance
-  params = NeutralFreeTrackParameters(pos4, phi, theta, 1 / p, cov,
-                                      ParticleHypothesis::pion0());
+  params = FreeTrackParameters(pos4, phi, theta, 1 / p, cov,
+                               ParticleHypothesis::pion0());
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
@@ -120,14 +120,14 @@ BOOST_DATA_TEST_CASE(
   Vector4 pos4(x, y, z, time);
   Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  FreeTrackParameters params(pos4, phi, theta, p, q, std::nullopt,
+  FreeTrackParameters params(pos4, phi, theta, q / p, std::nullopt,
                              ParticleHypothesis::pionLike(std::abs(q)));
   checkParameters(params, pos4, dir, p, q);
   BOOST_CHECK(not params.covariance());
 
   // reassign w/ covariance
-  params = AnyFreeTrackParameters(pos4, phi, theta, p, q, cov,
-                                  ParticleHypothesis::pionLike(std::abs(q)));
+  params = FreeTrackParameters(pos4, phi, theta, q / p, cov,
+                               ParticleHypothesis::pionLike(std::abs(q)));
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }

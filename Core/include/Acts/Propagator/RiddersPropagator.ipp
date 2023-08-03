@@ -43,10 +43,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     // replace the covariance of the nominal result w/ the ridders covariance
     nominalResult.endParameters = CurvilinearTrackParameters(
         nominalFinalParameters.fourPosition(options.geoContext),
-        nominalFinalParameters.unitDirection(),
-        nominalFinalParameters.absoluteMomentum(),
-        nominalFinalParameters.charge(), std::move(cov),
-        nominalFinalParameters.particleHypothesis());
+        nominalFinalParameters.unitDirection(), nominalFinalParameters.qOverP(),
+        std::move(cov), nominalFinalParameters.particleHypothesis());
   }
 
   return ThisResult::success(std::move(nominalResult));
@@ -87,8 +85,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     // replace the covariance of the nominal result w/ the ridders covariance
     nominalResult.endParameters = BoundTrackParameters(
         nominalFinalParameters.referenceSurface().getSharedPtr(),
-        nominalFinalParameters.parameters(), nominalFinalParameters.charge(),
-        std::move(cov), nominalFinalParameters.particleHypothesis());
+        nominalFinalParameters.parameters(), std::move(cov),
+        nominalFinalParameters.particleHypothesis());
   }
 
   return ThisResult::success(std::move(nominalResult));

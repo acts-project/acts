@@ -103,7 +103,6 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearNeutral(
 /// Check that two parameters object are consistent within the tolerances.
 ///
 /// \warning Does not check that they are defined on the same surface.
-template <typename charge_t>
 inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
                                        const Acts::BoundTrackParameters& ref,
                                        const Acts::GeometryContext& geoCtx,
@@ -138,7 +137,6 @@ inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
 /// Check that two parameters covariances are consistent within the tolerances.
 ///
 /// \warning Does not check that the parameters value itself are consistent.
-template <typename charge_t>
 inline void checkCovarianceConsistency(const Acts::BoundTrackParameters& cmp,
                                        const Acts::BoundTrackParameters& ref,
                                        double relativeTolerance) {
@@ -178,7 +176,6 @@ inline Acts::Transform3 makeCurvilinearTransform(
 
 /// Construct a z-cylinder centered at zero with the track on its surface.
 struct ZCylinderSurfaceBuilder {
-  template <typename charge_t>
   std::shared_ptr<Acts::CylinderSurface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
@@ -191,7 +188,6 @@ struct ZCylinderSurfaceBuilder {
 
 /// Construct a disc at track position with plane normal along track tangent.
 struct DiscSurfaceBuilder {
-  template <typename charge_t>
   std::shared_ptr<Acts::DiscSurface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
@@ -215,7 +211,6 @@ struct DiscSurfaceBuilder {
 
 /// Construct a plane at track position with plane normal along track tangent.
 struct PlaneSurfaceBuilder {
-  template <typename charge_t>
   std::shared_ptr<Acts::PlaneSurface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
@@ -226,7 +221,6 @@ struct PlaneSurfaceBuilder {
 
 /// Construct a z-straw at the track position.
 struct ZStrawSurfaceBuilder {
-  template <typename charge_t>
   std::shared_ptr<Acts::StrawSurface> operator()(
       const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {

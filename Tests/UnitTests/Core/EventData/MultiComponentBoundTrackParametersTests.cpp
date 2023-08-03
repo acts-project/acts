@@ -28,7 +28,7 @@
 
 using namespace Acts;
 
-static constexpr auto particleHypothesis = ParticleHypothesis::pion();
+static const auto particleHypothesis = ParticleHypothesis::pion();
 
 BOOST_AUTO_TEST_CASE(test_constructors) {
   std::vector<std::tuple<double, BoundVector, BoundSymMatrix>> a;

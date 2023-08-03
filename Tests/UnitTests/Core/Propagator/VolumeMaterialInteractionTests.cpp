@@ -67,6 +67,10 @@ struct Stepper {
   double absoluteMomentum(const StepperState& state) const { return state.p; }
 
   double charge(const StepperState& state) const { return state.q; };
+
+  ParticleHypothesis particleHypothesis(const StepperState& state) const {
+    return state.particleHypothesis;
+  };
 };
 
 /// @brief Simplified navigator

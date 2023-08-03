@@ -82,14 +82,14 @@ BOOST_DATA_TEST_CASE(
   const Vector4 pos4(x, y, z, time);
   const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
-  NeutralCurvilinearTrackParameters params(pos4, dir, 1 / p, std::nullopt,
-                                           ParticleHypothesis::pion0());
+  CurvilinearTrackParameters params(pos4, dir, 1 / p, std::nullopt,
+                                    ParticleHypothesis::pion0());
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
   BOOST_CHECK(not params.covariance());
 
   // reassign w/ covariance
-  params = NeutralCurvilinearTrackParameters(pos4, dir, 1 / p, cov,
-                                             ParticleHypothesis::pion0());
+  params = CurvilinearTrackParameters(pos4, dir, 1 / p, cov,
+                                      ParticleHypothesis::pion0());
   BOOST_CHECK(params.covariance());
   BOOST_CHECK_EQUAL(params.covariance().value(), cov);
 }
@@ -125,7 +125,7 @@ BOOST_DATA_TEST_CASE(
   const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
 
   auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(q));
-  auto qOverP = particleHypothesis.qopFromPQ(p, q);
+  auto qOverP = particleHypothesis.qOverP(p, q);
 
   CurvilinearTrackParameters params(pos4, dir, qOverP, std::nullopt,
                                     particleHypothesis);
