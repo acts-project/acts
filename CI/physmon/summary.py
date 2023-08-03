@@ -7,6 +7,7 @@ import functools
 import os
 
 HERALD_URL = "https://herald.dokku.paulgessinger.com/view/{repo}/runs/{run_id}/artifacts/{artifact_name}/{path}"
+IS_CI = "GITHUB_ACTIONS" in os.environ
 
 
 parser = argparse.ArgumentParser()
@@ -70,13 +71,12 @@ if args.html:
             """
         )
 
-is_ci = "GITHUB_ACTIONS" in os.environ
 if args.md:
     with open(args.md, mode="w", encoding="utf-8") as f:
         f.write("# physmon summary\n")
         for h, s in summary.items():
             path = os.path.relpath(h, args.base)
-            if is_ci:
+            if IS_CI:
                 url = HERALD_URL.format(
                     repo=os.environ["GITHUB_REPOSITORY"],
                     run_id=os.environ["GITHUB_RUN_ID"],
