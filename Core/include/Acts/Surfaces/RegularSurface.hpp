@@ -34,6 +34,8 @@ class RegularSurface : public Surface {
   ///
   /// @param position is the global position where the normal vector is
   /// constructed
+  /// @note The @p position is required to be on-surface.
+  /// 			Use @ref Surface::coerceToSurface
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return normal vector by value
   virtual Vector3 normal(const GeometryContext& gctx,
@@ -94,5 +96,23 @@ class RegularSurface : public Surface {
   /// @return The global position by value
   virtual Vector3 localToGlobal(const GeometryContext& gctx,
                                 const Vector2& lposition) const = 0;
+
+  /// Force a position to be on the surface. This is the most generic overload
+  /// which is implemented by all surfaces.
+  /// @ref Surface::coerceToSurface
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position to coerce onto the surface
+  /// @param direction The direction to use for the coercion (ignored for @c RegularSurface)
+  /// @return The coerced position
+  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
+                          const Vector3& direction) const final;
+
+  /// Force a position to be on the surface.
+  /// @ref Surface::coerceToSurface
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The position to coerce onto the surface
+  /// @return The coerced position
+  virtual Vector3 coerceToSurface(const GeometryContext& gctx,
+                                  const Vector3& position) const = 0;
 };
 }  // namespace Acts

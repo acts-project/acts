@@ -90,6 +90,17 @@ Acts::Vector3 Acts::ConeSurface::rotSymmetryAxis(
   return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
+Acts::Vector3 Acts::ConeSurface::coerceToSurface(
+    const GeometryContext& gctx, const Vector3& position) const {
+  Vector3 loc3Dframe = transform(gctx).inverse() * position;
+
+  // calculate what the radius should be based on the z position
+  double r = loc3Dframe.z() * bounds().tanAlpha();
+
+  Vector2 local{r * VectorHelpers::phi(loc3Dframe), loc3Dframe.z()};
+  return localToGlobal(gctx, local);
+}
+
 Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& /*direction*/) const {

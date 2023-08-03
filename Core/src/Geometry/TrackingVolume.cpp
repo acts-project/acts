@@ -197,6 +197,8 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
   // normal vector
   // Coerce the arbitrary position bPosition to be on the surface repr so we can
   // get a normal
+  bPosition = bSurfaceMine->surfaceRepresentation().coerceToSurface(
+      gctx, bPosition, distance.normalized());
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
@@ -244,6 +246,8 @@ void Acts::TrackingVolume::glueTrackingVolumes(
   // normal vector
   // Coerce the arbitrary position bPosition to be on the surface repr so we can
   // get a normal
+  bPosition = bSurfaceMine->surfaceRepresentation().coerceToSurface(
+      gctx, bPosition, distance.normalized());
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation

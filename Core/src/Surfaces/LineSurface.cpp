@@ -102,6 +102,19 @@ Acts::Result<Acts::Vector2> Acts::LineSurface::globalToLocal(
   return Result<Vector2>::success(localXY);
 }
 
+Acts::Vector3 Acts::LineSurface::coerceToSurface(
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction) const {
+  // Bring the global position into the local frame. First remove the
+  // translation then the rotation.
+  Vector3 localPosition = referenceFrame(gctx, position, direction).inverse() *
+                          (position - transform(gctx).translation());
+  // force position to be on the PCA surface
+  localPosition.z() = 0;
+  return (referenceFrame(gctx, position, direction) * localPosition) +
+         transform(gctx).translation();
+}
+
 std::string Acts::LineSurface::name() const {
   return "Acts::LineSurface";
 }

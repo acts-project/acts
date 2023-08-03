@@ -120,6 +120,7 @@ class DiscSurface : public RegularSurface {
   SurfaceType type() const override;
 
   // User overloads from `RegularSurface`
+  using RegularSurface::coerceToSurface;
   using RegularSurface::globalToLocal;
   using RegularSurface::localToGlobal;
   using RegularSurface::normal;
@@ -145,6 +146,15 @@ class DiscSurface : public RegularSurface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @return The normal vector
   Vector3 normal(const GeometryContext& gctx) const;
+
+  /// Force a global position to be on the disc surface.
+  /// This is done by projecting the position onto the disc, and discarding the
+  /// distance to the surface.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position The global position to be projected
+  /// @return The projected position by value
+  Vector3 coerceToSurface(const GeometryContext& gctx,
+                          const Vector3& position) const final;
 
   /// The binning position The position calculated
   /// for a certain binning type

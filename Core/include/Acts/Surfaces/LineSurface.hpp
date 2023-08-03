@@ -117,6 +117,16 @@ class LineSurface : public Surface {
                                  const Vector3& position,
                                  const Vector3& direction) const final;
 
+  /// Force a global position to be on the line surface
+  /// This function calculates the PCA plane for the given @p direction and then
+  /// projects the given @p position onto this plane.
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param position Is the global position to be projected
+  /// @param direction Is the direction that defines the PCA plane
+  /// @return The projected position
+  Vector3 coerceToSurface(const GeometryContext& gctx, const Vector3& position,
+                          const Vector3& direction) const final;
+
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
   ///
