@@ -20,6 +20,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  
 
 # File to accumulate the histcmp results
 histcmp_results=$outdir/histcmp_results.csv
+echo "" > $histcmp_results
 
 SPYRAL_BIN=${SPYRAL_BIN:=spyral}
 SPYRAL="${SPYRAL_BIN} run -i 0.05 --summary"
@@ -279,7 +280,6 @@ if [[ "$mode" == "all" || "$mode" == "simulation" ]]; then
 fi
 
 CI/physmon/summary.py $histcmp_results \
-  --base $outdir \
   --md $outdir/summary.md \
   --html $outdir/summary.html
 ec=$(($ec | $?))
