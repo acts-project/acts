@@ -360,28 +360,23 @@ struct GenericDenseEnvironmentExtension {
     // this just serves as entry point for building their relation
     //~ double dtpp1dl = -mass * mass * qop[0] * qop[0] *
     //~ (3. * g + qop[0] * dgdqop(energy[0], .mass,
-    //~ absPdg,
-    //~ state.options.meanEnergyLoss));
+    //~ absPdg, meanEnergyLoss));
 
     double dtp1dl = qop[0] * mass * mass / hypot(1, qop[0] * mass);
     double qopNew = qop[0] + half_h * Lambdappi[0];
 
-    //~ double dtpp2dl = -state.options.mass * state.options.mass * qopNew *
+    //~ double dtpp2dl = -mass * mass * qopNew *
     //~ qopNew *
     //~ (3. * g * (1. + half_h * jdL[0]) +
-    //~ qopNew * dgdqop(energy[1], state.options.mass,
-    //~ state.options.absPdgCode,
-    //~ state.options.meanEnergyLoss));
+    //~ qopNew * dgdqop(energy[1], mass, absPdgCode, meanEnergyLoss));
 
-    double dtp2dl = qopNew * state.options.mass * state.options.mass /
-                    std::hypot(1, qopNew * state.options.mass);
+    double dtp2dl = qopNew * mass * mass / std::hypot(1, qopNew * mass);
     qopNew = qop[0] + half_h * Lambdappi[1];
 
-    //~ double dtpp3dl = -state.options.mass * state.options.mass * qopNew *
+    //~ double dtpp3dl = -mass * mass * qopNew *
     //~ qopNew *
     //~ (3. * g * (1. + half_h * jdL[1]) +
-    //~ qopNew * dgdqop(energy[2], mass, absPdg,
-    //~ state.options.meanEnergyLoss));
+    //~ qopNew * dgdqop(energy[2], mass, absPdg, meanEnergyLoss));
 
     double dtp3dl = qopNew * mass * mass / hypot(1, qopNew * mass);
     qopNew = qop[0] + half_h * Lambdappi[2];
