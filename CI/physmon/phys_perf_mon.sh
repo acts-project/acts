@@ -243,9 +243,8 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_histcmp \
         $outdir/performance_ambi_orthogonal.root \
         $refdir/performance_ambi_orthogonal.root \
-        --title "Ambisolver orthogonal" \
-        -o $outdir/ambi_orthogonal.html \
-        -p $outdir/ambi_orthogonal_plots
+        "Ambisolver orthogonal" \
+        ambi_orthogonal
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
