@@ -39,8 +39,6 @@ for h in args.inputs:
         except Exception as e:
             print(r"could not parse {h}", e)
 
-output = "# physmon summary\n"
-
 if args.html:
     with open(args.html, mode="w", encoding="utf-8") as f:
         f.write(
