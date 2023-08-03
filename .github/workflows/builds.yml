@@ -259,7 +259,6 @@ jobs:
         shell: bash
         env:
           PYTEST_MD_REPORT: true
-          PYTEST_MD_REPORT_COLOR: text
           PYTEST_MD_REPORT_VERBOSE: 0
           PYTEST_MD_REPORT_OUTPUT: pytest.md
         run: >
