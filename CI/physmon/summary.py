@@ -70,7 +70,7 @@ if args.html:
             """
         )
 
-is_ci = "CI" in os.environ
+is_ci = "GITHUB_ACTIONS" in os.environ
 if args.md:
     with open(args.md, mode="w", encoding="utf-8") as f:
         f.write("# physmon summary\n")
