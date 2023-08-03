@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -121,7 +122,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       const auto& params = optParams.value();
       double charge = std::copysign(1, params[Acts::eBoundQOverP]);
       trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
-                                   m_covariance);
+                                   m_covariance,
+                                   Acts::ParticleHypothesis::pion());
     }
   }
 

@@ -8,21 +8,30 @@
 
 #pragma once
 
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/GenericFreeTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 
 namespace Acts {
 
-using BoundTrackParameters = GenericBoundTrackParameters<SinglyCharged>;
-using CurvilinearTrackParameters =
-    GenericCurvilinearTrackParameters<SinglyCharged>;
-using FreeTrackParameters = GenericFreeTrackParameters<SinglyCharged>;
+using SinglyChargedBoundTrackParameters =
+    GenericBoundTrackParameters<SinglyChargedParticleHypothesis>;
+using SinglyChargedCurvilinearTrackParameters =
+    GenericCurvilinearTrackParameters<SinglyChargedParticleHypothesis>;
+using SinglyChargedFreeTrackParameters =
+    GenericFreeTrackParameters<SinglyChargedParticleHypothesis>;
 
-using NeutralBoundTrackParameters = GenericBoundTrackParameters<Neutral>;
+using NeutralBoundTrackParameters =
+    GenericBoundTrackParameters<NeutralParticleHypothesis>;
 using NeutralCurvilinearTrackParameters =
-    GenericCurvilinearTrackParameters<Neutral>;
-using NeutralFreeTrackParameters = GenericFreeTrackParameters<Neutral>;
+    GenericCurvilinearTrackParameters<NeutralParticleHypothesis>;
+using NeutralFreeTrackParameters =
+    GenericFreeTrackParameters<NeutralParticleHypothesis>;
+
+using BoundTrackParameters = GenericBoundTrackParameters<ParticleHypothesis>;
+using CurvilinearTrackParameters =
+    GenericCurvilinearTrackParameters<ParticleHypothesis>;
+using FreeTrackParameters = GenericFreeTrackParameters<ParticleHypothesis>;
 
 }  // namespace Acts

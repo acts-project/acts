@@ -64,8 +64,6 @@ class EigenStepper {
 
     /// Constructor from the initial bound track parameters
     ///
-    /// @tparam charge_t Type of the bound parameter charge
-    ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] fieldCacheIn is the cache object for the magnetic field
     /// @param [in] par The track parameters at start
@@ -73,13 +71,12 @@ class EigenStepper {
     /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    MagneticFieldProvider::Cache fieldCacheIn,
-                   const GenericBoundTrackParameters<charge_t>& par,
+                   const BoundTrackParameters& par,
                    Direction ndir = Direction::Forward,
                    double ssize = std::numeric_limits<double>::max())
-        : absCharge(std::abs(par.charge())),
+        : particleHypothesis(par.particleHypothesis()),
           navDir(ndir),
           stepSize(ssize),
           fieldCache(std::move(fieldCacheIn)),
@@ -103,8 +100,8 @@ class EigenStepper {
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// The absolute charge as the free vector can be 1/p or q/p
-    double absCharge = UnitConstants::e;
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
     /// Covariance matrix (and indicator)
     /// associated with the initial error on track parameters
@@ -218,8 +215,7 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double absoluteMomentum(const State& state) const {
-    auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qOverP(state));
+    return particleHypothesis(state).pFromQOP(qOverP(state));
   }
 
   /// Momentum accessor
@@ -233,7 +229,14 @@ class EigenStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return std::copysign(state.absCharge, qOverP(state));
+    return particleHypothesis(state).qFromQOP(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  ParticleHypothesis particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
   }
 
   /// Time access

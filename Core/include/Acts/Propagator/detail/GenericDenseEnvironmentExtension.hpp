@@ -77,8 +77,12 @@ struct GenericDenseEnvironmentExtension {
             typename navigator_t>
   int bid(const propagator_state_t& state, const stepper_t& stepper,
           const navigator_t& navigator) const {
+    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    auto absQ = particleHypothesis.absoluteCharge();
+    auto mass = particleHypothesis.mass();
+
     // Check for valid particle properties
-    if (stepper.charge(state.stepping) == 0. || state.options.mass == 0. ||
+    if (absQ == 0. || mass == 0. ||
         stepper.absoluteMomentum(state.stepping) <
             state.options.momentumCutOff) {
       return 0;
@@ -116,28 +120,34 @@ struct GenericDenseEnvironmentExtension {
          const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
          std::array<Scalar, 4>& kQoP, const int i = 0, const double h = 0.,
          const ThisVector3& kprev = ThisVector3::Zero()) {
+    // using because of autodiff
+    using std::hypot;
+
     auto q = stepper.charge(state.stepping);
+    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    auto mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
       auto volumeMaterial = navigator.currentVolumeMaterial(state.navigation);
       ThisVector3 position = stepper.position(state.stepping);
-      material = (volumeMaterial->material(position.template cast<double>()));
+      material = volumeMaterial->material(position.template cast<double>());
       initialMomentum = stepper.absoluteMomentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = q / initialMomentum;
-      initializeEnergyLoss(state);
+      qop[0] = stepper.qOverP(state.stepping);
+      initializeEnergyLoss(state, stepper);
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
       // Evaluate k for the time propagation
       Lambdappi[0] = -qop[0] * qop[0] * qop[0] * g * energy[0] / (q * q);
-      //~ tKi[0] = std::hypot(1, state.options.mass / initialMomentum);
-      tKi[0] = hypot(1, state.options.mass * qop[0]);
+      //~ tKi[0] = std::hypot(1, mass / initialMomentum);
+      tKi[0] = hypot(1, mass * qop[0]);
       kQoP[0] = Lambdappi[0];
     } else {
       // Update parameters and check for momentum condition
-      updateEnergyLoss(state.options.mass, h, state, stepper, i);
+      updateEnergyLoss(mass, h, state, stepper, i);
       if (currentMomentum < state.options.momentumCutOff) {
         return false;
       }
@@ -147,7 +157,7 @@ struct GenericDenseEnvironmentExtension {
       // Evaluate k_i for the time propagation
       auto qopNew = qop[0] + h * Lambdappi[i - 1];
       Lambdappi[i] = -qopNew * qopNew * qopNew * g * energy[i] / (q * q);
-      tKi[i] = hypot(1, state.options.mass * qopNew);
+      tKi[i] = hypot(1, mass * qopNew);
       kQoP[i] = Lambdappi[i];
     }
     return true;
@@ -171,6 +181,12 @@ struct GenericDenseEnvironmentExtension {
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const navigator_t& /*navigator*/, const double h) const {
+    // using because of autodiff
+    using std::hypot;
+
+    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    auto mass = particleHypothesis.mass();
+
     // Evaluate the new momentum
     auto newMomentum =
         stepper.absoluteMomentum(state.stepping) +
@@ -182,14 +198,14 @@ struct GenericDenseEnvironmentExtension {
     }
 
     // Add derivative dlambda/ds = Lambda''
-    state.stepping.derivative(7) = -hypot(state.options.mass, newMomentum) * g /
+    state.stepping.derivative(7) = -hypot(mass, newMomentum) * g /
                                    (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
     state.stepping.pars[eFreeQOverP] =
         stepper.charge(state.stepping) / newMomentum;
     // Add derivative dt/ds = 1/(beta * c) = sqrt(m^2 * p^{-2} + c^{-2})
-    state.stepping.derivative(3) = hypot(1, state.options.mass / newMomentum);
+    state.stepping.derivative(3) = hypot(1, mass / newMomentum);
     // Update time
     state.stepping.pars[eFreeTime] +=
         (h / 6.) * (tKi[0] + 2. * (tKi[1] + tKi[2]) + tKi[3]);
@@ -261,8 +277,13 @@ struct GenericDenseEnvironmentExtension {
     /// constant offset does not exist for rectangular matrix dFdu' (due to the
     /// missing Lambda part) and only exists for dGdu' in dlambda/dlambda.
 
+    // using because of autodiff
+    using std::hypot;
+
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
+    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    auto mass = particleHypothesis.mass();
 
     D = FreeMatrix::Identity();
     const double half_h = h * 0.5;
@@ -337,14 +358,12 @@ struct GenericDenseEnvironmentExtension {
     // The following comment lines refer to the application of the time being
     // treated as a position. Since t and qop are treated independently for now,
     // this just serves as entry point for building their relation
-    //~ double dtpp1dl = -state.options.mass * state.options.mass * qop[0] *
-    //~ qop[0] *
-    //~ (3. * g + qop[0] * dgdqop(energy[0], state.options.mass,
-    //~ state.options.absPdgCode,
+    //~ double dtpp1dl = -mass * mass * qop[0] * qop[0] *
+    //~ (3. * g + qop[0] * dgdqop(energy[0], .mass,
+    //~ absPdg,
     //~ state.options.meanEnergyLoss));
 
-    double dtp1dl = qop[0] * state.options.mass * state.options.mass /
-                    std::hypot(1, qop[0] * state.options.mass);
+    double dtp1dl = qop[0] * mass * mass / hypot(1, qop[0] * mass);
     double qopNew = qop[0] + half_h * Lambdappi[0];
 
     //~ double dtpp2dl = -state.options.mass * state.options.mass * qopNew *
@@ -361,18 +380,15 @@ struct GenericDenseEnvironmentExtension {
     //~ double dtpp3dl = -state.options.mass * state.options.mass * qopNew *
     //~ qopNew *
     //~ (3. * g * (1. + half_h * jdL[1]) +
-    //~ qopNew * dgdqop(energy[2], state.options.mass,
-    //~ state.options.absPdgCode,
+    //~ qopNew * dgdqop(energy[2], mass, absPdg,
     //~ state.options.meanEnergyLoss));
 
-    double dtp3dl = qopNew * state.options.mass * state.options.mass /
-                    std::hypot(1, qopNew * state.options.mass);
+    double dtp3dl = qopNew * mass * mass / hypot(1, qopNew * mass);
     qopNew = qop[0] + half_h * Lambdappi[2];
-    double dtp4dl = qopNew * state.options.mass * state.options.mass /
-                    std::hypot(1, qopNew * state.options.mass);
+    double dtp4dl = qopNew * mass * mass / hypot(1, qopNew * mass);
 
-    //~ D(3, 7) = h * state.options.mass * state.options.mass * qop[0] /
-    //~ std::hypot(1., state.options.mass * qop[0])
+    //~ D(3, 7) = h * mass * mass * qop[0] /
+    //~ hypot(1., mass * qop[0])
     //~ + h * h / 6. * (dtpp1dl + dtpp2dl + dtpp3dl);
 
     D(3, 7) = (h / 6.) * (dtp1dl + 2. * (dtp2dl + dtp3dl) + dtp4dl);
@@ -383,22 +399,30 @@ struct GenericDenseEnvironmentExtension {
   /// loss of a particle in material
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
+  ///
   /// @param [in] state Deliverer of configurations
-  template <typename propagator_state_t>
-  void initializeEnergyLoss(const propagator_state_t& state) {
-    energy[0] = hypot(initialMomentum, state.options.mass);
+  template <typename propagator_state_t, typename stepper_t>
+  void initializeEnergyLoss(const propagator_state_t& state,
+                            const stepper_t& stepper) {
+    // using because of autodiff
+    using std::hypot;
+
+    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    auto mass = particleHypothesis.mass();
+    auto absPdg = particleHypothesis.absPdg();
+
+    energy[0] = hypot(initialMomentum, mass);
     // use unit length as thickness to compute the energy loss per unit length
     Acts::MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
-      g = -computeEnergyLossMean(slab, state.options.absPdgCode,
-                                 state.options.mass,
+      g = -computeEnergyLossMean(slab, absPdg, mass,
                                  static_cast<double>(qop[0]));
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
-      g = -computeEnergyLossMode(slab, state.options.absPdgCode,
-                                 state.options.mass,
+      g = -computeEnergyLossMean(slab, absPdg, mass,
                                  static_cast<double>(qop[0]));
     }
     // Change of the momentum per path length
@@ -409,14 +433,12 @@ struct GenericDenseEnvironmentExtension {
       // inverse momentum
       if (state.options.includeGgradient) {
         if (state.options.meanEnergyLoss) {
-          dgdqopValue = deriveEnergyLossMeanQOverP(
-              slab, state.options.absPdgCode, state.options.mass,
-              static_cast<double>(qop[0]));
+          dgdqopValue = deriveEnergyLossMeanQOverP(slab, absPdg, mass,
+                                                   static_cast<double>(qop[0]));
         } else {
           // TODO path length dependence; see above
-          dgdqopValue = deriveEnergyLossModeQOverP(
-              slab, state.options.absPdgCode, state.options.mass,
-              static_cast<double>(qop[0]));
+          dgdqopValue = deriveEnergyLossModeQOverP(slab, absPdg, mass,
+                                                   static_cast<double>(qop[0]));
         }
       }
       // Calculate term for later error propagation
@@ -440,6 +462,9 @@ struct GenericDenseEnvironmentExtension {
   void updateEnergyLoss(const double mass, const double h,
                         const propagator_state_t& state,
                         const stepper_t& stepper, const int i) {
+    // using because of autodiff
+    using std::hypot;
+
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
     energy[i] = hypot(currentMomentum, mass);

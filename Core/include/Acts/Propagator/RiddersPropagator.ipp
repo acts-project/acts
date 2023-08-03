@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+
 template <typename propagator_t>
 template <typename parameters_t, typename propagator_options_t>
 auto Acts::RiddersPropagator<propagator_t>::propagate(
@@ -43,7 +45,8 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
         nominalFinalParameters.fourPosition(options.geoContext),
         nominalFinalParameters.unitDirection(),
         nominalFinalParameters.absoluteMomentum(),
-        nominalFinalParameters.charge(), std::move(cov));
+        nominalFinalParameters.charge(), std::move(cov),
+        nominalFinalParameters.particleHypothesis());
   }
 
   return ThisResult::success(std::move(nominalResult));
@@ -85,7 +88,7 @@ auto Acts::RiddersPropagator<propagator_t>::propagate(
     nominalResult.endParameters = BoundTrackParameters(
         nominalFinalParameters.referenceSurface().getSharedPtr(),
         nominalFinalParameters.parameters(), nominalFinalParameters.charge(),
-        std::move(cov));
+        std::move(cov), nominalFinalParameters.particleHypothesis());
   }
 
   return ThisResult::success(std::move(nominalResult));
@@ -193,7 +196,7 @@ Acts::RiddersPropagator<propagator_t>::wiggleParameter(
 
     // Propagate with updated start parameters
     BoundTrackParameters tp(start.referenceSurface().getSharedPtr(), values,
-                            start.covariance());
+                            start.covariance(), start.particleHypothesis());
     const auto& r = m_propagator.propagate(tp, target, options).value();
     // Collect the slope
     derivatives.push_back((r.endParameters->parameters() - nominal) / h);

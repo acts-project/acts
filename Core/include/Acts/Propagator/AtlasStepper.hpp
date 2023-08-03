@@ -61,7 +61,8 @@ class AtlasStepper {
           Direction ndir = Direction::Forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
-        : navDir(ndir),
+        : particleHypothesis(pars.particleHypothesis()),
+          navDir(ndir),
           field(0., 0., 0.),
           stepSize(ssize),
           tolerance(stolerance),
@@ -230,6 +231,8 @@ class AtlasStepper {
       state_ready = true;
     }
 
+    ParticleHypothesis particleHypothesis;
+
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
@@ -355,8 +358,11 @@ class AtlasStepper {
 
   double qOverP(const State& state) const { return state.pVector[7]; }
 
+  /// Absolute momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double absoluteMomentum(const State& state) const {
-    return 1. / std::abs(qOverP(state));
+    return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
   Vector3 momentum(const State& state) const {
@@ -364,8 +370,17 @@ class AtlasStepper {
   }
 
   /// Charge access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return qOverP(state) > 0. ? 1. : -1.;
+    return particleHypothesis(state).extractCharge(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  ParticleHypothesis particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
   }
 
   /// Overstep limit
@@ -483,9 +498,9 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    auto parameters =
-        BoundTrackParameters::create(surface.getSharedPtr(), state.geoContext,
-                                     pos4, dir, qOverP, std::move(covOpt));
+    auto parameters = BoundTrackParameters::create(
+        surface.getSharedPtr(), state.geoContext, pos4, dir, qOverP,
+        std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();
     }
@@ -530,7 +545,8 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
+    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt),
+                                          state.particleHypothesis);
 
     Jacobian jacobian(state.jacobian);
 
@@ -1255,17 +1271,17 @@ class AtlasStepper {
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
+      double mass = particleHypothesis(state.stepping).mass();
+
       // Evaluate the time propagation
-      double dtds =
-          std::hypot(1, state.options.mass / absoluteMomentum(state.stepping));
+      double dtds = std::hypot(1, mass / absoluteMomentum(state.stepping));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
-        double dtdl = h * state.options.mass * state.options.mass *
-                      charge(state.stepping) /
+        double dtdl = h * mass * mass * charge(state.stepping) /
                       (absoluteMomentum(state.stepping) * dtds);
         state.stepping.pVector[43] += dtdl;
 

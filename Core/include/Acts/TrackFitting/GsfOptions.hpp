@@ -26,7 +26,7 @@ namespace GsfConstants {
 constexpr std::string_view kFinalMultiComponentStateColumn =
     "gsf-final-multi-component-state";
 using FinalMultiComponentState =
-    std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>;
+    std::optional<Acts::MultiComponentBoundTrackParameters>;
 }  // namespace GsfConstants
 
 /// The extensions needed for the GSF

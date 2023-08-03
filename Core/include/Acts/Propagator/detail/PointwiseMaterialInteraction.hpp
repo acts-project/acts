@@ -41,8 +41,8 @@ struct PointwiseMaterialInteraction {
   const double momentum = 0.0;
   /// The particle mass
   const double mass = 0.0;
-  /// The particle pdg
-  const int pdg = 0.0;
+  /// The particle absolute pdg
+  const int absPdg = 0.0;
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport = false;
   /// The navigation direction
@@ -82,8 +82,8 @@ struct PointwiseMaterialInteraction {
         qOverP(stepper.qOverP(state.stepping)),
         absQ(std::abs(stepper.charge(state.stepping))),
         momentum(stepper.absoluteMomentum(state.stepping)),
-        mass(state.options.mass),
-        pdg(state.options.absPdgCode),
+        mass(stepper.particleHypothesis(state.stepping).mass()),
+        absPdg(stepper.particleHypothesis(state.stepping).absPdg()),
         performCovarianceTransport(state.stepping.covTransport),
         navDir(state.stepping.navDir) {}
 

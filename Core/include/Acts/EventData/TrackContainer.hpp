@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -100,9 +99,7 @@ class TrackContainer {
   /// Get a const track proxy for a track index
   /// @param itrack the track index in the container
   /// @return A const track proxy for the index
-  ConstTrackProxy getTrack(IndexType itrack) const {
-    return {*this, itrack};
-  }
+  ConstTrackProxy getTrack(IndexType itrack) const { return {*this, itrack}; }
 
   /// Get a mutable track proxy for a track index
   /// @param itrack the track index in the container
@@ -114,9 +111,7 @@ class TrackContainer {
 
   /// Get the size of the track container
   /// @return the sixe
-  constexpr IndexType size() const {
-    return m_container->size_impl();
-  }
+  constexpr IndexType size() const { return m_container->size_impl(); }
 
   /// Add a track to the container. Note this only creates the logical track and
   /// allocates memory. You can combine this with @c getTrack to obtain a track proxy
@@ -164,9 +159,7 @@ class TrackContainer {
 
   /// Get a const reference to the track container backend
   /// @return a const reference to the backend
-  const auto& container() const {
-    return *m_container;
-  }
+  const auto& container() const { return *m_container; }
 
   /// Get a mutable reference to the track state container backend
   /// @return a mutable reference to the backend
@@ -184,15 +177,11 @@ class TrackContainer {
 
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
-  const auto& trackStateContainer() const {
-    return *m_traj;
-  }
+  const auto& trackStateContainer() const { return *m_traj; }
 
   /// Retrieve the holder of the track state container
   /// @return The track state container including it's holder
-  const auto& trackStateContainerHolder() const {
-    return m_traj;
-  }
+  const auto& trackStateContainerHolder() const { return m_traj; }
 
   /// Get a mutable iterator to the first track in the container
   /// @return a mutable iterator to the first track
@@ -263,6 +252,18 @@ class TrackContainer {
   template <typename T>
   constexpr const T& component(HashedString key, IndexType itrack) const {
     return *std::any_cast<const T*>(container().component_impl(key, itrack));
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  constexpr ParticleHypothesis& particleHypothesis(IndexType itrack) {
+    return component<ParticleHypothesis, hashString("particleHypothesis")>(
+        itrack);
+  }
+
+  constexpr const ParticleHypothesis& particleHypothesis(
+      IndexType itrack) const {
+    return component<ParticleHypothesis, hashString("particleHypothesis")>(
+        itrack);
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>

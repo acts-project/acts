@@ -66,30 +66,16 @@ ProcessCode PropagationAlgorithm::execute(
     pars << d0, z0, phi, theta, qop, t;
     // some screen output
 
-    Acts::Vector3 sPosition(0., 0., 0.);
-    Acts::Vector3 sMomentum(0., 0., 0.);
-
     // The covariance generation
     auto cov = generateCovariance(rng, gauss);
 
     // execute the test for charged particles
-    PropagationOutput pOutput;
-    if (charge != 0.0) {
-      // charged extrapolation - with hit recording
-      Acts::BoundTrackParameters startParameters(surface, pars, std::move(cov));
-      sPosition = startParameters.position(context.geoContext);
-      sMomentum = startParameters.momentum();
-      pOutput = m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
-                                              startParameters);
-    } else {
-      // execute the test for neutral particles
-      Acts::NeutralBoundTrackParameters neutralParameters(surface, pars,
-                                                          std::move(cov));
-      sPosition = neutralParameters.position(context.geoContext);
-      sMomentum = neutralParameters.momentum();
-      pOutput = m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
-                                              neutralParameters);
-    }
+    Acts::BoundTrackParameters startParameters(
+        surface, pars, std::move(cov), Acts::ParticleHypothesis::pion());
+    Acts::Vector3 sPosition = startParameters.position(context.geoContext);
+    Acts::Vector3 sMomentum = startParameters.momentum();
+    PropagationOutput pOutput = m_cfg.propagatorImpl->execute(
+        context, m_cfg, logger(), startParameters);
     // Record the propagator steps
     propagationSteps.push_back(std::move(pOutput.first));
     if (m_cfg.recordMaterialInteractions &&

@@ -66,9 +66,9 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     finalCov = cov;
   }
 
-  return BoundState{
-      BoundTrackParameters(surface.getSharedPtr(), finalPars, finalCov),
-      Jacobian::Zero(), accumulatedPathLength};
+  return BoundState{BoundTrackParameters(surface.getSharedPtr(), finalPars,
+                                         finalCov, particleHypothesis(state)),
+                    Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R, typename A>
@@ -100,7 +100,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
 
       pos4 += state.components[i].weight * cp.fourPosition(state.geoContext);
       dir += state.components[i].weight * cp.unitDirection();
-      qop += state.components[i].weight * (cp.charge() / cp.absoluteMomentum());
+      qop += state.components[i].weight * cp.template get<eBoundQOverP>();
       if (cp.covariance()) {
         cov += state.components[i].weight * *cp.covariance();
       }
@@ -120,8 +120,9 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     }
 
     return CurvilinearState{
-        CurvilinearTrackParameters(pos4, dir, qop, finalCov), Jacobian::Zero(),
-        pathLenth};
+        CurvilinearTrackParameters(pos4, dir, qop, finalCov,
+                                   particleHypothesis(state)),
+        Jacobian::Zero(), pathLenth};
   }
 }
 

@@ -73,7 +73,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     const Acts::BoundTrackParameters initialParams(
         track.referenceSurface().getSharedPtr(), track.parameters(),
-        track.covariance());
+        track.covariance(), track.particleHypothesis());
 
     trackSourceLinks.clear();
     surfSequence.clear();

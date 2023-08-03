@@ -65,7 +65,8 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
       parameters.emplace(
           std::pair{track.tipIndex(),
                     TrackParameters{track.referenceSurface().getSharedPtr(),
-                                    track.parameters(), track.covariance()}});
+                                    track.parameters(), track.covariance(),
+                                    track.particleHypothesis()}});
     }
 
     if (tips.empty()) {
@@ -89,7 +90,8 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
       parameters.emplace(
           std::pair{track.tipIndex(),
                     TrackParameters{track.referenceSurface().getSharedPtr(),
-                                    track.parameters(), track.covariance()}});
+                                    track.parameters(), track.covariance(),
+                                    track.particleHypothesis()}});
 
       trajectories.emplace_back(tracks.trackStateContainer(), std::move(tips),
                                 std::move(parameters));

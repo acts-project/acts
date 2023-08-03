@@ -232,6 +232,9 @@ struct EventDataView3D {
       const ViewConfig& smoothedConfig = s_viewSmoothed) {
     // @TODO: Refactor based on Track class
 
+    // TODO get particle hypothesis from track
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
+
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
@@ -269,8 +272,8 @@ struct EventDataView3D {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
-                                 state.predicted(),
-                                 state.predictedCovariance()),
+                                 state.predicted(), state.predictedCovariance(),
+                                 particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             predictedConfig, predictedConfig, ViewConfig(false));
       }
@@ -279,7 +282,8 @@ struct EventDataView3D {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
-                                 state.filtered(), state.filteredCovariance()),
+                                 state.filtered(), state.filteredCovariance(),
+                                 particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             filteredConfig, filteredConfig, ViewConfig(false));
       }
@@ -288,7 +292,8 @@ struct EventDataView3D {
         drawBoundTrackParameters(
             helper,
             BoundTrackParameters(state.referenceSurface().getSharedPtr(),
-                                 state.smoothed(), state.smoothedCovariance()),
+                                 state.smoothed(), state.smoothedCovariance(),
+                                 particleHypothesis),
             gctx, momentumScale, locErrorScale, angularErrorScale,
             smoothedConfig, smoothedConfig, ViewConfig(false));
       }

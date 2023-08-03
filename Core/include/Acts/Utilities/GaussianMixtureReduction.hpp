@@ -221,7 +221,7 @@ template <typename mixture_t, typename projector_t = Acts::Identity>
 auto reduceGaussianMixture(const mixture_t &mixture, const Surface &surface,
                            MixtureReductionMethod method,
                            projector_t &&projector = projector_t{}) {
-  using R = std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>;
+  using R = std::tuple<BoundVector, BoundSymMatrix>;
   const auto [mean, cov] =
       detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
         return detail::gaussianMixtureMeanCov(mixture, projector, desc);

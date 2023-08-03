@@ -42,8 +42,9 @@ ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
   auto isValidTrack = [&](const auto& trk) {
     const auto theta = trk.template get<Acts::eBoundTheta>();
     const auto eta = -std::log(std::tan(theta / 2));
+    const auto pT = trk.transverseMomentum();
     // define charge selection
-    return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
+    return within(pT, m_cfg.ptMin, m_cfg.ptMax) and
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
            within(trk.template get<Acts::eBoundPhi>(), m_cfg.phiMin,
