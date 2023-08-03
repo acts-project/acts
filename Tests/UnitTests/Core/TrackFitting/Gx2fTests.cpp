@@ -313,8 +313,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   extensions.calibrator
       .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
 
-  MagneticFieldContext mfContext = MagneticFieldContext();
-  CalibrationContext calContext = CalibrationContext();
+  MagneticFieldContext mfContext;
+  CalibrationContext calContext;
 
   Experimental::Gx2FitterOptions gx2fOptions(
       tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),

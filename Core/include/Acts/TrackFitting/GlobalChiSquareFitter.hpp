@@ -391,6 +391,10 @@ class Gx2Fitter {
 
           trackStateProxy.jacobian() = std::move(jacobian);
           trackStateProxy.pathLength() = std::move(pathLength);
+
+          // We have predicted parameters, so calibrate the uncalibrated input
+          // measuerement
+          extensions.calibrator(state.geoContext, trackStateProxy);
         }
       }
 
