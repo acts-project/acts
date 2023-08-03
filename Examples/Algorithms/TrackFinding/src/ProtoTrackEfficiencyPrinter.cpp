@@ -63,6 +63,9 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEfficiencyPrinter::execute(
 
       eff = std::max(eff, size / refTrack.size());
 
+      // prevent eff==1.0 from beeing put in the overflow bin
+      eff = std::min(eff, 0.999999);
+
       if (eff > 0.50001) {
         toDelete = testTrackIt;
         break;
