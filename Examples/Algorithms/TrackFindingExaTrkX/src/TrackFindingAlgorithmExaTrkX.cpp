@@ -25,27 +25,28 @@ auto cantor(const T& t) {
   return t[0] + (t[0] + t[1]) * (t[0] + t[1] + 1) / 2;
 }
 
-std::ostream &operator<<(std::ostream &os, const std::vector<int64_t> &track) {
-   for(auto u : track) {
-     os << u << " ";
-   }
-   return os;
+std::ostream& operator<<(std::ostream& os, const std::vector<int64_t>& track) {
+  for (auto u : track) {
+    os << u << " ";
+  }
+  return os;
 }
-
 
 }  // namespace
 
 class TruthGraph {
   std::vector<int64_t> m_truthGraphCantor;
-  const Acts::Logger &m_logger;
+  const Acts::Logger& m_logger;
 
-  auto &logger() const { return m_logger; }
+  auto& logger() const { return m_logger; }
 
  public:
   TruthGraph(const SimSpacePointContainer& spacepoints,
              const IndexMultimap<Index>& measHitMap,
-             const SimHitContainer& truthHits, const Acts::Logger &l) : m_logger(l) {
-    std::unordered_map<SimBarcode, std::pair<double, std::vector<std::size_t>>> tracks;
+             const SimHitContainer& truthHits, const Acts::Logger& l)
+      : m_logger(l) {
+    std::unordered_map<SimBarcode, std::pair<double, std::vector<std::size_t>>>
+        tracks;
 
     for (auto i = 0ul; i < spacepoints.size(); ++i) {
       const auto measId = spacepoints[i]
@@ -55,9 +56,10 @@ class TruthGraph {
 
       auto [a, b] = measHitMap.equal_range(measId);
       for (auto it = a; it != b; ++it) {
-        const auto &hit = *truthHits.nth(it->second);
+        const auto& hit = *truthHits.nth(it->second);
         const auto pid = hit.particleId();
-        tracks[pid].first = std::max(tracks[pid].first, hit.momentum4Before()[3]); 
+        tracks[pid].first =
+            std::max(tracks[pid].first, hit.momentum4Before()[3]);
         tracks[pid].second.push_back(i);
       }
     }
@@ -66,15 +68,15 @@ class TruthGraph {
     //     const auto &[m, t] = track;
     //     ACTS_VERBOSE(pid << ": " << t);
     // }
-/*
-    for(auto it=tracks.begin(); it != tracks.end();) {
-        if( (it->second.first < 0.5) && (it->second.second.size() < 3) ) {
-            it = tracks.erase(it);
-        } else {
-            ++it;
+    /*
+        for(auto it=tracks.begin(); it != tracks.end();) {
+            if( (it->second.first < 0.5) && (it->second.second.size() < 3) ) {
+                it = tracks.erase(it);
+            } else {
+                ++it;
+            }
         }
-    }
-*/
+    */
     std::vector<int64_t> truthGraph;
     for (auto& [_, v] : tracks) {
       auto& [mom, track] = v;
@@ -85,13 +87,16 @@ class TruthGraph {
       }
     }
 
-    const auto n = std::min(10ul, truthGraph.size()/2);
+    const auto n = std::min(10ul, truthGraph.size() / 2);
     ACTS_INFO("Truth graph edges " << truthGraph.size() / 2);
     auto opts = torch::TensorOptions().dtype(torch::kInt64);
-    ACTS_INFO("slice:\n" << torch::from_blob(truthGraph.data(),
-                            {static_cast<long>(truthGraph.size() / 2), 2}, opts)
-        .clone()
-        .transpose(0, 1).slice(1, 0, n));
+    ACTS_INFO("slice:\n"
+              << torch::from_blob(truthGraph.data(),
+                                  {static_cast<long>(truthGraph.size() / 2), 2},
+                                  opts)
+                     .clone()
+                     .transpose(0, 1)
+                     .slice(1, 0, n));
 
     m_truthGraphCantor.reserve(truthGraph.size() / 2);
     for (auto it = truthGraph.begin(); it != truthGraph.end(); it += 2) {
@@ -100,7 +105,9 @@ class TruthGraph {
     std::sort(m_truthGraphCantor.begin(), m_truthGraphCantor.end());
 
     ACTS_INFO("Truth graph cantor:");
-    for(auto i=0ul; i<n; ++i) { std::cout << m_truthGraphCantor[i] << " "; }
+    for (auto i = 0ul; i < n; ++i) {
+      std::cout << m_truthGraphCantor[i] << " ";
+    }
     std::cout << std::endl;
   }
 
@@ -115,15 +122,19 @@ class TruthGraph {
     std::sort(predGraphCantor.begin(), predGraphCantor.end());
 
     const auto n = std::min(10ul, predGraphCantor.size());
-    ACTS_INFO("Slice of edgelist:\n" << std::get<0>(torch::sort(graph, 0)).slice(1, 0, n));
+    ACTS_INFO("Slice of edgelist:\n"
+              << std::get<0>(torch::sort(graph, 0)).slice(1, 0, n));
 
     ACTS_INFO("Pred graph cantor:");
-    for(auto i=0ul; i<n; ++i) { std::cout << predGraphCantor[i] << " "; }
+    for (auto i = 0ul; i < n; ++i) {
+      std::cout << predGraphCantor[i] << " ";
+    }
     std::cout << std::endl;
 
     ACTS_INFO("Pred graph edges " << predGraphCantor.size());
 
-    std::vector<int64_t> intersection(std::max(predGraphCantor.size(), m_truthGraphCantor.size()));
+    std::vector<int64_t> intersection(
+        std::max(predGraphCantor.size(), m_truthGraphCantor.size()));
     auto intersection_end =
         std::set_intersection(predGraphCantor.begin(), predGraphCantor.end(),
                               m_truthGraphCantor.begin(),
@@ -142,24 +153,14 @@ class TruthGraph {
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
-      m_cfg(std::move(config)) {
+      m_cfg(std::move(config)),
+      m_pipeline(m_cfg.graphConstructor, m_cfg.edgeClassifiers,
+                 m_cfg.trackBuilder, logger()) {
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing spacepoint input collection");
   }
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing protoTrack output collection");
-  }
-  if (!m_cfg.graphConstructor) {
-    throw std::invalid_argument("Missing graph construction module");
-  }
-  if (!m_cfg.trackBuilder) {
-    throw std::invalid_argument("Missing track building module");
-  }
-  if (m_cfg.edgeClassifiers.empty() or
-      not std::all_of(m_cfg.edgeClassifiers.begin(),
-                      m_cfg.edgeClassifiers.end(),
-                      [](const auto& a) { return static_cast<bool>(a); })) {
-    throw std::invalid_argument("Missing graph construction module");
   }
 
   // Sanitizer run with dummy input to detect configuration issues
@@ -188,35 +189,6 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitMap);
 }
 
-std::vector<std::vector<int>>
-ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
-    boost::multi_array<float, 2>& features, std::vector<int>& spacepointIDs,
-    const TruthGraph* truthGraph) const {
-  auto [nodes, edges] = (*m_cfg.graphConstructor)(features);
-  std::any edge_weights;
-
-  if (truthGraph) {
-    auto [eff, pur] = truthGraph->effpur(std::any_cast<torch::Tensor>(edges));
-    ACTS_INFO("After Graph construction: eff=" << eff << ", pur=" << pur);
-  }
-
-  for (auto edgeClassifier : m_cfg.edgeClassifiers) {
-    auto [newNodes, newEdges, newWeights] =
-        (*edgeClassifier)(std::move(nodes), std::move(edges));
-    nodes = std::move(newNodes);
-    edges = std::move(newEdges);
-    edge_weights = std::move(newWeights);
-
-    if (truthGraph) {
-      auto [eff, pur] = truthGraph->effpur(std::any_cast<torch::Tensor>(edges));
-      ACTS_INFO("After Graph construction: eff=" << eff << ", pur=" << pur);
-    }
-  }
-
-  return (*m_cfg.trackBuilder)(std::move(nodes), std::move(edges),
-                               std::move(edge_weights), spacepointIDs);
-}
-
 enum feat : std::size_t {
   eR,
   ePhi,
@@ -231,7 +203,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   auto spacepoints = m_inputSpacePoints(ctx);
-  std::sort(spacepoints.begin(), spacepoints.end(), [](const auto &a, const auto &b){ return std::hypot(a.x(), a.y()) < std::hypot(b.x(), b.y()); });
+  std::sort(spacepoints.begin(), spacepoints.end(),
+            [](const auto& a, const auto& b) {
+              return std::hypot(a.x(), a.y()) < std::hypot(b.x(), b.y());
+            });
 
   std::optional<ClusterContainer> clusters;
   if (m_inputClusters.isInitialized()) {
@@ -239,11 +214,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   }
 
   std::optional<TruthGraph> truthGraph;
-  TruthGraph* truthGraphPtr = nullptr;
+  Acts::Pipeline::PipelineHook hook;
   if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
     truthGraph.emplace(spacepoints, m_inputMeasurementMap(ctx),
-                            m_inputSimHits(ctx), logger());
-    truthGraphPtr = &*truthGraph;
+                       m_inputSimHits(ctx), logger());
+    hook = [&](const auto&, const auto& edges, const auto& logger) {
+      const auto [eff, pur] =
+          truthGraph->effpur(std::any_cast<torch::Tensor>(edges));
+      ACTS_VERBOSE("Eff=" << eff << ", Pur=" << pur);
+    };
   }
 
   // Convert Input data to a list of size [num_measurements x
@@ -261,7 +240,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   double sumCells = 0.0;
   double sumActivation = 0.0;
 
-  ACTS_INFO("First spacepoint x,y,z=" << spacepoints[0].x() << ", " << spacepoints[0].y() << ", " << spacepoints[0].z());
+  ACTS_INFO("First spacepoint x,y,z=" << spacepoints[0].x() << ", "
+                                      << spacepoints[0].y() << ", "
+                                      << spacepoints[0].z());
 
   for (auto i = 0ul; i < num_spacepoints; ++i) {
     const auto& sp = spacepoints[i];
@@ -297,8 +278,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
 
   // Run the pipeline
-  const auto trackCandidates =
-      runPipeline(features, spacepointIDs, truthGraphPtr);
+  const auto trackCandidates = m_pipeline.run(features, spacepointIDs, hook);
 
   ACTS_DEBUG("Done with pipeline");
 

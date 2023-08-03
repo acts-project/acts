@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/ExaTrkX/Pipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -84,12 +85,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  std::vector<std::vector<int>> runPipeline(
-      boost::multi_array<float, 2>& features, std::vector<int>& spacepointIDs,
-      const TruthGraph* truthGraph = nullptr) const;
-
   // configuration
   Config m_cfg;
+
+  Acts::Pipeline m_pipeline;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};

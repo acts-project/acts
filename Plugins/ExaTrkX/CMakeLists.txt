@@ -1,5 +1,6 @@
 set(SOURCES 
   src/buildEdges.cpp
+  src/Pipeline.cpp
 )
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
