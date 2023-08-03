@@ -320,7 +320,8 @@ jobs:
           && echo "::endgroup::"
           && export PYTHONPATH="${PYTHONPATH}":"${GITHUB_WORKSPACE}/Examples/Scripts/Python"
           && CI/physmon/phys_perf_mon.sh all physmon
-          && cat summary.md >> $GITHUB_STEP_SUMMARY
+          && cat physmon/summary.md >> $GITHUB_STEP_SUMMARY
+          && rm physmon/summary.md
 
       - uses: actions/upload-artifact@v3
         if: always()

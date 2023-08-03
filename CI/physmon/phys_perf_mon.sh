@@ -249,7 +249,7 @@ fi
 
 CI/physmon/summary.py $outdir/*.html \
   --base $outdir \
-  --md summary.md \
+  --md $outdir/summary.md \
   --html $outdir/summary.html
 ec=$(($ec | $?))
 
