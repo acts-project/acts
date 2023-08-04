@@ -19,9 +19,9 @@ template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const GenericBoundTrackParameters<charge_t>& par, Direction navDir,
-    double ssize) const -> State {
-  return State{gctx, m_bField->makeCache(mctx), par, navDir, ssize};
+    const GenericBoundTrackParameters<charge_t>& par, double ssize) const
+    -> State {
+  return State{gctx, m_bField->makeCache(mctx), par, ssize};
 }
 
 template <typename E, typename A>
@@ -29,14 +29,12 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundVector& boundParams,
                                           const BoundSymMatrix& cov,
                                           const Surface& surface,
-                                          const Direction navDir,
                                           const double stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
          boundParams, cov, surface);
-  state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
 
@@ -147,7 +145,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     constexpr auto success = &Result<bool>::success;
     constexpr auto failure = &Result<bool>::failure;
 
-    const double h = step.value() * state.stepping.navDir;
+    const double h = step.value() * state.options.direction;
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
@@ -230,7 +228,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   // use the adjusted step size
-  const double h = state.stepping.stepSize.value() * state.stepping.navDir;
+  const double h = state.stepping.stepSize.value() * state.options.direction;
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
