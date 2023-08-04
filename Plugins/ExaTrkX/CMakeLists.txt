@@ -16,6 +16,7 @@ if(ACTS_EXATRKX_ENABLE_TORCH)
     src/TorchEdgeClassifier.cpp
     src/TorchMetricLearning.cpp
     src/BoostTrackBuilding.cpp
+    src/TorchTruthGraphMetricsHook.cpp
   )
 endif()
 

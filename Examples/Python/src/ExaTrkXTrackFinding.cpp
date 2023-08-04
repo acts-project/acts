@@ -10,8 +10,10 @@
 #include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/Pipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -21,6 +23,7 @@
 
 #include <memory>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -170,6 +173,44 @@ void addExaTrkXTrackFinding(Context &ctx) {
       inputSimhits, inputMeasurementSimhitMap, outputProtoTracks,
       graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale, zScale,
       cellCountScale, cellSumScale, clusterXScale, clusterYScale);
+
+  {
+    auto cls =
+        py::class_<Acts::PipelineHook, std::shared_ptr<Acts::PipelineHook>>(
+            mex, "PipelineHook");
+  }
+
+  {
+    using Class = Acts::TorchTruthGraphMetricsHook;
+
+    auto cls = py::class_<Class, Acts::PipelineHook, std::shared_ptr<Class>>(
+                   mex, "TorchTruthGraphMetricsHook")
+                   .def(py::init(
+                       [](const std::vector<int64_t> &g, Logging::Level lvl) {
+                         return std::make_shared<Class>(
+                             g, getDefaultLogger("PipelineHook", lvl));
+                       }));
+  }
+
+  {
+    using Class = Acts::Pipeline;
+
+    auto cls =
+        py::class_<Class, std::shared_ptr<Class>>(mex, "Pipeline")
+            .def(py::init(
+                     [](std::shared_ptr<GraphConstructionBase> g,
+                        std::vector<std::shared_ptr<EdgeClassificationBase>> e,
+                        std::shared_ptr<TrackBuildingBase> t,
+                        Logging::Level lvl) {
+                       return std::make_shared<Class>(
+                           g, e, t, getDefaultLogger("MetricLearning", lvl));
+                     }),
+                 py::arg("graphConstructor"), py::arg("edgeClassifiers"),
+                 py::arg("trackBuilder"), py::arg("level"))
+            .def("run", &Pipeline::run, py::arg("features"),
+                 py::arg("spacepoints"),
+                 py::arg("hook") = Acts::PipelineHook{});
+  }
 }
 
 }  // namespace Acts::Python

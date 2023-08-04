@@ -20,22 +20,25 @@
 
 namespace Acts {
 
+class PipelineHook {
+ public:
+  virtual ~PipelineHook(){};
+  virtual void operator()(const std::any &, const std::any &) const {};
+};
+
 class Pipeline {
  public:
-  using PipelineHook = std::function<void(const std::any &, const std::any &,
-                                          const Logger &logger)>;
-
   Pipeline(std::shared_ptr<GraphConstructionBase> graphConstructor,
            std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
            std::shared_ptr<TrackBuildingBase> trackBuilder,
-           const Acts::Logger &logger);
+           std::unique_ptr<const Acts::Logger> logger);
 
-  std::vector<std::vector<int>> run(boost::multi_array<float, 2> &features,
+  std::vector<std::vector<int>> run(std::vector<float> &features,
                                     std::vector<int> &spacepointIDs,
                                     const PipelineHook &hook = {}) const;
 
  private:
-  std::unique_ptr<Acts::Logger> m_logger;
+  std::unique_ptr<const Acts::Logger> m_logger;
 
   std::shared_ptr<GraphConstructionBase> m_graphConstructor;
   std::vector<std::shared_ptr<EdgeClassificationBase>> m_edgeClassifiers;

@@ -13,8 +13,9 @@ namespace Acts {
 Pipeline::Pipeline(
     std::shared_ptr<GraphConstructionBase> graphConstructor,
     std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
-    std::shared_ptr<TrackBuildingBase> trackBuilder, const Acts::Logger &logger)
-    : m_logger(logger.cloneWithSuffix("Pipeline")),
+    std::shared_ptr<TrackBuildingBase> trackBuilder,
+    std::unique_ptr<const Acts::Logger> logger)
+    : m_logger(std::move(logger)),
       m_graphConstructor(graphConstructor),
       m_edgeClassifiers(edgeClassifiers),
       m_trackBuilder(trackBuilder) {
@@ -31,12 +32,12 @@ Pipeline::Pipeline(
   }
 }
 
-std::vector<std::vector<int>> Pipeline::run(
-    boost::multi_array<float, 2> &features, std::vector<int> &spacepointIDs,
-    const PipelineHook &hook) const {
-  auto [nodes, edges] = (*m_graphConstructor)(features);
+std::vector<std::vector<int>> Pipeline::run(std::vector<float> &features,
+                                            std::vector<int> &spacepointIDs,
+                                            const PipelineHook &hook) const {
+  auto [nodes, edges] = (*m_graphConstructor)(features, spacepointIDs.size());
 
-  hook(nodes, edges, logger());
+  hook(nodes, edges);
 
   std::any edge_weights;
 
@@ -47,7 +48,7 @@ std::vector<std::vector<int>> Pipeline::run(
     edges = std::move(newEdges);
     edge_weights = std::move(newWeights);
 
-    hook(nodes, edges, logger());
+    hook(nodes, edges);
   }
 
   return (*m_trackBuilder)(std::move(nodes), std::move(edges),

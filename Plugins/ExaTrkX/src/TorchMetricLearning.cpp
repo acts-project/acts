@@ -45,19 +45,19 @@ TorchMetricLearning::TorchMetricLearning(const Config &cfg,
 TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
-    boost::multi_array<float, 2> &inputValues) {
+    std::vector<float> &inputValues, std::size_t numNodes) {
   ACTS_DEBUG("Start graph construction");
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
-  const int64_t numSpacepoints = inputValues.shape()[0];
-  const int64_t numAllFeatures = inputValues.shape()[1];
+  const int64_t numSpacepoints = numNodes;
+  const int64_t numAllFeatures = inputValues.size() / numNodes;
 
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information: " << [&]() {
     std::stringstream ss;
     for (int i = 0; i < numAllFeatures; ++i) {
-      ss << inputValues[0][i] << "  ";
+      ss << inputValues[i] << "  ";
     }
     return ss.str();
   }());

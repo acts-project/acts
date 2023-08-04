@@ -28,7 +28,7 @@ class GraphConstructionBase {
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
-      boost::multi_array<float, 2> &inputValues) = 0;
+      std::vector<float> &inputValues, std::size_t numNodes) = 0;
 
   virtual ~GraphConstructionBase() = default;
 };
