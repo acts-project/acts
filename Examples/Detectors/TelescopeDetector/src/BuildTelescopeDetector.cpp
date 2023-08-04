@@ -40,7 +40,8 @@ ActsExamples::Telescope::buildDetector(
     std::vector<
         std::shared_ptr<ActsExamples::Telescope::TelescopeDetectorElement>>&
         detectorStore,
-    const std::vector<double>& positions, const std::vector<double>& stereos,
+    const std::vector<double>& positions,
+    const std::vector<double>& stereoAngles,
     const std::array<double, 2>& offsets, const std::array<double, 2>& bounds,
     double thickness, ActsExamples::Telescope::TelescopeSurfaceType surfaceType,
     Acts::BinningValue binValue) {
@@ -80,11 +81,12 @@ ActsExamples::Telescope::buildDetector(
   for (unsigned int i = 0; i < nLayers; ++i) {
     // The translation without rotation yet
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
-    // The entire transformation (the coordinate system, whose center is defined by trans, will be rotated as well)
+    // The entire transformation (the coordinate system, whose center is defined
+    // by trans, will be rotated as well)
     Acts::Transform3 trafo(rotation * trans);
 
     // rotate around local z axis by stereo angle
-    auto stereo = stereos[i];
+    auto stereo = stereoAngles[i];
     trafo *= Acts::AngleAxis3(stereo, Acts::Vector3::UnitZ());
 
     // Create the detector element
