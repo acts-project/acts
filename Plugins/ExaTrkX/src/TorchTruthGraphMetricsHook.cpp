@@ -58,7 +58,10 @@ Acts::TorchTruthGraphMetricsHook::TorchTruthGraphMetricsHook(
 
 void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
                                                   const std::any& edges) const {
-  auto edgeTensor = std::any_cast<torch::Tensor>(edges);
+  auto edgeTensor = std::any_cast<torch::Tensor>(edges)
+                        .clone()
+                        .to(torch::kInt64)
+                        .to(torch::kCPU);
 
   if (edgeTensor.size(0) != 2) {
     throw std::invalid_argument("input tensor must have shape (2,N)");
