@@ -134,32 +134,32 @@ ActsExamples::VertexPerformanceWriter::VertexPerformanceWriter(
     m_outputTree->Branch("covZT", &m_covZT);
 
     // Branches related to track momenta at vertex
-    m_outputTree->Branch("truthPhi", &m_truthPhi);
-    m_outputTree->Branch("truthTheta", &m_truthTheta);
-    m_outputTree->Branch("truthQOverP", &m_truthQOverP);
+    m_outputTree->Branch("trk_truthPhi", &m_truthPhi);
+    m_outputTree->Branch("trk_truthTheta", &m_truthTheta);
+    m_outputTree->Branch("trk_truthQOverP", &m_truthQOverP);
 
-    m_outputTree->Branch("recoPhi", &m_recoPhi);
-    m_outputTree->Branch("recoPhiFitted", &m_recoPhiFitted);
-    m_outputTree->Branch("recoTheta", &m_recoTheta);
-    m_outputTree->Branch("recoThetaFitted", &m_recoThetaFitted);
-    m_outputTree->Branch("recoQOverP", &m_recoQOverP);
-    m_outputTree->Branch("recoQOverPFitted", &m_recoQOverPFitted);
+    m_outputTree->Branch("trk_recoPhi", &m_recoPhi);
+    m_outputTree->Branch("trk_recoPhiFitted", &m_recoPhiFitted);
+    m_outputTree->Branch("trk_recoTheta", &m_recoTheta);
+    m_outputTree->Branch("trk_recoThetaFitted", &m_recoThetaFitted);
+    m_outputTree->Branch("trk_recoQOverP", &m_recoQOverP);
+    m_outputTree->Branch("trk_recoQOverPFitted", &m_recoQOverPFitted);
 
-    m_outputTree->Branch("resPhi", &m_resPhi);
-    m_outputTree->Branch("resPhiFitted", &m_resPhiFitted);
-    m_outputTree->Branch("resTheta", &m_resTheta);
-    m_outputTree->Branch("resThetaFitted", &m_resThetaFitted);
-    m_outputTree->Branch("resQOverP", &m_resQOverP);
-    m_outputTree->Branch("resQOverPFitted", &m_resQOverPFitted);
-    m_outputTree->Branch("momOverlap", &m_momOverlap);
-    m_outputTree->Branch("momOverlapFitted", &m_momOverlapFitted);
+    m_outputTree->Branch("trk_resPhi", &m_resPhi);
+    m_outputTree->Branch("trk_resPhiFitted", &m_resPhiFitted);
+    m_outputTree->Branch("trk_resTheta", &m_resTheta);
+    m_outputTree->Branch("trk_resThetaFitted", &m_resThetaFitted);
+    m_outputTree->Branch("trk_resQOverP", &m_resQOverP);
+    m_outputTree->Branch("trk_resQOverPFitted", &m_resQOverPFitted);
+    m_outputTree->Branch("trk_momOverlap", &m_momOverlap);
+    m_outputTree->Branch("trk_momOverlapFitted", &m_momOverlapFitted);
 
-    m_outputTree->Branch("pullPhi", &m_pullPhi);
-    m_outputTree->Branch("pullPhiFitted", &m_pullPhiFitted);
-    m_outputTree->Branch("pullTheta", &m_pullTheta);
-    m_outputTree->Branch("pullThetaFitted", &m_pullThetaFitted);
-    m_outputTree->Branch("pullQOverP", &m_pullQOverP);
-    m_outputTree->Branch("pullQOverPFitted", &m_pullQOverPFitted);
+    m_outputTree->Branch("trk_pullPhi", &m_pullPhi);
+    m_outputTree->Branch("trk_pullPhiFitted", &m_pullPhiFitted);
+    m_outputTree->Branch("trk_pullTheta", &m_pullTheta);
+    m_outputTree->Branch("trk_pullThetaFitted", &m_pullThetaFitted);
+    m_outputTree->Branch("trk_pullQOverP", &m_pullQOverP);
+    m_outputTree->Branch("trk_pullQOverPFitted", &m_pullQOverPFitted);
 
     m_outputTree->Branch("nTracksTruthVtx", &m_nTracksOnTruthVertex);
     m_outputTree->Branch("nTracksRecoVtx", &m_nTracksOnRecoVertex);
@@ -469,6 +469,39 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                          : 1.0);
     if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
       int count = 0;
+      // Get references to inner vectors where all track variables corresponding
+      // to the current vertex will be saved
+      auto& innerTruthPhi = m_truthPhi.emplace_back();
+      auto& innerTruthTheta = m_truthTheta.emplace_back();
+      auto& innerTruthQOverP = m_truthQOverP.emplace_back();
+
+      auto& innerRecoPhi = m_recoPhi.emplace_back();
+      auto& innerRecoTheta = m_recoTheta.emplace_back();
+      auto& innerRecoQOverP = m_recoQOverP.emplace_back();
+
+      auto& innerRecoPhiFitted = m_recoPhiFitted.emplace_back();
+      auto& innerRecoThetaFitted = m_recoThetaFitted.emplace_back();
+      auto& innerRecoQOverPFitted = m_recoQOverPFitted.emplace_back();
+
+      auto& innerResPhi = m_resPhi.emplace_back();
+      auto& innerResTheta = m_resTheta.emplace_back();
+      auto& innerResQOverP = m_resQOverP.emplace_back();
+
+      auto& innerResPhiFitted = m_resPhiFitted.emplace_back();
+      auto& innerResThetaFitted = m_resThetaFitted.emplace_back();
+      auto& innerResQOverPFitted = m_resQOverPFitted.emplace_back();
+
+      auto& innerMomOverlap = m_momOverlap.emplace_back();
+      auto& innerMomOverlapFitted = m_momOverlapFitted.emplace_back();
+
+      auto& innerPullPhi = m_pullPhi.emplace_back();
+      auto& innerPullTheta = m_pullTheta.emplace_back();
+      auto& innerPullQOverP = m_pullQOverP.emplace_back();
+
+      auto& innerPullPhiFitted = m_pullPhiFitted.emplace_back();
+      auto& innerPullThetaFitted = m_pullThetaFitted.emplace_back();
+      auto& innerPullQOverPFitted = m_pullQOverPFitted.emplace_back();
+
       for (std::size_t j = 0; j < associatedTruthParticles.size(); ++j) {
         const auto& particle = associatedTruthParticles[j];
         int priVtxId = particle.particleId().vertexPrimary();
@@ -602,9 +635,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               trueMom.head(2) =
                   Acts::makePhiThetaFromDirectionUnit(trueUnitDir);
               trueMom[2] = particle.qOverP();
-              m_truthPhi.push_back(trueMom[0]);
-              m_truthTheta.push_back(trueMom[1]);
-              m_truthQOverP.push_back(trueMom[2]);
+              innerTruthPhi.push_back(trueMom[0]);
+              innerTruthTheta.push_back(trueMom[1]);
+              innerTruthQOverP.push_back(trueMom[2]);
 
               // Save track parameters before the vertex fit
               const auto paramsAtVtx = propagateToVtx(*(trk.originalParams));
@@ -614,29 +647,29 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 const Acts::ActsMatrix<3, 3>& momCov =
                     paramsAtVtx->covariance()->block<3, 3>(Acts::eBoundPhi,
                                                            Acts::eBoundPhi);
-                m_recoPhi.push_back(recoMom[0]);
-                m_recoTheta.push_back(recoMom[1]);
-                m_recoQOverP.push_back(recoMom[2]);
+                innerRecoPhi.push_back(recoMom[0]);
+                innerRecoTheta.push_back(recoMom[1]);
+                innerRecoQOverP.push_back(recoMom[2]);
 
                 Acts::ActsVector<3> diffMom = recoMom - trueMom;
                 // Accounting for the periodicity of phi. We overwrite the
                 // previously computed value for better readability.
                 diffMom[0] = Acts::detail::difference_periodic(
                     recoMom(0), trueMom(0), 2 * M_PI);
-                m_resPhi.push_back(diffMom[0]);
-                m_resTheta.push_back(diffMom[1]);
-                m_resQOverP.push_back(diffMom[2]);
+                innerResPhi.push_back(diffMom[0]);
+                innerResTheta.push_back(diffMom[1]);
+                innerResQOverP.push_back(diffMom[2]);
 
-                m_pullPhi.push_back(
+                innerPullPhi.push_back(
                     pull(diffMom[0], momCov(0, 0), "phi", false));
-                m_pullTheta.push_back(
+                innerPullTheta.push_back(
                     pull(diffMom[1], momCov(1, 1), "theta", false));
-                m_pullQOverP.push_back(
+                innerPullQOverP.push_back(
                     pull(diffMom[2], momCov(2, 2), "q/p", false));
 
                 const auto& recoUnitDir = paramsAtVtx->unitDirection();
                 double overlap = trueUnitDir.dot(recoUnitDir);
-                m_momOverlap.push_back(overlap);
+                innerMomOverlap.push_back(overlap);
               }
 
               // Save track parameters after the vertex fit
@@ -647,33 +680,39 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 const Acts::ActsMatrix<3, 3>& momCovFitted =
                     paramsAtVtxFitted->covariance()->block<3, 3>(
                         Acts::eBoundPhi, Acts::eBoundPhi);
-                m_recoPhiFitted.push_back(recoMomFitted[0]);
-                m_recoThetaFitted.push_back(recoMomFitted[1]);
-                m_recoQOverPFitted.push_back(recoMomFitted[2]);
+                innerRecoPhiFitted.push_back(recoMomFitted[0]);
+                innerRecoThetaFitted.push_back(recoMomFitted[1]);
+                innerRecoQOverPFitted.push_back(recoMomFitted[2]);
 
                 Acts::ActsVector<3> diffMomFitted = recoMomFitted - trueMom;
                 // Accounting for the periodicity of phi. We overwrite the
                 // previously computed value for better readability.
                 diffMomFitted[0] = Acts::detail::difference_periodic(
                     recoMomFitted(0), trueMom(0), 2 * M_PI);
-                m_resPhiFitted.push_back(diffMomFitted[0]);
-                m_resThetaFitted.push_back(diffMomFitted[1]);
-                m_resQOverPFitted.push_back(diffMomFitted[2]);
+                innerResPhiFitted.push_back(diffMomFitted[0]);
+                innerResThetaFitted.push_back(diffMomFitted[1]);
+                innerResQOverPFitted.push_back(diffMomFitted[2]);
 
-                m_pullPhiFitted.push_back(
+                innerPullPhiFitted.push_back(
                     pull(diffMomFitted[0], momCovFitted(0, 0), "phi"));
-                m_pullThetaFitted.push_back(
+                innerPullThetaFitted.push_back(
                     pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
-                m_pullQOverPFitted.push_back(
+                innerPullQOverPFitted.push_back(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
                 const auto& recoUnitDirFitted =
                     paramsAtVtxFitted->unitDirection();
                 double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
-                m_momOverlapFitted.push_back(overlapFitted);
+                innerMomOverlapFitted.push_back(overlapFitted);
               }
             }
           }
+          /*
+          std::cout << "\nnew vec\n";
+          for (auto& tphi : m_truthPhi.back()) {
+            std::cout << "\n" << tphi << "\n";
+          }
+          */
           count++;
         }
       }
