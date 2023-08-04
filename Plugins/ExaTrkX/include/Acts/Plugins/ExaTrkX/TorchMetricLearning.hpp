@@ -31,6 +31,7 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
     int embeddingDim = 8;
     float rVal = 1.6;
     int knnVal = 500;
+    bool shuffleDirections = false;
   };
 
   TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);

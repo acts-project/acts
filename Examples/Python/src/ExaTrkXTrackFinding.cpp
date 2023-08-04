@@ -132,6 +132,7 @@ void addExaTrkXTrackFinding(Context &ctx) {
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
+    ACTS_PYTHON_MEMBER(shuffleDirections);
     ACTS_PYTHON_STRUCT_END();
   }
   {
