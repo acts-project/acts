@@ -44,7 +44,9 @@ torch::Tensor postprocessEdgeTensor(torch::Tensor edges,
   // Remove duplicates
   if (removeDuplicates) {
     torch::Tensor duplicate_mask = edges.index({0}) > edges.index({1});
-    edges = edges.index({Slice(), duplicate_mask});
+    edges.index({Slice(), duplicate_mask}) =
+        edges.index({Slice(), duplicate_mask}).flip(0);
+    edges = std::get<0>(torch::unique_dim(edges, -1, false));
   }
 
   // Randomly flip direction
@@ -56,11 +58,9 @@ torch::Tensor postprocessEdgeTensor(torch::Tensor edges,
     torch::Tensor flip_edges =
         edges.index({Slice(), random_cut_flip.to(torch::kBool)}).flip({0});
     edges = torch::cat({keep_edges, flip_edges}, 1);
-  } else {
-    edges = edges.toType(torch::kInt64);
   }
 
-  return edges;
+  return edges.toType(torch::kInt64);
 }
 
 torch::Tensor Acts::detail::buildEdgesFRNN(at::Tensor &embedFeatures,
