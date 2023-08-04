@@ -423,7 +423,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                 return out
 
         @staticmethod
-        def parse_loc(loc:str) -> Tuple[str, Tuple[int, int]]:
+        def parse_loc(loc: str) -> Tuple[str, Tuple[int, int]]:
             file, lines = loc.split(":", 1)
 
             if m := re.match(r"^\((\d+) ?, ?(\d+)\]$", lines.strip()):
@@ -444,9 +444,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                 file, lines = cls.parse_loc(loc)
 
                 for fpe, count in types.items():
-                    out.append(
-                        cls(file, lines, cls._fpe_types_to_enum[fpe], count)
-                    )
+                    out.append(cls(file, lines, cls._fpe_types_to_enum[fpe], count))
             return out
 
     @classmethod
