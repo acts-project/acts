@@ -427,9 +427,9 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
             for loc, types in d.items():
                 file, lines = loc.split(":", 1)
 
-                if m := re.match(f"^\((\d+) ?, ?(\d+)\]$", lines.strip()):
+                if m := re.match(r"^\((\d+) ?, ?(\d+)\]$", lines.strip()):
                     start, end = map(int, m.groups())
-                elif m := re.match(f"^(\d+) ?- ?(\d+)$", lines.strip()):
+                elif m := re.match(r"^(\d+) ?- ?(\d+)$", lines.strip()):
                     start, end = map(int, m.groups())
                     end += 1  # assumption here is that it's inclusive
                 else:
@@ -487,7 +487,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                             )
 
                     if m := re.match(
-                        f".*\/\/ ?MARK: ?fpeMaskBegin\( ?(\w+), ?(\d+) ?, ?#?(\d+) ?\)",
+                        r".*\/\/ ?MARK: ?fpeMaskBegin\( ?(\w+), ?(\d+) ?, ?#?(\d+) ?\)",
                         line,
                     ):
                         fpeType, count, _ = m.groups()
