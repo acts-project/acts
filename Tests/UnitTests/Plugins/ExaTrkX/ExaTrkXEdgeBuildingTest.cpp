@@ -164,3 +164,118 @@ BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_kdtree) {
 
   test_random_graph(emb_dim, n_nodes, r, knn, cpuEdgeBuilder);
 }
+
+BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
+  // clang-format off
+  std::vector<int64_t> edges = {
+    1,1,
+    2,3,
+    2,2,
+    5,4,
+  };
+  // clang-format on
+
+  auto opts = torch::TensorOptions().dtype(torch::kInt64);
+  const auto edgeTensor =
+      torch::from_blob(edges.data(), {static_cast<long>(edges.size() / 2), 2},
+                       opts)
+          .transpose(0, 1);
+
+  const auto withoutSelfLoops =
+      Acts::detail::postprocessEdgeTensor(edgeTensor, true, false, false)
+          .transpose(1, 0)
+          .flatten();
+
+  const std::vector<int64_t> postEdges(
+      withoutSelfLoops.data_ptr<int64_t>(),
+      withoutSelfLoops.data_ptr<int64_t>() + withoutSelfLoops.numel());
+
+  // clang-format off
+  const std::vector<int64_t> ref = {
+    2,3,
+    5,4,
+  };
+  // clang-format on
+
+  BOOST_CHECK(ref == postEdges);
+}
+
+BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
+  // clang-format off
+  std::vector<int64_t> edges = {
+    1,2,
+    2,1,   // duplicate, flipped
+    3,2,
+    3,2,   // duplicate, not flipped
+    7,6,   // should be flipped
+  };
+  // clang-format on
+
+  auto opts = torch::TensorOptions().dtype(torch::kInt64);
+  const auto edgeTensor =
+      torch::from_blob(edges.data(), {static_cast<long>(edges.size() / 2), 2},
+                       opts)
+          .transpose(0, 1);
+
+  const auto withoutDups =
+      Acts::detail::postprocessEdgeTensor(edgeTensor, false, true, false)
+          .transpose(1, 0)
+          .flatten();
+
+  const std::vector<int64_t> postEdges(
+      withoutDups.data_ptr<int64_t>(),
+      withoutDups.data_ptr<int64_t>() + withoutDups.numel());
+
+  // clang-format off
+  const std::vector<int64_t> ref = {
+    1,2,
+    2,3,
+    6,7,
+  };
+  // clang-format on
+
+  BOOST_CHECK(ref == postEdges);
+}
+
+BOOST_AUTO_TEST_CASE(test_random_flip) {
+  torch::manual_seed(seed);
+
+  // clang-format off
+  std::vector<int64_t> edges = {
+    1,2,
+    2,3,
+    3,4,
+    4,5,
+  };
+  // clang-format on
+
+  auto opts = torch::TensorOptions().dtype(torch::kInt64);
+  const auto edgeTensor =
+      torch::from_blob(edges.data(), {static_cast<long>(edges.size() / 2), 2},
+                       opts)
+          .transpose(0, 1);
+
+  const auto flipped =
+      Acts::detail::postprocessEdgeTensor(edgeTensor, false, false, true)
+          .transpose(0, 1)
+          .flatten();
+
+  const std::vector<int64_t> postEdges(
+      flipped.data_ptr<int64_t>(),
+      flipped.data_ptr<int64_t>() + flipped.numel());
+
+  BOOST_CHECK(postEdges.size() == edges.size());
+  for (auto preIt = edges.begin(); preIt != edges.end(); preIt += 2) {
+    int found = 0;
+
+    for (auto postIt = postEdges.begin(); postIt != postEdges.end();
+         postIt += 2) {
+      bool noflp = (*preIt == *postIt) and *(preIt + 1) == *(postIt + 1);
+      bool flp = *preIt == *(postIt + 1) and *(preIt + 1) == *(postIt);
+
+      found += (flp or noflp);
+    }
+
+    BOOST_CHECK(found == 1);
+  }
+}

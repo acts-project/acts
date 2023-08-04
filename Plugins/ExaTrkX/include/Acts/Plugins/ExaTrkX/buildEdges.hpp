@@ -17,6 +17,11 @@ class Tensor;
 namespace Acts {
 namespace detail {
 
+/// Post process edges
+at::Tensor postprocessEdgeTensor(at::Tensor edges, bool removeSelfLoops = true,
+                                 bool removeDuplicates = true,
+                                 bool flipDirections = false);
+
 /// Edge building using FRNN and CUDA.
 /// Raises an exception if not built with CUDA
 at::Tensor buildEdgesFRNN(at::Tensor& embedFeatures, float rVal, int kVal,
