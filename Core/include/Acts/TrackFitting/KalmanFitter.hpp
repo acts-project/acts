@@ -362,7 +362,7 @@ class KalmanFitter {
       // Update:
       // - Waiting for a current surface
       auto surface = navigator.currentSurface(state.navigation);
-      std::string direction = state.stepping.navDir.toString();
+      std::string direction = state.options.direction.toString();
       if (surface != nullptr) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
@@ -512,12 +512,12 @@ class KalmanFitter {
       result.reversed = true;
 
       // Reverse navigation direction
-      state.stepping.navDir = state.stepping.navDir.invert();
+      state.options.direction = state.options.direction.invert();
 
       // Reset propagator options
       // TODO Not sure if reset of pathLimit during propagation makes any sense
       state.options.pathLimit =
-          state.stepping.navDir * std::abs(state.options.pathLimit);
+          state.options.direction * std::abs(state.options.pathLimit);
 
       // Get the last measurement state and reset navigation&stepping state
       // based on information on this state
@@ -527,8 +527,7 @@ class KalmanFitter {
       stepper.resetState(
           state.stepping, st.filtered(),
           reversedFilteringCovarianceScaling * st.filteredCovariance(),
-          st.referenceSurface(), state.stepping.navDir,
-          state.options.maxStepSize);
+          st.referenceSurface(), state.options.maxStepSize);
 
       // For the last measurement state, smoothed is filtered
       st.smoothed() = st.filtered();
@@ -538,7 +537,7 @@ class KalmanFitter {
       // Reset navigation state
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), state.stepping.navDir,
+          stepper.direction(state.stepping), state.options.direction,
           &st.referenceSurface(), targetSurface);
 
       // Update material effects for last measurement state in reversed
@@ -732,7 +731,7 @@ class KalmanFitter {
 
         // If the update is successful, set covariance and
         auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                            state.stepping.navDir, logger());
+                                            state.options.direction, logger());
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
@@ -922,7 +921,7 @@ class KalmanFitter {
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
         return targetSurface->intersect(
             state.geoContext, freeVector.segment<3>(eFreePos0),
-            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
+            state.options.direction * freeVector.segment<3>(eFreeDir0), true,
             state.options.targetTolerance);
       };
 
@@ -973,7 +972,7 @@ class KalmanFitter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir = state.stepping.navDir.invert();
+        state.options.direction = state.options.direction.invert();
       }
       // Reset the step size
       state.stepping.stepSize = ConstrainedStep(state.options.maxStepSize);
