@@ -60,7 +60,7 @@ struct NavigationOptions {
   double pathLimit = std::numeric_limits<double>::max();
 
   /// The overstep tolerance for this navigation step
-  double overstepLimit = -1 * UnitConstants::um;
+  double overstepLimit = 0;
 
   /// Force intersection with boundaries
   bool forceIntersectBoundaries = false;
@@ -239,6 +239,9 @@ class Navigator {
 
     // Get the compatible layers (including the current layer)
     NavigationOptions<Layer> navOpts;
+    navOpts.resolveSensitive = true;
+    navOpts.resolveMaterial = true;
+    navOpts.resolvePassive = true;
     state.navLayers =
         state.currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
 
