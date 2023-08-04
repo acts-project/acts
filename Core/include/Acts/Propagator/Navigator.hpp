@@ -521,7 +521,7 @@ class Navigator {
         auto boundary = state.navigation.navBoundary().object;
         state.navigation.currentVolume = boundary->attachedVolume(
             state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), state.options.direction);
+            stepper.direction(state.stepping), state.stepping.navDir);
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           ACTS_VERBOSE(
@@ -777,7 +777,7 @@ class Navigator {
           // ~ non-zero field
           double ir = (dir.cross(B).norm()) * q / mom;
           double s;
-          if (state.options.direction == Direction::Forward) {
+          if (state.stepping.navDir == Direction::Forward) {
             s = state.stepping.stepSize.max();
           } else {
             s = state.stepping.stepSize.min();
@@ -797,7 +797,7 @@ class Navigator {
         auto protoNavSurfaces =
             state.navigation.currentVolume->compatibleSurfacesFromHierarchy(
                 state.geoContext, stepper.position(state.stepping),
-                state.options.direction * stepper.direction(state.stepping),
+                state.stepping.navDir * stepper.direction(state.stepping),
                 opening_angle, navOpts);
         if (!protoNavSurfaces.empty()) {
           // did we find any surfaces?
@@ -957,7 +957,7 @@ class Navigator {
       state.navigation.navBoundaries =
           state.navigation.currentVolume->compatibleBoundaries(
               state.geoContext, stepper.position(state.stepping),
-              state.options.direction * stepper.direction(state.stepping),
+              state.stepping.navDir * stepper.direction(state.stepping),
               navOpts, logger());
       // The number of boundary candidates
       if (logger().doPrint(Logging::VERBOSE)) {
@@ -1076,7 +1076,7 @@ class Navigator {
       // target volume and layer search through global search
       auto targetIntersection = state.navigation.targetSurface->intersect(
           state.geoContext, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping), false,
+          state.stepping.navDir * stepper.direction(state.stepping), false,
           state.options.targetTolerance);
       if (targetIntersection) {
         ACTS_VERBOSE(volInfo(state)
@@ -1154,7 +1154,7 @@ class Navigator {
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
         state.geoContext, stepper.position(state.stepping),
-        state.options.direction * stepper.direction(state.stepping), navOpts);
+        state.stepping.navDir * stepper.direction(state.stepping), navOpts);
     // the number of layer candidates
     if (!state.navigation.navSurfaces.empty()) {
       if (logger().doPrint(Logging::VERBOSE)) {
@@ -1222,7 +1222,7 @@ class Navigator {
     state.navigation.navLayers =
         state.navigation.currentVolume->compatibleLayers(
             state.geoContext, stepper.position(state.stepping),
-            state.options.direction * stepper.direction(state.stepping),
+            state.stepping.navDir * stepper.direction(state.stepping),
             navOpts);
 
     // Layer candidates have been found
