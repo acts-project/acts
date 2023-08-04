@@ -707,12 +707,6 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               }
             }
           }
-          /*
-          std::cout << "\nnew vec\n";
-          for (auto& tphi : m_truthPhi.back()) {
-            std::cout << "\n" << tphi << "\n";
-          }
-          */
           count++;
         }
       }
