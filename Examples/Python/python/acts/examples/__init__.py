@@ -1,6 +1,6 @@
 import sys, inspect
 from pathlib import Path
-from typing import Optional, Protocol, Union, List, Dict
+from typing import Optional, Protocol, Union, List, Dict, Tuple
 import os
 import re
 
@@ -355,8 +355,9 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
             if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
                 n = []
                 for loc, fpe, count in m:
+                    file, lines = self.FpeMask.parse_loc(loc)
                     t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
-                    n.append(self.FpeMask(loc, t, count))
+                    n.append(self.FpeMask(file, lines, t, count))
                 kwargs["fpeMasks"] = n
 
         kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
@@ -421,24 +422,30 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
                 return out
 
+        @staticmethod
+        def parse_loc(loc:str) -> Tuple[str, Tuple[int, int]]:
+            file, lines = loc.split(":", 1)
+
+            if m := re.match(r"^\((\d+) ?, ?(\d+)\]$", lines.strip()):
+                start, end = map(int, m.groups())
+            elif m := re.match(r"^(\d+) ?- ?(\d+)$", lines.strip()):
+                start, end = map(int, m.groups())
+                end += 1  # assumption here is that it's inclusive
+            else:
+                start = int(lines)
+                end = start + 1
+
+            return file, (start, end)
+
         @classmethod
         def fromDict(cls, d: Dict[str, Dict[str, int]]) -> List["FpeMask"]:
             out = []
             for loc, types in d.items():
-                file, lines = loc.split(":", 1)
-
-                if m := re.match(r"^\((\d+) ?, ?(\d+)\]$", lines.strip()):
-                    start, end = map(int, m.groups())
-                elif m := re.match(r"^(\d+) ?- ?(\d+)$", lines.strip()):
-                    start, end = map(int, m.groups())
-                    end += 1  # assumption here is that it's inclusive
-                else:
-                    start = int(lines)
-                    end = start + 1
+                file, lines = cls.parse_loc(loc)
 
                 for fpe, count in types.items():
                     out.append(
-                        cls(file, (start, end), cls._fpe_types_to_enum[fpe], count)
+                        cls(file, lines, cls._fpe_types_to_enum[fpe], count)
                     )
             return out
 
