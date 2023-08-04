@@ -73,9 +73,13 @@ template <typename surface_t, typename bounds_t>
 std::shared_ptr<surface_t> surfaceFromJsonT(const nlohmann::json& j) {
   nlohmann::json jTransform = j["transform"];
   Transform3 sTransform = Transform3JsonConverter::fromJson(jTransform);
-  nlohmann::json jBounds = j["bounds"];
-  auto sBounds = SurfaceBoundsJsonConverter::fromJson<bounds_t>(jBounds);
-  return Surface::makeShared<surface_t>(sTransform, std::move(sBounds));
+  if constexpr (std::is_same_v<bounds_t, void>) {
+    return Surface::makeShared<surface_t>(sTransform);
+  } else {
+    nlohmann::json jBounds = j["bounds"];
+    auto sBounds = SurfaceBoundsJsonConverter::fromJson<bounds_t>(jBounds);
+    return Surface::makeShared<surface_t>(sTransform, std::move(sBounds));
+  }
 }
 
 namespace SurfaceJsonConverter {

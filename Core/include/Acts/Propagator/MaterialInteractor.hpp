@@ -106,7 +106,7 @@ struct MaterialInteractor {
         stepper.transportCovarianceToCurvilinear(state.stepping);
       }
       // Change the noise updater depending on the navigation direction
-      NoiseUpdateMode mode = (state.stepping.navDir == Direction::Forward)
+      NoiseUpdateMode mode = (state.options.direction == Direction::Forward)
                                  ? addNoise
                                  : removeNoise;
       // Apply the material interactions

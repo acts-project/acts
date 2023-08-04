@@ -24,6 +24,11 @@ void TelescopeDetectorWithOptions::addOptions(
       value<VariableReals>()->default_value({{0, 30, 60, 120, 150, 180}}),
       "Telescope detector Input: the layers positions in the longidutinal "
       "direction in mm");
+  opt("geo-tele-stereos",
+      value<VariableReals>()->default_value({{0, 0, 0, 0, 0, 0}}),
+      "Telescope detector Input: the layers stereo angle around the "
+      "longitudinal "
+      "direction in rad");
   opt("geo-tele-offsets", value<Reals<2>>()->default_value({{0, 0}}),
       "Telescope detector Input: the layers offsets in the transverse plane "
       "in "
@@ -53,6 +58,9 @@ auto TelescopeDetectorWithOptions::finalize(
   cfg.positions = vm["geo-tele-positions"]
                       .template as<ActsExamples::Options::VariableReals>()
                       .values;
+  cfg.stereos = vm["geo-tele-stereos"]
+                    .template as<ActsExamples::Options::VariableReals>()
+                    .values;
   cfg.offsets =
       vm["geo-tele-offsets"].template as<ActsExamples::Options::Reals<2>>();
   // The bounds values are taken as (halfX, halfY) for plane surface and
