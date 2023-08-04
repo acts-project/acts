@@ -583,8 +583,8 @@ class CombinatorialKalmanFilter {
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
-                         currentState.referenceSurface(),
-                         state.stepping.navDir, state.options.maxStepSize);
+                         currentState.referenceSurface(), state.stepping.navDir,
+                         state.options.maxStepSize);
 
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed

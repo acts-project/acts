@@ -60,7 +60,7 @@ struct NavigationOptions {
   double pathLimit = std::numeric_limits<double>::max();
 
   /// The overstep tolerance for this navigation step
-  double overstepLimit = 0;
+  double overstepLimit = -1 * UnitConstants::um;
 
   /// Force intersection with boundaries
   bool forceIntersectBoundaries = false;
@@ -939,8 +939,8 @@ class Navigator {
     // Helper function to find boundaries
     auto findBoundaries = [&]() -> bool {
       // The navigation options
-      // Exclude the current surface in case it's a boundary
       NavigationOptions<Surface> navOpts;
+      // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
       navOpts.pathLimit =
           stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
@@ -1222,8 +1222,7 @@ class Navigator {
     state.navigation.navLayers =
         state.navigation.currentVolume->compatibleLayers(
             state.geoContext, stepper.position(state.stepping),
-            state.stepping.navDir * stepper.direction(state.stepping),
-            navOpts);
+            state.stepping.navDir * stepper.direction(state.stepping), navOpts);
 
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {
