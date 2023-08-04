@@ -11,8 +11,7 @@ add_library(
   src/Physics/NuclearInteraction/NuclearInteraction.cpp
   src/Physics/PhotonConversion.cpp
   src/Physics/StandardInteractions.cpp
-  src/Utilities/LandauDistribution.cpp
-  src/Utilities/ParticleData.cpp)
+  src/Utilities/LandauDistribution.cpp)
 target_include_directories(
   ActsFatras
   PUBLIC

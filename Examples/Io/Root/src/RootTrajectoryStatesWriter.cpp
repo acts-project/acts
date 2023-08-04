@@ -442,23 +442,23 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
               m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
               m_err_x_hit.push_back(
-                  sqrt(hitCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                  std::sqrt(hitCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
               m_pull_x_hit.push_back(
                   res[Acts::eBoundLoc0] /
-                  sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                  std::sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
 
               if (state.calibratedSize() >= 2) {
-                m_pull_y_hit.push_back(
-                    res[Acts::eBoundLoc1] /
-                    sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
                 m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
                 m_err_y_hit.push_back(
-                    sqrt(hitCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                    std::sqrt(hitCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                m_pull_y_hit.push_back(
+                    res[Acts::eBoundLoc1] /
+                    std::sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
               } else {
                 float nan = std::numeric_limits<float>::quiet_NaN();
-                m_pull_y_hit.push_back(nan);
                 m_res_y_hit.push_back(nan);
                 m_err_y_hit.push_back(nan);
+                m_pull_y_hit.push_back(nan);
               }
 
               m_dim_hit.push_back(state.calibratedSize());
@@ -489,35 +489,36 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
             // track parameters error
             m_err_eLOC0[ipar].push_back(
-                sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
             m_err_eLOC1[ipar].push_back(
-                sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                std::sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
             m_err_ePHI[ipar].push_back(
-                sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+                std::sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
             m_err_eTHETA[ipar].push_back(
-                sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+                std::sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
             m_err_eQOP[ipar].push_back(
-                sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+                std::sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
             m_err_eT[ipar].push_back(
-                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+                std::sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
 
             // track parameters pull
             m_pull_eLOC0[ipar].push_back(
                 (parameters[Acts::eBoundLoc0] - truthLOC0) /
-                sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
             m_pull_eLOC1[ipar].push_back(
                 (parameters[Acts::eBoundLoc1] - truthLOC1) /
-                sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                std::sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
             m_pull_ePHI[ipar].push_back(
-                resPhi / sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
+                resPhi /
+                std::sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
             m_pull_eTHETA[ipar].push_back(
                 (parameters[Acts::eBoundTheta] - truthTHETA) /
-                sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
+                std::sqrt(covariance(Acts::eBoundTheta, Acts::eBoundTheta)));
             m_pull_eQOP[ipar].push_back(
                 (parameters[Acts::eBoundQOverP] - truthQOP) /
-                sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+                std::sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
             double sigmaTime =
-                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
+                std::sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
             m_pull_eT[ipar].push_back(
                 sigmaTime == 0.0
                     ? std::numeric_limits<double>::quiet_NaN()

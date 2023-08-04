@@ -125,8 +125,8 @@ class Portal : public std::enable_shared_from_this<Portal> {
   ///
   /// @note this overwrites the existing link
   void assignDetectorVolumeUpdator(
-      Direction dir, DetectorVolumeUpdator&& dVolumeUpdator,
-      const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes);
+      Direction dir, DetectorVolumeUpdator dVolumeUpdator,
+      std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes);
 
   /// Update the volume link, w/o directive, i.e. it relies that there's only
   /// one remaining link to be set, throws an exception if that's not the case
@@ -135,10 +135,9 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void assignDetectorVolumeUpdator(
-      DetectorVolumeUpdator&& dVolumeUpdator,
-      const std::vector<std::shared_ptr<DetectorVolume>>&
-          attachedVolumes) noexcept(false);
+  void assignDetectorVolumeUpdator(DetectorVolumeUpdator dVolumeUpdator,
+                                   std::vector<std::shared_ptr<DetectorVolume>>
+                                       attachedVolumes) noexcept(false);
 
   // Access to the portal targets: opposite/along normal vector
   const DetectorVolumeUpdators& detectorVolumeUpdators() const;

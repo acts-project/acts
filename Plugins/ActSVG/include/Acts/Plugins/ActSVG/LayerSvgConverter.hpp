@@ -11,9 +11,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "actsvg/core.hpp"
-#include "actsvg/meta.hpp"
+#include <actsvg/core.hpp>
+#include <actsvg/meta.hpp>
 
 namespace Acts {
 
@@ -56,8 +55,6 @@ struct Options {
   /// Label checks
   bool labelProjection = false;
   ActsScalar labelGauge = 0.;
-  /// ACTS log level
-  Logging::Level logLevel = Logging::INFO;
 };
 
 /// Write/create the layer sheets for a given layer

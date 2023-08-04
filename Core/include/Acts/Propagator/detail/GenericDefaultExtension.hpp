@@ -62,7 +62,7 @@ struct GenericDefaultExtension {
          const navigator_t& /*navigator*/, ThisVector3& knew,
          const Vector3& bField, std::array<Scalar, 4>& kQoP, const int i = 0,
          const double h = 0., const ThisVector3& kprev = ThisVector3::Zero()) {
-    auto qop = stepper.qop(state.stepping);
+    auto qop = stepper.qOverP(state.stepping);
     // First step does not rely on previous data
     if (i == 0) {
       knew = qop * stepper.direction(state.stepping).cross(bField);
@@ -137,7 +137,7 @@ struct GenericDefaultExtension {
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
     using std::hypot;
     auto derivative =
-        hypot(1, state.options.mass / stepper.momentum(state.stepping));
+        hypot(1, state.options.mass / stepper.absoluteMomentum(state.stepping));
     state.stepping.pars[eFreeTime] += h * derivative;
     if (state.stepping.covTransport) {
       state.stepping.derivative(3) = derivative;
@@ -182,7 +182,7 @@ struct GenericDefaultExtension {
 
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
-    auto qop = stepper.qop(state.stepping);
+    auto qop = stepper.qOverP(state.stepping);
 
     D = FreeMatrix::Identity();
 
@@ -241,10 +241,10 @@ struct GenericDefaultExtension {
 
     dGdL = h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
-    D(3, 7) =
-        h * state.options.mass * state.options.mass *
-        stepper.qop(state.stepping) /
-        std::hypot(1., state.options.mass / stepper.momentum(state.stepping));
+    D(3, 7) = h * state.options.mass * state.options.mass *
+              stepper.qOverP(state.stepping) /
+              std::hypot(1., state.options.mass /
+                                 stepper.absoluteMomentum(state.stepping));
     return true;
   }
 };

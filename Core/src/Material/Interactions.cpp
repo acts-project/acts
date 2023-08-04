@@ -8,9 +8,9 @@
 
 #include "Acts/Material/Interactions.hpp"
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -201,10 +201,10 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, int /* unused */,
   const auto rq = Acts::RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
-  const auto t = computeMassTerm(Me, rq);
-  // uses RPP2018 eq. 33.11
+  const auto u = computeMassTerm(Me, rq);
+  // uses RPP2018 eq. 33.12
   const auto running =
-      std::log(t / I) + std::log(eps / I) + 0.2f - rq.beta2 - 2 * dhalf;
+      std::log(u / I) + std::log(eps / I) + 0.2f - rq.beta2 - 2 * dhalf;
   return eps * running;
 }
 

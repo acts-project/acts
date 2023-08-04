@@ -6,6 +6,11 @@ configure_file(
 add_library(
   ActsCore SHARED "")
 
+target_sources(
+  ActsCore
+  PRIVATE
+    src/ActsVersion.cpp)
+
 target_compile_features(
   ActsCore
   PUBLIC ${ACTS_CXX_STANDARD_FEATURE})

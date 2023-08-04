@@ -16,7 +16,7 @@
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -126,8 +126,16 @@ struct PropagatorState {
     /// Momentum direction accessor
     Vector3 direction(const State& state) const { return state.dir; }
 
+    /// QoP accessor
+    double qOverP(const State& state) const {
+      return (state.q == 0 ? 1 : state.q) / state.p;
+    }
+
+    /// Absolute momentum accessor
+    double absoluteMomentum(const State& state) const { return state.p; }
+
     /// Momentum accessor
-    double momentum(const State& state) const { return state.p; }
+    Vector3 momentum(const State& state) const { return state.p * state.dir; }
 
     /// Charge access
     double charge(const State& state) const { return state.q; }
@@ -137,12 +145,11 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(State& state,
-                                               const Surface& surface,
-                                               const BoundaryCheck& bcheck,
-                                               const Logger& logger) const {
-      return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
-                                                        bcheck, logger);
+    Intersection3D::Status updateSurfaceStatus(
+        State& state, const Surface& surface, const BoundaryCheck& bcheck,
+        const Logger& logger, ActsScalar surfaceTolerance) const {
+      return detail::updateSingleSurfaceStatus<Stepper>(
+          *this, state, surface, bcheck, logger, surfaceTolerance);
     }
 
     template <typename object_intersection_t>

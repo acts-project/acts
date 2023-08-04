@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/ParticleData.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
-#include "ActsFatras/Utilities/ParticleData.hpp"
 
 #include <limits>
 #include <random>
@@ -21,8 +21,8 @@
 ActsExamples::ParametricParticleGenerator::ParametricParticleGenerator(
     const Config& cfg)
     : m_cfg(cfg),
-      m_charge(cfg.charge.value_or(ActsFatras::findCharge(m_cfg.pdg))),
-      m_mass(cfg.mass.value_or(ActsFatras::findMass(m_cfg.pdg))),
+      m_charge(cfg.charge.value_or(Acts::findCharge(m_cfg.pdg).value_or(0))),
+      m_mass(cfg.mass.value_or(Acts::findMass(m_cfg.pdg).value_or(0))),
       // since we want to draw the direction uniform on the unit sphere, we must
       // draw from cos(theta) instead of theta. see e.g.
       // https://mathworld.wolfram.com/SpherePointPicking.html

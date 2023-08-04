@@ -53,7 +53,12 @@ const Acts::TrackingVolume* Acts::TrackingGeometry::lowestTrackingVolume(
 
 const Acts::TrackingVolume* Acts::TrackingGeometry::highestTrackingVolume()
     const {
-  return (m_world.get());
+  return m_world.get();
+}
+
+const std::shared_ptr<const Acts::TrackingVolume>&
+Acts::TrackingGeometry::highestTrackingVolumeShared() const {
+  return m_world;
 }
 
 const Acts::Layer* Acts::TrackingGeometry::associatedLayer(

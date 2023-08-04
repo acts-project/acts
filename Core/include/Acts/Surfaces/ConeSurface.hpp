@@ -111,12 +111,12 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
   /// constructed
-  /// @param momentum is the momentum used for the measurement frame
+  /// @param direction is the momentum direction used for the measurement frame
   /// construction
   /// @return matrix that indicates the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                  const Vector3& position,
-                                 const Vector3& momentum) const final;
+                                 const Vector3& direction) const final;
 
   /// Return method for surface normal information
   ///
@@ -151,24 +151,24 @@ class ConeSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const final;
+                        const Vector3& direction) const final;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
