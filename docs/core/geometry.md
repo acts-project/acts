@@ -186,7 +186,7 @@ possible.
 The un-occupied space in a volume which contains a layer array is filled with
 objects of type {class}`Acts::NavigationLayer`, which allows that in a fully static geometry
 setup, every single point in a volume can be associated with a layer. Layer
-objects are confined together in a special {class}`Acts::LayerArray` class and can be
+objects are confined together in a special {type}`Acts::LayerArray` class and can be
 contained by a {class}`Acts::TrackingVolume`.
 
 ![LayerArray](/figures/geometry/LayerArray.png)
@@ -196,8 +196,8 @@ contained by a {class}`Acts::TrackingVolume`.
 ## Volume classes
 
 The {class}`Acts::Volume` class is a container of
-{class}`Acts::BoundarySurface` objects, where each
-{class}`Acts::BoundarySurface` is an extension of the {class}`Acts::Surface`
+{type}`Acts::BoundarySurface` objects, where each
+{type}`Acts::BoundarySurface` is an extension of the {class}`Acts::Surface`
 class with additional information about the attached Volumes. The normal vector
 of the surface defines an *inside* (opposite w.r.t. the normal vector) and an
 *outside* (along w.r.t. the normal vector) direction. Either a single volume or
