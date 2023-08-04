@@ -20,7 +20,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}"  )" &> /dev/null && pwd  
 
 # File to accumulate the histcmp results
 histcmp_results=$outdir/histcmp_results.csv
-echo "" > $histcmp_results
+echo -n "" > $histcmp_results
 
 SPYRAL_BIN=${SPYRAL_BIN:=spyral}
 SPYRAL="${SPYRAL_BIN} run -i 0.05 --summary"
@@ -238,7 +238,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_histcmp \
         $outdir/performance_ambi_seeded.root \
         $refdir/performance_ambi_seeded.root \
-        "Ambisolver seeded"
+        "Ambisolver seeded" \
         ambi_seeded
 
     run_histcmp \
