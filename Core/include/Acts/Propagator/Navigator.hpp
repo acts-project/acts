@@ -806,7 +806,7 @@ class Navigator {
           // ~ non-zero field
           double ir = (dir.cross(B).norm()) * q / mom;
           double s;
-          if (state.stepping.navDir == Direction::Forward) {
+          if (state.options.direction == Direction::Forward) {
             s = state.stepping.stepSize.max();
           } else {
             s = state.stepping.stepSize.min();

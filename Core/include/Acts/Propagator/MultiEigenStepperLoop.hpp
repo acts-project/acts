@@ -274,7 +274,6 @@ class MultiEigenStepperLoop
     SmallVector<Component> components;
 
     bool covTransport = false;
-    Direction navDir;
     double pathAccumulated = 0.;
     std::size_t steps = 0;
 
