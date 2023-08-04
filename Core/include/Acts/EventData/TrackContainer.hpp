@@ -265,18 +265,6 @@ class TrackContainer {
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr ParticleHypothesis& particleHypothesis(IndexType itrack) {
-    return component<ParticleHypothesis, hashString("particleHypothesis")>(
-        itrack);
-  }
-
-  constexpr const ParticleHypothesis& particleHypothesis(
-      IndexType itrack) const {
-    return component<ParticleHypothesis, hashString("particleHypothesis")>(
-        itrack);
-  }
-
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
     return container().parameters(itrack);
   }

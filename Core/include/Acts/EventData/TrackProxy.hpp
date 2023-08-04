@@ -13,6 +13,7 @@
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
@@ -358,16 +359,16 @@ class TrackProxy {
 
   /// Get the particle hypothesis
   /// @return the particle hypothesis
-  const Acts::ParticleHypothesis& particleHypothesis() const {
-    return m_container->particleHypothesis(m_index);
+  const ParticleHypothesis& particleHypothesis() const {
+    return component<ParticleHypothesis, hashString("particleHypothesis")>();
   }
 
   /// Get the particle hypothesis
   /// Mutable version
   /// @return the particle hypothesis
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  Acts::ParticleHypothesis& particleHypothesis() {
-    return m_container->particleHypothesis(m_index);
+  ParticleHypothesis& particleHypothesis() {
+    return component<ParticleHypothesis, hashString("particleHypothesis")>();
   }
 
   /// Get the charge of the tack
@@ -380,7 +381,7 @@ class TrackProxy {
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
   ActsScalar absoluteMomentum() const {
-    return SinglyCharged{}.extractMomentum(qOverP());
+    return particleHypothesis().extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum of the track
