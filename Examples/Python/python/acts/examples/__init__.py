@@ -445,7 +445,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                         if m := re.match(r".*\/\/ ?MARK: ?(fpeMask.*)$", line):
                             exp = m.group(1)
                             for m in re.findall(
-                                r"fpeMask\((\w+), ?(\d+) ?, ?issue: ?(\d+)\)", exp
+                                r"fpeMask\((\w+), ?(\d+) ?, ?#(\d+)\)", exp
                             ):
                                 fpeType, count, _ = m
                                 count = int(count)
