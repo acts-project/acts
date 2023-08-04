@@ -543,9 +543,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
             // track parameters error
             m_err_eLOC0[ipar].push_back(
-                std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, issue:2348)
+                    Acts::eBoundLoc0, Acts::eBoundLoc0)));
             m_err_eLOC1[ipar].push_back(
-                std::sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, issue:2348)
+                    Acts::eBoundLoc1, Acts::eBoundLoc1)));
             m_err_ePHI[ipar].push_back(
                 std::sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
             m_err_eTHETA[ipar].push_back(
