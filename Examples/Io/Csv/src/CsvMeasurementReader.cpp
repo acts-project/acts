@@ -8,21 +8,26 @@
 
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <iterator>
 #include <list>
+#include <stdexcept>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -39,6 +44,11 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   if (m_cfg.outputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurement output collection");
   }
+
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+  m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
+  m_outputClusters.maybeInitialize(m_cfg.outputClusters);
 }
 
 std::string ActsExamples::CsvMeasurementReader::CsvMeasurementReader::name()
@@ -53,7 +63,7 @@ std::pair<size_t, size_t> ActsExamples::CsvMeasurementReader::availableEvents()
 
 namespace {
 struct CompareHitId {
-  // support transparent comparision between identifiers and full objects
+  // support transparent comparison between identifiers and full objects
   using is_transparent = void;
   template <typename T>
   constexpr bool operator()(const T& left, const T& right) const {
@@ -117,7 +127,7 @@ std::vector<ActsExamples::CellData> readCellsByHitId(
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
   // hit_id in the files is not required to be neither continuous nor
-  // monotonic. internally, we want continous indices within [0,#hits)
+  // monotonic. internally, we want continuous indices within [0,#hits)
   // to simplify data handling. to be able to perform this mapping we first
   // read all data into memory before converting to the internal event data
   // types.
@@ -158,7 +168,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     DigitizedParameters dParameters;
     for (unsigned int ipar = 0;
          ipar < static_cast<unsigned int>(Acts::eBoundSize); ++ipar) {
-      if ((m.local_key) & (1 << (ipar + 1))) {
+      if (((m.local_key) & (1 << (ipar + 1))) != 0) {
         dParameters.indices.push_back(static_cast<Acts::BoundIndices>(ipar));
         switch (ipar) {
           case static_cast<unsigned int>(Acts::eBoundLoc0): {
@@ -213,14 +223,11 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   }
 
   // Write the data to the EventStore
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
-  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
-                     std::move(measurementSimHitsMap));
-  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
-                     std::move(sourceLinkStorage));
+  m_outputMeasurements(ctx, std::move(measurements));
+  m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
+  m_outputSourceLinks(ctx, std::move(sourceLinks));
   if (not clusters.empty()) {
-    ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
+    m_outputClusters(ctx, std::move(clusters));
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

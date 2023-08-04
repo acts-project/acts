@@ -8,13 +8,25 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace Acts {
 namespace Test {
+
+class Object {};
 
 /// test of the intersection class
 BOOST_AUTO_TEST_CASE(IntersectionTest) {
@@ -151,6 +163,25 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   BOOST_CHECK_EQUAL(ztfsnIntersections[3].pathLength, -3.);
 }
 
+/// test swappping of the intersection
+BOOST_AUTO_TEST_CASE(SwapObjectIntersectionTest) {
+  using ObjectIntersection = ObjectIntersection<Object>;
+
+  Intersection3D intersection(Vector3(0., 0., 0.), 0.,
+                              IntersectionStatus::onSurface);
+  Intersection3D alternative(Vector3(10., 0., 0.), 10.,
+                             IntersectionStatus::reachable);
+  ObjectIntersection oIntersection;
+  oIntersection.intersection = intersection;
+  oIntersection.alternative = alternative;
+
+  BOOST_CHECK(oIntersection.intersection.position == Vector3(0., 0., 0.));
+  BOOST_CHECK(oIntersection.alternative.position == Vector3(10., 0., 0.));
+  oIntersection.swapSolutions();
+  BOOST_CHECK(oIntersection.alternative.position == Vector3(0., 0., 0.));
+  BOOST_CHECK(oIntersection.intersection.position == Vector3(10., 0., 0.));
+}
+
 /// test of the object intersection class
 BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
   auto psf6 = Surface::makeShared<PlaneSurface>(Vector3(6., 0., 0.),
@@ -179,7 +210,7 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
                                          Intersection3D::Status::reachable),
                           psf9.get());
   PlaneIntersection int9b(
-      Intersection3D(Vector3(9., 1., 0.), std::sqrt(9. * 9. + 1.),
+      Intersection3D(Vector3(9., 1., 0.), std::hypot(9., 1.),
                      Intersection3D::Status::reachable),
       psf9.get());
   PlaneIntersection int10(Intersection3D(Vector3(10., 0., 0.), 10.,

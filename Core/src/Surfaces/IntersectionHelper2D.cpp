@@ -8,12 +8,11 @@
 
 #include "Acts/Surfaces/detail/IntersectionHelper2D.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 #include <cmath>
-#include <iostream>
-#include <tuple>
 
 Acts::Intersection2D Acts::detail::IntersectionHelper2D::intersectSegment(
     const Vector2& s0, const Vector2& s1, const Vector2& origin,
@@ -55,7 +54,7 @@ Acts::detail::IntersectionHelper2D::intersectEllipse(ActsScalar Rx,
     ActsScalar solD = std::copysign(toSolD.norm(), toSolD.dot(dir));
     ActsScalar altD = std::copysign(toAltD.norm(), toAltD.dot(dir));
 
-    if (solD * solD < altD * altD) {
+    if (std::abs(solD) < std::abs(altD)) {
       return {Intersection2D(sol, solD, Intersection2D::Status::reachable),
               Intersection2D(alt, altD, Intersection2D::Status::reachable)};
     }

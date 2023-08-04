@@ -11,22 +11,24 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 
-#include <functional>
 #include <memory>
 #include <mutex>
 
 #include <HepMC3/GenEvent.h>
 
-#include "G4VUserDetectorConstruction.hh"
-
 class G4RunManager;
 
 namespace ActsExamples {
 
-class EventRecording final : public ActsExamples::BareAlgorithm {
+class DetectorConstructionFactory;
+
+class EventRecording final : public ActsExamples::IAlgorithm {
  public:
   /// @class Config
   struct Config {
@@ -35,7 +37,7 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
     /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
 
-    G4VUserDetectorConstruction* detectorConstruction{nullptr};
+    std::shared_ptr<DetectorConstructionFactory> detectorConstructionFactory;
 
     /// random number seed 1
     int seed1 = 12345;
@@ -56,10 +58,10 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
   /// @param level the log level
   EventRecording(const Config& config, Acts::Logging::Level level);
 
-  ~EventRecording();
+  ~EventRecording() override;
 
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -69,6 +71,10 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
   Config m_cfg;
   /// G4 run manager
   std::unique_ptr<G4RunManager> m_runManager;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  WriteDataHandle<std::vector<HepMC3::GenEvent>> m_outputEvents{this,
+                                                                "OutputEvents"};
 
   // has to be mutable; algorithm interface enforces object constness
   mutable std::mutex m_runManagerLock;

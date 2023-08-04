@@ -62,7 +62,7 @@ auto aCylinder = Surface::makeShared<CylinderSurface>(at, std::move(cb));
 // Define a Straw surface
 auto aStraw = Surface::makeShared<StrawSurface>(at, 50_cm, 2_m);
 
-// The orgin of our attempts for plane, disc and cylinder
+// The origin of our attempts for plane, disc and cylinder
 Vector3 origin(0., 0., 0.);
 
 // The origin for straw/line attempts

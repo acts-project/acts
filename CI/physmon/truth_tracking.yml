@@ -11,9 +11,6 @@ checks:
     IntegralCheck:
       threshold: 3
 
-
-
-
   "nStates_*":
     KolmogorovTest: null
   "nMeasurements_*":

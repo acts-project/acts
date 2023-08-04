@@ -1,6 +1,5 @@
 add_library(
   ActsExamplesIoNuclearInteractions SHARED
-  src/NuclearInteractionOptions.cpp
   src/RootNuclearInteractionParametersWriter.cpp
   src/detail/NuclearInteractionParametrisation.cpp
 )
@@ -12,7 +11,7 @@ target_link_libraries(
   PUBLIC
     ActsCore ActsExamplesFramework
     Threads::Threads
-  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree Boost::program_options)
+  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
 
 install(
   TARGETS ActsExamplesIoNuclearInteractions

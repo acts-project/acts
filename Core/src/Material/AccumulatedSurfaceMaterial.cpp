@@ -10,7 +10,6 @@
 
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 
 #include <utility>
 
@@ -31,7 +30,7 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
   m_accumulatedMaterial = AccumulatedMatrix(bins1, accVec);
 }
 
-// Assign a material properites object
+// Assign a material properties object
 std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
     const Vector2& lp, const MaterialSlab& mp, double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
@@ -44,7 +43,7 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
   return {bin0, bin1, 0};
 }
 
-// Assign a material properites object
+// Assign a material properties object
 std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
     const Vector3& gp, const MaterialSlab& mp, double pathCorrection) {
   if (m_binUtility.dimensions() == 0) {
@@ -54,6 +53,43 @@ std::array<size_t, 3> Acts::AccumulatedSurfaceMaterial::accumulate(
   std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
   m_accumulatedMaterial[bTriple[1]][bTriple[0]].accumulate(mp, pathCorrection);
   return bTriple;
+}
+
+// Void average for vacuum assignment
+void Acts::AccumulatedSurfaceMaterial::trackVariance(const Vector3& gp,
+                                                     MaterialSlab slabReference,
+                                                     bool emptyHit) {
+  if (m_binUtility.dimensions() == 0) {
+    m_accumulatedMaterial[0][0].trackVariance(slabReference, emptyHit);
+    return;
+  }
+  std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
+  std::vector<std::array<size_t, 3>> trackBins = {bTriple};
+  trackVariance(trackBins, slabReference);
+}
+
+// Average the information accumulated during one event
+void Acts::AccumulatedSurfaceMaterial::trackVariance(
+    const std::vector<std::array<size_t, 3>>& trackBins,
+    MaterialSlab slabReference, bool emptyHit) {
+  // the homogeneous material case
+  if (m_binUtility.dimensions() == 0) {
+    m_accumulatedMaterial[0][0].trackVariance(slabReference, emptyHit);
+    return;
+  }
+  // The touched bins are known, so you can access them directly
+  if (not trackBins.empty()) {
+    for (auto bin : trackBins) {
+      m_accumulatedMaterial[bin[1]][bin[0]].trackVariance(slabReference);
+    }
+  } else {
+    // Touched bins are not known: Run over all bins
+    for (auto& matVec : m_accumulatedMaterial) {
+      for (auto& mat : matVec) {
+        mat.trackVariance(slabReference);
+      }
+    }
+  }
 }
 
 // Void average for vacuum assignment

@@ -11,6 +11,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -19,15 +20,25 @@
 
 namespace Acts {
 
+namespace Experimental {
+
+namespace GsfConstants {
+constexpr std::string_view kFinalMultiComponentStateColumn =
+    "gsf-final-multi-component-state";
+using FinalMultiComponentState =
+    std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>;
+}  // namespace GsfConstants
+
 /// The extensions needed for the GSF
+template <typename traj_t>
 struct GsfExtensions {
-  using TrackStateProxy = MultiTrajectory::TrackStateProxy;
-  using ConstTrackStateProxy = MultiTrajectory::ConstTrackStateProxy;
+  using TrackStateProxy = typename traj_t::TrackStateProxy;
+  using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        NavigationDirection, LoggerWrapper)>;
+                                        Direction, const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -45,20 +56,19 @@ struct GsfExtensions {
 
   /// Default constructor which connects the default void components
   GsfExtensions() {
-    calibrator.connect<&voidKalmanCalibrator>();
-    updater.connect<&voidKalmanUpdater>();
-    outlierFinder.connect<&voidOutlierFinder>();
+    calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
+    updater.template connect<&voidKalmanUpdater<traj_t>>();
+    outlierFinder.template connect<&voidOutlierFinder<traj_t>>();
   }
 };
 
+template <typename traj_t>
 struct GsfOptions {
   std::reference_wrapper<const GeometryContext> geoContext;
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  GsfExtensions extensions;
-
-  LoggerWrapper logger;
+  GsfExtensions<traj_t> extensions;
 
   PropagatorPlainOptions propagatorPlainOptions;
 
@@ -66,9 +76,21 @@ struct GsfOptions {
 
   std::size_t maxComponents = 4;
 
-  bool abortOnError = true;
+  double weightCutoff = 1.e-4;
+
+  bool abortOnError = false;
 
   bool disableAllMaterialHandling = false;
+
+  std::string_view finalMultiComponentStateColumn = "";
+
+  MixtureReductionMethod stateReductionMethod =
+      MixtureReductionMethod::eMaxWeight;
+
+#if __cplusplus < 202002L
+  GsfOptions() = delete;
+#endif
 };
 
+}  // namespace Experimental
 }  // namespace Acts

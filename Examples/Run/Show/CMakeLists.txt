@@ -5,8 +5,7 @@ target_link_libraries(
   ActsExampleShowFatrasGeneric
   PRIVATE
     ActsExamplesFramework ActsExamplesCommon ActsExamplesIoCsv
-    ActsExamplesPrinters ActsExamplesDetectorGeneric
-    Boost::program_options)
+    ActsExamplesPrinters ActsExamplesDetectorGeneric)
 add_executable(
   ActsExampleShowParticles
   ShowParticles.cpp)
@@ -14,7 +13,7 @@ target_link_libraries(
   ActsExampleShowParticles
   PRIVATE
     ActsExamplesFramework ActsExamplesCommon ActsExamplesIoCsv
-    ActsExamplesPrinters Boost::program_options)
+    ActsExamplesPrinters)
 
 install(
   TARGETS

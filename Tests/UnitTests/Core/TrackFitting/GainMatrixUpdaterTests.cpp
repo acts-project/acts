@@ -8,15 +8,21 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <utility>
 
 namespace {
 
@@ -47,7 +53,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   trkCov.diagonal() << 0.08, 0.3, 1, 1, 1, 0;
 
   // Make trajectory w/ one state
-  MultiTrajectory traj;
+  VectorMultiTrajectory traj;
   auto idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(idx);
 
@@ -55,8 +61,8 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predicted() = trkPar;
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
-  ts.setUncalibrated(sourceLink);
-  testSourceLinkCalibrator(tgContext, ts);
+  ts.setUncalibratedSourceLink(SourceLink{std::move(sourceLink)});
+  testSourceLinkCalibrator<VectorMultiTrajectory>(tgContext, ts);
 
   // Check that the state has storage available
   BOOST_CHECK(ts.hasPredicted());
@@ -64,7 +70,10 @@ BOOST_AUTO_TEST_CASE(Update) {
   BOOST_CHECK(ts.hasCalibrated());
 
   // Gain matrix update and filtered state
-  BOOST_CHECK(GainMatrixUpdater()(tgContext, ts).ok());
+  BOOST_CHECK(GainMatrixUpdater()
+                  .
+                  operator()<VectorMultiTrajectory>(tgContext, ts)
+                  .ok());
 
   // Check for regression. This does NOT test if the math is correct, just that
   // the result is the same as when the test was written.

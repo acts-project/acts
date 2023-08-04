@@ -97,18 +97,8 @@ void Initialise_hist(TGraph*& surface_hist,
 /// Fill the histograms for each surfaces.
 
 void Fill(std::map<uint64_t,TGraph*>& surface_hist,  std::map<uint64_t,sinfo>& surface_info,
-  const std::string& input_file, const std::string& json_surface_file, const int& nbprocess){
-
-  nlohmann::json Det;
+  const std::string& input_file, const int& nbprocess){
   std::map<std::string,std::string> surface_name;
-
-  if(json_surface_file != ""){
-    std::ifstream lfile(json_surface_file.c_str());
-    lfile >> Det;
-
-    Parse_Json(Det, surface_name);
-  }
-
   std::map<uint64_t,std::pair<std::vector<float>,std::vector<float>>> surface_pos;
 
   //Get file, tree and set top branch address
@@ -185,20 +175,18 @@ void Fill(std::map<uint64_t,TGraph*>& surface_hist,  std::map<uint64_t,sinfo>& s
 
 
 /// Plot the position of material interaction with respect with the associated surface.
-/// If a surface map json file is specify it is parse to associate name to the different surface id.
 /// nbprocess : number of parameter to be processed.
 /// name : name of the output directory.
-/// The parsing of the Json surface map file (use to associate the name to the volumes)
-/// might not work with version of root newer that version 6.18.04
 
-void Mat_map_surface_plot_dist(std::string input_file = "", std::string json_surface_file = "", int nbprocess = -1, std::string name = ""){
+
+void Mat_map_surface_plot_dist(std::string input_file = "", int nbprocess = -1, std::string name = ""){
 
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
 
   std::map<uint64_t,TGraph*> surface_hist;
   std::map<uint64_t,sinfo> surface_info;
-  Fill(surface_hist, surface_info, input_file, json_surface_file, nbprocess);
+  Fill(surface_hist, surface_info, input_file, nbprocess);
   for (auto hist_it = surface_hist.begin(); hist_it != surface_hist.end(); hist_it++){
     if(hist_it->second)
     plot(hist_it->second, surface_info[hist_it->first], name);

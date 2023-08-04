@@ -8,17 +8,17 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Seeding/AtlasSeedfinder.hpp"
+#include "Acts/Seeding/AtlasSeedFinder.hpp"
 
 #include <algorithm>
 
 // space point structure with the bare minimum and reasonable default
 // covariances. clusterList default is SCT (strip detector)
 struct SpacePoint {
-  float x;
-  float y;
-  float z;
-  float r;
+  float x = 0;
+  float y = 0;
+  float z = 0;
+  float r = 0;
   float covr = 0.03;
   float covz = 0.03;
   std::pair<int, int> m_clusterList = std::pair<int, int>(1, 1);
@@ -26,21 +26,19 @@ struct SpacePoint {
     m_clusterList = std::pair<int, int>(first, second);
   }
   const std::pair<int, int> clusterList() const { return m_clusterList; }
-  int surface;
+  int surface = 0;
 };
 
 // call sequence to create seeds. Seeds are copied as the
 // call to next() overwrites the previous seed object
 std::vector<Acts::Legacy::Seed<SpacePoint>> runSeeding(
     std::vector<SpacePoint*> spVec) {
-  Acts::Legacy::AtlasSeedfinder<SpacePoint> seedMaker;
+  Acts::Legacy::AtlasSeedFinder<SpacePoint> seedMaker;
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
   const Acts::Legacy::Seed<SpacePoint>* seed = seedMaker.next();
-  int numSeeds = 0;
   std::vector<Acts::Legacy::Seed<SpacePoint>> seedVec;
-  while (seed != 0) {
-    numSeeds++;
+  while (seed != nullptr) {
     auto spIter = seed->spacePoints().begin();
     spIter++;
     spIter++;
@@ -109,7 +107,7 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_) {
     sp->x = xVec.at(i);
     sp->y = yVec.at(i);
     sp->z = zVec.at(i);
-    sp->r = std::sqrt(sp->x * sp->x + sp->y * sp->y);
+    sp->r = std::hypot(sp->x, sp->y);
     if (sp->r < 200.) {
       sp->setClusterList(1, 0);
     }

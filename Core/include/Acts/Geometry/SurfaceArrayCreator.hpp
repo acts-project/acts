@@ -15,16 +15,19 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <algorithm>
+#include <cmath>
+#include <cstddef>
 #include <functional>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <ostream>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace Acts {
@@ -54,18 +57,18 @@ class SurfaceArrayCreator {
   friend class Acts::SurfaceArray;
 
   struct ProtoAxis {
-    BinningType bType;
-    BinningValue bValue;
-    size_t nBins;
-    AxisScalar min;
-    AxisScalar max;
+    BinningType bType = BinningType::equidistant;
+    BinningValue bValue = BinningValue::binX;
+    size_t nBins = 0;
+    AxisScalar min = 0;
+    AxisScalar max = 0;
     std::vector<AxisScalar> binEdges;
 
     size_t getBin(AxisScalar x) const {
       if (binEdges.empty()) {
         // equidistant
         AxisScalar w = (max - min) / nBins;
-        return std::floor((x - min) / w);
+        return static_cast<size_t>(std::floor((x - min) / w));
       } else {
         // variable
         const auto it =
@@ -114,7 +117,7 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
@@ -137,10 +140,10 @@ class SurfaceArrayCreator {
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
-  /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
-  /// @param bTypeZ the binning type in z direction (equidistant/aribtrary)
+  /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
+  /// @param bTypeZ the binning type in z direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -160,7 +163,7 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
@@ -183,10 +186,10 @@ class SurfaceArrayCreator {
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param protoLayerOpt The proto layer containing the layer size
-  /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
-  /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
+  /// @param bTypeR the binning type in r direction (equidistant/arbitrary)
+  /// @param bTypePhi the binning type in phi direction (equidistant/arbitrary)
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -203,7 +206,7 @@ class SurfaceArrayCreator {
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
   ///
-  /// @param [in] gctx The gometry context fro this building call
+  /// @param [in] gctx The gometry context for this building call
   /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -226,7 +229,7 @@ class SurfaceArrayCreator {
       std::optional<ProtoLayer> protoLayerOpt = std::nullopt,
       const Transform3& transform = Transform3::Identity()) const;
 
-  /// Static check funtion for surface equivalent
+  /// Static check function for surface equivalent
   ///
   /// @param [in] gctx the geometry context for this check
   /// @param bValue the binning value for the binning
@@ -313,7 +316,8 @@ class SurfaceArrayCreator {
   ///       into an actual @c Axis object to be used
   ProtoAxis createVariableAxis(const GeometryContext& gctx,
                                const std::vector<const Surface*>& surfaces,
-                               BinningValue bValue, ProtoLayer protoLayer,
+                               BinningValue bValue,
+                               const ProtoLayer& protoLayer,
                                Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
@@ -340,7 +344,8 @@ class SurfaceArrayCreator {
   ///       into an actual @c Axis object to be used
   ProtoAxis createEquidistantAxis(const GeometryContext& gctx,
                                   const std::vector<const Surface*>& surfaces,
-                                  BinningValue bValue, ProtoLayer protoLayer,
+                                  BinningValue bValue,
+                                  const ProtoLayer& protoLayer,
                                   Transform3& transform,
                                   size_t nBins = 0) const;
 

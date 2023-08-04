@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -27,14 +28,17 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
+#include <functional>
 #include <map>
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
 class IVolumeMaterial;
 class ISurfaceMaterial;
 class TrackingGeometry;
+struct MaterialInteraction;
 
 /// @brief selector for finding surface
 struct MaterialSurface {
@@ -90,6 +94,8 @@ class SurfaceMaterialMapper {
     bool emptyBinCorrection = true;
     /// Mapping output to debug stream
     bool mapperDebugOutput = false;
+    /// Compute the variance of each material slab (only if using an input map)
+    bool computeVariance = false;
   };
 
   /// @struct State
@@ -108,6 +114,10 @@ class SurfaceMaterialMapper {
     /// The created surface material from it
     std::map<GeometryIdentifier, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
+
+    /// The surface material of the input tracking geometry
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
+        inputSurfaceMaterial;
 
     /// The volume material of the input tracking geometry
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>
@@ -163,6 +173,24 @@ class SurfaceMaterialMapper {
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+
+  /// Loop through all the material interactions and add them to the
+  /// associated surface
+  ///
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  ///
+  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+
+  /// Loop through all the material interactions and add them to the
+  /// associated surface
+  ///
+  /// @param mState The current state map
+  /// @param rMaterial Vector of all the material interactions that will be mapped
+  ///
+  /// @note The material interactions are assumed to have an associated surface ID
+  void mapSurfaceInteraction(State& mState,
+                             std::vector<MaterialInteraction>& rMaterial) const;
 
  private:
   /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume

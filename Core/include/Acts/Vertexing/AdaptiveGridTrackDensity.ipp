@@ -68,7 +68,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float z0 = trk.parameters()[1];
 
   // Calculate offset in d direction to central bin at z-axis
-  int dOffset = std::floor(d0 / m_cfg.binSize - 0.5) + 1;
+  int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
   // Calculate bin in z
   int zBin = int(z0 / m_cfg.binSize);
 
@@ -87,7 +87,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
 
   // Check if current track does affect grid density
   // in central bins at z-axis
-  if ((std::abs(dOffset) > trkGridSize - 1) / 2.) {
+  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
     return {0, trackGrid};
   }
 
@@ -186,7 +186,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   // Find right half-maximum bin
   int rhmBin = zBin;
   while (gridValue > maxValue / 2) {
-    // Check if we are still operating on continous z values
+    // Check if we are still operating on continuous z values
     if ((zMaxGridBin + (rhmBin - zBin)) != mainGridZValues[rhmBin]) {
       break;
     }
@@ -205,7 +205,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   int lhmBin = zBin;
   gridValue = mainGridDensity[zBin];
   while (gridValue > maxValue / 2) {
-    // Check if we are still operating on continous z values
+    // Check if we are still operating on continuous z values
     if ((zMaxGridBin + (lhmBin - zBin)) != mainGridZValues[lhmBin]) {
       break;
     }
@@ -306,13 +306,13 @@ double Acts::AdaptiveGridTrackDensity<trkGridSize>::getDensitySum(
   // Sum up only the density contributions from the
   // neighboring bins if they are still within bounds
   if (0 < pos) {
-    // Check if we are still operating on continous z values
+    // Check if we are still operating on continuous z values
     if (mainGridZValues[pos] - mainGridZValues[pos - 1] == 1) {
       sum += mainGridDensity[pos - 1];
     }
   }
   if (pos + 1 <= mainGridDensity.size() - 1) {
-    // Check if we are still operating on continous z values
+    // Check if we are still operating on continuous z values
     if (mainGridZValues[pos + 1] - mainGridZValues[pos] == 1) {
       sum += mainGridDensity[pos + 1];
     }

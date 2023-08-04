@@ -462,7 +462,7 @@ __global__ void cuSearchTriplet(
         dCotThetaMinusError2 =
             deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
         // avoid taking root of scatteringInRegion
-        // if left side of ">" is positive, both sides of unequality can be
+        // if left side of ">" is positive, both sides of inequality can be
         // squared
         // (scattering is always positive)
 
@@ -516,7 +516,7 @@ __global__ void cuSearchTriplet(
     __syncthreads();
 
     if (threadIdx.x + offset < *nSpTcompPerSpM) {
-      // The index will be different (and not deterministic) becuase of atomic
+      // The index will be different (and not deterministic) because of atomic
       // operation It will be resorted after kernel call
       if (isPassed == 1) {
         int tPos = atomicAdd(nTrplPerSpB, 1);

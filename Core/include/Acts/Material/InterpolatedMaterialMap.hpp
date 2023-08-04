@@ -254,14 +254,14 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// @param [in] mapper Material map
   /// @param [in] bu @c BinUtility for build from
   InterpolatedMaterialMap(Mapper_t&& mapper, BinUtility bu)
-      : m_mapper(std::move(mapper)), m_binUtility(bu) {}
+      : m_mapper(std::move(mapper)), m_binUtility(std::move(bu)) {}
 
   /// @brief Retrieve the binned material
   ///
   /// @param [in] position Global 3D position
   ///
   /// @return Material at given position
-  const Material material(const Vector3& position) const {
+  const Material material(const Vector3& position) const override {
     return m_mapper.material(position);
   }
 
@@ -340,7 +340,7 @@ class InterpolatedMaterialMap : public IVolumeMaterial {
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
-  std::ostream& toStream(std::ostream& sl) const {
+  std::ostream& toStream(std::ostream& sl) const override {
     sl << "Acts::InterpolatedMaterialMap : " << std::endl;
     sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1
        << " / " << m_binUtility.max(1) + 1 << std::endl;

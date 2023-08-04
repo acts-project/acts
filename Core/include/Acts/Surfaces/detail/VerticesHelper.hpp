@@ -9,8 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -53,7 +55,8 @@ void createSegment(std::vector<vertex_t>& vertices,
                    const vertex_t& offset = vertex_t::Zero(),
                    const transform_t& transform = transform_t::Identity()) {
   // Calculate the number of segments - 1 is the minimum
-  unsigned int segs = std::abs(phi2 - phi1) / (2 * M_PI) * lseg;
+  unsigned int segs =
+      static_cast<unsigned int>(std::abs(phi2 - phi1) / (2 * M_PI) * lseg);
   segs = segs > 0 ? segs : 1;
   ActsScalar phistep = (phi2 - phi1) / segs;
   // Create the segments

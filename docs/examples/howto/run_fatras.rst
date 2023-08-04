@@ -13,7 +13,7 @@ input data.
 
 Additional options might be needed to enable different generators or detectors.
 The ``ACTS_BUILD_EXAMPLES_PYTHIA8=on`` option enables Pythia8-based event
-generator excutables. To be able to run e.g. DD4hep-base detectors, the
+generator executables. To be able to run e.g. DD4hep-base detectors, the
 ``ACTS_BUILD_EXAMPLES_DD4hep=on`` option must be set. The full list of
 available options is available in the *Getting started* guide.
 
@@ -26,7 +26,7 @@ Generate particle truth information
 Before running the fast simulation, a truth dataset needs to be generated. The
 simplest option is to use the particle gun, which generates particles
 uniformly distributed within the given ranges. The particle gun does not
-implement a physics process but is usefull e.g. single particle studies.
+implement a physics process but is useful e.g. single particle studies.
 
 The following command will generate 100 events with four (anti-)muons in
 each one and write the data as CSV files into the ``data/gen/four_muons``
@@ -45,7 +45,7 @@ directory.
        --gen-randomize-charge \
        --gen-nparticles=4
 
-The muons are generated within the given kinematic range, but are indepenent
+The muons are generated within the given kinematic range, but are independent
 from each other. With the particle gun, all particles always originate from
 a single common vertex. With the default settings, the vertex will always be
 at the origin. Additional options allow to smear the vertex positions. The

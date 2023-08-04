@@ -42,9 +42,11 @@ class AdaptiveMultiVertexFinder {
   template <typename T, typename = int>
   struct NeedsRemovedTracks : std::false_type {};
 
+#ifndef DOXYGEN
   template <typename T>
   struct NeedsRemovedTracks<T, decltype((void)T::tracksToRemove, 0)>
       : std::true_type {};
+#endif
 
  public:
   /// Configuration struct
@@ -58,12 +60,11 @@ class AdaptiveMultiVertexFinder {
     /// @param bIn Input magnetic field
     Config(vfitter_t fitter, const sfinder_t& sfinder,
            const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
-           const Linearizer_t& lin,
-           std::shared_ptr<const MagneticFieldProvider> bIn)
+           Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(sfinder),
           ipEstimator(ipEst),
-          linearizer(lin),
+          linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
     // Vertex fitter
@@ -136,7 +137,7 @@ class AdaptiveMultiVertexFinder {
     // Include also single track vertices
     bool addSingleTrackVertices = false;
 
-    // Use 3d information fo evaluating the vertex distance significance
+    // Use 3d information for evaluating the vertex distance significance
     // for vertex merging/splitting
     bool do3dSplitting = false;
 
@@ -195,6 +196,8 @@ class AdaptiveMultiVertexFinder {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
+  AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
+
   /// @brief Function that performs the adaptive
   /// multi-vertex finding
   ///
@@ -215,15 +218,15 @@ class AdaptiveMultiVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to logging instance
-  const Logger& logger() const { return *m_logger; }
+  const Logger& logger() const {
+    return *m_logger;
+  }
 
   /// @brief Calls the seed finder and sets constraints on the found seed
   /// vertex if desired

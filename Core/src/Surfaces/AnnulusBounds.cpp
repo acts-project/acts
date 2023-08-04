@@ -8,13 +8,16 @@
 
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 
 Acts::AnnulusBounds::AnnulusBounds(
     const std::array<double, eSize>& values) noexcept(false)
@@ -55,8 +58,9 @@ Acts::AnnulusBounds::AnnulusBounds(
                 (std::pow(m, 2) + 1);
 
     Vector2 v1(x1, m * x1);
-    if (v1.dot(dir) > 0)
+    if (v1.dot(dir) > 0) {
       return v1;
+    }
     return {x2, m * x2};
   };
 
@@ -280,7 +284,7 @@ bool Acts::AnnulusBounds::inside(const Vector2& lposition,
     double minDist = std::numeric_limits<double>::max();
 
     Vector2 currentClosest;
-    double currentDist;
+    double currentDist = 0;
 
     // do projection in STRIP PC
 

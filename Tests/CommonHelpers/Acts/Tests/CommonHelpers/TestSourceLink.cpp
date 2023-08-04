@@ -36,32 +36,3 @@ std::ostream& Acts::Test::operator<<(
   os << ")";
   return os;
 }
-
-Acts::BoundVariantMeasurement Acts::Test::testSourceLinkCalibratorReturn(
-    const Acts::GeometryContext& /*gctx*/,
-    Acts::MultiTrajectory::TrackStateProxy trackState) {
-  const auto& sl =
-      static_cast<const Acts::Test::TestSourceLink&>(trackState.uncalibrated());
-  if ((sl.indices[0] != Acts::eBoundSize) and
-      (sl.indices[1] != Acts::eBoundSize)) {
-    auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
-                                sl.indices[1]);
-    trackState.setCalibrated(meas);
-    return meas;
-  } else if (sl.indices[0] != Acts::eBoundSize) {
-    auto meas =
-        makeMeasurement(sl, sl.parameters.head<1>(),
-                        sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
-    trackState.setCalibrated(meas);
-    return meas;
-  } else {
-    throw std::runtime_error(
-        "Tried to extract measurement from invalid TestSourceLink");
-  }
-}
-
-void Acts::Test::testSourceLinkCalibrator(
-    const Acts::GeometryContext& gctx,
-    Acts::MultiTrajectory::TrackStateProxy trackState) {
-  testSourceLinkCalibratorReturn(gctx, trackState);
-}

@@ -75,7 +75,7 @@ int main(int argc, char* argv[]) {
   size_t num_iters = 0;
   const auto bin_utility_benchmark_small = Acts::Test::microBenchmark(
       [&] {
-        auto bin = num_iters % 2 ? small.bin(low) : small.bin(high);
+        auto bin = (num_iters % 2) != 0u ? small.bin(low) : small.bin(high);
         if (bin < 3) {
           ++st;
         } else {
@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
   num_iters = 0;
   const auto bin_utility_benchmark_medium = Acts::Test::microBenchmark(
       [&] {
-        auto bin = num_iters % 2 ? medium.bin(low) : medium.bin(high);
+        auto bin = (num_iters % 2) != 0u ? medium.bin(low) : medium.bin(high);
         if (bin < 10) {
           ++st;
         } else {
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
   num_iters = 0;
   const auto bin_utility_benchmark_many = Acts::Test::microBenchmark(
       [&] {
-        auto bin = num_iters % 2 ? many.bin(low) : many.bin(high);
+        auto bin = (num_iters % 2) != 0u ? many.bin(low) : many.bin(high);
         if (bin < 49) {
           ++st;
         } else {
@@ -130,7 +130,8 @@ int main(int argc, char* argv[]) {
   num_iters = 0;
   const auto bin_utility_benchmark_eq = Acts::Test::microBenchmark(
       [&] {
-        auto bin = num_iters % 2 ? equidistant.bin(low) : equidistant.bin(high);
+        auto bin = (num_iters % 2) != 0u ? equidistant.bin(low)
+                                         : equidistant.bin(high);
         if (bin < 49) {
           ++st;
         } else {

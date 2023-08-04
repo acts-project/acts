@@ -16,7 +16,9 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <cstddef>
 #include <fstream>
 
 namespace bdata = boost::unit_test::data;
@@ -30,7 +32,7 @@ BOOST_AUTO_TEST_CASE(TestSolenoidBField) {
   // Create a test context
   MagneticFieldContext mfContext = MagneticFieldContext();
 
-  SolenoidBField::Config cfg;
+  SolenoidBField::Config cfg{};
   cfg.length = 5.8_m;
   cfg.radius = (2.56 + 2.46) * 0.5 * 0.5_m;
   cfg.nCoils = 1154;

@@ -8,15 +8,22 @@
 
 #include "Acts/Surfaces/ConeSurface.hpp"
 
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
+#include "Acts/Surfaces/detail/AlignmentHelper.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
 #include "Acts/Surfaces/detail/VerticesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
-#include <cassert>
+#include <algorithm>
 #include <cmath>
+#include <limits>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -43,9 +50,9 @@ Acts::ConeSurface::ConeSurface(const Transform3& transform, double alpha,
 }
 
 Acts::ConeSurface::ConeSurface(const Transform3& transform,
-                               const std::shared_ptr<const ConeBounds>& cbounds)
-    : GeometryObject(), Surface(transform), m_bounds(cbounds) {
-  throw_assert(cbounds, "ConeBounds must not be nullptr");
+                               std::shared_ptr<const ConeBounds> cbounds)
+    : GeometryObject(), Surface(transform), m_bounds(std::move(cbounds)) {
+  throw_assert(m_bounds, "ConeBounds must not be nullptr");
 }
 
 Acts::Vector3 Acts::ConeSurface::binningPosition(
@@ -76,12 +83,12 @@ Acts::ConeSurface& Acts::ConeSurface::operator=(const ConeSurface& other) {
 
 Acts::Vector3 Acts::ConeSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
-  return std::move(transform(gctx).matrix().block<3, 1>(0, 2));
+  return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
 Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*direction*/) const {
   RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the local z axis
@@ -102,7 +109,7 @@ Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
 
 Acts::Vector3 Acts::ConeSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*direction*/) const {
   // create the position in the local 3d frame
   double r = lposition[Acts::eBoundLoc1] * bounds().tanAlpha();
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -112,7 +119,7 @@ Acts::Vector3 Acts::ConeSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::ConeSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/, double tolerance) const {
+    const Vector3& /*direction*/, double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {
@@ -280,7 +287,8 @@ Acts::detail::RealQuadraticEquation Acts::ConeSurface::intersectionSolver(
 
 Acts::SurfaceIntersection Acts::ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck,
+    ActsScalar tolerance) const {
   // Solve the quadratic equation
   auto qe = intersectionSolver(gctx, position, direction);
 
@@ -291,10 +299,9 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
 
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
-  Intersection3D::Status status1 =
-      (qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance)
-          ? Intersection3D::Status::onSurface
-          : Intersection3D::Status::reachable;
+  Intersection3D::Status status1 = std::abs(qe.first) < std::abs(tolerance)
+                                       ? Intersection3D::Status::onSurface
+                                       : Intersection3D::Status::reachable;
 
   if (bcheck and not isOnSurface(gctx, solution1, direction, bcheck)) {
     status1 = Intersection3D::Status::missed;
@@ -302,10 +309,9 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
 
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.first * direction;
-  Intersection3D::Status status2 =
-      (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)
-          ? Intersection3D::Status::onSurface
-          : Intersection3D::Status::reachable;
+  Intersection3D::Status status2 = std::abs(qe.second) < std::abs(tolerance)
+                                       ? Intersection3D::Status::onSurface
+                                       : Intersection3D::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
     status2 = Intersection3D::Status::missed;
   }
@@ -320,7 +326,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
                 (status1 == Intersection3D::Status::missed and
                  status2 == Intersection3D::Status::missed);
   // Check and (eventually) go with the first solution
-  if ((check1 and qe.first * qe.first < qe.second * qe.second) or
+  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
       status2 == Intersection3D::Status::missed) {
     // And add the alternative
     if (qe.solutions > 1) {
@@ -395,7 +401,7 @@ Acts::ActsMatrix<2, 3> Acts::ConeSurface::localCartesianToBoundLocalDerivative(
   using VectorHelpers::phi;
   // The local frame transform
   const auto& sTransform = transform(gctx);
-  // calculate the transformation to local coorinates
+  // calculate the transformation to local coordinates
   const Vector3 localPos = sTransform.inverse() * position;
   const double lr = perp(localPos);
   const double lphi = phi(localPos);

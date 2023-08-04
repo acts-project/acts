@@ -14,7 +14,6 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Utilities/BoundingBox.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <array>
 #include <vector>

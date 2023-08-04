@@ -13,19 +13,22 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
 
+#include <HepMC3/GenEvent.h>
+
 class G4RunManager;
 
 namespace ActsExamples {
 
 /// @brief This class extracts a certain process from a HepMC event record.
-class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
+class HepMCProcessExtractor final : public ActsExamples::IAlgorithm {
  public:
   /// @class Config
   struct Config {
@@ -48,14 +51,22 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   /// @param config the configuration
   /// @param level the log level
   HepMCProcessExtractor(Config config, Acts::Logging::Level level);
-  ~HepMCProcessExtractor();
+  ~HepMCProcessExtractor() override;
 
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   /// The config object
   Config m_cfg;
+
+  ReadDataHandle<std::vector<HepMC3::GenEvent>> m_inputEvents{this,
+                                                              "InputEvents"};
+  WriteDataHandle<ActsExamples::ExtractedSimulationProcessContainer>
+      m_outputSimulationProcesses{this, "OutputSimulationProcesses"};
 };
 
 }  // namespace ActsExamples

@@ -6,8 +6,7 @@ set(_common_libraries
   ActsExamplesMagneticField
   ActsExamplesIoObj
   ActsExamplesIoJson
-  ActsExamplesIoRoot
-  Boost::program_options)
+  ActsExamplesIoRoot)
 
 # Empty detector
 add_executable(
@@ -15,7 +14,7 @@ add_executable(
   EmptyDetectorPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationEmpty
-  PRIVATE ${_common_libraries} ActsExamplesDetectorEmpty)
+  PRIVATE ${_common_libraries})
 
 # Generic detector
 add_executable(
@@ -23,7 +22,7 @@ add_executable(
   GenericPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationGeneric
-  PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
+  PRIVATE ${_common_libraries})
 
 add_executable(
   ActsExampleNavigationValidation
@@ -38,7 +37,7 @@ add_executable(
   AlignedPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationAligned
-  PRIVATE ${_common_libraries} ActsExamplesDetectorContextual)
+  PRIVATE ${_common_libraries})
 
 
 # TGeo detector
@@ -47,7 +46,7 @@ add_executable(
   TGeoPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationTGeo
-  PRIVATE ${_common_libraries} ActsExamplesDetectorTGeo)
+  PRIVATE ${_common_libraries})
 
 install(
   TARGETS

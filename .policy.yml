@@ -1,6 +1,7 @@
 policy:
   approval:
   - One of the reviewers has approved
+  - Is a backport
 
 approval_rules:
 - name: One of the reviewers has approved
@@ -13,3 +14,15 @@ approval_rules:
     allow_contributor: true # Update button 'contributions' should be ignored
     invalidate_on_push: true
     ignore_update_merges: true
+  if:
+    targets_branch:
+      pattern: "^main$"
+
+- name: Is a backport
+  requires:
+    count: 0
+  if:
+    targets_branch:
+      pattern: "^develop/.*$"
+    has_author_in:
+      users: ["acts-project-service"]

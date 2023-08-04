@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
 #include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
+#include "ActsExamples/Detector/AlignedDetectorWithOptions.hpp"
 
 #include "DetectorAlignment.hpp"
 
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
         auto alignContext =
             gctx.get<ActsExamples::Contextual::
                          InternallyAlignedDetectorElement::ContextType>();
-        if (alignedDetElement) {
+        if (alignedDetElement != nullptr) {
           alignedDetElement->addAlignedTransform(aTransform, alignContext.iov);
           return true;
         }
@@ -39,11 +39,11 @@ int main(int argc, char* argv[]) {
       -> std::vector<Acts::DetectorElementBase*> {
     std::vector<Acts::DetectorElementBase*> dets;
     auto* alignedDetector =
-        dynamic_cast<ActsExamples::Contextual::AlignedDetector*>(
-            detector.get());
+        &dynamic_cast<ActsExamples::AlignedDetectorWithOptions*>(detector.get())
+             ->m_detector;
     for (auto& lstore : alignedDetector->detectorStore()) {
       for (auto& ldet : lstore) {
-        // get the detetor surface
+        // get the detector surface
         const auto& surface = &ldet->surface();
         auto geoID = surface->geometryId();
         auto it = std::find(geometrySelection.begin(), geometrySelection.end(),
@@ -57,6 +57,6 @@ int main(int argc, char* argv[]) {
   };
 
   return runDetectorAlignment(
-      argc, argv, std::make_shared<ActsExamples::Contextual::AlignedDetector>(),
+      argc, argv, std::make_shared<ActsExamples::AlignedDetectorWithOptions>(),
       alignedTransformUpdater, alignedDetElementsGetter);
 }

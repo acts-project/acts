@@ -9,15 +9,24 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 
+#include <array>
 #include <cmath>
+#include <memory>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -78,7 +87,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto pLayerSf = createProtoLayer(Transform3::Identity());
   auto pLayerSfShared = createProtoLayer(Transform3::Identity());
 
-  BOOST_CHECK(pLayerSf.extent.ranges == pLayerSfShared.extent.ranges);
+  BOOST_CHECK(pLayerSf.extent.range() == pLayerSfShared.extent.range());
   BOOST_CHECK(pLayerSf.envelope == pLayerSfShared.envelope);
 
   // CHECK That you have 4 surfaces
@@ -95,7 +104,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   BOOST_CHECK(pLayerSf.surfaces().size() == 5);
 
   // That should invalidate the ranges
-  BOOST_CHECK(pLayerSf.extent.ranges != pLayerSfShared.extent.ranges);
+  BOOST_CHECK(!(pLayerSf.extent.range() == pLayerSfShared.extent.range()));
 
   // Test 1 - identity transform
   auto protoLayer = createProtoLayer(Transform3::Identity());
@@ -112,7 +121,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   CHECK_CLOSE_ABS(protoLayer.medium(binZ), 0., 1e-8);
   CHECK_CLOSE_ABS(protoLayer.min(binZ), -6., 1e-8);
   CHECK_CLOSE_ABS(protoLayer.max(binZ), 6., 1e-8);
-  CHECK_CLOSE_ABS(protoLayer.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
+  CHECK_CLOSE_ABS(protoLayer.max(binR), std::hypot(3, 6), 1e-8);
   CHECK_CLOSE_ABS(protoLayer.min(binR), 3., 1e-8);
 
   // Test 1a
@@ -130,7 +139,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   CHECK_CLOSE_ABS(protoLayerRot.min(binZ), -6., 1e-8);
   CHECK_CLOSE_ABS(protoLayerRot.max(binZ), 6., 1e-8);
   CHECK_CLOSE_ABS(protoLayerRot.min(binR), 3., 1e-8);
-  CHECK_CLOSE_ABS(protoLayerRot.max(binR), std::sqrt(3 * 3 + 6 * 6), 1e-8);
+  CHECK_CLOSE_ABS(protoLayerRot.max(binR), std::hypot(3, 6), 1e-8);
 
   std::stringstream sstream;
   protoLayerRot.toStream(sstream);

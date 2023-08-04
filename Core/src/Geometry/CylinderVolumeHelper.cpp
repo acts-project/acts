@@ -32,6 +32,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <iosfwd>
+#include <ostream>
+#include <utility>
+
+namespace Acts {
+class DiscBounds;
+}  // namespace Acts
 
 Acts::CylinderVolumeHelper::CylinderVolumeHelper(
     const Acts::CylinderVolumeHelper::Config& cvhConfig,
@@ -208,7 +216,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
   ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
-  // assing min/max
+  // assign min/max
   double min = cylinder ? rMin : zMin;
   double max = cylinder ? rMax : zMax;
 
@@ -418,18 +426,19 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     const CylinderVolumeBounds*& cylinderVolumeBounds,
     const Transform3& transform, double& rMinClean, double& rMaxClean,
     double& zMinClean, double& zMaxClean, BinningValue& bValue,
-    BinningType /*unused*/) const {
+    BinningType /*bType*/) const {
   // some verbose output
 
   ACTS_VERBOSE("Parsing the " << layers.size()
                               << " layers to gather overall dimensions");
-  if (cylinderVolumeBounds != nullptr)
-    ACTS_DEBUG("Cylinder volume bounds are given: (rmin/rmax/dz) = "
-               << "(" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR)
-               << "/" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR)
-               << "/"
-               << cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
-               << ")");
+  if (cylinderVolumeBounds != nullptr) {
+    ACTS_VERBOSE(
+        "Cylinder volume bounds are given: (rmin/rmax/dz) = "
+        << "(" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR) << "/"
+        << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR) << "/"
+        << cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
+        << ")");
+  }
 
   // prepare for parsing the layers
   double layerRmin = 10e10;
@@ -495,10 +504,13 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
       "Estimate/check CylinderVolumeBounds from/w.r.t. enclosed "
       "layers + envelope covers");
   // the z from the layers w and w/o envelopes
-  double zEstFromLayerEnv = 0.5 * ((layerZmax) + (layerZmin));
-  double halflengthFromLayer = 0.5 * std::abs((layerZmax) - (layerZmin));
+  double zEstFromLayerEnv = 0.5 * (layerZmax + layerZmin);
+  double halflengthFromLayer = 0.5 * std::abs(layerZmax - layerZmin);
 
-  bool concentric = (zEstFromLayerEnv * zEstFromLayerEnv < 0.001);
+  // using `sqrt(0.001) = 0.031622777` because previously it compared to
+  // `zEstFromLayerEnv * zEstFromLayerEnv < 0.001` which was changed due to
+  // underflow/overflow concerns
+  bool concentric = std::abs(zEstFromLayerEnv) < 0.031622777;
 
   bool idTrf = transform.isApprox(Transform3::Identity());
 
@@ -591,8 +603,9 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     // list the volume names:
     //  and make the screen output readable
     size_t ivol = 0;
-    for (auto& vol : volumes)
+    for (auto& vol : volumes) {
       ACTS_VERBOSE("[" << ivol++ << "] - volume : " << vol->volumeName());
+    }
 
     // the needed iterators
     auto tVolIter = volumes.begin();
@@ -631,8 +644,16 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
               std::const_pointer_cast<TrackingVolume>(*tVolIter);
           std::shared_ptr<TrackingVolume> tVol2 =
               std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
+
+          // re-evalueate rGlueMin
+          ActsScalar rGlueR =
+              0.5 * (tVol1->volumeBounds()
+                         .values()[CylinderVolumeBounds::BoundValues::eMaxR] +
+                     tVol2->volumeBounds()
+                         .values()[CylinderVolumeBounds::BoundValues::eMinR]);
+
           glueTrackingVolumes(gctx, tVol1, tubeOuterCover, tVol2,
-                              tubeInnerCover, rMin, rGlueMin, rMax, zMin, zMax);
+                              tubeInnerCover, rMin, rGlueR, rMax, zMin, zMax);
         }
       }
     } else {
@@ -702,23 +723,27 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     ACTS_VERBOSE("[GV] Register " << glueVolumesNegativeFace.size()
                                   << " volumes at face negativeFaceXY:");
     for (tVolIter = glueVolumesNegativeFace.begin();
-         tVolIter != glueVolumesNegativeFace.end(); ++tVolIter)
+         tVolIter != glueVolumesNegativeFace.end(); ++tVolIter) {
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
+    }
     ACTS_VERBOSE("[GV] Register " << glueVolumesPositiveFace.size()
                                   << " volumes at face positiveFaceXY: ");
     for (tVolIter = glueVolumesPositiveFace.begin();
-         tVolIter != glueVolumesPositiveFace.end(); ++tVolIter)
+         tVolIter != glueVolumesPositiveFace.end(); ++tVolIter) {
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
+    }
     ACTS_VERBOSE("[GV] Register " << glueVolumesInnerTube.size()
                                   << " volumes at face tubeInnerCover: ");
     for (tVolIter = glueVolumesInnerTube.begin();
-         tVolIter != glueVolumesInnerTube.end(); ++tVolIter)
+         tVolIter != glueVolumesInnerTube.end(); ++tVolIter) {
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
+    }
     ACTS_VERBOSE("[GV] Register " << glueVolumesOuterTube.size()
                                   << " volumes at face tubeOuterCover:");
     for (tVolIter = glueVolumesOuterTube.begin();
-         tVolIter != glueVolumesOuterTube.end(); ++tVolIter)
+         tVolIter != glueVolumesOuterTube.end(); ++tVolIter) {
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+    }
   }
   // return success
   return true;
@@ -858,7 +883,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
     // Collect the material - might be ambiguous, first one wins
     std::shared_ptr<const ISurfaceMaterial> boundaryMaterial = nullptr;
 
-    ACTS_VERBOSE("New Boundary surface setting for countainers");
+    ACTS_VERBOSE("New Boundary surface setting for containers");
     ACTS_VERBOSE(" - at first volume: " << tvolOne->volumeName());
     // Update the volume with the boundary surface accordingly
     // it's safe to access directly, they can not be nullptr

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <cmath>
@@ -18,10 +18,10 @@
 
 namespace Acts {
 
-/// This class is only a light wrapper arround a surface and a vector of
+/// This class is only a light wrapper around a surface and a vector of
 /// parameters. Its main purpose is to provide many constructors for the
 /// underlying vector. Most accessors are generated from the
-/// SingleBoundTrackParameters equivalent and and thus may be expensive
+/// GenericBoundTrackParameters equivalent and thus may be expensive
 /// @tparam charge_t Helper type to interpret the particle charge/momentum
 /// @note This class holds shared ownership on its reference surface.
 /// @note The accessors for parameters, covariance, position, etc.
@@ -31,7 +31,7 @@ namespace Acts {
 /// TODO Add constructor from range and projector maybe?
 template <typename charge_t>
 class MultiComponentBoundTrackParameters {
-  using SingleParameters = SingleBoundTrackParameters<charge_t>;
+  using SingleParameters = GenericBoundTrackParameters<charge_t>;
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       m_components;
@@ -72,7 +72,7 @@ class MultiComponentBoundTrackParameters {
       std::shared_ptr<const Surface> surface,
       const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps,
       ActsScalar q)
-      : m_surface(surface), m_chargeInterpreter(std::abs(q)) {
+      : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
     static_assert(std::is_same_v<BoundSymMatrix, covariance_t> ||
                   std::is_same_v<std::optional<BoundSymMatrix>, covariance_t>);
     if constexpr (std::is_same_v<BoundSymMatrix, covariance_t>) {
@@ -90,7 +90,7 @@ class MultiComponentBoundTrackParameters {
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
       const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps)
-      : m_surface(surface) {
+      : m_surface(std::move(surface)) {
     static_assert(std::is_same_v<BoundSymMatrix, covariance_t> ||
                   std::is_same_v<std::optional<BoundSymMatrix>, covariance_t>);
     if constexpr (std::is_same_v<BoundSymMatrix, covariance_t>) {
@@ -110,7 +110,7 @@ class MultiComponentBoundTrackParameters {
   /// @param cov Bound parameters covariance matrix
   ///
   /// In principle, only the charge magnitude is needed her to allow
-  /// unambigous extraction of the absolute momentum. The particle charge is
+  /// unambiguous extraction of the absolute momentum. The particle charge is
   /// required as an input here to be consistent with the other constructors
   /// below that that also take the charge as an input. The charge sign is
   /// only used in debug builds to check for consistency with the q/p
@@ -118,8 +118,8 @@ class MultiComponentBoundTrackParameters {
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface, const BoundVector& params,
       ActsScalar q, std::optional<BoundSymMatrix> cov = std::nullopt)
-      : m_surface(surface), m_chargeInterpreter(std::abs(q)) {
-    m_components.push_back({1., params, cov});
+      : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
+    m_components.push_back({1., params, std::move(cov)});
   }
 
   /// Construct from a parameters vector on the surface.
@@ -135,8 +135,8 @@ class MultiComponentBoundTrackParameters {
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface, const BoundVector& params,
       std::optional<BoundSymMatrix> cov = std::nullopt)
-      : m_surface(surface) {
-    m_components.push_back({1., params, cov});
+      : m_surface(std::move(surface)) {
+    m_components.push_back({1., params, std::move(cov)});
   }
 
   /// Parameters are not default constructible due to the charge type.
@@ -157,7 +157,7 @@ class MultiComponentBoundTrackParameters {
   /// Reference surface onto which the parameters are bound.
   const Surface& referenceSurface() const { return *m_surface; }
 
-  /// Get the weight and a SingleBoundTrackParameters object for one component
+  /// Get the weight and a GenericBoundTrackParameters object for one component
   std::pair<double, SingleParameters> operator[](std::size_t i) const {
     return std::make_pair(
         std::get<double>(m_components[i]),

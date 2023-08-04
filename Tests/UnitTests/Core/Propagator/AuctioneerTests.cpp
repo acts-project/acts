@@ -10,7 +10,7 @@
 
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 
-#include <vector>
+#include <array>
 
 namespace Acts {
 namespace Test {

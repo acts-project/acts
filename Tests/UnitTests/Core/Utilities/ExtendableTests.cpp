@@ -12,6 +12,9 @@
 
 #include "Acts/Utilities/detail/Extendable.hpp"
 
+#include <tuple>
+#include <type_traits>
+
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 
@@ -35,7 +38,7 @@ BOOST_AUTO_TEST_CASE(Extendable_) {
   };
 
   // Test the empty list
-  detail::Extendable<> nullist;
+  detail::Extendable<> nullist{};
   (void)nullist;
   BOOST_CHECK_EQUAL(std::tuple_size<std::tuple<>>::value, 0u);
 

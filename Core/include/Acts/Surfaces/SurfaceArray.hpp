@@ -143,7 +143,7 @@ class SurfaceArray {
         : m_globalToLocal(std::move(globalToLocal)),
           m_localToGlobal(std::move(localToGlobal)),
           m_grid(std::move(axes)),
-          m_binValues(bValues) {
+          m_binValues(std::move(bValues)) {
       m_neighborMap.resize(m_grid.size());
     }
 
@@ -177,8 +177,9 @@ class SurfaceArray {
                            const SurfaceVector& surfaces) override {
       size_t binCompleted = 0;
       size_t nBins = size();
-      double minPath, curPath;
-      const Surface* minSrf;
+      double minPath = 0;
+      double curPath = 0;
+      const Surface* minSrf = nullptr;
 
       for (size_t b = 0; b < nBins; ++b) {
         if (!isValidBin(b)) {
@@ -505,7 +506,7 @@ class SurfaceArray {
   /// @return Reference to @c SurfaceVector containing all surfaces
   /// @note This does not reflect the actual state of the grid. It only
   ///       returns what was given in the constructor, without any checks
-  ///       if that is actually whats in the grid.
+  ///       if that is actually what's in the grid.
   const SurfaceVector& surfaces() const { return m_surfacesRawPointers; }
 
   /// @brief Get vector of axes spanning the grid as @c AnyAxis

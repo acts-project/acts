@@ -23,6 +23,7 @@ pybind11_add_module(ActsPythonBindings
   src/TrackFitting.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
+  src/AmbiguityResolution.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
@@ -33,7 +34,6 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsCore 
   ActsPythonUtilities
   ActsExamplesFramework
-  ActsExamplesDetectorsCommon
   ActsExamplesDetectorGeneric
   ActsExamplesDetectorContextual
   ActsExamplesDetectorTGeo
@@ -51,11 +51,17 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesFatras
   ActsExamplesPrinters
   ActsExamplesDetectorTelescope
+  ActsExamplesUtilities
+  ActsExamplesAmbiguityResolution
 )
 
 set(py_files 
   __init__.py 
   examples/__init__.py
+  examples/simulation.py
+  examples/reconstruction.py
+  examples/itk.py
+  examples/odd.py
   _adapter.py
 )
 
@@ -64,6 +70,13 @@ if(ACTS_BUILD_PLUGIN_JSON)
   target_sources(ActsPythonBindings PRIVATE src/Json.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/JsonStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_ACTSVG)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoSvg)
+  target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
 endif()
 
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
@@ -96,8 +109,8 @@ endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
   target_link_libraries(ActsPythonBindingsGeant4 PUBLIC 
-    ActsExamplesGeant4 
-    ActsPythonUtilities)
+    ActsExamplesGeant4 ActsExamplesDetectorGeant4
+    ActsPythonUtilities ActsExamplesMuonSpectrometerMockupDetector)
   add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
 
   install(TARGETS ActsPythonBindingsGeant4 DESTINATION ${_python_install_dir})
@@ -142,6 +155,33 @@ if(ACTS_BUILD_EXAMPLES_EXATRKX)
   target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFindingStub.cpp)
+endif()
+
+if(ACTS_BUILD_EXAMPLES_EDM4HEP)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoEDM4hep)
+  target_sources(ActsPythonBindings PRIVATE src/EDM4hep.cpp)
+  list(APPEND py_files examples/edm4hep.py)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/EDM4hepStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_ONNX)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesFrameworkML ActsExamplesTrackFindingML)
+  target_sources(ActsPythonBindings PRIVATE src/Onnx.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibrator.cpp)
+  list(APPEND py_files examples/onnx/__init__.py)
+
+  if(ACTS_BUILD_PLUGIN_MLPACK)
+    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpack.cpp)
+    list(APPEND py_files examples/onnx/mlpack.py)
+  else()
+    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
+  endif()
+
+else()
+  target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxNeuralCalibratorStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)

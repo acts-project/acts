@@ -8,7 +8,10 @@
 
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <TProfile.h>
 
 ActsExamples::TrackSummaryPlotTool::TrackSummaryPlotTool(
     const ActsExamples::TrackSummaryPlotTool::Config& cfg,

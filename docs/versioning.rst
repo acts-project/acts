@@ -43,6 +43,7 @@ The following components will never become part of the public API:
 
 - Symbols in helper namespaces e.g. in ``Acts::detail`` must be considered
   implementation details and are not part of the public API.
+- Symbols in the namespace ``Acts::Experimental`` are not part of the public API.
 - The examples framework and executables in the ``Examples`` directory.
 - All units tests, integration tests, (micro)-benchmarks, and related code in
   the ``Tests`` directory.

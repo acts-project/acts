@@ -6,16 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <array>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+
+namespace Acts {
+class IMaterialDecorator;
+}  // namespace Acts
 
 namespace py = pybind11;
 using namespace ActsExamples;
@@ -32,6 +39,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_MEMBER(dd4hepLogLevel);
     ACTS_PYTHON_MEMBER(xmlFileNames);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(bTypePhi);
@@ -40,19 +48,19 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_MEMBER(envelopeR);
     ACTS_PYTHON_MEMBER(envelopeZ);
     ACTS_PYTHON_MEMBER(defaultLayerThickness);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
   }
 
   {
-    auto gd = py::class_<DD4hepDetector, std::shared_ptr<DD4hepDetector>>(
-                  m, "DD4hepDetector")
-                  .def(py::init<>())
-                  .def("finalize",
-                       py::overload_cast<
-                           DD4hep::DD4hepGeometryService::Config,
-                           std::shared_ptr<const Acts::IMaterialDecorator>>(
-                           &DD4hepDetector::finalize));
+    py::class_<DD4hep::DD4hepDetector, std::shared_ptr<DD4hep::DD4hepDetector>>(
+        m, "DD4hepDetector")
+        .def(py::init<>())
+        .def("finalize",
+             py::overload_cast<DD4hep::DD4hepGeometryService::Config,
+                               std::shared_ptr<const Acts::IMaterialDecorator>>(
+                 &DD4hep::DD4hepDetector::finalize));
   }
 }

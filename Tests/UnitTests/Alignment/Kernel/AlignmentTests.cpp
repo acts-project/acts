@@ -60,7 +60,8 @@ using ConstantFieldPropagator =
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
 using KalmanSmoother = Acts::GainMatrixSmoother;
-using KalmanFitterType = Acts::KalmanFitter<ConstantFieldPropagator>;
+using KalmanFitterType =
+    Acts::KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
 
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
@@ -73,16 +74,19 @@ const CalibrationContext calCtx;
 std::normal_distribution<double> normalDist(0., 1.);
 std::default_random_engine rng(42);
 
-KalmanFitterExtensions getExtensions() {
-  KalmanFitterExtensions extensions;
-  extensions.calibrator.connect<&testSourceLinkCalibrator>();
-  extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
+KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
+  KalmanFitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother
+      .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
   return extensions;
 }
 
 ///
-/// @brief Contruct a telescope-like detector
+/// @brief Construct a telescope-like detector
 ///
 struct TelescopeDetector {
   /// Default constructor for the Cubit tracking geometry
@@ -116,8 +120,7 @@ struct TelescopeDetector {
     auto length = positions.back() - positions.front();
 
     std::vector<LayerPtr> layers(nLayers);
-    unsigned int i;
-    for (i = 0; i < nLayers; ++i) {
+    for (unsigned int i = 0; i < nLayers; ++i) {
       // The transform
       Translation3 trans(0., 0., positions[i]);
       Transform3 trafo(rotation * trans);
@@ -147,7 +150,7 @@ struct TelescopeDetector {
     LayerArrayCreator layArrCreator(
         lacConfig, getDefaultLogger("LayerArrayCreator", Logging::INFO));
     LayerVector layVec;
-    for (i = 0; i < nLayers; i++) {
+    for (unsigned int i = 0; i < nLayers; i++) {
       layVec.push_back(layers[i]);
     }
 
@@ -176,26 +179,28 @@ struct TelescopeDetector {
 // Construct a straight-line propagator.
 StraightPropagator makeStraightPropagator(
     std::shared_ptr<const TrackingGeometry> geo) {
-  Navigator::Config cfg{geo};
+  Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Navigator navigator(cfg);
   StraightLineStepper stepper;
-  return StraightPropagator(std::move(stepper), std::move(navigator));
+  return StraightPropagator(stepper, std::move(navigator));
 }
 
 // Construct a propagator using a constant magnetic field along z.
 ConstantFieldPropagator makeConstantFieldPropagator(
-    std::shared_ptr<const TrackingGeometry> geo, double bz) {
-  Navigator::Config cfg{geo};
+    std::shared_ptr<const TrackingGeometry> geo, double bz,
+    std::unique_ptr<const Logger> logger) {
+  Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Navigator navigator(cfg);
+  Navigator navigator(cfg, logger->cloneWithSuffix("Nav"));
   auto field = std::make_shared<ConstantBField>(Vector3(0.0, 0.0, bz));
   ConstantFieldStepper stepper(std::move(field));
-  return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
+  return ConstantFieldPropagator(std::move(stepper), std::move(navigator),
+                                 logger->cloneWithSuffix("Prop"));
 }
 
 // Construct initial track parameters.
@@ -243,7 +248,7 @@ struct KalmanFitterInputTrajectory {
 std::vector<KalmanFitterInputTrajectory> createTrajectories(
     std::shared_ptr<const TrackingGeometry> geo, size_t nTrajectories) {
   // simulation propagator
-  const auto simPropagator = makeStraightPropagator(geo);
+  const auto simPropagator = makeStraightPropagator(std::move(geo));
 
   std::vector<KalmanFitterInputTrajectory> trajectories;
   trajectories.reserve(nTrajectories);
@@ -274,13 +279,14 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   const auto geometry = detector();
 
   // reconstruction propagator and fitter
-  const auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
-  const auto kfZeroPropagator = makeConstantFieldPropagator(geometry, 0_T);
-  const auto kfZero = KalmanFitterType(kfZeroPropagator);
+  auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
+  const auto kfZeroPropagator =
+      makeConstantFieldPropagator(geometry, 0_T, std::move(kfLogger));
+  auto kfZero = KalmanFitterType(kfZeroPropagator);
 
   // alignment
-  const auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
-  const auto alignZero = Alignment(kfZero);
+  auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
+  const auto alignZero = Alignment(std::move(kfZero), std::move(alignLogger));
 
   // Create 10 trajectories
   const auto& trajectories = createTrajectories(geometry, 10);
@@ -288,17 +294,16 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   // Construct the KalmanFitter options
 
   KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, getExtensions(),
-                                LoggerWrapper{*kfLogger},
                                 PropagatorPlainOptions());
 
   // Construct an non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
-      [](DetectorElementBase* /*unused*/, const GeometryContext& /*unused*/,
-         const Transform3& /*unused*/) { return true; };
+      [](DetectorElementBase* /*element*/, const GeometryContext& /*gctx*/,
+         const Transform3& /*transform*/) { return true; };
 
   // Construct the alignment options
-  AlignmentOptions<KalmanFitterOptions> alignOptions(
-      kfOptions, voidAlignUpdater, LoggerWrapper{*alignLogger});
+  AlignmentOptions<KalmanFitterOptions<VectorMultiTrajectory>> alignOptions(
+      kfOptions, voidAlignUpdater);
   alignOptions.maxIterations = 1;
 
   // Set the surfaces to be aligned (fix the layer 8)
@@ -320,7 +325,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   auto evaluateRes = alignZero.evaluateTrackAlignmentState(
       kfOptions.geoContext, inputTraj.sourcelinks, *inputTraj.startParameters,
-      kfOptions, idxedAlignSurfaces, AlignmentMask::All, alignOptions.logger);
+      kfOptions, idxedAlignSurfaces, AlignmentMask::All);
   BOOST_CHECK(evaluateRes.ok());
 
   const auto& alignState = evaluateRes.value();

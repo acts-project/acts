@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
 #include <memory>
 
@@ -28,10 +29,14 @@ struct SeedFinderOrthogonalConfig {
   // cot of maximum theta angle
   // equivalent to 2.7 eta (pseudorapidity)
   float cotThetaMax = 7.40627;
-  // minimum distance in r between two measurements within one seed
-  float deltaRMin = 5 * Acts::UnitConstants::mm;
-  // maximum distance in r between two measurements within one seed
-  float deltaRMax = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and top SP in one seed
+  float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and top SP in one seed
+  float deltaRMaxTopSP = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and bottom SP in one seed
+  float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and bottom SP in one seed
+  float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
 
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
@@ -59,16 +64,36 @@ struct SeedFinderOrthogonalConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
+  // z of last layers to avoid iterations
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
+
+  // radial range for middle SP
+  // variable range based on SP radius
+  bool useVariableMiddleSPRange = true;
+  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+  // range defined in vector for each z region
+  std::vector<std::vector<float>> rRangeMiddleSP;
+  // range defined by rMinMiddle and rMaxMiddle
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
   float deltaPhiMax = 0.085;
 
-  float bFieldInZ = 2.08 * Acts::UnitConstants::T;
-  // location of beam in x,y plane.
-  // used as offset for Space Points
-  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
-                        0 * Acts::UnitConstants::mm};
+  // cut to the maximum value of delta z between SPs
+  float deltaZMax =
+      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+
+  // enable cut on the compatibility between interaction point and SPs
+  bool interactionPointCut = false;
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
@@ -76,20 +101,41 @@ struct SeedFinderOrthogonalConfig {
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
 
-  // derived values, set on Seedfinder construction
+  // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
-  float pTPerHelixRadius = 0;
-  float minHelixDiameter2 = 0;
-  float pT2perRadius = 0;
-  float sigmapT2perRadius = 0;
+
+  bool isInInternalUnits = false;
+
+  SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
+    if (not isInInternalUnits) {
+      throw std::runtime_error(
+          "SeedFinderOrthogonalConfig not in ACTS internal units in "
+          "calculateDerivedQuantities");
+    }
+    SeedFinderOrthogonalConfig config = *this;
+    // calculation of scattering using the highland formula
+    // convert pT to p once theta angle is known
+    config.highland = 13.6 * std::sqrt(radLengthPerSeed) *
+                      (1 + 0.038 * std::log(radLengthPerSeed));
+    config.maxScatteringAngle2 = std::pow(config.highland / config.minPt, 2);
+    return config;
+  }
 
   SeedFinderOrthogonalConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "SeedFinderOrthogonalConfig already in ACTS internal units in "
+          "toInternalUnits");
+    }
     using namespace Acts::UnitLiterals;
     SeedFinderOrthogonalConfig config = *this;
+    config.isInInternalUnits = true;
     config.minPt /= 1_MeV;
-    config.deltaRMin /= 1_mm;
-    config.deltaRMax /= 1_mm;
+    config.deltaRMinTopSP /= 1_mm;
+    config.deltaRMaxTopSP /= 1_mm;
+    config.deltaRMinBottomSP /= 1_mm;
+    config.deltaRMaxBottomSP /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;
     config.collisionRegionMin /= 1_mm;
@@ -98,10 +144,6 @@ struct SeedFinderOrthogonalConfig {
     config.zMax /= 1_mm;
     config.rMax /= 1_mm;
     config.rMin /= 1_mm;
-    config.bFieldInZ /= 1000. * 1_T;
-
-    config.beamPos[0] /= 1_mm;
-    config.beamPos[1] /= 1_mm;
 
     return config;
   }

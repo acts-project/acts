@@ -9,10 +9,14 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -24,10 +28,20 @@
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <iterator>
+#include <map>
+#include <memory>
+#include <optional>
+#include <ostream>
+#include <random>
+#include <utility>
 #include <vector>
 
 #include "SpacePoint.hpp"
@@ -96,6 +110,9 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
   std::array<double, 3> thetaArray = {80._degree, 90.0_degree, 100._degree};
   std::array<double, 2> qArray = {1, -1};
 
+  auto logger = Acts::getDefaultLogger("estimateTrackParamsFromSeed",
+                                       Acts::Logging::INFO);
+
   for (const auto& p : pArray) {
     for (const auto& phi : phiArray) {
       for (const auto& theta : thetaArray) {
@@ -111,7 +128,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           std::map<GeometryIdentifier::Value, SpacePoint> spacePoints;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
-            const auto& geoId = sl.geometryId();
+            const auto geoId = sl.geometryId();
             const auto& layer = geoId.layer();
             auto it = spacePoints.find(layer);
             // Avoid to use space point from the same layers
@@ -152,14 +169,14 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           double rho = expParams[eBoundQOverP] * 0.3 * 2. / UnitConstants::m;
 
           // The space point pointers
-          std::array<const SpacePoint*, 3> spacePointPtrs;
+          std::array<const SpacePoint*, 3> spacePointPtrs{};
           std::transform(spacePoints.begin(), std::next(spacePoints.begin(), 3),
                          spacePointPtrs.begin(),
                          [](const auto& sp) { return &sp.second; });
 
           // Test the partial track parameters estimator
           auto partialParamsOpt = estimateTrackParamsFromSeed(
-              spacePointPtrs.begin(), spacePointPtrs.end());
+              spacePointPtrs.begin(), spacePointPtrs.end(), *logger);
           BOOST_REQUIRE(partialParamsOpt.has_value());
           const auto& estPartialParams = partialParamsOpt.value();
           BOOST_TEST_INFO(
@@ -180,7 +197,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           // Test the full track parameters estimator
           auto fullParamsOpt = estimateTrackParamsFromSeed(
               geoCtx, spacePointPtrs.begin(), spacePointPtrs.end(),
-              *bottomSurface, Vector3(0, 0, 2._T), 0.1_T);
+              *bottomSurface, Vector3(0, 0, 2._T), 0.1_T, *logger);
           BOOST_REQUIRE(fullParamsOpt.has_value());
           const auto& estFullParams = fullParamsOpt.value();
           BOOST_TEST_INFO(

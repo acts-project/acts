@@ -21,12 +21,20 @@ namespace Acts {
 ///
 /// @brief Vertex fitter class implementing the Billoir vertex fitter
 ///
-/// This class implements the Billoir vertex fitter:
+/// This class implements the Billoir vertex fitter from Ref. (1). It is also
+/// useful to have a look at Ref. (2). Note that the Billoir vertex fitter
+/// outputs one 4D vertex position and nTrack momenta at this very point.
 ///
-/// Fast vertex fitting with a local parametrization of tracks
+/// Ref. (1):
+/// Fast vertex fitting with a local parametrization of tracks.
 /// Author(s) Billoir, P ; Qian, S
 /// In: Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
 /// DOI 10.1016/0168-9002(92)90859-3
+///
+/// Ref. (2):
+/// Pattern Recognition, Tracking and Vertex Reconstruction in Particle
+/// Detectors.
+/// Author(s) Fruehwirth, R ; Strandli, A
 ///
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
@@ -51,7 +59,7 @@ class FullBilloirVertexFitter {
   };
 
   struct Config {
-    /// Maximum number of interations in fitter
+    /// Maximum number of iterations in fitter
     int maxIterations = 5;
   };
 
@@ -97,8 +105,6 @@ class FullBilloirVertexFitter {
   /// input_track_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other input_track_t
   /// objects.
-  ///
-  /// @param params input_track_t object to extract track parameters from
   std::function<BoundTrackParameters(input_track_t)> extractParameters;
 };
 

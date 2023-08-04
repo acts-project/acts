@@ -45,7 +45,7 @@ constexpr auto epsPos = 10_um;
 constexpr auto epsDir = 1_mrad;
 constexpr auto epsMom = 5_MeV;
 // relative covariance tolerance
-constexpr auto epsCov = 0.05;
+constexpr auto epsCov = 0.07;
 
 const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;

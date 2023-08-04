@@ -46,8 +46,6 @@ def main():
 
         output = []
         for item in items:
-            if item.code in config["ignore"]:
-                continue
 
             emoji = Emoji(
                 {"warning": "yellow_circle", "error": "red_circle"}[item.severity]
@@ -67,23 +65,31 @@ def main():
             s.append(item.code, style="bold")
             s.append(f"]")
 
-            output.append(s)
-
             def subpath(m):
                 return f"[bold]{m.group(1)}[/bold]:"
 
             message = re.sub(r"([\w/.\-+]+:\d+:\d+):", subpath, item.message)
-            output.append(Panel(message))
-            output.append(Rule())
 
-            for pattern in counts.keys():
+            accounted_for = False
+            for pattern in config["limits"].keys():
 
                 if not fnmatch.fnmatch(item.code, pattern):
                     continue
                 counts[pattern] += 1
+                accounted_for = True
 
-        output = output[:-1]
-        console.print(Panel(Group(*output), title=str(file)))
+            if accounted_for:
+                output.append(s)
+                output.append(Panel(message))
+                output.append(Rule())
+                pass
+            else:
+                counts.setdefault(item.code, 0)
+                counts[item.code] += 1
+
+        #  output = output[:-1]
+        if len(output) > 0:
+            console.print(Panel(Group(*output), title=str(file)))
 
     table = Table()
     table.add_column("", width=2)
@@ -92,10 +98,13 @@ def main():
     table.add_column("limit", justify="right")
     exit = 0
     for pattern, count in counts.items():
-        limit = config["limits"][pattern]
+        limit = config["limits"].get(pattern, float("inf"))
         emoji = Emoji("green_circle")
         style = "green"
-        if count > limit:
+        if limit == float("inf"):
+            emoji = Emoji("white_circle")
+            style = "white"
+        elif count > limit:
             exit = 1
             emoji = Emoji("red_circle")
             style = "red bold"

@@ -16,6 +16,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -66,7 +67,7 @@ class LayerCreator {
 
   /// returning a cylindrical layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -90,7 +91,7 @@ class LayerCreator {
 
   /// returning a cylindrical layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -115,7 +116,7 @@ class LayerCreator {
 
   /// returning a disc layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -139,7 +140,7 @@ class LayerCreator {
 
   /// returning a disc layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -164,7 +165,7 @@ class LayerCreator {
 
   /// returning a plane layer
   ///
-  /// @param gctx ist the geometry context with which the geometry is built
+  /// @param gctx is the geometry context with which the geometry is built
   /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -217,7 +218,7 @@ class LayerCreator {
   /// configuration object
   Config m_cfg;
 
-  /// Private acces method to the logger
+  /// Private access method to the logger
   const Logger& logger() const { return *m_logger; }
 
   /// logging instance

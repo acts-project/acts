@@ -106,7 +106,7 @@ class GaussianGridTrackDensity {
                                    MainGridVector& mainGrid) const;
 
  private:
-  /// @brief Helper function that acutally adds the track to the
+  /// @brief Helper function that actually adds the track to the
   /// main density grid
   ///
   /// @param zBin The center z-bin position the track
@@ -166,7 +166,7 @@ class GaussianGridTrackDensity {
   /// as needed for 'getHighestSumZPosition'
   ///
   /// @param mainGrid The main 1-dim density grid along the z-axis
-  /// @param pos The center z-bin positon
+  /// @param pos The center z-bin position
   ///
   /// @return The sum
   double getDensitySum(const MainGridVector& mainGrid, int pos) const;

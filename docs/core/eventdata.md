@@ -1,6 +1,15 @@
 # Event data
 
+:::{attention}
+This section is largely **outdated** and will be replaced in the future.
+:::
+
 ## Track parametrization
+
+:::{tip}
+An introduction to track parametrization concepts can be found in
+[](track_parametrization).
+:::
 
 A trajectory in a magnetic field is generally parameterized by a set of at least
 five parameters (when being bound to a surface). Two different categories are
@@ -78,8 +87,8 @@ which either is a `ChargedPolicy` class for charged track parameter representati
 ```cpp
 namespace Acts {
     typedef SingleTrackParameters<ChargedPolicy>            TrackParameters;
-    typedef SingleCurvilinearTrackParameters<ChargedPolicy> CurvilinearTrackParameters;
-    typedef SingleBoundTrackParameters<ChargedPolicy>       BoundTrackParameters;
+    typedef GenericCurvilinearTrackParameters<ChargedPolicy> CurvilinearTrackParameters;
+    typedef GenericBoundTrackParameters<ChargedPolicy>       BoundTrackParameters;
 }  // end of namespace Acts
 ```
 
@@ -88,9 +97,9 @@ Or, respectively, a `NeutralPolicy` object
 ```cpp
 namespace Acts {
     typedef SingleTrackParameters<NeutralPolicy> NeutralParameters;
-    typedef SingleCurvilinearTrackParameters<NeutralPolicy>
+    typedef GenericCurvilinearTrackParameters<NeutralPolicy>
                                               NeutralCurvilinearTrackParameters;
-    typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundTrackParameters;
+    typedef GenericBoundTrackParameters<NeutralPolicy> NeutralBoundTrackParameters;
 } // end of namespace Acts  
 ```
 

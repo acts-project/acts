@@ -12,10 +12,11 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AdaptiveGridTrackDensity.hpp"
+#include "Acts/Vertexing/DummyVertexFitter.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-#include "DummyVertexFitter.hpp"
+#include <map>
 
 namespace Acts {
 
@@ -162,8 +163,6 @@ class AdaptiveGridDensityVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 };
 

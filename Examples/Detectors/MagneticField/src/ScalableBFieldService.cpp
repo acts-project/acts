@@ -8,8 +8,11 @@
 
 #include "ActsExamples/MagneticField/ScalableBFieldService.hpp"
 
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/MagneticField/ScalableBField.hpp"
 
+#include <any>
 #include <cmath>
 
 namespace {

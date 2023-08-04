@@ -11,21 +11,26 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 #include <algorithm>
+#include <array>
 #include <iterator>
+#include <ostream>
 #include <set>
 #include <utility>
+
+namespace Acts {
+class PlanarBounds;
+}  // namespace Acts
 
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
@@ -64,15 +69,15 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   ACTS_VERBOSE(" - from R min/max   = " << protoLayer.min(binR, false) << " / "
                                         << protoLayer.max(binR, false));
   ACTS_VERBOSE(" - with R thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binR].first
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binR][0u]
                                         << " / "
-                                        << protoLayer.envelope[binR].second);
+                                        << protoLayer.envelope[binR][1u]);
 
   ACTS_VERBOSE(" - with z min/max   = "
                << protoLayer.min(binZ, false) << " (-"
-               << protoLayer.envelope[binZ].first << ") / "
+               << protoLayer.envelope[binZ][0u] << ") / "
                << protoLayer.max(binZ, false) << " (+"
-               << protoLayer.envelope[binZ].second << ")");
+               << protoLayer.envelope[binZ][1u] << ")");
 
   ACTS_VERBOSE(" - z center         = " << layerZ);
   ACTS_VERBOSE(" - halflength z     = " << layerHalfZ);
@@ -109,8 +114,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
       addTranslation * transform, cBounds, std::move(sArray), layerThickness,
       std::move(ad), active);
 
-  if (!cLayer)
+  if (!cLayer) {
     ACTS_ERROR("Creation of cylinder layer did not succeed!");
+  }
   associateSurfacesToLayer(*cLayer);
 
   // now return
@@ -137,14 +143,14 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   ACTS_VERBOSE(" - from R min/max   = " << protoLayer.min(binR, false) << " / "
                                         << protoLayer.max(binR, false));
   ACTS_VERBOSE(" - with R thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binR].first
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binR][0u]
                                         << " / "
-                                        << protoLayer.envelope[binR].second);
+                                        << protoLayer.envelope[binR][1u]);
   ACTS_VERBOSE(" - with z min/max   = "
                << protoLayer.min(binZ, false) << " (-"
-               << protoLayer.envelope[binZ].first << ") / "
+               << protoLayer.envelope[binZ][0u] << ") / "
                << protoLayer.max(binZ, false) << " (+"
-               << protoLayer.envelope[binZ].second << ")");
+               << protoLayer.envelope[binZ][1u] << ")");
   ACTS_VERBOSE(" - z center         = " << layerZ);
   ACTS_VERBOSE(" - halflength z     = " << layerHalfZ);
 
@@ -181,8 +187,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
       addTranslation * transform, cBounds, std::move(sArray), layerThickness,
       std::move(ad), active);
 
-  if (!cLayer)
+  if (!cLayer) {
     ACTS_ERROR("Creation of cylinder layer did not succeed!");
+  }
   associateSurfacesToLayer(*cLayer);
 
   // now return
@@ -206,14 +213,14 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ACTS_VERBOSE(" - from Z min/max   = " << protoLayer.min(binZ, false) << " / "
                                         << protoLayer.max(binZ, false));
   ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binZ].first
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binZ][0u]
                                         << " / "
-                                        << protoLayer.envelope[binZ].second);
+                                        << protoLayer.envelope[binZ][1u]);
   ACTS_VERBOSE(" - with R min/max   = "
                << protoLayer.min(binR, false) << " (-"
-               << protoLayer.envelope[binR].first << ") / "
+               << protoLayer.envelope[binR][0u] << ") / "
                << protoLayer.max(binR, false) << " (+"
-               << protoLayer.envelope[binR].second << ")");
+               << protoLayer.envelope[binR][1u] << ")");
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.min(binPhi, false)
                                         << " / "
                                         << protoLayer.max(binPhi, false));
@@ -245,8 +252,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
       DiscLayer::create(addTranslation * transform, dBounds, std::move(sArray),
                         layerThickness, std::move(ad), active);
 
-  if (!dLayer)
+  if (!dLayer) {
     ACTS_ERROR("Creation of disc layer did not succeed!");
+  }
   associateSurfacesToLayer(*dLayer);
   // return the layer
   return dLayer;
@@ -269,14 +277,14 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ACTS_VERBOSE(" - from Z min/max   = " << protoLayer.min(binZ, false) << " / "
                                         << protoLayer.max(binZ, false));
   ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binZ].first
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binZ][0u]
                                         << " / "
-                                        << protoLayer.envelope[binZ].second);
+                                        << protoLayer.envelope[binZ][1u]);
   ACTS_VERBOSE(" - with R min/max   = "
                << protoLayer.min(binR, false) << " (-"
-               << protoLayer.envelope[binR].first << ") / "
+               << protoLayer.envelope[binR][0u] << ") / "
                << protoLayer.max(binR, false) << " (+"
-               << protoLayer.envelope[binR].second << ")");
+               << protoLayer.envelope[binR][1u] << ")");
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.min(binPhi, false)
                                         << " / "
                                         << protoLayer.max(binPhi, false));
@@ -322,7 +330,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
   // remaining layer parameters
-  double layerHalf1, layerHalf2, layerThickness;
+  double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;
   switch (bValue) {
     case BinningValue::binX: {
       layerHalf1 = 0.5 * (protoLayer.max(binY) - protoLayer.min(binY));

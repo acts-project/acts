@@ -9,38 +9,33 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
+
+#include <stdexcept>
 
 #include <boost/program_options.hpp>
 
-void DD4hepDetector::addOptions(
-    boost::program_options::options_description& opt) const {
-  ActsExamples::Options::addDD4hepOptions(opt);
-}
+namespace ActsExamples {
+namespace DD4hep {
 
-auto DD4hepDetector::finalize(
-    const boost::program_options::variables_map& vm,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  // read the detector config & dd4hep detector
-  auto dd4HepDetectorConfig =
-      ActsExamples::Options::readDD4hepConfig<po::variables_map>(vm);
-  return finalize(dd4HepDetectorConfig, mdecorator);
-}
+DD4hepDetector::DD4hepDetector() = default;
+
+DD4hepDetector::DD4hepDetector(
+    std::shared_ptr<DD4hepGeometryService> _geometryService)
+    : geometryService(std::move(_geometryService)) {}
+
+DD4hepDetector::~DD4hepDetector() = default;
 
 auto DD4hepDetector::finalize(
     ActsExamples::DD4hep::DD4hepGeometryService::Config config,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext dd4HepContext;
-  config.matDecorator = mdecorator;
-  auto geometrySvc =
+  config.matDecorator = std::move(mdecorator);
+  geometryService =
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
   TrackingGeometryPtr dd4tGeometry =
-      geometrySvc->trackingGeometry(dd4HepContext);
+      geometryService->trackingGeometry(dd4HepContext);
   if (!dd4tGeometry) {
     throw std::runtime_error{
         "Did not receive tracking geometry from DD4hep geometry service"};
@@ -50,3 +45,6 @@ auto DD4hepDetector::finalize(
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
       std::move(dd4tGeometry), std::move(dd4ContextDeocrators));
 }
+
+}  // namespace DD4hep
+}  // namespace ActsExamples

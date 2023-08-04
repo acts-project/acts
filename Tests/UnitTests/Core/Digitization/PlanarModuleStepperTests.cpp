@@ -9,15 +9,22 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/PlanarModuleStepper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <cmath>
+#include <cstdlib>
+#include <memory>
+#include <random>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -46,8 +53,7 @@ auto cSegmentation =
 DigitizationModule pdModule(cSegmentation, hThickness, 1, lAngle, 0., true);
 // (2) negative readout
 DigitizationModule ndModule(cSegmentation, hThickness, -1, lAngle, 0., true);
-std::vector<DigitizationModule> testModules = {std::move(pdModule),
-                                               std::move(ndModule)};
+std::vector<DigitizationModule> testModules = {pdModule, ndModule};
 
 /// The Planar module stepper
 PlanarModuleStepper pmStepper;
@@ -69,8 +75,9 @@ BOOST_DATA_TEST_CASE(
                        bdata::distribution =
                            std::uniform_real_distribution<>(-halfY, halfY))) ^
         bdata::random((bdata::seed = 3,
-                       bdata::distribution =
-                           std::uniform_int_distribution<>(-halfY, halfY))) ^
+                       bdata::distribution = std::uniform_int_distribution<>(
+                           -static_cast<int>(halfY),
+                           static_cast<int>(halfY)))) ^
         bdata::xrange(ntests),
     entryX, entryY, exitX, exitY, index) {
   // avoid warning with void

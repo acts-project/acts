@@ -13,9 +13,14 @@
 #include "Acts/Digitization/PlanarModuleStepper.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <ostream>
 
 Acts::PlanarModuleStepper::PlanarModuleStepper(
     std::unique_ptr<const Logger> mlogger)

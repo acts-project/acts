@@ -8,7 +8,7 @@
 
 #pragma once
 
-/// Set the Geometry Context PLUGIN
+// Set the Geometry Context PLUGIN
 #ifdef ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #include ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #else

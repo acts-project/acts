@@ -8,7 +8,8 @@
 
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 
-#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/BoundarySurfaceT.hpp"
@@ -24,21 +25,27 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustmentVolume.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Result.hpp"
-#include "Acts/Utilities/detail/AxisFwd.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <iosfwd>
+#include <ostream>
 #include <stdexcept>
+#include <string>
 #include <tuple>
+#include <type_traits>
+#include <vector>
+
+namespace Acts {
+struct EndOfWorldReached;
+}  // namespace Acts
 
 Acts::VolumeMaterialMapper::VolumeMaterialMapper(
     const Config& cfg, StraightLinePropagator propagator,
@@ -94,13 +101,11 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
     ACTS_DEBUG("Material volume found with volumeID " << volumeID);
     ACTS_DEBUG("       - ID is " << geoID);
 
-    const BinUtility* bu;
-
     // We need a dynamic_cast to either a volume material proxy or
     // proper surface material
     auto psm = dynamic_cast<const ProtoVolumeMaterial*>(volumeMaterial);
     // Get the bin utility: try proxy material first
-    bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
+    const BinUtility* bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
     if (bu != nullptr) {
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning is " << *bu);
@@ -236,7 +241,8 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
 void Acts::VolumeMaterialMapper::createExtraHits(
     State& mState,
     std::pair<const GeometryIdentifier, BinUtility>& currentBinning,
-    Acts::MaterialSlab properties, Vector3 position, Vector3 direction) const {
+    Acts::MaterialSlab properties, const Vector3& position,
+    Vector3 direction) const {
   if (currentBinning.second.dimensions() == 0) {
     // Writing homogeneous material for the current volumes no need to create
     // extra hits. We directly accumulate the material
@@ -245,7 +251,8 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 
   // Computing the extra hits properties based on the mappingStep length
-  int volumeStep = floor(properties.thickness() / m_cfg.mappingStep);
+  int volumeStep =
+      static_cast<int>(std::floor(properties.thickness() / m_cfg.mappingStep));
   float remainder = properties.thickness() - m_cfg.mappingStep * volumeStep;
   properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
   direction = direction * (m_cfg.mappingStep / direction.norm());
@@ -315,7 +322,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       ACTS_DEBUG("Homogeneous material volume");
       Acts::Material mat = mState.homogeneousGrid[matBin.first].average();
       mState.volumeMaterial[matBin.first] =
-          std::make_unique<HomogeneousVolumeMaterial>(std::move(mat));
+          std::make_unique<HomogeneousVolumeMaterial>(mat);
     } else if (matBin.second.dimensions() == 2) {
       // Average the material in the 2D grid then create an
       // InterpolatedMaterialMap
@@ -368,9 +375,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<BoundSurfaceCollector, MaterialVolumeCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
-  auto propLogger = getDefaultLogger("Propagator", Logging::INFO);
-  PropagatorOptions<ActionList, AbortList> options(
-      mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
+  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
+                                                   mState.magFieldContext);
 
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
@@ -442,7 +448,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         lastPositionEnd = volIter->position;
         currentBinning = mState.materialBin.find(currentID);
       }
-      // If the curent volume has a ProtoVolumeMaterial
+      // If the current volume has a ProtoVolumeMaterial
       // and the material hit has a non 0 thickness
       if (currentBinning != mState.materialBin.end() &&
           rmIter->materialSlab.thickness() > 0) {
@@ -494,6 +500,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         }
       }
       rmIter->volume = volIter->volume;
+      rmIter->intersectionID = currentID;
+      rmIter->intersection = rmIter->position;
     }
     ++rmIter;
   }

@@ -9,19 +9,33 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <utility>
+#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 
@@ -30,14 +44,14 @@ namespace {
 namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using AnyBoundTrackParameters = SingleBoundTrackParameters<AnyCharge>;
+using AnyBoundTrackParameters = GenericBoundTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const BoundSymMatrix cov = BoundSymMatrix::Identity();
 
 template <typename charge_t>
-void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
+void checkParameters(const GenericBoundTrackParameters<charge_t>& params,
                      double l0, double l1, double time, double phi,
                      double theta, double p, double q, const Vector3& pos,
                      const Vector3& unitDir) {
@@ -64,8 +78,8 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   BOOST_CHECK_EQUAL(params.charge(), q);
 }
 
-void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
-             double time, double phi, double theta, double p) {
+void runTest(const std::shared_ptr<const Surface>& surface, double l0,
+             double l1, double time, double phi, double theta, double p) {
   // phi is ill-defined in forward/backward tracks
   phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
 

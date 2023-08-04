@@ -158,7 +158,7 @@ class AdaptiveGridTrackDensity {
   /// @param mainGridDensity The main 1-dim density grid along the z-axis
   /// @param mainGridZValues The corresponding z-bin values of the track
   /// densities along the z-axis
-  /// @param pos The center z-bin positon
+  /// @param pos The center z-bin position
   ///
   /// @return The sum
   double getDensitySum(const std::vector<float>& mainGridDensity,

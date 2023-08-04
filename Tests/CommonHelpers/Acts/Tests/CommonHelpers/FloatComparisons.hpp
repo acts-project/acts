@@ -24,7 +24,7 @@
 //
 // Test failures are reported in detail, from the floating-point comparison
 // that failed (and the reason why it failed) to the context in which the
-// failure occured (container contents if applicable, source file & line...).
+// failure occurred (container contents if applicable, source file & line...).
 
 // Check if "val" and "ref" are within relative tolerance "tol" of each other.
 #define CHECK_CLOSE_REL(val, ref, reltol) \
@@ -142,7 +142,7 @@ predicate_result matrixCompare(const Eigen::DenseBase<Derived1>& val,
     for (int row = 0; row < val.rows(); ++row) {
       predicate_result res = compareImpl(val(row, col), ref(row, col));
       if (!res) {
-        res.message() << " The failure occured during a matrix comparison,"
+        res.message() << " The failure occurred during a matrix comparison,"
                       << " at index (" << row << ", " << col << ")."
                       << " The value was\n"
                       << val << '\n'
@@ -196,7 +196,7 @@ predicate_result compare(const Container& val, const Container& ref,
     predicate_result res = compareImpl(*valIter, *refIter);
     if (!res) {
       // If content comparison failed, report the container's contents
-      res.message() << " The failure occured during a container comparison,"
+      res.message() << " The failure occurred during a container comparison,"
                     << " at index " << std::distance(valBeg, valIter) << '.'
                     << " The value contained {";
       for (const auto& item : val) {

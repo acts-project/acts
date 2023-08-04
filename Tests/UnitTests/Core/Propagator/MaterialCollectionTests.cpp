@@ -11,23 +11,37 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/Material.hpp"
+#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iostream>
 #include <memory>
+#include <optional>
+#include <random>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -62,8 +76,7 @@ EigenStepper estepper(bField);
 EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
 
 StraightLineStepper slstepper;
-StraightLinePropagator slpropagator(std::move(slstepper),
-                                    std::move(navigatorSL));
+StraightLinePropagator slpropagator(slstepper, std::move(navigatorSL));
 const int ntests = 500;
 const int skip = 0;
 bool debugModeFwd = false;
@@ -112,7 +125,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   using AbortListType = AbortList<>;
 
   using Options = PropagatorOptions<ActionListType, AbortListType>;
-  Options fwdOptions(tgContext, mfContext, getDummyLogger());
+  Options fwdOptions(tgContext, mfContext);
 
   fwdOptions.maxStepSize = 25_cm;
   fwdOptions.pathLimit = 25_cm;
@@ -155,10 +168,10 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // backward material test
-  Options bwdOptions(tgContext, mfContext, getDummyLogger());
-  bwdOptions.maxStepSize = -25_cm;
+  Options bwdOptions(tgContext, mfContext);
+  bwdOptions.maxStepSize = 25_cm;
   bwdOptions.pathLimit = -25_cm;
-  bwdOptions.direction = NavigationDirection::Backward;
+  bwdOptions.direction = Direction::Backward;
 
   // get the material collector and configure it
   auto& bwdMaterialInteractor =
@@ -173,7 +186,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     std::cout << ">>> Backward Propagation : start." << std::endl;
   }
   const auto& bwdResult =
-      prop.propagate(*fwdResult.endParameters.get(), startSurface, bwdOptions)
+      prop.propagate(*fwdResult.endParameters, startSurface, bwdOptions)
           .value();
 
   if (debugModeBwd) {
@@ -217,7 +230,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // stepping from one surface to the next
   // now go from surface to surface and check
-  Options fwdStepOptions(tgContext, mfContext, getDummyLogger());
+  Options fwdStepOptions(tgContext, mfContext);
   fwdStepOptions.maxStepSize = 25_cm;
   fwdStepOptions.pathLimit = 25_cm;
 
@@ -242,18 +255,18 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // move forward step by step through the surfaces
-  const BoundTrackParameters* sParameters = &start;
-  std::vector<std::unique_ptr<const BoundTrackParameters>> stepParameters;
+  BoundTrackParameters sParameters = start;
+  std::vector<BoundTrackParameters> stepParameters;
   for (auto& fwdSteps : fwdMaterial.materialInteractions) {
     if (debugModeFwdStep) {
       std::cout << ">>> Forward step : "
-                << sParameters->referenceSurface().geometryId() << " --> "
+                << sParameters.referenceSurface().geometryId() << " --> "
                 << fwdSteps.surface->geometryId() << std::endl;
     }
 
     // make a forward step
     const auto& fwdStep =
-        prop.propagate(*sParameters, (*fwdSteps.surface), fwdStepOptions)
+        prop.propagate(sParameters, (*fwdSteps.surface), fwdStepOptions)
             .value();
 
     auto& fwdStepMaterial =
@@ -261,11 +274,10 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
-    if (fwdStep.endParameters != nullptr) {
+    if (fwdStep.endParameters.has_value()) {
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(std::make_unique<BoundTrackParameters>(
-          (*fwdStep.endParameters.get())));
-      sParameters = stepParameters.back().get();
+      stepParameters.push_back(*fwdStep.endParameters);
+      sParameters = stepParameters.back();
     }
   }
   // final destination surface
@@ -273,12 +285,12 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   if (debugModeFwdStep) {
     std::cout << ">>> Forward step : "
-              << sParameters->referenceSurface().geometryId() << " --> "
+              << sParameters.referenceSurface().geometryId() << " --> "
               << dSurface.geometryId() << std::endl;
   }
 
   const auto& fwdStepFinal =
-      prop.propagate(*sParameters, dSurface, fwdStepOptions).value();
+      prop.propagate(sParameters, dSurface, fwdStepOptions).value();
 
   auto& fwdStepMaterial =
       fwdStepFinal.template get<typename MaterialInteractor::result_type>();
@@ -291,11 +303,11 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   // stepping from one surface to the next : backwards
   // now go from surface to surface and check
-  Options bwdStepOptions(tgContext, mfContext, getDummyLogger());
+  Options bwdStepOptions(tgContext, mfContext);
 
-  bwdStepOptions.maxStepSize = -25_cm;
+  bwdStepOptions.maxStepSize = 25_cm;
   bwdStepOptions.pathLimit = -25_cm;
-  bwdStepOptions.direction = NavigationDirection::Backward;
+  bwdStepOptions.direction = Direction::Backward;
 
   // get the material collector and configure it
   auto& bwdStepMaterialInteractor =
@@ -318,16 +330,16 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // move forward step by step through the surfaces
-  sParameters = fwdResult.endParameters.get();
+  sParameters = *fwdResult.endParameters;
   for (auto& bwdSteps : bwdMaterial.materialInteractions) {
     if (debugModeBwdStep) {
       std::cout << ">>> Backward step : "
-                << sParameters->referenceSurface().geometryId() << " --> "
+                << sParameters.referenceSurface().geometryId() << " --> "
                 << bwdSteps.surface->geometryId() << std::endl;
     }
     // make a forward step
     const auto& bwdStep =
-        prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions)
+        prop.propagate(sParameters, (*bwdSteps.surface), bwdStepOptions)
             .value();
 
     auto& bwdStepMaterial =
@@ -335,11 +347,10 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
     bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
-    if (bwdStep.endParameters != nullptr) {
+    if (bwdStep.endParameters.has_value()) {
       // make sure the parameters do not run out of scope
-      stepParameters.push_back(std::make_unique<BoundTrackParameters>(
-          *(bwdStep.endParameters.get())));
-      sParameters = stepParameters.back().get();
+      stepParameters.push_back(*bwdStep.endParameters);
+      sParameters = stepParameters.back();
     }
   }
   // final destination surface
@@ -347,12 +358,12 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
 
   if (debugModeBwdStep) {
     std::cout << ">>> Backward step : "
-              << sParameters->referenceSurface().geometryId() << " --> "
+              << sParameters.referenceSurface().geometryId() << " --> "
               << dSurface.geometryId() << std::endl;
   }
 
   const auto& bwdStepFinal =
-      prop.propagate(*sParameters, dbSurface, bwdStepOptions).value();
+      prop.propagate(sParameters, dbSurface, bwdStepOptions).value();
 
   auto& bwdStepMaterial =
       bwdStepFinal.template get<typename MaterialInteractor::result_type>();

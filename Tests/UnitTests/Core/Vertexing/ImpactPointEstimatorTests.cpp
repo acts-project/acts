@@ -10,18 +10,38 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <limits>
 #include <memory>
+#include <optional>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 namespace {
 
@@ -134,11 +154,11 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   // estimate parameters at the closest point in 3d
   auto res = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, myTrack, refPosition, state);
-  BoundTrackParameters trackAtIP3d = **res;
+  BoundTrackParameters trackAtIP3d = *res;
   const auto& atPerigee = myTrack.parameters();
   const auto& atIp3d = trackAtIP3d.parameters();
 
-  // all parameters except the helix invariants theta, q/p shoud be changed
+  // all parameters except the helix invariants theta, q/p should be changed
   BOOST_CHECK_NE(atPerigee[eBoundLoc0], atIp3d[eBoundLoc0]);
   BOOST_CHECK_NE(atPerigee[eBoundLoc1], atIp3d[eBoundLoc1]);
   // BOOST_CHECK_NE(atPerigee[eBoundTime], atIp3d[eBoundTime]);
@@ -190,10 +210,58 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
   auto res2 = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, params1, vtxPos, state);
   BOOST_CHECK(res2.ok());
-  BoundTrackParameters endParams = std::move(**res2);
+  BoundTrackParameters endParams = *res2;
   Vector3 surfaceCenter = endParams.referenceSurface().center(geoContext);
 
   BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);
+}
+
+// Test the Impact3d Point estimator 2d and 3d lifetimes sign
+// on a single track.
+
+BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
+  Estimator ipEstimator = makeEstimator(2_T);
+
+  // Create a track from a decay
+  BoundVector trk_par;
+  trk_par[eBoundLoc0] = 200_um;
+  trk_par[eBoundLoc1] = 300_um;
+  trk_par[eBoundTime] = 1_ns;
+  trk_par[eBoundPhi] = 45_degree;
+  trk_par[eBoundTheta] = 45_degree;
+  trk_par[eBoundQOverP] = 1_e / 10_GeV;
+
+  Vector4 ip_pos{0., 0., 0., 0.};
+  Vertex<BoundTrackParameters> ip_vtx(ip_pos, makeVertexCovariance(), {});
+
+  // Form the bound track parameters at the ip
+  auto perigeeSurface = Surface::makeShared<PerigeeSurface>(ip_pos.head<3>());
+  BoundTrackParameters track(perigeeSurface, trk_par,
+                             makeBoundParametersCovariance());
+
+  Vector3 direction{0., 1., 0.};
+  auto lifetimes_signs = ipEstimator.getLifetimesSignOfTrack(
+      track, ip_vtx, direction, geoContext, magFieldContext);
+
+  // Check if the result is OK
+  BOOST_CHECK(lifetimes_signs.ok());
+
+  // Check that d0 sign is positive
+  BOOST_CHECK((*lifetimes_signs).first > 0.);
+
+  // Check that z0 sign is negative
+  BOOST_CHECK((*lifetimes_signs).second < 0.);
+
+  // Check the 3d sign
+
+  auto sign3d = ipEstimator.get3DLifetimeSignOfTrack(
+      track, ip_vtx, direction, geoContext, magFieldContext);
+
+  // Check result is OK
+  BOOST_CHECK(sign3d.ok());
+
+  // Check 3D sign (should be positive)
+  BOOST_CHECK((*sign3d) > 0.);
 }
 
 // Check `.estimateImpactParameters`.

@@ -12,19 +12,36 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/DiscLayer.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Range1D.hpp"
 
-#include <fstream>
-#include <random>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <set>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include <boost/format.hpp>
 
@@ -297,8 +314,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture) {
 
   // CASE III
   ProtoLayer pl3;
-  pl3.extent.ranges[Acts::binR] = {1, 20};
-  pl3.extent.ranges[Acts::binZ] = {-25, 25};
+  pl3.extent.range(Acts::binR).set(1, 20);
+  pl3.extent.range(Acts::binZ).set(-25, 25);
   layer = std::dynamic_pointer_cast<CylinderLayer>(
       p_LC->cylinderLayer(tgContext, srf, equidistant, equidistant, pl3));
   CHECK_CLOSE_REL(layer->thickness(), 19, 1e-3);
@@ -331,8 +348,8 @@ BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture) {
   draw_surfaces(surfaces, "LayerCreator_createDiscLayer_EC_1.obj");
 
   ProtoLayer pl(tgContext, surfaces);
-  pl.extent.ranges[binZ] = {-10, 10};
-  pl.extent.ranges[binR] = {5., 25.};
+  pl.extent.range(binZ).set(-10, 10);
+  pl.extent.range(binR).set(5., 25.);
   std::shared_ptr<DiscLayer> layer = std::dynamic_pointer_cast<DiscLayer>(
       p_LC->discLayer(tgContext, surfaces, equidistant, equidistant, pl));
   CHECK_CLOSE_REL(layer->thickness(), 20, 1e-3);

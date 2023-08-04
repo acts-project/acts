@@ -24,7 +24,7 @@ namespace Acts {
 template <typename object_t>
 struct NavigationOptions {
   /// The navigation direction
-  NavigationDirection navDir = NavigationDirection::Forward;
+  Direction navDir = Direction::Forward;
 
   /// The boundary check directive
   BoundaryCheck boundaryCheck = true;
@@ -55,16 +55,21 @@ struct NavigationOptions {
   /// @todo could be dynamic in the future (pT dependent)
   double overstepLimit = -1 * UnitConstants::um;
 
+  /// Force intersection with boundaries
+  bool forceIntersectBoundaries = false;
+
   /// Constructor
   ///
-  /// @param nDir Navigation direction prescription
+  /// @param ndir Navigation direction prescription
   /// @param bcheck Boundary check for the navigation action
+  /// @param resolves Boolean whether to resolve sensitives
+  /// @param resolvem Boolean whether to resolve material
+  /// @param resolvep Boolean whether to resolve passives
   /// @param sobject Start object to check against
   /// @param eobject End object to check against
-  /// @param maxStepLength Maximal step length to check against
-  NavigationOptions(NavigationDirection ndir, BoundaryCheck bcheck,
-                    bool resolves = true, bool resolvem = true,
-                    bool resolvep = false, const object_t* sobject = nullptr,
+  NavigationOptions(Direction ndir, BoundaryCheck bcheck, bool resolves = true,
+                    bool resolvem = true, bool resolvep = false,
+                    const object_t* sobject = nullptr,
                     const object_t* eobject = nullptr)
       : navDir(ndir),
         boundaryCheck(std::move(bcheck)),

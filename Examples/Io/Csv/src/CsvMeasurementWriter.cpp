@@ -8,22 +8,22 @@
 
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Intersection.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
 
-#include <ios>
+#include <array>
 #include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <variant>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -35,26 +35,25 @@ ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
     : WriterT(config.inputMeasurements, "CsvMeasurementWriter", level),
       m_cfg(config) {
   // Input container for measurements is already checked by base constructor
-  if (m_cfg.inputSimHits.empty()) {
-    throw std::invalid_argument("Missing simulated hits input collection");
-  }
   if (m_cfg.inputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map input collection");
   }
+
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
 }
 
-ActsExamples::CsvMeasurementWriter::~CsvMeasurementWriter() {}
+ActsExamples::CsvMeasurementWriter::~CsvMeasurementWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
-  const auto& measurementSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
-      m_cfg.inputMeasurementSimHitsMap);
+  const auto& measurementSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   ClusterContainer clusters;
 
@@ -71,7 +70,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   if (not m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE(
         "Set up writing of clusters from collection: " << m_cfg.inputClusters);
-    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
+    clusters = m_inputClusters(ctx);
     std::string pathCells =
         perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
     writerCells =
@@ -138,7 +137,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
             for (auto& c : cluster.channels) {
               cell.channel0 = c.bin[0];
               cell.channel1 = c.bin[1];
-              // TODO store digitial timestamp once added to the cell definition
+              // TODO store digital timestamp once added to the cell definition
               cell.timestamp = 0;
               cell.value = c.activation;
               writerCells->append(cell);

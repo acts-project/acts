@@ -8,6 +8,8 @@
 
 #include "Acts/Surfaces/SurfaceError.hpp"
 
+#include <string>
+
 namespace {
 
 class SurfaceErrorCategory : public std::error_category {

@@ -21,11 +21,20 @@
 #include <Acts/Utilities/Logger.hpp>
 
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 
 class TFile;
 
 namespace Acts {
+class ISurfaceMaterial;
+class IVolumeMaterial;
+class Layer;
+class TrackingGeometry;
+class TrackingVolume;
+
 using SurfaceMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 using VolumeMaterialMap =
@@ -109,7 +118,7 @@ class RootMaterialWriter : public IMaterialWriter {
   RootMaterialWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~RootMaterialWriter();
+  ~RootMaterialWriter() override;
 
   /// Write out the material map
   ///
@@ -120,6 +129,9 @@ class RootMaterialWriter : public IMaterialWriter {
   ///
   /// @param tGeometry is the TrackingGeometry
   void write(const Acts::TrackingGeometry& tGeometry);
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   /// Collect the material from the tracking geometry

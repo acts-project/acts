@@ -14,13 +14,13 @@ target_include_directories(
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(
   ActsPluginDD4hep
-  PUBLIC ActsCore ActsPluginTGeo ActsDD4hep::ActsDD4hep)
+  PUBLIC ActsCore ActsPluginTGeo)
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)
   target_include_directories(ActsPluginDD4hep PUBLIC ${DD4hep_INCLUDE_DIRS})
   target_link_libraries(ActsPluginDD4hep PUBLIC ${DD4hep_DDCORE_LIBRARY})
 else()
-  target_link_libraries(ActsPluginDD4hep PUBLIC DD4hep::DDCore)
+  target_link_libraries(ActsPluginDD4hep PUBLIC DD4hep::DDCore DD4hep::DDRec)
 endif()
 
 install(

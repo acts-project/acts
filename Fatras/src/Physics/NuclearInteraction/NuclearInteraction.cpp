@@ -8,6 +8,13 @@
 
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <memory>
+#include <type_traits>
+
 namespace ActsFatras {
 
 const detail::NuclearInteractionParameters& NuclearInteraction::findParameters(
@@ -15,10 +22,12 @@ const detail::NuclearInteractionParameters& NuclearInteraction::findParameters(
     const detail::NuclearInteractionParametrisation& parametrisation,
     float particleMomentum) const {
   // Return lowest/highest if momentum outside the boundary
-  if (particleMomentum <= parametrisation.front().first)
+  if (particleMomentum <= parametrisation.front().first) {
     return parametrisation.front().second;
-  if (particleMomentum >= parametrisation.back().first)
+  }
+  if (particleMomentum >= parametrisation.back().first) {
     return parametrisation.back().second;
+  }
 
   // Find the two neighbouring parametrisations
   const auto lowerBound = std::lower_bound(
@@ -34,7 +43,7 @@ const detail::NuclearInteractionParameters& NuclearInteraction::findParameters(
   const float weight = (momentumUpperNeighbour - particleMomentum) /
                        (momentumUpperNeighbour - momentumLowerNeighbour);
   return (rnd < weight) ? std::prev(lowerBound, 1)->second : lowerBound->second;
-}
+}  // namespace ActsFatras
 
 unsigned int NuclearInteraction::sampleDiscreteValues(
     double rnd,
@@ -46,14 +55,14 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   }
 
   // Find the bin
-  const uint32_t int_rnd = UINT32_MAX * rnd;
+  const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
   size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
                          distribution.second.size() - 1);
 
   // Return the corresponding bin
-  return distribution.first[iBin];
+  return static_cast<unsigned int>(distribution.first[iBin]);
 }
 
 Particle::Scalar NuclearInteraction::sampleContinuousValues(
@@ -67,10 +76,11 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
   }
 
   // Find the bin
-  const uint32_t int_rnd = UINT32_MAX * rnd;
+  const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
   // Fast exit for non-normalised CDFs like interaction probabiltiy
-  if (int_rnd > distribution.second.back())
+  if (int_rnd > distribution.second.back()) {
     return std::numeric_limits<Scalar>::infinity();
+  }
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
   size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
@@ -84,8 +94,9 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
     return distribution.first[iBin] +
            (distribution.first[iBin + 1] - distribution.first[iBin]) *
                (dcont > 0 ? (int_rnd - basecont) / dcont : 0.5);
-  } else
+  } else {
     return distribution.first[iBin];
+  }
 }
 
 unsigned int NuclearInteraction::finalStateMultiplicity(

@@ -9,8 +9,11 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+
+#include <algorithm>
 
 Acts::FreeVector Acts::detail::transformBoundToFreeParameters(
     const Acts::Surface& surface, const GeometryContext& geoCtx,

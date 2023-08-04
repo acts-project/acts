@@ -10,7 +10,6 @@
 
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceError.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/Digitization/DigitizationData.hpp"
 
 #include <array>

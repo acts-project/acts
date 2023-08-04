@@ -11,19 +11,41 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Vertexing/FsmwMode1dFinder.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <iostream>
+#include <memory>
+#include <random>
+#include <string>
+#include <system_error>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -85,8 +107,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    typedef FullBilloirVertexFitter<BoundTrackParameters, Linearizer_t>
-        BilloirFitter;
+    using BilloirFitter =
+        FullBilloirVertexFitter<BoundTrackParameters, Linearizer_t>;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -98,7 +120,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
     double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = sqrt(x * x + y * y);
+    double d0_v = std::hypot(x, y);
     double z0_v = z;
 
     // Start constructing nTracks tracks in the following
@@ -210,7 +232,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Set up propagator with void navigator
     auto propagator = std::make_shared<Propagator>(stepper);
 
-    typedef FullBilloirVertexFitter<InputTrack, Linearizer_t> BilloirFitter;
+    using BilloirFitter = FullBilloirVertexFitter<InputTrack, Linearizer_t>;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -222,7 +244,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = sqrt(x * x + y * y);
+    double d0_v = std::hypot(x, y);
     double z0_v = z;
 
     // Start constructing nTracks tracks in the following
@@ -279,7 +301,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
     std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](InputTrack params) { return params.parameters(); };
+        [](const InputTrack& params) { return params.parameters(); };
 
     VertexFinder finder(cfg, extractParameters);
     VertexFinder::State state;

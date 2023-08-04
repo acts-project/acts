@@ -8,9 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <limits>
 
 using Acts::Vector3;

@@ -3,7 +3,9 @@ from pathlib import Path
 import pytest
 
 from helpers import dd4hepEnabled
-from common import getOpenDataDetector
+
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 import acts.examples
 
@@ -21,6 +23,12 @@ def count_surfaces(geo):
     return nSurfaces
 
 
+def check_extra_odd(srf):
+    if srf.geometryId().volume() in [28, 30, 23, 25, 16, 18]:
+        assert srf.geometryId().extra() != 0
+    return
+
+
 def test_generic_geometry():
     detector, geo, contextDecorators = acts.examples.GenericDetector.create()
     assert detector is not None
@@ -30,17 +38,37 @@ def test_generic_geometry():
     assert count_surfaces(geo) == 18728
 
 
+def test_telescope_geometry():
+    n_surfaces = 10
+
+    detector, geo, contextDecorators = acts.examples.TelescopeDetector.create(
+        bounds=[100, 100],
+        positions=[10 * i for i in range(n_surfaces)],
+        stereos=[0] * n_surfaces,
+        binValue=0,
+    )
+
+    assert detector is not None
+    assert geo is not None
+    assert contextDecorators is not None
+
+    assert count_surfaces(geo) == n_surfaces
+
+
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd():
-
     config = acts.MaterialMapJsonConverter.Config()
     matDeco = acts.JsonMaterialDecorator(
         rConfig=config,
-        jFileName="thirdparty/OpenDataDetector/config/odd-material-mapping-config.json",
+        jFileName=str(
+            getOpenDataDetectorDirectory() / "config/odd-material-mapping-config.json"
+        ),
         level=acts.logging.WARNING,
     )
 
-    detector, geo, _ = getOpenDataDetector(matDeco)
+    detector, geo, _ = getOpenDataDetector(getOpenDataDetectorDirectory(), matDeco)
+
+    geo.visitSurfaces(check_extra_odd)
 
     assert count_surfaces(geo) == 18824
 

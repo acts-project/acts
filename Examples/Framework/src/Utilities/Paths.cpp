@@ -10,17 +10,21 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <charconv>
+#include <cstdint>
 #include <cstdio>
+#include <filesystem>
+#include <map>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
-
-#include <boost/filesystem.hpp>
+#include <type_traits>
+#include <vector>
 
 std::string ActsExamples::ensureWritableDirectory(const std::string& dir) {
-  using boost::filesystem::current_path;
-  using boost::filesystem::path;
+  using std::filesystem::current_path;
+  using std::filesystem::path;
 
   auto dir_path = dir.empty() ? current_path() : path(dir);
   if (exists(dir_path) and not is_directory(dir_path)) {
@@ -56,9 +60,9 @@ std::string ActsExamples::perEventFilepath(const std::string& dir,
 
 std::pair<size_t, size_t> ActsExamples::determineEventFilesRange(
     const std::string& dir, const std::string& name) {
-  using boost::filesystem::current_path;
-  using boost::filesystem::directory_iterator;
-  using boost::filesystem::path;
+  using std::filesystem::current_path;
+  using std::filesystem::directory_iterator;
+  using std::filesystem::path;
 
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("EventFilesRange", Acts::Logging::INFO));

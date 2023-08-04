@@ -32,7 +32,7 @@ namespace Acts {
 ///
 /// With a defined covariance matrix, the closest point and the distance are
 /// not defined along the usual Euclidean metric, but by the Mahalanobis
-/// distance induced by the the covariance.
+/// distance induced by the covariance.
 class BoundaryCheck {
  public:
   /// Construct either hard cut in both dimensions or no cut at all.
@@ -123,7 +123,7 @@ class BoundaryCheck {
 
  private:
   /// Return a new BoundaryCheck with updated covariance.
-  /// @param jacobian Tranform Jacobian for the covariance
+  /// @param jacobian Transform Jacobian for the covariance
   /// @warning This currently only transforms the covariance and does not work
   ///          for the tolerance based check.
   BoundaryCheck transformed(const ActsMatrix<2, 2>& jacobian) const;
@@ -151,7 +151,7 @@ class BoundaryCheck {
   Vector2 m_tolerance;
   Type m_type;
 
-  // To acces the m_type
+  // To access the m_type
   friend class CylinderBounds;
   friend class RectangleBounds;
   // To be able to use `transformed`

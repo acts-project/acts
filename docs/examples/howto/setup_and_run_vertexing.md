@@ -1,3 +1,4 @@
+(vertexing)=
 # ACTS Vertexing Tutorial - Example: Adaptive Multi-Vertex Finder (AMVF) - Pythia8
 
 This tutorial sets up and runs the ACTS Adaptive Multi-Vertex Finder on smeared ACTS Pythia8 truth tracks.
@@ -19,16 +20,16 @@ to your cmake command will significantly speed up the execution time of the vert
 
 ## Setting up an ACTS Adaptive Multi-Vertex Finder Algorithm
 
-A template algorithm file with an (almost) empty ```execute()``` method to be filled in the following is provided here:
+A template algorithm file with an (almost) empty `execute()` method to be filled in the following is provided here:
 ```
 ../Examples/Algorithms/Vertexing/src/TutorialVertexFinderAlgorithm.cpp
 ```
-Open the file in your editor and let's start setting up the AMVF. We will start setting up all necessary components in the ```execute()``` method.
-*Note:* You would normally **not** want to do all the following setup steps in the ```execute()``` method (that is run on every single event), but rather in e.g. the constructor. For the sake of this tutorial, however, everything will be set up and run in the ```execute()``` method.
+Open the file in your editor and let's start setting up the AMVF. We will start setting up all necessary components in the `execute()` method.
+*Note:* You would normally **not** want to do all the following setup steps in the `execute()` method (that is run on every single event), but rather in e.g. the constructor. For the sake of this tutorial, however, everything will be set up and run in the `execute()` method.
 
 ### Setting up required tools: Stepper and propagator
 
-We need the ```Acts::Propagator``` with the ```Acts::EigenStepper```:
+We need the `Acts::Propagator` with the `Acts::EigenStepper`:
 ```cpp
 // Set up EigenStepper
 Acts::EigenStepper<> stepper(m_cfg.bField);
@@ -57,7 +58,8 @@ Now, for the sake of this example, let's specify a user-defined annealing scheme
 ```cpp
 // Set up deterministic annealing with user-defined temperatures
 std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
-Acts::AnnealingUtility::Config annealingConfig(temperatures);
+Acts::AnnealingUtility::Config annealingConfig;
+annealingConfig.setOfTemperatures = temperatures;
 Acts::AnnealingUtility annealingUtility(annealingConfig);
 ```
 The AMVF strongly interplays with its dedicated vertex fitter, the *Adaptive Multi-Vertex Fitter*. Let's configure and set it up with the annealing utility defined above:
@@ -90,7 +92,7 @@ Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator, lineariz
 // We do not want to use a beamspot constraint here
 finderConfig.useBeamSpotConstraint = false;
 ```
-Create the AMVF instance and a finder state to be passed to the ```find()``` method below:
+Create the AMVF instance and a finder state to be passed to the `find()` method below:
 ```cpp
 // Instantiate the finder
 Finder finder(finderConfig);
@@ -105,7 +107,7 @@ VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
  ```
 ### Deploying the vertex finder on the track collection
 
-Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The ```find()``` methods on ACTS vertex finders return an ```Acts::Result``` object that we can use to check if any errors occured and to retrieve the vertex collection:
+Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The `find()` methods on ACTS vertex finders return an `Acts::Result` object that we can use to check if any errors occurred and to retrieve the vertex collection:
 ```cpp
 // Find vertices
 auto res = finder.find(inputTrackPointers, finderOpts, state);
@@ -126,7 +128,7 @@ if (res.ok()) {
   ACTS_ERROR("Error in vertex finder: " << res.error().message());
 }
 ```
-For reference, the full tutorial code can also be found in a file called ```AdaptiveMultiVertexFinderAlgorithm.cpp``` in the same directory as ```TutorialVertexFinderAlgorithm.cpp```.
+For reference, the full tutorial code can also be found in a file called `AdaptiveMultiVertexFinderAlgorithm.cpp` in the same directory as `TutorialVertexFinderAlgorithm.cpp`.
 
 ## Running the example algorithm
 

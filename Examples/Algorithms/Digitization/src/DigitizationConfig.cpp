@@ -9,17 +9,8 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
-#include "ActsExamples/Digitization/Smearers.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
-
-#include <numeric>
-#include <string>
-
-#include <boost/program_options.hpp>
 
 namespace {
 
@@ -34,11 +25,9 @@ enum SmearingTypes : int {
 }  // namespace
 
 ActsExamples::DigitizationConfig::DigitizationConfig(
-    const Options::Variables& vars,
+    bool merge, double sigma, bool commonCorner,
     Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : doMerge(vars["digi-merge"].as<bool>()),
-      mergeNsigma(vars["digi-merge-nsigma"].as<double>()),
-      mergeCommonCorner(vars["digi-merge-common-corner"].as<bool>()) {
+    : doMerge(merge), mergeNsigma(sigma), mergeCommonCorner(commonCorner) {
   digitizationConfigs = std::move(digiCfgs);
 }
 
@@ -62,6 +51,10 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
     boundIndices.insert(boundIndices.end(),
                         dCfg.geometricDigiConfig.indices.begin(),
                         dCfg.geometricDigiConfig.indices.end());
+    // we assume nobody will add multiple smearers to a single bound index
+    for (const auto& c : dCfg.smearingDigiConfig) {
+      boundIndices.push_back(c.index);
+    }
     bIndexInput.push_back({geoID, boundIndices});
   }
   return bIndexInput;

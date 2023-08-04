@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,22 +9,28 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/detail/FacesHelper.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
 
+#include <array>
+#include <cmath>
+#include <cstddef>
 #include <optional>
+#include <vector>
 
 namespace Acts {
+class IVisualization3D;
 
 static ViewConfig s_viewParameter = ViewConfig({0, 0, 255});
 static ViewConfig s_viewMeasurement = ViewConfig({255, 102, 0});
@@ -33,7 +39,7 @@ static ViewConfig s_viewFiltered = ViewConfig({255, 255, 0});
 static ViewConfig s_viewSmoothed = ViewConfig({0, 102, 255});
 
 struct EventDataView3D {
-  /// Helper to find the egen values and corr angle
+  /// Helper to find the eigen values and corr angle
   ///
   /// @param covariance The covariance matrix
   static inline std::array<double, 3> decomposeCovariance(
@@ -53,7 +59,7 @@ struct EventDataView3D {
     return {lambda0, lambda1, theta};
   }
 
-  /// Helper mehod to draw the ellipse points
+  /// Helper method to draw the ellipse points
   ///
   /// @param lambda0 The Eigenvalue in 0
   /// @param lambda1 The Eigenvalue in 1
@@ -106,7 +112,7 @@ struct EventDataView3D {
   /// @param position Where the cone originates from
   /// @param direction The direction parameters
   /// @param covariance The 2x2 covariance matrix for phi/theta
-  /// @param directionScale The direction arror length
+  /// @param directionScale The direction arrow length
   /// @param angularErrorScale The local Error scale
   /// @param viewConfig The visualization parameters
   static void drawCovarianceAngular(
@@ -172,6 +178,30 @@ struct EventDataView3D {
     }
   }
 
+  /// Helper method to draw a single measurement
+  ///
+  /// @param helper [in, out] The visualization helper
+  /// @param lposition calibrated measurement
+  /// @param covariance calibrated covariance
+  /// @param transform reference surface transformed with the geometry context
+  /// @param locErrorScale  The scale of the local error
+  /// @param measurementConfig The visualization options for the measurement
+  ///
+  /// TODO: Expand to 1D measurements
+  static void drawMeasurement(
+      IVisualization3D& helper, const Vector2& lposition,
+      const SymMatrix2& covariance, const Transform3& transform,
+      const double locErrorScale = 1.,
+      const ViewConfig& measurementConfig = s_viewMeasurement) {
+    if (locErrorScale <= 0) {
+      throw std::invalid_argument("locErrorScale must be > 0");
+    }
+    if (measurementConfig.visible) {
+      drawCovarianceCartesian(helper, lposition, covariance, transform,
+                              locErrorScale, measurementConfig);
+    }
+  }
+
   /// Helper method to draw one trajectory stored in a MultiTrajectory object
   ///
   /// @param helper [in, out] The visualization helper
@@ -180,7 +210,7 @@ struct EventDataView3D {
   /// @param gctx The geometry context for which it is drawn
   /// @param momentumScale The scale of the momentum
   /// @param locErrorScale  The scale of the local error
-  /// @param angularErrorScale The sclae of the angular error
+  /// @param angularErrorScale The scale of the angular error
   /// @param surfaceConfig The visualization options for the surface
   /// @param measurementConfig The visualization options for the measurement
   /// @param predictedConfig The visualization options for the predicted
@@ -189,8 +219,9 @@ struct EventDataView3D {
   /// parameters
   /// @param smoothedConfig The visualization options for the smoothed
   /// parameters
-  static inline void drawMultiTrajectory(
-      IVisualization3D& helper, const Acts::MultiTrajectory& multiTraj,
+  template <typename traj_t>
+  static void drawMultiTrajectory(
+      IVisualization3D& helper, const traj_t& multiTraj,
       const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
@@ -199,6 +230,8 @@ struct EventDataView3D {
       const ViewConfig& predictedConfig = s_viewPredicted,
       const ViewConfig& filteredConfig = s_viewFiltered,
       const ViewConfig& smoothedConfig = s_viewSmoothed) {
+    // @TODO: Refactor based on Track class
+
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
@@ -222,14 +255,12 @@ struct EventDataView3D {
       // Second, if necessary and present, draw the calibrated measurement (only
       // draw 2D measurement here)
       // @Todo: how to draw 1D measurement?
-      if (measurementConfig.visible and state.hasCalibrated() and
-          state.calibratedSize() == 2) {
-        const Vector2& lposition = state.calibrated().template head<2>();
-        const SymMatrix2 covariance =
-            state.calibratedCovariance().template topLeftCorner<2, 2>();
-        drawCovarianceCartesian(helper, lposition, covariance,
-                                state.referenceSurface().transform(gctx),
-                                locErrorScale, measurementConfig);
+      if (state.hasCalibrated() and state.calibratedSize() == 2) {
+        const Vector2& lposition = state.template calibrated<2>();
+        const SymMatrix2 covariance = state.template calibratedCovariance<2>();
+        drawMeasurement(helper, lposition, covariance,
+                        state.referenceSurface().transform(gctx), locErrorScale,
+                        measurementConfig);
       }
 
       // Last, if necessary and present, draw the track parameters

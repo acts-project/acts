@@ -11,8 +11,13 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+
+#include <memory>
+#include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// A mock service that changes the magnetic field scale for each event.
 ///
@@ -31,12 +36,12 @@ class ScalableBFieldService : public IContextDecorator {
   ScalableBFieldService(const Config& cfg, Acts::Logging::Level lvl);
 
   /// The service name.
-  const std::string& name() const final override;
+  const std::string& name() const override;
 
   /// Update the magnetic field context.
   ///
   /// @param ctx The per-event context
-  ProcessCode decorate(AlgorithmContext& ctx) final override;
+  ProcessCode decorate(AlgorithmContext& ctx) override;
 
  private:
   Config m_cfg;

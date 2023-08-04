@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename vfitter_t, typename sfinder_t>
@@ -32,8 +33,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
   int iteration = 0;
   std::vector<const InputTrack_t*> removedSeedTracks;
-  while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
-          ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
+  while (((m_cfg.addSingleTrackVertices && !seedTracks.empty()) ||
+          ((!m_cfg.addSingleTrackVertices) && !seedTracks.empty())) &&
          iteration < m_cfg.maxIterations) {
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
@@ -56,7 +57,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     allVerticesPtr.push_back(&vtxCandidate);
 
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
-               << vtxCandidate.fullPosition());
+               << vtxCandidate.fullPosition().transpose());
     if (vtxCandidate.position().z() ==
         vertexingOptions.vertexConstraint.position().z()) {
       ACTS_DEBUG(
@@ -93,7 +94,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       return fitResult.error();
     }
     ACTS_DEBUG("New position of current vertex candidate after fit: "
-               << vtxCandidate.fullPosition());
+               << vtxCandidate.fullPosition().transpose());
     // Check if vertex is good vertex
     auto [nCompatibleTracks, isGoodVertex] =
         checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, fitterState);
@@ -519,7 +520,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const double deltaZPos = otherZPos - candidateZPos;
     const double sumCovZ = otherZCov + candidateZCov;
 
-    double significance;
+    double significance = 0;
     if (not m_cfg.do3dSplitting) {
       // Use only z significance
       if (sumCovZ > 0.) {
@@ -530,11 +531,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     } else {
       // Use full 3d information for significance
       SymMatrix4 sumCov = candidateCov + otherCov;
-      SymMatrix4 sumCovInverse;
-      bool invertible;
-      sumCov.computeInverseWithCheck(sumCovInverse, invertible);
-      if (invertible) {
-        significance = std::sqrt(deltaPos.dot(sumCovInverse * deltaPos));
+      if (auto sumCovInverse = safeInverse(sumCov); sumCovInverse) {
+        significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
       } else {
         return true;
       }

@@ -8,17 +8,18 @@
 
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Definitions/Units.hpp>
 
+#include <array>
 #include <fstream>
-#include <ios>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
+#include <boost/container/static_vector.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
@@ -35,6 +36,8 @@ ActsExamples::CsvSpacePointReader::CsvSpacePointReader(
                        : cfg.inputStem + '_' + cfg.inputCollection;
   m_eventsRange = determineEventFilesRange(cfg.inputDir, filename + ".csv");
   m_logger = Acts::getDefaultLogger("CsvSpacePointReader", lvl);
+
+  m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
 }
 
 std::string ActsExamples::CsvSpacePointReader::CsvSpacePointReader::name()
@@ -65,6 +68,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
     if (m_cfg.inputCollection == "pixel" || m_cfg.inputCollection == "strip" ||
         m_cfg.inputCollection == "overlap") {
+      boost::container::static_vector<Acts::SourceLink, 2> sLinks;
+      // auto sp = SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, sLinks);
+
       if (m_cfg.extendCollection) {
         Acts::Vector3 topStripDirection(data.sp_topStripDirection[0],
                                         data.sp_topStripDirection[1],
@@ -79,14 +85,13 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
                                              data.sp_topStripCenterPosition[1],
                                              data.sp_topStripCenterPosition[2]);
 
-        spacePoints.emplace_back(
-            globalPos, data.sp_covr, data.sp_covz, data.measurement_id,
-            data.sp_topHalfStripLength, data.sp_bottomHalfStripLength,
-            topStripDirection, bottomStripDirection, stripCenterDistance,
-            topStripCenterPosition);
+        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, sLinks,
+                                 data.sp_topHalfStripLength,
+                                 data.sp_bottomHalfStripLength,
+                                 topStripDirection, bottomStripDirection,
+                                 stripCenterDistance, topStripCenterPosition);
       } else {
-        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz,
-                                 data.measurement_id);
+        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, sLinks);
       }
     } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);
@@ -96,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
   ACTS_DEBUG("Created " << spacePoints.size() << " " << m_cfg.inputCollection
                         << " space points");
-  ctx.eventStore.add("PixelSpacePoints", std::move(spacePoints));
+  m_outputSpacePoints(ctx, std::move(spacePoints));
 
   return ProcessCode::SUCCESS;
 }

@@ -106,19 +106,16 @@ std::shared_ptr<const InterpolatedBFieldMap> atlasBField(
 double Bz = 2_T;
 
 using BFieldType = InterpolatedBFieldMap;
-using SharedFieldType = SharedBField<InterpolatedBFieldMap>;
 using EigenStepperType = EigenStepper<>;
 using AtlasStepperType = AtlasStepper;
 using EigenPropagatorType = Propagator<EigenStepperType>;
 using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
 auto bField = atlasBField("Field.txt");
-auto bFieldSharedA = SharedFieldType(bField);
-auto bFieldSharedE = SharedFieldType(bField);
 
-EigenStepperType estepper(bFieldSharedE);
+EigenStepperType estepper(bField);
 EigenPropagatorType epropagator(std::move(estepper));
-AtlasStepperType astepper(bFieldSharedA);
+AtlasStepperType astepper(bField);
 AtlasPropagatorType apropagator(std::move(astepper));
 
 // The actual test - needs to be included to avoid

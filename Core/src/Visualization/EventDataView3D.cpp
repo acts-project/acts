@@ -8,6 +8,17 @@
 
 #include "Acts/Visualization/EventDataView3D.hpp"
 
+#include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/detail/FacesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <cmath>
+#include <utility>
+
+namespace Acts {
+class IVisualization3D;
+}  // namespace Acts
+
 void Acts::EventDataView3D::drawCovarianceCartesian(
     IVisualization3D& helper, const Vector2& lposition,
     const SymMatrix2& covariance, const Transform3& transform,

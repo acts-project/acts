@@ -9,14 +9,18 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
 #include <cmath>
 #include <cstdlib>
 #include <exception>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -89,7 +93,7 @@ class EllipseBounds : public PlanarBounds {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line, here it refers to the full 2PI Ellipse
   ///
-  /// @note the number of segements to may be altered by also providing
+  /// @note the number of segments to may be altered by also providing
   /// the extremas in all direction
   ///
   /// @return vector for vertices in 2D

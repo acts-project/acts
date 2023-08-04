@@ -9,6 +9,7 @@
 #pragma once
 
 #include <system_error>
+#include <type_traits>
 
 namespace Acts {
 
@@ -18,7 +19,6 @@ enum class CombinatorialKalmanFilterError {
   SmoothFailed,
   OutputConversionFailed,
   MeasurementSelectionFailed,
-  NoTrackFound,
   PropagationReachesMaxSteps,
 };
 

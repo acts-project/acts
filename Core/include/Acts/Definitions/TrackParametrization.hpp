@@ -63,14 +63,14 @@ enum BoundIndices : unsigned int {
 /// in `namespace Acts` and are prefixed to avoid naming collisions.
 enum FreeIndices : unsigned int {
   // Spatial position
-  // The spatial position components must be stored as one continous block.
+  // The spatial position components must be stored as one continuous block.
   eFreePos0 = 0u,
   eFreePos1 = eFreePos0 + 1u,
   eFreePos2 = eFreePos0 + 2u,
   // Time
   eFreeTime = 3u,
   // (Unit) direction
-  // The direction components must be stored as one continous block.
+  // The direction components must be stored as one continuous block.
   eFreeDir0 = 4u,
   eFreeDir1 = eFreeDir0 + 1u,
   eFreeDir2 = eFreeDir0 + 2u,
@@ -108,10 +108,10 @@ static_assert(FreeIndices::eFreeSize == 8u,
 static_assert(eBoundLoc0 != eBoundLoc1, "Local parameters must be different");
 
 // Ensure free track parameter indices are consistently defined.
-static_assert(eFreePos1 == eFreePos0 + 1u, "Position must be continous");
-static_assert(eFreePos2 == eFreePos0 + 2u, "Position must be continous");
-static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continous");
-static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continous");
+static_assert(eFreePos1 == eFreePos0 + 1u, "Position must be continuous");
+static_assert(eFreePos2 == eFreePos0 + 2u, "Position must be continuous");
+static_assert(eFreeDir1 == eFreeDir0 + 1u, "Direction must be continuous");
+static_assert(eFreeDir2 == eFreeDir0 + 2u, "Direction must be continuous");
 
 // Shorthand vector/matrix types related to bound track parameters.
 using BoundVector = ActsVector<eBoundSize>;

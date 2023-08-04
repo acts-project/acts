@@ -5,13 +5,12 @@ target_link_libraries(
   ActsExampleGeant4DD4hep
   PRIVATE
     ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
+    ActsExamplesDD4hepDetectorWithOptions
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesGeant4Common
     ActsExamplesMagneticField
-    ActsExamplesIoRoot
-    Boost::program_options)
+    ActsExamplesIoRoot)
 
 install(
   TARGETS ActsExampleGeant4DD4hep
@@ -25,12 +24,11 @@ target_link_libraries(
   ActsExampleMaterialRecordingDD4hep
   PRIVATE
     ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
+    ActsExamplesDD4hepDetectorWithOptions
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesGeant4Common
-    ActsExamplesIoRoot
-    Boost::program_options)
+    ActsExamplesIoRoot)
 
 install(
   TARGETS ActsExampleMaterialRecordingDD4hep

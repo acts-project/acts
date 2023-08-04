@@ -27,8 +27,8 @@ namespace Acts {
 ///
 /// @brief Implements a vertex finder based on the mode of z0 values:
 /// 1. Determines the mode value of all input track z0 values
-/// 2. If no contraint is given, returns (0,0, z0_mode) as vertex position
-/// 3. If vertex contraint is given with x=x_constr and y=y_constr,
+/// 2. If no constraint is given, returns (0,0, z0_mode) as vertex position
+/// 3. If vertex constraint is given with x=x_constr and y=y_constr,
 ///    the returned vertex position will be (x_constr, y_constr, z0_mode).
 template <typename vfitter_t>
 class ZScanVertexFinder {
@@ -86,7 +86,6 @@ class ZScanVertexFinder {
                         getDefaultLogger("ZScanVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters([](T params) { return params; }),
-
         m_logger(std::move(logger)) {}
 
   /// @brief Constructor for user-defined InputTrack_t type =!
@@ -123,8 +122,6 @@ class ZScanVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance

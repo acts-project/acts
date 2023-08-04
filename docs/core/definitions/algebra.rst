@@ -15,6 +15,7 @@ The basic scalar type can be defined via this file and is set per default to `do
 It is recommended within the code to deduce the Scalar type from the Event Data object, e.g.
 
 .. code-block:: cpp
- using Scalar = Vector3::Scalar;
+
+   using Scalar = Vector3::Scalar;
 
 Currently only the `Core` package builds with `float` precision.

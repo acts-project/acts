@@ -11,12 +11,17 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
+#include <vector>
 
 namespace utf = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();
@@ -65,7 +70,7 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsRecreation) {
   RectangleBounds original(halfX, halfY);
   // const bool symmetric(false);
   auto valvector = original.values();
-  std::array<double, RectangleBounds::eSize> values;
+  std::array<double, RectangleBounds::eSize> values{};
   std::copy_n(valvector.begin(), RectangleBounds::eSize, values.begin());
   RectangleBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

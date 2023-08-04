@@ -16,6 +16,11 @@
 #include <memory>
 #include <string>
 
+class TEfficiency;
+namespace ActsFatras {
+class Particle;
+}  // namespace ActsFatras
+
 namespace ActsExamples {
 
 // Tools to make efficiency plots to show tracking efficiency.

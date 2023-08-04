@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <algorithm>
 #include <optional>
 #include <tuple>
 #include <variant>
@@ -57,7 +58,7 @@ struct CovarianceCache {
   ///
   /// @param gctx The current geometry context
   /// @param surface The surface of the bound representation
-  /// @param position The position of the representaiton
+  /// @param position The position of the representation
   /// @param boundParameters The bound parameters at the surface
   /// @param boundCovariance The bound covariance to be propagated
   ///
@@ -65,7 +66,7 @@ struct CovarianceCache {
   /// a bound matrix, remember the surface & establish the
   /// jacobian between bound and free parametrisation.
   CovarianceCache(const GeometryContext& gctx, const Surface& surface,
-                  const Vector3 position, const BoundVector& boundParameters,
+                  const Vector3& position, const BoundVector& boundParameters,
                   const BoundSymMatrix& boundCovariance);
 
   /// Constructor from curvilinear
@@ -77,7 +78,7 @@ struct CovarianceCache {
   /// This constructor will set the variant covariance type to
   /// a bound matrix, remember the surface & establish the
   /// jacobian between bound and free parametrisation.
-  CovarianceCache(const Vector3 position, const Vector3& direction,
+  CovarianceCache(const Vector3& position, const Vector3& direction,
                   const BoundSymMatrix& boundCovariance);
 
   /// Construction from free

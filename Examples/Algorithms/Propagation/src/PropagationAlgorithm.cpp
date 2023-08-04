@@ -8,7 +8,14 @@
 
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
+
+#include <stdexcept>
 
 namespace ActsExamples {
 
@@ -67,27 +74,26 @@ ProcessCode PropagationAlgorithm::execute(
 
     // execute the test for charged particles
     PropagationOutput pOutput;
-    if (charge) {
+    if (charge != 0.0) {
       // charged extrapolation - with hit recording
-      Acts::BoundTrackParameters startParameters(surface, std::move(pars),
-                                                 std::move(cov));
+      Acts::BoundTrackParameters startParameters(surface, pars, std::move(cov));
       sPosition = startParameters.position(context.geoContext);
       sMomentum = startParameters.momentum();
-      pOutput = m_cfg.propagatorImpl->execute(
-          context, m_cfg, Acts::LoggerWrapper{logger()}, startParameters);
+      pOutput = m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
+                                              startParameters);
     } else {
       // execute the test for neutral particles
-      Acts::NeutralBoundTrackParameters neutralParameters(
-          surface, std::move(pars), std::move(cov));
+      Acts::NeutralBoundTrackParameters neutralParameters(surface, pars,
+                                                          std::move(cov));
       sPosition = neutralParameters.position(context.geoContext);
       sMomentum = neutralParameters.momentum();
-      pOutput = m_cfg.propagatorImpl->execute(
-          context, m_cfg, Acts::LoggerWrapper{logger()}, neutralParameters);
+      pOutput = m_cfg.propagatorImpl->execute(context, m_cfg, logger(),
+                                              neutralParameters);
     }
     // Record the propagator steps
     propagationSteps.push_back(std::move(pOutput.first));
     if (m_cfg.recordMaterialInteractions &&
-        pOutput.second.materialInteractions.size()) {
+        !pOutput.second.materialInteractions.empty()) {
       // Create a recorded material track
       RecordedMaterialTrack rmTrack;
       // Start position
@@ -102,13 +108,11 @@ ProcessCode PropagationAlgorithm::execute(
   }
 
   // Write the propagation step data to the event store
-  context.eventStore.add(m_cfg.propagationStepCollection,
-                         std::move(propagationSteps));
+  m_outpoutPropagationSteps(context, std::move(propagationSteps));
 
   // Write the recorded material to the event store
   if (m_cfg.recordMaterialInteractions) {
-    context.eventStore.add(m_cfg.propagationMaterialCollection,
-                           std::move(recordedMaterial));
+    m_recordedMaterial(context, std::move(recordedMaterial));
   }
 
   return ProcessCode::SUCCESS;
@@ -139,13 +143,16 @@ std::optional<Acts::BoundSymMatrix> PropagationAlgorithm::generateCovariance(
 
 PropagationAlgorithm::PropagationAlgorithm(
     const PropagationAlgorithm::Config& config, Acts::Logging::Level level)
-    : BareAlgorithm("PropagationAlgorithm", level), m_cfg(config) {
+    : IAlgorithm("PropagationAlgorithm", level), m_cfg(config) {
   if (!m_cfg.propagatorImpl) {
     throw std::invalid_argument("Config needs to contain a propagator");
   }
   if (!m_cfg.randomNumberSvc) {
     throw std::invalid_argument("No random number generator given");
   }
+
+  m_outpoutPropagationSteps.initialize(m_cfg.propagationStepCollection);
+  m_recordedMaterial.initialize(m_cfg.propagationMaterialCollection);
 }
 
 }  // namespace ActsExamples

@@ -13,6 +13,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+
+#include <memory>
 
 namespace Acts {
 class Surface;
@@ -49,7 +52,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
-      std::shared_ptr<const Acts::DigitizationModule> digitzationModule =
+      std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
           nullptr);
 
   /// Constructor for single sided detector element
@@ -65,13 +68,13 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
-      std::shared_ptr<const Acts::DigitizationModule> digitzationModule =
+      std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
           nullptr);
 
   /// Identifier
-  Identifier identifier() const override final;
+  Identifier identifier() const final;
 
-  /// Return local to global transform associated with this identifier
+  /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   ///
@@ -80,18 +83,21 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const override;
 
-  /// Return surface associated with this identifier,
-  const Acts::Surface& surface() const final override;
+  /// Return surface associated with this detector element
+  const Acts::Surface& surface() const override;
+
+  /// Non-cost access to surface associated with this detector element
+  Acts::Surface& surface() override;
 
   /// Set the identifier after construction (sometimes needed)
   void assignIdentifier(const Identifier& identifier);
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const final override;
+  double thickness() const override;
 
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const Acts::DigitizationModule> digitizationModule()
-      const final override;
+      const override;
 
  private:
   /// the element representation
@@ -100,7 +106,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// the transform for positioning in 3D space
   std::shared_ptr<const Acts::Transform3> m_elementTransform;
   /// the surface represented by it
-  std::shared_ptr<const Acts::Surface> m_elementSurface;
+  std::shared_ptr<Acts::Surface> m_elementSurface;
   /// the element thickness
   double m_elementThickness;
   /// store either
@@ -129,6 +135,10 @@ ActsExamples::Generic::GenericDetectorElement::transform(
 
 inline const Acts::Surface&
 ActsExamples::Generic::GenericDetectorElement::surface() const {
+  return *m_elementSurface;
+}
+
+inline Acts::Surface& ActsExamples::Generic::GenericDetectorElement::surface() {
   return *m_elementSurface;
 }
 

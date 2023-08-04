@@ -8,8 +8,21 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <cmath>
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <utility>
 
 namespace tt = boost::test_tools;
 

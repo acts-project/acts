@@ -9,21 +9,42 @@
 #pragma once
 
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
+#include <utility>
 #include <vector>
 
-struct DD4hepDetector : public ActsExamples::IBaseDetector {
-  void addOptions(
-      boost::program_options::options_description& opt) const override;
+namespace dd4hep {
+class Detector;
+}  // namespace dd4hep
 
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const boost::program_options::variables_map& vm,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
+namespace Acts {
+class TrackingGeometry;
+class IMaterialDecorator;
+}  // namespace Acts
 
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(ActsExamples::DD4hep::DD4hepGeometryService::Config cfg,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+namespace ActsExamples {
+class IContextDecorator;
+}  // namespace ActsExamples
+
+namespace ActsExamples {
+namespace DD4hep {
+
+struct DD4hepDetector {
+  using ContextDecorators =
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
+
+  DD4hepDetector();
+  DD4hepDetector(std::shared_ptr<DD4hepGeometryService> geometryService);
+  ~DD4hepDetector();
+
+  std::shared_ptr<DD4hepGeometryService> geometryService;
+
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      DD4hepGeometryService::Config config,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
+
+}  // namespace DD4hep
+}  // namespace ActsExamples

@@ -183,7 +183,7 @@ inline void assumeWritten(T& clobber) {
 struct MicroBenchmarkResult {
   using Duration = std::chrono::duration<double, std::nano>;
 
-  size_t iters_per_run;
+  size_t iters_per_run = 0;
   std::vector<Duration> run_timings;
 
   // Total benchmark running time
@@ -246,7 +246,7 @@ struct MicroBenchmarkResult {
   // run time distribution is roughly symmetric.
   //
   Duration runTimeMedian() const {
-    assert(run_timings.size() >= 1);
+    assert(!run_timings.empty());
     const std::vector<Duration> sorted_timings = sortedRunTimes();
     const size_t midpoint = sorted_timings.size() / 2;
     if (sorted_timings.size() % 2 == 0) {
@@ -411,7 +411,8 @@ struct MicroBenchmarkIter<Callable, void> {
   constexpr static bool is_callable =
       Concepts ::exists<call_without_input_t, Callable>;
 
-  static inline void iter(const Callable& iteration, const void* = nullptr) {
+  static inline void iter(const Callable& iteration,
+                          const void* /*input*/ = nullptr) {
     static_assert(is_callable,
                   "Gave callable that is not callable without input");
     if constexpr (is_callable) {
@@ -479,7 +480,7 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 //   a ~GHz CPU clock this gives you a clock-related bias and noise of ~10ns. At
 //   ~10µs run times, that only contributes for 1/1000 of observed timings.
 // - The main source of benchmark noise is that your operating system's
-//   scheduler disturbs the program every few miliseconds. With run timings of
+//   scheduler disturbs the program every few milliseconds. With run timings of
 //   ~10µs, this disturbance affects less than 1% of data points, and is thus
 //   perfectly eliminated by our outlier-robust statistics.
 //
@@ -501,7 +502,7 @@ MicroBenchmarkResult microBenchmarkImpl(Callable&& run, size_t iters_per_run,
 //       * Outlier rejection (many runs mean better outlier rejection)
 //       * Benchmark running time (many runs take longer)
 //       * Handling of short-lived background disturbances (these have a higher
-//         chance of occuring in longer-lived benchmarks, but if they only take
+//         chance of occurring in longer-lived benchmarks, but if they only take
 //         a small portion of the benchmark's running time, they can be taken
 //         care of by outlier rejection instead of polluting the results)
 // - `warmup_time` should be chosen based on the time it takes for run timings

@@ -10,6 +10,10 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -21,7 +25,16 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <type_traits>
+#include <utility>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -47,7 +60,7 @@ static auto bField = std::make_shared<BFieldType>(Vector3{0, 0, 1_T});
 ///
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
-/// @param angleU Roation around the original U axis
+/// @param angleU Rotation around the original U axis
 Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
                                     double angleY) {
   Transform3 ctransform;
@@ -64,7 +77,7 @@ Transform3 createCylindricTransform(const Vector3& nposition, double angleX,
 ///
 /// @param nnomal The nominal normal direction
 /// @param angleT Rotation around the norminal normal
-/// @param angleU Roation around the original U axis
+/// @param angleU Rotation around the original U axis
 Transform3 createPlanarTransform(const Vector3& nposition,
                                  const Vector3& nnormal, double angleT,
                                  double angleU) {
@@ -165,7 +178,7 @@ BOOST_AUTO_TEST_CASE(JacobianCylinderToGlobalTest) {
   BoundVector pars;
   pars << 182.34, -82., 0.134, 0.85, 1. / (100_GeV), 0;
 
-  BoundTrackParameters atCylinder(cSurface, std::move(pars), std::move(cov));
+  BoundTrackParameters atCylinder(cSurface, pars, std::move(cov));
 
   // run the test
   testJacobianToGlobal(atCylinder);
@@ -185,7 +198,7 @@ BOOST_AUTO_TEST_CASE(JacobianDiscToGlobalTest) {
   BoundVector pars;
   pars << 192.34, 1.823, 0.734, 0.235, 1. / (100_GeV), 0;
 
-  BoundTrackParameters atDisc(dSurface, std::move(pars), std::move(cov));
+  BoundTrackParameters atDisc(dSurface, pars, std::move(cov));
 
   // run the test
   testJacobianToGlobal(atDisc);
@@ -207,7 +220,7 @@ BOOST_AUTO_TEST_CASE(JacobianPlaneToGlobalTest) {
   BoundVector pars;
   pars << 12.34, -8722., 2.134, 0.85, 1. / (100_GeV), 0;
 
-  BoundTrackParameters atPlane(pSurface, std::move(pars), std::move(cov));
+  BoundTrackParameters atPlane(pSurface, pars, std::move(cov));
 
   // run the test
   testJacobianToGlobal(atPlane);
@@ -224,7 +237,7 @@ BOOST_AUTO_TEST_CASE(JacobianPerigeeToGlobalTest) {
   BoundVector pars;
   pars << -3.34, -822., -0.734, 0.85, 1. / (100_GeV), 0;
 
-  BoundTrackParameters perigee(pSurface, std::move(pars), std::move(cov));
+  BoundTrackParameters perigee(pSurface, pars, std::move(cov));
 
   // run the test
   testJacobianToGlobal(perigee);
@@ -243,7 +256,7 @@ BOOST_AUTO_TEST_CASE(JacobianStrawToGlobalTest) {
   BoundVector pars;
   pars << -8.34, 812., 0.734, 0.25, 1. / (100_GeV), 0;
 
-  BoundTrackParameters atStraw(sSurface, std::move(pars), std::move(cov));
+  BoundTrackParameters atStraw(sSurface, pars, std::move(cov));
 
   // run the test
   testJacobianToGlobal(atStraw);

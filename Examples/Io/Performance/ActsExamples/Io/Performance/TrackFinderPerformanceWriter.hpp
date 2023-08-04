@@ -8,13 +8,16 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <memory>
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write track finder performance measures.
 ///
@@ -44,15 +47,19 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   /// @param level The log level
   TrackFinderPerformanceWriter(Config config, Acts::Logging::Level level);
 
-  ~TrackFinderPerformanceWriter() final override;
+  ~TrackFinderPerformanceWriter() override;
 
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const;
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) final override;
+                     const ProtoTrackContainer& tracks) override;
 
   struct Impl;
+
   std::unique_ptr<Impl> m_impl;
 };
 

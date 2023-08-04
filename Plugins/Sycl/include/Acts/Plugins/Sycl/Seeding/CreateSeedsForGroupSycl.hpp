@@ -30,7 +30,7 @@ namespace Acts::Sycl {
 /// @param[in] device_resource is the optional device-accessible memory
 ///                            resource, necessary if @c resource is not
 ///                            device-accessible
-/// @param[in] seedfinderConfig includes the required configuration
+/// @param[in] seedFinderConfig includes the required configuration
 /// parameters for the algorithm
 /// @param[in] deviceCuts is an experiment specific object with customizable
 /// seed weight altering and seed cutting member functions
@@ -44,7 +44,7 @@ namespace Acts::Sycl {
 void createSeedsForGroupSycl(
     QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource,
-    const detail::DeviceSeedfinderConfig& seedfinderConfig,
+    const detail::DeviceSeedFinderConfig& seedFinderConfig,
     const DeviceExperimentCuts& deviceCuts,
     vecmem::vector<detail::DeviceSpacePoint>& bottomSPs,
     vecmem::vector<detail::DeviceSpacePoint>& middleSPs,

@@ -8,16 +8,26 @@
 
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
+#include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Plugins/TGeo/ITGeoDetectorElementSplitter.hpp"
+#include "Acts/Plugins/TGeo/ITGeoIdentifierProvider.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoParser.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
-#include <stdio.h>
+#include <ostream>
+#include <stdexcept>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+
+namespace Acts {
+class ISurfaceMaterial;
+}  // namespace Acts
 
 Acts::TGeoLayerBuilder::TGeoLayerBuilder(
     const Acts::TGeoLayerBuilder::Config& config,
@@ -93,7 +103,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                        << " configuration(s)" + addonOutput);
 
   // Helper function to fill the layer
-  auto fillLayer = [&](const LayerSurfaceVector lSurfaces,
+  auto fillLayer = [&](const LayerSurfaceVector& lSurfaces,
                        const LayerConfig& lCfg,
                        unsigned int pl_id = 0) -> void {
     int nb0 = 0, nt0 = 0;
@@ -227,9 +237,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                 ? m_cfg.identifierProvider->identify(gctx, *snode.node)
                 : Identifier();
 
-        auto tgElement = std::make_shared<const Acts::TGeoDetectorElement>(
-            identifier, *snode.node, *snode.transform, layerCfg.localAxes,
-            m_cfg.unit);
+        auto tgElement =
+            m_cfg.elementFactory(identifier, *snode.node, *snode.transform,
+                                 layerCfg.localAxes, m_cfg.unit, nullptr);
 
         std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
             tgElements =
@@ -238,7 +248,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                           const Acts::TGeoDetectorElement>>{tgElement}
                     : m_cfg.detectorElementSplitter->split(gctx, tgElement);
 
-        for (auto tge : tgElements) {
+        for (const auto& tge : tgElements) {
           m_elementStore.push_back(tge);
           layerSurfaces.push_back(tge->surface().getSharedPtr());
         }
@@ -287,4 +297,13 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     }
   }
   return;
+}
+
+std::shared_ptr<Acts::TGeoDetectorElement>
+Acts::TGeoLayerBuilder::defaultElementFactory(
+    const Identifier& identifier, const TGeoNode& tGeoNode,
+    const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+  return std::make_shared<TGeoDetectorElement>(
+      identifier, tGeoNode, tGeoMatrix, axes, scalor, std::move(material));
 }

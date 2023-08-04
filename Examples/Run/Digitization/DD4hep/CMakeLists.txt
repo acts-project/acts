@@ -6,7 +6,7 @@ target_link_libraries(
   ActsExampleDigitizationConfigDD4hep
   PRIVATE
     ActsExamplesDigitizationCommon
-    ActsExamplesDetectorDD4hep
+    ActsExamplesDD4hepDetectorWithOptions
 )
 
 install(
@@ -19,7 +19,9 @@ add_executable(
   DD4hepDigitizationExample.cpp)
 target_link_libraries(
     ActsExampleDigitizationDD4hep
-  PRIVATE ActsExamplesDigitizationCommon ActsExamplesDetectorDD4hep)
+  PRIVATE
+    ActsExamplesDigitizationCommon
+    ActsExamplesDD4hepDetectorWithOptions)
 
 install(
   TARGETS ActsExampleDigitizationDD4hep

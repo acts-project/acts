@@ -36,6 +36,8 @@ ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader(
   if (m_cfg.outputEvents.empty()) {
     throw std::invalid_argument("Missing output collection");
   }
+
+  m_outputEvents.initialize(m_cfg.outputEvents);
 }
 
 std::string ActsExamples::HepMC3AsciiReader::HepMC3AsciiReader::name() const {
@@ -65,12 +67,13 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
     reader.read_event(event);
   }
 
-  if (events.empty())
+  if (events.empty()) {
     return ActsExamples::ProcessCode::ABORT;
+  }
 
   ACTS_VERBOSE(events.size()
                << " events read, writing to " << m_cfg.outputEvents);
-  ctx.eventStore.add(m_cfg.outputEvents, std::move(events));
+  m_outputEvents(ctx, std::move(events));
 
   reader.close();
   return ActsExamples::ProcessCode::SUCCESS;

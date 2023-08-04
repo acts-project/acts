@@ -19,11 +19,17 @@
 #include <Acts/Utilities/Logger.hpp>
 
 #include <map>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 
 class TFile;
 
 namespace Acts {
+class ISurfaceMaterial;
+class IVolumeMaterial;
+
 using SurfaceMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>;
 using VolumeMaterialMap =
@@ -87,7 +93,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   RootMaterialDecorator(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootMaterialDecorator();
+  ~RootMaterialDecorator() override;
 
   /// Decorate a surface
   ///
@@ -118,6 +124,9 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
       volume.assignVolumeMaterial(vMaterial->second);
     }
   }
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   /// The config class

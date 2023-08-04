@@ -8,6 +8,8 @@
 
 #include "Acts/Geometry/TrackingVolume.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/GlueVolumesDescriptor.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -16,8 +18,6 @@
 #include "Acts/Material/ProtoVolumeMaterial.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
@@ -25,8 +25,15 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <ostream>
 #include <string>
+#include <tuple>
+#include <type_traits>
 #include <utility>
+
+namespace Acts {
+class ISurfaceMaterial;
+}  // namespace Acts
 
 Acts::TrackingVolume::TrackingVolume(
     const Transform3& transform, VolumeBoundsPtr volbounds,
@@ -96,10 +103,13 @@ const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
   }
 
   // search for dense volumes
-  if (!m_confinedDenseVolumes.empty())
-    for (auto& denseVolume : m_confinedDenseVolumes)
-      if (denseVolume->inside(position, tol))
+  if (!m_confinedDenseVolumes.empty()) {
+    for (auto& denseVolume : m_confinedDenseVolumes) {
+      if (denseVolume->inside(position, tol)) {
         return denseVolume.get();
+      }
+    }
+  }
 
   // there is no lower sub structure
   return this;
@@ -113,7 +123,7 @@ const Acts::TrackingVolumeBoundaries& Acts::TrackingVolume::boundarySurfaces()
 void Acts::TrackingVolume::connectDenseBoundarySurfaces(
     MutableTrackingVolumeVector& confinedDenseVolumes) {
   if (!confinedDenseVolumes.empty()) {
-    NavigationDirection navDir;
+    Direction dir = Direction::Positive;
     // Walk over each dense volume
     for (auto& confDenseVol : confinedDenseVolumes) {
       // Walk over each boundary surface of the volume
@@ -132,13 +142,13 @@ void Acts::TrackingVolume::connectDenseBoundarySurfaces(
                 boundSur.at(i));
         if (mutableBs->m_oppositeVolume != nullptr &&
             mutableBs->m_alongVolume == nullptr) {
-          navDir = NavigationDirection::Forward;
-          mutableBs->attachVolume(this, navDir);
+          dir = Direction::Positive;
+          mutableBs->attachVolume(this, dir);
         } else {
           if (mutableBs->m_oppositeVolume == nullptr &&
               mutableBs->m_alongVolume != nullptr) {
-            navDir = NavigationDirection::Backward;
-            mutableBs->attachVolume(this, navDir);
+            dir = Direction::Negative;
+            mutableBs->attachVolume(this, dir);
           }
         }
 
@@ -161,7 +171,7 @@ void Acts::TrackingVolume::createBoundarySurfaces() {
   for (auto& osf : orientedSurfaces) {
     TrackingVolume* opposite = nullptr;
     TrackingVolume* along = nullptr;
-    if (osf.second == NavigationDirection::Backward) {
+    if (osf.second == Direction::Negative) {
       opposite = this;
     } else {
       along = this;
@@ -187,9 +197,7 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  NavigationDirection navDir = (nvector.dot(distance) > 0.)
-                                   ? NavigationDirection::Forward
-                                   : NavigationDirection::Backward;
+  Direction dir = Direction::fromScalar(nvector.dot(distance));
   // The easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -197,7 +205,7 @@ void Acts::TrackingVolume::glueTrackingVolume(const GeometryContext& gctx,
     // the boundary orientation
     auto mutableBSurfaceMine =
         std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(bSurfaceMine);
-    mutableBSurfaceMine->attachVolume(neighbor, navDir);
+    mutableBSurfaceMine->attachVolume(neighbor, dir);
     // Make sure you keep the boundary material if there
     const Surface& neighborSurface =
         neighbor->m_boundarySurfaces.at(bsfNeighbor)->surfaceRepresentation();
@@ -234,9 +242,7 @@ void Acts::TrackingVolume::glueTrackingVolumes(
   Vector3 nvector =
       bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  NavigationDirection navDir = (nvector.dot(distance) > 0.)
-                                   ? NavigationDirection::Forward
-                                   : NavigationDirection::Backward;
+  Direction dir = Direction::fromScalar(nvector.dot(distance));
   // the easy case :
   // - no glue volume descriptors on either side
   if ((m_glueVolumeDescriptor == nullptr) ||
@@ -244,7 +250,7 @@ void Acts::TrackingVolume::glueTrackingVolumes(
     // the boundary orientation
     auto mutableBSurfaceMine =
         std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(bSurfaceMine);
-    mutableBSurfaceMine->attachVolumeArray(neighbors, navDir);
+    mutableBSurfaceMine->attachVolumeArray(neighbors, dir);
     // now set it to the neighbor volumes - the optised way
     for (auto& nVolume : neighbors->arrayObjects()) {
       auto mutableNVolume = std::const_pointer_cast<TrackingVolume>(nVolume);
@@ -302,7 +308,7 @@ void Acts::TrackingVolume::synchronizeLayers(double envelope) const {
     // layers." << endreq;
     for (auto& clayIter : m_confinedLayers->arrayObjects()) {
       if (clayIter) {
-        // @todo implement syncrhonize layer
+        // @todo implement synchronize layer
         //  if (clayIter->surfaceRepresentation().type() == Surface::Cylinder &&
         //  !(center().isApprox(clayIter->surfaceRepresentation().center())) )
         //      clayIter->resizeAndRepositionLayer(volumeBounds(),center(),envelope);
@@ -358,13 +364,13 @@ void Acts::TrackingVolume::interlinkLayers() {
 void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-    size_t& vol) {
+    size_t& vol, const GeometryIdentifierHook& hook, const Logger& logger) {
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeometryId(volumeID);
-
+  ACTS_DEBUG("volumeID: " << volumeID << ", name: " << volumeName());
   // insert the volume into the map
   volumeMap[volumeID] = thisVolume;
 
@@ -372,7 +378,8 @@ void Acts::TrackingVolume::closeGeometry(
   if (materialDecorator != nullptr) {
     materialDecorator->decorate(*thisVolume);
   }
-  if (thisVolume->volumeMaterial() == nullptr && thisVolume->motherVolume() &&
+  if (thisVolume->volumeMaterial() == nullptr &&
+      thisVolume->motherVolume() != nullptr &&
       thisVolume->motherVolume()->volumeMaterial() != nullptr) {
     auto protoMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(
         thisVolume->motherVolume()->volumeMaterial());
@@ -387,14 +394,14 @@ void Acts::TrackingVolume::closeGeometry(
   GeometryIdentifier::Value iboundary = 0;
   // loop over the boundary surfaces
   for (auto& bSurfIter : boundarySurfaces()) {
-    // get the intersection soltuion
+    // get the intersection solution
     auto& bSurface = bSurfIter->surfaceRepresentation();
     // create the boundary surface id
     auto boundaryID = GeometryIdentifier(volumeID).setBoundary(++iboundary);
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
     mutableBSurface.assignGeometryId(boundaryID);
-    // Assigne material if you have a decorator
+    // Assign material if you have a decorator
     if (materialDecorator != nullptr) {
       materialDecorator->decorate(mutableBSurface);
     }
@@ -411,7 +418,8 @@ void Acts::TrackingVolume::closeGeometry(
         auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
-        mutableLayerPtr->closeGeometry(materialDecorator, layerID);
+        mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook,
+                                       logger);
       }
     } else if (m_bvhTop != nullptr) {
       GeometryIdentifier::Value isurface = 0;
@@ -437,7 +445,8 @@ void Acts::TrackingVolume::closeGeometry(
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->setMotherVolume(this);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol, hook,
+                                        logger);
     }
   }
 
@@ -446,7 +455,8 @@ void Acts::TrackingVolume::closeGeometry(
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->setMotherVolume(this);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol, hook,
+                                        logger);
     }
   }
 }
@@ -456,7 +466,7 @@ boost::container::small_vector<Acts::BoundaryIntersection, 4>
 Acts::TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Surface>& options,
-    LoggerWrapper logger) const {
+    const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
   // Loop over boundarySurfaces and calculate the intersection
   auto excludeObject = options.startObject;
@@ -478,20 +488,42 @@ Acts::TrackingVolume::compatibleBoundaries(
       return BoundaryIntersection();
     }
 
+    if (options.forceIntersectBoundaries and
+        sIntersection.intersection.pathLength > 0) {
+      const bool coCriterion =
+          std::abs(sIntersection.intersection.pathLength) < std::abs(oLimit);
+      ACTS_VERBOSE("Forcing intersection with surface "
+                   << bSurface->surfaceRepresentation().geometryId());
+      if (coCriterion) {
+        ACTS_VERBOSE("Intersection forced successfully ");
+        ACTS_VERBOSE("- intersection path length "
+                     << std::abs(sIntersection.intersection.pathLength)
+                     << " < overstep limit " << std::abs(oLimit));
+        return BoundaryIntersection(sIntersection.intersection, bSurface,
+                                    sIntersection.object);
+      }
+      ACTS_VERBOSE("Can't force intersection: ");
+      ACTS_VERBOSE("- intersection path length "
+                   << std::abs(sIntersection.intersection.pathLength)
+                   << " > overstep limit " << std::abs(oLimit));
+    }
+
     ACTS_VERBOSE("Check intersection with surface "
                  << bSurface->surfaceRepresentation().geometryId());
-    if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
-                                  s_onSurfaceTolerance, logger)) {
-      sIntersection.intersection.pathLength *= options.navDir;
+    if (detail::checkIntersection<decltype(sIntersection.intersection),
+                                  decltype(logger)>(
+            sIntersection.intersection, pLimit, oLimit, s_onSurfaceTolerance,
+            logger)) {
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
     }
 
     if (sIntersection.alternative) {
       ACTS_VERBOSE("Consider alternative");
-      if (detail::checkIntersection(sIntersection.alternative, pLimit, oLimit,
-                                    s_onSurfaceTolerance, logger)) {
-        sIntersection.alternative.pathLength *= options.navDir;
+      if (detail::checkIntersection<decltype(sIntersection.alternative),
+                                    decltype(logger)>(
+              sIntersection.alternative, pLimit, oLimit, s_onSurfaceTolerance,
+              logger)) {
         return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);
         ;
@@ -512,12 +544,9 @@ Acts::TrackingVolume::compatibleBoundaries(
     for (auto& bsIter : bSurfaces) {
       // Get the boundary surface pointer
       const auto& bSurfaceRep = bsIter->surfaceRepresentation();
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream os;
-        os << "Consider boundary surface " << &bSurfaceRep << " :\n";
-        bSurfaceRep.toStream(gctx, os);
-        logger().log(Logging::VERBOSE, os.str());
-      }
+      ACTS_VERBOSE("Consider boundary surface " << bSurfaceRep.geometryId()
+                                                << " :\n"
+                                                << std::tie(bSurfaceRep, gctx));
 
       // Exclude the boundary where you are on
       if (excludeObject != &bSurfaceRep) {
@@ -552,20 +581,31 @@ Acts::TrackingVolume::compatibleBoundaries(
     processBoundaries(bSurfacesConfined);
   }
 
-  // Sort them accordingly to the navigation direction
-  if (options.navDir == NavigationDirection::Forward) {
-    std::sort(bIntersections.begin(), bIntersections.end());
-  } else {
-    std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
-  }
+  auto comparator = [](double a, double b) {
+    // sign function would be nice but ...
+    if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
+      return a < b;
+    }
+    if (a > 0) {  // b < 0
+      return true;
+    }
+    return false;
+  };
+
+  std::sort(bIntersections.begin(), bIntersections.end(),
+            [&](const auto& a, const auto& b) {
+              return comparator(a.intersection.pathLength,
+                                b.intersection.pathLength);
+            });
   return bIntersections;
 }
 
 boost::container::small_vector<Acts::LayerIntersection, 10>
-Acts::TrackingVolume::compatibleLayers(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const NavigationOptions<Layer>& options,
-    LoggerWrapper logger) const {
+Acts::TrackingVolume::compatibleLayers(const GeometryContext& gctx,
+                                       const Vector3& position,
+                                       const Vector3& direction,
+                                       const NavigationOptions<Layer>& options,
+                                       LoggerWrapper logger) const {
   ACTS_VERBOSE(volumeName()
                << " [" << geometryId() << "]: "
                << "Finding compatible layers, position: "
@@ -615,12 +655,10 @@ Acts::TrackingVolume::compatibleLayers(
         auto atIntersection =
             tLayer->surfaceOnApproach(gctx, position, direction, options);
         auto path = atIntersection.intersection.pathLength;
-        bool withinLimit =
-            (path * path <= options.pathLimit * options.pathLimit);
-
+        bool withinLimit = std::abs(path) <= std::abs(options.pathLimit);
         ACTS_VERBOSE("Path: " << path << ", within limits: "
                               << (withinLimit ? "yes" : "no"));
-        // Intersection is ok - take it (move to surface on appraoch)
+        // Intersection is ok - take it (move to surface on approach)
         if (atIntersection &&
             (atIntersection.object != options.targetSurface) && withinLimit) {
           ACTS_VERBOSE("Layer intersection is accepted");
@@ -635,12 +673,8 @@ Acts::TrackingVolume::compatibleLayers(
               ? nullptr
               : tLayer->nextLayer(gctx, position, options.navDir * direction);
     }
-    // sort them accordingly to the navigation direction
-    if (options.navDir == NavigationDirection::Forward) {
-      std::sort(lIntersections.begin(), lIntersections.end());
-    } else {
-      std::sort(lIntersections.begin(), lIntersections.end(), std::greater<>());
-    }
+
+    std::sort(lIntersections.begin(), lIntersections.end());
   } else {
     ACTS_VERBOSE("Have NO confined layers");
   }
@@ -658,7 +692,7 @@ std::vector<const Acts::Volume*> intersectSearchHierarchy(
     if (lnode->intersect(obj)) {
       if (lnode->hasEntity()) {
         // found primitive
-        // check obb to limit false positivies
+        // check obb to limit false positives
         const Acts::Volume* vol = lnode->entity();
         const auto& obb = vol->orientedBoundingBox();
         if (obb.intersect(obj.transformed(vol->itransform()))) {
@@ -724,7 +758,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
   }
 
   // Sort according to the path length
-  if (options.navDir == NavigationDirection::Forward) {
+  if (options.navDir == Direction::Forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());

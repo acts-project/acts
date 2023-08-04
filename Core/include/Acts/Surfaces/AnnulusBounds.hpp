@@ -9,12 +9,18 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <array>
+#include <cmath>
 #include <exception>
+#include <iosfwd>
+#include <stdexcept>
 #include <vector>
 
 namespace Acts {
@@ -81,8 +87,8 @@ class AnnulusBounds : public DiscBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2& lposition,
-                      const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2& lposition,
+              const BoundaryCheck& bcheck) const final;
 
   /// Outstream operator
   ///
@@ -121,14 +127,14 @@ class AnnulusBounds : public DiscBounds {
   Vector2 moduleOrigin() const;
 
   /// This method returns the four corners of the bounds in polar coordinates
-  /// Starting from the upper right (max R, pos locX) and proceding clock-wise
+  /// Starting from the upper right (max R, pos locX) and proceeding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
   std::vector<Vector2> corners() const;
 
   /// This method returns the xy coordinates of the four corners of the
   /// bounds in module coorindates (in x/y)
-  /// Starting from the upper right (max R, pos locX) and proceding clock-wise
+  /// Starting from the upper right (max R, pos locX) and proceeding clock-wise
   /// i.e. (max R; pos locX), (min R; pos locX), (min R; neg loc X), (max R: neg
   /// locX)
   ///
@@ -139,7 +145,7 @@ class AnnulusBounds : public DiscBounds {
   ///  which may slightly alter the number of segments returned
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const;
+  std::vector<Vector2> vertices(unsigned int lseg) const override;
 
   /// This method returns inner radius
   double rMin() const final;
@@ -199,7 +205,7 @@ class AnnulusBounds : public DiscBounds {
   Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
                            const SymMatrix2& weight) const;
 
-  /// Private helper mehtod
+  /// Private helper method
   double squaredNorm(const Vector2& v, const SymMatrix2& weight) const;
 };
 

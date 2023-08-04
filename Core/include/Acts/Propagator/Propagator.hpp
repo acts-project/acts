@@ -14,25 +14,19 @@
 // clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cmath>
-#include <functional>
-#include <memory>
-#include <type_traits>
-
-#include <boost/algorithm/string.hpp>
+#include <optional>
 
 namespace Acts {
 
@@ -46,11 +40,11 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   /// Accessor to additional propagation quantities
   using detail::Extendable<result_list...>::get;
 
-  /// Final track parameters - initialized to null pointer
-  std::unique_ptr<parameters_t> endParameters = nullptr;
+  /// Final track parameters
+  std::optional<parameters_t> endParameters = std::nullopt;
 
   /// Full transport jacobian
-  std::unique_ptr<BoundMatrix> transportJacobian = nullptr;
+  std::optional<BoundMatrix> transportJacobian = std::nullopt;
 
   /// Number of propagation steps that were carried out
   unsigned int steps = 0;
@@ -63,12 +57,14 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
 ///
 struct PropagatorPlainOptions {
   /// Propagation direction
-  NavigationDirection direction = NavigationDirection::Forward;
+  Direction direction = Direction::Forward;
 
-  /// The |pdg| code for (eventual) material integration - pion default
-  int absPdgCode = 211;
+  /// The |pdg| code for (eventual) material integration -
+  /// pion default
+  int absPdgCode = PdgParticle::ePionPlus;
 
-  /// The mass for the particle for (eventual) material integration
+  /// The mass of the particle for (eventual) material integration -
+  /// pion default
   double mass = 139.57018 * UnitConstants::MeV;
 
   /// Maximum number of steps for one propagate call
@@ -112,7 +108,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   using action_list_type = action_list_t;
   using aborter_list_type = aborter_list_t;
 
-  /// Delete default contructor
+  /// Delete default constructor
   PropagatorOptions() = delete;
 
   /// PropagatorOptions copy constructor
@@ -121,8 +117,8 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 
   /// PropagatorOptions with context
   PropagatorOptions(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx, LoggerWrapper logger_)
-      : geoContext(gctx), magFieldContext(mctx), logger(logger_) {}
+                    const MagneticFieldContext& mctx)
+      : geoContext(gctx), magFieldContext(mctx) {}
 
   /// @brief Expand the Options with extended aborters
   ///
@@ -133,14 +129,14 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   PropagatorOptions<action_list_t, extended_aborter_list_t> extend(
       extended_aborter_list_t aborters) const {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
-        geoContext, magFieldContext, logger);
+        geoContext, magFieldContext);
     // Copy the options over
     eoptions.direction = direction;
     eoptions.absPdgCode = absPdgCode;
     eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
     eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
-    eoptions.maxStepSize = direction * std::abs(maxStepSize);
+    eoptions.maxStepSize = maxStepSize;
     eoptions.targetTolerance = targetTolerance;
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
@@ -166,7 +162,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     mass = pOptions.mass;
     maxSteps = pOptions.maxSteps;
     maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
-    maxStepSize = direction * std::abs(pOptions.maxStepSize);
+    maxStepSize = pOptions.maxStepSize;
     targetTolerance = pOptions.targetTolerance;
     pathLimit = direction * std::abs(pOptions.pathLimit);
     loopProtection = pOptions.loopProtection;
@@ -186,8 +182,6 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 
   /// The context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-
-  LoggerWrapper logger;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -244,8 +238,13 @@ class Propagator final {
   ///
   /// @param stepper The stepper implementation is moved to a private member
   /// @param navigator The navigator implementation, moved to a private member
-  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
-      : m_stepper(std::move(stepper)), m_navigator(std::move(navigator)) {}
+  /// @param _logger a logger instance
+  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t(),
+                      std::shared_ptr<const Logger> _logger =
+                          getDefaultLogger("Propagator", Acts::Logging::INFO))
+      : m_stepper(std::move(stepper)),
+        m_navigator(std::move(navigator)),
+        m_logger{std::move(_logger)} {}
 
   /// @brief private Propagator state for navigation and debugging
   ///
@@ -258,21 +257,17 @@ class Propagator final {
   struct State {
     /// Create the propagator state from the options
     ///
-    /// @tparam parameters_t the type of the start parameters
     /// @tparam propagator_options_t the type of the propagator options
     ///
-    /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param steppingIn Stepper state instance to begin with
-    template <typename parameters_t>
-    State(const parameters_t& start, const propagator_options_t& topts,
-          StepperState steppingIn)
+    /// @param navigationIn Navigator state instance to begin with
+    State(const propagator_options_t& topts, StepperState steppingIn,
+          NavigatorState navigationIn)
         : options(topts),
           stepping{std::move(steppingIn)},
-          geoContext(topts.geoContext) {
-      // Setting the start surface
-      navigation.startSurface = &start.referenceSurface();
-    }
+          navigation{std::move(navigationIn)},
+          geoContext(topts.geoContext) {}
 
     /// These are the options - provided for each propagation step
     propagator_options_t options;
@@ -311,6 +306,7 @@ class Propagator final {
     using type = typename action_list_t::template result_type<this_result_type>;
   };
 
+ public:
   /// @brief Short-hand type definition for propagation result derived from
   ///        an action list
   ///
@@ -321,6 +317,7 @@ class Propagator final {
   using action_list_t_result_t =
       typename result_type_helper<parameters_t, action_list_t>::type;
 
+ private:
   /// @brief Propagate track parameters
   /// Private method with propagator and stepper state
   ///
@@ -332,13 +329,15 @@ class Propagator final {
   /// @note Does not (yet) convert into  the return_type of the propagation
   ///
   /// @tparam result_t Type of the result object for this propagation
-  /// @tparam propagator_state_t Type of of propagator state with options
+  /// @tparam propagator_state_t Type of the propagator state with options
   ///
   /// @param [in,out] state the propagator state object
+  /// @param [in,out] result an existing result object to start from
   ///
   /// @return Propagation result
   template <typename result_t, typename propagator_state_t>
-  Result<result_t> propagate_impl(propagator_state_t& state) const;
+  Result<void> propagate_impl(propagator_state_t& state,
+                              result_t& result) const;
 
  public:
   /// @brief Propagate track parameters
@@ -349,9 +348,8 @@ class Propagator final {
   /// propagation options is reached.
   ///
   /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam action_list_t Type list of actions, type ActionList<>
-  /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
@@ -367,6 +365,35 @@ class Propagator final {
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
+  /// @brief Propagate track parameters
+  ///
+  /// This function performs the propagation of the track parameters using the
+  /// internal stepper implementation, until at least one abort condition is
+  /// fulfilled or the maximum number of steps/path length provided in the
+  /// propagation options is reached.
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam path_aborter_t The path aborter type to be added
+  ///
+  /// @param [in] start initial track parameters to propagate
+  /// @param [in] options Propagation options, type Options<,>
+  /// @param [in] inputResult an existing result object to start from
+  ///
+  /// @return Propagation result containing the propagation status, final
+  ///         track parameters, and output of actions (if they produce any)
+  ///
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  Result<
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>>
+  propagate(
+      const parameters_t& start, const propagator_options_t& options,
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>&&
+          inputResult) const;
+
   /// @brief Propagate track parameters - User method
   ///
   /// This function performs the propagation of the track parameters according
@@ -375,10 +402,9 @@ class Propagator final {
   /// steps/path length as given in the propagation options is reached.
   ///
   /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam surface_t Type of target surface
-  /// @tparam action_list_t Type list of actions
-  /// @tparam aborter_list_t Type list of abort conditions
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added
+  /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
@@ -394,12 +420,47 @@ class Propagator final {
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
+  /// @brief Propagate track parameters - User method
+  ///
+  /// This function performs the propagation of the track parameters according
+  /// to the internal implementation object until at least one abort condition
+  /// is fulfilled, the destination surface is hit or the maximum number of
+  /// steps/path length as given in the propagation options is reached.
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added
+  /// @tparam path_aborter_t The path aborter type to be added
+  ///
+  /// @param [in] start Initial track parameters to propagate
+  /// @param [in] target Target surface of to propagate to
+  /// @param [in] options Propagation options
+  /// @param [in] inputResult an existing result object to start from
+  ///
+  /// @return Propagation result containing the propagation status, final
+  ///         track parameters, and output of actions (if they produce any)
+  template <typename parameters_t, typename propagator_options_t,
+            typename target_aborter_t = SurfaceReached,
+            typename path_aborter_t = PathLimitReached>
+  Result<action_list_t_result_t<
+      BoundTrackParameters, typename propagator_options_t::action_list_type>>
+  propagate(
+      const parameters_t& start, const Surface& target,
+      const propagator_options_t& options,
+      action_list_t_result_t<BoundTrackParameters,
+                             typename propagator_options_t::action_list_type>
+          inputResult) const;
+
  private:
+  const Logger& logger() const { return *m_logger; }
+
   /// Implementation of propagation algorithm
   stepper_t m_stepper;
 
   /// Implementation of navigator
   navigator_t m_navigator;
+
+  std::shared_ptr<const Logger> m_logger;
 };
 
 }  // namespace Acts

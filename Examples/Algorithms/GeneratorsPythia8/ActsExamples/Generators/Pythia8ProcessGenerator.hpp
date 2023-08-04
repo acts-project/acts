@@ -8,15 +8,16 @@
 
 #pragma once
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/PdgParticle.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Generators/EventGenerator.hpp"
 
 #include <memory>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace Pythia8 {
@@ -35,10 +36,14 @@ class Pythia8Generator : public EventGenerator::ParticlesGenerator {
     double cmsEnergy = 14 * Acts::UnitConstants::TeV;
     /// Additional Pythia8 settings.
     std::vector<std::string> settings = {{"HardQCD:all = on"}};
+    /// Let pythia print summarized event info
+    bool printShortEventListing = false;
+    /// Let pythia print detailed event info
+    bool printLongEventListing = false;
   };
 
   Pythia8Generator(const Config& cfg, Acts::Logging::Level lvl);
-  ~Pythia8Generator();
+  ~Pythia8Generator() override;
   // try to prevent pythia breakage by forbidding copying
   Pythia8Generator() = delete;
   Pythia8Generator(const Pythia8Generator&) = delete;

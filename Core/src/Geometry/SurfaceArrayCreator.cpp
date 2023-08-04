@@ -9,7 +9,6 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -17,6 +16,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
@@ -238,7 +238,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
     std::transform(
         phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules),
-        [&equal, this](std::vector<const Surface*> surfaces_) -> size_t {
+        [&equal, this](const std::vector<const Surface*>& surfaces_) -> size_t {
           return this->findKeySurfaces(surfaces_, equal).size();
         });
 
@@ -411,7 +411,8 @@ size_t Acts::SurfaceArrayCreator::determineBinCount(
 Acts::SurfaceArrayCreator::ProtoAxis
 Acts::SurfaceArrayCreator::createVariableAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-    BinningValue bValue, ProtoLayer protoLayer, Transform3& transform) const {
+    BinningValue bValue, const ProtoLayer& protoLayer,
+    Transform3& transform) const {
   if (surfaces.empty()) {
     throw std::logic_error(
         "No surfaces handed over for creating arbitrary bin utility!");
@@ -466,10 +467,11 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     const Acts::Surface* backSurface = keys.back();
     const Acts::PlanarBounds* backBounds =
         dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (backBounds == nullptr)
+    if (backBounds == nullptr) {
       ACTS_ERROR(
           "Given SurfaceBounds are not planar - not implemented for "
           "other bounds yet! ");
+    }
     // get the global vertices
     std::vector<Acts::Vector3> backVertices =
         makeGlobalVertices(gctx, *backSurface, backBounds->vertices(segments));
@@ -549,7 +551,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
 Acts::SurfaceArrayCreator::ProtoAxis
 Acts::SurfaceArrayCreator::createEquidistantAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-    BinningValue bValue, ProtoLayer protoLayer, Transform3& transform,
+    BinningValue bValue, const ProtoLayer& protoLayer, Transform3& transform,
     size_t nBins) const {
   if (surfaces.empty()) {
     throw std::logic_error(
@@ -567,7 +569,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   // direction
   std::vector<const Acts::Surface*> keys;
 
-  size_t binNumber;
+  size_t binNumber = 0;
   if (nBins == 0) {
     // determine bin count
     binNumber = determineBinCount(gctx, surfaces, bValue);

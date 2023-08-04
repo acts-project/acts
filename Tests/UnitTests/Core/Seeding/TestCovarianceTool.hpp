@@ -16,7 +16,7 @@ class CovarianceTool {
 
   /// ICovarianceTool interface method
   /// returns squared errors in z and r for the passed SpacePoint
-  /// @param sp is the SpacePoint fro which the covariance values will be
+  /// @param sp is the SpacePoint from which the covariance values will be
   /// retrieved
   /// @param zAlign is the alignment uncertainty in z.
   /// it is going to be squared and added to varianceZ.

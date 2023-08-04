@@ -8,12 +8,22 @@
 
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <optional>
+#include <system_error>
+#include <type_traits>
+#include <utility>
 
 namespace Acts {
 namespace {
@@ -36,7 +46,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
+  const double sinTheta = std::hypot(x, y);
   const double invSinTheta = 1. / sinTheta;
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
@@ -52,7 +62,7 @@ FreeToBoundMatrix freeToCurvilinearJacobian(const Vector3& direction) {
   } else {
     // Under grazing incidence to z, the above coordinate system definition
     // becomes numerically unstable, and we need to switch to another one
-    const double c = sqrt(y * y + z * z);
+    const double c = std::hypot(y, z);
     const double invC = 1. / c;
     jacToCurv(0, 1) = -z * invC;
     jacToCurv(0, 2) = y * invC;
@@ -193,10 +203,7 @@ Result<void> reinitializeJacobians(const GeometryContext& geoContext,
   const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
   auto lpResult = surface.globalToLocal(geoContext, position, direction);
   if (not lpResult.ok()) {
-    ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("CovarianceEngine", Logging::INFO));
-    ACTS_FATAL(
-        "Inconsistency in global to local transformation during propagation.")
+    return lpResult.error();
   }
   // Transform from free to bound parameters
   Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(
@@ -235,7 +242,7 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
   const double z = direction(2);  // == cos(theta)
   // can be turned into cosine/sine
   const double cosTheta = z;
-  const double sinTheta = sqrt(x * x + y * y);
+  const double sinTheta = std::hypot(x, y);
   const double invSinTheta = 1. / sinTheta;
   const double cosPhi = x * invSinTheta;
   const double sinPhi = y * invSinTheta;
@@ -260,7 +267,7 @@ namespace detail {
 Result<BoundState> boundState(
     const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
-    FreeVector& derivatives, BoundToFreeMatrix& boundToFreeJacobian,
+    FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
     FreeVector& parameters, bool covTransport, double accumulatedPath,
     const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) {
@@ -271,10 +278,10 @@ Result<BoundState> boundState(
     jacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
-    // boundToFreeJacobian
-    transportCovarianceToBound(
-        geoContext, covarianceMatrix, jacobian, transportJacobian, derivatives,
-        boundToFreeJacobian, parameters, surface, freeToBoundCorrection);
+    // jacToGlobal
+    transportCovarianceToBound(geoContext, covarianceMatrix, jacobian,
+                               transportJacobian, derivatives, jacToGlobal,
+                               parameters, surface, freeToBoundCorrection);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;
@@ -296,7 +303,7 @@ CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
                                   BoundMatrix& jacobian,
                                   FreeMatrix& transportJacobian,
                                   FreeVector& derivatives,
-                                  BoundToFreeMatrix& boundToFreeJacobian,
+                                  BoundToFreeMatrix& jacToGlobal,
                                   const FreeVector& parameters,
                                   bool covTransport, double accumulatedPath) {
   const Vector3& direction = parameters.segment<3>(eFreeDir0);
@@ -308,10 +315,10 @@ CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
     jacobian = BoundMatrix::Identity();
     // Calculate the jacobian and transport the covarianceMatrix to final local.
     // Then reinitialize the transportJacobian, derivatives and the
-    // boundToFreeJacobian
+    // jacToGlobal
     transportCovarianceToCurvilinear(covarianceMatrix, jacobian,
                                      transportJacobian, derivatives,
-                                     boundToFreeJacobian, direction);
+                                     jacToGlobal, direction);
   }
   if (covarianceMatrix != BoundSymMatrix::Zero()) {
     cov = covarianceMatrix;

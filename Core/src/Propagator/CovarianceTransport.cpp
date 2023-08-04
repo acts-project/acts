@@ -12,7 +12,7 @@
 
 Acts::CovarianceCache::CovarianceCache(const GeometryContext& gctx,
                                        const Surface& surface,
-                                       const Vector3 position,
+                                       const Vector3& position,
                                        const BoundVector& boundParameters,
                                        const BoundSymMatrix& boundCovariance)
     : applyTransport(true), atSurface(&surface), atPosition(position) {
@@ -20,19 +20,17 @@ Acts::CovarianceCache::CovarianceCache(const GeometryContext& gctx,
   boundToFreeJacobian = surface.boundToFreeJacobian(gctx, boundParameters);
 }
 
-Acts::CovarianceCache::CovarianceCache(const Vector3 position,
+Acts::CovarianceCache::CovarianceCache(const Vector3& position,
                                        const Vector3& direction,
                                        const BoundSymMatrix& boundCovariance)
-    : applyTransport(true), atSurface(nullptr), atPosition(position) {
+    : applyTransport(true), atPosition(position) {
   covariance.emplace<BoundSymMatrix>(boundCovariance);
   boundToFreeJacobian = detail::curvilinearToFreeJacobian(direction);
 }
 
 Acts::CovarianceCache::CovarianceCache(const FreeVector& freeParameters,
                                        const FreeSymMatrix& freeCovariance)
-    : applyTransport(true),
-      atSurface(nullptr),
-      atPosition(freeParameters.segment<3>(eFreePos0)) {
+    : applyTransport(true), atPosition(freeParameters.segment<3>(eFreePos0)) {
   covariance.emplace<FreeSymMatrix>(freeCovariance);
   anglesToDirectionJacobian =
       detail::anglesToDirectionJacobian(freeParameters.segment<3>(eFreeDir0));

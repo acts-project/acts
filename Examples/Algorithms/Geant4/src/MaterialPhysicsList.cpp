@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Geant4/MaterialPhysicsList.hpp"
 
+#include <utility>
+
 #include <G4ParticleTypes.hh>
 #include <G4ProcessManager.hh>
 #include <G4ProcessVector.hh>
@@ -33,6 +35,7 @@ void ActsExamples::MaterialPhysicsList::ConstructProcess() {
 void ActsExamples::MaterialPhysicsList::SetCuts() {
   SetCutsWithDefault();
 
-  if (verboseLevel > 0)
+  if (verboseLevel > 0) {
     DumpCutValuesTable();
+  }
 }

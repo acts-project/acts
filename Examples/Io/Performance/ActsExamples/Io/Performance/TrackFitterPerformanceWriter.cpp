@@ -9,15 +9,23 @@
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <TFile.h>
-#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 
@@ -42,12 +50,15 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
     throw std::invalid_argument("Missing output filename");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), "RECREATE");
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
 
@@ -62,16 +73,17 @@ ActsExamples::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::TrackFitterPerformanceWriter::finalize() {
   // fill residual and pull details into additional hists
   m_resPlotTool.refinement(m_resPlotCache);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_resPlotTool.write(m_resPlotCache);
     m_effPlotTool.write(m_effPlotCache);
@@ -84,13 +96,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // Read truth input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Truth particles with corresponding reconstructed tracks
   std::vector<ActsFatras::Barcode> reconParticleIds;
@@ -105,14 +113,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
-      continue;
-    }
-
     // The trajectory entry indices and the multiTrajectory
     const auto& trackTips = traj.tips();
     const auto& mj = traj.multiTrajectory();
+
+    if (trackTips.empty()) {
+      ACTS_WARNING("No trajectory found for entry " << itraj);
+      continue;
+    }
 
     // Check the size of the trajectory entry indices. For track fitting, there
     // should be at most one trajectory

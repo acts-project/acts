@@ -11,10 +11,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <array>
+#include <stdexcept>
+#include <vector>
 
 namespace Acts {
 
@@ -51,7 +56,7 @@ BOOST_AUTO_TEST_CASE(DiscTrapezoidBoundsRecreation) {
   DiscTrapezoidBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi,
                                stereo);
   auto valvector = original.values();
-  std::array<double, DiscTrapezoidBounds::eSize> values;
+  std::array<double, DiscTrapezoidBounds::eSize> values{};
   std::copy_n(valvector.begin(), DiscTrapezoidBounds::eSize, values.begin());
   DiscTrapezoidBounds recreated(values);
   BOOST_CHECK_EQUAL(recreated, original);

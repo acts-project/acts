@@ -11,7 +11,7 @@ target_link_libraries(
   PUBLIC ActsCore ActsPluginIdentification)
 target_link_libraries(
   ActsExamplesDetectorGeneric
-  PUBLIC ActsExamplesFramework ActsExamplesDetectorsCommon)
+  PUBLIC ActsExamplesFramework)
 
 install(
   TARGETS ActsExamplesDetectorGeneric

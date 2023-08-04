@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
@@ -17,12 +18,21 @@
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
-#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 
@@ -102,7 +112,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   Navigator navigator({tGeometry});
   StraightLineStepper stepper;
   SurfaceMaterialMapper::StraightLinePropagator propagator(
-      std::move(stepper), std::move(navigator));
+      stepper, std::move(navigator));
 
   /// The config object
   SurfaceMaterialMapper::Config smmConfig;

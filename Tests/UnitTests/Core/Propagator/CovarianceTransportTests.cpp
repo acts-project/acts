@@ -13,6 +13,13 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <memory>
+#include <optional>
+#include <tuple>
+#include <variant>
 
 namespace tt = boost::test_tools;
 

@@ -8,7 +8,7 @@
 
 #pragma once
 
-/// Set the Calibration Context PLUGIN
+// Set the Calibration Context PLUGIN
 #ifdef ACTS_CORE_CALIBRATIONCONTEXT_PLUGIN
 #include ACTS_CORE_CALIBRATIONCONTEXT_PLUGIN
 #else
@@ -18,7 +18,7 @@
 namespace Acts {
 
 /// @brief This is the central definition of the Acts
-/// payload object regarding detector calbiration
+/// payload object regarding detector calibration
 ///
 /// It is propagated through the code to allow for event/thread
 /// dependent calibration

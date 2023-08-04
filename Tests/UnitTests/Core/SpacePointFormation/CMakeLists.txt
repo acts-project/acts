@@ -1,2 +1,1 @@
-add_unittest(SingleHitSpacePointBuilder SingleHitSpacePointBuilderTests.cpp)
-add_unittest(DoubleHitSpacePointBuilder DoubleHitSpacePointBuilderTests.cpp)
+add_unittest(SpacePointBuilder SpacePointBuilderTests.cpp)

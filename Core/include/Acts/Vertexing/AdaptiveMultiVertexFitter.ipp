@@ -61,7 +61,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       currentVtxInfo.oldPosition = currentVtx->fullPosition();
 
       Vector4 dist = currentVtxInfo.oldPosition - currentVtxInfo.linPoint;
-      double perpDist = std::sqrt(dist[0] * dist[0] + dist[1] * dist[1]);
+      double perpDist = std::hypot(dist[0], dist[1]);
       // Determine if relinearization is needed
       if (perpDist > m_cfg.maxDistToLinPoint) {
         // Relinearization needed, distance too big
@@ -78,9 +78,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
             state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
         currentVtx->setFullCovariance(
             state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance());
-      }
-
-      else if (currentVtx->fullCovariance() == SymMatrix4::Zero()) {
+      } else if (currentVtx->fullCovariance() == SymMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
       double weight =
@@ -208,7 +206,7 @@ Acts::Result<void> Acts::
       return res.error();
     }
     // Set ip3dParams for current trackAtVertex
-    currentVtxInfo.ip3dParams.emplace(trk, *(res.value()));
+    currentVtxInfo.ip3dParams.emplace(trk, res.value());
   }
   return {};
 }
@@ -238,7 +236,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
         return res.error();
       }
       // Set ip3dParams for current trackAtVertex
-      currentVtxInfo.ip3dParams.emplace(trk, *(res.value()));
+      currentVtxInfo.ip3dParams.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.get3dVertexCompatibility(
@@ -293,7 +291,7 @@ Acts::Result<void> Acts::
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
     }  // End loop over tracks at vertex
-    ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
+    ACTS_VERBOSE("New vertex position: " << vtx->fullPosition().transpose());
   }  // End loop over vertex collection
 
   return {};

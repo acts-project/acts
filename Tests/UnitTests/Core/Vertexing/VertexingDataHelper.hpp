@@ -34,19 +34,19 @@ struct VertexInfo {
   // The covariance
   SymMatrix3 covariance;
   // Number of tracks
-  int nTracks;
+  int nTracks = 0;
   // Weight of first track
-  double trk1Weight;
+  double trk1Weight = 0;
   // Vertex compatibility value of first track
-  double trk1Comp;
+  double trk1Comp = 0;
   // Chi2 of first track
-  double trk1Chi2;
+  double trk1Chi2 = 0;
 };
 
 inline std::tuple<Vertex<BoundTrackParameters>, std::vector<VertexInfo>,
                   std::vector<BoundTrackParameters>>
-readTracksAndVertexCSV(std::string toolString,
-                       std::string fileBase = "vertexing_event_mu20") {
+readTracksAndVertexCSV(const std::string& toolString,
+                       const std::string& fileBase = "vertexing_event_mu20") {
   const auto beamspotDataPath =
       Acts::Test::getDataPath(fileBase + "_beamspot.csv");
   const auto tracksDataPath = Acts::Test::getDataPath(fileBase + "_tracks.csv");

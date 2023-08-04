@@ -11,21 +11,48 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Vertexing/FsmwMode1dFinder.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexFinderConcept.hpp"
+#include "Acts/Vertexing/VertexingOptions.hpp"
+#include "Acts/Vertexing/ZScanVertexFinder.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <functional>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <optional>
+#include <random>
+#include <string>
+#include <system_error>
+#include <tuple>
+#include <type_traits>
+#include <utility>
+#include <vector>
 
 #include "VertexingDataHelper.hpp"
 
@@ -140,7 +167,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                              ipEstimator);
 
     cfg.reassignTracksAfterFirstFit = true;
@@ -181,7 +208,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
       std::vector<TrackAtVertex<BoundTrackParameters>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
-      double d0_v = sqrt(x * x + y * y);
+      double d0_v = std::hypot(x, y);
       double z0_v = z;
 
       // Construct random track emerging from vicinity of vertex position
@@ -337,7 +364,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
     std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](InputTrack params) { return params.parameters(); };
+        [](const InputTrack& params) { return params.parameters(); };
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;
@@ -357,7 +384,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                              ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
@@ -397,7 +424,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
       std::vector<TrackAtVertex<InputTrack>> tracksAtTrueVtx;
 
       // Calculate d0 and z0 corresponding to vertex position
-      double d0_v = sqrt(x * x + y * y);
+      double d0_v = std::hypot(x, y);
       double z0_v = z;
 
       // Construct random track emerging from vicinity of vertex position
@@ -567,7 +594,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   static_assert(VertexFinderConcept<VertexFinder>,
                 "Vertex finder does not fulfill vertex finder concept.");
 
-  VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+  VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                            ipEstimator);
 
   cfg.useBeamConstraint = true;

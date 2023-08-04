@@ -11,11 +11,15 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/SurfaceVisitorConcept.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 namespace Acts {
 
@@ -23,6 +27,7 @@ class Layer;
 class Surface;
 class PerigeeSurface;
 class IMaterialDecorator;
+class TrackingVolume;
 
 using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
@@ -33,7 +38,7 @@ using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 ///
 ///  It enables both, a global search for an asociatedVolume
 ///  (respectively, if existing, a global search of an associated Layer or the
-///  next associated Layer), such as a continous navigation by BoundarySurfaces
+///  next associated Layer), such as a continuous navigation by BoundarySurfaces
 ///  between the confined TrackingVolumes.
 class TrackingGeometry {
   /// Give the GeometryBuilder friend rights
@@ -45,8 +50,12 @@ class TrackingGeometry {
   /// @param highestVolume is the world volume
   /// @param materialDecorator is a dediated decorator that can assign
   ///        surface or volume based material to the TrackingVolume
+  /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger instance of a logger (defaulting to the "silent" one)
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
-                   const IMaterialDecorator* materialDecorator = nullptr);
+                   const IMaterialDecorator* materialDecorator = nullptr,
+                   const GeometryIdentifierHook& hook = {},
+                   const Logger& logger = getDummyLogger());
 
   /// Destructor
   ~TrackingGeometry();
@@ -54,6 +63,11 @@ class TrackingGeometry {
   /// Access to the world volume
   /// @return plain pointer to the world volume
   const TrackingVolume* highestTrackingVolume() const;
+
+  /// Access to the world volume
+  /// @return shared pointer to the world volume
+  const std::shared_ptr<const TrackingVolume>& highestTrackingVolumeShared()
+      const;
 
   /// return the lowest tracking Volume
   ///
@@ -92,7 +106,7 @@ class TrackingGeometry {
   ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
-  template <typename visitor_t>
+  template <ACTS_CONCEPT(SurfaceVisitor) visitor_t>
   void visitSurfaces(visitor_t&& visitor) const {
     highestTrackingVolume()->template visitSurfaces<visitor_t>(
         std::forward<visitor_t>(visitor));

@@ -4,13 +4,13 @@ The following guidelines must be followed by all new code. Existing code that do
 You might disagree with some guidelines, but in a large code base as this one consistency is more important than personal opinion.
 All guidelines have a short identifier label, e.g. N.1, for easier reference in discussions.
 
-For cases and constructs not explicitely mentioned here, code should fall back to the [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
+For cases and constructs not explicitly mentioned here, code should fall back to the [C++ Core Guidelines](https://isocpp.github.io/CppCoreGuidelines/CppCoreGuidelines).
 
 ## Acts-specific
 
 ### A.indices: Always use enum values to access vector/matrix components
 
-Always use the apropriate enum values to access components. This clearly states
+Always use the appropriate enum values to access components. This clearly states
 the semantic meaning and is easier to understand.
 
 Example:
@@ -159,7 +159,7 @@ Example:
 static constexpr double kMagic = 1.23;
 ```
 
-Variables defined in the `Acts::UnitConstants` namespace are excempted for usability reasons and use regular variable naming instead.
+Variables defined in the `Acts::UnitConstants` namespace are exempted for usability reasons and use regular variable naming instead.
  
 ### N.6: Enum values use eCamelCase
 
@@ -209,4 +209,4 @@ Files that contain only symbols in the `detail` namespace should be moved in a`d
 
 ## Formatting
 
-Code formatting is handled by [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html). A configuration file is available in the repository root. Please set up your editor/IDE to format files automatically.
+See [](howto_format)

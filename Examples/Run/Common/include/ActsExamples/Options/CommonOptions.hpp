@@ -38,7 +38,7 @@ namespace Options {
 ///
 /// @param caption Optional help text caption
 boost::program_options::options_description makeDefaultOptions(
-    std::string caption = std::string());
+    const std::string& caption = std::string());
 
 /// Add sequencer options, e.g. number of events
 void addSequencerOptions(boost::program_options::options_description& opt);

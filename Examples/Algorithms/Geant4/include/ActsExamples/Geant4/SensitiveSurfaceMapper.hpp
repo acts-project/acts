@@ -27,18 +27,25 @@ namespace ActsExamples {
 /// it such that name will be containing the mapping prefix
 /// and the Acts::GeometryIdentifier of the surface.
 ///
+/// The mapping is done by matching the position of the G4 physical volume with
+/// the center position of an Acts::Surface.
+///
 /// This allows to directly associate Geant4 hits to the sensitive
 /// elements of the Acts::TrackingGeoemtry w/o map lookup.
 class SensitiveSurfaceMapper {
  public:
-  static constexpr const char* mappingPrefix = "ActsGeoID#";
+  constexpr static std::string_view mappingPrefix = "ActsGeoID#";
 
   /// Configuration struct for the surface mapper
   struct Config {
-    std::vector<std::string> materialMappings = {"Silicon"};
-    std::vector<std::string> volumeMappings = {};
+    /// For which G4 material names we try to find a mapping
+    std::vector<std::string> materialMappings;
 
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
+    /// For which G4 volume names we try to find a mapping
+    std::vector<std::string> volumeMappings;
+
+    /// The tracking geometry we try to map
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor with:
@@ -59,7 +66,7 @@ class SensitiveSurfaceMapper {
   /// @param motherPosition the absolute position of the mother
   /// @param sCounter  a counter of how many volumes have been remapped
   void remapSensitiveNames(G4VPhysicalVolume* g4PhysicalVolume,
-                           const Acts::Vector3 motherPosition,
+                           const Acts::Transform3& motherTransform,
                            int& sCounter) const;
 
  protected:

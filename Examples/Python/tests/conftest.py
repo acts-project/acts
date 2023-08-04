@@ -1,3 +1,4 @@
+import multiprocessing
 from pathlib import Path
 import sys
 import os
@@ -6,6 +7,7 @@ import shutil
 from typing import Dict
 import warnings
 import pytest_check as check
+from collections import namedtuple
 
 
 sys.path += [
@@ -13,14 +15,42 @@ sys.path += [
     str(Path(__file__).parent),
 ]
 
+
 import helpers
 import helpers.hash_root
 from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 import pytest
 
 import acts
 import acts.examples
+
+try:
+    import ROOT
+
+    ROOT.gSystem.ResetSignals()
+except ImportError:
+    pass
+
+try:
+    if acts.logging.getFailureThreshold() != acts.logging.WARNING:
+        acts.logging.setFailureThreshold(acts.logging.WARNING)
+except RuntimeError:
+    # Repackage with different error string
+    errtype = (
+        "negative"
+        if acts.logging.getFailureThreshold() < acts.logging.WARNING
+        else "positive"
+    )
+    warnings.warn(
+        "Runtime log failure threshold could not be set. "
+        "Compile-time value is probably set via CMake, i.e. "
+        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
+        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
+        f"The pytest test-suite can produce false-{errtype} results in this configuration"
+    )
+
 
 u = acts.UnitConstants
 
@@ -196,6 +226,68 @@ def trk_geo(request):
     yield geo
 
 
+DetectorConfig = namedtuple(
+    "DetectorConfig",
+    [
+        "detector",
+        "trackingGeometry",
+        "decorators",
+        "geometrySelection",
+        "digiConfigFile",
+        "name",
+    ],
+)
+
+
+@pytest.fixture(params=["generic", pytest.param("odd", marks=pytest.mark.odd)])
+def detector_config(request):
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
+    if request.param == "generic":
+        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        return DetectorConfig(
+            detector,
+            trackingGeometry,
+            decorators,
+            geometrySelection=(
+                srcdir
+                / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            ),
+            digiConfigFile=(
+                srcdir
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            ),
+            name=request.param,
+        )
+    elif request.param == "odd":
+        if not helpers.dd4hepEnabled:
+            pytest.skip("DD4hep not set up")
+
+        matDeco = acts.IMaterialDecorator.fromFile(
+            srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
+            level=acts.logging.INFO,
+        )
+        detector, trackingGeometry, decorators = getOpenDataDetector(
+            getOpenDataDetectorDirectory(), matDeco
+        )
+        return DetectorConfig(
+            detector,
+            trackingGeometry,
+            decorators,
+            digiConfigFile=(
+                srcdir
+                / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+            ),
+            geometrySelection=(
+                srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
+            ),
+            name=request.param,
+        )
+
+    else:
+        raise ValueError(f"Invalid detector {detector}")
+
+
 @pytest.fixture
 def ptcl_gun(rng):
     def _factory(s):
@@ -243,6 +335,10 @@ def fatras(ptcl_gun, trk_geo, rng):
             trackingGeometry=trk_geo,
             magneticField=field,
             generateHitsOnSensitive=True,
+            emScattering=False,
+            emEnergyLossIonisation=False,
+            emEnergyLossRadiation=False,
+            emPhotonConversion=False,
         )
 
         s.addAlgorithm(simAlg)
@@ -268,33 +364,37 @@ def fatras(ptcl_gun, trk_geo, rng):
     return _factory
 
 
+def _do_material_recording(d: Path):
+    from material_recording import runMaterialRecording
+
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
+
+    detectorConstructionFactory = (
+        acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
+    )
+
+    s = acts.examples.Sequencer(events=2, numThreads=1)
+
+    runMaterialRecording(detectorConstructionFactory, str(d), tracksPerEvent=100, s=s)
+    s.run()
+
+
 @pytest.fixture(scope="session")
 def material_recording_session():
     if not helpers.geant4Enabled:
         pytest.skip("Geantino recording requested, but Geant4 is not set up")
 
     if not helpers.dd4hepEnabled:
-        pytest.skip("DD4hep recording requested, but Geant4 is not set up")
-
-    from material_recording import runMaterialRecording
-
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
-    )
-    dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
-        dd4hepSvc
-    )
+        pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
     with tempfile.TemporaryDirectory() as d:
-
-        s = acts.examples.Sequencer(events=2, numThreads=1)
-
-        runMaterialRecording(dd4hepG4Construction, str(d), tracksPerEvent=100, s=s)
-        s.run()
-
-        del s
-        del dd4hepSvc
-        del dd4hepG4Construction
+        p = multiprocessing.Process(target=_do_material_recording, args=(d,))
+        p.start()
+        p.join()
+        if p.exitcode != 0:
+            raise RuntimeError("Failure to exeecute material recording")
 
         yield Path(d)
 

@@ -8,19 +8,69 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
-#include <cassert>
+#include <algorithm>
+#include <cstdlib>
 
 namespace Acts {
 
-LoggerWrapper::LoggerWrapper(const Logger& logger) : m_logger(&logger) {}
+namespace Logging {
 
-void LoggerWrapper::log(const Logging::Level& lvl,
-                        const std::string& input) const {
-  assert(m_logger != nullptr);
-  return m_logger->log(lvl, input);
+#if defined(ACTS_ENABLE_LOG_FAILURE_THRESHOLD) and \
+    not defined(ACTS_LOG_FAILURE_THRESHOLD)
+namespace {
+Level& getFailureThresholdMutable() {
+  static Level _level = []() {
+    Level level = Level::MAX;
+
+    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
+    if (envvar == nullptr) {
+      return level;
+    }
+    std::string slevel = envvar;
+    if (slevel == "VERBOSE") {
+      level = std::min(level, Level::VERBOSE);
+    } else if (slevel == "DEBUG") {
+      level = std::min(level, Level::DEBUG);
+    } else if (slevel == "INFO") {
+      level = std::min(level, Level::INFO);
+    } else if (slevel == "WARNING") {
+      level = std::min(level, Level::WARNING);
+    } else if (slevel == "ERROR") {
+      level = std::min(level, Level::ERROR);
+    } else if (slevel == "FATAL") {
+      level = std::min(level, Level::FATAL);
+    } else {
+      std::cerr << "ACTS_LOG_FAILURE_THRESHOLD environment variable is set to "
+                   "unknown value: "
+                << slevel << std::endl;
+    }
+    return level;
+  }();
+
+  return _level;
+}
+}  // namespace
+
+Level getFailureThreshold() {
+  return getFailureThresholdMutable();
 }
 
-namespace Logging {
+void setFailureThreshold(Level level) {
+  getFailureThresholdMutable() = level;
+}
+
+#else
+
+void setFailureThreshold(Level /*lvl*/) {
+  throw std::logic_error{
+      "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
+      "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
+      "override. See "
+      "https://acts.readthedocs.io/en/latest/core/"
+      "logging.html#logging-thresholds"};
+}
+
+#endif
 
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {
@@ -28,6 +78,12 @@ class NeverFilterPolicy final : public OutputFilterPolicy {
   ~NeverFilterPolicy() override = default;
 
   bool doPrint(const Level& /*lvl*/) const override { return false; }
+
+  Level level() const override { return Level::MAX; }
+
+  std::unique_ptr<OutputFilterPolicy> clone(Level /*level*/) const override {
+    return std::make_unique<NeverFilterPolicy>();
+  }
 };
 
 std::unique_ptr<const Logger> makeDummyLogger() {
@@ -53,11 +109,10 @@ std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 
-LoggerWrapper getDummyLogger() {
+const Logger& getDummyLogger() {
   static const std::unique_ptr<const Logger> logger =
       Logging::makeDummyLogger();
-  static const LoggerWrapper loggerWrapper{*logger};
 
-  return loggerWrapper;
+  return *logger;
 }
 }  // namespace Acts

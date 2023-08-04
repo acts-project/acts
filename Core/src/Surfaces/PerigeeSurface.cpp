@@ -8,9 +8,12 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
+#include "Acts/Geometry/GeometryObject.hpp"
+
 #include <iomanip>
 #include <iostream>
-#include <utility>
+#include <memory>
+#include <vector>
 
 Acts::PerigeeSurface::PerigeeSurface(const Vector3& gp)
     : LineSurface(Transform3(Translation3(gp.x(), gp.y(), gp.z())), nullptr) {}

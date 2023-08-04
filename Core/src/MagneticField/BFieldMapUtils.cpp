@@ -8,13 +8,20 @@
 
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <initializer_list>
 #include <limits>
+#include <set>
 #include <tuple>
 
 using Acts::VectorHelpers::perp;
@@ -42,13 +49,12 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   size_t nBinsR = rPos.size();
   size_t nBinsZ = zPos.size();
 
-  // get the minimum and maximum
-  auto minMaxR = std::minmax_element(rPos.begin(), rPos.end());
-  auto minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
-  double rMin = *minMaxR.first;
-  double zMin = *minMaxZ.first;
-  double rMax = *minMaxR.second;
-  double zMax = *minMaxZ.second;
+  // get the minimum and maximum. We just sorted the vectors, so these are just
+  // the first and last elements.
+  double rMin = rPos[0];
+  double zMin = zPos[0];
+  double rMax = rPos[nBinsR - 1];
+  double zMax = zPos[nBinsZ - 1];
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
   double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
@@ -56,8 +62,8 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   rMax += stepR;
   zMax += stepZ;
   if (firstQuadrant) {
-    zMin = -(*minMaxZ.second);
-    nBinsZ = 2. * nBinsZ - 1;
+    zMin = -zPos[nBinsZ - 1];
+    nBinsZ = static_cast<size_t>(2. * nBinsZ - 1);
   }
 
   // Create the axis for the grid
@@ -110,7 +116,7 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   auto transformBField = [](const Acts::Vector2& field,
                             const Acts::Vector3& pos) {
     double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cos_phi, sin_phi;
+    double cos_phi = 0, sin_phi = 0;
     if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
       double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
       cos_phi = pos.x() * inv_r_sin_theta;
@@ -154,19 +160,16 @@ Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
   size_t nBinsY = yPos.size();
   size_t nBinsZ = zPos.size();
 
-  // get the minimum and maximum
-  auto minMaxX = std::minmax_element(xPos.begin(), xPos.end());
-  auto minMaxY = std::minmax_element(yPos.begin(), yPos.end());
-  auto minMaxZ = std::minmax_element(zPos.begin(), zPos.end());
   // Create the axis for the grid
-  // get minima
-  double xMin = *minMaxX.first;
-  double yMin = *minMaxY.first;
-  double zMin = *minMaxZ.first;
+  // get minima and maximia. We just sorted the vectors, so these are just the
+  // first and last elements.
+  double xMin = xPos[0];
+  double yMin = yPos[0];
+  double zMin = zPos[0];
   // get maxima
-  double xMax = *minMaxX.second;
-  double yMax = *minMaxY.second;
-  double zMax = *minMaxZ.second;
+  double xMax = xPos[nBinsX - 1];
+  double yMax = yPos[nBinsY - 1];
+  double zMax = zPos[nBinsZ - 1];
   // calculate maxima (add one last bin, because bin value always corresponds to
   // left boundary)
   double stepZ = std::fabs(zMax - zMin) / (nBinsZ - 1);
@@ -178,9 +181,9 @@ Acts::fieldMapXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
 
   // If only the first octant is given
   if (firstOctant) {
-    xMin = -*minMaxX.second;
-    yMin = -*minMaxY.second;
-    zMin = -*minMaxZ.second;
+    xMin = -xPos[nBinsX - 1];
+    yMin = -yPos[nBinsY - 1];
+    zMin = -zPos[nBinsZ - 1];
     nBinsX = 2 * nBinsX - 1;
     nBinsY = 2 * nBinsY - 1;
     nBinsZ = 2 * nBinsZ - 1;
@@ -254,11 +257,11 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
                        std::pair<double, double> zlim,
                        std::pair<size_t, size_t> nbins,
                        const SolenoidBField& field) {
-  double rMin, rMax, zMin, zMax;
+  double rMin = 0, rMax = 0, zMin = 0, zMax = 0;
   std::tie(rMin, rMax) = rlim;
   std::tie(zMin, zMax) = zlim;
 
-  size_t nBinsR, nBinsZ;
+  size_t nBinsR = 0, nBinsZ = 0;
   std::tie(nBinsR, nBinsZ) = nbins;
 
   double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
@@ -288,7 +291,7 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
   auto transformBField = [](const Acts::Vector2& bfield,
                             const Acts::Vector3& pos) {
     double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cos_phi, sin_phi;
+    double cos_phi = 0, sin_phi = 0;
     if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
       double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
       cos_phi = pos.x() * inv_r_sin_theta;

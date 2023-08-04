@@ -8,15 +8,26 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <memory>
+#include <string>
 
 namespace Acts {
 
 class LineBounds;
+class DetectorElementBase;
+class SurfaceBounds;
 
 ///  @class LineSurface
 ///
@@ -26,9 +37,11 @@ class LineBounds;
 ///
 ///  @note It leaves the type() method virtual, so it can not be instantiated
 ///
-/// @image html LineSurface.png
+/// @image html figures/LineSurface.png
 class LineSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from Transform3 and bounds
@@ -52,7 +65,7 @@ class LineSurface : public Surface {
   ///
   /// @param lbounds The bounds describing the straw dimensions
   /// @param detelement for which this surface is (at least) one representation
-  LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
+  LineSurface(std::shared_ptr<const LineBounds> lbounds,
               const DetectorElementBase& detelement);
 
   /// Copy constructor
@@ -77,19 +90,19 @@ class LineSurface : public Surface {
   /// @param other is the source surface dor copying
   LineSurface& operator=(const LineSurface& other);
 
-  /// Normal vector return
+  /// The normal vector is undefined if we do not know the momentum.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
   ///
-  /// @return a Vector3 by value
+  /// @return a zero vector
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
 
-  /// The binning position is the position calcualted
+  /// The binning position is the position calculated
   /// for a certain binning type
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -102,18 +115,18 @@ class LineSurface : public Surface {
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
   /// for StraightLine and Perigee Surface
-  ///  - the default implementation is the the RotationMatrix3 of the transform
+  ///  - the default implementation is the RotationMatrix3 of the transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
   /// constructed
-  /// @param momentum is the momentum used for the measurement frame
+  /// @param direction is the momentum direction used for the measurement frame
   /// construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                  const Vector3& position,
-                                 const Vector3& momentum) const final;
+                                 const Vector3& direction) const final;
 
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
@@ -136,23 +149,24 @@ class LineSurface : public Surface {
       const GeometryContext& gctx, const FreeVector& parameters) const final;
 
   /// Local to global transformation
-  /// for line surfaces the momentum is used in order to interpret the drift
-  /// radius
+  ///
+  /// @note for line surfaces the momentum direction is used in order to interpret the
+  /// drift radius
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param momentum is the global momentum (used to sign the closest approach)
+  /// @param direction is the global momentum direction (used to sign the closest approach)
   ///
   /// @return global position by value
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const final;
+                        const Vector3& direction) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
   ///
   /// This method is the true global->local transformation.<br>
   /// makes use of globalToLocal and indicates the sign of the Acts::eBoundLoc0
-  /// by the given momentum
+  /// by the given momentum direction
   ///
   /// The calculation of the sign of the radius (or \f$ d_0 \f$) can be done as
   /// follows:<br>
@@ -174,18 +188,18 @@ class LineSurface : public Surface {
   /// onto \f$ \vec{measX} \f$:<br>
   /// \f$ sign = -sign(\vec{d} \cdot \vec{measX}) \f$
   ///
-  /// \image html SignOfDriftCircleD0.gif
+  /// @image html figures/SignOfDriftCircleD0.gif
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
-  /// @param momentum global 3D momentum representation (optionally ignored)
+  /// @param direction global 3D momentum direction (optionally ignored)
   /// @param tolerance (unused)
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// @brief Straight line intersection schema
@@ -193,8 +207,9 @@ class LineSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position as a starting point
   /// @param direction The global direction at the starting point
-  ///        @note exptected to be normalized
+  ///        @note expected to be normalized
   /// @param bcheck The boundary check directive for the estimate
+  /// @param tolerance the tolerance used for the intersection
   ///
   ///   <b>mathematical motivation:</b>
   ///   Given two lines in parameteric form:<br>
@@ -226,8 +241,8 @@ class LineSurface : public Surface {
   /// @return is the intersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction,
-      const BoundaryCheck& bcheck = false) const final;
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      ActsScalar tolerance = s_onSurfaceTolerance) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
@@ -235,7 +250,7 @@ class LineSurface : public Surface {
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
-                        const Vector3& momentum) const override;
+                        const Vector3& direction) const override;
 
   /// This method returns the bounds of the Surface by reference */
   const SurfaceBounds& bounds() const final;
@@ -259,7 +274,7 @@ class LineSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates
@@ -274,10 +289,10 @@ class LineSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position
-  /// @param momentum is the momentum
+  /// @param direction is the momentum direction
   /// @param lposition is the local position to be filled
   bool globalToLocalPlain(const GeometryContext& gctx, const Vector3& position,
-                          const Vector3& momentum, Vector2& lposition) const;
+                          const Vector3& direction, Vector2& lposition) const;
 };
 
 }  // namespace Acts

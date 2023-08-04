@@ -9,11 +9,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <algorithm>
+#include <array>
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -40,7 +50,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeConstruction) {
 BOOST_AUTO_TEST_CASE(CuboidVolumeRecreation) {
   CuboidVolumeBounds original(hx, hy, hz);
   auto valvector = original.values();
-  std::array<double, CuboidVolumeBounds::eSize> values;
+  std::array<double, CuboidVolumeBounds::eSize> values{};
   std::copy_n(valvector.begin(), CuboidVolumeBounds::eSize, values.begin());
   CuboidVolumeBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);
@@ -105,10 +115,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
   for (auto& os : cvbOrientedSurfaces) {
     auto osCenter = os.first->center(geoCtx);
     auto osNormal = os.first->normal(geoCtx);
-    double nDir = (double)os.second;
     // Check if you step inside the volume with the oriented normal
-    auto insideBox = osCenter + nDir * osNormal;
-    auto outsideBox = osCenter - nDir * osNormal;
+    Vector3 insideBox = osCenter + os.second * osNormal;
+    Vector3 outsideBox = osCenter - os.second * osNormal;
     BOOST_CHECK(box.inside(insideBox));
     BOOST_CHECK(!box.inside(outsideBox));
   }

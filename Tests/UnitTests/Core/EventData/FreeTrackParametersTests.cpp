@@ -10,14 +10,20 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
+#include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericFreeTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <limits>
+#include <optional>
+#include <utility>
+#include <vector>
 
 #include "TrackParametersDatasets.hpp"
 
@@ -25,14 +31,14 @@ namespace {
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using AnyFreeTrackParameters = SingleFreeTrackParameters<AnyCharge>;
+using AnyFreeTrackParameters = GenericFreeTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
 const FreeSymMatrix cov = FreeSymMatrix::Identity();
 
 template <typename charge_t>
-void checkParameters(const SingleFreeTrackParameters<charge_t>& params,
+void checkParameters(const GenericFreeTrackParameters<charge_t>& params,
                      const Vector4& pos4, const Vector3& unitDir, double p,
                      double q) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);

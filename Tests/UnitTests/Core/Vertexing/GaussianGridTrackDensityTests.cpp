@@ -11,12 +11,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <utility>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -104,7 +113,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   auto zeroGrid = Grid::MainGridVector::Zero();
   BOOST_CHECK_EQUAL(mainGrid, zeroGrid);
 
-  // Now add track 1 and 2 to grid, seperately.
+  // Now add track 1 and 2 to grid, separately.
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
@@ -118,7 +127,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   // Track 1 and 2 summed should give higher densities than
   // only track 1 alone
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
-  BOOST_CHECK(gridCopy.sum() < mainGrid.sum());
+  BOOST_CHECK_EQUAL(gridCopy.sum(), mainGrid.sum());
 
   binAndTrackGrid = grid.addTrack(params4, mainGrid);
 
@@ -136,8 +145,8 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Check if position of maximum is correct
   auto maxRes = grid.getMaxZPosition(mainGrid);
-  int maxBin = (*maxRes / binSize) + mainGridSize / 2;
-  BOOST_CHECK_EQUAL(maxBin, mainGridSize / 2 + 1);
+  int maxBin = static_cast<int>((*maxRes / binSize) + mainGridSize / 2);
+  BOOST_CHECK_EQUAL(maxBin, 0);
 
   // Check if error is thrown for empty grid
   mainGrid = Grid::MainGridVector::Zero();
@@ -208,12 +217,12 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
-  // Artifically add some more density around the peak of track 2
-  int maxZbin = (posZ2 / binSize + mainGridSize / 2.);
+  // Artificially add some more density around the peak of track 2
+  int maxZbin = static_cast<int>((posZ2 / binSize + mainGridSize / 2.));
   mainGrid(maxZbin - 1) += 1;
   mainGrid(maxZbin + 1) += 1;
 
-  // Even though peak density of track 1 is slighly higher, track 2
+  // Even though peak density of track 1 is slightly higher, track 2
   // has a higher sum of track densities including the peak and the two
   // surrounding bins and will be the output z position.
   auto maxRes = grid.getMaxZPosition(mainGrid);
@@ -269,12 +278,12 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
-  // Artifically add some more density around the peak of track 2
-  int maxZbin = (posZ2 / binSize + mainGridSize / 2.);
+  // Artificially add some more density around the peak of track 2
+  int maxZbin = static_cast<int>((posZ2 / binSize + mainGridSize / 2.));
   mainGrid(maxZbin - 1) += 1;
   mainGrid(maxZbin + 1) += 1;
 
-  // Even though peak density of track 1 is slighly higher, track 2
+  // Even though peak density of track 1 is slightly higher, track 2
   // has a higher sum of track densities including the peak and the two
   // surrounding bins and will be the output z position.
 

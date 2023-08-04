@@ -6,12 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/BenchmarkTools.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <chrono>
 #include <fstream>
@@ -115,7 +116,7 @@ int main(int argc, char* argv[]) {
   // - This variation of the first benchmark uses a fixed position again, but
   //   uses the cache infrastructure to evaluate how much of an impact it has on
   //   performance in this scenario. We expect this to improve performance as
-  //   the the cache will always be valid for the fixed point.
+  //   the cache will always be valid for the fixed point.
   {
     std::cout << "Benchmarking cached interpolated field lookup: "
               << std::flush;

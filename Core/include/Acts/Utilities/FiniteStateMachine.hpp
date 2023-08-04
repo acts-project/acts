@@ -19,10 +19,10 @@ namespace Acts {
 /// Implementation of a finite state machine engine
 ///
 /// Allows setting up a system of states and transitions between them. States
-/// are definedd as empty structs (footprint: 1 byte). Tranitions call functions
-/// using overload resolution. This works by subclassing this class, providing
-/// the deriving type as the first template argument (CRTP) and providing
-/// methods like
+/// are definedd as empty structs (footprint: 1 byte). Transitions call
+/// functions using overload resolution. This works by subclassing this class,
+/// providing the deriving type as the first template argument (CRTP) and
+/// providing methods like
 ///
 /// ```cpp
 /// event_return on_event(const S&, const E&);
@@ -128,7 +128,7 @@ class FiniteStateMachine {
   /// @param state Initial state for the FSM.
   FiniteStateMachine(StateVariant state) : m_state(std::move(state)){};
 
-  /// Get the current state of of the FSM (as a variant).
+  /// Get the current state of the FSM (as a variant).
   /// @return StateVariant The current state of the FSM.
   const StateVariant& getState() const noexcept { return m_state; }
 
