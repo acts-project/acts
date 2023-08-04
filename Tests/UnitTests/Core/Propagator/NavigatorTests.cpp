@@ -91,9 +91,6 @@ struct PropagatorState {
       /// Charge
       double q = 0;
 
-      /// the navigation direction
-      Direction navDir = Direction::Forward;
-
       // accummulated path length cache
       double pathAccumulated = 0.;
 
@@ -112,7 +109,6 @@ struct PropagatorState {
     /// State resetter
     void resetState(State& /*state*/, const BoundVector& /*boundParams*/,
                     const BoundSymMatrix& /*cov*/, const Surface& /*surface*/,
-                    const Direction /*navDir*/,
                     const double /*stepSize*/) const {}
 
     /// Global particle position accessor
@@ -145,11 +141,14 @@ struct PropagatorState {
       return s_onSurfaceTolerance;
     }
 
-    Intersection3D::Status updateSurfaceStatus(
-        State& state, const Surface& surface, const BoundaryCheck& bcheck,
-        const Logger& logger, ActsScalar surfaceTolerance) const {
+    Intersection3D::Status updateSurfaceStatus(State& state,
+                                               const Surface& surface,
+                                               Direction navDir,
+                                               const BoundaryCheck& bcheck,
+                                               ActsScalar surfaceTolerance,
+                                               const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(
-          *this, state, surface, bcheck, logger, surfaceTolerance);
+          *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
     }
 
     template <typename object_intersection_t>
@@ -235,6 +234,8 @@ struct PropagatorState {
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
+
+    Direction direction = Direction::Forward;
 
     const Acts::Logger& logger = Acts::getDummyLogger();
 
