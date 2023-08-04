@@ -89,7 +89,10 @@ MagneticFieldContext mfContext = MagneticFieldContext();
 template <typename stepper_state_t>
 struct PropState {
   /// @brief Constructor
-  PropState(stepper_state_t sState) : stepping(std::move(sState)) {}
+  PropState(Direction direction, stepper_state_t sState)
+      : stepping(std::move(sState)) {
+    options.direction = direction;
+  }
   /// State of the eigen stepper
   stepper_state_t stepping;
   /// Propagator options which only carry the relevant components
@@ -98,6 +101,7 @@ struct PropState {
     double tolerance = 1e-4;
     double stepSizeCutOff = 0.;
     unsigned int maxRungeKuttaStepTrials = 10000;
+    Direction direction = Direction::Forward;
   } options;
 };
 
@@ -181,7 +185,6 @@ struct StepCollector {
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Set up some variables
-  Direction navDir = Direction::Backward;
   double stepSize = 123.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
 
@@ -194,7 +197,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Test charged parameters without covariance matrix
   CurvilinearTrackParameters cp(makeVector4(pos, time), dir, charge / absMom);
   EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
-                                navDir, stepSize);
+                                stepSize);
 
   EigenStepper<> es(bField);
 
@@ -204,7 +207,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.derivative, FreeVector::Zero());
   BOOST_CHECK(!esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
-  BOOST_CHECK_EQUAL(esState.navDir, navDir);
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esState.stepSize.value(), stepSize);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
@@ -213,7 +215,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   NeutralCurvilinearTrackParameters ncp(makeVector4(pos, time), dir,
                                         1 / absMom);
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
-                                  navDir, stepSize);
+                                  stepSize);
   BOOST_CHECK_EQUAL(es.charge(esState), 0.);
 
   // Test with covariance matrix
@@ -221,7 +223,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   ncp = NeutralCurvilinearTrackParameters(makeVector4(pos, time), dir,
                                           1 / absMom, cov);
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
-                                  navDir, stepSize);
+                                  stepSize);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK(esState.covTransport);
   BOOST_CHECK_EQUAL(esState.cov, cov);
@@ -248,7 +250,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Build the state and the stepper
   EigenStepper<>::State esState(tgContext, bField->makeCache(mfContext), cp,
-                                navDir, stepSize);
+                                stepSize);
   EigenStepper<> es(bField);
 
   // Test the getters
@@ -306,7 +308,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Perform a step without and with covariance transport
   esState.cov = cov;
-  PropState ps(std::move(esState));
+  PropState ps(navDir, std::move(esState));
 
   ps.stepping.covTransport = false;
   es.step(ps, mockNavigator).value();
@@ -346,12 +348,11 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto copyState = [&](auto& field, const auto& state) {
     using field_t = std::decay_t<decltype(field)>;
     std::decay_t<decltype(state)> copy(tgContext, field.makeCache(mfContext),
-                                       cp, navDir, stepSize);
+                                       cp, stepSize);
     copy.pars = state.pars;
     copy.absCharge = state.absCharge;
     copy.covTransport = state.covTransport;
     copy.cov = state.cov;
-    copy.navDir = state.navDir;
     copy.jacobian = state.jacobian;
     copy.jacToGlobal = state.jacToGlobal;
     copy.jacTransport = state.jacTransport;
@@ -376,7 +377,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   EigenStepper<>::State esStateCopy(copyState(*bField, ps.stepping));
   BOOST_CHECK(cp2.covariance().has_value());
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
-                cp2.referenceSurface(), navDir, stepSize2);
+                cp2.referenceSurface(), stepSize2);
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
@@ -392,7 +393,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), navDir * stepSize2);
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
@@ -400,7 +400,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Reset all possible parameters except the step size
   esStateCopy = copyState(*bField, ps.stepping);
   es.resetState(esStateCopy, cp2.parameters(), *cp2.covariance(),
-                cp2.referenceSurface(), navDir);
+                cp2.referenceSurface());
   // Test all components
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, BoundToFreeMatrix::Zero());
   BOOST_CHECK_NE(esStateCopy.jacToGlobal, ps.stepping.jacToGlobal);
@@ -416,7 +416,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.navDir, navDir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
                     std::numeric_limits<double>::max());
@@ -441,7 +440,6 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), -es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.navDir, Direction::Forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
   BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
                     std::numeric_limits<double>::max());
@@ -454,12 +452,12 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                                    dir, charge / absMom, cov)
           .value();
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), cp,
-                                  navDir, stepSize);
+                                  stepSize);
 
   // Test the intersection in the context of a surface
   auto targetSurface =
       Surface::makeShared<PlaneSurface>(pos + navDir * 2. * dir, dir);
-  es.updateSurfaceStatus(esState, *targetSurface, BoundaryCheck(false));
+  es.updateSurfaceStatus(esState, *targetSurface, navDir, BoundaryCheck(false));
   CHECK_CLOSE_ABS(esState.stepSize.value(ConstrainedStep::actor), navDir * 2.,
                   eps);
 
@@ -467,14 +465,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   es.updateStepSize(
       esState,
       targetSurface->intersect(esState.geoContext, es.position(esState),
-                               esState.navDir * es.direction(esState), false),
+                               navDir * es.direction(esState), false),
       false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setValue(navDir * stepSize);
   es.updateStepSize(
       esState,
       targetSurface->intersect(esState.geoContext, es.position(esState),
-                               esState.navDir * es.direction(esState), false),
+                               navDir * es.direction(esState), false),
       true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
@@ -524,8 +522,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   auto nBfield = std::make_shared<NullBField>();
   EigenStepper<> nes(nBfield);
   EigenStepper<>::State nesState(tgContext, nBfield->makeCache(mfContext), cp,
-                                 navDir, stepSize);
-  PropState nps(copyState(*nBfield, nesState));
+                                 stepSize);
+  PropState nps(navDir, copyState(*nBfield, nesState));
   // Test that we can reach the minimum step size
   nps.options.tolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;
