@@ -37,8 +37,8 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
 
   if (cfg.positions.size() != cfg.stereos.size()) {
     throw std::invalid_argument(
-        "The size of provided positions must be the same as the size of "
-        "provided stereos.");
+        "The number of provided positions must match the number of "
+        "provided stereo angles.");
   }
 
   config = cfg;

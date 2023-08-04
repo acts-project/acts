@@ -27,7 +27,7 @@ void TelescopeDetectorWithOptions::addOptions(
   opt("geo-tele-stereos",
       value<VariableReals>()->default_value({{0, 0, 0, 0, 0, 0}}),
       "Telescope detector Input: the layers stereo angle around the "
-      "longidutinal "
+      "longitudinal "
       "direction in rad");
   opt("geo-tele-offsets", value<Reals<2>>()->default_value({{0, 0}}),
       "Telescope detector Input: the layers offsets in the transverse plane "

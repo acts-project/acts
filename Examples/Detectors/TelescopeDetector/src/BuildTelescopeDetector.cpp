@@ -80,11 +80,10 @@ ActsExamples::Telescope::buildDetector(
   for (unsigned int i = 0; i < nLayers; ++i) {
     // The translation without rotation yet
     Acts::Translation3 trans(offsets[0], offsets[1], positions[i]);
-    // The transform (the center defined by trans will be rotated as well with
-    // the following definition of trafo)
+    // The entire transformation (the coordinate system, whose center is defined by trans, will be rotated as well)
     Acts::Transform3 trafo(rotation * trans);
 
-    // twist around local z axis by stereo angle
+    // rotate around local z axis by stereo angle
     auto stereo = stereos[i];
     trafo *= Acts::AngleAxis3(stereo, Acts::Vector3::UnitZ());
 

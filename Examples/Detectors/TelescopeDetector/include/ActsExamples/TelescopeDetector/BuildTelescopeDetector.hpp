@@ -34,7 +34,7 @@ enum class TelescopeSurfaceType {
 ///
 /// @param gctx is the detector element dependent geometry context
 /// @param detectorStore is the store for the detector element
-/// @param positions is the offset of different layers in the longitudinal
+/// @param positions is the offset of different layers in the longitudinal direction
 /// @param stereos is the stereo angle of different layers around the longitudinal
 /// direction
 /// @param offsets is the offset (u, v) of the layers in the transverse plane
