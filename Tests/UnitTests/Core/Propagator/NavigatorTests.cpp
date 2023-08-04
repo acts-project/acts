@@ -113,7 +113,7 @@ struct PropagatorState {
 
     void step(State& sstate, double fraction = 1) {
       // update the cache position
-      double ssize = sstate.stepSize * fraction;
+      double ssize = sstate.stepSize.value() * fraction;
       Vector4 prev = sstate.pos4;
       sstate.pos4[Acts::ePos0] += ssize * sstate.dir[Acts::eMom0];
       sstate.pos4[Acts::ePos1] += ssize * sstate.dir[Acts::eMom1];

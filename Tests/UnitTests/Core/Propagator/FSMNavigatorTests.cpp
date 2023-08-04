@@ -10,6 +10,7 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -68,7 +69,7 @@ struct PseudoStepper {
     double q;
 
     /// the navigation direction
-    NavigationDirection navDir = NavigationDirection::Forward;
+    Direction navDir = Direction::Forward;
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -87,11 +88,11 @@ struct PseudoStepper {
 
   void step(State& sstate, double fraction) {
     // update the cache position
-    double ssize = sstate.stepSize * fraction;
+    double ssize = sstate.stepSize.value() * fraction;
     std::cout << "PseudoStepper: Performing step with size: " << ssize
               << " along [" << sstate.dir.transpose() << "]: " << std::endl;
     Vector4 prev = sstate.pos4;
-    sstate.pos4.head<3>() += (sstate.stepSize * fraction) * sstate.dir;
+    sstate.pos4.head<3>() += (sstate.stepSize.value() * fraction) * sstate.dir;
     auto rz = [](const Vector4& v) -> std::string {
       return std::to_string(VectorHelpers::perp(v)) + "," +
              std::to_string(v[eFreePos2]);
@@ -109,8 +110,7 @@ struct PseudoStepper {
   /// State resetter
   void resetState(State& /*unused*/, const BoundVector& /*unused*/,
                   const BoundSymMatrix& /*unused*/, const Surface& /*unused*/,
-                  const NavigationDirection /*unused*/,
-                  const double /*unused*/) const {}
+                  const Direction /*unused*/, const double /*unused*/) const {}
 
   /// Global particle position accessor
   Vector3 position(const State& state) const {
@@ -123,11 +123,17 @@ struct PseudoStepper {
   /// Momentum direction accessor
   Vector3 direction(const State& state) const { return state.dir; }
 
-  /// Momentum accessor
-  double momentum(const State& state) const { return state.p; }
-
   /// Charge access
   double charge(const State& state) const { return state.q; }
+
+  /// qOverP access
+  double qOverP(const State& state) const { return state.q / state.p; }
+
+  /// Abs momentum access
+  double absoluteMomentum(const State& state) const { return state.p; }
+
+  /// Momentum accessor
+  Vector3 momentum(const State& state) const { return state.dir * state.p; }
 
   /// Overstep limit access
   double overstepLimit(const State& /*state*/) const {
@@ -136,9 +142,10 @@ struct PseudoStepper {
 
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      LoggerWrapper logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger(),
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance) const {
     return detail::updateSingleSurfaceStatus<PseudoStepper>(
-        *this, state, surface, bcheck, logger);
+        *this, state, surface, bcheck, logger, surfaceTolerance);
   }
 
   template <typename object_intersection_t>
@@ -156,7 +163,7 @@ struct PseudoStepper {
       State& state, double stepSize,
       Acts::ConstrainedStep::Type stype = Acts::ConstrainedStep::actor,
       bool release = true) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
 
@@ -229,8 +236,6 @@ struct PropagatorState {
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
-
-    LoggerWrapper logger{getDummyLogger()};
   };
 
   /// Navigation cache: the start surface

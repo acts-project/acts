@@ -199,7 +199,7 @@ class TrackingVolume : public Volume {
   boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options,
-      LoggerWrapper logger = getDummyLogger()) const;
+      const Logger& logger = getDummyLogger()) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///

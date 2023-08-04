@@ -150,8 +150,8 @@ class FSMNavigator {
     /// @param ssurface is the new starting surface
     /// @param tsurface is the target surface
     void reset(const GeometryContext& geoContext, const Vector3& pos,
-               const Vector3& dir, NavigationDirection navDir,
-               const Surface* ssurface, const Surface* tsurface) {
+               const Vector3& dir, Direction navDir, const Surface* ssurface,
+               const Surface* tsurface) {
       // Reset everything first
       *this = State();
 
@@ -253,9 +253,9 @@ class FSMNavigator {
         ACTS_DEBUG(
             "Slow start through volume hierarchy search for lowest volume");
         ACTS_DEBUG("Starting from position "
-                   << toString(stepper.position(state.stepping))
+                   << stepper.position(state.stepping).transpose()
                    << " and direction "
-                   << toString(stepper.direction(state.stepping)));
+                   << stepper.direction(state.stepping).transpose());
         state.navigation.startVolume =
             navigator.m_cfg.trackingGeometry->lowestTrackingVolume(
                 state.geoContext, stepper.position(state.stepping));
@@ -340,8 +340,7 @@ class FSMNavigator {
       state.navigation.navLayers =
           state.navigation.currentVolume->compatibleLayers(
               state.geoContext, stepper.position(state.stepping),
-              stepper.direction(state.stepping), navOpts,
-              LoggerWrapper{logger()});
+              stepper.direction(state.stepping), navOpts, logger());
 
       ACTS_DEBUG(volInfo(state) << "Found " << state.navigation.navLayers.size()
                                 << " layer candidates");
@@ -379,7 +378,7 @@ class FSMNavigator {
           state.navigation.navLayerIter->representation;
 
       auto targetStatus = stepper.updateSurfaceStatus(
-          state.stepping, *layerSurface, true, LoggerWrapper{*m_logger});
+          state.stepping, *layerSurface, true, *m_logger);
 
       if (targetStatus == Intersection3D::Status::onSurface) {
         ACTS_DEBUG(volInfo(state) << "Layer hit, current surface is now: "
@@ -422,7 +421,7 @@ class FSMNavigator {
               *state.navigation.navLayerIter;
 
           auto layerStatus = stepper.updateSurfaceStatus(
-              state.stepping, *layerSurface, true, LoggerWrapper{*m_logger});
+              state.stepping, *layerSurface, true, *m_logger);
           if (layerStatus != Intersection3D::Status::reachable) {
             ACTS_DEBUG(volInfo(state)
                        << "During approach of layer " << layer->geometryId()
@@ -549,8 +548,8 @@ class FSMNavigator {
       // did we hit the layer?
       const Surface* surface = state.navigation.navSurfaceIter->representation;
 
-      auto targetStatus = stepper.updateSurfaceStatus(
-          state.stepping, *surface, true, LoggerWrapper{*m_logger});
+      auto targetStatus = stepper.updateSurfaceStatus(state.stepping, *surface,
+                                                      true, *m_logger);
 
       if (targetStatus == Intersection3D::Status::onSurface) {
         ACTS_DEBUG(volInfo(state) << "Surface hit, current surface is now: "
@@ -587,7 +586,7 @@ class FSMNavigator {
             state.navigation.navSurfaceIter->representation;
 
         auto surfaceStatus = stepper.updateSurfaceStatus(
-            state.stepping, *surface, true, LoggerWrapper{*m_logger});
+            state.stepping, *surface, true, *m_logger);
         if (surfaceStatus != Intersection3D::Status::reachable) {
           ACTS_DEBUG(volInfo(state)
                      << "During approach of surface " << surface->geometryId()
@@ -643,8 +642,7 @@ class FSMNavigator {
       state.navigation.navBoundaries =
           state.navigation.currentVolume->compatibleBoundaries(
               state.geoContext, stepper.position(state.stepping),
-              stepper.direction(state.stepping), navOpts,
-              LoggerWrapper{logger()});
+              stepper.direction(state.stepping), navOpts, logger());
 
       // The number of boundary candidates
       if (logger().doPrint(Logging::VERBOSE)) {
@@ -686,7 +684,7 @@ class FSMNavigator {
           state.navigation.navBoundaryIter->object;
 
       auto targetStatus = stepper.updateSurfaceStatus(
-          state.stepping, *boundarySurface, true, LoggerWrapper{*m_logger});
+          state.stepping, *boundarySurface, true, *m_logger);
 
       // @TODO: Check if we are in target volume
 
@@ -769,7 +767,7 @@ class FSMNavigator {
         auto boundarySurface = state.navigation.navBoundaryIter->representation;
         // Step towards the boundary surfrace
         auto boundaryStatus = stepper.updateSurfaceStatus(
-            state.stepping, *boundarySurface, true, LoggerWrapper{*m_logger});
+            state.stepping, *boundarySurface, true, *m_logger);
         if (boundaryStatus == Intersection3D::Status::reachable) {
           ACTS_VERBOSE(volInfo(state)
                        << "Boundary reachable, step size updated to "
@@ -878,14 +876,14 @@ class FSMNavigator {
       : m_cfg(std::move(cfg)), m_logger(std::move(logger)){};
 
   template <typename propagator_state_t, typename stepper_t>
-  void status(propagator_state_t& state, const stepper_t& stepper) const {
+  void preStep(propagator_state_t& state, const stepper_t& stepper) const {
     // ACTS_VERBOSE("Status call");
     state.navigation.m_logger = m_logger.get();
     state.navigation.dispatch(events::Status{}, *this, state, stepper);
   }
 
   template <typename propagator_state_t, typename stepper_t>
-  void target(propagator_state_t& state, const stepper_t& stepper) const {
+  void postStep(propagator_state_t& state, const stepper_t& stepper) const {
     // ACTS_VERBOSE("Target call");
     state.navigation.m_logger = m_logger.get();
     state.navigation.dispatch(events::Target{}, *this, state, stepper);

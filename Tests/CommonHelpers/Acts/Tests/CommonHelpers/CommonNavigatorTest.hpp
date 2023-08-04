@@ -8,6 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+
 namespace Acts::Test {
 
 template <typename stepper_t, typename state_t, typename navigator_t>
@@ -24,7 +27,6 @@ void commonNavigatorSequenceTest(stepper_t& stepper, state_t& state,
   state.navigation.startSurface = startSurface;
 
   auto logger = getDefaultLogger("Navigator", Logging::Level::VERBOSE);
-  state.options.logger = LoggerWrapper{*logger};
 
   auto step = [&](double fraction = 1.) {
     stepper.step(state.stepping, fraction);
@@ -32,12 +34,12 @@ void commonNavigatorSequenceTest(stepper_t& stepper, state_t& state,
 
   auto status = [&]() {
     std::cout << "STATUS" << std::endl;
-    navigator.status(state, stepper);
+    navigator.preStep(state, stepper);
   };
 
   auto target = [&]() {
     std::cout << "TARGET" << std::endl;
-    navigator.target(state, stepper);
+    navigator.postStep(state, stepper);
   };
 
   state.stepping.pos4 = position;

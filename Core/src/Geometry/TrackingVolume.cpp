@@ -605,7 +605,7 @@ Acts::TrackingVolume::compatibleLayers(const GeometryContext& gctx,
                                        const Vector3& position,
                                        const Vector3& direction,
                                        const NavigationOptions<Layer>& options,
-                                       LoggerWrapper logger) const {
+                                       const Logger& logger) const {
   ACTS_VERBOSE(volumeName()
                << " [" << geometryId() << "]: "
                << "Finding compatible layers, position: "
