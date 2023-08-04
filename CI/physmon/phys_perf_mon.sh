@@ -125,6 +125,7 @@ function full_chain() {
         $outdir/performance_seeding_${suffix}.root \
         $refdir/performance_seeding_${suffix}.root \
         "Seeding ${suffix}" \
+        seeding_${suffix} \
         -c $config
     fi
     
