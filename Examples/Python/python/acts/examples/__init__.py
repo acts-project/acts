@@ -361,6 +361,8 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
 
         kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
 
+        self._printFpeSummary(kwargs["fpeMasks"])
+
         cfg = self.Config()
         if len(args) == 1 and isinstance(args[0], self.Config):
             cfg = args[0]
@@ -519,3 +521,111 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                         )
 
         return cls._autoFpeMasks
+
+    @classmethod
+    def _printFpeSummary(cls, masks: List[FpeMask]):
+        if len(masks) == 0:
+            return
+
+        # Try to make a nice summary with rich, or fallback to a plain text one
+        try:
+            import rich
+
+            have_rich = True
+        except ImportError:
+            have_rich = False
+
+        error = False
+        srcdir = cls.srcdir()
+
+        def rich_summary():
+            import rich
+            import rich.rule
+            import rich.panel
+            from rich.markdown import Markdown as md
+            import rich.syntax
+            import rich.table
+            import rich.text
+
+            print = rich.print
+            print(rich.rule.Rule("FPE masks"))
+
+            nonlocal error
+
+            for i, mask in enumerate(masks):
+                if i > 0:
+                    print(rich.rule.Rule())
+                #  print(f"- {mask.file}:{mask.lines[0]}: {mask.type.name}: {mask.count}")
+                full_path = srcdir / mask.file
+                if not full_path.exists():
+                    print(
+                        rich.panel.Panel(
+                            md(f"File at **{full_path}** does not exist"),
+                            title=f"{mask}",
+                            style="red",
+                        )
+                    )
+                    error = True
+                    continue
+
+                start, end = mask.lines
+                start = max(0, start - 2)
+                end += 2
+                print(
+                    rich.panel.Panel(
+                        rich.syntax.Syntax.from_path(
+                            full_path,
+                            line_numbers=True,
+                            line_range=(start, end),
+                            highlight_lines=list(range(*mask.lines)),
+                        ),
+                        title=f"{mask}",
+                        subtitle=f"{full_path}",
+                    )
+                )
+
+            print(rich.rule.Rule())
+
+            table = rich.table.Table(title="FPE Summary", expand=True)
+            table.add_column("File")
+            table.add_column("Lines")
+            table.add_column("FPE type")
+            table.add_column("Mask limit")
+
+            for mask in masks:
+                start, end = mask.lines
+                if start + 1 == end:
+                    line_str = str(start)
+                else:
+                    line_str = f"({start}-{end}]"
+
+                full_path = srcdir / mask.file
+
+                table.add_row(
+                    str(mask.file),
+                    line_str,
+                    mask.type.name,
+                    str(mask.count),
+                    style="red" if not full_path.exists() else None,
+                )
+
+            print(table)
+
+        if not have_rich or not sys.stdout.isatty():
+
+            print("FPE masks:")
+            for mask in masks:
+                s = f"{mask.file}:{mask.lines[0]}: {mask.type.name}: {mask.count}"
+
+                full_path = srcdir / mask.file
+                if not full_path.exists():
+                    print(f"- {s}\n  [File at {full_path} does not exist!]")
+                    error = True
+                else:
+                    print(f"- {s}")
+
+        else:
+            rich_summary()
+
+        if error:
+            raise RuntimeError("Sequencer FPE masking configuration has errors")
