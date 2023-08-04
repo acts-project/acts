@@ -23,13 +23,32 @@ Acts::TorchTruthGraphMetricsHook::TorchTruthGraphMetricsHook(
     const std::vector<int64_t>& truthGraph,
     std::unique_ptr<const Acts::Logger> l)
     : m_logger(std::move(l)) {
+  // Sort the edges, so we get predictable cantor pairs
+  auto truthGraphSorted = truthGraph;
+  for (auto it = truthGraphSorted.begin(); it != truthGraphSorted.end();
+       it += 2) {
+    std::sort(it, it + 2);
+  }
+
   // Use cantor pairing to store truth graph, so we can easily use set
   // operations to compute efficiency and purity
-  m_truthGraphCantor.reserve(truthGraph.size() / 2);
-  for (auto it = truthGraph.begin(); it != truthGraph.end(); it += 2) {
+  m_truthGraphCantor.reserve(truthGraphSorted.size() / 2);
+  for (auto it = truthGraphSorted.begin(); it != truthGraphSorted.end();
+       it += 2) {
     m_truthGraphCantor.push_back(cantor(it));
   }
+
   std::sort(m_truthGraphCantor.begin(), m_truthGraphCantor.end());
+
+  // Check if unique (should be!)
+  auto new_end =
+      std::unique(m_truthGraphCantor.begin(), m_truthGraphCantor.end());
+  if (new_end != m_truthGraphCantor.end()) {
+    ACTS_WARNING("Truth graph not unique ("
+                 << std::distance(new_end, m_truthGraphCantor.end())
+                 << " duplicates)");
+    m_truthGraphCantor.erase(new_end, m_truthGraphCantor.end());
+  }
 }
 
 void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
@@ -49,11 +68,20 @@ void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
   std::vector<int64_t> predGraphCantor(
       cantorTensor.data_ptr<int64_t>(),
       cantorTensor.data_ptr<int64_t>() + cantorTensor.numel());
+
+  // Sort
   std::sort(predGraphCantor.begin(), predGraphCantor.end());
 
-  assert(predGraphCantor.size() ==
-         static_cast<std::size_t>(edgeTensor.size(1)));
+  // Check if unique (should be!)
+  auto new_end = std::unique(predGraphCantor.begin(), predGraphCantor.end());
+  if (new_end != predGraphCantor.end()) {
+    ACTS_WARNING("Input edges not unique ("
+                 << std::distance(new_end, predGraphCantor.end())
+                 << " duplicates)");
+    predGraphCantor.erase(new_end, predGraphCantor.end());
+  }
 
+  // Calculate intersection
   std::vector<int64_t> intersection(
       std::max(predGraphCantor.size(), m_truthGraphCantor.size()));
 
