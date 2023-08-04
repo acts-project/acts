@@ -19,7 +19,7 @@ namespace Acts {
 
 template <typename traj_t>
 void voidKalmanCalibrator(const GeometryContext& /*gctx*/,
-    const SourceLink& /*sourceLink*/,
+                          const SourceLink& /*sourceLink*/,
                           typename traj_t::TrackStateProxy /*trackState*/) {
   throw std::runtime_error{"VoidKalmanCalibrator should not ever execute"};
 }
