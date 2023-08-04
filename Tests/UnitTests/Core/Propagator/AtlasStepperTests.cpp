@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
 BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   Stepper::State state(
       geoCtx, magneticField->makeCache(magCtx),
-      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, std::nullopt,
+      CurvilinearTrackParameters(pos4, unitDir, charge / absMom, cov,
                                  particleHypothesis),
       navDir, stepSize, tolerance);
 

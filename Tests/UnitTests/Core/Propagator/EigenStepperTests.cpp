@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 
   // Test with covariance matrix
   Covariance cov = 8. * Covariance::Identity();
-  ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom,
-                                   std::nullopt, ParticleHypothesis::pion0());
+  ncp = CurvilinearTrackParameters(makeVector4(pos, time), dir, 1 / absMom, cov,
+                                   ParticleHypothesis::pion0());
   esState = EigenStepper<>::State(tgContext, bField->makeCache(mfContext), ncp,
                                   navDir, stepSize);
   BOOST_CHECK_NE(esState.jacToGlobal, BoundToFreeMatrix::Zero());
