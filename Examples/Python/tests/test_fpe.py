@@ -42,7 +42,7 @@ with _src.open() as fh:
         if m is None:
             continue
         (name,) = m.groups()
-        _locs[_name_to_type[name]] = (str(_src), (i+1, i+2))
+        _locs[_name_to_type[name]] = (str(_src), (i + 1, i + 2))
 
 
 class FpeMaker(acts.examples.IAlgorithm):
@@ -193,7 +193,6 @@ def test_fpe_rearm(fpe_type):
 
 
 def test_fpe_masking_single(fpe_type):
-
     trigger = getattr(acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
     def func(context):
