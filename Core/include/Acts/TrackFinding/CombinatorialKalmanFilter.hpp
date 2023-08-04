@@ -583,15 +583,15 @@ class CombinatorialKalmanFilter {
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
-                         currentState.referenceSurface(), state.stepping.navDir,
-                         state.options.maxStepSize);
+                         currentState.referenceSurface(),
+                         state.options.direction, state.options.maxStepSize);
 
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed
       // after smoothing
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), state.stepping.navDir,
+          state.options.direction * stepper.direction(state.stepping),
           &currentState.referenceSurface(), nullptr);
 
       // No Kalman filtering for the starting surface, but still need
