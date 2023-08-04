@@ -91,9 +91,14 @@ jobs:
       - name: Render comment
         if: steps.get-pr-number.outputs.result != 'false'
         run: |
-          pip install Jinja2
           ls -al $GITHUB_WORKSPACE/physmon
-          CI/physmon/generate_comment.py $GITHUB_WORKSPACE/physmon comment.md
+          echo "# 📊: Physics performance monitoring for ${PR_SHA}" >> comment.md
+          echo "[Full contents](${ARTIFACT_URL})" >> comment.md
+          if [ -f "$GITHUB_WORKSPACE/physmon/summary.md" ]; then
+            cat $GITHUB_WORKSPACE/physmon/summary.md >> comment.md
+          else
+            echo "🟥 summary not found!" >> comment.md
+          fi
           cat comment.md
 
       - name: Find Comment
