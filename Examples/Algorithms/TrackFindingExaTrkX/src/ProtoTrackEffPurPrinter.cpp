@@ -20,7 +20,8 @@ ActsExamples::ProtoTrackEffPurPrinter::ProtoTrackEffPurPrinter(
     : IAlgorithm("ProtoTrackEfficencyPrinter", lvl),
       m_cfg(cfg),
       m_effHistogram(bh::make_histogram(bh::axis::regular<>(10, 0.0, 1.0))),
-      m_purHistogram(bh::make_histogram(bh::axis::regular<>(10, 0.0, 1.0))) {
+      m_purHistogram(bh::make_histogram(bh::axis::regular<>(10, 0.0, 1.0))),
+      m_countPerTrackHist(bh::make_histogram(bh::axis::integer<>(1, 5))) {
   m_testProtoTracks.initialize(m_cfg.testProtoTracks);
   m_refProtoTracks.initialize(m_cfg.refProtoTracks);
 }
@@ -54,6 +55,7 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEffPurPrinter::execute(
 
   std::vector<float> testTrackPurities(testTracks.size(), 0.f);
   std::vector<float> trueTrackEfficiencies(truthTracks.size(), 0.f);
+  std::vector<std::size_t> trueTracksPerTestTrack;
 
   {
     // allocate once for memory optimization
@@ -82,6 +84,8 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEffPurPrinter::execute(
             auto bc = std::count(truthTrackIds.begin(), truthTrackIds.end(), b);
             return ac > bc;  // sort many-to-few
           });
+
+      trueTracksPerTestTrack.push_back(truthTrackUniqueIds.size());
 
       // compute metrics
       if (truthTrackUniqueIds[0] == invalid &&
@@ -117,12 +121,14 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEffPurPrinter::execute(
   std::lock_guard<std::mutex>{m_histogramMutex};
   m_effHistogram.fill(trueTrackEfficiencies);
   m_purHistogram.fill(testTrackPurities);
+  m_countPerTrackHist.fill(trueTracksPerTestTrack);
 
   return {};
 }
 
 ActsExamples::ProcessCode ActsExamples::ProtoTrackEffPurPrinter::finalize() {
-  ACTS_INFO("Truth track efficiency histogram:\n" << m_effHistogram);
-  ACTS_INFO("Test track purity histogram:\n" << m_purHistogram);
+  ACTS_INFO("Truth track efficiency:\n" << m_effHistogram);
+  ACTS_INFO("Test track purity:\n" << m_purHistogram);
+  ACTS_INFO("Particles per test track:\n" << m_countPerTrackHist);
   return {};
 }

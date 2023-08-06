@@ -52,6 +52,11 @@ class ProtoTrackEffPurPrinter final : public IAlgorithm {
   mutable Hist m_effHistogram;
   mutable Hist m_purHistogram;
 
+  using CountHist = decltype(boost::histogram::make_histogram(
+      std::declval<boost::histogram::axis::integer<>>()));
+
+  mutable CountHist m_countPerTrackHist;
+
   mutable std::mutex m_histogramMutex;
 };
 

@@ -36,8 +36,8 @@ class ExamplesEdmHook : public Acts::PipelineHook {
  public:
   ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
                   const IndexMultimap<Index>& measHitMap,
-                  const SimHitContainer& truthHits,
-                  const Acts::Logger& logger) : m_logger(logger.clone()) {
+                  const SimHitContainer& truthHits, const Acts::Logger& logger)
+      : m_logger(logger.clone()) {
     // Associate tracks to graph, collect momentum
     std::unordered_map<SimBarcode, std::pair<double, std::vector<std::size_t>>>
         tracks;
