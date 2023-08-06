@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -18,53 +19,84 @@
 #include <torch/torch.h>
 
 using namespace ActsExamples;
+using namespace Acts::UnitLiterals;
 
 namespace {
 
-auto makeHook(const SimSpacePointContainer& spacepoints,
-              const IndexMultimap<Index>& measHitMap,
-              const SimHitContainer& truthHits, const Acts::Logger& logger) {
-  std::unordered_map<SimBarcode, std::pair<double, std::vector<std::size_t>>>
-      tracks;
+class ExamplesEdmHook : public Acts::PipelineHook {
+  constexpr static double m_targetPT = 0.5_GeV;
+  constexpr static std::size_t m_targetSize = 3;
 
-  for (auto i = 0ul; i < spacepoints.size(); ++i) {
-    const auto measId =
-        spacepoints[i].sourceLinks()[0].template get<IndexSourceLink>().index();
+  std::unique_ptr<const Acts::Logger> m_logger;
+  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_truthGraphHook;
+  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_targetGraphHook;
 
-    auto [a, b] = measHitMap.equal_range(measId);
-    for (auto it = a; it != b; ++it) {
-      const auto& hit = *truthHits.nth(it->second);
-      const auto pid = hit.particleId();
-      tracks[pid].first = std::max(tracks[pid].first, hit.momentum4Before()[3]);
-      tracks[pid].second.push_back(i);
+  const Acts::Logger& logger() const { return *m_logger; }
+
+ public:
+  ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
+                  const IndexMultimap<Index>& measHitMap,
+                  const SimHitContainer& truthHits,
+                  const Acts::Logger& logger) {
+    // Associate tracks to graph, collect momentum
+    std::unordered_map<SimBarcode, std::pair<double, std::vector<std::size_t>>>
+        tracks;
+
+    for (auto i = 0ul; i < spacepoints.size(); ++i) {
+      const auto measId = spacepoints[i]
+                              .sourceLinks()[0]
+                              .template get<IndexSourceLink>()
+                              .index();
+
+      auto [a, b] = measHitMap.equal_range(measId);
+      for (auto it = a; it != b; ++it) {
+        const auto& hit = *truthHits.nth(it->second);
+        const auto pid = hit.particleId();
+        const auto pT =
+            std::hypot(hit.momentum4Before()[0], hit.momentum4Before()[1]);
+
+        // The maximum hit momentum should be close to the particle momentum
+        tracks[pid].first = std::max(tracks[pid].first, pT);
+        tracks[pid].second.push_back(i);
+      }
     }
+
+    // Collect edges for truth graph and target graph
+    std::vector<int64_t> truthGraph;
+    std::vector<int64_t> targetGraph;
+
+    for (auto& [_, v] : tracks) {
+      auto& [mom, track] = v;
+      std::sort(track.begin(), track.end());
+
+      for (auto i = 0ul; i < track.size() - 1; ++i) {
+        truthGraph.push_back(track[i]);
+        truthGraph.push_back(track[i + 1]);
+
+        if (mom > m_targetPT && track.size() >= m_targetSize) {
+          targetGraph.push_back(track[i]);
+          targetGraph.push_back(track[i + 1]);
+        }
+      }
+    }
+
+    m_truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
+        truthGraph, logger.clone());
+    m_targetGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
+        targetGraph, logger.clone());
   }
 
-  // for(const auto &[pid, track] : tracks) {
-  //     const auto &[m, t] = track;
-  //     ACTS_VERBOSE(pid << ": " << t);
-  // }
-  // for(auto it=tracks.begin(); it != tracks.end();) {
-  //     if( (it->second.first < 0.5) && (it->second.second.size() < 3) ) {
-  //         it = tracks.erase(it);
-  //     } else {
-  //         ++it;
-  //     }
-  // }
+  ~ExamplesEdmHook(){};
 
-  std::vector<int64_t> truthGraph;
-  for (auto& [_, v] : tracks) {
-    auto& [mom, track] = v;
-    std::sort(track.begin(), track.end());
-    for (auto i = 0ul; i < track.size() - 1; ++i) {
-      truthGraph.push_back(track[i]);
-      truthGraph.push_back(track[i + 1]);
-    }
+  void operator()(const std::any& nodes, const std::any& edges) const override {
+    ACTS_INFO("Metrics for total graph:")
+    (*m_truthGraphHook)(nodes, edges);
+    ACTS_INFO("Metrics for target graph (pT > "
+              << m_targetPT / Acts::UnitConstants::GeV
+              << ", #hits >= " << m_targetSize << "):");
+    (*m_truthGraphHook)(nodes, edges);
   }
-
-  return std::make_unique<Acts::TorchTruthGraphMetricsHook>(truthGraph,
-                                                            logger.clone());
-}
+};
 
 }  // namespace
 
@@ -133,8 +165,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
   auto hook = std::make_unique<Acts::PipelineHook>();
   if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
-    hook = makeHook(spacepoints, m_inputMeasurementMap(ctx),
-                    m_inputSimHits(ctx), logger());
+    hook = std::make_unique<ExamplesEdmHook>(
+        spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx), logger());
   }
 
   // Convert Input data to a list of size [num_measurements x
