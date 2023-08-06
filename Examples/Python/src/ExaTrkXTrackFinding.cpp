@@ -19,6 +19,7 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/ProtoTrackEffPurPrinter.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include <memory>
@@ -212,6 +213,10 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("spacepoints"),
                  py::arg("hook") = Acts::PipelineHook{});
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ProtoTrackEffPurPrinter, mex,
+                                "ProtoTrackEffPurPrinter", testProtoTracks,
+                                refProtoTracks);
 }
 
 }  // namespace Acts::Python

@@ -35,7 +35,6 @@
 #include "ActsExamples/TrackFindingX/MeasurementMapSelectorAlgorithm.hpp"
 // #include "ActsExamples/TrackFindingX/ParameterFromTrajectoryAlgorithm.hpp"
 // #include "ActsExamples/TrackFindingX/SourceLinkSelectorAlgorithm.hpp"
-#include "ActsExamples/TrackFindingX/ProtoTrackEfficiencyPrinter.hpp"
 #include "ActsExamples/TrackFindingX/TrackFindingFromPrototrackAlgorithm.hpp"
 #include "ActsExamples/Utilities/MakeMeasurementParticlesMap.hpp"
 
@@ -384,10 +383,6 @@ void addTrackFinding(Context& ctx) {
         ActsExamples::MeasurementMapSelectorAlgorithm, mex,
         "MeasurementMapSelectorAlgorithm", inputMeasurementParticleMap,
         inputSourceLinks, outputMeasurementParticleMap, geometrySelection);
-
-    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ProtoTrackEfficiencyPrinter,
-                                  mex, "ProtoTrackEfficiencyPrinter",
-                                  testProtoTracks, refProtoTracks);
 
     ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::MakeMeasurementParticlesMap,
                                   mex, "MakeMeasurementParticlesMap",
