@@ -35,7 +35,6 @@ struct StepperState {
   Vector3 pos, dir;
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
-  Direction navDir = Direction::Forward;
 };
 
 /// @brief Simplified navigator
@@ -46,6 +45,7 @@ struct NaivgatorState {
 /// @brief Simplified propgator state
 struct State {
   struct {
+    Direction direction = Direction::Forward;
   } options;
 
   StepperState stepping;
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.p = 8.;
   state.stepping.q = 9.;
   state.stepping.covTransport = true;
-  state.stepping.navDir = Direction::Backward;
+  state.options.direction = Direction::Backward;
   state.navigation.currentVolume = volume.get();
 
   Stepper stepper;
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
                     state.stepping.particleHypothesis.absPdg());
   BOOST_CHECK_EQUAL(volMatInt.performCovarianceTransport,
                     state.stepping.covTransport);
-  BOOST_CHECK_EQUAL(volMatInt.navDir, state.stepping.navDir);
+  BOOST_CHECK_EQUAL(volMatInt.navDir, state.options.direction);
 
   // Evaluate the material
   bool result = volMatInt.evaluateMaterialSlab(state, navigator);

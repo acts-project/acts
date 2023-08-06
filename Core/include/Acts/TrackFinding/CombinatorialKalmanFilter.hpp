@@ -547,7 +547,7 @@ class CombinatorialKalmanFilter {
                 result.iSmoothed++;
                 // Reverse navigation direction to start targeting for the rest
                 // tracks
-                state.stepping.navDir = state.stepping.navDir.invert();
+                state.options.direction = state.options.direction.invert();
 
                 // TODO this is kinda silly but I dont see a better solution
                 // with the current CKF control flow
@@ -583,7 +583,7 @@ class CombinatorialKalmanFilter {
       // Update the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
-                         currentState.referenceSurface(), state.stepping.navDir,
+                         currentState.referenceSurface(),
                          state.options.maxStepSize);
 
       // Reset the navigation state
@@ -591,7 +591,7 @@ class CombinatorialKalmanFilter {
       // after smoothing
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), state.stepping.navDir,
+          stepper.direction(state.stepping), state.options.direction,
           &currentState.referenceSurface(), nullptr);
 
       // No Kalman filtering for the starting surface, but still need
@@ -1188,7 +1188,7 @@ class CombinatorialKalmanFilter {
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
         return smoothingTargetSurface->intersect(
             state.geoContext, freeVector.segment<3>(eFreePos0),
-            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
+            state.options.direction * freeVector.segment<3>(eFreeDir0), true,
             state.options.targetTolerance);
       };
 
@@ -1240,7 +1240,7 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir = state.stepping.navDir.invert();
+        state.options.direction = state.options.direction.invert();
       }
       // Reinitialize the stepping jacobian
       state.stepping.jacobian = BoundMatrix::Identity();

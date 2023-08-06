@@ -69,7 +69,7 @@ struct VolumeMaterialInteraction {
         mass(stepper.particleHypothesis(state.stepping).mass()),
         absPdg(stepper.particleHypothesis(state.stepping).absPdg()),
         performCovarianceTransport(state.stepping.covTransport),
-        navDir(state.stepping.navDir) {}
+        navDir(state.options.direction) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
