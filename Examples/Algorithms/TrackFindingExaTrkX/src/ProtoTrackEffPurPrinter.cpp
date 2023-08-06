@@ -96,8 +96,12 @@ ActsExamples::ProcessCode ActsExamples::ProtoTrackEffPurPrinter::execute(
 
         const auto &truthTrack = truthTracks[truthId];
 
-        const float eff = static_cast<float>(nhits) / truthTrack.size();
-        const float pur = static_cast<float>(nhits) / testTrack.size();
+        // Ensure eff,pur < 1.0, so the binning in the histogram is nice
+        float eff = static_cast<float>(nhits) / truthTrack.size();
+        eff = std::min(eff, 0.9999f);
+
+        float pur = static_cast<float>(nhits) / testTrack.size();
+        pur = std::min(pur, 0.9999f);
 
         trueTrackEfficiencies[truthId] =
             std::max(trueTrackEfficiencies[truthId], eff);

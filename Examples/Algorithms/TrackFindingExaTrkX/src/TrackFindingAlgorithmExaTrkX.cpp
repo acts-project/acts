@@ -37,7 +37,7 @@ class ExamplesEdmHook : public Acts::PipelineHook {
   ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
                   const IndexMultimap<Index>& measHitMap,
                   const SimHitContainer& truthHits,
-                  const Acts::Logger& logger) {
+                  const Acts::Logger& logger) : m_logger(logger.clone()) {
     // Associate tracks to graph, collect momentum
     std::unordered_map<SimBarcode, std::pair<double, std::vector<std::size_t>>>
         tracks;
@@ -89,7 +89,7 @@ class ExamplesEdmHook : public Acts::PipelineHook {
   ~ExamplesEdmHook(){};
 
   void operator()(const std::any& nodes, const std::any& edges) const override {
-    ACTS_INFO("Metrics for total graph:")
+    ACTS_INFO("Metrics for total graph:");
     (*m_truthGraphHook)(nodes, edges);
     ACTS_INFO("Metrics for target graph (pT > "
               << m_targetPT / Acts::UnitConstants::GeV
