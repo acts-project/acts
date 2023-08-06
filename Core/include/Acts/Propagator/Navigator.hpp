@@ -800,7 +800,7 @@ class Navigator {
         auto protoNavSurfaces =
             state.navigation.currentVolume->compatibleSurfacesFromHierarchy(
                 state.geoContext, stepper.position(state.stepping),
-                state.stepping.navDir * stepper.direction(state.stepping),
+                state.options.direction * stepper.direction(state.stepping),
                 opening_angle, navOpts);
         if (!protoNavSurfaces.empty()) {
           // did we find any surfaces?
@@ -960,7 +960,7 @@ class Navigator {
       state.navigation.navBoundaries =
           state.navigation.currentVolume->compatibleBoundaries(
               state.geoContext, stepper.position(state.stepping),
-              state.stepping.navDir * stepper.direction(state.stepping),
+              state.options.direction * stepper.direction(state.stepping),
               navOpts, logger());
       // The number of boundary candidates
       if (logger().doPrint(Logging::VERBOSE)) {
@@ -1157,7 +1157,7 @@ class Navigator {
     // get the surfaces
     state.navigation.navSurfaces = navLayer->compatibleSurfaces(
         state.geoContext, stepper.position(state.stepping),
-        state.stepping.navDir * stepper.direction(state.stepping), navOpts);
+        state.options.direction * stepper.direction(state.stepping), navOpts);
     // the number of layer candidates
     if (!state.navigation.navSurfaces.empty()) {
       if (logger().doPrint(Logging::VERBOSE)) {
@@ -1225,7 +1225,8 @@ class Navigator {
     state.navigation.navLayers =
         state.navigation.currentVolume->compatibleLayers(
             state.geoContext, stepper.position(state.stepping),
-            state.stepping.navDir * stepper.direction(state.stepping), navOpts);
+            state.options.direction * stepper.direction(state.stepping),
+            navOpts);
 
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {

@@ -240,8 +240,6 @@ struct PropagatorState {
     const Acts::Logger& logger = Acts::getDummyLogger();
 
     ActsScalar targetTolerance = s_onSurfaceTolerance;
-
-    Direction direction = Direction::Forward;
   };
 
   /// Navigation cache: the start surface

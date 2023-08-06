@@ -34,7 +34,7 @@ def runTruthTrackingKalman(
     )
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=100, numThreads=1, logLevel=acts.logging.INFO, trackFpes=False,
     )
 
     rnd = acts.examples.RandomNumbers()
@@ -97,6 +97,7 @@ def runTruthTrackingKalman(
         field,
         directNavigation,
         reverseFilteringMomThreshold,
+        logLevel=acts.logging.VERBOSE,
     )
 
     # Output
@@ -163,4 +164,5 @@ if "__main__" == __name__:
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
         outputDir=Path.cwd(),
+        reverseFilteringMomThreshold=1*u.TeV,
     ).run()

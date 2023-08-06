@@ -591,11 +591,7 @@ class CombinatorialKalmanFilter {
       // after smoothing
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
-<<<<<<< HEAD
-          state.stepping.navDir * stepper.direction(state.stepping),
-=======
-          stepper.direction(state.stepping), state.options.direction,
->>>>>>> 3f4cbabb95ee953f37a0e50ed5c2b4ea73ad5d24
+          state.options.direction * stepper.direction(state.stepping),
           &currentState.referenceSurface(), nullptr);
 
       // No Kalman filtering for the starting surface, but still need
