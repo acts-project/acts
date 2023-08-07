@@ -551,7 +551,7 @@ class Navigator {
         auto boundary = state.navigation.navBoundary().object;
         state.navigation.currentVolume = boundary->attachedVolume(
             state.geoContext, stepper.position(state.stepping),
-            stepper.direction(state.stepping), state.stepping.navDir);
+            stepper.direction(state.stepping), state.options.direction);
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           ACTS_VERBOSE(
@@ -622,9 +622,9 @@ class Navigator {
     // Check if we are at a surface
     // If we are on the surface pointed at by the index, we can make
     // it the current one to pass it to the other actors
-    auto surfaceStatus =
-        stepper.updateSurfaceStatus(state.stepping, *surface, true, logger(),
-                                    state.options.targetTolerance);
+    auto surfaceStatus = stepper.updateSurfaceStatus(
+        state.stepping, *surface, state.options.direction, true,
+        state.options.targetTolerance, logger());
     if (surfaceStatus == Intersection3D::Status::onSurface) {
       ACTS_VERBOSE(volInfo(state)
                    << "Status Surface successfully hit, storing it.");
@@ -713,9 +713,9 @@ class Navigator {
           break;
         }
       }
-      auto surfaceStatus =
-          stepper.updateSurfaceStatus(state.stepping, *surface, boundaryCheck,
-                                      logger(), state.options.targetTolerance);
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, *surface, state.options.direction, boundaryCheck,
+          state.options.targetTolerance, logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Surface reachable, step size updated to "
@@ -787,7 +787,7 @@ class Navigator {
       if (state.navigation.currentVolume->hasBoundingVolumeHierarchy()) {
         // has hierarchy, use that, skip layer resolution
         NavigationOptions<Surface> navOpts(
-            state.stepping.navDir, true, m_cfg.resolveSensitive,
+            state.options.direction, true, m_cfg.resolveSensitive,
             m_cfg.resolveMaterial, m_cfg.resolvePassive, nullptr,
             state.navigation.targetSurface);
         navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
@@ -806,7 +806,7 @@ class Navigator {
           // ~ non-zero field
           double ir = (dir.cross(B).norm()) * q / mom;
           double s;
-          if (state.stepping.navDir == Direction::Forward) {
+          if (state.options.direction == Direction::Forward) {
             s = state.stepping.stepSize.max();
           } else {
             s = state.stepping.stepSize.min();
@@ -878,9 +878,9 @@ class Navigator {
         }
       }
       // Try to step towards it
-      auto layerStatus =
-          stepper.updateSurfaceStatus(state.stepping, *layerSurface, true,
-                                      logger(), state.options.targetTolerance);
+      auto layerStatus = stepper.updateSurfaceStatus(
+          state.stepping, *layerSurface, state.options.direction, true,
+          state.options.targetTolerance, logger());
       if (layerStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state) << "Layer reachable, step size updated to "
                                     << stepper.outputStepSize(state.stepping));
@@ -967,7 +967,7 @@ class Navigator {
     // Helper function to find boundaries
     auto findBoundaries = [&]() -> bool {
       // The navigation options
-      NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+      NavigationOptions<Surface> navOpts(state.options.direction, true);
       navOpts.pathLimit =
           stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
       navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
@@ -1020,9 +1020,9 @@ class Navigator {
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundary().representation;
       // Step towards the boundary surfrace
-      auto boundaryStatus =
-          stepper.updateSurfaceStatus(state.stepping, *boundarySurface, true,
-                                      logger(), state.options.targetTolerance);
+      auto boundaryStatus = stepper.updateSurfaceStatus(
+          state.stepping, *boundarySurface, state.options.direction, true,
+          state.options.targetTolerance, logger());
       if (boundaryStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << "Boundary reachable, step size updated to "
@@ -1103,7 +1103,7 @@ class Navigator {
       // target volume and layer search through global search
       auto targetIntersection = state.navigation.targetSurface->intersect(
           state.geoContext, stepper.position(state.stepping),
-          state.stepping.navDir * stepper.direction(state.stepping), false,
+          state.options.direction * stepper.direction(state.stepping), false,
           state.options.targetTolerance);
       if (targetIntersection) {
         ACTS_VERBOSE(volInfo(state)
@@ -1152,7 +1152,7 @@ class Navigator {
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
     // Use navigation parameters and NavigationOptions
     NavigationOptions<Surface> navOpts(
-        state.stepping.navDir, true, m_cfg.resolveSensitive,
+        state.options.direction, true, m_cfg.resolveSensitive,
         m_cfg.resolveMaterial, m_cfg.resolvePassive, startSurface,
         state.navigation.targetSurface);
 
@@ -1233,7 +1233,7 @@ class Navigator {
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
     NavigationOptions<Layer> navOpts(
-        state.stepping.navDir, m_cfg.boundaryCheckLayerResolving,
+        state.options.direction, m_cfg.boundaryCheckLayerResolving,
         m_cfg.resolveSensitive, m_cfg.resolveMaterial, m_cfg.resolvePassive,
         startLayer, nullptr);
     // Set also the target surface
@@ -1319,8 +1319,9 @@ class Navigator {
         return true;
       }
       auto targetStatus = stepper.updateSurfaceStatus(
-          state.stepping, *state.navigation.targetSurface, true, logger(),
-          state.options.targetTolerance);
+          state.stepping, *state.navigation.targetSurface,
+          state.options.direction, true, state.options.targetTolerance,
+          logger());
       // the only advance could have been to the target
       if (targetStatus == Intersection3D::Status::onSurface) {
         // set the target surface

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
@@ -17,7 +18,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
-
 namespace detail {
 
 /// Update surface status - Single component
@@ -33,14 +33,14 @@ namespace detail {
 template <typename stepper_t>
 Acts::Intersection3D::Status updateSingleSurfaceStatus(
     const stepper_t& stepper, typename stepper_t::State& state,
-    const Surface& surface, const BoundaryCheck& bcheck, const Logger& logger,
-    ActsScalar surfaceTolerance) {
+    const Surface& surface, Direction navDir, const BoundaryCheck& bcheck,
+    ActsScalar surfaceTolerance, const Logger& logger) {
   ACTS_VERBOSE(
       "Update single surface status for surface: " << surface.geometryId());
 
   auto sIntersection = surface.intersect(
       state.geoContext, stepper.position(state),
-      state.navDir * stepper.direction(state), bcheck, surfaceTolerance);
+      navDir * stepper.direction(state), bcheck, surfaceTolerance);
 
   // The intersection is on surface already
   if (sIntersection.intersection.status == Intersection3D::Status::onSurface) {
