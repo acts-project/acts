@@ -1,59 +1,22 @@
-import multiprocessing
 from pathlib import Path
-import sys
-import os
-import tempfile
-import shutil
 from typing import Dict
-import warnings
-import pytest_check as check
+import shutil
+import tempfile
+import os
+import multiprocessing
 from collections import namedtuple
 
-
-sys.path += [
-    str(Path(__file__).parent.parent.parent.parent / "Examples/Scripts/Python/"),
-    str(Path(__file__).parent),
-]
-
+import pytest
 
 import helpers
 import helpers.hash_root
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
-import pytest
-
 import acts
 import acts.examples
 
-try:
-    import ROOT
-
-    ROOT.gSystem.ResetSignals()
-except ImportError:
-    pass
-
-try:
-    if acts.logging.getFailureThreshold() != acts.logging.WARNING:
-        acts.logging.setFailureThreshold(acts.logging.WARNING)
-except RuntimeError:
-    # Repackage with different error string
-    errtype = (
-        "negative"
-        if acts.logging.getFailureThreshold() < acts.logging.WARNING
-        else "positive"
-    )
-    warnings.warn(
-        "Runtime log failure threshold could not be set. "
-        "Compile-time value is probably set via CMake, i.e. "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
-        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
-        f"The pytest test-suite can produce false-{errtype} results in this configuration"
-    )
-
-
 u = acts.UnitConstants
-
 
 class RootHashAssertionError(AssertionError):
     def __init__(
