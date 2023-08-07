@@ -38,32 +38,38 @@ with tempfile.TemporaryDirectory() as temp:
         Path(__file__).parent.parent / "fpe_masks.yml"
     ) + [
         acts.examples.Sequencer.FpeMask(
-            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp:172",
+            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
+            (172, 173),
             acts.FpeType.FLTINV,
             1,
         ),
         acts.examples.Sequencer.FpeMask(
-            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp:172",
+            "Examples/Algorithms/Fatras/src/FatrasSimulation.cpp",
+            (172, 173),
             acts.FpeType.FLTOVF,
             1,
         ),
         acts.examples.Sequencer.FpeMask(
-            "Examples/Io/Root/src/RootTrajectorySummaryWriter.cpp:371",
+            "Examples/Io/Root/src/RootTrajectorySummaryWriter.cpp",
+            (371, 372),
             acts.FpeType.FLTINV,
             1,
         ),
         acts.examples.Sequencer.FpeMask(
-            "Core/src/Utilities/AnnealingUtility.cpp:38",
+            "Core/src/Utilities/AnnealingUtility.cpp",
+            (38, 39),
             acts.FpeType.FLTUND,
             1,
         ),
         acts.examples.Sequencer.FpeMask(
-            "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp:110",
+            "Fatras/include/ActsFatras/Kernel/detail/SimulationActor.hpp",
+            (110, 111),
             acts.FpeType.FLTINV,
             1,
         ),
         acts.examples.Sequencer.FpeMask(
-            "Fatras/include/ActsFatras/Kernel/Simulation.hpp:98",
+            "Fatras/include/ActsFatras/Kernel/Simulation.hpp",
+            (98, 99),
             acts.FpeType.FLTOVF,
             1,
         ),
