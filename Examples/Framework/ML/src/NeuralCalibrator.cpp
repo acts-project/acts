@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SourceLink.hpp"
 #include <ActsExamples/EventData/NeuralCalibrator.hpp>
 
 #include <TFile.h>
@@ -67,16 +68,16 @@ ActsExamples::NeuralCalibrator::NeuralCalibrator(
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
-    const Acts::GeometryContext& gctx,
+    const Acts::GeometryContext& gctx, const Acts::SourceLink& sourceLink,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
-  Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
-  const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
-  assert((sourceLink.index() < measurements.size()) and
+  trackState.setUncalibratedSourceLink(sourceLink);
+  const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
+  assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
   if (std::find(m_volumeIds.begin(), m_volumeIds.end(),
-                sourceLink.geometryId().volume()) == m_volumeIds.end()) {
+                idxSourceLink.geometryId().volume()) == m_volumeIds.end()) {
     m_fallback.calibrate(measurements, clusters, gctx, trackState);
     return;
   }
@@ -88,73 +89,72 @@ void ActsExamples::NeuralCalibrator::calibrate(
   size_t matSize0 = 7u;
   size_t matSize1 = 7u;
   size_t iInput = ::detail::fillChargeMatrix(
-      input, (*clusters)[sourceLink.index()], matSize0, matSize1);
+      input, (*clusters)[idxSourceLink.index()], matSize0, matSize1);
 
-  input[iInput++] = sourceLink.geometryId().volume();
-  input[iInput++] = sourceLink.geometryId().layer();
+  input[iInput++] = idxSourceLink.geometryId().volume();
+  input[iInput++] = idxSourceLink.geometryId().layer();
   input[iInput++] = trackState.parameters()[Acts::eBoundPhi];
   input[iInput++] = trackState.parameters()[Acts::eBoundTheta];
 
   std::visit(
       [&](const auto& measurement) {
-        auto E = measurement.expander();
-        auto P = measurement.projector();
-        Acts::ActsVector<Acts::eBoundSize> fpar = E * measurement.parameters();
-        Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
-            E * measurement.covariance() * E.transpose();
+    auto E = measurement.expander();
+    auto P = measurement.projector();
+    Acts::ActsVector<Acts::eBoundSize> fpar = E * measurement.parameters();
+    Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
+        E * measurement.covariance() * E.transpose();
 
-        input[iInput++] = fpar[Acts::eBoundLoc0];
-        input[iInput++] = fpar[Acts::eBoundLoc1];
-        input[iInput++] = fcov(Acts::eBoundLoc0, Acts::eBoundLoc0);
-        input[iInput++] = fcov(Acts::eBoundLoc1, Acts::eBoundLoc1);
-        if (iInput != m_nInputs) {
-          throw std::runtime_error("Expected input size of " +
-                                   std::to_string(m_nInputs) +
-                                   ", got: " + std::to_string(iInput));
-        }
+    input[iInput++] = fpar[Acts::eBoundLoc0];
+    input[iInput++] = fpar[Acts::eBoundLoc1];
+    input[iInput++] = fcov(Acts::eBoundLoc0, Acts::eBoundLoc0);
+    input[iInput++] = fcov(Acts::eBoundLoc1, Acts::eBoundLoc1);
+    if (iInput != m_nInputs) {
+      throw std::runtime_error("Expected input size of " +
+                               std::to_string(m_nInputs) +
+                               ", got: " + std::to_string(iInput));
+    }
 
-        // Input is a single row, hence .front()
-        std::vector<float> output =
-            m_model.runONNXInference(inputBatch).front();
-        // Assuming 2-D measurements, the expected params structure is:
-        // [           0,    nComponent[ --> priors
-        // [  nComponent,  3*nComponent[ --> means
-        // [3*nComponent,  5*nComponent[ --> variances
-        size_t nParams = 5 * m_nComponents;
-        if (output.size() != nParams) {
-          throw std::runtime_error(
-              "Got output vector of size " + std::to_string(output.size()) +
-              ", expected size " + std::to_string(nParams));
-        }
+    // Input is a single row, hence .front()
+    std::vector<float> output = m_model.runONNXInference(inputBatch).front();
+    // Assuming 2-D measurements, the expected params structure is:
+    // [           0,    nComponent[ --> priors
+    // [  nComponent,  3*nComponent[ --> means
+    // [3*nComponent,  5*nComponent[ --> variances
+    size_t nParams = 5 * m_nComponents;
+    if (output.size() != nParams) {
+      throw std::runtime_error("Got output vector of size " +
+                               std::to_string(output.size()) +
+                               ", expected size " + std::to_string(nParams));
+    }
 
-        // Most probable value computation of mixture density
-        size_t iMax = 0;
-        if (m_nComponents > 1) {
-          iMax = std::distance(
-              output.begin(),
-              std::max_element(output.begin(), output.begin() + m_nComponents));
-        }
-        size_t iLoc0 = m_nComponents + iMax * 2;
-        size_t iVar0 = 3 * m_nComponents + iMax * 2;
+    // Most probable value computation of mixture density
+    size_t iMax = 0;
+    if (m_nComponents > 1) {
+      iMax = std::distance(
+          output.begin(),
+          std::max_element(output.begin(), output.begin() + m_nComponents));
+    }
+    size_t iLoc0 = m_nComponents + iMax * 2;
+    size_t iVar0 = 3 * m_nComponents + iMax * 2;
 
-        fpar[Acts::eBoundLoc0] = output[iLoc0];
-        fpar[Acts::eBoundLoc1] = output[iLoc0 + 1];
-        fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = output[iVar0];
-        fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = output[iVar0 + 1];
+    fpar[Acts::eBoundLoc0] = output[iLoc0];
+    fpar[Acts::eBoundLoc1] = output[iLoc0 + 1];
+    fcov(Acts::eBoundLoc0, Acts::eBoundLoc0) = output[iVar0];
+    fcov(Acts::eBoundLoc1, Acts::eBoundLoc1) = output[iVar0 + 1];
 
-        constexpr size_t kSize =
-            std::remove_reference_t<decltype(measurement)>::size();
-        std::array<Acts::BoundIndices, kSize> indices = measurement.indices();
-        Acts::ActsVector<kSize> cpar = P * fpar;
-        Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
+    constexpr size_t kSize =
+        std::remove_reference_t<decltype(measurement)>::size();
+    std::array<Acts::BoundIndices, kSize> indices = measurement.indices();
+    Acts::ActsVector<kSize> cpar = P * fpar;
+    Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
 
-        Acts::SourceLink sl{sourceLink.geometryId(), sourceLink};
+    Acts::SourceLink sl{idxSourceLink};
 
-        Acts::Measurement<Acts::BoundIndices, kSize> calibrated(
-            std::move(sl), indices, cpar, ccov);
+    Acts::Measurement<Acts::BoundIndices, kSize> calibrated(
+        std::move(sl), indices, cpar, ccov);
 
-        trackState.allocateCalibrated(calibrated.size());
-        trackState.setCalibrated(calibrated);
+    trackState.allocateCalibrated(calibrated.size());
+    trackState.setCalibrated(calibrated);
       },
-      (measurements)[sourceLink.index()]);
+      (measurements)idxSsourceLink.index()]);
 }
