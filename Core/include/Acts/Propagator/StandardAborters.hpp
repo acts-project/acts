@@ -145,7 +145,7 @@ struct SurfaceReached {
 
     const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
-        state.stepping.navDir * stepper.direction(state.stepping), true,
+        state.options.direction * stepper.direction(state.stepping), true,
         tolerance);
     const auto closest = sIntersection.closest();
 

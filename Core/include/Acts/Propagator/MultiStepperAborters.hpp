@@ -82,7 +82,7 @@ struct MultiStepperSurfaceReached {
           targetSurface
               .intersect(
                   state.geoContext, stepper.position(state.stepping),
-                  state.stepping.navDir * stepper.direction(state.stepping),
+                  state.options.direction * stepper.direction(state.stepping),
                   true, averageOnSurfaceTolerance)
               .closest();
 
