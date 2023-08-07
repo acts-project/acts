@@ -579,36 +579,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     /*
      * Search the trees for points that lie in the given search range.
      */
-    tree.rangeSearchMapDiscard(
-        bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
-                         const typename tree_t::coordinate_t &,
-                         const typename tree_t::value_t &bottom) {
-          if (validTuple(options, *bottom, middle, false)) {
-            bottom_lh_v.push_back(bottom);
-          }
-        });
-  }
-
-  /*
-   * Perform the same search for candidate bottom spacepoints, but for
-   * monotonically decreasing z tracks.
-   */
-  if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
-    tree.rangeSearchMapDiscard(
-        bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
-                         const typename tree_t::coordinate_t &,
-                         const typename tree_t::value_t &bottom) {
-          if (validTuple(options, middle, *bottom, true)) {
-            bottom_hl_v.push_back(bottom);
-          }
-        });
-  }
-
-  /*
-   * Next, we perform a search for top candidates in increasing z tracks,
-   * which only makes sense if we found any bottom candidates.
-   */
-  if (!bottom_lh_v.empty()) {
     tree.rangeSearchMapDiscard(top_lh_r,
                                [this, &options, &middle, &top_lh_v](
                                    const typename tree_t::coordinate_t &,
@@ -620,9 +590,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   }
 
   /*
-   * And repeat for the top spacepoints for decreasing z tracks!
+   * Perform the same search for candidate bottom spacepoints, but for
+   * monotonically decreasing z tracks.
    */
-  if (!bottom_hl_v.empty()) {
+  if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
     tree.rangeSearchMapDiscard(top_hl_r,
                                [this, &options, &middle, &top_hl_v](
                                    const typename tree_t::coordinate_t &,
@@ -633,8 +604,61 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                });
   }
 
-  // TODO: add seed confirmation
+  // apply cut on the number of top SP if seedConfirmation is true
   SeedFilterState seedFilterState;
+  bool search_bot_hl = true;
+  bool search_bot_lh = true;
+  if (m_config.seedConfirmation) {
+    // check if middle SP is in the central or forward region
+    SeedConfirmationRangeConfig seedConfRange =
+        (middle.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         middle.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP is
+    // in the central or forward region
+    seedFilterState.nTopSeedConf = middle.radius() > seedConfRange.rMaxSeedConf
+                                       ? seedConfRange.nTopForLargeR
+                                       : seedConfRange.nTopForSmallR;
+    // set max bottom radius for seed confirmation
+    seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+    // continue if number of top SPs is smaller than minimum
+    if (top_lh_v.size() < seedFilterState.nTopSeedConf) {
+      search_bot_lh = false;
+    }
+    if (top_hl_v.size() < seedFilterState.nTopSeedConf) {
+      search_bot_hl = false;
+    }
+  }
+
+  /*
+   * Next, we perform a search for bottom candidates in increasing z tracks,
+   * which only makes sense if we found any bottom candidates.
+   */
+  if (!top_lh_v.empty() and search_bot_lh) {
+    tree.rangeSearchMapDiscard(
+        bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
+                         const typename tree_t::coordinate_t &,
+                         const typename tree_t::value_t &bottom) {
+          if (validTuple(options, *bottom, middle, false)) {
+            bottom_lh_v.push_back(bottom);
+          }
+        });
+  }
+
+  /*
+   * And repeat for the top spacepoints for decreasing z tracks!
+   */
+  if (!top_hl_v.empty() and search_bot_hl) {
+    tree.rangeSearchMapDiscard(
+        bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
+                         const typename tree_t::coordinate_t &,
+                         const typename tree_t::value_t &bottom) {
+          if (validTuple(options, middle, *bottom, true)) {
+            bottom_hl_v.push_back(bottom);
+          }
+        });
+  }
 
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
@@ -653,9 +677,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(
-      spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
-      std::back_inserter(out_cont));
+  if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or
+      (!bottom_hl_v.empty() && !top_hl_v.empty())) {
+    m_config.seedFilter->filterSeeds_1SpFixed(
+        spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
+        std::back_inserter(out_cont));
+  }
 }
 
 template <typename external_spacepoint_t>
