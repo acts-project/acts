@@ -14,11 +14,10 @@ histograms:
     min: -0.0005
     max: 0.0005
 
-  # fixed mu=50
   "^n.*$":
-    nbins: 50
+    nbins: 250
     min: 0
-    max: 51
+    max: 251
 
   "truthX|truthY|recoX|recoY":
     nbins: 100
