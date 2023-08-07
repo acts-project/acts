@@ -69,7 +69,7 @@ with tempfile.TemporaryDirectory() as temp:
         ),
     ]
     s = acts.examples.Sequencer(
-        events=3,
+        events=1, #TODO set back to 3
         numThreads=-1,
         logLevel=acts.logging.INFO,
         fpeMasks=fpeMasks,
@@ -85,7 +85,7 @@ with tempfile.TemporaryDirectory() as temp:
     addPythia8(
         s,
         hardProcess=["Top:qqbar2ttbar=on"],
-        npileup=200,
+        npileup=1, #TODO: set back to 200
         vtxGen=acts.examples.GaussianVertexGenerator(
             mean=acts.Vector4(0, 0, 0, 0),
             stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
@@ -154,6 +154,7 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
+        acts.seeder.AdaptiveGridSeeder,
         associatedParticles=None,
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",

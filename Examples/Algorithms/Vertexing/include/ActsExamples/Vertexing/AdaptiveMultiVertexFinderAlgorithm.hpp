@@ -17,6 +17,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
@@ -64,6 +65,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   using VertexCollection =
       std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
 
+  enum SeedFinder {GaussianSeeder, AdaptiveGridSeeder};
+
   struct Config {
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
@@ -73,6 +76,9 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
+    /// String describing which vertex seed finder we want to use
+    SeedFinder seedFinder;
+    //std::shared_ptr<SeedFinder> seedFinder;
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };

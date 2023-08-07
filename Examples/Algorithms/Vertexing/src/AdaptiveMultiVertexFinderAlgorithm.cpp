@@ -60,6 +60,13 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
+  if (m_cfg.seedFinder == GaussianSeeder) {
+    std::cout << "\nGaussian\n";
+  }
+  else if (m_cfg.seedFinder == AdaptiveGridSeeder) {
+    std::cout << "\nGrid\n";
+  }
+
   // Set up the propagator
   auto propagator = std::make_shared<Propagator>(stepper);
 
