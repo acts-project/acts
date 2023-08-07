@@ -195,8 +195,10 @@ auto gaussianMixtureMeanCov(const components_t components,
 
   std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
 
+  // MARK: fpeMaskBegin(FLTUND, 1, #2347)
   const auto cov =
       gaussianMixtureCov(components, mean, sumOfWeights, projector, angleDesc);
+  // MARK: fpeMaskEnd(FLTUND)
 
   return RetType{mean, cov};
 }
