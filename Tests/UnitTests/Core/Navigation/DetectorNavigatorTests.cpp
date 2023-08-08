@@ -19,8 +19,8 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Navigation/DetectorNavigator.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
-#include "Acts/Navigation/NextNavigator.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
@@ -44,7 +44,7 @@ Acts::MagneticFieldContext mfContext;
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
-BOOST_AUTO_TEST_CASE(NextNavigator) {
+BOOST_AUTO_TEST_CASE(DetectorNavigator) {
   auto innerVolume = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalAndSubPortalGenerator(), tgContext,
       "Inner Volume", Acts::Transform3::Identity(),
@@ -73,19 +73,19 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
   auto bField = std::make_shared<Acts::ConstantBField>(
       Acts::Vector3(0, 0, 2 * Acts::UnitConstants::T));
 
-  Acts::Experimental::NextNavigator::Config navCfg;
+  Acts::Experimental::DetectorNavigator::Config navCfg;
   navCfg.detector = detector.get();
 
   auto stepper = Acts::EigenStepper<>(bField);
-  auto navigator = Acts::Experimental::NextNavigator(
-      navCfg,
-      Acts::getDefaultLogger("NextNavigator", Acts::Logging::Level::VERBOSE));
+  auto navigator = Acts::Experimental::DetectorNavigator(
+      navCfg, Acts::getDefaultLogger("DetectorNavigator",
+                                     Acts::Logging::Level::VERBOSE));
   auto options = Acts::PropagatorOptions<ActionListType, AbortListType>(
       tgContext, mfContext);
-  auto propagator =
-      Acts::Propagator<Acts::EigenStepper<>, Acts::Experimental::NextNavigator>(
-          stepper, navigator,
-          Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
+  auto propagator = Acts::Propagator<Acts::EigenStepper<>,
+                                     Acts::Experimental::DetectorNavigator>(
+      stepper, navigator,
+      Acts::getDefaultLogger("Propagator", Acts::Logging::Level::VERBOSE));
 
   // define start parameters
   Acts::Vector4 pos(0, 0, -5, 0);

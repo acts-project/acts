@@ -1,6 +1,7 @@
 import inspect
 import functools
 from typing import Optional, Callable, Dict, Any
+from pathlib import Path
 
 import acts
 
@@ -23,6 +24,9 @@ def _make_config_adapter(fn):
         cfg = type(self).Config()
         _kwargs = {}
         for k, v in kwargs.items():
+            if isinstance(v, Path):
+                v = str(v)
+
             if hasattr(cfg, k):
                 setattr(cfg, k, v)
             else:

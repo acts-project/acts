@@ -75,6 +75,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             s,
             setup.trackingGeometry,
             setup.field,
+            enableInteractions=True,
             rnd=rnd,
         )
 

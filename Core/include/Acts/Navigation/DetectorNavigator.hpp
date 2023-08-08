@@ -31,7 +31,7 @@
 namespace Acts {
 namespace Experimental {
 
-class NextNavigator {
+class DetectorNavigator {
  public:
   struct Config {
     /// Detector for this Navigation
@@ -68,9 +68,10 @@ class NextNavigator {
   ///
   /// @param cfg The navigator configuration
   /// @param _logger a logger instance
-  explicit NextNavigator(Config cfg, std::shared_ptr<const Logger> _logger =
-                                         getDefaultLogger("NextNavigator",
-                                                          Logging::Level::INFO))
+  explicit DetectorNavigator(Config cfg,
+                             std::shared_ptr<const Logger> _logger =
+                                 getDefaultLogger("DetectorNavigator",
+                                                  Logging::Level::INFO))
       : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
   State makeState(const Surface* startSurface,
@@ -221,8 +222,9 @@ class NextNavigator {
                                   << surface.geometryId());
       // Estimate the surface status
       bool boundaryCheck = c.boundaryCheck;
-      auto surfaceStatus = stepper.updateSurfaceStatus(state.stepping, surface,
-                                                       boundaryCheck, logger());
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, surface, state.options.direction, boundaryCheck,
+          state.options.targetTolerance, logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper)
@@ -289,7 +291,8 @@ class NextNavigator {
 
     // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, *nextSurface, boundaryCheck, logger());
+        state.stepping, *nextSurface, state.options.direction, boundaryCheck,
+        state.options.targetTolerance, logger());
 
     // Check if we are at a surface
     if (surfaceStatus == Intersection3D::Status::onSurface) {

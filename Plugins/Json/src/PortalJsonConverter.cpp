@@ -14,6 +14,7 @@
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/SurfaceJsonConverter.hpp"
+#include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
