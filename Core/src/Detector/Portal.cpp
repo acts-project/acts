@@ -12,6 +12,7 @@
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <cstddef>
 #include <stdexcept>
@@ -24,7 +25,9 @@ class DetectorVolume;
 }  // namespace Acts
 
 Acts::Experimental::Portal::Portal(std::shared_ptr<Surface> surface)
-    : m_surface(std::move(surface)) {}
+    : m_surface(std::move(surface)) {
+  throw_assert(m_surface, "Portal surface is nullptr");
+}
 
 std::shared_ptr<Acts::Experimental::Portal>
 Acts::Experimental::Portal::makeShared(std::shared_ptr<Surface> surface) {

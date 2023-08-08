@@ -65,59 +65,80 @@ std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
   /// Unroll the types
   switch (sType) {
     // Surface is a plane surface
-    case Surface::SurfaceType::Plane: {
-      if (bType == SurfaceBounds::BoundsType::eEllipse) {
-        mutableSf = surfaceFromJsonT<PlaneSurface, EllipseBounds>(j);
-      } else if (bType == SurfaceBounds::BoundsType::eRectangle) {
-        mutableSf = surfaceFromJsonT<PlaneSurface, RectangleBounds>(j);
-      } else if (bType == SurfaceBounds::BoundsType::eTrapezoid) {
-        mutableSf = surfaceFromJsonT<PlaneSurface, TrapezoidBounds>(j);
-      }
-    } break;
-    // Surface is a disc surface
-    case Surface::SurfaceType::Disc: {
-      if (bType == SurfaceBounds::BoundsType::eAnnulus) {
-        mutableSf = surfaceFromJsonT<DiscSurface, AnnulusBounds>(j);
-      } else if (bType == SurfaceBounds::BoundsType::eDisc) {
-        mutableSf = surfaceFromJsonT<DiscSurface, RadialBounds>(j);
-      } else if (bType == SurfaceBounds::BoundsType::eDiscTrapezoid) {
-        mutableSf = surfaceFromJsonT<DiscSurface, DiscTrapezoidBounds>(j);
-      }
+    case Surface::SurfaceType::Plane:
+      switch (bType) {
+        case SurfaceBounds::BoundsType::eEllipse:
+          mutableSf = surfaceFromJsonT<PlaneSurface, EllipseBounds>(j);
+          break;
+        case SurfaceBounds::BoundsType::eRectangle:
+          mutableSf = surfaceFromJsonT<PlaneSurface, RectangleBounds>(j);
+          break;
+        case SurfaceBounds::BoundsType::eTrapezoid:
+          mutableSf = surfaceFromJsonT<PlaneSurface, TrapezoidBounds>(j);
+          break;
 
-    } break;
-    // Surface is a cylinder surface
-    case Surface::SurfaceType::Cylinder: {
-      mutableSf = surfaceFromJsonT<CylinderSurface, CylinderBounds>(j);
-    } break;
-    // Surface is a cone surface
-    case Surface::SurfaceType::Cone: {
-      mutableSf = surfaceFromJsonT<ConeSurface, ConeBounds>(j);
-    } break;
-    // Surface is a straw surface
-    case Surface::SurfaceType::Straw: {
-      mutableSf = surfaceFromJsonT<StrawSurface, LineBounds>(j);
-    } break;
-    // Surface is a perigee surface
-    case Surface::SurfaceType::Perigee: {
-      Transform3 pTransform = Transform3JsonConverter::fromJson(j["transform"]);
-      mutableSf = Surface::makeShared<PerigeeSurface>(pTransform);
-    } break;
-    default:
+        case SurfaceBounds::BoundsType::eBoundless:
+          mutableSf = surfaceFromJsonT<PlaneSurface, void>(j);
+          break;
+        default:
+          throw std::invalid_argument("Invalid bounds type " +
+                                      std::to_string(bType) +
+                                      " for plane surface");
+      }
       break;
+    // Surface is a disc surface
+    case Surface::SurfaceType::Disc:
+      switch (bType) {
+        case SurfaceBounds::BoundsType::eAnnulus:
+          mutableSf = surfaceFromJsonT<DiscSurface, AnnulusBounds>(j);
+          break;
+        case SurfaceBounds::BoundsType::eDisc:
+          mutableSf = surfaceFromJsonT<DiscSurface, RadialBounds>(j);
+          break;
+        case SurfaceBounds::BoundsType::eDiscTrapezoid:
+          mutableSf = surfaceFromJsonT<DiscSurface, DiscTrapezoidBounds>(j);
+          break;
+        default:
+          throw std::invalid_argument("Invalid bounds type " +
+                                      std::to_string(bType) +
+                                      " for disc surface");
+      }
+      break;
+    // Surface is a cylinder surface
+    case Surface::SurfaceType::Cylinder:
+      mutableSf = surfaceFromJsonT<CylinderSurface, CylinderBounds>(j);
+      break;
+    // Surface is a cone surface
+    case Surface::SurfaceType::Cone:
+      mutableSf = surfaceFromJsonT<ConeSurface, ConeBounds>(j);
+      break;
+    // Surface is a straw surface
+    case Surface::SurfaceType::Straw:
+      mutableSf = surfaceFromJsonT<StrawSurface, LineBounds>(j);
+      break;
+    // Surface is a perigee surface
+    case Surface::SurfaceType::Perigee:
+      mutableSf = Surface::makeShared<PerigeeSurface>(
+          Transform3JsonConverter::fromJson(j["transform"]));
+      break;
+    default:
+      throw std::invalid_argument("Invalid surface type " +
+                                  std::to_string(sType));
   }
 
-  if (mutableSf != nullptr) {
-    GeometryIdentifier geoID(j["geo_id"]);
-    mutableSf->assignGeometryId(geoID);
-    // Add material
-    if (j.find("material") != j.end() and not j["material"].empty()) {
-      const ISurfaceMaterial* surfaceMaterial = nullptr;
-      from_json(j, surfaceMaterial);
-      std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
-          surfaceMaterial);
-      mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
-    }
+  throw_assert(mutableSf, "Could not create surface from json");
+
+  GeometryIdentifier geoID(j["geo_id"]);
+  mutableSf->assignGeometryId(geoID);
+  // Add material
+  if (j.find("material") != j.end() and not j["material"].empty()) {
+    const ISurfaceMaterial* surfaceMaterial = nullptr;
+    from_json(j, surfaceMaterial);
+    std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
+        surfaceMaterial);
+    mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
   }
+
   return mutableSf;
 }
 
