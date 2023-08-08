@@ -57,9 +57,6 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using Fitter =
       Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  // using Seeder = Acts::TrackDensityVertexFinder<
-  //     Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
-  // using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
   using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   using VertexCollection =
@@ -76,7 +73,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
     std::string outputProtoVertices;
     /// Output vertex collection
     std::string outputVertices = "vertices";
-    /// String describing which vertex seed finder we want to use
+    /// Enum member determining the choice of the vertex seed finder
     SeedFinder seedFinder;
     // std::shared_ptr<SeedFinder> seedFinder;
     /// The magnetic field
