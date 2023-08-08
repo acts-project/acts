@@ -14,6 +14,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
 namespace Acts {
 class ConstVectorMultiTrajectory;
@@ -35,6 +36,7 @@ struct RefittingCalibrator {
   };
 
   void calibrate(const Acts::GeometryContext& gctx,
+                 const Acts::CalibrationContext& cctx,
                  const Acts::SourceLink& sourceLink, Proxy trackState) const;
 };
 
