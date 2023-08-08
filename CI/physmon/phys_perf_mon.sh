@@ -255,6 +255,24 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         --title "AMVF ttbar" \
         -o $outdir/amvf_ttbar.html \
         -p $outdir/amvf_ttbar_plots
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/performance_amvf_gridseeder_ttbar.root \
+        vertexing \
+        $outdir/performance_amvf_gridseeder_ttbar_hist.root \
+        --silent \
+        --config CI/physmon/vertexing_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/performance_amvf_gridseeder_ttbar.root
+
+    run \
+        $outdir/performance_amvf_gridseeder_ttbar_hist.root \
+        $refdir/performance_amvf_gridseeder_ttbar_hist.root \
+        --title "AMVF (+grid seeding) ttbar" \
+        -o $outdir/amvf_gridseeder_ttbar.html \
+        -p $outdir/amvf_gridseeder_ttbar_plots
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then

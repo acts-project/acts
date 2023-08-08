@@ -176,16 +176,17 @@ with tempfile.TemporaryDirectory() as temp:
     s.run()
     del s
 
-    vertexing = "amvf"
-    shutil.move(
-        tp / f"{vertexing}/performance_vertexing.root",
-        tp / f"performance_{vertexing}.root",
-    )
+    for vertexing in ["amvf", "amvf_gridseeder"]:
+        shutil.move(
+            tp / f"{vertexing}/performance_vertexing.root",
+            tp / f"performance_{vertexing}.root",
+        )
 
     for stem in [
         "performance_ckf",
         "tracksummary_ckf",
         "performance_amvf",
+        "performance_amvf_gridseeder",
     ] + (["performance_seeding", "performance_ambi"]):
         perf_file = tp / f"{stem}.root"
         assert perf_file.exists(), "Performance file not found"
