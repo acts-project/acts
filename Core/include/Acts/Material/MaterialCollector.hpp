@@ -89,14 +89,14 @@ struct MaterialCollector {
             ACTS_VERBOSE("Update on start surface: post-update mode.");
             prepofu = navigator.currentSurface(state.navigation)
                           ->surfaceMaterial()
-                          ->factor(state.stepping.navDir,
+                          ->factor(state.options.direction,
                                    MaterialUpdateStage::PostUpdate);
           } else if (navigator.targetSurface(state.navigation) ==
                      navigator.currentSurface(state.navigation)) {
             ACTS_VERBOSE("Update on target surface: pre-update mode");
             prepofu = navigator.currentSurface(state.navigation)
                           ->surfaceMaterial()
-                          ->factor(state.stepping.navDir,
+                          ->factor(state.options.direction,
                                    MaterialUpdateStage::PreUpdate);
           } else {
             ACTS_VERBOSE("Update while pass through: full mode.");
