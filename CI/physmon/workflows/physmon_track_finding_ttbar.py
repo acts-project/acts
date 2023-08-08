@@ -154,12 +154,23 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
-        acts.seeder.AdaptiveGridSeeder,
+        seeder=acts.seeder.GaussianSeeder,
         associatedParticles=None,
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",
         vertexFinder=VertexFinder.AMVF,
         outputDirRoot=tp / "amvf",
+    )
+
+    addVertexFitting(
+        s,
+        setup.field,
+        seeder=acts.seeder.AdaptiveGridSeeder,
+        associatedParticles=None,
+        outputProtoVertices="amvf_gridseeder_protovertices",
+        outputVertices="amvf_gridseeder_fittedVertices",
+        vertexFinder=VertexFinder.AMVF,
+        outputDirRoot=tp / "amvf_gridseeder",
     )
 
     s.run()
