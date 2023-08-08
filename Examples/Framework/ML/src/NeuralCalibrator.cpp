@@ -69,7 +69,7 @@ ActsExamples::NeuralCalibrator::NeuralCalibrator(
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
-    const Acts::GeometryContext& gctx, const Acts::CalibrationContext& /*cctx*/,
+    const Acts::GeometryContext& gctx, const Acts::CalibrationContext& cctx,
     const Acts::SourceLink& sourceLink,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
@@ -80,7 +80,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
   if (std::find(m_volumeIds.begin(), m_volumeIds.end(),
                 idxSourceLink.geometryId().volume()) == m_volumeIds.end()) {
-    m_fallback.calibrate(measurements, clusters, gctx, sourceLink, trackState);
+    m_fallback.calibrate(measurements, clusters, gctx, cctx, sourceLink,
+                         trackState);
     return;
   }
 
