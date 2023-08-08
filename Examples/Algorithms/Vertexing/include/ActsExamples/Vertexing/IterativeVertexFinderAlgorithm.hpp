@@ -19,7 +19,6 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/IterativeVertexFinder.hpp"
@@ -57,7 +56,8 @@ class IterativeVertexFinderAlgorithm final : public IAlgorithm {
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using Fitter =
       Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using Seeder = Acts::GridDensityVertexFinder<20000, 109, Fitter>;
+  using Seeder = Acts::TrackDensityVertexFinder<
+      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
   using Finder = Acts::IterativeVertexFinder<Fitter, Seeder>;
   using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 

@@ -17,10 +17,10 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Vertexing/AdaptiveGridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/GaussianTrackDensity.hpp"
-#include "Acts/Vertexing/GridDensityVertexFinder.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
@@ -56,7 +56,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using Fitter =
       Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using Seeder = Acts::GridDensityVertexFinder<20000, 109, Fitter>;
+  using Seeder = Acts::AdaptiveGridDensityVertexFinder<109, Fitter>;
   using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
   using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
