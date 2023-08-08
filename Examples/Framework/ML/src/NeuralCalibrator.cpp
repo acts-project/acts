@@ -78,7 +78,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
   if (std::find(m_volumeIds.begin(), m_volumeIds.end(),
                 idxSourceLink.geometryId().volume()) == m_volumeIds.end()) {
-    m_fallback.calibrate(measurements, clusters, gctx, trackState);
+    m_fallback.calibrate(measurements, clusters, gctx, sourceLink, trackState);
     return;
   }
 
