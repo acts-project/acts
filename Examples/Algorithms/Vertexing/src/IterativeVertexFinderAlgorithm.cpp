@@ -83,7 +83,6 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   // Setup the seed finder
   IPEstimator::Config ipEstCfg(m_cfg.bField, propagator);
   IPEstimator ipEst(ipEstCfg);
-  // Set up the vertex seed finder
   Seeder seeder;
   // Set up the actual vertex finder
   Finder::Config finderCfg(vertexFitter, std::move(linearizer),
