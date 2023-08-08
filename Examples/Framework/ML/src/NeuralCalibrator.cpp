@@ -157,5 +157,5 @@ void ActsExamples::NeuralCalibrator::calibrate(
         trackState.allocateCalibrated(calibrated.size());
         trackState.setCalibrated(calibrated);
       },
-      measurements[idxSsourceLink.index()]);
+      measurements[idxSourceLink.index()]);
 }
