@@ -1432,7 +1432,7 @@ def addAmbiguityResolutionMLDBScan(
 def addVertexFitting(
     s,
     field,
-    seeder: Optional[acts.seeder.SeedFinder] = acts.seeder.GaussianSeeder, 
+    seeder: Optional[acts.seeder.SeedFinder] = acts.seeder.GaussianSeeder,
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
@@ -1570,7 +1570,6 @@ def addSingleSeedVertexFinding(
     inputSpacePoints: Optional[str] = "spacepoints",
     outputVertices: Optional[str] = "fittedSeedVertices",
 ) -> None:
-
     from acts.examples import (
         SingleSeedVertexFinderAlgorithm,
         VertexPerformanceWriter,
