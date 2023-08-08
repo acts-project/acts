@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include <ActsExamples/EventData/NeuralCalibrator.hpp>
 
 #include <TFile.h>
@@ -68,7 +69,8 @@ ActsExamples::NeuralCalibrator::NeuralCalibrator(
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
-    const Acts::GeometryContext& gctx, const Acts::SourceLink& sourceLink,
+    const Acts::GeometryContext& gctx, const Acts::CalibrationContext& /*cctx*/,
+    const Acts::SourceLink& sourceLink,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
   trackState.setUncalibratedSourceLink(sourceLink);
