@@ -62,7 +62,8 @@ class MeasurementCalibratorAdapter {
 
   MeasurementCalibratorAdapter() = delete;
 
-  void calibrate(const Acts::GeometryContext& gctx, const Acts::SourceLink&,
+  void calibrate(const Acts::GeometryContext& gctx,
+                 const Acts::SourceLink& sourceLink,
                  Acts::VectorMultiTrajectory::TrackStateProxy trackState) const;
 
  private:
