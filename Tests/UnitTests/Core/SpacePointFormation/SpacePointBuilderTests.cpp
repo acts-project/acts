@@ -84,7 +84,7 @@ std::pair<Vector3, Vector3> stripEnds(
   const auto lpos = testslink.parameters;
 
   Vector3 globalFakeMom(1, 1, 1);
-  const auto geoId = slink.geometryId();
+  const auto geoId = testslink.m_geometryId;
   const Surface* surface = geo->findSurface(geoId);
 
   const double stripLength = 40.;
@@ -175,7 +175,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   std::vector<const Vector3*> backStripEnds;
 
   for (auto& sl : sourceLinks) {
-    const auto geoId = sl.geometryId();
+    const auto geoId = sl.m_geometryId;
     const auto volumeId = geoId.volume();
     if (volumeId == 2) {  // pixel type detector
       singleHitSourceLinks.emplace_back(SourceLink{sl});
@@ -205,12 +205,18 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig = SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
 
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
+  spBuilderConfig.slSurfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
   auto spBuilder =
       SpacePointBuilder<TestSpacePoint>(spBuilderConfig, spConstructor);
 
   // for cosmic  without vertex constraint, usePerpProj = true
   auto spBuilderConfig_perp = SpacePointBuilderConfig();
   spBuilderConfig_perp.trackingGeometry = geometry;
+  spBuilderConfig_perp.slSurfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   spBuilderConfig_perp.usePerpProj = true;
 
@@ -292,6 +298,10 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     auto spBuilderConfig_badStrips = SpacePointBuilderConfig();
 
     spBuilderConfig_badStrips.trackingGeometry = geometry;
+    spBuilderConfig_badStrips.slSurfaceAccessor
+        .connect<&TestSourceLink::SurfaceAccessor::operator()>(
+            &surfaceAccessor);
+
     auto spBuilder_badStrips = SpacePointBuilder<TestSpacePoint>(
         spBuilderConfig_badStrips, spConstructor);
     // sp building with the recovery method

@@ -15,6 +15,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 
 #include <algorithm>
 #include <array>
@@ -68,7 +69,14 @@ struct TestSourceLink final {
 
   constexpr size_t index() const { return sourceId; }
 
-  GeometryIdentifier geometryId() const { return m_geometryId; }
+  struct SurfaceAccessor {
+    const Acts::TrackingGeometry& trackingGeometry;
+
+    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+      const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+      return trackingGeometry.findSurface(testSourceLink.m_geometryId);
+    }
+  };
 };
 
 bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);

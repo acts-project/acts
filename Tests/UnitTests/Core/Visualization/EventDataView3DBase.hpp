@@ -350,6 +350,11 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
           &kfSmoother);
 
+  Test::TestSourceLink::SurfaceAccessor surfaceAccessor{*detector};
+  extensions.surfaceAccessor
+      .connect<&Test::TestSourceLink::SurfaceAccessor::operator()>(
+          &surfaceAccessor);
+
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
                                 PropagatorPlainOptions(), rSurface);
 

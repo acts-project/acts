@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Any.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
@@ -28,10 +29,6 @@ class SourceLink final {
   using any_type = AnyBase<16>;
 
  public:
-  /// Getter for the geometry identifier
-  /// @return The GeometryIdentifier
-  constexpr GeometryIdentifier geometryId() const { return m_geometryId; }
-
   SourceLink(const SourceLink& other) = default;
   SourceLink(SourceLink&& other) = default;
   SourceLink& operator=(const SourceLink& other) = default;
@@ -54,13 +51,8 @@ class SourceLink final {
   /// @tparam T The source link type
   /// @param upstream The upstream source link to store
   template <typename T, typename = std::enable_if_t<
-                            Concepts::exists<detail_sl::geometry_id_t, T> &&
                             !std::is_same_v<std::decay_t<T>, SourceLink>>>
-  explicit SourceLink(T&& upstream) : m_geometryId{upstream.geometryId()} {
-    static_assert(
-        std::is_same_v<detail_sl::geometry_id_t<T>, GeometryIdentifier>,
-        "geometryId method does not return a geometry id type");
-
+  explicit SourceLink(T&& upstream) {
     static_assert(!std::is_same_v<std::decay_t<T>, SourceLink>,
                   "Cannot wrap SourceLink in SourceLink");
 
@@ -125,5 +117,8 @@ struct SourceLinkAdapterIterator {
 
   BaseIterator m_iterator;
 };
+
+/// Delegate to unpack the surface associated with a source link
+using SourceLinkSurfaceAccessor = Delegate<const Surface*(const SourceLink&)>;
 
 }  // namespace Acts

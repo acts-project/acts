@@ -237,8 +237,8 @@ struct GaussianSumFitter {
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (auto it = begin; it != end; ++it) {
       SourceLink sl = *it;
-      auto geoId = sl.geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.emplace(
+          options.extensions.surfaceAccessor(sl)->geometryId(), std::move(sl));
     }
 
     ACTS_VERBOSE(

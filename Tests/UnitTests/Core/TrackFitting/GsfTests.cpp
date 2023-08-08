@@ -68,6 +68,8 @@ using namespace Acts::Experimental;
 
 Acts::GainMatrixUpdater kfUpdater;
 
+FitterTester tester;
+
 GsfExtensions<VectorMultiTrajectory> getExtensions() {
   GsfExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -75,10 +77,11 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(
+          &tester.surfaceAccessor);
   return extensions;
 }
-
-FitterTester tester;
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
