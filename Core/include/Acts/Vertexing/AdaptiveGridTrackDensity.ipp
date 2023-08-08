@@ -239,6 +239,10 @@ float Acts::AdaptiveGridTrackDensity<trkGridSize>::normal2D(
   float expo =
       -1 / (2 * det) *
       (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
+  // For small exponents, the computation of std::exp would lead to an FPE
+  if (expo < -50.) {
+    return 0.0;
+  }
   return coef * std::exp(expo);
 }
 

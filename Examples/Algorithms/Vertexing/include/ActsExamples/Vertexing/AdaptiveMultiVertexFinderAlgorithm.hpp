@@ -57,9 +57,9 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   using Fitter =
       Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using Seeder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
-  using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
+  //using Seeder = Acts::TrackDensityVertexFinder<
+  //    Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+  //using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
   using Options = Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   using VertexCollection =
@@ -89,7 +89,10 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final; //TODO find out why we have final keyword here
+
+  // TODO comment
+  template<typename vseeder_t, typename vfinder_t> ProcessCode executeAfterSeederChoice(const ActsExamples::AlgorithmContext& ctx, const vseeder_t& seedFinder) const;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
