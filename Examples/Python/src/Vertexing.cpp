@@ -34,14 +34,15 @@ void addVertexing(Context& ctx) {
   auto seeder = m.def_submodule("seeder", "");
 
   py::enum_<Seeder>(seeder, "SeedFinder")
-    .value("GaussianSeeder", Seeder::GaussianSeeder)
-    .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder)
-    .export_values();
+      .value("GaussianSeeder", Seeder::GaussianSeeder)
+      .value("AdaptiveGridSeeder", Seeder::AdaptiveGridSeeder)
+      .export_values();
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      inputTrajectories, outputProtoVertices, outputVertices, seedFinder, bField); 
+      inputTrajectories, outputProtoVertices, outputVertices, seedFinder,
+      bField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
                                 mex, "IterativeVertexFinderAlgorithm",

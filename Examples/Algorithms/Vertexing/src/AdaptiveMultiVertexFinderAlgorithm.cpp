@@ -58,30 +58,30 @@ ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   if (m_cfg.seedFinder == GaussianSeeder) {
-    using Seeder = Acts::TrackDensityVertexFinder<Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+    using Seeder = Acts::TrackDensityVertexFinder<
+        Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
     Seeder seedFinder;
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
-  }
-  else if (m_cfg.seedFinder == AdaptiveGridSeeder) {
+  } else if (m_cfg.seedFinder == AdaptiveGridSeeder) {
     using Seeder = Acts::AdaptiveGridDensityVertexFinder<109, Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
     // The seeder config argument corresponds to the bin size in mm
     Seeder::Config seederConfig(0.05);
     Seeder seedFinder(seederConfig);
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
-  }
-  else {
+  } else {
     return ActsExamples::ProcessCode::ABORT;
   }
 }
 
-template<typename vseeder_t, typename vfinder_t> 
+template <typename vseeder_t, typename vfinder_t>
 ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
-    const ActsExamples::AlgorithmContext& ctx, const vseeder_t& seedFinder) const {
+    const ActsExamples::AlgorithmContext& ctx,
+    const vseeder_t& seedFinder) const {
   using Finder = vfinder_t;
-  
+
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
@@ -108,8 +108,9 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.doSmoothing = true;
   Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
 
-  typename Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), m_cfg.bField);
+  typename Finder::Config finderConfig(std::move(fitter), seedFinder,
+                                       ipEstimator, std::move(linearizer),
+                                       m_cfg.bField);
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
