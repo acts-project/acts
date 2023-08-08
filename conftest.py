@@ -5,8 +5,9 @@ import pytest_check as check
 
 
 sys.path += [
+    str(Path(__file__).parent / "Examples/Scripts"),
     str(Path(__file__).parent / "Examples/Scripts/Python"),
-    str(Path(__file__).parent / "Examples/Python/tests" ),
+    str(Path(__file__).parent / "Examples/Python/tests"),
 ]
 
 
@@ -18,6 +19,7 @@ try:
     import ROOT
 
     ROOT.gSystem.ResetSignals()
+    ROOT.gROOT.SetBatch(ROOT.kTRUE)
 except ImportError:
     pass
 
@@ -41,4 +43,9 @@ except RuntimeError:
 
 
 def pytest_addoption(parser):
-    parser.addoption("--physmon-output-path", action="store", default=Path.cwd()/"physmon", type=Path)
+    parser.addoption(
+        "--physmon-output-path",
+        action="store",
+        default=Path.cwd() / "physmon",
+        type=Path,
+    )

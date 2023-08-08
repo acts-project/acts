@@ -1,6 +1,8 @@
 from pathlib import Path
 from math import sqrt
 import sys, os
+from typing import Tuple, List
+
 import acts
 import acts.examples
 
@@ -9,8 +11,11 @@ def getOpenDataDetector(
     odd_dir: Path,
     mdecorator=None,
     logLevel=acts.logging.INFO,
-):
-
+) -> Tuple[
+    "acts.examples.dd4hep.DD4hepDetector",
+    acts.TrackingGeometry,
+    List[acts.IMaterialDecorator],
+]:
     import acts.examples.dd4hep
 
     customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)

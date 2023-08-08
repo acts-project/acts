@@ -1,13 +1,15 @@
 from pathlib import Path
-import collections
-from typing import List, IO, Tuple
+import re
+from typing import List, IO, Tuple, Optional
 import threading
 import csv
 from datetime import datetime
 import time
+import shutil
 
 import pytest
 import psutil
+from pytest_check import check
 
 import acts
 import acts.examples
@@ -15,7 +17,7 @@ from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
 
-@pytest.fixture()
+@pytest.fixture(scope="session")
 def output_path(request):
     path: Path = request.config.getoption("--physmon-output-path").resolve()
     path.mkdir(parents=True, exist_ok=True)
@@ -23,22 +25,119 @@ def output_path(request):
     return path
 
 
-PhysmonSetup = collections.namedtuple(
-    "Setup",
-    [
-        "detector",
-        "trackingGeometry",
-        "decorators",
-        "field",
-        "digiConfig",
-        "geoSel",
-    ],
-)
+class Physmon:
+    detector: "acts.examples.dd4hep.DD4hepDetector"
+    trackingGeometry: acts.TrackingGeometry
+    decorators: List[acts.IMaterialDecorator]
+    field: acts.MagneticFieldProvider
+    digiConfig: Path
+    geoSel: Path
+    output_path: Path
+    tmp_path: Path
+    name: str
+
+    def __init__(
+        self,
+        detector,
+        trackingGeometry,
+        decorators,
+        field,
+        digiConfig,
+        geoSel,
+        output_path,
+        tmp_path,
+        name,
+    ):
+        self.detector = detector
+        self.trackingGeometry = trackingGeometry
+        self.decorators = decorators
+        self.field = field
+        self.digiConfig = digiConfig
+        self.geoSel = geoSel
+        self.output_path = output_path
+        self.tmp_path = tmp_path
+        self.name = name
+
+    def add_output_file(self, filename: str, rename: Optional[str] = None):
+        __tracebackhide__ = True
+        tmp = self.tmp_path / filename
+        assert tmp.exists(), f"Output file {tmp} does not exist"
+        outname = rename if rename else filename
+        shutil.copy(tmp, self.output_path / outname)
+
+    def histogram_comparison(
+        self, filename: Path, title: str, config_path: Optional[Path] = None
+    ):
+        __tracebackhide__ = True
+        monitored = self.output_path / filename
+        reference = Path(__file__).parent.parent / "reference" / filename
+
+        assert monitored.exists(), f"Output file {monitored} does not exist"
+        assert reference.exists(), f"Reference file {reference} does not exist"
+
+        from histcmp.console import Console
+        from histcmp.report import make_report
+        from histcmp.checks import Status
+        from histcmp.config import Config
+        from histcmp.github import is_github_actions, github_actions_marker
+        from histcmp.cli import print_summary
+
+        from histcmp.compare import compare, Comparison
+
+        from rich.panel import Panel
+        from rich.console import Group
+        from rich.pretty import Pretty
+
+        import yaml
+
+        console = Console()
+
+        console.print(
+            Panel(
+                Group(f"Monitored: {monitored}", f"Reference: {reference}"),
+                title="Comparing files:",
+            )
+        )
+
+        if config_path is None:
+            config = Config.default()
+        else:
+            with config_path.open() as fh:
+                config = Config(**yaml.safe_load(fh))
+
+        console.print(Panel(Pretty(config), title="Configuration"))
+
+        #  filter_path = Path(_filter)
+        #  if filter_path.exists():
+        #  with filter_path.open() as fh:
+        #  filters = fh.read().strip().split("\n")
+        #  else:
+        #  filters = [_filter]
+        filters = []
+        comparison = compare(
+            config, monitored, reference, filters=filters, console=console
+        )
+
+        comparison.label_monitored = "monitored"
+        comparison.label_reference = "reference"
+        comparison.title = title
+
+        status = print_summary(comparison, console)
+
+        plots = self.output_path / "plots"
+        plots.mkdir(exist_ok=True, parents=True)
+        report_file = self.output_path / f"{self.name}.html"
+        make_report(comparison, report_file, console, plots, format="pdf")
+
+        for item in comparison.items:
+            msg = f"{item.key} failures: " + ", ".join(
+                [c.name for c in item.checks if c.status == Status.FAILURE]
+            )
+            check.equal(item.status, Status.SUCCESS, msg=msg)
 
 
 @pytest.fixture(scope="session")
-def setup():
-    u = acts.UnitConstants
+def _physmon_prereqs():
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     matDeco = acts.IMaterialDecorator.fromFile(
@@ -49,7 +148,19 @@ def setup():
     detector, trackingGeometry, decorators = getOpenDataDetector(
         getOpenDataDetectorDirectory(), matDeco
     )
-    setup = PhysmonSetup(
+
+    return srcdir, detector, trackingGeometry, decorators
+
+
+@pytest.fixture()
+def physmon(output_path, _physmon_prereqs, tmp_path, request):
+    u = acts.UnitConstants
+
+    srcdir, detector, trackingGeometry, decorators = _physmon_prereqs
+
+    name = re.sub(r"^test_", "", request.node.name)
+
+    setup = Physmon(
         detector=detector,
         trackingGeometry=trackingGeometry,
         decorators=decorators,
@@ -57,6 +168,9 @@ def setup():
         / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
         geoSel=srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json",
         field=acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T)),
+        output_path=output_path,
+        tmp_path=tmp_path,
+        name=name,
     )
     return setup
 
@@ -83,7 +197,6 @@ class Monitor:
         self.writer = csv.writer(output)
         self.writer.writerow(("time", "rss", "vms"))
 
-
         self.time: List[float] = [0]
         self.rss: List[float] = [0]
         self.vms: List[float] = [0]
@@ -101,10 +214,6 @@ class Monitor:
         return rss, vms
 
     def run(self, p: psutil.Process):
-
-        rss_offset, vms_offset = self._get_memory(p)
-        self.writer.writerow((0, 0, 0))
-
         try:
             start = datetime.now()
             while p.is_running() and p.status() in (
@@ -117,8 +226,6 @@ class Monitor:
                 delta = (datetime.now() - start).total_seconds()
 
                 rss, vms = self._get_memory(p)
-                rss -= rss_offset
-                vms -= vms_offset
 
                 self.rss.append(rss / 1e6)
                 self.vms.append(vms / 1e6)
@@ -137,14 +244,15 @@ class Monitor:
 
 
 @pytest.fixture(autouse=True)
-def monitor(output_path: Path, request, capsys):
+def monitor(physmon: Physmon, request, capsys):
     import psutil
 
     p = psutil.Process()
 
-    memory = output_path / "memory"
+    memory = physmon.output_path / "memory"
     memory.mkdir(exist_ok=True)
-    with (memory / f"mem_{request.node.name}.csv").open("w") as fh:
+    name = re.sub(r"^test_", "", request.node.name)
+    with (memory / f"mem_{name}.csv").open("w") as fh:
         mon = Monitor(output=fh, interval=0.1)
 
         t = threading.Thread(target=mon.run, args=(p,))
@@ -157,7 +265,5 @@ def monitor(output_path: Path, request, capsys):
 
         # @TODO: Add plotting
 
-        with capsys.disabled():
-            print("MONITORING")
-
-
+        #  with capsys.disabled():
+        #  print("MONITORING")
