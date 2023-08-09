@@ -123,7 +123,7 @@ members: globalToLocal,localToGlobal,intersect,normal
 ### Line surface
 
 {class}`Acts::LineSurface` is a special kind of surface that depends on a reference
-direction, typically the unit momentum direction of a particle. A point in
+direction, typically the unit momentum direction $\vec d$ of a particle. A point in
 space is considered *on surface* if and only if it coincides with the point of
 closest approach between the direction vector $\vec d$ and the line direction
 vector $\vec z$. As such, the function {func}`Acts::LineSurface::globalToLocal`

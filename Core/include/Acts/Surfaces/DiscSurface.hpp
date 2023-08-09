@@ -40,7 +40,7 @@ class SurfaceBounds;
 /// The surface transform positions the disc such that the origin
 /// is at @f$ r=0 @f$, independent of the provided \c DiscBounds.
 /// The normal vector of the disc (i.e., the local @f$z@f$-axis) is given by
-/// \vec e_{z} = \vec e_{r} \times\vec e_{phi}.
+/// @f$ \vec e_{z} = \vec e_{r} \times\vec e_{phi} @f$.
 ///
 /// The disc surface The only surface type for which the
 /// covariance matrix is NOT given in the reference frame.
