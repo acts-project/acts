@@ -33,15 +33,14 @@ class SurfaceBounds;
 
 /// @class DiscSurface
 ///
-/// Class for a disc surface, defined by a radius and and angle
+/// Class for a disc surface (or a segment thereof)
 ///
-/// The DiscSurface has a polar local coordinate system, with
-/// @f$ (r,phi) @f$ describing the coordinates.
+/// The DiscSurface is defined by the local polar coordinates @f$ (r,phi) @f$.
 ///
-/// The surface transform positions the disc such, that the origin
-/// is at @f$ r=0 @f$, independent of the provided \c DiscBounds. The @f$z@f$-axis
-/// The normal vector of the Disc, being perpendicular to the
-/// radial direction.
+/// The surface transform positions the disc such that the origin
+/// is at @f$ r=0 @f$, independent of the provided \c DiscBounds. 
+/// The normal vector of the disc (i.e., the local @f$z@f$-axis) is given by 
+/// \vec e_{z} = \vec e_{r} \times\vec e_{phi}.
 ///
 /// The disc surface The only surface type for which the
 /// covariance matrix is NOT given in the reference frame.

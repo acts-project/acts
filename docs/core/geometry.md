@@ -8,17 +8,13 @@ used together with the track propagation module and thus all geometry objects
 become natively integrated into the tracking software.
 
 ```{note}
-There is an ongoing rewrite of the geometry module and associated navigation
-module that will remove the explicit modeling of layers and replace them with a
-description where logical layers are modeled as volumes.
-
-See [](exp_geometry_impl)
+There is an ongoing rewrite of the geometry and navigation modules where logical layers will be modelled as volumes, see [](exp_geometry_impl).
 
 ```
 
 ## GeometryObject base class
 
-All geometry objects in Acts inherit from a virtual {class}`Acts::GeometryObject` base class
+All geometry objects in Acts inherit from a virtual {class}`Acts::GeometryObject` base class.
 
 :::{doxygenclass} Acts::GeometryObject
 :::
@@ -54,12 +50,12 @@ members: kVolumeMask,kBoundaryMask,kLayerMask,kApproachMask,kSensitiveMask,kExtr
 
 ## Surface classes
 
-All classes which represent thin surface in ACTS inherit from
-{class}`Acts::Surface`. The common {class}`Acts::Surface` virtual base defines
-the public interface of all surfaces. The different concrete
-{class}`Acts::Surface` classes are defined by their respective native local
-coordinate system, while different shapes on surfaces are defined by classes
-inhriting from {class}`Acts::SurfaceBounds`, which every surface must provide.
+All classes which represent a thin surface in ACTS inherit from
+the common virtual base class {class}`Acts::Surface`, which defines
+the public interface of all surfaces. While the different concrete
+surface classes are defined by their respective native local
+coordinate system, the shapes on these surfaces are defined by classes
+that inherit from {class}`Acts::SurfaceBounds`, which every surface must provide.
 In case of boundless surfaces, a special {class}`Acts::InfiniteBounds` class is
 available.
 
@@ -79,9 +75,9 @@ Each {class}`Acts::Surface` instance reports its type from {func}`Acts::Surface:
 | {class}`Acts::LineSurface` | $[d_0, z_0]$ | {class}`Acts::LineBounds` |
 
 ```{tip}
-The coordinate systems define - in an ideal setup - also the readout
+In an ideal setup, the coordinate systems also define the readout
 measurement directions. In such a case, a track prediction from the
-propagation, e.g. will already be in the correct frame of the measurement and
+propagation will already be in the correct frame of the measurement and
 residual or compatibility checks will not need additional coordinate
 transformations.
 ```
@@ -132,7 +128,7 @@ space is considered *on surface* if and only if it coincides with the point of
 closest approach between the direction vector $\vec d$ and the line direction
 vector $\vec z$. As such, the function {func}`Acts::LineSurface::globalToLocal`
 can fail, if the argument position and direction do not fulfill this criterion.
-It if pure-virtual, meaning that it can not be instantiated on its own.
+It is pure-virtual, meaning that it can not be instantiated on its own.
 
 :::{doxygenclass} Acts::LineSurface
 ---
@@ -164,11 +160,11 @@ The {class}`Acts::Layer` class is an extension of the {class}`Acts::Surface` cla
 definition of sub surfaces (sensitive surfaces for modules, or extra material
 surfaces).
 
-The Layer can simply correspond to a 'virtual' surface in the detector
+The layer can simply correspond to a 'virtual' surface in the detector
 description or represent a more complex object that may contain:
 
 * a representing surface, which is accessible via a {func}`Acts::Layer::surfaceRepresentation`
-* method an array of contained surfaces, accessible via {func}`Acts::Layer::surfaceArray` method
+* an array of contained surfaces, accessible via {func}`Acts::Layer::surfaceArray` method
 * approach surfaces (i.e. boundary surface of the volume occupied by the layer)
 * surface material description on any of the confined surfaces
 
@@ -178,12 +174,12 @@ detection modules:
 ![CylinderLayer](/figures/geometry/CylinderLayer.png)
 
 Modules can be sorted onto layer using all supported binning methods described
-through the {class}`Acts::SurfaceArray` class, the binning can be adjusted to fit as good as
+through the {class}`Acts::SurfaceArray` class. The binning can be adjusted to fit as well as
 possible.
 
 ![DiscLayerEB](/figures/geometry/DiscLayerEB.png)
 
-The un-occupied space in a volume which contains a layer array is filled with
+The unoccupied space in a volume that contains a layer array is filled with
 objects of type {class}`Acts::NavigationLayer`, which allows that in a fully static geometry
 setup, every single point in a volume can be associated with a layer. Layer
 objects are confined together in a special {type}`Acts::LayerArray` class and can be
@@ -198,7 +194,7 @@ contained by a {class}`Acts::TrackingVolume`.
 The {class}`Acts::Volume` class is a container of
 {type}`Acts::BoundarySurface` objects, where each
 {type}`Acts::BoundarySurface` is an extension of the {class}`Acts::Surface`
-class with additional information about the attached Volumes. The normal vector
+class with additional information about the attached volumes. The normal vector
 of the surface defines an *inside* (opposite w.r.t. the normal vector) and an
 *outside* (along w.r.t. the normal vector) direction. Either a single volume or
 an array of volumes can be attached to a volume.
@@ -235,13 +231,13 @@ This information is confined together in the {class}`Acts::Material` class.
 In track reconstruction, only an effective material description is needed, i.e.
 non-physical values in regards of the atomic number, the elementary charge or
 even the density are allowed, as long as the effective relative radiation
-length and $A/Z \times \rho$ ratio can be retrieved.  This enables compatictification
+length and $A/Z \times \rho$ ratio can be retrieved.  This enables the compactification
 of the material description, as the element composition record does not have to
 be kept.
 ```
 
-Surface based material extends this material information by representative
-thickness, the corresponding object is called {class}`Acts::MaterialSlab`. The
+Surface based material extends this material information by a representative
+thickness; the corresponding object is called {class}`Acts::MaterialSlab`. The
 thickness hereby can be arbitrarily chosen in order to regulate the material
 budget, it does not have to represent the actual thickness of a detector
 element. To attach it to a surface, a dedicated {class}`Acts::SurfaceMaterial`
