@@ -47,7 +47,7 @@ struct SpacePointGridConfig {
   // cover the full phi-range of minPT), leave this at 1.
   int phiBinDeflectionCoverage = 1;
   // maximum number of phi bins
-  int maxPhiBins = 300;
+  int maxPhiBins = 10000;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
   bool isInInternalUnits = false;
