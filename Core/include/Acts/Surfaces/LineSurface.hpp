@@ -190,7 +190,7 @@ class LineSurface : public Surface {
   /// @param direction global 3D momentum direction (optionally ignored)
   /// @param tolerance (unused)
   ///
-  /// @return A `Result<Vector2>`, which is set to `!ok()` if the @p position is not 
+  /// @return A `Result<Vector2>`, which is set to `!ok()` if the @p position is not
   /// the point of closest approach to the line surface.
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
