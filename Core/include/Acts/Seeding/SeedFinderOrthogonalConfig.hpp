@@ -107,7 +107,7 @@ struct SeedFinderOrthogonalConfig {
   float maxScatteringAngle2 = 0;
 
   // Delegate to apply experiment specific cuts
-  Delegate<bool(const float bottomRadius, const float cotTheta)> experimentCuts;
+  Delegate<bool(float bottomRadius, float cotTheta)> experimentCuts;
 
   bool isInInternalUnits = false;
 
