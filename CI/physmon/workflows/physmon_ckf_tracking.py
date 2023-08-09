@@ -40,7 +40,7 @@ setup = makeSetup()
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
         s = acts.examples.Sequencer(
-            events=1,
+            events=500,
             numThreads=-1,
             logLevel=acts.logging.INFO,
             fpeMasks=acts.examples.Sequencer.FpeMask.fromFile(
@@ -67,7 +67,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                     0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns
                 ),
             ),
-            multiplicity=1,
+            multiplicity=50,
             rnd=rnd,
         )
 
