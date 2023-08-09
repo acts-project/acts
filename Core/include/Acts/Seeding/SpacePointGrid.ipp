@@ -95,7 +95,7 @@ Acts::SpacePointGridCreator::createGrid(
     // Each individual bin should be approximately a fraction (depending on this
     // number) of the maximum expected azimutal deflection.
 
-    // set protection for large number of bins, by default it is infinite
+    // set protection for large number of bins, by default it is large
     if (phiBins > config.maxPhiBins) {
       phiBins = config.maxPhiBins;
     }
