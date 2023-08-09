@@ -174,7 +174,7 @@ class LineSurface : public Surface {
   /// center of the line and the global position of the measurement/predicted
   /// state. Then, @f$ \vec d @f$ lies in the so-called measurement plane.
   /// The latter is determined by the two orthogonal vectors @f$
-  /// \vec{\texttt{measY}} = \vec{\texttt{Acts::eBoundLoc1}} @f$ and @f$
+  /// \vec{\texttt{measY}} = \vec{e}_z @f$ and @f$
   /// \vec{\texttt{measX}} = \vec{\texttt{measY}} \times
   /// \frac{\vec{p}}{|\vec{p}|} @f$.
   ///

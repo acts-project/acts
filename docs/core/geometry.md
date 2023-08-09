@@ -31,15 +31,15 @@ object.
 ## Geometry identifier
 
 The {class}`Acts::GeometryIdentifier` is mainly used for fast identification of the type of
-the geometry object (as most are either extensions or containers of the
+the geometry object (as most of them are either extensions or containers of the
 {class}`Acts::Surface` objects) and for the identification of the geometry surfaces after
 building, e.g. for the uploading/assigning of material to the surface after
 creation. The {class}`Acts::GeometryIdentifier` uses a simple masking procedure for applying an
 identification schema.
 
-It is used for Acts internal applications, such as material mapping, but not for
-`EventData` and `Geometry` identification in an experiment setup, for this the
-`Identifier` class is to be used and/or defined.
+While it is used in Acts-internal applications such as material mapping, it is not employed for
+`EventData` and `Geometry` identification in an experiment setup. Instead, one should define and use the
+`Identifier` class in the latter case.
 
 :::{doxygenclass} Acts::GeometryIdentifier
 ---
