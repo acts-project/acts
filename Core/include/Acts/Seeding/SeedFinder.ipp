@@ -201,7 +201,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
     const float& uIP2, const float& cosPhiM, const float& sinPhiM) const {
   float impactMax = m_config.impactMax;
-  if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+
+  static constexpr bool isBottomCandidate =
+      candidateType == Acts::SpacePointCandidateType::eBottom;
+
+  if (isBottomCandidate) {
     impactMax = -impactMax;
   }
 
@@ -247,7 +251,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     // the iterator so we don't need to look at the other SPs again
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+      if (isBottomCandidate) {
         // if r-distance is too big, try next SP in bin
         if ((rM - otherSP->radius()) <= deltaRMaxSP) {
           break;
@@ -267,7 +271,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
 
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+      if (isBottomCandidate) {
         deltaR = (rM - otherSP->radius());
 
         // if r-distance is too small, try next SP in bin
@@ -283,7 +287,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         }
       }
 
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+      if (isBottomCandidate) {
         deltaZ = (zM - otherSP->z());
       } else {
         deltaZ = (otherSP->z() - zM);
@@ -376,7 +380,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
         // discard bottom-middle dublets in a certain (r, eta) region according
         // to detector specific cuts
-        if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+        if (isBottomCandidate) {
           if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
             continue;
           }
@@ -425,7 +429,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // discard bottom-middle dublets in a certain (r, eta) region according
       // to detector specific cuts
-      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+      if (isBottomCandidate) {
         if (!m_config.experimentCuts(otherSP->radius(), cotTheta)) {
           continue;
         }
