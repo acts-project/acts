@@ -560,7 +560,6 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
             for i, mask in enumerate(masks):
                 if i > 0:
                     print(rich.rule.Rule())
-                #  print(f"- {mask.file}:{mask.lines[0]}: {mask.type.name}: {mask.count}")
                 full_path = srcdir / mask.file
                 if not full_path.exists():
                     print(
