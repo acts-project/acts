@@ -21,6 +21,17 @@ namespace Acts {
 ///
 /// @tparam input_track_t Track object type
 
+struct FittedMomentum {
+  FittedMomentum(Vector3 mom, std::optional<ActsSymMatrix<3>> cov)
+      : momentum(mom), covariance(cov) {}
+
+  FittedMomentum() : momentum(Vector3::Zero()), covariance(std::nullopt) {}
+
+  Vector3 momentum;
+  // TODO: do we even need the optional?
+  std::optional<ActsSymMatrix<3>> covariance;
+};
+
 template <typename input_track_t>
 
 struct TrackAtVertex {
@@ -38,6 +49,14 @@ struct TrackAtVertex {
         originalParams(originalTrack),
         chi2Track(chi2perTrack) {}
 
+  TrackAtVertex(double chi2perTrack, const BoundTrackParameters& paramsAtVertex,
+                const input_track_t* originalTrack,
+                const FittedMomentum& fittedMom)
+      : fittedParams(paramsAtVertex),
+        fittedMomentum(fittedMom),
+        originalParams(originalTrack),
+        chi2Track(chi2perTrack) {}
+
   /// @brief Constructor with default chi2
   ///
   /// @param paramsAtVertex Fitted perigee parameter
@@ -48,6 +67,9 @@ struct TrackAtVertex {
 
   /// Fitted perigee
   BoundTrackParameters fittedParams;
+
+  /// Momentum after vertex fit
+  FittedMomentum fittedMomentum;
 
   /// Original input parameters
   const input_track_t* originalParams;
