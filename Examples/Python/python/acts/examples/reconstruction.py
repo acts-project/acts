@@ -315,9 +315,12 @@ def addSeeding(
                 seedFinderConfigArg,
                 seedFinderOptionsArg,
                 seedFilterConfigArg,
+                trackingGeometry, 
                 logLevel,
                 layerMappingConfigFile,
+                geoSelectionConfigFile,
                 fastrack_inputConfigFile, 
+                
             )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
@@ -766,9 +769,12 @@ def addFTFSeeding(
     seedFinderConfigArg: SeedFinderConfigArg,
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
+    trackingGeometry: acts.TrackingGeometry,
     logLevel: acts.logging.Level = None,
     layerMappingConfigFile: Union[Path, str] = None,
+    geoSelectionConfigFile: Union[Path, str] = None,
     fastrack_inputConfigFile: Union[Path, str] = None,
+    
 ):  
     """FTF seeding
     """
@@ -861,6 +867,11 @@ def addFTFSeeding(
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
         layerMappingFile=layerMappingFile, 
+        geometrySelection = acts.examples.readJsonGeometryList(
+            str(geoSelectionConfigFile)
+        ),
+        inputSourceLinks = "sourcelinks" , 
+        trackingGeometry = trackingGeometry, 
         
     )
 

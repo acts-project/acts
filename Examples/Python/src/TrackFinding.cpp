@@ -191,8 +191,8 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(collisionRegionMin);
     ACTS_PYTHON_MEMBER(collisionRegionMax);
-    // ACTS_PYTHON_MEMBER(phiMin);
-    // ACTS_PYTHON_MEMBER(phiMax);
+    ACTS_PYTHON_MEMBER(phiMin);
+    ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(zMin);
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(rMax);
@@ -214,6 +214,11 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(fastrack_input_file);
+    ACTS_PYTHON_MEMBER(m_phiSliceWidth);
+    ACTS_PYTHON_MEMBER(m_nMaxPhiSlice);
+    ACTS_PYTHON_MEMBER(m_useTrigSeedML);
+    ACTS_PYTHON_MEMBER(input_vector);
+
 
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
@@ -292,7 +297,7 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingFTFAlgorithm, mex,
       "SeedingFTFAlgorithm", inputSpacePoints, outputSeeds,
-      seedFilterConfig, seedFinderConfig, seedFinderOptions, layerMappingFile);
+      seedFilterConfig, seedFinderConfig, seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks, trackingGeometry, ACTS_FTF_Map);
 
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

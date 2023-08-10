@@ -4,6 +4,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
+#include "Acts/Seeding/GNN_DataStorage.hpp"
 
 #include <memory> 
 
@@ -106,6 +107,7 @@ struct SeedFinderFTFConfig {
   float m_nMaxPhiSlice ; 
   bool m_useTrigSeedML = false ; 
   std::string fastrack_input_file ; 
+  std::vector<TrigInDetSiLayer> input_vector ; 
 
 
   ////

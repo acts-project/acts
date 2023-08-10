@@ -59,6 +59,8 @@ FasTrackConnector::FasTrackConnector(std::ifstream& inFile) {
 }
 
 FasTrackConnector::~FasTrackConnector() {
+  // std::cout << "start of fastrack destructor " << std::endl ;     
+
   for(std::map<int, std::vector<FasTrackConnection*> >::iterator it = m_connMap.begin();it!=m_connMap.end();++it) {
     for(std::vector<FasTrackConnection*>::iterator cIt=(*it).second.begin();cIt!=(*it).second.end();++cIt) {
       delete (*cIt);
@@ -66,6 +68,8 @@ FasTrackConnector::~FasTrackConnector() {
     (*it).second.clear();
   }
   m_connMap.clear();
+  // std::cout << "end of fastrack destructor " << std::endl ;     
+
 
 }
 } 
