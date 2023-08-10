@@ -22,7 +22,6 @@ class TrigFTF_GNN_Node {
 
   };
   //want constructor to take simspace point 
-  // TrigFTF_GNN_Node(const space_point_t&, float minT = -100.0, float maxT = 100.0);  
   TrigFTF_GNN_Node(const space_point_t& p, float minT = -100.0, float maxT = 100.0)  : m_sp(p), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
     m_in.clear();
     m_out.clear();
@@ -67,7 +66,6 @@ class TrigFTF_GNN_Node {
 template <typename space_point_t>  
 class TrigFTF_GNN_EtaBin {
  public:
-  // TrigFTF_GNN_EtaBin();
   TrigFTF_GNN_EtaBin() {
     m_vn.clear(); 
   }
@@ -79,7 +77,6 @@ class TrigFTF_GNN_EtaBin {
     m_vn.clear();
   }
 
-  // void sortByPhi();
   void sortByPhi() {
     std::sort(m_vn.begin(), m_vn.end(), typename Acts::TrigFTF_GNN_Node<space_point_t>::CompareByPhi());
   }
@@ -88,7 +85,6 @@ class TrigFTF_GNN_EtaBin {
     return m_vn.empty();
   }
   
-  // void generatePhiIndexing(float);
   void generatePhiIndexing(float dphi) {
 
     for(unsigned int nIdx=0;nIdx<m_vn.size();nIdx++) {
@@ -134,9 +130,9 @@ struct FTF_SP {
 template <typename space_point_t>  
 class TrigFTF_GNN_DataStorage {
  public:
-  // TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& );
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& g) : m_geo(g) {
-
+      //still to add reserve line 
+    m_etaBins.reserve(g.num_bins());
     for(int k=0;k<g.num_bins();k++) {
       m_etaBins.emplace_back(TrigFTF_GNN_EtaBin<space_point_t>()); //usde to be push 
     }
@@ -146,11 +142,8 @@ class TrigFTF_GNN_DataStorage {
     
   }
  
-  int addSpacePoint(const FTF_SP<space_point_t>& sp, bool useML ) { //in athena & after sp type 
-    // std::cout << "asp start" << std::endl ;     
-    
-    //this line is crashing it 
-    // const TrigFTF_GNN_Layer<space_point_t>* pL = m_geo.getTrigFTF_GNN_LayerByIndex(sp.FTF_ID); //want ftf layer 
+  int addSpacePoint(const FTF_SP<space_point_t>& sp, bool useML ) { 
+
     //found needed to search by key which is the combined ID 
     const TrigFTF_GNN_Layer<space_point_t>* pL = m_geo.getTrigFTF_GNN_LayerByKey (sp.combined_ID); //want combined ID 
 
@@ -186,17 +179,15 @@ class TrigFTF_GNN_DataStorage {
     //   //   if(cluster_width > 0.2) return -3;
     //   // }
       m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node<space_point_t>(*sp.SP)); //add template here? add , min_tau, max_tau here for constructor 
-    }
-    // std::cout << "end of asp" << std::endl ;     
+    }   
 
     return 0;
   }
 
-  //Tim suggestion to prevent copies 
+  //for safety to prevent passing as copy 
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_DataStorage &) = delete;
   TrigFTF_GNN_DataStorage &operator=(const TrigFTF_GNN_DataStorage &) = delete;
 
-  // unsigned int numberOfNodes() const;
   unsigned int numberOfNodes() const {
 
     unsigned int n=0;
@@ -208,8 +199,6 @@ class TrigFTF_GNN_DataStorage {
   }
 
 
-
-  // void getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t>*>&);
   void getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t>*>& vn) {
   
     vn.clear();
@@ -224,13 +213,10 @@ class TrigFTF_GNN_DataStorage {
     }
   }
 
-  // void sortByPhi();
+
   void sortByPhi() {
     for(auto& b : m_etaBins) b.sortByPhi();
   }
-
-
-  // void generatePhiIndexing(float);
 
   void generatePhiIndexing(float dphi) {
     for(auto& b : m_etaBins) b.generatePhiIndexing(dphi);

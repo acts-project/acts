@@ -154,15 +154,12 @@ class TrigFTF_GNN_Layer {
     return m_bins.at(idx);//index in the global storage
   }
 
-  // float getMinBinRadius(int) const;
   float getMinBinRadius(int idx) const {
     if(idx >= static_cast<int>(m_minRadius.size())) idx = idx-1;
     if(idx < 0) idx = 0;
     
     return m_minRadius.at(idx);
   }
-
-  // float getMaxBinRadius(int) const;
 
   float getMaxBinRadius(int idx) const {
     if(idx >= static_cast<int>(m_maxRadius.size())) idx = idx-1;
@@ -173,7 +170,6 @@ class TrigFTF_GNN_Layer {
 
   int num_bins() const {return m_bins.size();} 
 
-  // bool verifyBin(const TrigFTF_GNN_Layer<space_point_t>*, int, int, float, float) const;
   bool verifyBin(const TrigFTF_GNN_Layer<space_point_t>* pL, int b1, int b2, float min_z0, float max_z0) const {
 
     float z1min = m_minBinCoord.at(b1);
@@ -234,8 +230,7 @@ class TrigFTF_GNN_Layer {
   }
 
 
-  const TrigInDetSiLayer& m_layer;
-  // const TrigInDetSiLayer m_layer; //CHECK: changed from ref to copy for saftey 
+  const TrigInDetSiLayer& m_layer; 
   std::vector<int> m_bins;//eta-bin indices
   std::vector<float> m_minRadius;
   std::vector<float> m_maxRadius;
@@ -258,7 +253,6 @@ class TrigFTF_GNN_Layer {
 template <typename space_point_t>  
 class TrigFTF_GNN_Geometry {
  public:
-  // TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>&, const FasTrackConnector*);
   TrigFTF_GNN_Geometry(const std::vector<TrigInDetSiLayer>& layers, const FasTrackConnector* conn) : m_nEtaBins(0) {
 
     const float min_z0 = -168.0;
@@ -267,9 +261,7 @@ class TrigFTF_GNN_Geometry {
     m_etaBinWidth = conn->m_etaBin;
     for(const auto& layer : layers) {
       const TrigFTF_GNN_Layer<space_point_t>* pL = addNewLayer(layer, m_nEtaBins);
-      m_nEtaBins += pL->num_bins();
-      // std::cout << " Rosie printing layer vector " << layer.m_subdet << std::endl; 
-      
+      m_nEtaBins += pL->num_bins();      
     
     }
   
@@ -311,17 +303,15 @@ class TrigFTF_GNN_Geometry {
     }
   }
 
-  // TrigFTF_GNN_Geometry();
   TrigFTF_GNN_Geometry() : m_nEtaBins(0) {
   } 
-
-  //Tim suggestion to prevent copies 
+  
+  //for safety to prevent passing as copy 
   TrigFTF_GNN_Geometry(const TrigFTF_GNN_Geometry &) = delete;
   TrigFTF_GNN_Geometry &operator=(const TrigFTF_GNN_Geometry &) = delete;
 
 
   ~TrigFTF_GNN_Geometry() {
-    // std::cout << "start of gnn geo's destructor " << std::endl ;     
 
 
 
@@ -329,17 +319,13 @@ class TrigFTF_GNN_Geometry {
       delete (*it);
     }
 
-    // std::cout << "middle of gnn geo's destructor " << std::endl ;     
-
     m_layMap.clear();m_layArray.clear();
-    // std::cout << "end of gnn geo's destructor " << std::endl ;     
 
   }
   
   const TrigFTF_GNN_Layer<space_point_t>* getTrigFTF_GNN_LayerByKey(unsigned int key) const {
     typename std::map<unsigned int, TrigFTF_GNN_Layer<space_point_t>*>::const_iterator it = m_layMap.find(key);
     if(it == m_layMap.end()) {
-      // std::cout << "Rosie, printing map info" << m_layMap.size() <<  std::endl ; 
 
       return nullptr;
     }
@@ -349,10 +335,9 @@ class TrigFTF_GNN_Geometry {
     return (*it).second;
   }
 
-  const TrigFTF_GNN_Layer<space_point_t>* getTrigFTF_GNN_LayerByIndex(int idx) const {
-    std::cout << "in layer by index at start printing idx " << idx << std::endl ;     
+  const TrigFTF_GNN_Layer<space_point_t>* getTrigFTF_GNN_LayerByIndex(int idx) const {     
     
-    return m_layArray.at(idx); //not sure if this is correct, currently looking for FTF_ID, should it be combinedID?
+    return m_layArray.at(idx); 
      
   }
 
@@ -363,7 +348,6 @@ class TrigFTF_GNN_Geometry {
   const TrigFTF_GNN_Layer<space_point_t>* addNewLayer(const TrigInDetSiLayer& l, int bin0) {
 
     unsigned int layerKey = l.m_subdet; //this should be combined ID 
-    // std::cout << " Rosie seeing what key values are " << layerKey << std::endl; 
     float ew = m_etaBinWidth;
     
     TrigFTF_GNN_Layer<space_point_t>* pHL = new TrigFTF_GNN_Layer<space_point_t>(l, ew, bin0);

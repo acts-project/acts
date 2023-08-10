@@ -7,7 +7,6 @@
 #include "Acts/Seeding/SeedFinderFTF.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 //in core 
-// #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"

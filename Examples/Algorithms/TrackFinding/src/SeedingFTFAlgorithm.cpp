@@ -35,32 +35,22 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     Acts::Logging::Level lvl) 
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), 
       m_cfg(std::move(cfg)) {
-
-    // std::cout << "in initialise 1" << std::endl ;     
+     
     //fill config struct
-    m_cfg.layerMappingFile = m_cfg.layerMappingFile ; 
-    // std::cout << "in initialise 2 " << std::endl ;     
+    m_cfg.layerMappingFile = m_cfg.layerMappingFile ; ;     
 
-    m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
-    // std::cout << "in initialise 3 " << std::endl ;     
+    m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();;     
 
     m_cfg.seedFinderConfig =
-    m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
-    // std::cout << "in initialise 4 " << std::endl ;     
+    m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();     
 
     m_cfg.seedFinderOptions =
       m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
-          m_cfg.seedFinderConfig);
-    // std::cout << "in initialise 5 " << std::endl ;     
+          m_cfg.seedFinderConfig);     
     
-    
-    m_cfg.ACTS_FTF_Map = Make_ACTS_FTF_Map() ;
-    // std::cout << "in initialise 6 " << std::endl ;     
+    m_cfg.ACTS_FTF_Map = Make_ACTS_FTF_Map() ;     
 
-
-    m_cfg.seedFinderConfig.input_vector = LayerNumbering() ; 
-    // std::cout << "in initialise 7 " << std::endl ;     
-
+    m_cfg.seedFinderConfig.input_vector = LayerNumbering() ;      
 
     for (const auto &spName : m_cfg.inputSpacePoints) {
       if (spName.empty()) {
@@ -72,26 +62,19 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
               this,
               "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
       handle->initialize(spName);
-    }
-    // std::cout << "in initialise 8 " << std::endl ;     
+    }     
 
-    m_outputSeeds.initialize(m_cfg.outputSeeds);
-    // std::cout << "in initialise 9 " << std::endl ;     
+    m_outputSeeds.initialize(m_cfg.outputSeeds);     
 
 
-    m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
-    // std::cout << "in initialise 9 " << std::endl ;     
+    m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);     
 
 
     m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
-          Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
-    // std::cout << "in initialise 10 " << std::endl ;     
+          Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));    
 
-    
-    // m_seedFinder = Acts::SeedFinderFTF<SimSpacePoint>(m_cfg.seedFinderConfig);
-    // std::cout << "in initialise 11 " << std::endl ;     
-
+    // m_seedFinder = Acts::SeedFinderFTF<SimSpacePoint>(m_cfg.seedFinderConfig);   
       } //this is not FTF config type because it is a meber of the algs config, which is of type FTF cofig  
 
 
@@ -100,8 +83,7 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
 //exectute: 
 ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-
-  // std::cout << "in execute 1 " << std::endl ;     
+     
     
   std::vector<Acts::FTF_SP<SimSpacePoint>> FTF_spacePoints = Make_FTF_spacePoints(ctx, m_cfg.ACTS_FTF_Map);
 
@@ -114,8 +96,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   //     << sp.SP->z() << ", "
   //     << sp.SP->r() 
   //     << "\n";
-  // } 
-  // std::cout << "in execute 2 " << std::endl ;     
+  // }      
 
 
   for (auto sp : FTF_spacePoints){
@@ -124,12 +105,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
         << sp.SP->sourceLinks().front().geometryId().volume() << "\n");
   }   
   
-  // std::cout << "in execute 3 " << std::endl ;     
-
-  
   //this is now calling on a core algorithm
-  Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig);
-  // std::cout << "in execute 4 " << std::endl ;     
+  Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig);  
 
   //need this function as create_coords is needed for seeds 
   std::function<std::pair<Acts::Vector3, Acts::Vector2>(
@@ -139,21 +116,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
         Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
         return std::make_pair(position, variance);
       };  
-      //output of function needed for seed
-  // std::cout << "in execute 5 " << std::endl ;     
+      //output of function needed for seed     
 
-  //crashing here 
-  finder.loadSpacePoints(FTF_spacePoints); 
-  // std::cout << "in execute 6 " << std::endl ;     
+  finder.loadSpacePoints(FTF_spacePoints);      
 
 
-  //still to develop, input will be FTF_spacePoints 
+  //still to develop
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               FTF_spacePoints, create_coordinates);
-
-  // std::cout << "in execute 7 " << std::endl ;     
+     
                              
-
   m_outputSeeds(ctx, std::move(seeds));
 
 
@@ -163,8 +135,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
 std::map<std::pair<int, int>,std::pair<int, int>> ActsExamples::SeedingFTFAlgorithm::Make_ACTS_FTF_Map() const {
 
- //create map from csv 
-  // map<std::pair<int, int>,int> ACTS_FTF;
   map<std::pair<int, int>,std::pair<int, int>> ACTS_FTF;
   std::ifstream data(m_cfg.layerMappingFile);  //0 in this file refers to no FTF ID 
   std::string line;
@@ -232,7 +202,7 @@ std::vector<Acts::FTF_SP<ActsExamples::SimSpacePoint>> ActsExamples::SeedingFTFA
         continue; 
       }
       
-      // Search for vol, lay 0n if doesnt esist (end) then search for full thing 
+      // Search for vol, lay and module=0, if doesnt esist (end) then search for full thing 
       //vol*100+lay as first number in pair then 0 or mod id 
       auto ACTS_joint_id = ACTS_vol_id*100 + ACTS_lay_id ;
       auto key = std::make_pair(ACTS_joint_id,0) ; //here the key needs to be pair of(vol*100+lay, 0) 
@@ -250,21 +220,16 @@ std::vector<Acts::FTF_SP<ActsExamples::SimSpacePoint>> ActsExamples::SeedingFTFA
       } 
 
       //now should be pixel with FTF ID: 
-      // int FTF_id = Find->second ; 
       int FTF_id = Find->second.first ; //new map the item is a pair so want first from it 
 
 
-      //backup warning shouldnt need as no 0 in csv 
       if (FTF_id == 0) {
         ACTS_WARNING("No assigned FTF ID for key for volume id: " << ACTS_vol_id << " and layer id: " << ACTS_lay_id) ;
       }
 
-      //need to have combined id here 
-      //access eta mod from map 
+      //access IDs from map 
       int eta_mod = Find->second.second ;
-
       int combined_id = FTF_id*1000 + eta_mod ; 
-
 
       //fill FTF vector with current sapce point and ID 
       FTF_spacePoints.emplace_back(&spacePoint,FTF_id,combined_id); 
@@ -274,7 +239,7 @@ std::vector<Acts::FTF_SP<ActsExamples::SimSpacePoint>> ActsExamples::SeedingFTFA
 
 
 
-  return FTF_spacePoints ; //not sure if I also need to return normal space point vector 
+  return FTF_spacePoints ; 
 }
 
 
@@ -283,10 +248,6 @@ std::vector<Acts::TrigInDetSiLayer> ActsExamples::SeedingFTFAlgorithm::LayerNumb
   std::vector<Acts::TrigInDetSiLayer> input_vector ;
   std::vector<size_t> count_vector ;
 
-  // //make a map of combined ID, vol, lay, z, r, mod id 
-  // std::map<int,std::vector<int>> filling_map ;
-  // fstream fout;
-  // fout.open("Module_loop_sensitives.csv", ios::out | ios::app);  
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) { //think this is the volume loop 
 
@@ -297,10 +258,9 @@ std::vector<Acts::TrigInDetSiLayer> ActsExamples::SeedingFTFAlgorithm::LayerNumb
         auto ACTS_lay_id = geoid.layer() ;
         auto mod_id = geoid.sensitive() ; 
         auto bounds_vect = surface->bounds().values() ; 
-        auto center = surface->center(Acts::GeometryContext()) ; //vector of 3 values //this needs geo context 
+        auto center = surface->center(Acts::GeometryContext()) ; 
     
 
-        // std::cout << "seeing what mod info is " << mod_id << std::endl ; 
         //make bounds global 
         Acts::Vector3 globalFakeMom(1, 1, 1); //fake mom, idea from hough 
         Acts::Vector2 min_bound_local = Acts::Vector2(bounds_vect[0],bounds_vect[1]) ; 
@@ -317,38 +277,30 @@ std::vector<Acts::TrigInDetSiLayer> ActsExamples::SeedingFTFAlgorithm::LayerNumb
         float maxBound =-100000.0;
 
 
-
         //convert to FTF ID 
         auto ACTS_joint_id = ACTS_vol_id*100 + ACTS_lay_id ;
         auto key = std::make_pair(ACTS_joint_id,0) ; //here the key needs to be pair of(vol*100+lay, 0) 
         auto Find = m_cfg.ACTS_FTF_Map.find(key) ;
-        // int FTF_id = Find->second ;
         int FTF_id = Find->second.first ; //new map, item is pair want first 
         if (Find == m_cfg.ACTS_FTF_Map.end()){ //if end then make new key of (vol*100+lay, modid)
           key = std::make_pair(ACTS_joint_id,mod_id) ; //mod ID 
           Find = m_cfg.ACTS_FTF_Map.find(key) ; 
           FTF_id = Find->second.first; 
-          // std::cout << "keys not for mod 0 " << ACTS_joint_id << " mod id: " << mod_id << " FTF: " << FTF_id<< std::endl ;
                
         } 
 
         short barrel_ec = 0; //a variable that says if barrrel, 0 = barrel, need to find what the n values are 
-        // int eta_mod = 0 ; //could set eta mod to map memeber here, 80s have 0 in map too 
         int eta_mod = Find->second.second ;
 
         //assign barrel_ec depending on FTF_layer 
         if(79 < FTF_id && FTF_id < 85 ){ //80s, barrel 
           barrel_ec  = 0 ; 
-          // eta_mod = 0 ;
         }
         else if(89 < FTF_id && FTF_id < 99) {//90s positive 
           barrel_ec  = 2 ;
-          // eta_mod = Find->second->second ; //access second member of item 
         }
         else { //70s negative 
           barrel_ec  = -2 ;
-          // eta_mod = Find->second->second ;
-          // std::cout << "checking some eta mod values are correct " << eta_mod << std::endl ;
 
         }
 
@@ -361,7 +313,7 @@ std::vector<Acts::TrigInDetSiLayer> ActsExamples::SeedingFTFAlgorithm::LayerNumb
             if(max_bound_global(2) > maxBound) maxBound = max_bound_global(2);
         }
         else{
-            rc = center(2); //check this is right, not barrel center in Z 
+            rc = center(2); //not barrel center in Z 
             //bounds of r 
             float min = sqrt(min_bound_global(0)*min_bound_global(0)+min_bound_global(1)*min_bound_global(1)) ;
             float max = sqrt(max_bound_global(0)*max_bound_global(0)+max_bound_global(1)*max_bound_global(1)) ;
@@ -389,8 +341,7 @@ std::vector<Acts::TrigInDetSiLayer> ActsExamples::SeedingFTFAlgorithm::LayerNumb
 
         }
 
-        
-        // //temporary making map 
+        //temporary code for output module info to csv 
         // int ACTS_IDs = ACTS_vol_id*100 + ACTS_lay_id; 
         // if (filling_map.find(ACTS_IDs) != filling_map.end()) { //not end so does exist 
         //   filling_map[ACTS_IDs][2] += center(2) ; //z 
@@ -416,26 +367,13 @@ std::vector<Acts::TrigInDetSiLayer> ActsExamples::SeedingFTFAlgorithm::LayerNumb
 
     });
 
-
   } 
 
-  // fstream fout;
-  // fout.open("Module_loop.csv", ios::out | ios::app);
-  // for (auto  i : filling_map){
-  //         fout << i.second[0] << ", " //vol
-  //           << i.second[1] << ", " //lay 
-  //           << i.second[2]/i.second[4]  << ", " //z 
-  //           << i.second[3]/i.second[4]  //r 
-  //           << "\n";
-  // }   
   
   for (int i = 0; i < input_vector.size(); i++){ 
     input_vector[i].m_refCoord = input_vector[i].m_refCoord/count_vector[i] ; 
-    //do I need to also divide bounds?  
-    // std::cout << "checking vector is correct" << input_vector[i].m_subdet << std::endl ;  
 
   }  
-  // std::cout << "checking vector is filled" << input_vector.size() << count_vector.size();  
 
   return input_vector ; 
 
