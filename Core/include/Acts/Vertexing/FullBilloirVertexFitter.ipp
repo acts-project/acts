@@ -214,7 +214,6 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     // start momentum related calculations
 
     std::vector<std::optional<BoundSymMatrix>> covDeltaP(nTracks);
-    std::vector<std::optional<ActsSymMatrix<3>>> covP(nTracks);
 
     // Update track momenta and calculate the covariance of the track parameters
     // after the fit (TODO: parameters -> momenta).
@@ -265,7 +264,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       ActsMatrix<4, 3> covVP = billoirTrack.B;
 
       // cov(P,P), 3x3 matrix
-      ActsSymMatrix<3> covPDummy =
+      ActsSymMatrix<3> covP =
           billoirTrack.Cinv +
           billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
 
@@ -274,9 +273,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       cov.block<4, 4>(0, 0) = covV;
       cov.block<4, 3>(0, 4) = covVP;
       cov.block<3, 4>(4, 0) = covVP.transpose();
-      cov.block<3, 3>(4, 4) = covPDummy;
-
-      covP[iTrack] = covPDummy;
+      cov.block<3, 3>(4, 4) = covP;
 
       covDeltaP[iTrack] = transMat * cov * transMat.transpose();
     }
@@ -331,10 +328,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec[eBoundTime] = linPoint[FreeIndices::eFreeTime];
         BoundTrackParameters refittedParams(perigee, paramVec,
                                             covDeltaP[iTrack]);
-        FittedMomentum fittedMomentum(trackMomenta[iTrack], covP[iTrack]);
         TrackAtVertex<input_track_t> trackAtVertex(
-            billoirTrack.chi2, refittedParams, fittedMomentum,
-            billoirTrack.originalTrack);
+            billoirTrack.chi2, refittedParams, billoirTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackAtVertex));
       }
 
