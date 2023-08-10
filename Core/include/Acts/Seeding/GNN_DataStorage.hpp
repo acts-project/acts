@@ -131,7 +131,6 @@ template <typename space_point_t>
 class TrigFTF_GNN_DataStorage {
  public:
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t>& g) : m_geo(g) {
-      //still to add reserve line 
     m_etaBins.reserve(g.num_bins());
     for(int k=0;k<g.num_bins();k++) {
       m_etaBins.emplace_back(TrigFTF_GNN_EtaBin<space_point_t>()); //usde to be push 
