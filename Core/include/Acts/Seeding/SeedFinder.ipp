@@ -242,7 +242,27 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     // we make a copy of the iterator here since we need it to remain
     // the same in the Neighbour object
     auto min_itr = otherSPCol.itr;
-    bool found = false;
+
+    // find the first SP inside the radius region of interest and update
+    // the iterator so we don't need to look at the other SPs again
+    for (; min_itr != otherSPs.end(); ++min_itr) {
+      const auto& otherSP = *min_itr;
+      if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
+        // if r-distance is too big, try next SP in bin
+        if ((rM - otherSP->radius()) <= deltaRMaxSP) {
+          break;
+        }
+      } else {
+        // if r-distance is too small, try next SP in bin
+        if ((otherSP->radius() - rM) >= deltaRMinSP) {
+          break;
+        }
+      }
+    }
+    // We update the iterator in the Neighbour object
+    // that mean that we have changed the middle space point
+    // and the lower bound has moved accordingly
+    otherSPCol.itr = min_itr;
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
@@ -254,11 +274,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         if (deltaR < deltaRMinSP) {
           break;
         }
-        // if r-distance is too big, try next SP in bin
-        if (deltaR > deltaRMaxSP) {
-          continue;
-        }
-
       } else {
         deltaR = (otherSP->radius() - rM);
 
@@ -266,18 +281,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         if (deltaR > deltaRMaxSP) {
           break;
         }
-        // if r-distance is too small, try next SP in bin
-        if (deltaR < deltaRMinSP) {
-          continue;
-        }
-      }
-
-      // We update the iterator in the Neighbour object
-      // that mean that we have changed the middle space point
-      // and the lower bound has moved accordingly
-      if (not found) {
-        found = true;
-        otherSPCol.itr = min_itr;
       }
 
       if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {

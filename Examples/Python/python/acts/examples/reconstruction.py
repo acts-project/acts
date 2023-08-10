@@ -41,6 +41,7 @@ SeedFinderConfigArg = namedtuple(
         "maxPtScattering",
         "zBinEdges",
         "zBinsCustomLooping",
+        "skipZMiddleBinSearch",
         "rRangeMiddleSP",
         "useVariableMiddleSPRange",
         "binSizeR",
@@ -56,7 +57,7 @@ SeedFinderConfigArg = namedtuple(
         "z",  # (min,max)
         "zOutermostLayers",  # (min,max)
     ],
-    defaults=[None] * 19 + [(None, None)] * 8,
+    defaults=[None] * 20 + [(None, None)] * 8,
 )
 SeedFinderOptionsArg = namedtuple(
     "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
@@ -88,9 +89,10 @@ SpacePointGridConfigArg = namedtuple(
         "phiBinDeflectionCoverage",
         "impactMax",
         "deltaRMax",
+        "maxPhiBins",
         "phi",  # (min,max)
     ],
-    defaults=[None] * 5 + [(None, None)] * 1,
+    defaults=[None] * 6 + [(None, None)] * 1,
 )
 
 SeedingAlgorithmConfigArg = namedtuple(
@@ -201,14 +203,14 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, skipZMiddleBinSearch, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFilterConfig.hpp
-    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax)
+    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
@@ -544,6 +546,7 @@ def addStandardSeeding(
             maxPtScattering=seedFinderConfigArg.maxPtScattering,
             zBinEdges=seedFinderConfigArg.zBinEdges,
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            skipZMiddleBinSearch=seedFinderConfigArg.skipZMiddleBinSearch,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
             binSizeR=seedFinderConfigArg.binSizeR,
@@ -603,6 +606,7 @@ def addStandardSeeding(
             cotThetaMax=seedFinderConfig.cotThetaMax,
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
             impactMax=spacePointGridConfigArg.impactMax,
             zBinEdges=spacePointGridConfigArg.zBinEdges,
             phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
@@ -1553,6 +1557,51 @@ def addVertexFitting(
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
+            )
+        )
+
+    return s
+
+
+def addSingleSeedVertexFinding(
+    s,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+    inputSpacePoints: Optional[str] = "spacepoints",
+    outputVertices: Optional[str] = "fittedSeedVertices",
+) -> None:
+
+    from acts.examples import (
+        SingleSeedVertexFinderAlgorithm,
+        VertexPerformanceWriter,
+    )
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    findSingleSeedVertex = SingleSeedVertexFinderAlgorithm(
+        level=customLogLevel(),
+        inputSpacepoints=inputSpacePoints,
+        outputVertices=outputVertices,
+    )
+    s.addAlgorithm(findSingleSeedVertex)
+
+    inputParticles = "particles_input"
+    selectedParticles = "particles_selected"
+
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        s.addWriter(
+            VertexPerformanceWriter(
+                level=customLogLevel(),
+                inputAllTruthParticles=inputParticles,
+                inputSelectedTruthParticles=selectedParticles,
+                useTracks=False,
+                inputVertices=outputVertices,
+                treeName="seedvertexing",
+                filePath=str(outputDirRoot / "performance_seedvertexing.root"),
             )
         )
 

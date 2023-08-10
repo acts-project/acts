@@ -12,7 +12,6 @@
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
-#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -222,7 +221,9 @@ class DirectNavigator {
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish & update the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter, false);
+          state.stepping, **state.navigation.navSurfaceIter,
+          state.options.direction, false, state.options.targetTolerance,
+          *m_logger);
       if (surfaceStatus == Intersection3D::Status::unreachable) {
         ACTS_VERBOSE(
             "Surface not reachable anymore, switching to next one in "
@@ -269,7 +270,9 @@ class DirectNavigator {
     if (state.navigation.navSurfaceIter != state.navigation.navSurfaces.end()) {
       // Establish the surface status
       auto surfaceStatus = stepper.updateSurfaceStatus(
-          state.stepping, **state.navigation.navSurfaceIter, false);
+          state.stepping, **state.navigation.navSurfaceIter,
+          state.options.direction, false, state.options.targetTolerance,
+          *m_logger);
       if (surfaceStatus == Intersection3D::Status::onSurface) {
         // Set the current surface
         state.navigation.currentSurface = *state.navigation.navSurfaceIter;

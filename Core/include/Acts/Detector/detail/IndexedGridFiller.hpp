@@ -40,66 +40,9 @@ namespace detail {
 /// @note for closed binning a span over half the bins flips direction
 ///
 /// @return a vector of bins to be filled
-static inline std::vector<std::size_t> binSequence(
-    std::array<std::size_t, 2u> minMaxBins, std::size_t expand,
-    std::size_t nBins, Acts::detail::AxisBoundaryType type) {
-  // Return vector for iterations
-  std::vector<std::size_t> rBins;
-  /// Helper method to fill a range
-  ///
-  /// @param lmin the minimum bin
-  /// @param lmax the maximum bin
-  auto fill_linear = [&](std::size_t lmin, std::size_t lmax) -> void {
-    for (std::size_t b = lmin; b <= lmax; ++b) {
-      rBins.push_back(b);
-    }
-  };
-  std::size_t bmin = minMaxBins[0u];
-  std::size_t bmax = minMaxBins[1u];
-
-  // Open/Bound cases
-  if (type != Acts::detail::AxisBoundaryType::Closed) {
-    rBins.reserve(bmax - bmin + 1u + 2 * expand);
-    // handle bmin:/max expand it down (for bound, don't fill underflow)
-    if (type == Acts::detail::AxisBoundaryType::Bound) {
-      bmin = (int(bmin) - int(expand) > 0) ? bmin - expand : 1u;
-      bmax = (bmax + expand <= nBins) ? bmax + expand : nBins;
-    } else if (type == Acts::detail::AxisBoundaryType::Open) {
-      bmin = (int(bmin) - int(expand) >= 0) ? bmin - expand : 0u;
-      bmax = (bmax + expand <= nBins + 1u) ? bmax + expand : nBins + 1u;
-    }
-    fill_linear(bmin, bmax);
-  } else {
-    // Close case
-    std::size_t span = bmax - bmin + 1u + 2 * expand;
-    // Safe with respect to the closure point, treat as bound
-    if (2 * span < nBins and (bmax + expand <= nBins) and
-        (int(bmin) - int(expand) > 0)) {
-      return binSequence({bmin, bmax}, expand, nBins,
-                         Acts::detail::AxisBoundaryType::Bound);
-    } else if (2 * span < nBins) {
-      bmin = int(bmin) - int(expand) > 0 ? bmin - expand : 1u;
-      bmax = bmax + expand <= nBins ? bmax + expand : nBins;
-      fill_linear(bmin, bmax);
-      // deal with expansions over the phi boundary
-      if (bmax + expand > nBins) {
-        std::size_t overstep = (bmax + expand - nBins);
-        fill_linear(1u, overstep);
-      }
-      if (int(bmin) - int(expand) < 1) {
-        std::size_t understep = abs(int(bmin) - int(expand));
-        fill_linear(nBins - understep, nBins);
-      }
-      std::sort(rBins.begin(), rBins.end());
-    } else {
-      // Jump over the phi boundary
-      fill_linear(bmax - expand, nBins);
-      fill_linear(1, bmin + expand);
-      std::sort(rBins.begin(), rBins.end());
-    }
-  }
-  return rBins;
-}
+std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
+                                     std::size_t expand, std::size_t nBins,
+                                     Acts::detail::AxisBoundaryType type);
 
 /// @brief Helper method to fill local bins given a set of query points
 /// bin in between the extra points are filled, and a possible expansion

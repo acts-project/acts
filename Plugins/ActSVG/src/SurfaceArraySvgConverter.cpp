@@ -25,10 +25,6 @@ Acts::Svg::SurfaceArrayConverter::convert(
 
   const auto& surfaces = surfaceArray.surfaces();
 
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("SurfaceArraySvgConverter", cOptions.logLevel));
-
   // The edges of the grid
   auto binning = surfaceArray.binningValues();
   auto axes = surfaceArray.getAxes();
@@ -117,7 +113,6 @@ Acts::Svg::SurfaceArrayConverter::convert(
     }
   }
 
-  ACTS_DEBUG("Found " << templateObjects.size() << " templates for this layer");
   // Estimate a reference radius
   ActsScalar radius = 0.;
 

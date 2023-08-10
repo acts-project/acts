@@ -72,6 +72,8 @@ class VertexPerformanceWriter final
     /// Minimum fraction of hits associated to particle to consider
     /// as truth matched.
     double truthMatchProbMin = 0.5;
+    /// Whether information about tracks is available
+    bool useTracks = true;
   };
 
   /// Constructor

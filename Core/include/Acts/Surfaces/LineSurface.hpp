@@ -90,12 +90,12 @@ class LineSurface : public Surface {
   /// @param other is the source surface dor copying
   LineSurface& operator=(const LineSurface& other);
 
-  /// Normal vector return
+  /// The normal vector is undefined if we do not know the momentum.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position is ignored
   ///
-  /// @return a Vector3 by value
+  /// @return a zero vector
   Vector3 normal(const GeometryContext& gctx,
                  const Vector2& lposition) const final;
 

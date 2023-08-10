@@ -95,6 +95,9 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// These are the cast parameters - copied from constructor
   std::array<BinningValue, grid_type::DIM> casts{};
 
+  /// A transform to be applied to the position
+  Transform3 transform = Transform3::Identity();
+
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
@@ -135,9 +138,6 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   }
 
  private:
-  /// A transform to be applied to the position
-  Transform3 transform = Transform3::Identity();
-
   /// Unroll the cast loop
   /// @param position is the position of the update call
   /// @param a is the array to be filled

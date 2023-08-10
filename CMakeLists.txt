@@ -181,7 +181,7 @@ endif()
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.33)
+set(_acts_actsvg_version 0.4.35)
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
@@ -292,6 +292,8 @@ if(ACTS_BUILD_PLUGIN_CUDA)
   enable_cuda()
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
+  # Explicitly find python so we can more easily override the version
+  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
 if(ACTS_BUILD_PLUGIN_JSON)
