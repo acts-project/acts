@@ -238,8 +238,10 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // ... and add it to the total chi2 value
       newChi2 += billoirTrack.chi2;
 
-      // Covariance matrix of the refitted momentum, see Eq. 8.23 in Ref. (2). Be mindful of the different choice of notation!
-      covP[iTrack] =  billoirTrack.Cinv + billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
+      // Covariance matrix of the refitted momentum, see Eq. 8.23 in Ref. (2).
+      // Be mindful of the different choice of notation!
+      covP[iTrack] = billoirTrack.Cinv +
+                     billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
     }
 
     // assign new linearization point (= new vertex position in global frame)
