@@ -126,7 +126,6 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
   DensityMap trackDensityMap;
 
   int halfTrkGridSize = (trkGridSize - 1) / 2;
-  // TODO: I think we can just pass d0
   float i = halfTrkGridSize + offset;
   float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
 
@@ -157,9 +156,6 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
     if (densityMap.count(rhmBin + 1) == 0) {
-      // TODO: I think in this case the linear approximation does not work, we
-      // would need to use 0 instead of densityMap.at(rhmBin) in the computation
-      // of deltaZ1
       break;
     }
     rhmBin += 1;
@@ -170,17 +166,11 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   float deltaZ1 =
       (maxValue / 2 - densityMap.at(rhmBin - 1)) *
       (m_cfg.binSize / (densityMap.at(rhmBin - 1) - densityMap.at(rhmBin)));
-  // TODO: I think we should have here:
-  // float deltaZ1 =
-  //       (maxValue / 2 - densityMap.at(rhmBin)) *
-  //       (m_cfg.binSize / (densityMap.at(rhmBin - 1) -
-  //       densityMap.at(rhmBin)));
   int lhmBin = zMaxBin;
   gridValue = maxValue;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
     if (densityMap.count(lhmBin - 1) == 0) {
-      // TODO: I think in this case the linear approximation does not work
       break;
     }
     lhmBin -= 1;
@@ -191,11 +181,6 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   float deltaZ2 =
       (maxValue / 2 - densityMap.at(lhmBin + 1)) *
       (m_cfg.binSize / (densityMap.at(rhmBin + 1) - densityMap.at(rhmBin)));
-  // TODO: I think we should have here:
-  // float deltaZ2 =
-  //    (maxValue / 2 - densityMap.at(lhmBin)) *
-  //    (m_cfg.binSize / (densityMap.at(lhmBin + 1) - densityMap.at(lhmBin)));
-
   float fwhm = (rhmBin - lhmBin) * m_cfg.binSize - deltaZ1 - deltaZ2;
 
   // FWHM = 2.355 * sigma
