@@ -19,14 +19,11 @@ namespace Acts {
 ///
 /// @brief Vertex fitters return a vertex position and updated track momenta at said position (+corresponding covariances). The updated track momenta and their covariances are saved in the following struct.
 struct FittedMomentum {
-  FittedMomentum(Vector3 mom, std::optional<ActsSymMatrix<3>> cov)
+  FittedMomentum(Vector3 mom, ActsSymMatrix<3> cov)
       : momentum(mom), covariance(cov) {}
 
-  FittedMomentum() : momentum(Vector3::Zero()), covariance(std::nullopt) {}
-
   Vector3 momentum;
-  // TODO: do we even need the optional?
-  std::optional<ActsSymMatrix<3>> covariance;
+  ActsSymMatrix<3> covariance;
 };
 
 /// @struct TrackAtVertex
@@ -57,7 +54,7 @@ struct TrackAtVertex {
   /// @param chi2PerTrack Chi2 of the track
   /// @param fittedMom updated momentum after the vertex fit
   /// @param originalTrack Original perigee parameter
-  TrackAtVertex(double chi2PerTrack, const FittedMomentum& fittedMom,
+  TrackAtVertex(double chi2PerTrack, std::optional<FittedMomentum> fittedMom,
                 const input_track_t* originalTrack)
       : fittedMomentum(fittedMom),
         originalParams(originalTrack),
@@ -67,12 +64,12 @@ struct TrackAtVertex {
   ///
   /// @param fittedMom updated momentum after the vertex fit
   /// @param originalTrack Original perigee parameter
-  TrackAtVertex(const FittedMomentum& fittedMom,
+  TrackAtVertex(std::optional<FittedMomentum> fittedMom,
                 const input_track_t* originalTrack)
       : fittedMomentum(fittedMom), originalParams(originalTrack) {}
 
   /// Momentum after vertex fit
-  FittedMomentum fittedMomentum;
+  std::optional<FittedMomentum> fittedMomentum;
 
   /// Original input parameters
   const input_track_t* originalParams;
