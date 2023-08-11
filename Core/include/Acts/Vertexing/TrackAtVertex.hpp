@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -50,8 +50,7 @@ struct TrackAtVertex {
         chi2Track(chi2perTrack) {}
 
   TrackAtVertex(double chi2perTrack, const BoundTrackParameters& paramsAtVertex,
-                const input_track_t* originalTrack,
-                const FittedMomentum& fittedMom)
+                const FittedMomentum& fittedMom, const input_track_t* originalTrack)
       : fittedParams(paramsAtVertex),
         fittedMomentum(fittedMom),
         originalParams(originalTrack),
@@ -64,6 +63,10 @@ struct TrackAtVertex {
   TrackAtVertex(const BoundTrackParameters& paramsAtVertex,
                 const input_track_t* originalTrack)
       : fittedParams(paramsAtVertex), originalParams(originalTrack) {}
+
+  TrackAtVertex(const BoundTrackParameters& paramsAtVertex, const FittedMomentum& fittedMom,
+                const input_track_t* originalTrack)
+      : fittedParams(paramsAtVertex), fittedMomentum(fittedMom), originalParams(originalTrack) {}
 
   /// Fitted perigee
   BoundTrackParameters fittedParams;

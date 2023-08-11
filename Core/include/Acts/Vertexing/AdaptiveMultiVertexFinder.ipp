@@ -231,6 +231,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     -> Result<void> {
   for (const auto& trk : tracks) {
     auto params = m_extractParameters(*trk);
+    FittedMomentum fittedMomentum(params.parameters().template segment<3>(eBoundPhi), 
+                                  params.covariance().value().template block<3, 3>(eBoundPhi, eBoundPhi));
     auto pos = params.position(vertexingOptions.geoContext);
     // If track is too far away from vertex, do not consider checking the IP
     // significance
@@ -245,7 +247,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     if (ipSig < m_cfg.tracksMaxSignificance) {
       // Create TrackAtVertex objects, unique for each (track, vertex) pair
       fitterState.tracksAtVerticesMap.emplace(std::make_pair(trk, &vtx),
-                                              TrackAtVertex(params, trk));
+                                              TrackAtVertex(params, fittedMomentum, trk));
 
       // Add the original track parameters to the list for vtx
       fitterState.vtxInfoMap[&vtx].trackLinks.push_back(trk);
