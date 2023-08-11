@@ -16,7 +16,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-#include <map>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -81,10 +81,10 @@ class AdaptiveGridDensityVertexFinder {
     DensityMap mainDensityMap;
 
     // Map from input track to corresponding track density map
-    std::map<const InputTrack_t*, DensityMap> trackDensities;
+    std::unordered_map<const InputTrack_t*, DensityMap> trackDensities;
 
     // Map to store bool if track has passed track selection or not
-    std::map<const InputTrack_t*, bool> trackSelectionMap;
+    std::unordered_map<const InputTrack_t*, bool> trackSelectionMap;
 
     // Store tracks that have been removed from track collection. These
     // tracks will be removed from the main grid
