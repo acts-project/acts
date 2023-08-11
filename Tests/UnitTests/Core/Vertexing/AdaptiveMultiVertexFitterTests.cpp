@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
         &(allTracks[iTrack]));
     state.tracksAtVerticesMap.insert(std::make_pair(
         std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
-        TrackAtVertex<BoundTrackParameters>(1., &(allTracks[iTrack]))));
+        TrackAtVertex<BoundTrackParameters>(&(allTracks[iTrack]), 1.)));
 
     // Use first track also for second vertex to let vtx1 and vtx2
     // share this track
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
           &(allTracks[iTrack]));
       state.tracksAtVerticesMap.insert(std::make_pair(
           std::make_pair(&(allTracks[iTrack]), &(vtxList.at(1))),
-          TrackAtVertex<BoundTrackParameters>(1., &(allTracks[iTrack]))));
+          TrackAtVertex<BoundTrackParameters>(&(allTracks[iTrack]), 1.)));
     }
   }
 
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     vtxInfo1.trackLinks.push_back(&trk);
     state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(&trk, &vtx1),
-                       TrackAtVertex<BoundTrackParameters>(1.5, &trk)));
+                       TrackAtVertex<BoundTrackParameters>(&trk, 1.5)));
   }
 
   // Prepare second vertex
@@ -512,7 +512,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     vtxInfo2.trackLinks.push_back(&trk);
     state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(&trk, &vtx2),
-                       TrackAtVertex<BoundTrackParameters>(1.5, &trk)));
+                       TrackAtVertex<BoundTrackParameters>(&trk, 1.5)));
   }
 
   state.vtxInfoMap[&vtx1] = std::move(vtxInfo1);

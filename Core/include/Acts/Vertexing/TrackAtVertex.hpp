@@ -40,7 +40,7 @@ struct TrackAtVertex {
   ///
   /// @param chi2PerTrack Chi2 of the track
   /// @param originalTrack Original perigee parameter
-  TrackAtVertex(double chi2PerTrack, const input_track_t* originalTrack)
+  TrackAtVertex(const input_track_t* originalTrack, double chi2PerTrack)
       : originalParams(originalTrack), chi2(chi2PerTrack) {}
 
   /// @brief Constructor used before the vertex fit (i.e., when we don't know the fitted momentum yet) with default chi2
@@ -49,30 +49,30 @@ struct TrackAtVertex {
   TrackAtVertex(const input_track_t* originalTrack)
       : originalParams(originalTrack) {}
 
-  /// @brief Constructed used when we know the momentum after the fit
+  /// @brief Constructor used when we know the momentum after the fit
   ///
   /// @param chi2PerTrack Chi2 of the track
   /// @param fittedMom updated momentum after the vertex fit
   /// @param originalTrack Original perigee parameter
-  TrackAtVertex(double chi2PerTrack, std::optional<FittedMomentum> fittedMom,
-                const input_track_t* originalTrack)
-      : fittedMomentum(fittedMom),
-        originalParams(originalTrack),
+  TrackAtVertex(const input_track_t* originalTrack,
+                std::optional<FittedMomentum> fittedMom, double chi2PerTrack)
+      : originalParams(originalTrack),
+        fittedMomentum(fittedMom),
         chi2(chi2PerTrack) {}
 
-  /// @brief Constructed used when we know the momentum after the fit with default chi2
+  /// @brief Constructor used when we know the momentum after the fit with default chi2
   ///
   /// @param fittedMom updated momentum after the vertex fit
   /// @param originalTrack Original perigee parameter
-  TrackAtVertex(std::optional<FittedMomentum> fittedMom,
-                const input_track_t* originalTrack)
-      : fittedMomentum(fittedMom), originalParams(originalTrack) {}
+  TrackAtVertex(const input_track_t* originalTrack,
+                std::optional<FittedMomentum> fittedMom)
+      : originalParams(originalTrack), fittedMomentum(fittedMom) {}
+
+  /// Original track parameters
+  const input_track_t* originalParams;
 
   /// Momentum after vertex fit
   std::optional<FittedMomentum> fittedMomentum;
-
-  /// Original input parameters
-  const input_track_t* originalParams;
 
   /// Chi2 of the track
   double chi2 = 0;

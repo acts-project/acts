@@ -283,9 +283,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         const auto& billoirTrack = billoirTracks[iTrack];
         // new refitted track momentum
         FittedMomentum fittedMomentum(trackMomenta[iTrack], covP[iTrack]);
-        TrackAtVertex<input_track_t> trackAtVertex(billoirTrack.chi2,
+        TrackAtVertex<input_track_t> trackAtVertex(billoirTrack.originalTrack,
                                                    std::move(fittedMomentum),
-                                                   billoirTrack.originalTrack);
+                                                   billoirTrack.chi2);
         tracksAtVertex.push_back(std::move(trackAtVertex));
       }
 
