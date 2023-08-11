@@ -213,20 +213,18 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
     state.vtxInfoMap[&(vtxList[vtxIdx])].trackLinks.push_back(
         &(allTracks[iTrack]));
-    state.tracksAtVerticesMap.insert(
-        std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
-                       TrackAtVertex<BoundTrackParameters>(
-                           1., allTracks[iTrack], &(allTracks[iTrack]))));
+    state.tracksAtVerticesMap.insert(std::make_pair(
+        std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
+        TrackAtVertex<BoundTrackParameters>(1., &(allTracks[iTrack]))));
 
     // Use first track also for second vertex to let vtx1 and vtx2
     // share this track
     if (iTrack == 0) {
       state.vtxInfoMap[&(vtxList.at(1))].trackLinks.push_back(
           &(allTracks[iTrack]));
-      state.tracksAtVerticesMap.insert(
-          std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList.at(1))),
-                         TrackAtVertex<BoundTrackParameters>(
-                             1., allTracks[iTrack], &(allTracks[iTrack]))));
+      state.tracksAtVerticesMap.insert(std::make_pair(
+          std::make_pair(&(allTracks[iTrack]), &(vtxList.at(1))),
+          TrackAtVertex<BoundTrackParameters>(1., &(allTracks[iTrack]))));
     }
   }
 
@@ -487,7 +485,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     vtxInfo1.trackLinks.push_back(&trk);
     state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(&trk, &vtx1),
-                       TrackAtVertex<BoundTrackParameters>(1.5, trk, &trk)));
+                       TrackAtVertex<BoundTrackParameters>(1.5, &trk)));
   }
 
   // Prepare second vertex
@@ -514,7 +512,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     vtxInfo2.trackLinks.push_back(&trk);
     state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(&trk, &vtx2),
-                       TrackAtVertex<BoundTrackParameters>(1.5, trk, &trk)));
+                       TrackAtVertex<BoundTrackParameters>(1.5, &trk)));
   }
 
   state.vtxInfoMap[&vtx1] = std::move(vtxInfo1);

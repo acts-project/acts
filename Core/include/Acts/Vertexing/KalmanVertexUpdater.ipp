@@ -51,7 +51,7 @@ void Acts::KalmanVertexUpdater::detail::update(
   // Otherwise just adds track to existing list of tracks at vertex
   if (sign > 0) {
     // Update track
-    trk.chi2Track = trkChi2;
+    trk.chi2 = trkChi2;
     trk.ndf = 2 * trackWeight;
   }
   // Remove trk from current vertex

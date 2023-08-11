@@ -103,14 +103,13 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       perigeeSurface, newTrkParams, std::move(fullPerTrackCov));
 
   ActsSymMatrix<3> momCov =
-      sMat + (newTrkCov).transpose() *
-                 (vtxWeight.block<3, 3>(0, 0) * newTrkCov);
+      sMat +
+      (newTrkCov).transpose() * (vtxWeight.block<3, 3>(0, 0) * newTrkCov);
   FittedMomentum fittedMom(newTrkMomentum, momCov);
 
   // Set new properties
-  track.fittedParams = refittedPerigee;
   track.fittedMomentum = fittedMom;
-  track.chi2Track = chi2;
+  track.chi2 = chi2;
   track.ndf = 2 * track.trackWeight;
 
   return;

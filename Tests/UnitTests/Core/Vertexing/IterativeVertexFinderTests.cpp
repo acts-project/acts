@@ -241,8 +241,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
         tracks.push_back(std::make_unique<BoundTrackParameters>(params));
 
-        TrackAtVertex<BoundTrackParameters> trAtVt(0., params,
-                                                   tracks.back().get());
+        TrackAtVertex<BoundTrackParameters> trAtVt(0., tracks.back().get());
         tracksAtTrueVtx.push_back(trAtVt);
       }
 
@@ -460,7 +459,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
         auto params = extractParameters(paramsUT);
 
-        TrackAtVertex<InputTrack> trAtVt(0., params, tracks.back().get());
+        TrackAtVertex<InputTrack> trAtVt(0., tracks.back().get());
         tracksAtTrueVtx.push_back(trAtVt);
       }
 

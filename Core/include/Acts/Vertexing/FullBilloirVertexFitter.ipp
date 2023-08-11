@@ -333,8 +333,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
                                             covDeltaP[iTrack]);
         FittedMomentum fittedMomentum(trackMomenta[iTrack], covP[iTrack]);
         TrackAtVertex<input_track_t> trackAtVertex(
-            billoirTrack.chi2, refittedParams, fittedMomentum,
-            billoirTrack.originalTrack);
+            billoirTrack.chi2, fittedMomentum, billoirTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackAtVertex));
       }
 
