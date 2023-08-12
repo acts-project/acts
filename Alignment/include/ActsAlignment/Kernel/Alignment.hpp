@@ -20,6 +20,8 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsAlignment/Kernel/AlignmentError.hpp"
 #include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "ActsAlignment/Kernel/Alignment.ipp"
+
 
 #include <limits>
 #include <map>
@@ -229,5 +231,3 @@ struct Alignment {
   const Acts::Logger& logger() const { return *m_logger; }
 };
 }  // namespace ActsAlignment
-
-#include "ActsAlignment/Kernel/Alignment.ipp"

@@ -85,6 +85,24 @@ class GeometryIdentifier {
     return setBits(kExtraMask, extra);
   }
 
+   /// Return the misalignment in the x-direction.
+  double misalignmentX() const { return m_misalignmentX; }
+
+  /// Return the misalignment in the y-direction (for the surface).
+  double misalignmentY() const { return m_misalignmentY; }
+
+  /// Set the misalignment in the x-direction.
+  void setMisalignmentX(double misalignmentX) {
+    m_misalignmentX = misalignmentX;
+  }
+
+  /// Set the misalignment in the y-direction (for the surface).
+  void setMisalignmentY(double misalignmentY) {
+    m_misalignmentY = misalignmentY;
+  }
+
+
+
  private:
   // clang-format off
   static constexpr Value kVolumeMask    = 0xff00000000000000; // (2^8)-1 = 255 volumes
@@ -96,6 +114,8 @@ class GeometryIdentifier {
   // clang-format on
 
   Value m_value = 0;
+  double m_misalignmentX = 0.0;
+  double m_misalignmentY = 0.0;
 
   /// Extract the bit shift necessary to access the masked values.
   static constexpr int extractShift(Value mask) {

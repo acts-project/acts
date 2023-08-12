@@ -9,6 +9,11 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 
+struct MisalignmentParameters {
+  Acts::Translation3 translation;
+  Acts::RotationMatrix3 rotation;
+};
+
 template <typename fitter_t>
 template <typename source_link_t, typename start_parameters_t,
           typename fit_options_t>
@@ -176,6 +181,15 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     // The delta Euler angles
     Acts::Vector3 deltaEulerAngles =
         deltaAlignmentParam.segment<3>(Acts::eAlignmentRotation0);
+    const MisalignmentParameters& misalignmentParams =
+        alignOptions.misalignmentParameters.at(index);
+    // Calculate the misalignment parameters delta
+    Acts::AlignmentVector deltaMisalignmentParams =
+        Acts::AlignmentVector::Zero();
+    deltaMisalignmentParams.segment<3>(Acts::eAlignmentCenter0) =
+        misalignmentParams.translation;
+    deltaMisalignmentParams.segment<3>(Acts::eAlignmentRotation0) =
+        Acts::RotationMatrix3::Identity().eulerAngles(2, 1, 0);    
 
     // 3. The new transform
     const Acts::Vector3 newCenter = oldCenter + deltaCenter;
@@ -204,6 +218,10 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
       ACTS_ERROR("Update alignment parameters for detector element failed");
       return AlignmentError::AlignmentParametersUpdateFailure;
     }
+      // Apply the misalignment parameters delta
+    alignResult.deltaAlignmentParameters.segment(
+        index * Acts::eAlignmentSize, Acts::eAlignmentSize) +=
+        deltaMisalignmentParams;
   }
 
   return Acts::Result<void>::success();

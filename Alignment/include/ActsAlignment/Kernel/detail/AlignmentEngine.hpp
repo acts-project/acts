@@ -74,7 +74,8 @@ struct TrackAlignmentState {
 /// @param alignToBound The alignment to bound parameters derivative
 /// @param mask The alignment mask
 void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
-                              AlignmentMask mask);
+                              AlignmentMask mask,
+                              const ActsDynamicVector& misalignmentParameters);
 
 ///
 /// Calculate the first and second derivative of chi2 w.r.t. alignment
@@ -108,7 +109,9 @@ TrackAlignmentState trackAlignmentState(
     const std::pair<ActsDynamicMatrix, std::unordered_map<size_t, size_t>>&
         globalTrackParamsCov,
     const std::unordered_map<const Surface*, size_t>& idxedAlignSurfaces,
-    const AlignmentMask& alignMask) {
+    const AlignmentMask& alignMask,
+    const std::unordered_set<const Surface*>& selectedSurfaces,  // New parameter
+    const ActsDynamicMatrix& misalignmentCovariance) {
   using CovMatrix = typename parameters_t::CovarianceMatrix;
 
   // Construct an alignment state
@@ -126,24 +129,25 @@ TrackAlignmentState trackAlignmentState(
   // Visit the track states on the track
   multiTraj.visitBackwards(entryIndex, [&](const auto& ts) {
     // Remember the number of smoothed states
-    if (ts.hasSmoothed()) {
+    if (!ts.hasSmoothed()) {
       // nSmoothedStates++; // commented because clang-tidy complains about
       // unused
-    } else {
-      // @note: this should in principle never happen now. But still keep it as a note
       return true;
     }
 
+
+
     // Only measurement states matter (we can't align non-measurement states,
     // no?)
-    if (not ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
+    if (!ts.typeFlags().test(TrackStateFlag::MeasurementFlag)) {
       return true;
     }
     // Check if the reference surface is to be aligned
     bool isAlignable = false;
     const auto surface = &ts.referenceSurface();
     auto it = idxedAlignSurfaces.find(surface);
-    if (it != idxedAlignSurfaces.end()) {
+
+    if (it != idxedAlignSurfaces.end() && selectedSurfaces.count(surface) > 0) {
       isAlignable = true;
       // Remember the surface and its index
       alignState.alignedSurfaces[surface].first = it->second;
@@ -151,7 +155,7 @@ TrackAlignmentState trackAlignmentState(
     }
     // Rember the index of the state within the trajectory and whether it's
     // alignable
-    measurementStates.push_back({ts.index(), isAlignable});
+    measurementStates.emplace_back(ts.index(), isAlignable);
     // Add up measurement dimension
     alignState.measurementDim += ts.calibratedSize();
     return true;
@@ -237,13 +241,20 @@ TrackAlignmentState trackAlignmentState(
           surface->alignmentToBoundDerivative(gctx, freeParams, pathDerivative);
       // Set the degree of freedom per surface.
       // @Todo: don't allocate memory for fixed degree of freedom and consider surface/layer/volume wise align mask (instead of using global mask as now)
-      resetAlignmentDerivative(alignToBound, alignMask);
+      resetAlignmentDerivative(alignToBound, alignMask,
+      alignState.misalignmentParameters);
 
       // Residual is calculated as the (measurement - parameters), thus we need
       // a minus sign below
       alignState.alignmentToResidualDerivative.block(
           iMeasurement, iSurface * eAlignmentSize, measdim, eAlignmentSize) =
           -H * (alignToBound);
+
+
+      // for the surfaces that are out of the picture, skip the calculations
+      if (selectedSurfaces.count(surface) == 0) {
+        continue;
+      }
     }
 
     // (e) Extract and fill the track parameters covariance matrix for only
@@ -266,34 +277,67 @@ TrackAlignmentState trackAlignmentState(
   }
 
   // Calculate the chi2 and chi2 derivatives based on the alignment matrixs
-  alignState.chi2 = alignState.residual.transpose() *
+  // alignState.chi2 = alignState.residual.transpose() *
+  //                   alignState.measurementCovariance.inverse() *
+  //                   alignState.residual;
+  // alignState.alignmentToChi2Derivative =
+  //     ActsDynamicVector::Zero(alignState.alignmentDof);
+  // alignState.alignmentToChi2SecondDerivative =
+  //     ActsDynamicMatrix::Zero(alignState.alignmentDof, alignState.alignmentDof);
+  // // The covariance of residual
+  // alignState.residualCovariance = ActsDynamicMatrix::Zero(
+  //     alignState.measurementDim, alignState.measurementDim);
+  // alignState.residualCovariance = alignState.measurementCovariance -
+  //                                 alignState.projectionMatrix *
+  //                                     alignState.trackParametersCovariance *
+  //                                     alignState.projectionMatrix.transpose();
+
+  // alignState.alignmentToChi2Derivative =
+  //     2 * alignState.alignmentToResidualDerivative.transpose() *
+  //     alignState.measurementCovariance.inverse() *
+  //     alignState.residualCovariance *
+  //     alignState.measurementCovariance.inverse() * alignState.residual;
+  // alignState.alignmentToChi2SecondDerivative =
+  //     2 * alignState.alignmentToResidualDerivative.transpose() *
+  //     alignState.measurementCovariance.inverse() *
+  //     alignState.residualCovariance *
+  //     alignState.measurementCovariance.inverse() *
+  //     alignState.alignmentToResidualDerivative;
+
+  // return alignState;
+    alignState.chi2 = alignState.residual.transpose() *
                     alignState.measurementCovariance.inverse() *
                     alignState.residual;
   alignState.alignmentToChi2Derivative =
-      ActsDynamicVector::Zero(alignState.alignmentDof);
+      2 * alignState.alignmentToResidualDerivative.transpose() *
+      alignState.measurementCovariance.inverse() * alignState.residual;
   alignState.alignmentToChi2SecondDerivative =
-      ActsDynamicMatrix::Zero(alignState.alignmentDof, alignState.alignmentDof);
-  // The covariance of residual
-  alignState.residualCovariance = ActsDynamicMatrix::Zero(
-      alignState.measurementDim, alignState.measurementDim);
+      2 * alignState.alignmentToResidualDerivative.transpose() *
+      alignState.measurementCovariance.inverse() *
+      alignState.alignmentToResidualDerivative;
+
   alignState.residualCovariance = alignState.measurementCovariance -
                                   alignState.projectionMatrix *
                                       alignState.trackParametersCovariance *
                                       alignState.projectionMatrix.transpose();
 
-  alignState.alignmentToChi2Derivative =
-      2 * alignState.alignmentToResidualDerivative.transpose() *
-      alignState.measurementCovariance.inverse() *
-      alignState.residualCovariance *
-      alignState.measurementCovariance.inverse() * alignState.residual;
-  alignState.alignmentToChi2SecondDerivative =
-      2 * alignState.alignmentToResidualDerivative.transpose() *
-      alignState.measurementCovariance.inverse() *
-      alignState.residualCovariance *
-      alignState.measurementCovariance.inverse() *
-      alignState.alignmentToResidualDerivative;
+  alignState.alignmentToChi2SecondDerivative.block(
+      0, 0, alignState.alignmentDof, alignState.alignmentDof) +=
+      alignState.misalignmentCovariance;
 
   return alignState;
+}
+
+void resetAlignmentDerivative(Acts::AlignmentToBoundMatrix& alignToBound,
+                              AlignmentMask mask,
+                              const ActsDynamicVector& misalignmentParameters) {
+  const size_t alignmentDof = misalignmentParameters.size();
+
+  for (size_t i = 0; i < alignmentDof; ++i) {
+    if (mask.isFixed(i)) {
+      alignToBound.col(i).setZero();
+    }
+  }
 }
 
 }  // namespace detail
