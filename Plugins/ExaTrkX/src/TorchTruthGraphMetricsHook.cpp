@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 
 #include <torch/torch.h>
 
@@ -58,21 +59,8 @@ Acts::TorchTruthGraphMetricsHook::TorchTruthGraphMetricsHook(
 
 void Acts::TorchTruthGraphMetricsHook::operator()(const std::any&,
                                                   const std::any& edges) const {
-  auto edgeTensor = std::any_cast<torch::Tensor>(edges)
-                        .clone()
-                        .to(torch::kInt64)
-                        .to(torch::kCPU);
-
-  if (edgeTensor.size(0) != 2) {
-    throw std::invalid_argument("input tensor must have shape (2,N)");
-  }
-
-  // bring to shape so we can put it to vector
-  edgeTensor = edgeTensor.t().flatten();
-
-  std::vector<int64_t> edgeIndex(
-      edgeTensor.data_ptr<int64_t>(),
-      edgeTensor.data_ptr<int64_t>() + edgeTensor.numel());
+  // We need to transpose the edges here for the right memory layout
+  const auto edgeIndex = Acts::detail::tensor2DToVector<int64_t>(std::any_cast<torch::Tensor>(edges).t());
 
   auto predGraphCantor = cantorize(edgeIndex);
 

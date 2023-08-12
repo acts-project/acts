@@ -8,7 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 #include "Acts/Utilities/ContainerPrinter.hpp"
 
 #include <cassert>
@@ -18,10 +19,6 @@
 #include <torch/torch.h>
 
 #define PRINT 0
-
-bool haveCuda(boost::unit_test::test_unit_id) {
-  return torch::cuda::is_available();
-}
 
 float distance(const at::Tensor &a, const at::Tensor &b) {
   assert(a.sizes() == b.sizes());
@@ -143,7 +140,9 @@ const int knn = 50;
 const int seed = 42;
 
 BOOST_AUTO_TEST_CASE(test_random_graph_edge_building_cuda,
-                     *boost::unit_test::precondition(haveCuda)) {
+                     *boost::unit_test::precondition([](auto) {
+                       return torch::cuda::is_available();
+                     })) {
   torch::manual_seed(seed);
 
   auto cudaEdgeBuilder = [](auto &features, auto radius, auto k) {

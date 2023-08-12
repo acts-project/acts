@@ -8,7 +8,8 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 
-#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
 #include <torch/script.h>
 #include <torch/torch.h>
@@ -63,11 +64,15 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   }());
   printCudaMemInfo(logger());
 
-  auto opts = torch::TensorOptions().dtype(torch::kFloat32);
-  torch::Tensor inputTensor =
-      torch::from_blob(inputValues.data(), {numSpacepoints, numAllFeatures},
-                       opts)
-          .to(device);
+  auto inputTensor = detail::vectorToTensor2D(inputValues, numAllFeatures).to(device);
+
+  // If we are on CPU, clone to get ownership (is this necessary?), else bring
+  // to device.
+  if (inputTensor.options().device() == device) {
+    inputTensor = inputTensor.clone();
+  } else {
+    inputTensor = inputTensor.to(device);
+  }
 
   // **********
   // Embedding
@@ -100,8 +105,8 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // ****************
   // Building Edges
   // ****************
-  auto edgeList =
-      buildEdges(output, m_cfg.rVal, m_cfg.knnVal, m_cfg.shuffleDirections);
+  auto edgeList = detail::buildEdges(output, m_cfg.rVal, m_cfg.knnVal,
+                                     m_cfg.shuffleDirections);
 
   ACTS_VERBOSE("Shape of built edges: (" << edgeList.size(0) << ", "
                                          << edgeList.size(1));

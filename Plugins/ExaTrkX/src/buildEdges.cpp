@@ -6,8 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
+#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Utilities/ContainerPrinter.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/KDTree.hpp"
@@ -246,11 +247,8 @@ struct BuildEdgesKDTree {
           });
     }
 
-    auto opts = at::TensorOptions().dtype(torch::kInt32);
-    return torch::from_blob(edges.data(),
-                            {static_cast<long>(edges.size() / 2), 2}, opts)
-        .clone()
-        .transpose(0, 1);
+    // Transpose is necessary here, clone to get ownership
+    return Acts::detail::vectorToTensor2D(edges, 2).t().clone();
   }
 };
 
@@ -262,8 +260,8 @@ at::Tensor Acts::detail::buildEdgesKDTree(at::Tensor &embedFeatures, float rVal,
   return postprocessEdgeTensor(tensor, true, true, flipDirections);
 }
 
-at::Tensor Acts::buildEdges(at::Tensor &embedFeatures, float rVal, int kVal,
-                            [[maybe_unused]] bool flipDirections) {
+at::Tensor Acts::detail::buildEdges(at::Tensor &embedFeatures, float rVal,
+                                    int kVal, bool flipDirections) {
 #ifndef ACTS_EXATRKX_CPUONLY
   if (torch::cuda::is_available()) {
     return detail::buildEdgesFRNN(embedFeatures, rVal, kVal, flipDirections);

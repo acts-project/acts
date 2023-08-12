@@ -33,8 +33,6 @@ at::Tensor buildEdgesFRNN(at::Tensor& embedFeatures, float rVal, int kVal,
 at::Tensor buildEdgesKDTree(at::Tensor& embedFeatures, float rVal, int kVal,
                             bool flipDirections = false);
 
-}  // namespace detail
-
 /// Dispatches either to FRNN or KD-Tree based edge building
 ///
 /// @param embedFeatures Tensor of shape (n_nodes, embedding_dim)
@@ -45,4 +43,5 @@ at::Tensor buildEdgesKDTree(at::Tensor& embedFeatures, float rVal, int kVal,
 at::Tensor buildEdges(at::Tensor& embedFeatures, float rVal, int kVal,
                       bool flipDirections = false);
 
+}  // namespace detail
 }  // namespace Acts
