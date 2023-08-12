@@ -15,6 +15,11 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Definitions/Algebra.hpp"
+#include "ActsAlignment/Kernel/detail/AlignmentEngine.hpp"
+#include "Detector.hpp" 
+
+
 
 ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
                                                      Acts::Logging::Level lvl)
@@ -121,6 +126,20 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   ActsAlignment::AlignmentOptions<TrackFitterOptions> alignOptions(
       kfOptions, m_cfg.alignedTransformUpdater, m_cfg.alignedDetElements,
       m_cfg.chi2ONdfCutOff, m_cfg.deltaChi2ONdfCutOff, m_cfg.maxNumIterations);
+  // SensorMisalignments object
+SensorMisalignments sensorMisalignments;
+
+// Iterate over the aligned detector elements
+for (auto detElement : m_cfg.alignedDetElements) {
+// using the setMisalignment() function of the SensorMisalignments object - misalignment for each detector
+  sensorMisalignments.setMisalignment(detElement, misalignmentParameters);
+}
+
+// Passing sensorMisalignments object to the alignment function
+auto result = (*m_cfg.align)(sourceLinkTrackContainer, initialParameters,
+                             alignOptions, sensorMisalignments);
+
+
 
   ACTS_DEBUG("Invoke track-based alignment with " << numTracksUsed
                                                   << " input tracks");
@@ -139,3 +158,4 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   m_outputAlignmentParameters(ctx, std::move(alignedParameters));
   return ActsExamples::ProcessCode::SUCCESS;
 }
+

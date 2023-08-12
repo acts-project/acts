@@ -38,7 +38,8 @@ struct AlignmentFunctionImpl
           sourceLinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsAlignment::AlignmentOptions<
-          ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options)
+          ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options,
+          const SensorMisalignments& sensorMisalignments)
       const override {
     return align.align(sourceLinks, initialParameters, options);
   };

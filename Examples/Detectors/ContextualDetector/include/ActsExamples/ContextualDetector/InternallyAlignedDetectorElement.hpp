@@ -6,120 +6,111 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-
+#include "ActsExamples/ContextualDetector/InternalAlignmentDecorator.hpp"
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
-#include "Acts/Plugins/Identification/Identifier.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
+#include "ActsExamples/ContextualDetector/InternallyAlignedDetectorElement.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+#include <algorithm> // For std::find
 
-#include <iostream>
-#include <memory>
-#include <mutex>
-#include <unordered_map>
+namespace ActsExamples::Contextual {
 
-namespace ActsExamples {
+InternalAlignmentDecorator::InternalAlignmentDecorator(
+    const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
+    : m_cfg(cfg), m_logger(std::move(logger)) {}
 
-namespace Contextual {
+ProcessCode InternalAlignmentDecorator::decorate(AlgorithmContext& context) {
+    // We need to lock the Decorator
+    std::lock_guard<std::mutex> alignmentLock(m_alignmentMutex);
 
-/// @class InternallyAlignedDetectorElement extends GenericDetectorElement
-///
-/// This is a lightweight type of detector element,
-/// it simply implements the base class.
-///
-/// The AlignedDetectorElement demonstrates how a GeometryContext
-/// can be used if it carries an interval of validity concept
-///
-/// The nominal transform is only used to once create the alignment
-/// store and then in a contextual call the actual detector element
-/// position is taken internal multi component store - the latter
-/// has to be filled though from an external source
-class InternallyAlignedDetectorElement
-    : public Generic::GenericDetectorElement {
- public:
-  struct ContextType {
-    /// The current interval of validity
-    unsigned int iov = 0;
-    bool nominal = false;
-  };
+    // In which iov batch are we?
+    unsigned int iov = context.eventNumber / m_cfg.iovSize;
 
-  // Inherit constructor
-  using Generic::GenericDetectorElement::GenericDetectorElement;
+    ACTS_VERBOSE("IOV handling in thread " << std::this_thread::get_id() << ".");
+    ACTS_VERBOSE("IOV resolved to " << iov << " - from event "
+                                      << context.eventNumber << ".");
 
-  /// Return local to global transform associated with this identifier
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  ///
-  /// @note this is called from the surface().transform(gctx)
-  const Acts::Transform3& transform(
-      const Acts::GeometryContext& gctx) const override;
+    m_eventsSeen++;
 
-  /// Return the nominal local to global transform
-  ///
-  /// @note the geometry context will hereby be ignored
-  const Acts::Transform3& nominalTransform(
-      const Acts::GeometryContext& gctx) const;
+    context.geoContext = InternallyAlignedDetectorElement::ContextType{iov};
 
-  /// Return local to global transform associated with this identifier
-  ///
-  /// @param alignedTransform is a new transform
-  /// @param iov is the batch for which it is meant
-  void addAlignedTransform(const Acts::Transform3& alignedTransform,
-                           unsigned int iov);
+    if (m_cfg.randomNumberSvc != nullptr) {
+        if (auto it = m_activeIovs.find(iov); it != m_activeIovs.end()) {
+            // Iov is already present, update last accessed
+            it->second.lastAccessed = m_eventsSeen;
+        } else {
+            // Iov is not present yet, create it
 
-  void clearAlignedTransform(unsigned int iov);
+            m_activeIovs.emplace(iov, IovStatus{m_eventsSeen});
 
- private:
-  std::unordered_map<unsigned int, Acts::Transform3> m_alignedTransforms;
-  mutable std::mutex m_alignmentMutex;
-};
+            ACTS_VERBOSE("New IOV " << iov << " detected at event "
+                                    << context.eventNumber
+                                    << ", emulate new alignment.");
 
-inline const Acts::Transform3& InternallyAlignedDetectorElement::transform(
-    const Acts::GeometryContext& gctx) const {
-  if (!gctx.hasValue()) {
-    // Return the standard transform if geo context is empty
-    return nominalTransform(gctx);
-  }
-  const auto& alignContext = gctx.get<ContextType&>();
+            // Create an algorithm local random number generator
+            RandomEngine rng = m_cfg.randomNumberSvc->spawnGenerator(context);
 
-  std::lock_guard lock{m_alignmentMutex};
-  if (alignContext.nominal) {
-    // nominal alignment
-    return nominalTransform(gctx);
-  }
-  auto aTransform = m_alignedTransforms.find(alignContext.iov);
-  if (aTransform == m_alignedTransforms.end()) {
-    throw std::runtime_error{
-        "Aligned transform for IOV " + std::to_string(alignContext.iov) +
-        " not found. This can happen if the garbage collection runs too "
-        "early (--align-flushsize too low)"};
-  }
-  return aTransform->second;
+            for (auto& lstore : m_cfg.detectorStore) {
+                for (auto& ldet : lstore) {
+                    // get the nominal transform
+                    Acts::Transform3 tForm =
+                        ldet->nominalTransform(context.geoContext);  // copy
+                    // create a new transform
+                    if (isMisalignedSuperstructure(tForm, rng)) {
+                        Acts::Vector3 translation = generateMisalignmentTranslation(rng);
+                        applyMisalignmentToSuperstructure(ldet->surface(), translation);
+                    }
+                }
+            }
+        }
+    }
+
+    // Garbage collection
+    if (m_cfg.doGarbageCollection) {
+        for (auto it = m_activeIovs.begin(); it != m_activeIovs.end();) {
+            unsigned int this_iov = it->first;
+            auto& status = it->second;
+            if (m_eventsSeen - status.lastAccessed > m_cfg.flushSize) {
+                ACTS_DEBUG("IOV " << this_iov << " has not been accessed in the last "
+                                << m_cfg.flushSize << " events, clearing");
+                it = m_activeIovs.erase(it);
+                for (auto& lstore : m_cfg.detectorStore) {
+                    for (auto& ldet : lstore) {
+                        ldet->clearAlignedTransform(this_iov);
+                    }
+                }
+            } else {
+                it++;
+            }
+        }
+    }
+
+    return ProcessCode::SUCCESS;
 }
 
-inline const Acts::Transform3&
-InternallyAlignedDetectorElement::nominalTransform(
-    const Acts::GeometryContext& gctx) const {
-  return GenericDetectorElement::transform(gctx);
+bool InternalAlignmentDecorator::isMisalignedSuperstructure(const Acts::Transform3& tForm, RandomEngine& rng) const {
+    // Determine whether the superstructure should be misaligned
+    // based on tForm and random probability
+    // For example, misalign with a 20% probability
+    return rng() < 0.2; 
 }
 
-inline void InternallyAlignedDetectorElement::addAlignedTransform(
-    const Acts::Transform3& alignedTransform, unsigned int iov) {
-  std::lock_guard lock{m_alignmentMutex};
-  m_alignedTransforms[iov] = alignedTransform;
+Acts::Vector3 InternalAlignmentDecorator::generateMisalignmentTranslation(RandomEngine& rng) const {
+    // Generate the misalignment translation vector
+    // Generate random translations in the range of -0.1 to 0.1
+    double deltaX = (rng() - 0.5) * 0.2; // Adjust range as needed
+    double deltaY = (rng() - 0.5) * 0.2;
+    double deltaZ = (rng() - 0.5) * 0.2;
+    return Acts::Vector3{deltaX, deltaY, deltaZ};
 }
 
-inline void InternallyAlignedDetectorElement::clearAlignedTransform(
-    unsigned int iov) {
-  std::lock_guard lock{m_alignmentMutex};
-  if (auto it = m_alignedTransforms.find(iov);
-      it != m_alignedTransforms.end()) {
-    m_alignedTransforms.erase(it);
-  }
+void InternalAlignmentDecorator::applyMisalignmentToSuperstructure(const Acts::Surface* surface, const Acts::Vector3& translation) const {
+    // Apply the misalignment translation to the superstructure's transformation
+    if (surface) {
+        Acts::Transform3& tForm = surface->transform();
+        tForm.translation() += translation;
+    }
 }
 
-}  // namespace Contextual
-}  // end of namespace ActsExamples
+} // namespace ActsExamples::Contextual

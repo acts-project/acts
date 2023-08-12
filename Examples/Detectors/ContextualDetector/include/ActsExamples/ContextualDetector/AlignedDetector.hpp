@@ -16,6 +16,8 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <random>  // --> random distributions
+#include <algorithm> //  --> std::find
 
 namespace Acts {
 class TrackingGeometry;
@@ -78,6 +80,66 @@ class AlignedDetector {
   /// The Store of the detector elements (lifetime: job)
   std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>
       m_detectorStore;
+  
+    // helper function
+  std::tuple<double, double, double, double> generateCorrelatedMisalignments(
+      double sigmaInPlane, double sigmaOutPlane, double sigmaInRot,
+      double sigmaOutRot, std::mt19937& rng);
+
+ public:
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      const Config& cfg,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+
 };
 
 }  // namespace ActsExamples::Contextual
+
+
+//TODO: add implementation of generateCorrelatedMisalignments --> outside the class ?
+std::tuple<double, double, double, double>
+ActsExamples::Contextual::AlignedDetector::generateCorrelatedMisalignments(
+    double sigmaInPlane, double sigmaOutPlane, double sigmaInRot,
+    double sigmaOutRot, std::mt19937& rng) {
+  std::normal_distribution<double> inPlaneDistribution(0.0, sigmaInPlane);
+  std::normal_distribution<double> outPlaneDistribution(0.0, sigmaOutPlane);
+  std::normal_distribution<double> inRotDistribution(0.0, sigmaInRot);
+  std::normal_distribution<double> outRotDistribution(0.0, sigmaOutRot);
+
+  double inPlaneMisalignment = inPlaneDistribution(rng);
+  double outPlaneMisalignment = outPlaneDistribution(rng);
+  double inRotMisalignment = inRotDistribution(rng);
+  double outRotMisalignment = outRotDistribution(rng);
+
+  return std::make_tuple(inPlaneMisalignment, outPlaneMisalignment,
+                         inRotMisalignment, outRotMisalignment);
+}
+
+// Add the implementation of finalize outside the class
+std::pair<ActsExamples::Contextual::AlignedDetector::TrackingGeometryPtr,
+          ActsExamples::Contextual::AlignedDetector::ContextDecorators>
+ActsExamples::Contextual::AlignedDetector::finalize(
+    const Config& cfg,
+    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) {
+
+
+  // local random number generator
+  std::mt19937 rng(cfg.seed);
+
+  // For each detector element apply misalignment
+  for (auto& detectorElements : m_detectorStore) {
+    // correlated misalignment values
+    auto misalignments = generateCorrelatedMisalignments(
+        cfg.sigmaInPlane, cfg.sigmaOutPlane, cfg.sigmaInRot, cfg.sigmaOutRot,
+        rng);
+
+    // 
+    for (auto& detectorElement : detectorElements) {
+      detectorElement->applyMisalignment(std::get<0>(misalignments),
+                                         std::get<1>(misalignments),
+                                         std::get<2>(misalignments),
+                                         std::get<3>(misalignments));
+    }
+  }
+
+}
