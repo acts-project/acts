@@ -61,7 +61,8 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
                << *std::min_element(inputValues.begin(), inputValues.end()))
   printCudaMemInfo(logger());
 
-  auto inputTensor = detail::vectorToTensor2D(inputValues, m_cfg.spacepointFeatures);
+  auto inputTensor =
+      detail::vectorToTensor2D(inputValues, m_cfg.spacepointFeatures);
 
   // If we are on CPU, clone to get ownership (is this necessary?), else bring
   // to device.
@@ -93,8 +94,8 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // Building Edges
   // ****************
 
-  auto edgeList = detail::buildEdges(output, m_cfg.embeddingDim,
-                             m_cfg.rVal, m_cfg.knnVal);
+  auto edgeList =
+      detail::buildEdges(output, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
 
   ACTS_VERBOSE("Shape of built edges: (" << edgeList.size(0) << ", "
                                          << edgeList.size(1));

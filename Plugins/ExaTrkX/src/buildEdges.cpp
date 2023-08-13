@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
+
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/KDTree.hpp"
