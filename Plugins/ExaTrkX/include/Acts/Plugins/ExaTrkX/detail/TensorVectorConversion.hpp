@@ -56,10 +56,6 @@ struct TorchTypeMap<double> {
 /// @Note Input must be mutable, due to torch API.
 /// @Note Tensor does not take ownership! `.clone()` afterwards to get
 /// ownership of the data
-///
-/// [0, 1, 1, 2, 2, 3, 3, 4, 4, 5]  ->  [[ 0, 1, 2, 3, 4]
-///                                      [ 1, 2, 3, 4, 5]]
-///
 template <typename T>
 at::Tensor vectorToTensor2D(std::vector<T> &vec, std::size_t cols) {
   assert(vec.size() % cols == 0);
@@ -74,10 +70,6 @@ at::Tensor vectorToTensor2D(std::vector<T> &vec, std::size_t cols) {
 
 /// Converts 2D tensor to vector
 /// @Note Automatically converts tensor to target type!
-///
-/// [[ 0, 1, 2, 3, 4]   -> [0, 1, 1, 2, 2, 3, 3, 4, 4, 5]
-///  [ 1, 2, 3, 4, 5]]
-///
 template <typename T>
 std::vector<T> tensor2DToVector(const at::Tensor &tensor) {
   assert(tensor.sizes().size() == 2);
