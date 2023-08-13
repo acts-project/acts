@@ -31,30 +31,30 @@
 
 using namespace torch::indexing;
 
-at::Tensor Acts::detail::postprocessEdgeTensor(at::Tensor edges,
-                                               bool removeSelfLoops,
-                                               bool removeDuplicates,
-                                               bool flipDirections) {
+torch::Tensor Acts::detail::postprocessEdgeTensor(torch::Tensor edges,
+                                                  bool removeSelfLoops,
+                                                  bool removeDuplicates,
+                                                  bool flipDirections) {
   // Remove self-loops
   if (removeSelfLoops) {
-    at::Tensor selfLoopMask = edges.index({0}) != edges.index({1});
+    torch::Tensor selfLoopMask = edges.index({0}) != edges.index({1});
     edges = edges.index({Slice(), selfLoopMask});
   }
 
   // Remove duplicates
   if (removeDuplicates) {
-    at::Tensor mask = edges.index({0}) > edges.index({1});
+    torch::Tensor mask = edges.index({0}) > edges.index({1});
     edges.index_put_({Slice(), mask}, edges.index({Slice(), mask}).flip(0));
     edges = std::get<0>(torch::unique_dim(edges, -1, false));
   }
 
   // Randomly flip direction
   if (flipDirections) {
-    at::Tensor random_cut_keep = torch::randint(2, {edges.size(1)});
-    at::Tensor random_cut_flip = 1 - random_cut_keep;
-    at::Tensor keep_edges =
+    torch::Tensor random_cut_keep = torch::randint(2, {edges.size(1)});
+    torch::Tensor random_cut_flip = 1 - random_cut_keep;
+    torch::Tensor keep_edges =
         edges.index({Slice(), random_cut_keep.to(torch::kBool)});
-    at::Tensor flip_edges =
+    torch::Tensor flip_edges =
         edges.index({Slice(), random_cut_flip.to(torch::kBool)}).flip({0});
     edges = torch::cat({keep_edges, flip_edges}, 1);
   }
@@ -62,8 +62,9 @@ at::Tensor Acts::detail::postprocessEdgeTensor(at::Tensor edges,
   return edges.toType(torch::kInt64);
 }
 
-at::Tensor Acts::detail::buildEdgesFRNN(at::Tensor &embedFeatures, float rVal,
-                                        int kVal, bool flipDirections) {
+torch::Tensor Acts::detail::buildEdgesFRNN(torch::Tensor &embedFeatures,
+                                           float rVal, int kVal,
+                                           bool flipDirections) {
 #ifndef ACTS_EXATRKX_CPUONLY
   torch::Device device(torch::kCUDA);
 
@@ -85,19 +86,19 @@ at::Tensor Acts::detail::buildEdgesFRNN(at::Tensor &embedFeatures, float rVal,
   int G = -1;
 
   // Set up grid properties
-  at::Tensor grid_min;
-  at::Tensor grid_max;
-  at::Tensor grid_size;
+  torch::Tensor grid_min;
+  torch::Tensor grid_max;
+  torch::Tensor grid_size;
 
-  at::Tensor embedTensor = embedFeatures.reshape({1, numSpacepoints, dim});
-  at::Tensor gridParamsCuda =
+  torch::Tensor embedTensor = embedFeatures.reshape({1, numSpacepoints, dim});
+  torch::Tensor gridParamsCuda =
       torch::zeros({batch_size, grid_params_size}, device).to(torch::kFloat32);
-  at::Tensor r_tensor = torch::full({batch_size}, rVal, device);
-  at::Tensor lengths = torch::full({batch_size}, numSpacepoints, device);
+  torch::Tensor r_tensor = torch::full({batch_size}, rVal, device);
+  torch::Tensor lengths = torch::full({batch_size}, numSpacepoints, device);
 
   // build the grid
   for (int i = 0; i < batch_size; i++) {
-    at::Tensor allPoints =
+    torch::Tensor allPoints =
         embedTensor.index({i, Slice(None, lengths.index({i}).item().to<long>()),
                            Slice(None, grid_dim)});
     grid_min = std::get<0>(allPoints.min(0));
@@ -128,28 +129,28 @@ at::Tensor Acts::detail::buildEdgesFRNN(at::Tensor &embedFeatures, float rVal,
     }
   }
 
-  at::Tensor pc_grid_cnt =
+  torch::Tensor pc_grid_cnt =
       torch::zeros({batch_size, G}, device).to(torch::kInt32);
-  at::Tensor pc_grid_cell =
+  torch::Tensor pc_grid_cell =
       torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
-  at::Tensor pc_grid_idx =
+  torch::Tensor pc_grid_idx =
       torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
 
   // put spacepoints into the grid
   InsertPointsCUDA(embedTensor, lengths.to(torch::kInt64), gridParamsCuda,
                    pc_grid_cnt, pc_grid_cell, pc_grid_idx, G);
 
-  at::Tensor pc_grid_off =
+  torch::Tensor pc_grid_off =
       torch::full({batch_size, G}, 0, device).to(torch::kInt32);
-  at::Tensor grid_params = gridParamsCuda.to(torch::kCPU);
+  torch::Tensor grid_params = gridParamsCuda.to(torch::kCPU);
 
   // for loop seems not to be necessary anymore
   pc_grid_off = PrefixSumCUDA(pc_grid_cnt, grid_params);
 
-  at::Tensor sorted_points =
+  torch::Tensor sorted_points =
       torch::zeros({batch_size, numSpacepoints, dim}, device)
           .to(torch::kFloat32);
-  at::Tensor sorted_points_idxs =
+  torch::Tensor sorted_points_idxs =
       torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
 
   CountingSortCUDA(embedTensor, lengths.to(torch::kInt64), pc_grid_cell,
@@ -160,13 +161,13 @@ at::Tensor Acts::detail::buildEdgesFRNN(at::Tensor &embedFeatures, float rVal,
       lengths.to(torch::kInt64), pc_grid_off.to(torch::kInt32),
       sorted_points_idxs, sorted_points_idxs,
       gridParamsCuda.to(torch::kFloat32), kVal, r_tensor, r_tensor * r_tensor);
-  at::Tensor positiveIndices = indices >= 0;
+  torch::Tensor positiveIndices = indices >= 0;
 
-  at::Tensor repeatRange = torch::arange(positiveIndices.size(1), device)
-                               .repeat({1, positiveIndices.size(2), 1})
-                               .transpose(1, 2);
+  torch::Tensor repeatRange = torch::arange(positiveIndices.size(1), device)
+                                  .repeat({1, positiveIndices.size(2), 1})
+                                  .transpose(1, 2);
 
-  at::Tensor stackedEdges = torch::stack(
+  torch::Tensor stackedEdges = torch::stack(
       {repeatRange.index({positiveIndices}), indices.index({positiveIndices})});
 
   return postprocessEdgeTensor(std::move(stackedEdges), true, true,
@@ -204,7 +205,8 @@ auto dist(const Span<float, Dim> &a, const Span<float, Dim> &b) {
 
 template <std::size_t Dim>
 struct BuildEdgesKDTree {
-  static at::Tensor invoke(at::Tensor &embedFeatures, float rVal, int kVal) {
+  static torch::Tensor invoke(torch::Tensor &embedFeatures, float rVal,
+                              int kVal) {
     assert(embedFeatures.size(1) == Dim);
     embedFeatures = embedFeatures.to(torch::kCPU);
 
@@ -252,16 +254,17 @@ struct BuildEdgesKDTree {
   }
 };
 
-at::Tensor Acts::detail::buildEdgesKDTree(at::Tensor &embedFeatures, float rVal,
-                                          int kVal, bool flipDirections) {
+torch::Tensor Acts::detail::buildEdgesKDTree(torch::Tensor &embedFeatures,
+                                             float rVal, int kVal,
+                                             bool flipDirections) {
   auto tensor = Acts::template_switch<BuildEdgesKDTree, 1, 12>(
       embedFeatures.size(1), embedFeatures, rVal, kVal);
 
   return postprocessEdgeTensor(tensor, true, true, flipDirections);
 }
 
-at::Tensor Acts::detail::buildEdges(at::Tensor &embedFeatures, float rVal,
-                                    int kVal, bool flipDirections) {
+torch::Tensor Acts::detail::buildEdges(torch::Tensor &embedFeatures, float rVal,
+                                       int kVal, bool flipDirections) {
 #ifndef ACTS_EXATRKX_CPUONLY
   if (torch::cuda::is_available()) {
     return detail::buildEdgesFRNN(embedFeatures, rVal, kVal, flipDirections);
