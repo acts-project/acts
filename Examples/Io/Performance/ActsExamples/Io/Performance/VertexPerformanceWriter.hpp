@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -60,6 +61,8 @@ class VertexPerformanceWriter final
     std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
     std::string inputVertices;
+    /// Magnetic field
+    std::shared_ptr<Acts::MagneticFieldProvider> bField;
     /// Output filename.
     std::string filePath = "vertexingperformance.root";
     /// Name of the output tree.
@@ -104,42 +107,89 @@ class VertexPerformanceWriter final
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
 
-  std::vector<float> m_truthX;
-  std::vector<float> m_truthY;
-  std::vector<float> m_truthZ;
-  std::vector<float> m_truthT;
+  // True 4D vertex position
+  std::vector<double> m_truthX;
+  std::vector<double> m_truthY;
+  std::vector<double> m_truthZ;
+  std::vector<double> m_truthT;
 
-  std::vector<float> m_recoX;
-  std::vector<float> m_recoY;
-  std::vector<float> m_recoZ;
-  std::vector<float> m_recoT;
+  // Reconstructed 4D vertex position
+  std::vector<double> m_recoX;
+  std::vector<double> m_recoY;
+  std::vector<double> m_recoZ;
+  std::vector<double> m_recoT;
 
-  /// Difference in x position between reco and true vtx
-  std::vector<float> m_resX;
-  std::vector<float> m_resY;
-  std::vector<float> m_resZ;
-  std::vector<float> m_resT;
+  /// Difference of reconstructed and true vertex 4D position
+  std::vector<double> m_resX;
+  std::vector<double> m_resY;
+  std::vector<double> m_resZ;
+  std::vector<double> m_resT;
 
-  std::vector<float> m_pullX;
-  std::vector<float> m_pullY;
-  std::vector<float> m_pullZ;
-  std::vector<float> m_pullT;
+  // pull(X) = (X_reco - X_true)/Var(X_reco)^(1/2)
+  std::vector<double> m_pullX;
+  std::vector<double> m_pullY;
+  std::vector<double> m_pullZ;
+  std::vector<double> m_pullT;
 
-  std::vector<float> m_covXX;
-  std::vector<float> m_covYY;
-  std::vector<float> m_covZZ;
-  std::vector<float> m_covTT;
-  std::vector<float> m_covXY;
-  std::vector<float> m_covXZ;
-  std::vector<float> m_covXT;
-  std::vector<float> m_covYZ;
-  std::vector<float> m_covYT;
-  std::vector<float> m_covZT;
+  // Vertex covariance
+  std::vector<double> m_covXX;
+  std::vector<double> m_covYY;
+  std::vector<double> m_covZZ;
+  std::vector<double> m_covTT;
+  std::vector<double> m_covXY;
+  std::vector<double> m_covXZ;
+  std::vector<double> m_covXT;
+  std::vector<double> m_covYZ;
+  std::vector<double> m_covYT;
+  std::vector<double> m_covZT;
 
+  //--------------------------------------------------------------
+  // Track-related variables are contained in a vector of vectors: The inner
+  // vectors contain the values of all tracks corresponding to one vertex. The
+  // outer vector can then have the same length as the flat vectors of
+  // vertex-related variables (see above). E.g.,
+  // m_truthPhi = ((truthPhi of 1st trk belonging to vtx 1,
+  //                truthPhi of 2nd trk belonging to vtx 1, ...),
+  //               (truthPhi of 1st trk belonging to vtx 2,
+  //                truthPhi of 2nd trk belonging to vtx 2, ...),
+  //                ...)
+  //
+  // True track momenta at the vertex
+  std::vector<std::vector<double>> m_truthPhi;
+  std::vector<std::vector<double>> m_truthTheta;
+  std::vector<std::vector<double>> m_truthQOverP;
+
+  // Reconstructed track momenta at the vertex before and after the vertex fit
+  std::vector<std::vector<double>> m_recoPhi;
+  std::vector<std::vector<double>> m_recoPhiFitted;
+  std::vector<std::vector<double>> m_recoTheta;
+  std::vector<std::vector<double>> m_recoThetaFitted;
+  std::vector<std::vector<double>> m_recoQOverP;
+  std::vector<std::vector<double>> m_recoQOverPFitted;
+
+  // Difference between reconstructed momenta and true momenta
+  std::vector<std::vector<double>> m_resPhi;
+  std::vector<std::vector<double>> m_resPhiFitted;
+  std::vector<std::vector<double>> m_resTheta;
+  std::vector<std::vector<double>> m_resThetaFitted;
+  std::vector<std::vector<double>> m_resQOverP;
+  std::vector<std::vector<double>> m_resQOverPFitted;
+  std::vector<std::vector<double>> m_momOverlap;
+  std::vector<std::vector<double>> m_momOverlapFitted;
+
+  // Pulls
+  std::vector<std::vector<double>> m_pullPhi;
+  std::vector<std::vector<double>> m_pullPhiFitted;
+  std::vector<std::vector<double>> m_pullTheta;
+  std::vector<std::vector<double>> m_pullThetaFitted;
+  std::vector<std::vector<double>> m_pullQOverP;
+  std::vector<std::vector<double>> m_pullQOverPFitted;
+
+  // Number of tracks associated with truth/reconstructed vertex
   std::vector<int> m_nTracksOnTruthVertex;
   std::vector<int> m_nTracksOnRecoVertex;
 
-  std::vector<float> m_trackVtxMatchFraction;
+  std::vector<double> m_trackVtxMatchFraction;
 
   /// Number of reconstructed vertices
   int m_nRecoVtx = -1;
