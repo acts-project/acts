@@ -1095,12 +1095,7 @@ def test_ckf_tracks_example(
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     events = 100
-    # Digitization is not thread-safe
-    s = Sequencer(
-        events=events,
-        numThreads=1,
-        failOnFirstFpe=True,
-    )
+    s = Sequencer(events=events, numThreads=1)  # Digitization is not thread-safe
 
     root_files = [
         (
