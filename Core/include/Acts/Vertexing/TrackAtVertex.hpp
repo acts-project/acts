@@ -72,7 +72,7 @@ struct TrackAtVertex {
   const input_track_t* originalParams;
 
   /// Momentum after the vertex fit
-  std::optional<FittedMomentum> fittedMomentum;
+  std::optional<FittedMomentum> fittedMomentum = std::nullopt;
 
   /// Chi2 of the track
   double chi2 = 0;

@@ -673,35 +673,39 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               }
 
               // Save track parameters after the vertex fit
-              Acts::ActsVector<3> recoMomFitted =
-                  trk.fittedMomentum.value().momentum;
-              const Acts::ActsMatrix<3, 3>& momCovFitted =
-                  trk.fittedMomentum.value().covariance;
-              innerRecoPhiFitted.push_back(recoMomFitted[0]);
-              innerRecoThetaFitted.push_back(recoMomFitted[1]);
-              innerRecoQOverPFitted.push_back(recoMomFitted[2]);
+              if (trk.fittedMomentum != std::nullopt) {
+                Acts::ActsVector<3> recoMomFitted =
+                    trk.fittedMomentum.value().momentum;
+                const Acts::ActsMatrix<3, 3>& momCovFitted =
+                    trk.fittedMomentum.value().covariance;
+                innerRecoPhiFitted.push_back(recoMomFitted[0]);
+                innerRecoThetaFitted.push_back(recoMomFitted[1]);
+                innerRecoQOverPFitted.push_back(recoMomFitted[2]);
 
-              Acts::ActsVector<3> diffMomFitted = recoMomFitted - trueMom;
-              // Accounting for the periodicity of phi. We overwrite the
-              // previously computed value for better readability.
-              diffMomFitted[0] = Acts::detail::difference_periodic(
-                  recoMomFitted(0), trueMom(0), 2 * M_PI);
-              innerResPhiFitted.push_back(diffMomFitted[0]);
-              innerResThetaFitted.push_back(diffMomFitted[1]);
-              innerResQOverPFitted.push_back(diffMomFitted[2]);
+                Acts::ActsVector<3> diffMomFitted = recoMomFitted - trueMom;
+                // Accounting for the periodicity of phi. We overwrite the
+                // previously computed value for better readability.
+                diffMomFitted[0] = Acts::detail::difference_periodic(
+                    recoMomFitted(0), trueMom(0), 2 * M_PI);
+                innerResPhiFitted.push_back(diffMomFitted[0]);
+                innerResThetaFitted.push_back(diffMomFitted[1]);
+                innerResQOverPFitted.push_back(diffMomFitted[2]);
 
-              innerPullPhiFitted.push_back(
-                  pull(diffMomFitted[0], momCovFitted(0, 0), "phi"));
-              innerPullThetaFitted.push_back(
-                  pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
-              innerPullQOverPFitted.push_back(
-                  pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
+                innerPullPhiFitted.push_back(
+                    pull(diffMomFitted[0], momCovFitted(0, 0), "phi"));
+                innerPullThetaFitted.push_back(
+                    pull(diffMomFitted[1], momCovFitted(1, 1), "theta"));
+                innerPullQOverPFitted.push_back(
+                    pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
-              const auto& recoUnitDirFitted =
-                  Acts::makeDirectionUnitFromPhiTheta(recoMomFitted[0],
-                                                      recoMomFitted[1]);
-              double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
-              innerMomOverlapFitted.push_back(overlapFitted);
+                const auto& recoUnitDirFitted =
+                    Acts::makeDirectionUnitFromPhiTheta(recoMomFitted[0],
+                                                        recoMomFitted[1]);
+                double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
+                innerMomOverlapFitted.push_back(overlapFitted);
+              } else {
+                ACTS_WARNING("No fitted track momentum found!");
+              }
             }
           }
           count++;
