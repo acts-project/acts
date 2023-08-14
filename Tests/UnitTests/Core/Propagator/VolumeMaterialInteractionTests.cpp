@@ -32,6 +32,7 @@ struct StepperState {
   Vector3 pos, dir;
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
+  double absCharge = UnitConstants::e;
 };
 
 /// @brief Simplified navigator
@@ -110,7 +111,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.absQ, std::abs(stepper.charge(state.stepping)));
   CHECK_CLOSE_ABS(volMatInt.qOverP, stepper.qOverP(state.stepping), 1e-6);
   BOOST_CHECK_EQUAL(volMatInt.mass, state.options.mass);
-  BOOST_CHECK_EQUAL(volMatInt.pdg, state.options.absPdgCode);
+  BOOST_CHECK_EQUAL(volMatInt.absPdg, state.options.absPdgCode);
   BOOST_CHECK_EQUAL(volMatInt.performCovarianceTransport,
                     state.stepping.covTransport);
   BOOST_CHECK_EQUAL(volMatInt.navDir, state.options.direction);
