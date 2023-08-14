@@ -100,11 +100,11 @@ int main(int argc, char const* argv[]) {
     // TODO make mean/mode configurable by command line
     const auto delta = computeEnergyLossMean(slab, pdg, mass, qOverP, charge);
     const auto deltaIon =
-        Acts::computeEnergyLossBethe(slab, pdg, mass, qOverP, charge);
+        Acts::computeEnergyLossBethe(slab, mass, qOverP, charge);
     const auto deltaRad =
         computeEnergyLossRadiative(slab, pdg, mass, qOverP, charge);
     const auto sigma =
-        Acts::computeEnergyLossLandauSigma(slab, pdg, mass, qOverP, charge);
+        Acts::computeEnergyLossLandauSigma(slab, mass, qOverP, charge);
 
     printLine(std::cout, mass, p, delta, deltaIon, deltaRad, sigma);
   }

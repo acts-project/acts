@@ -48,11 +48,11 @@ BOOST_DATA_TEST_CASE(energy_loss_consistency, thickness* particle* momentum, x,
   const auto slab = Acts::MaterialSlab(material, x);
   const auto qOverP = q / p;
 
-  auto dEBethe = computeEnergyLossBethe(slab, i, m, qOverP, q);
-  auto dELandau = computeEnergyLossLandau(slab, i, m, qOverP, q);
-  auto dELandauSigma = computeEnergyLossLandauSigma(slab, i, m, qOverP, q);
+  auto dEBethe = computeEnergyLossBethe(slab, m, qOverP, q);
+  auto dELandau = computeEnergyLossLandau(slab, m, qOverP, q);
+  auto dELandauSigma = computeEnergyLossLandauSigma(slab, m, qOverP, q);
   auto dELandauSigmaQOverP =
-      computeEnergyLossLandauSigmaQOverP(slab, i, m, qOverP, q);
+      computeEnergyLossLandauSigmaQOverP(slab, m, qOverP, q);
   auto dERad = computeEnergyLossRadiative(slab, i, m, qOverP, q);
   auto dEMean = computeEnergyLossMean(slab, i, m, qOverP, q);
   auto dEMode = computeEnergyLossMode(slab, i, m, qOverP, q);
@@ -100,10 +100,10 @@ BOOST_DATA_TEST_CASE(vacuum, thickness* particle* momentum, x, i, m, q, p) {
   const auto vacuum = Acts::MaterialSlab(Acts::Material(), x);
   const auto qOverP = q / p;
 
-  BOOST_CHECK_EQUAL(computeEnergyLossBethe(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeEnergyLossLandau(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeEnergyLossLandauSigma(vacuum, i, m, qOverP, q), 0);
-  BOOST_CHECK_EQUAL(computeEnergyLossLandauSigmaQOverP(vacuum, i, m, qOverP, q),
+  BOOST_CHECK_EQUAL(computeEnergyLossBethe(vacuum, m, qOverP, q), 0);
+  BOOST_CHECK_EQUAL(computeEnergyLossLandau(vacuum, m, qOverP, q), 0);
+  BOOST_CHECK_EQUAL(computeEnergyLossLandauSigma(vacuum, m, qOverP, q), 0);
+  BOOST_CHECK_EQUAL(computeEnergyLossLandauSigmaQOverP(vacuum, m, qOverP, q),
                     0);
   BOOST_CHECK_EQUAL(computeEnergyLossRadiative(vacuum, i, m, qOverP, q), 0);
   BOOST_CHECK_EQUAL(computeEnergyLossMean(vacuum, i, m, qOverP, q), 0);
@@ -125,8 +125,6 @@ BOOST_DATA_TEST_CASE(silicon_energy_loss,
 
   const auto slab = Acts::MaterialSlab(silicon, thickness);
 
-  const int pdg = Acts::eMuon;
-
   const auto m = 105.7_MeV;
 
   const auto qOverP = -1. / p;
@@ -134,7 +132,7 @@ BOOST_DATA_TEST_CASE(silicon_energy_loss,
   const auto charge = -1_e;
 
   // Difference is within 5% from PDG value
-  BOOST_CHECK_CLOSE(computeEnergyLossBethe(slab, pdg, m, qOverP, charge) /
+  BOOST_CHECK_CLOSE(computeEnergyLossBethe(slab, m, qOverP, charge) /
                         thickness / slab.material().massDensity() /
                         (1_MeV * 1_cm2 / 1_g),
                     loss, 5.);
@@ -148,8 +146,6 @@ BOOST_AUTO_TEST_CASE(silicon_landau) {
 
   const auto slab = Acts::MaterialSlab(silicon, thickness);
 
-  const int pdg = Acts::eMuon;
-
   const float m = 105.7_MeV;
 
   const float qOverP = -1. / 10_GeV;
@@ -157,7 +153,7 @@ BOOST_AUTO_TEST_CASE(silicon_landau) {
   const float charge = -1_e;
 
   // Difference is within 5% from PDG value
-  const auto dE = computeEnergyLossLandau(slab, pdg, m, qOverP, charge) / 1_MeV;
+  const auto dE = computeEnergyLossLandau(slab, m, qOverP, charge) / 1_MeV;
   BOOST_CHECK_CLOSE(dE, 0.525, 5.);
 
   // Difference is within 10% from PDG value
