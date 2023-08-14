@@ -85,7 +85,7 @@ struct PointwiseMaterialInteraction {
         mass(state.options.mass),
         pdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),
-        navDir(state.stepping.navDir) {}
+        navDir(state.options.direction) {}
 
   /// @brief This function evaluates the material properties to interact with
   ///
