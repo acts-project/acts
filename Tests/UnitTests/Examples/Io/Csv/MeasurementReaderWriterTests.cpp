@@ -50,13 +50,11 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
     Acts::Vector2 p = Acts::Vector2::Random();
     Acts::SymMatrix2 c = Acts::SymMatrix2::Random();
 
+    // NOTE this fails:
+    // auto m = Acts::makeMeasurement(sl, p, c, eBoundLoc0, eBoundTime)
+    // because we dont support non-consecutive parameters here for now
     auto m = Acts::makeMeasurement(Acts::SourceLink{sl}, p, c, Acts::eBoundLoc0,
                                    Acts::eBoundLoc1);
-
-    // TODO this fails!
-    // auto m = Acts::makeMeasurement(Acts::SourceLink{sl}, p, c,
-    // Acts::eBoundLoc0,
-    //                                Acts::eBoundTime);
 
     measOriginal.push_back(m);
 
