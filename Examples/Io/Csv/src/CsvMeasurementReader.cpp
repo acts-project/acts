@@ -48,6 +48,9 @@ ActsExamples::CsvMeasurementReader::CsvMeasurementReader(
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
   m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
   m_outputClusters.maybeInitialize(m_cfg.outputClusters);
+  m_outputMeasurementParticlesMap.maybeInitialize(
+      m_cfg.outputMeasurementParticlesMap);
+  m_inputHits.maybeInitialize(m_cfg.inputSimHits);
 
   // Check if event ranges match (should also catch missing files)
   auto checkRange = [&](const std::string& fileStem) {
@@ -276,6 +279,20 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
   MeasurementContainer measurements;
   for (auto& [_, meas] : orderedMeasurements) {
     measurements.emplace_back(std::move(meas));
+  }
+
+  if (m_inputHits.isInitialized() &&
+      m_outputMeasurementParticlesMap.isInitialized()) {
+    const auto hits = m_inputHits(ctx);
+
+    IndexMultimap<ActsFatras::Barcode> outputMap;
+
+    for (const auto& [measIdx, hitIdx] : measurementSimHitsMap) {
+      const auto& hit = hits.nth(hitIdx);
+      outputMap.emplace(measIdx, hit->particleId());
+    }
+
+    m_outputMeasurementParticlesMap(ctx, std::move(outputMap));
   }
 
   // Write the data to the EventStore

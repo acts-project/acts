@@ -192,13 +192,15 @@ def test_csv_meas_reader(tmp_path, fatras, trk_geo, conf_const):
             outputMeasurements="measurements",
             outputMeasurementSimHitsMap="simhitsmap",
             outputSourceLinks="sourcelinks",
+            outputMeasurementParticlesMap="meas_ptcl_map",
+            inputSimHits=simAlg.config.outputSimHits,
             inputDir=str(out),
         )
     )
 
     algs = [
         AssertCollectionExistsAlg(k, f"check_alg_{k}", acts.logging.WARNING)
-        for k in ("measurements", "simhitsmap", "sourcelinks")
+        for k in ("measurements", "simhitsmap", "sourcelinks", "meas_ptcl_map")
     ]
     for alg in algs:
         s.addAlgorithm(alg)
