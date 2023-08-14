@@ -24,8 +24,7 @@ summary = []
 
 with open(args.results) as f:
     reader = csv.reader(f)
-    for row in reader:
-        title, slug, ec = row
+    for title, slug, ec in reader:
         summary.append(
             {
                 "title": title,
