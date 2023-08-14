@@ -129,8 +129,7 @@ class DirectNavigator {
   /// @param tsurface is the target surface
   void resetState(State& state, const GeometryContext& /*geoContext*/,
                   const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  Direction /*navDir*/, const Surface* ssurface,
-                  const Surface* tsurface) const {
+                  const Surface* ssurface, const Surface* tsurface) const {
     // Reset everything except the navSurfaces
     auto navSurfaces = state.navSurfaces;
     state = State();
