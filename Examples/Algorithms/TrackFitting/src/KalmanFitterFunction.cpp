@@ -157,7 +157,8 @@ ActsExamples::makeKalmanFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
-  Acts::Navigator::Config cfg{trackingGeometry};
+  const auto& geo = *trackingGeometry;
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -176,7 +177,7 @@ ActsExamples::makeKalmanFitterFunction(
 
   // build the fitter function. owns the fitter object.
   auto fitterFunction = std::make_shared<KalmanFitterFunctionImpl>(
-      std::move(trackFitter), std::move(directTrackFitter), *trackingGeometry);
+      std::move(trackFitter), std::move(directTrackFitter), geo);
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->reverseFilteringLogic.momentumThreshold =
