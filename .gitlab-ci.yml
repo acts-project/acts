@@ -40,7 +40,7 @@ clang_tidy:
     - mkdir clang-tidy
 
     # Main clang-tidy run during cmake compilation
-    - CI/clang_tidy/run_clang_tidy.sh build | tee clang-tidy/clang-tidy.log
+    - CI/clang_tidy/run_clang_tidy.sh build -j2 | tee clang-tidy/clang-tidy.log
 
     # Install dependencies for processing scripts
     - pip install -r CI/clang_tidy/requirements.txt
