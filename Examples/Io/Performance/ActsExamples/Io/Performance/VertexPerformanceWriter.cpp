@@ -608,13 +608,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           auto propagateToVtx = [&](const auto& params)
               -> std::optional<
                   Acts::GenericBoundTrackParameters<Acts::SinglyCharged>> {
-            auto intersection =
-                perigeeSurface
-                    ->intersect(ctx.geoContext, params.position(ctx.geoContext),
-                                params.unitDirection(), false)
-                    .closest();
+            auto intersection = perigeeSurface->intersect(
+                ctx.geoContext, params.position(ctx.geoContext),
+                params.unitDirection(), false);
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
-                intersection.pathLength());
+                intersection.intersection.pathLength);
 
             auto result =
                 propagator->propagate(params, *perigeeSurface, pOptions);
