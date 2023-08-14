@@ -31,7 +31,7 @@ namespace Acts {
 ///  The cone can open to both sides, steered by \f$ z_min \f$ and \f$ z_max
 ///  \f$.
 ///
-///  @image html /figures/ConeBounds.gif
+///  @image html figures/ConeBounds.gif
 ///
 
 class ConeBounds : public SurfaceBounds {
