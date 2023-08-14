@@ -86,7 +86,7 @@ auto kalmanHandleMeasurement(
   if (not extensions.outlierFinder(trackStateProxy)) {
     // Run Kalman update
     auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                        state.stepping.navDir, logger);
+                                        state.options.direction, logger);
     if (!updateRes.ok()) {
       ACTS_ERROR("Update step failed: " << updateRes.error());
       return updateRes.error();

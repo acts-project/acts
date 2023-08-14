@@ -55,6 +55,22 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiTheta(T phi, T theta) {
   };
 }
 
+/// Construct a phi and theta angle from a direction vector.
+///
+/// @param unitDir 3D vector indicating a direction
+///
+template <typename T>
+inline Eigen::Matrix<T, 2, 1> makePhiThetaFromDirectionUnit(
+    Eigen::Matrix<T, 3, 1> unitDir) {
+  unitDir.normalize();
+  T phi = std::atan2(unitDir[1], unitDir[0]);
+  T theta = std::acos(unitDir[2]);
+  return {
+      phi,
+      theta,
+  };
+}
+
 /// Construct the first curvilinear unit vector `U` for the given direction.
 ///
 /// @param direction is the input direction vector
