@@ -1,9 +1,5 @@
 #include "ActsExamples/ContextualDetector/ExternalAlignmentDecorator.hpp"
-<<<<<<< HEAD
-
 #include "Acts/Geometry/GeometryContext.hpp"
-=======
->>>>>>> 2c318123d (adding hpp and cpp files-xternal alignment)
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
