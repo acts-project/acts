@@ -214,8 +214,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
     state.vtxInfoMap[&(vtxList[vtxIdx])].trackLinks.push_back(
         &(allTracks[iTrack]));
     state.tracksAtVerticesMap.insert(std::make_pair(
-        std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
-        TrackAtVertex<BoundTrackParameters>(&(allTracks[iTrack]), 1.)));
+        std::make_pair(&allTracks[iTrack], &vtxList[vtxIdx]),
+        TrackAtVertex<BoundTrackParameters>(&allTracks[iTrack], 1.)));
 
     // Use first track also for second vertex to let vtx1 and vtx2
     // share this track

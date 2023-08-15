@@ -19,7 +19,7 @@ namespace Acts {
 ///
 /// @brief Vertex fitters return a vertex position and updated track momenta at said position (+corresponding covariances). The updated track momenta and their covariances are saved in the following struct.
 struct FittedMomentum {
-  FittedMomentum(Vector3 mom, ActsSymMatrix<3> cov)
+  FittedMomentum(const Vector3& mom, const ActsSymMatrix<3>& cov)
       : momentum(mom), covariance(cov) {}
 
   Vector3 momentum;

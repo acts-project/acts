@@ -673,11 +673,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               }
 
               // Save track parameters after the vertex fit
-              if (trk.fittedMomentum != std::nullopt) {
+              if (trk.fittedMomentum) {
                 Acts::ActsVector<3> recoMomFitted =
-                    trk.fittedMomentum.value().momentum;
+                    trk.fittedMomentum->momentum;
                 const Acts::ActsMatrix<3, 3>& momCovFitted =
-                    trk.fittedMomentum.value().covariance;
+                    trk.fittedMomentum->covariance;
                 innerRecoPhiFitted.push_back(recoMomFitted[0]);
                 innerRecoThetaFitted.push_back(recoMomFitted[1]);
                 innerRecoQOverPFitted.push_back(recoMomFitted[2]);
