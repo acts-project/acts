@@ -43,8 +43,8 @@ torch::Tensor Acts::detail::postprocessEdgeTensor(torch::Tensor edges,
 
   // Remove duplicates
   if (removeDuplicates) {
-    // This code is wrong, but we keep it here to separate the refactor from the fix pull request
-    // Replace this after the refactor went in
+    // This code is wrong, but we keep it here to separate the refactor from the
+    // fix pull request Replace this after the refactor went in
     torch::Tensor duplicate_mask = edges.index({0}) > edges.index({1});
     edges = edges.index({Slice(), duplicate_mask});
 
