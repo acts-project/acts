@@ -77,6 +77,15 @@ class SeedFinderFTF {
   
 
   //needs to be memeber of class so can accessed by all memeber functions 
+
+  //trying to move geo from finder constructor to geo into here 
+  std::ifstream input_ifstream = std::ifstream(m_config.fastrack_input_file.c_str(), std::ifstream::in) ;
+
+  FasTrackConnector input_fastrack= FasTrackConnector(input_ifstream) ; 
+
+  TrigFTF_GNN_Geometry<external_spacepoint_t> mGNNgeo =  TrigFTF_GNN_Geometry<external_spacepoint_t>(m_config.input_vector, &input_fastrack);
+
+
   TrigFTF_GNN_DataStorage<external_spacepoint_t>* m_storage;
 
 }; 

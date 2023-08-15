@@ -70,7 +70,7 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
  private: 
   Config m_cfg; 
-  // Acts::SeedFinderFTF<SimSpacePoint> m_seedFinder; 
+  // std::unique_ptr<Acts::SeedFinderFTF<SimSpacePoint>> m_seedFinder; 
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};

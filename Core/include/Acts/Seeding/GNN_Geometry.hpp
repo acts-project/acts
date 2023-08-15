@@ -329,8 +329,6 @@ class TrigFTF_GNN_Geometry {
 
       return nullptr;
     }
-    
-
 
     return (*it).second;
   }

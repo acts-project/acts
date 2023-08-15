@@ -4,12 +4,13 @@
 #include<map>
 #include<algorithm>
 
-#define MAX_SEG_PER_NODE 1000 //was 30
-#define N_SEG_CONNS  6 //was 6
-
 #include "Acts/Seeding/GNN_Geometry.hpp"
 
 namespace Acts {
+
+constexpr size_t MAX_SEG_PER_NODE = 1000; //was 30
+constexpr size_t N_SEG_CONNS = 6; //was 6
+
 template <typename space_point_t>  
 class TrigFTF_GNN_Node {
  public:

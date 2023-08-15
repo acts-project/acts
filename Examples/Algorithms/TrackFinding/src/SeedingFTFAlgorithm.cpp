@@ -74,7 +74,7 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));    
 
-    // m_seedFinder = Acts::SeedFinderFTF<SimSpacePoint>(m_cfg.seedFinderConfig);   
+    // m_seedFinder = std::make_unique<Acts::SeedFinderFTF<SimSpacePoint>>(m_cfg.seedFinderConfig) ; 
       } //this is not FTF config type because it is a meber of the algs config, which is of type FTF cofig  
 
 
@@ -88,15 +88,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   std::vector<Acts::FTF_SP<SimSpacePoint>> FTF_spacePoints = Make_FTF_spacePoints(ctx, m_cfg.ACTS_FTF_Map);
 
 
-  // //loop over FTF_SP vector to plot the space points 
-  // fstream fout;
-  // fout.open("FTF_SP_output.csv", ios::out | ios::app);
-  // for (auto sp : FTF_spacePoints){
-  //   fout << sp.FTF_ID << ", "
-  //     << sp.SP->z() << ", "
-  //     << sp.SP->r() 
-  //     << "\n";
-  // }      
+  //loop over FTF_SP vector to plot the space points 
+  fstream fout;
+  fout.open("FTF_SP_output.csv", ios::out | ios::app);
+  for (auto sp : FTF_spacePoints){
+    int eta_mod_input = sp.combined_ID -sp.FTF_ID*1000 ; 
+    fout << sp.FTF_ID << ", "
+      << sp.SP->z() << ", "
+      << sp.SP->r() << ", "
+      << eta_mod_input //should hopefully be eta mod 
+      << "\n";
+  }      
 
 
   for (auto sp : FTF_spacePoints){
@@ -108,6 +110,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   //this is now calling on a core algorithm
   Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig);  
 
+
   //need this function as create_coords is needed for seeds 
   std::function<std::pair<Acts::Vector3, Acts::Vector2>(
       const SimSpacePoint *sp)>
@@ -118,14 +121,15 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       };  
       //output of function needed for seed     
 
-  finder.loadSpacePoints(FTF_spacePoints);      
 
+  finder.loadSpacePoints(FTF_spacePoints);       
+       
 
   //still to develop
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               FTF_spacePoints, create_coordinates);
-     
-                             
+       
+                   
   m_outputSeeds(ctx, std::move(seeds));
 
 
