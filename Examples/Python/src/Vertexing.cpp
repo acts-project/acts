@@ -24,11 +24,11 @@ namespace py = pybind11;
 
 using namespace ActsExamples;
 using namespace Acts;
-using Seeder = ActsExamples::AdaptiveMultiVertexFinderAlgorithm::SeedFinder;
 
 namespace Acts::Python {
 
 void addVertexing(Context& ctx) {
+  using Seeder = ActsExamples::AdaptiveMultiVertexFinderAlgorithm::SeedFinder;
   auto mex = ctx.get("examples");
   auto& m = ctx.get("main");
   auto seeder = m.def_submodule("seeder", "");

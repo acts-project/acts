@@ -57,13 +57,13 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
 ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  if (m_cfg.seedFinder == GaussianSeeder) {
+  if (m_cfg.seedFinder == SeedFinder::GaussianSeeder) {
     using Seeder = Acts::TrackDensityVertexFinder<
         Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
     Seeder seedFinder;
     return executeAfterSeederChoice<Seeder, Finder>(ctx, seedFinder);
-  } else if (m_cfg.seedFinder == AdaptiveGridSeeder) {
+  } else if (m_cfg.seedFinder == SeedFinder::AdaptiveGridSeeder) {
     using Seeder = Acts::AdaptiveGridDensityVertexFinder<109, Fitter>;
     using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, Seeder>;
     // The seeder config argument corresponds to the bin size in mm
