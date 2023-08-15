@@ -84,7 +84,7 @@ class DetectorNavigator {
 
   void resetState(State& state, const GeometryContext& /*geoContext*/,
                   const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  Direction /*navDir*/, const Surface* /*ssurface*/,
+                  const Surface* /*ssurface*/,
                   const Surface* /*tsurface*/) const {
     // Reset everything first
     state = State();
@@ -222,8 +222,9 @@ class DetectorNavigator {
                                   << surface.geometryId());
       // Estimate the surface status
       bool boundaryCheck = c.boundaryCheck;
-      auto surfaceStatus = stepper.updateSurfaceStatus(state.stepping, surface,
-                                                       boundaryCheck, logger());
+      auto surfaceStatus = stepper.updateSurfaceStatus(
+          state.stepping, surface, state.options.direction, boundaryCheck,
+          state.options.targetTolerance, logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper)
@@ -290,7 +291,8 @@ class DetectorNavigator {
 
     // TODO not sure about the boundary check
     auto surfaceStatus = stepper.updateSurfaceStatus(
-        state.stepping, *nextSurface, boundaryCheck, logger());
+        state.stepping, *nextSurface, state.options.direction, boundaryCheck,
+        state.options.targetTolerance, logger());
 
     // Check if we are at a surface
     if (surfaceStatus == Intersection3D::Status::onSurface) {
