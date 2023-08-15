@@ -124,8 +124,8 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
   int firstZBin = centralZBin - halfTrkGridSize;
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
-    float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-    trackDensityMap[firstZBin + j] = normal2D(d0, z + distCtrZ, cov);
+    float z = (j - halfTrkGridSize) * m_cfg.binSize;
+    trackDensityMap[firstZBin + j] = normal2D(-d0, z - distCtrZ, cov);
   }
   return trackDensityMap;
 }
