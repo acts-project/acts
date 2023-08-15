@@ -22,8 +22,10 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
         continue;
       }
       couldRemoveTracks = true;
-      auto trackDensityMap = state.trackDensities.at(trk);
-      m_cfg.gridDensity.subtractTrack(trackDensityMap, state.mainDensityMap);
+      auto binAndTrackGrid = state.binAndTrackGridMap.at(trk);
+      m_cfg.gridDensity.removeTrackGridFromMainGrid(
+          binAndTrackGrid.first, binAndTrackGrid.second, state.mainGridDensity,
+          state.mainGridZValues);
     }
     if (not couldRemoveTracks) {
       // No tracks were removed anymore
@@ -34,7 +36,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
       return seedVec;
     }
   } else {
-    state.mainDensityMap.clear();
+    state.mainGridDensity.clear();
+    state.mainGridZValues.clear();
     // Fill with track densities
     for (auto trk : trackVector) {
       const BoundTrackParameters& trkParams = m_extractParameters(*trk);
@@ -45,11 +48,11 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
         }
         continue;
       }
-      auto trackDensityMap =
-          m_cfg.gridDensity.addTrack(trkParams, state.mainDensityMap);
+      auto binAndTrackGrid = m_cfg.gridDensity.addTrack(
+          trkParams, state.mainGridDensity, state.mainGridZValues);
       // Cache track density contribution to main grid if enabled
       if (m_cfg.cacheGridStateForTrackRemoval) {
-        state.trackDensities[trk] = trackDensityMap;
+        state.binAndTrackGridMap[trk] = binAndTrackGrid;
         state.trackSelectionMap[trk] = true;
       }
     }
@@ -58,10 +61,11 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
 
   double z = 0;
   double width = 0;
-  if (not state.mainDensityMap.empty()) {
+  if (not state.mainGridDensity.empty()) {
     if (not m_cfg.estimateSeedWidth) {
       // Get z value of highest density bin
-      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainDensityMap);
+      auto maxZres = m_cfg.gridDensity.getMaxZPosition(state.mainGridDensity,
+                                                       state.mainGridZValues);
 
       if (!maxZres.ok()) {
         return maxZres.error();
@@ -69,8 +73,8 @@ auto Acts::AdaptiveGridDensityVertexFinder<trkGridSize, vfitter_t>::find(
       z = *maxZres;
     } else {
       // Get z value of highest density bin and width
-      auto maxZres =
-          m_cfg.gridDensity.getMaxZPositionAndWidth(state.mainDensityMap);
+      auto maxZres = m_cfg.gridDensity.getMaxZPositionAndWidth(
+          state.mainGridDensity, state.mainGridZValues);
 
       if (!maxZres.ok()) {
         return maxZres.error();

@@ -42,7 +42,7 @@ class AdaptiveGridDensityVertexFinder {
   using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
 
  public:
-  using DensityMap = typename GridDensity::DensityMap;
+  using TrackGridVector = typename GridDensity::TrackGridVector;
 
   /// @brief The Config struct
   struct Config {
@@ -77,17 +77,21 @@ class AdaptiveGridDensityVertexFinder {
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
-    // Map from z from the z bin values to the corresponding track density
-    DensityMap mainDensityMap;
+    // The main density vector
+    std::vector<float> mainGridDensity;
+    // Vector holding corresponding z bin values
+    std::vector<int> mainGridZValues;
 
-    // Map from input track to corresponding track density map
-    std::map<const InputTrack_t*, DensityMap> trackDensities;
+    // Map to store z-bin and track grid (i.e. the density contribution of
+    // a single track to the main grid) for every single track
+    std::map<const InputTrack_t*, std::pair<int, TrackGridVector>>
+        binAndTrackGridMap;
 
     // Map to store bool if track has passed track selection or not
     std::map<const InputTrack_t*, bool> trackSelectionMap;
 
     // Store tracks that have been removed from track collection. These
-    // tracks will be removed from the main grid
+    // track will be removed from the main grid
     std::vector<const InputTrack_t*> tracksToRemove;
 
     bool isInitialized = false;

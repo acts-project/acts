@@ -58,6 +58,10 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   paramVec2 << 0.01, 10.95, 0, 0, 0, 0;
   BoundVector paramVec3;
   paramVec3 << 0.01, 0.95, 0, 0, 0, 0;
+  BoundVector paramVec4;
+  paramVec4 << 0.01, -30.95, 0, 0, 0, 0;
+  BoundVector paramVec5;
+  paramVec5 << 0.01, -15.0, 0, 0, 0, 0;
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -67,29 +71,46 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
   BoundTrackParameters params3(perigeeSurface, paramVec3, covMat);
+  BoundTrackParameters params4(perigeeSurface, paramVec4, covMat);
+  BoundTrackParameters params5(perigeeSurface, paramVec5, covMat);
 
-  // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  // Start with empty grids
+  std::vector<float> mainGridDensity;
+  std::vector<int> mainGridZValues;
 
   // Track is too far away from z axis and was not added
-  auto trackDensityMap = grid.addTrack(params0, mainDensityMap);
-  BOOST_CHECK(mainDensityMap.empty());
+  auto zBinAndTrack = grid.addTrack(params0, mainGridDensity, mainGridZValues);
+  BOOST_CHECK(mainGridDensity.empty());
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
 
   // Track should have been entirely added to both grids
-  trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  zBinAndTrack = grid.addTrack(params1, mainGridDensity, mainGridZValues);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
 
   // Track should have been entirely added to both grids
-  trackDensityMap = grid.addTrack(params2, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 2 * trkGridSize);
+  zBinAndTrack = grid.addTrack(params2, mainGridDensity, mainGridZValues);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), 2 * trkGridSize);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
 
   // Track 3 has overlap of 2 bins with track 1
-  trackDensityMap = grid.addTrack(params3, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * trkGridSize - 2);
+  zBinAndTrack = grid.addTrack(params3, mainGridDensity, mainGridZValues);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), 3 * trkGridSize - 2);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
 
   // Add first track again, should *not* introduce new z entries
-  trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * trkGridSize - 2);
+  zBinAndTrack = grid.addTrack(params1, mainGridDensity, mainGridZValues);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), 3 * trkGridSize - 2);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
+
+  // Add two more tracks and check if order is correct
+  zBinAndTrack = grid.addTrack(params4, mainGridDensity, mainGridZValues);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
+  zBinAndTrack = grid.addTrack(params5, mainGridDensity, mainGridZValues);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
+
+  BOOST_CHECK(
+      std::is_sorted(std::begin(mainGridZValues), std::end(mainGridZValues)));
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
@@ -102,7 +123,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat(Covariance::Identity() * 0.005);
+  Covariance covMat(Covariance::Identity());
 
   float z0Trk1 = 0.25;
   float z0Trk2 = -10.95;
@@ -118,23 +139,28 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
-  // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  // Start with empty grids
+  std::vector<float> mainGridDensity;
+  std::vector<int> mainGridZValues;
 
-  auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  auto res1 = grid.getMaxZPosition(mainDensityMap);
+  // Fill grid with track densities
+  auto zBinAndTrack = grid.addTrack(params1, mainGridDensity, mainGridZValues);
+  auto res1 = grid.getMaxZPosition(mainGridDensity, mainGridZValues);
   BOOST_CHECK(res1.ok());
   // Maximum should be at z0Trk1 position
   BOOST_CHECK_EQUAL(*res1, z0Trk1);
 
-  trackDensityMap = grid.addTrack(params2, mainDensityMap);
-  auto res2 = grid.getMaxZPosition(mainDensityMap);
+  // Add second track
+  zBinAndTrack = grid.addTrack(params2, mainGridDensity, mainGridZValues);
+  auto res2 = grid.getMaxZPosition(mainGridDensity, mainGridZValues);
   BOOST_CHECK(res2.ok());
   // Trk 2 is closer to z-axis and should yield higher density values
   // New maximum is therefore at z0Trk2
   BOOST_CHECK_EQUAL(*res2, z0Trk2);
 
-  auto resWidth1 = grid.getMaxZPositionAndWidth(mainDensityMap);
+  // Get max position and width estimation
+  auto resWidth1 =
+      grid.getMaxZPositionAndWidth(mainGridDensity, mainGridZValues);
   BOOST_CHECK(resWidth1.ok());
   BOOST_CHECK_EQUAL((*resWidth1).first, z0Trk2);
   BOOST_CHECK((*resWidth1).second > 0);
@@ -168,20 +194,21 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
-  // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  // Start with empty grids
+  std::vector<float> mainGridDensity;
+  std::vector<int> mainGridZValues;
 
   // Fill grid with track densities
-  auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
+  auto zBinAndTrack = grid.addTrack(params1, mainGridDensity, mainGridZValues);
 
-  auto res1 = grid.getMaxZPosition(mainDensityMap);
+  auto res1 = grid.getMaxZPosition(mainGridDensity, mainGridZValues);
   BOOST_CHECK(res1.ok());
   // Maximum should be at z0Trk1 position
   BOOST_CHECK_EQUAL(*res1, z0Trk1);
 
   // Add second track
-  trackDensityMap = grid.addTrack(params2, mainDensityMap);
-  auto res2 = grid.getMaxZPosition(mainDensityMap);
+  zBinAndTrack = grid.addTrack(params2, mainGridDensity, mainGridZValues);
+  auto res2 = grid.getMaxZPosition(mainGridDensity, mainGridZValues);
   BOOST_CHECK(res2.ok());
   // Trk 2 is closer to z-axis and should yield higher density values
   // New maximum is therefore at z0Trk2
@@ -189,10 +216,10 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
 
   // Add small density values around the maximum of track 1
   const float densityToAdd = 5e-4;
-  mainDensityMap.at(1) += densityToAdd;
-  mainDensityMap.at(3) += densityToAdd;
+  mainGridDensity[21] += densityToAdd;
+  mainGridDensity[23] += densityToAdd;
 
-  auto res3 = grid.getMaxZPosition(mainDensityMap);
+  auto res3 = grid.getMaxZPosition(mainGridDensity, mainGridZValues);
   BOOST_CHECK(res3.ok());
   // Trk 2 still has the highest peak density value, however, the small
   // added densities for track 1 around its maximum should now lead to
@@ -228,80 +255,87 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   BoundTrackParameters params0(perigeeSurface, paramVec0, covMat);
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
 
-  // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  // Start with empty grids
+  std::vector<float> mainGridDensity;
+  std::vector<int> mainGridZValues;
 
   // Add track 0
-  auto trackDensityMap0 = grid.addTrack(params0, mainDensityMap);
-  BOOST_CHECK(not mainDensityMap.empty());
+  auto zBinAndTrack0 = grid.addTrack(params0, mainGridDensity, mainGridZValues);
+  BOOST_CHECK(not mainGridDensity.empty());
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
   // Grid size should match trkGridSize
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
 
   // Calculate total density
   float densitySum0 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum0 += it->second;
+  for (auto& d : mainGridDensity) {
+    densitySum0 += d;
   }
 
   // Add track 0 again
-  trackDensityMap0 = grid.addTrack(params0, mainDensityMap);
-  BOOST_CHECK(not mainDensityMap.empty());
+  auto zBinAndTrack1 = grid.addTrack(params0, mainGridDensity, mainGridZValues);
+  BOOST_CHECK(not mainGridDensity.empty());
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
   // Grid size should still match trkGridSize
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
 
   // Calculate new total density
   float densitySum1 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum1 += it->second;
+  for (auto& d : mainGridDensity) {
+    densitySum1 += d;
   }
 
   BOOST_CHECK(2 * densitySum0 == densitySum1);
 
-  // Remove track 0
-  grid.subtractTrack(trackDensityMap0, mainDensityMap);
+  // Remove track 1
+  grid.removeTrackGridFromMainGrid(zBinAndTrack1.first, zBinAndTrack1.second,
+                                   mainGridDensity, mainGridZValues);
 
   // Calculate new total density
   float densitySum2 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum2 += it->second;
+  for (auto& d : mainGridDensity) {
+    densitySum2 += d;
   }
 
   // Density should be old one again
   BOOST_CHECK(densitySum0 == densitySum2);
   // Grid size should still match trkGridSize (removal does not touch grid size)
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize);
 
   // Add track 1, overlapping track 0
-  auto trackDensityMap1 = grid.addTrack(params1, mainDensityMap);
+  auto zBinAndTrack2 = grid.addTrack(params1, mainGridDensity, mainGridZValues);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), mainGridZValues.size());
 
   int nNonOverlappingBins = int(std::abs(z0Trk1 - z0Trk2) / binSize + 1);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize + nNonOverlappingBins);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize + nNonOverlappingBins);
 
   float densitySum3 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum3 += it->second;
+  for (auto& d : mainGridDensity) {
+    densitySum3 += d;
   }
 
-  // Remove second track 0
-  grid.subtractTrack(trackDensityMap0, mainDensityMap);
+  // Remove second track 1
+  grid.removeTrackGridFromMainGrid(zBinAndTrack0.first, zBinAndTrack0.second,
+                                   mainGridDensity, mainGridZValues);
 
   float densitySum4 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum4 += it->second;
+  for (auto& d : mainGridDensity) {
+    densitySum4 += d;
   }
 
   // Density should match differences of removed tracks
   CHECK_CLOSE_ABS(densitySum4, densitySum3 - densitySum0, 1e-5);
 
-  // Remove track 1
-  grid.subtractTrack(trackDensityMap1, mainDensityMap);
+  // Remove last track again
+  grid.removeTrackGridFromMainGrid(zBinAndTrack2.first, zBinAndTrack2.second,
+                                   mainGridDensity, mainGridZValues);
 
   // Size should not have changed
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize + nNonOverlappingBins);
+  BOOST_CHECK_EQUAL(mainGridDensity.size(), trkGridSize + nNonOverlappingBins);
 
   float densitySum5 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum5 += it->second;
+  for (auto& d : mainGridDensity) {
+    densitySum5 += d;
   }
 
   // Grid is now empty after all tracks were removed
