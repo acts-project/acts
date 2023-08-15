@@ -610,7 +610,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                   Acts::GenericBoundTrackParameters<Acts::SinglyCharged>> {
             auto intersection = perigeeSurface->intersect(
                 ctx.geoContext, params.position(ctx.geoContext),
-                params.unitDirection(), false);
+                params.direction(), false);
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
                 intersection.intersection.pathLength);
 
@@ -667,7 +667,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 innerPullQOverP.push_back(
                     pull(diffMom[2], momCov(2, 2), "q/p", false));
 
-                const auto& recoUnitDir = paramsAtVtx->unitDirection();
+                const auto& recoUnitDir = paramsAtVtx->direction();
                 double overlap = trueUnitDir.dot(recoUnitDir);
                 innerMomOverlap.push_back(overlap);
               }
@@ -701,7 +701,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
                 const auto& recoUnitDirFitted =
-                    paramsAtVtxFitted->unitDirection();
+                    paramsAtVtxFitted->direction();
                 double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
                 innerMomOverlapFitted.push_back(overlapFitted);
               }

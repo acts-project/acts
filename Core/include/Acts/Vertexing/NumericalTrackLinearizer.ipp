@@ -109,7 +109,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // the propagation. Note that we work without covariance since we don't need
     // it to compute the derivative.
     Vector3 wiggledDir = makeDirectionFromPhiTheta(paramVecCopy(eLinPhi),
-                                                       paramVecCopy(eLinTheta));
+                                                   paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
         paramVecCopy.head(eLinPosSize), wiggledDir, paramVecCopy(eLinQOverP));

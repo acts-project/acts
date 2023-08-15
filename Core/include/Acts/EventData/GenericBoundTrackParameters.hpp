@@ -206,7 +206,7 @@ class GenericBoundTrackParameters {
   /// three-vector.
   Vector3 direction() const {
     return makeDirectionFromPhiTheta(m_params[eBoundPhi],
-                                         m_params[eBoundTheta]);
+                                     m_params[eBoundTheta]);
   }
   /// Absolute momentum.
   Scalar absoluteMomentum() const {
