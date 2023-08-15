@@ -673,7 +673,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               }
 
               // Save track parameters after the vertex fit
-              if (trk.fittedMomentum) {
+              if (trk.fittedMomentum.has_value()) {
                 Acts::ActsVector<3> recoMomFitted =
                     trk.fittedMomentum->momentum;
                 const Acts::ActsMatrix<3, 3>& momCovFitted =

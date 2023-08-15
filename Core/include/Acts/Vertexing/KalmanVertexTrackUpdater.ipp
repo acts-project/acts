@@ -60,7 +60,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
   // Now determine the smoothed chi2 of the track in the following
   KalmanVertexUpdater::updatePosition<input_track_t>(
-      vtx, linTrack, track.trackWeight, -1, matrixCache);
+      vtx, linTrack, track.weight, -1, matrixCache);
 
   // Corresponding weight matrix
   const SymMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
@@ -86,7 +86,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   // Set new properties
   track.fittedMomentum = fittedMom;
   track.chi2 = chi2;
-  track.ndf = 2 * track.trackWeight;
+  track.ndf = 2 * track.weight;
 
   return;
 }

@@ -19,7 +19,7 @@ void Acts::KalmanVertexUpdater::updateVertexWithTrack(
 template <typename input_track_t>
 void Acts::KalmanVertexUpdater::detail::update(
     Vertex<input_track_t>& vtx, TrackAtVertex<input_track_t>& trk, int sign) {
-  double trackWeight = trk.trackWeight;
+  double trackWeight = trk.weight;
 
   MatrixCache matrixCache;
 
@@ -56,7 +56,7 @@ void Acts::KalmanVertexUpdater::detail::update(
   }
   // Remove trk from current vertex
   if (sign < 0) {
-    trk.trackWeight = 0;
+    trk.weight = 0;
   }
 }
 

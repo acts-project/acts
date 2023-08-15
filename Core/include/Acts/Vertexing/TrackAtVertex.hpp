@@ -17,7 +17,9 @@ namespace Acts {
 
 /// @struct FittedMomentum
 ///
-/// @brief Vertex fitters return a vertex position and updated track momenta at said position (+corresponding covariances). The updated track momenta and their covariances are saved in the following struct.
+/// @brief Vertex fitters return a vertex position and updated track momenta at said position
+/// (+corresponding covariances). The updated track momenta and their
+/// covariances are saved in the following struct.
 struct FittedMomentum {
   FittedMomentum(const Vector3& mom, const ActsSymMatrix<3>& cov)
       : momentum(mom), covariance(cov) {}
@@ -72,15 +74,20 @@ struct TrackAtVertex {
   const input_track_t* originalParams;
 
   /// Momentum after the vertex fit
+  /// The full track parameters after the vertex fit are:
+  /// d0 = 0,
+  /// z0 = 0,
+  /// phi = fittedMomentum.momentum(0),
+  /// theta = fittedMomentum.momentum(1),
+  /// qOverP = fittedMomentum.momentum(2).
   std::optional<FittedMomentum> fittedMomentum = std::nullopt;
 
   /// Chi2 of the track
   double chi2 = 0;
 
   /// Number degrees of freedom
-  /// Note: Can be different from integer value
-  /// since annealing can result in effective
-  /// non-interger values
+  /// Note: Can be different from integer value since annealing can result in
+  /// effective non-integer values.
   double ndf = 0;
 
   /// Value of the compatibility of the track to the actual vertex, based
@@ -88,7 +95,7 @@ struct TrackAtVertex {
   double vertexCompatibility = 0;
 
   /// Weight of track in fit
-  double trackWeight = 1;
+  double weight = 1;
 
   /// The linearized state of the track at vertex
   LinearizedTrack linearizedState;
