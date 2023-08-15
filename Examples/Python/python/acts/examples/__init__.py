@@ -565,8 +565,6 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
             print = rich.print
             print(rich.rule.Rule("FPE masks"))
 
-            nonlocal error
-
             for i, mask in enumerate(masks):
                 if i > 0:
                     print(rich.rule.Rule())
