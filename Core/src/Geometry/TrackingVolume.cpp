@@ -472,9 +472,6 @@ Acts::TrackingVolume::compatibleBoundaries(
   auto excludeObject = options.startObject;
   boost::container::small_vector<Acts::BoundaryIntersection, 4> bIntersections;
 
-  // The signed direction: solution (except overstepping) is positive
-  auto sDirection = options.navDir * direction;
-
   // The Limits: current, path & overstepping
   double pLimit = options.pathLimit;
   double oLimit = options.overstepLimit;
@@ -532,7 +529,7 @@ Acts::TrackingVolume::compatibleBoundaries(
 
       // Exclude the boundary where you are on
       if (excludeObject != &bSurfaceRep) {
-        auto bCandidate = bSurfaceRep.intersect(gctx, position, sDirection,
+        auto bCandidate = bSurfaceRep.intersect(gctx, position, direction,
                                                 options.boundaryCheck);
         // Intersect and continue
         auto bIntersection = checkIntersection(bCandidate, bsIter.get());
@@ -616,10 +613,9 @@ Acts::TrackingVolume::compatibleLayers(
         }
       }
       // move to next one or break because you reached the end layer
-      tLayer =
-          (tLayer == options.endObject)
-              ? nullptr
-              : tLayer->nextLayer(gctx, position, options.navDir * direction);
+      tLayer = (tLayer == options.endObject)
+                   ? nullptr
+                   : tLayer->nextLayer(gctx, position, direction);
     }
     std::sort(lIntersections.begin(), lIntersections.end(),
               LayerIntersection::forwardOrder);
@@ -675,16 +671,13 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
     return sIntersections;
   }
 
-  // The signed direction
-  Vector3 sdir = options.navDir * direction;
-
   std::vector<const Volume*> hits;
   if (angle == 0) {
     // use ray
-    Ray3D obj(position, sdir);
+    Ray3D obj(position, direction);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   } else {
-    Acts::Frustum<ActsScalar, 3, 4> obj(position, sdir, angle);
+    Acts::Frustum<ActsScalar, 3, 4> obj(position, direction, angle);
     hits = intersectSearchHierarchy(std::move(obj), m_bvhTop);
   }
 
@@ -695,7 +688,7 @@ Acts::TrackingVolume::compatibleSurfacesFromHierarchy(
         boundarySurfaces = avol->boundarySurfaces();
     for (const auto& bs : boundarySurfaces) {
       const Surface& srf = bs->surfaceRepresentation();
-      auto sfmi = srf.intersect(gctx, position, sdir, false);
+      auto sfmi = srf.intersect(gctx, position, direction, false);
       for (const auto& sfi : sfmi.split()) {
         if (sfi and sfi.pathLength() > oLimit and sfi.pathLength() <= pLimit) {
           sIntersections.push_back(sfi);
