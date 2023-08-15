@@ -538,7 +538,7 @@ class KalmanFitter {
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping),
-          &st.referenceSurface(), targetSurface);
+          &st.referenceSurface(), nullptr);
 
       // Update material effects for last measurement state in reversed
       // direction
