@@ -11,12 +11,12 @@ mkdir -p $output_dir
 output_dir=$(realpath $output_dir)
 
 pushd $build_dir
-print "why?"
+echo "why?"
 NINJA_STATUS="[ninja][%f/%t] " ninja $@ | tee $output_dir/ninja.log
-print "what?"
+echo "what?"
 popd
-print "hi!"
+echo "hi!"
 cat $output_dir/ninja.log | grep -v '\[ninja\]' > $output_dir/clang-tidy.log
 
-print "hello?"
+echo "hello?"
 exit 0
