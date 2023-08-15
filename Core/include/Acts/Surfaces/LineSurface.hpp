@@ -161,32 +161,26 @@ class LineSurface : public Surface {
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
                         const Vector3& direction) const final;
 
-  /// Specified for LineSurface: global to local method without dynamic
-  /// memory allocation
+  /// Specified for `LineSurface`: global to local method without dynamic
+  /// memory allocation.
   ///
-  /// This method is the true global->local transformation.<br>
-  /// makes use of globalToLocal and indicates the sign of the Acts::eBoundLoc0
-  /// by the given momentum direction
+  /// This method is the true global -> local transformation. It makes use of
+  /// @c globalToLocal and indicates the sign of the @c Acts::eBoundLoc0
+  /// by the given momentum direction.
   ///
-  /// The calculation of the sign of the radius (or \f$ d_0 \f$) can be done as
-  /// follows:<br>
-  /// May \f$ \vec d = \vec m - \vec c \f$ denote the difference between the
+  /// The calculation of the sign of the radius (or @f$ d_0 @f$) can be done as
+  /// follows:
+  /// May @f$ \vec d = \vec m - \vec c @f$ denote the difference between the
   /// center of the line and the global position of the measurement/predicted
-  /// state,
-  /// then \f$ \vec d
-  /// \f$
-  /// lies within the so
-  /// called measurement plane.
-  /// The measurement plane is determined by the two orthogonal vectors \f$
-  /// \vec{measY}= \vec{Acts::eBoundLoc1} \f$
-  /// and \f$ \vec{measX} = \vec{measY} \times \frac{\vec{p}}{|\vec{p}|}
-  /// \f$.<br>
+  /// state. Then, @f$ \vec d @f$ lies in the so-called measurement plane.
+  /// The latter is determined by the two orthogonal vectors @f$
+  /// \vec{\texttt{measY}} = \vec{e}_z @f$ and @f$
+  /// \vec{\texttt{measX}} = \vec{\texttt{measY}} \times
+  /// \frac{\vec{p}}{|\vec{p}|} @f$.
   ///
-  /// The sign of the radius (\f$ d_{0} \f$ ) is then defined by the projection
-  /// of
-  /// \f$ \vec{d} \f$
-  /// onto \f$ \vec{measX} \f$:<br>
-  /// \f$ sign = -sign(\vec{d} \cdot \vec{measX}) \f$
+  /// The sign of the radius (or @f$ d_{0} @f$ ) is then defined by the projection
+  /// of @f$ \vec{d} @f$ on @f$ \vec{measX} @f$:<br> @f$ sign = -sign(\vec{d}
+  /// \cdot \vec{measX}) @f$
   ///
   /// @image html figures/SignOfDriftCircleD0.gif
   ///
@@ -196,13 +190,58 @@ class LineSurface : public Surface {
   /// @param direction global 3D momentum direction (optionally ignored)
   /// @param tolerance (unused)
   ///
-  /// @return a Result<Vector2> which can be !ok() if the operation fails
+  /// @return A `Result<Vector2>`, which is set to `!ok()` if the @p position is not
+  /// the point of closest approach to the line surface.
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
-  /// @brief Straight line intersection schema
+  /// Calculate the straight-line intersection with the line surface.
+  ///
+  /// <b>Mathematical motivation:</b>
+  ///
+  /// Given two lines in parameteric form:<br>
+  ///
+  /// @f$ \vec l_{a}(u) = \vec m_a + u \cdot \vec e_{a} @f$
+  ///
+  /// @f$ \vec l_{b}(\mu) = \vec m_b + \mu \cdot \vec e_{b} @f$
+  ///
+  /// The vector between any two points on the two lines is given by:
+  ///
+  /// @f$ \vec s(u, \mu) = \vec l_{b} - l_{a} = \vec m_{ab} + \mu
+  /// \cdot
+  /// \vec e_{b} - u \cdot \vec e_{a} @f$,
+  ///
+  /// where @f$ \vec m_{ab} = \vec m_{b} - \vec m_{a} @f$.
+  ///
+  /// @f$ \vec s(u_0, \mu_0) @f$ denotes the vector between the two
+  /// closest points
+  ///
+  /// @f$ \vec l_{a,0} = l_{a}(u_0) @f$ and @f$ \vec l_{b,0} =
+  /// l_{b}(\mu_0) @f$
+  ///
+  /// and is perpendicular to both, @f$ \vec e_{a} @f$ and @f$ \vec e_{b} @f$.
+  ///
+  /// This results in a system of two linear equations:
+  ///
+  /// - (i) @f$ 0 = \vec s(u_0, \mu_0) \cdot \vec e_a = \vec m_{ab} \cdot
+  /// \vec e_a + \mu_0 \vec e_a \cdot \vec e_b - u_0 @f$ <br>
+  /// - (ii) @f$ 0 = \vec s(u_0, \mu_0) \cdot \vec e_b = \vec m_{ab} \cdot
+  /// \vec e_b + \mu_0  - u_0 \vec e_b \cdot \vec e_a @f$ <br>
+  ///
+  /// Solving (i) and (ii) for @f$ u @f$ and @f$ \mu_0 @f$ yields:
+  ///
+  /// - @f$ u_0 = \frac{(\vec m_{ab} \cdot \vec e_a)-(\vec m_{ab} \cdot \vec
+  /// e_b)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
+  /// - @f$ \mu_0 = - \frac{(\vec m_{ab} \cdot \vec e_b)-(\vec m_{ab} \cdot \vec
+  /// e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
+  ///
+  /// The function checks if @f$ u_0 \simeq 0@f$ to check if the current @p
+  /// position is at the point of closest approach, i.e. the intersection
+  /// point, in which case it will return an @c onSurace intersection result.
+  /// Otherwise, the path length from @p position to the point of closest
+  /// approach (@f$ u_0 @f$) is returned in a @c reachable intersection.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The global position as a starting point
@@ -210,34 +249,6 @@ class LineSurface : public Surface {
   ///        @note expected to be normalized
   /// @param bcheck The boundary check directive for the estimate
   /// @param tolerance the tolerance used for the intersection
-  ///
-  ///   <b>mathematical motivation:</b>
-  ///   Given two lines in parameteric form:<br>
-  ///   - @f$ \vec l_{a}(\lambda) = \vec m_a + \lambda \cdot \vec e_{a} @f$ <br>
-  ///   - @f$ \vec l_{b}(\mu) = \vec m_b + \mu \cdot \vec e_{b} @f$ <br>
-  ///   the vector between any two points on the two lines is given by:
-  ///   - @f$ \vec s(\lambda, \mu) = \vec l_{b} - l_{a} = \vec m_{ab} + \mu
-  ///   \cdot
-  ///  \vec e_{b} - \lambda \cdot \vec e_{a} @f$, <br>
-  ///   when @f$ \vec m_{ab} = \vec m_{b} - \vec m_{a} @f$.<br>
-  ///   @f$ \vec s(u, \mu_0) @f$  denotes the vector between the two
-  ///  closest points <br>
-  ///   @f$ \vec l_{a,0} = l_{a}(u) @f$ and @f$ \vec l_{b,0} =
-  ///  l_{b}(\mu_0) @f$ <br>
-  ///   and is perpendicular to both, @f$ \vec e_{a} @f$ and @f$ \vec e_{b} @f$.
-  ///
-  ///   This results in a system of two linear equations:<br>
-  ///   - (i) @f$ 0 = \vec s(u, \mu_0) \cdot \vec e_a = \vec m_ab \cdot
-  ///  \vec e_a + \mu_0 \vec e_a \cdot \vec e_b - u @f$ <br>
-  ///   - (ii) @f$ 0 = \vec s(u, \mu_0) \cdot \vec e_b = \vec m_ab \cdot
-  ///  \vec e_b + \mu_0  - u \vec e_b \cdot \vec e_a @f$ <br>
-  ///
-  ///   Solving (i), (ii) for @f$ u @f$ and @f$ \mu_0 @f$ yields:
-  ///   - @f$ u = \frac{(\vec m_ab \cdot \vec e_a)-(\vec m_ab \cdot \vec
-  ///  e_b)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
-  ///   - @f$ \mu_0 = - \frac{(\vec m_ab \cdot \vec e_b)-(\vec m_ab \cdot \vec
-  ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
-  ///
   /// @return is the intersection object
   SurfaceIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
@@ -252,10 +263,10 @@ class LineSurface : public Surface {
   double pathCorrection(const GeometryContext& gctx, const Vector3& position,
                         const Vector3& direction) const override;
 
-  /// This method returns the bounds of the Surface by reference */
+  /// This method returns the bounds of the surface by reference
   const SurfaceBounds& bounds() const final;
 
-  /// Return properly formatted class name for screen output */
+  /// Return properly formatted class name for screen output
   std::string name() const override;
 
   /// Calculate the derivative of path length at the geometry constraint or
