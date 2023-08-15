@@ -82,19 +82,14 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   // Calculate bin in z
   int centralZBin = int(z0 / m_cfg.binSize);
 
-  // Calculate the positions of the bin centers
-  float binCtrD = dOffset * m_cfg.binSize;
-
   int sign = (z0 > 0) ? +1 : -1;
   float binCtrZ = (centralZBin + sign * 0.5f) * m_cfg.binSize;
 
   // Calculate the distance between IP values and their
   // corresponding bin centers
-  float distCtrD = d0 - binCtrD;
   float distCtrZ = z0 - binCtrZ;
 
-  DensityMap trackDensityMap =
-      createTrackGrid(dOffset, cov, distCtrD, centralZBin, distCtrZ);
+  DensityMap trackDensityMap = createTrackGrid(d0, centralZBin, distCtrZ, cov);
 
   for (const auto& densityEntry : trackDensityMap) {
     int zBin = densityEntry.first;
@@ -121,19 +116,16 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(
 template <int trkGridSize>
 typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2& cov, float distCtrD, int centralZBin,
-    float distCtrZ) const {
+    float d0, int centralZBin, float distCtrZ,
+    const Acts::SymMatrix2& cov) const {
   DensityMap trackDensityMap;
 
   int halfTrkGridSize = (trkGridSize - 1) / 2;
-  float i = halfTrkGridSize + offset;
-  float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-
   int firstZBin = centralZBin - halfTrkGridSize;
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
     float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-    trackDensityMap[firstZBin + j] = normal2D(d + distCtrD, z + distCtrZ, cov);
+    trackDensityMap[firstZBin + j] = normal2D(d0, z + distCtrZ, cov);
   }
   return trackDensityMap;
 }
