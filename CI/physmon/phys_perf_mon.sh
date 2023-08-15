@@ -61,6 +61,8 @@ if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
 fi
 if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     run_physmon_gen "CKF Tracking" "ckf_tracking"
+    run_physmon_gen "Track finding ttbar" "track_finding_ttbar"
+
 fi
 if [[ "$mode" == "all" || "$mode" == "vertexing" ]]; then
     run_physmon_gen "Vertexing" "vertexing"
@@ -246,6 +248,43 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         $refdir/performance_ambi_orthogonal.root \
         "Ambisolver orthogonal" \
         ambi_orthogonal
+
+    run_histcmp \
+        $outdir/performance_seeding_ttbar.root \
+        $refdir/performance_seeding_ttbar.root \
+        "Seeding ttbar" \
+        seeding_ttbar \
+        -c $config
+
+    run_histcmp \
+        $outdir/performance_ckf_ttbar.root \
+        $refdir/performance_ckf_ttbar.root \
+        "CKF ttbar" \
+        ckf_ttbar \
+        -c $config
+
+    run_histcmp \
+        $outdir/performance_ambi_ttbar.root \
+        $refdir/performance_ambi_ttbar.root \
+        "Ambisolver " \
+        ambi_ttbar
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/performance_amvf_ttbar.root \
+        vertexing \
+        $outdir/performance_amvf_ttbar_hist.root \
+        --silent \
+        --config CI/physmon/vertexing_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/performance_amvf_ttbar.root
+
+    run_histcmp \
+        $outdir/performance_amvf_ttbar_hist.root \
+        $refdir/performance_amvf_ttbar_hist.root \
+        "AMVF ttbar" \
+        amvf_ttbar
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
