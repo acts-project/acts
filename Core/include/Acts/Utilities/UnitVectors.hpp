@@ -45,7 +45,7 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiEta(T phi, T eta) {
 ///       unexpected implicit type conversions and forces the user to
 ///       explicitly cast mismatched input types.
 template <typename T>
-inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiTheta(T phi, T theta) {
+inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiTheta(T phi, T theta) {
   const auto cosTheta = std::cos(theta);
   const auto sinTheta = std::sin(theta);
   return {

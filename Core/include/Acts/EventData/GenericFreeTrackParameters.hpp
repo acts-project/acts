@@ -83,7 +83,7 @@ class GenericFreeTrackParameters {
         m_chargeInterpreter(std::abs(q)) {
     assert((0 <= p) and "Absolute momentum must be positive");
 
-    auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
+    auto dir = makeDirectionFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];
     m_params[eFreePos1] = pos4[ePos1];
     m_params[eFreePos2] = pos4[ePos2];
@@ -110,7 +110,7 @@ class GenericFreeTrackParameters {
                              Scalar qOverP,
                              std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(FreeVector::Zero()), m_cov(std::move(cov)) {
-    auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
+    auto dir = makeDirectionFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];
     m_params[eFreePos1] = pos4[ePos1];
     m_params[eFreePos2] = pos4[ePos2];

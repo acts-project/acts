@@ -83,7 +83,7 @@ BOOST_DATA_TEST_CASE(
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   NeutralCurvilinearTrackParameters params(pos4, dir, 1 / p);
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
@@ -102,7 +102,7 @@ BOOST_DATA_TEST_CASE(
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   CurvilinearTrackParameters params(pos4, dir, q / p);
   checkParameters(params, phi, theta, p, q, pos4, dir);
@@ -121,7 +121,7 @@ BOOST_DATA_TEST_CASE(
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   AnyCurvilinearTrackParameters params(pos4, dir, p, q);
   checkParameters(params, phi, theta, p, q, pos4, dir);

@@ -365,7 +365,7 @@ class TrackProxy {
   /// Get a unit vector along the track direction at the reference surface
   /// @return The direction unit vector
   Vector3 direction() const {
-    return makeDirectionUnitFromPhiTheta(phi(), theta());
+    return makeDirectionFromPhiTheta(phi(), theta());
   }
 
   /// Get the global momentum vector

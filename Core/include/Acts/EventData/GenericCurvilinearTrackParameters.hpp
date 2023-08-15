@@ -82,7 +82,7 @@ class GenericCurvilinearTrackParameters
       std::optional<CovarianceMatrix> cov = std::nullopt)
       : Base(Surface::makeShared<PlaneSurface>(
                  pos4.segment<3>(ePos0),
-                 makeDirectionUnitFromPhiTheta(phi, theta)),
+                 makeDirectionFromPhiTheta(phi, theta)),
              detail::transformFreeToCurvilinearParameters(
                  pos4[eTime], phi, theta, (q != Scalar(0)) ? (q / p) : (1 / p)),
              q, std::move(cov)) {
@@ -106,7 +106,7 @@ class GenericCurvilinearTrackParameters
       std::optional<CovarianceMatrix> cov = std::nullopt)
       : Base(Surface::makeShared<PlaneSurface>(
                  pos4.segment<3>(ePos0),
-                 makeDirectionUnitFromPhiTheta(phi, theta)),
+                 makeDirectionFromPhiTheta(phi, theta)),
              detail::transformFreeToCurvilinearParameters(pos4[eTime], phi,
                                                           theta, qOverP),
              std::move(cov)) {}

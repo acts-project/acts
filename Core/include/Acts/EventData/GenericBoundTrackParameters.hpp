@@ -205,7 +205,7 @@ class GenericBoundTrackParameters {
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
   Vector3 direction() const {
-    return makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
+    return makeDirectionFromPhiTheta(m_params[eBoundPhi],
                                          m_params[eBoundTheta]);
   }
   /// Absolute momentum.

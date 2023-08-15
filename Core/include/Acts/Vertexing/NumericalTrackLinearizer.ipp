@@ -108,7 +108,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // Create curvilinear track object from our parameters. This is needed for
     // the propagation. Note that we work without covariance since we don't need
     // it to compute the derivative.
-    Vector3 wiggledDir = makeDirectionUnitFromPhiTheta(paramVecCopy(eLinPhi),
+    Vector3 wiggledDir = makeDirectionFromPhiTheta(paramVecCopy(eLinPhi),
                                                        paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
