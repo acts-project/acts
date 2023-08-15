@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -44,7 +45,7 @@ struct NaivgatorState {
 struct State {
   struct {
     double mass = 0;
-    int absPdgCode = 0;
+    PdgParticle absPdgCode = eInvalid;
     Direction direction = Direction::Forward;
   } options;
 
@@ -94,7 +95,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.absCharge = std::abs(state.stepping.q);
   state.stepping.covTransport = true;
   state.options.mass = 10.;
-  state.options.absPdgCode = 11;
+  state.options.absPdgCode = PdgParticle::eElectron;
   state.options.direction = Direction::Backward;
   state.navigation.currentVolume = volume.get();
 
