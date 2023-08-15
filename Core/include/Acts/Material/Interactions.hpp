@@ -16,16 +16,6 @@
 
 namespace Acts {
 
-/// Additional derived relativistic quantities.
-struct RelativisticQuantities {
-  float q2OverBeta2 = 0.0f;
-  float beta2 = 0.0f;
-  float betaGamma = 0.0f;
-  float gamma = 0.0f;
-
-  RelativisticQuantities(float mass, float qOverP, float absQ);
-};
-
 /// Compute the mean energy loss due to ionisation and excitation.
 ///
 /// @param slab      The traversed material and its properties
@@ -76,10 +66,9 @@ float computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
 
 /// Compute the full with half maximum of landau energy loss distribution
 ///
-/// @param slab      The traversed material and its properties
-/// @param rq        The relativistic quantities
-float computeEnergyLossLandauFwhm(const MaterialSlab& slab,
-                                  const RelativisticQuantities& rq);
+/// @see computeEnergyLossBethe for parameters description
+float computeEnergyLossLandauFwhm(const MaterialSlab& slab, float m,
+                                  float qOverP, float absQ);
 
 /// Compute q/p Gaussian-equivalent sigma due to ionisation loss fluctuations.
 ///

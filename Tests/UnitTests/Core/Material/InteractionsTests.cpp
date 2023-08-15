@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(silicon_landau) {
 
   // Difference is within 10% from PDG value
   const auto fwhm =
-      Acts::computeEnergyLossLandauFwhm(slab, {m, qOverP, absQ}) / 1_MeV;
+      Acts::computeEnergyLossLandauFwhm(slab, m, qOverP, absQ) / 1_MeV;
   BOOST_CHECK_CLOSE(fwhm, 0.13, 10.);
 }
 
