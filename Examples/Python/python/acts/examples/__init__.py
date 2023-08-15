@@ -43,7 +43,6 @@ for module in [
 
 
 def _makeLayerTriplet(*args, **kwargs):
-
     if len(args) == 1:
         _type = type(args[0])
         negative = central = positive = args[0]
@@ -142,7 +141,8 @@ _patchKwargsConstructor(TGeoDetector.Config.Volume, proc=_process_volume_interva
 
 def NamedTypeArgs(**namedTypeArgs):
     """Decorator to move args of a named type (eg. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
-    Also allows the keyword argument to be converted from a built-in type (eg. `tuple` or `int`)."""
+    Also allows the keyword argument to be converted from a built-in type (eg. `tuple` or `int`).
+    """
 
     namedTypeClasses = {c: a for a, c in namedTypeArgs.items()}
 
@@ -344,11 +344,9 @@ def defaultLogging(
 
 
 class Sequencer(ActsPythonBindings._examples._Sequencer):
-
     _autoFpeMasks: Optional[List["FpeMask"]] = None
 
     def __init__(self, *args, **kwargs):
-
         # if we have the argument already in kwargs, we optionally convert them from tuples
         if "fpeMasks" in kwargs:
             m = kwargs["fpeMasks"]
@@ -543,7 +541,19 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
         error = False
         srcdir = cls.srcdir()
 
-        def rich_summary():
+        if not have_rich or not sys.stdout.isatty():
+            print("FPE masks:")
+            for mask in masks:
+                s = f"{mask.file}:{mask.lines[0]}: {mask.type.name}: {mask.count}"
+
+                full_path = srcdir / mask.file
+                if not full_path.exists():
+                    print(f"- {s}\n  [File at {full_path} does not exist!]")
+                    error = True
+                else:
+                    print(f"- {s}")
+
+        else:
             import rich
             import rich.rule
             import rich.panel
@@ -614,22 +624,6 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                 )
 
             print(table)
-
-        if not have_rich or not sys.stdout.isatty():
-
-            print("FPE masks:")
-            for mask in masks:
-                s = f"{mask.file}:{mask.lines[0]}: {mask.type.name}: {mask.count}"
-
-                full_path = srcdir / mask.file
-                if not full_path.exists():
-                    print(f"- {s}\n  [File at {full_path} does not exist!]")
-                    error = True
-                else:
-                    print(f"- {s}")
-
-        else:
-            rich_summary()
 
         if error:
             raise RuntimeError("Sequencer FPE masking configuration has errors")
