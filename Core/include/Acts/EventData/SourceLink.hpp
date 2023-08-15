@@ -17,6 +17,11 @@
 #include <type_traits>
 #include <utility>
 
+#if !defined(ACTS_SOURCELINK_SBO_SIZE)
+// Do not set this in code, use CMake!
+#define ACTS_SOURCELINK_SBO_SIZE 16
+#endif
+
 namespace Acts {
 
 namespace detail_sl {
@@ -25,7 +30,7 @@ using geometry_id_t = decltype(std::declval<T>().geometryId());
 }  // namespace detail_sl
 
 class SourceLink final {
-  using any_type = AnyBase<16>;
+  using any_type = AnyBase<ACTS_SOURCELINK_SBO_SIZE>;
 
  public:
   /// Getter for the geometry identifier
