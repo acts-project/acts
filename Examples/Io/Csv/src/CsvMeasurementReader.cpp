@@ -129,38 +129,30 @@ std::vector<ActsExamples::MeasurementData> readMeasurementsByGeometryId(
   return measurements;
 }
 
-// Build clusters from the cell data vector. Assumes the cell data to be sorted
-// by measurment id!
 ActsExamples::ClusterContainer makeClusters(
-    const std::vector<ActsExamples::CellData>& cellData,
+    const std::unordered_multimap<std::size_t, ActsExamples::CellData>&
+        cellDataMap,
     std::size_t nMeasurments) {
   using namespace ActsExamples;
   ClusterContainer clusters;
 
-  auto cellDataIt = cellData.begin();
   for (auto index = 0ul; index < nMeasurments; ++index) {
-    // Search for the range containing the index
-    cellDataIt = std::find_if(cellDataIt, cellData.end(), [&](const auto& cd) {
-      return cd.measurement_id == index;
-    });
-
-    auto nextCellDataIt = std::find_if(
-        cellDataIt, cellData.end(),
-        [&](const auto& cd) { return cd.measurement_id != index; });
+    auto [begin, end] = cellDataMap.equal_range(index);
 
     // Fill the channels with the iterators
     Cluster cluster;
-    cluster.channels.reserve(std::distance(cellDataIt, nextCellDataIt));
+    cluster.channels.reserve(std::distance(begin, end));
 
-    for (auto it = cellDataIt; it != nextCellDataIt; ++it) {
+    for (auto it = begin; it != end; ++it) {
+      const auto& cellData = it->second;
       ActsFatras::Channelizer::Segment2D dummySegment = {Acts::Vector2::Zero(),
                                                          Acts::Vector2::Zero()};
 
       ActsFatras::Channelizer::Bin2D bin{
-          static_cast<unsigned int>(it->channel0),
-          static_cast<unsigned int>(it->channel1)};
+          static_cast<unsigned int>(cellData.channel0),
+          static_cast<unsigned int>(cellData.channel1)};
 
-      cluster.channels.emplace_back(bin, dummySegment, it->value);
+      cluster.channels.emplace_back(bin, dummySegment, cellData.value);
     }
 
     // update the iterator
@@ -281,6 +273,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     measurements.emplace_back(std::move(meas));
   }
 
+  // Generate measurment-particles-map
   if (m_inputHits.isInitialized() &&
       m_outputMeasurementParticlesMap.isInitialized()) {
     const auto hits = m_inputHits(ctx);
@@ -335,12 +328,12 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
                    fromLegacy);
   }
 
-  // Sort cell data so we can go trough the cell data efficiently afterwards
-  std::sort(cellData.begin(), cellData.end(), [](const auto& a, const auto& b) {
-    return a.measurement_id < b.measurement_id;
-  });
+  std::unordered_multimap<std::size_t, ActsExamples::CellData> cellDataMap;
+  for (const auto& cd : cellData) {
+    cellDataMap.emplace(cd.measurement_id, cd);
+  }
 
-  auto clusters = makeClusters(cellData, orderedMeasurements.size());
+  auto clusters = makeClusters(cellDataMap, orderedMeasurements.size());
   m_outputClusters(ctx, std::move(clusters));
 
   return ActsExamples::ProcessCode::SUCCESS;
