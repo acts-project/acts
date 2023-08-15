@@ -121,16 +121,16 @@ Acts::RelativisticQuantities::RelativisticQuantities(float mass, float qOverP,
   // beta²/q² = (p/E)²/q² = p²/(q²m² + q²p²) = 1/(q² + (m²(q/p)²)
   // q²/beta² = q² + m²(q/p)²
   q2OverBeta2 = absQ * absQ + (mass * qOverP) * (mass * qOverP);
-  assert(q2OverBeta2 >= 0 && "Negative q2OverBeta2");
+  assert((q2OverBeta2 >= 0) && "Negative q2OverBeta2");
   // 1/p = q/(qp) = (q/p)/q
   const float mOverP = mass * std::abs(qOverP / absQ);
   const float pOverM = 1.0f / mOverP;
   // beta² = p²/E² = p²/(m² + p²) = 1/(1 + (m/p)²)
   beta2 = 1.0f / (1.0f + mOverP * mOverP);
-  assert(beta2 >= 0 && "Negative beta2");
+  assert((beta2 >= 0) && "Negative beta2");
   // beta*gamma = (p/sqrt(m² + p²))*(sqrt(m² + p²)/m) = p/m
   betaGamma = pOverM;
-  assert(betaGamma >= 0 && "Negative betaGamma");
+  assert((betaGamma >= 0) && "Negative betaGamma");
   // gamma = sqrt(m² + p²)/m = sqrt(1 + (p/m)²)
   gamma = std::sqrt(1.0f + pOverM * pOverM);
 }
@@ -263,7 +263,7 @@ namespace {
 ///
 inline float convertLandauFwhmToGaussianSigma(float fwhm) {
   // return fwhm / (2 * std::sqrt(2 * std::log(2.0f)));
-  return fwhm * 0.644391971f;
+  return fwhm * 0.42466090014400953f;
 }
 
 }  // namespace
