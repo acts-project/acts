@@ -111,7 +111,7 @@ class AdaptiveGridTrackDensity {
   /// @param centralZBin Central z bin of the track (where its density is the highest)
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
-  DensityMap createTrackGrid(float d0, int centralZBin, float distCtrZ,
+  DensityMap createTrackGrid(float d0, float z0, int centralZBin,
                              const Acts::SymMatrix2& cov) const;
 
   /// @brief Function that estimates the seed width based on the full width

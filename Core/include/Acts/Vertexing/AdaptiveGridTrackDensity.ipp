@@ -71,25 +71,17 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
-  // Calculate offset in d direction to central bin at z-axis
+  // Calculate bin in d direction
   int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
   // Check if current track affects grid density
-  // in central bins at z-axis
   if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
     DensityMap emptyTrackDensityMap;
     return emptyTrackDensityMap;
   }
-  // Calculate bin in z
+  // Calculate bin in z direction
   int centralZBin = int(z0 / m_cfg.binSize);
 
-  int sign = (z0 > 0) ? +1 : -1;
-  float binCtrZ = (centralZBin + sign * 0.5f) * m_cfg.binSize;
-
-  // Calculate the distance between IP values and their
-  // corresponding bin centers
-  float distCtrZ = z0 - binCtrZ;
-
-  DensityMap trackDensityMap = createTrackGrid(d0, centralZBin, distCtrZ, cov);
+  DensityMap trackDensityMap = createTrackGrid(d0, z0, centralZBin, cov);
 
   for (const auto& densityEntry : trackDensityMap) {
     int zBin = densityEntry.first;
@@ -116,16 +108,18 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(
 template <int trkGridSize>
 typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
-    float d0, int centralZBin, float distCtrZ,
-    const Acts::SymMatrix2& cov) const {
+    float d0, float z0, int centralZBin, const Acts::SymMatrix2& cov) const {
   DensityMap trackDensityMap;
 
   int halfTrkGridSize = (trkGridSize - 1) / 2;
   int firstZBin = centralZBin - halfTrkGridSize;
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
-    float z = (j - halfTrkGridSize) * m_cfg.binSize;
-    trackDensityMap[firstZBin + j] = normal2D(-d0, z - distCtrZ, cov);
+    int zBin = firstZBin + j;
+    int sign = (zBin > 0) ? +1 : -1;
+    float z = (zBin + sign * 0.5f) * m_cfg.binSize;
+    // float z = (j - halfTrkGridSize) * m_cfg.binSize;
+    trackDensityMap[zBin] = normal2D(-d0, z - z0, cov);
   }
   return trackDensityMap;
 }
