@@ -8,8 +8,7 @@
 
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"

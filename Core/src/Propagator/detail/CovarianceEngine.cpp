@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"

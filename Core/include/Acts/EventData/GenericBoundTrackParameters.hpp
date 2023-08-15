@@ -33,7 +33,7 @@ namespace Acts {
 ///
 /// @note This class holds shared ownership on its reference surface.
 template <class charge_t>
-class SingleBoundTrackParameters {
+class GenericBoundTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
@@ -51,9 +51,9 @@ class SingleBoundTrackParameters {
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
-  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const ParametersVector& params, Scalar q,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const ParametersVector& params,
+      Scalar q, std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(params),
         m_cov(std::move(cov)),
         m_surface(std::move(surface)),
@@ -74,9 +74,9 @@ class SingleBoundTrackParameters {
   /// ambiguities, i.e. the charge type is default-constructible.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  SingleBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                             const ParametersVector& params,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const ParametersVector& params,
+      std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(params), m_cov(std::move(cov)), m_surface(std::move(surface)) {
     assert(m_surface);
     normalizePhiTheta();
@@ -95,7 +95,7 @@ class SingleBoundTrackParameters {
   ///
   /// @note The returned result indicates whether the free parameters could
   /// successfully be converted to on-surface parameters.
-  static Result<SingleBoundTrackParameters<charge_t>> create(
+  static Result<GenericBoundTrackParameters<charge_t>> create(
       std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
       const Vector4& pos4, const Vector3& dir, Scalar p, Scalar q,
       std::optional<CovarianceMatrix> cov = std::nullopt) {
@@ -107,8 +107,8 @@ class SingleBoundTrackParameters {
       return bound.error();
     }
 
-    return SingleBoundTrackParameters<charge_t>{std::move(surface), *bound, q,
-                                                std::move(cov)};
+    return GenericBoundTrackParameters<charge_t>{std::move(surface), *bound, q,
+                                                 std::move(cov)};
   }
 
   /// Factory to construct from four-position, direction, and
@@ -128,7 +128,7 @@ class SingleBoundTrackParameters {
   /// successfully be converted to on-surface parameters.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  static Result<SingleBoundTrackParameters<charge_t>> create(
+  static Result<GenericBoundTrackParameters<charge_t>> create(
       std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
       const Vector4& pos4, const Vector3& dir, Scalar qOverP,
       std::optional<CovarianceMatrix> cov = std::nullopt) {
@@ -138,18 +138,19 @@ class SingleBoundTrackParameters {
       return bound.error();
     }
 
-    return SingleBoundTrackParameters<charge_t>{std::move(surface), *bound,
-                                                std::move(cov)};
+    return GenericBoundTrackParameters<charge_t>{std::move(surface), *bound,
+                                                 std::move(cov)};
   }
 
   /// Parameters are not default constructible due to the charge type.
-  SingleBoundTrackParameters() = delete;
-  SingleBoundTrackParameters(const SingleBoundTrackParameters&) = default;
-  SingleBoundTrackParameters(SingleBoundTrackParameters&&) = default;
-  ~SingleBoundTrackParameters() = default;
-  SingleBoundTrackParameters& operator=(const SingleBoundTrackParameters&) =
+  GenericBoundTrackParameters() = delete;
+  GenericBoundTrackParameters(const GenericBoundTrackParameters&) = default;
+  GenericBoundTrackParameters(GenericBoundTrackParameters&&) = default;
+  ~GenericBoundTrackParameters() = default;
+  GenericBoundTrackParameters& operator=(const GenericBoundTrackParameters&) =
       default;
-  SingleBoundTrackParameters& operator=(SingleBoundTrackParameters&&) = default;
+  GenericBoundTrackParameters& operator=(GenericBoundTrackParameters&&) =
+      default;
 
   /// Parameters vector.
   ParametersVector& parameters() { return m_params; }
@@ -263,20 +264,20 @@ class SingleBoundTrackParameters {
   ///   of equality in different contexts. None of that can be handled by
   ///   this operator. Users should think really hard if this is what they
   ///   want and we might decided that we will remove this in the future.
-  friend bool operator==(const SingleBoundTrackParameters<charge_t>& lhs,
-                         const SingleBoundTrackParameters<charge_t>& rhs) {
+  friend bool operator==(const GenericBoundTrackParameters<charge_t>& lhs,
+                         const GenericBoundTrackParameters<charge_t>& rhs) {
     return (lhs.m_params == rhs.m_params) and (lhs.m_cov == rhs.m_cov) and
            (lhs.m_surface == rhs.m_surface) and
            (lhs.m_chargeInterpreter == rhs.m_chargeInterpreter);
   }
   /// Compare two bound track parameters for bitwise in-equality.
-  friend bool operator!=(const SingleBoundTrackParameters<charge_t>& lhs,
-                         const SingleBoundTrackParameters<charge_t>& rhs) {
+  friend bool operator!=(const GenericBoundTrackParameters<charge_t>& lhs,
+                         const GenericBoundTrackParameters<charge_t>& rhs) {
     return not(lhs == rhs);
   }
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,
-                                  const SingleBoundTrackParameters& tp) {
+                                  const GenericBoundTrackParameters& tp) {
     detail::printBoundParameters(
         os, tp.referenceSurface(), tp.parameters(),
         tp.covariance().has_value() ? &tp.covariance().value() : nullptr);
