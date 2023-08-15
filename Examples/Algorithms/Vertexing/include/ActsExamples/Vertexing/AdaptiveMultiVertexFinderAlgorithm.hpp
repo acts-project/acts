@@ -62,7 +62,7 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
   using VertexCollection =
       std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
 
-  enum SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
+  enum class SeedFinder { GaussianSeeder, AdaptiveGridSeeder };
 
   struct Config {
     /// Optional. Input track parameters collection
