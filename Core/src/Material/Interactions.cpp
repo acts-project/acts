@@ -369,8 +369,12 @@ inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double energy) {
 
 }  // namespace
 
-float Acts::computeEnergyLossRadiative(const MaterialSlab& slab, int absPdg,
-                                       float m, float qOverP, float absQ) {
+float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
+                                       PdgParticle absPdg, float m,
+                                       float qOverP, float absQ) {
+  assert((absPdg == Acts::makeAbsolutePdgParticle(absPdg)) &&
+         "pdg is not absolute");
+
   // return early in case of vacuum or zero thickness
   if (not slab) {
     return 0.0f;
@@ -394,8 +398,11 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab, int absPdg,
 }
 
 float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
-                                            int absPdg, float m, float qOverP,
-                                            float absQ) {
+                                            PdgParticle absPdg, float m,
+                                            float qOverP, float absQ) {
+  assert((absPdg == Acts::makeAbsolutePdgParticle(absPdg)) &&
+         "pdg is not absolute");
+
   // return early in case of vacuum or zero thickness
   if (not slab) {
     return 0.0f;
@@ -425,28 +432,30 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
   return derE * derQOverP * x;
 }
 
-float Acts::computeEnergyLossMean(const MaterialSlab& slab, int absPdg, float m,
-                                  float qOverP, float absQ) {
+float Acts::computeEnergyLossMean(const MaterialSlab& slab, PdgParticle absPdg,
+                                  float m, float qOverP, float absQ) {
   return computeEnergyLossBethe(slab, m, qOverP, absQ) +
          computeEnergyLossRadiative(slab, absPdg, m, qOverP, absQ);
 }
 
-float Acts::deriveEnergyLossMeanQOverP(const MaterialSlab& slab, int absPdg,
-                                       float m, float qOverP, float absQ) {
+float Acts::deriveEnergyLossMeanQOverP(const MaterialSlab& slab,
+                                       PdgParticle absPdg, float m,
+                                       float qOverP, float absQ) {
   return deriveEnergyLossBetheQOverP(slab, m, qOverP, absQ) +
          deriveEnergyLossRadiativeQOverP(slab, absPdg, m, qOverP, absQ);
 }
 
-float Acts::computeEnergyLossMode(const MaterialSlab& slab, int absPdg, float m,
-                                  float qOverP, float absQ) {
+float Acts::computeEnergyLossMode(const MaterialSlab& slab, PdgParticle absPdg,
+                                  float m, float qOverP, float absQ) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
   return 0.9f * computeEnergyLossLandau(slab, m, qOverP, absQ) +
          0.15f * computeEnergyLossRadiative(slab, absPdg, m, qOverP, absQ);
 }
 
-float Acts::deriveEnergyLossModeQOverP(const MaterialSlab& slab, int absPdg,
-                                       float m, float qOverP, float absQ) {
+float Acts::deriveEnergyLossModeQOverP(const MaterialSlab& slab,
+                                       PdgParticle absPdg, float m,
+                                       float qOverP, float absQ) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
   return 0.9f * deriveEnergyLossLandauQOverP(slab, m, qOverP, absQ) +
@@ -477,8 +486,11 @@ inline float theta0RossiGreisen(float xOverX0, float momentumInv,
 }  // namespace
 
 float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
-                                            int absPdg, float m, float qOverP,
-                                            float absQ) {
+                                            PdgParticle absPdg, float m,
+                                            float qOverP, float absQ) {
+  assert((absPdg == Acts::makeAbsolutePdgParticle(absPdg)) &&
+         "pdg is not absolute");
+
   // return early in case of vacuum or zero thickness
   if (not slab) {
     return 0.0f;

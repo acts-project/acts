@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
@@ -43,7 +44,7 @@ struct PointwiseMaterialInteraction {
   /// The particle mass
   const float mass = 0.0;
   /// The particle absolute pdg
-  const int absPdg = 0.0;
+  const PdgParticle absPdg = PdgParticle::eInvalid;
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport = false;
   /// The navigation direction

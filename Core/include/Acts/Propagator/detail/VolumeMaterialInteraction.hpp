@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -36,7 +37,7 @@ struct VolumeMaterialInteraction {
   /// The particle mass
   const float mass = 0;
   /// The particle pdg
-  const int absPdg = 0;
+  const PdgParticle absPdg = eInvalid;
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport = false;
   /// The navigation direction

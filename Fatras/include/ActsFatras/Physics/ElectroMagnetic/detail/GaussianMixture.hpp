@@ -42,7 +42,7 @@ struct GaussianMixture {
                     Particle &particle) const {
     /// Calculate the highland formula first
     double sigma = Acts::computeMultipleScatteringTheta0(
-        slab, particle.pdg(), particle.mass(), particle.qOverP(),
+        slab, particle.absolutePdg(), particle.mass(), particle.qOverP(),
         particle.absoluteCharge());
     double sigma2 = sigma * sigma;
 
