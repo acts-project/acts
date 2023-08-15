@@ -142,7 +142,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         addVertexFitting(
             s,
             setup.field,
-            seeder=acts.seeder.GaussianSeeder,
+            seeder=acts.GaussianVertexSeeder,
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
@@ -155,7 +155,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         addVertexFitting(
             s,
             setup.field,
-            seeder=acts.seeder.GaussianSeeder,
+            seeder=acts.GaussianVertexSeeder,
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
@@ -165,13 +165,13 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             outputDirRoot=tp / "amvf",
         )
 
-        # Use the adaptive grid seeder in combination with the AMVF
+        # Use the adaptive grid vertex seeder in combination with the AMVF
         # To avoid having too many physmon cases, we only do this for the label "seeded"
         if label == "seeded":
             addVertexFitting(
                 s,
                 setup.field,
-                seeder=acts.seeder.AdaptiveGridSeeder,
+                seeder=acts.AdaptiveGridVertexSeeder,
                 associatedParticles=None,
                 outputProtoVertices="amvf_gridseeder_protovertices",
                 outputVertices="amvf_gridseeder_fittedVertices",
