@@ -59,7 +59,7 @@ class Sequencer {
  public:
   struct FpeMask {
     std::string file;
-    std::pair<unsigned int, unsigned int> lines;
+    std::pair<std::size_t, std::size_t> lines;
     Acts::FpeType type;
     std::size_t count;
   };
