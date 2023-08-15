@@ -957,9 +957,9 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash, digi_config_f
     else:
         # fmt: off
         filled_entries = [
-            'vol8', 'vol8_lay2', 'vol12_lay8_mod147', 'vol12_lay10', 'vol12_lay10_mod124',
-            'vol12_lay10_mod133', 'vol12_lay12', 'vol12_lay12_mod120', 'vol13',
-            'vol13_lay2', 'vol16_lay2_mod78', 'vol16_lay4', 'vol16_lay6', 'vol16_lay8',
+            'vol8', 'vol8_lay2', 'vol12_lay8_mod117', 'vol12_lay10', 'vol12_lay10_mod154',
+            'vol12_lay10_mod163', 'vol12_lay12', 'vol12_lay12_mod150', 'vol13',
+            'vol13_lay2', 'vol16_lay2_mod53', 'vol16_lay4', 'vol16_lay6', 'vol16_lay8',
             'vol16_lay10', 'vol16_lay12', 'vol17', 'vol17_lay2', 'vol18_lay2',
             'vol18_lay2_mod1', 'vol18_lay2_mod49', 'vol18_lay2_mod86', 'vol18_lay4',
         ]
