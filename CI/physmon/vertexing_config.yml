@@ -4,21 +4,31 @@ histograms:
     min: -0.1
     max: 0.1
 
+  "trk_res.*":
+    nbins: 100
+    min: -0.1
+    max: 0.1
+
   "pull.*":
     nbins: 50
     min: -6
     max: 6
+
+
+  "trk_pull.*":
+    nbins: 50
+    min: -10
+    max: 10
 
   "cov.*":
     nbins: 100
     min: -0.0005
     max: 0.0005
 
-  # fixed mu=50
   "^n.*$":
-    nbins: 50
+    nbins: 250
     min: 0
-    max: 51
+    max: 251
 
   "truthX|truthY|recoX|recoY":
     nbins: 100
@@ -34,6 +44,26 @@ histograms:
     nbins: 100
     min: -2000
     max: 2000
+
+  "trk_truthPhi|trk_recoPhi|trk_recoPhiFitted":
+    nbins: 100
+    min: -3.2
+    max: 3.2
+
+  "trk_truthTheta|trk_recoTheta|trk_recoThetaFitted":
+    nbins: 100
+    min: -0.1
+    max: 3.1
+
+  "trk_truthQOverP|trk_recoQOverP|trk_recoQOverPFitted":
+    nbins: 100
+    min: -1
+    max: 1
+
+  "trk_momOverlap|trk_momOverlapFitted":
+    nbins: 100
+    min: 0.99
+    max: 1
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]

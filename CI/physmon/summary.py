@@ -6,10 +6,15 @@ import re
 import functools
 import os
 
+HERALD_URL = "https://herald.dokku.paulgessinger.com/view/{repo}/runs/{run_id}/artifacts/{artifact_name}/{path}"
+IS_CI = "GITHUB_ACTIONS" in os.environ
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument("html", nargs="+")
-parser.add_argument("output")
+parser.add_argument("inputs", nargs="+")
+parser.add_argument("--base", required=True)
+parser.add_argument("--html")
+parser.add_argument("--md")
 args = parser.parse_args()
 
 re_title = re.compile(r'<p class="title">\s*(.*)\s*<\/p>', re.RegexFlag.MULTILINE)
@@ -17,7 +22,7 @@ re_check = re.compile(r'<a.*title="(.*)">\s*(.)\s*<\/a>', re.RegexFlag.MULTILINE
 
 summary = {}
 
-for h in args.html:
+for h in args.inputs:
     with open(h, mode="r", encoding="utf-8") as f:
         try:
             content = f.read()
@@ -34,9 +39,10 @@ for h in args.html:
         except Exception as e:
             print(r"could not parse {h}", e)
 
-with open(args.output, mode="w", encoding="utf-8") as f:
-    f.write(
-        """<!DOCTYPE html>
+if args.html:
+    with open(args.html, mode="w", encoding="utf-8") as f:
+        f.write(
+            """<!DOCTYPE html>
 <html>
 <head>
   <title>physmon summary</title>
@@ -44,19 +50,37 @@ with open(args.output, mode="w", encoding="utf-8") as f:
 </head>
 <body>
   <h1>physmon summary</h1>
-  <ul>"""
-    )
-
-    for h, s in summary.items():
-        path = os.path.relpath(h, os.path.dirname(args.output))
-        f.write(
-            f"""
-    <li>{"✅" if s["total"] else "🔴"} <a href="{path}">{s["title"]}</a></li>"""
+  <ul>
+            """
         )
 
-    f.write(
-        """
-  </ul>
-</body>
-</html>"""
-    )
+        for h, s in summary.items():
+            path = os.path.relpath(h, args.base)
+            f.write(
+                f"""
+        <li>{"✅" if s["total"] else "🔴"} <a href="{path}">{s["title"]}</a></li>"""
+            )
+
+        f.write(
+            """
+      </ul>
+    </body>
+    </html>
+            """
+        )
+
+if args.md:
+    with open(args.md, mode="w", encoding="utf-8") as f:
+        f.write("# physmon summary\n")
+        for h, s in summary.items():
+            path = os.path.relpath(h, args.base)
+            if IS_CI:
+                url = HERALD_URL.format(
+                    repo=os.environ["GITHUB_REPOSITORY"],
+                    run_id=os.environ["GITHUB_RUN_ID"],
+                    artifact_name="physmon",
+                    path=path,
+                )
+            else:
+                url = path
+            f.write(f"  - {'✅' if s['total'] else '🔴'} [{s['title']}]({url})\n")
