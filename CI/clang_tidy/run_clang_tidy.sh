@@ -14,13 +14,6 @@ pushd $build_dir
 NINJA_STATUS="[ninja] [%f/%t] " ninja $@ | tee $output_dir/ninja.log
 popd
 
-echo "hi1"
-# grep fails for empty input
-if [ ! -s $output_dir/ninja.log ]; then
-  echo "hi2"
-  echo -n > $output_dir/clang-tidy.log
-  exit 0
-fi
-
-echo "hi3"
+# grep fails if it does not find anything
+set +e
 cat $output_dir/ninja.log | grep -v '\[ninja\]' > $output_dir/clang-tidy.log
