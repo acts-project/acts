@@ -78,16 +78,14 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     return {-1, TrackGridVector::Zero()};
   }
   // Calculate the positions of the bin centers
-  float binCtrD = dOffset * m_cfg.binSize;
   float binCtrZ = (zBin + 0.5f) * m_cfg.binSize - m_cfg.zMinMax;
 
   // Calculate the distance between IP values and their
   // corresponding bin centers
-  float distCtrD = d0 - binCtrD;
   float distCtrZ = z0 - binCtrZ;
 
   // Create the track grid
-  TrackGridVector trackGrid = createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
+  TrackGridVector trackGrid = createTrackGrid(d0, distCtrZ, cov);
   // Add the track grid to the main grid
   addTrackGridToMainGrid(zBin, trackGrid, mainGrid);
 
@@ -138,17 +136,13 @@ template <int mainGridSize, int trkGridSize>
 typename Acts::GaussianGridTrackDensity<mainGridSize,
                                         trkGridSize>::TrackGridVector
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2& cov, float distCtrD,
-    float distCtrZ) const {
+    float d0, float distCtrZ, const Acts::SymMatrix2& cov) const {
   TrackGridVector trackGrid(TrackGridVector::Zero());
-
-  int i = (trkGridSize - 1) / 2 + offset;
-  float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
 
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
     float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-    trackGrid(j) = normal2D(-(d + distCtrD), z - distCtrZ, cov);
+    trackGrid(j) = normal2D(-d0, z - distCtrZ, cov);
   }
   return trackGrid;
 }

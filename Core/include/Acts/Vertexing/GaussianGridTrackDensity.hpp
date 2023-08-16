@@ -130,15 +130,12 @@ class GaussianGridTrackDensity {
   /// @brief Function that creates a 1-dim track grid (i.e. a vector)
   /// with the correct density contribution of a track along the z-axis
   ///
-  /// @param offset Offset in d0 direction, to account for the 2-dim part
-  /// of the Gaussian track distribution
-  /// @param cov The track covariance matrix
-  /// @param distCtrD The distance in d0 from the track position to its
-  /// bin center in the 2-dim grid
+  /// @param d0 Transverse impact parameter
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
-  TrackGridVector createTrackGrid(int offset, const SymMatrix2& cov,
-                                  float distCtrD, float distCtrZ) const;
+  /// @param cov The track covariance matrix
+  TrackGridVector createTrackGrid(float d0, float distCtrZ,
+                                  const Acts::SymMatrix2& cov) const;
 
   /// @brief Function that estimates the seed width based on the FWHM of
   /// the maximum density peak
