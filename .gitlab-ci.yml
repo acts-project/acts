@@ -74,7 +74,6 @@ build_exatrkx:
       - build/
     exclude:
       - build/**/*.o
-      - build/bin/ActsUnitTest*
       - build/bin/ActsIntegrationTest*
 
   script:
