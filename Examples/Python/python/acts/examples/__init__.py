@@ -562,15 +562,14 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
             import rich.table
             import rich.text
 
-            print = rich.print
-            print(rich.rule.Rule("FPE masks"))
+            rich.print(rich.rule.Rule("FPE masks"))
 
             for i, mask in enumerate(masks):
                 if i > 0:
-                    print(rich.rule.Rule())
+                    rich.print(rich.rule.Rule())
                 full_path = srcdir / mask.file
                 if not full_path.exists():
-                    print(
+                    rich.print(
                         rich.panel.Panel(
                             md(f"File at **{full_path}** does not exist"),
                             title=f"{mask}",
@@ -583,7 +582,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                 start, end = mask.lines
                 start = max(0, start - 2)
                 end += 2
-                print(
+                rich.print(
                     rich.panel.Panel(
                         rich.syntax.Syntax.from_path(
                             full_path,
@@ -596,7 +595,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                     )
                 )
 
-            print(rich.rule.Rule())
+            rich.print(rich.rule.Rule())
 
             table = rich.table.Table(title="FPE Summary", expand=True)
             table.add_column("File")
@@ -621,7 +620,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                     style="red" if not full_path.exists() else None,
                 )
 
-            print(table)
+            rich.print(table)
 
         if error:
             raise RuntimeError("Sequencer FPE masking configuration has errors")
