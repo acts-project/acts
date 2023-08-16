@@ -16,4 +16,12 @@ popd
 
 # grep fails if it does not find anything
 set +e
+rm $output_dir/clang-tidy.log
 cat $output_dir/ninja.log | grep -v '\[ninja\]' > $output_dir/clang-tidy.log
+set -e
+
+if [ ! -f $output_dir/clang-tidy.log ]; then
+  exit 1
+fi
+
+exit 0
