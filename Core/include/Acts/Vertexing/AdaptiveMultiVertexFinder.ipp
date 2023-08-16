@@ -117,7 +117,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     }
     bool keepVertex = isGoodVertex &&
                       keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
-    ACTS_DEBUG("New vertex will be saved: " << keepVertex);
+    ACTS_DEBUG("New vertex will be saved: "
+               << keepVertex << " " << isGoodVertex << " "
+               << keepNewVertex(vtxCandidate, allVerticesPtr, fitterState));
 
     // Delete vertex from allVertices list again if it's not kept
     if (not keepVertex) {
@@ -488,10 +490,14 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
     contamination = contaminationNum / contaminationDeNom;
   }
   if (contamination > m_cfg.maximumVertexContamination) {
+    std::cout << "contamination > m_cfg.maximumVertexContamination "
+              << contamination << " " << m_cfg.maximumVertexContamination
+              << std::endl;
     return false;
   }
 
   if (isMergedVertex(vtx, allVertices)) {
+    std::cout << "isMergedVertex" << std::endl;
     return false;
   }
 
@@ -522,20 +528,21 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
 
     double significance = 0;
     if (not m_cfg.do3dSplitting) {
-      // Use only z significance
-      if (sumCovZ > 0.) {
-        significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
-      } else {
-        return true;
+      if (sumCovZ <= 0) {
+        // TODO FIXME this should never happen
+        continue;
       }
+      // Use only z significance
+      significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
     } else {
       // Use full 3d information for significance
       SymMatrix4 sumCov = candidateCov + otherCov;
-      if (auto sumCovInverse = safeInverse(sumCov); sumCovInverse) {
-        significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
-      } else {
-        return true;
+      auto sumCovInverse = safeInverse(sumCov);
+      if (!sumCovInverse) {
+        // TODO FIXME this should never happen
+        continue;
       }
+      significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
     }
     if (significance < m_cfg.maxMergeVertexSignificance) {
       return true;
