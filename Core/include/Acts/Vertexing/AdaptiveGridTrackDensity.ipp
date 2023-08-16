@@ -71,9 +71,9 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float z0 = trk.parameters()[1];
 
   // Calculate bin in d direction
-  int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
+  int centralDBin = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
   // Check if current track affects grid density
-  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
+  if (std::abs(centralDBin) > (trkGridSize - 1) / 2.) {
     DensityMap emptyTrackDensityMap;
     return emptyTrackDensityMap;
   }
