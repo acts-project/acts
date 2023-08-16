@@ -139,6 +139,9 @@ class GaussianGridTrackDensity {
 
   /// @brief Function that estimates the seed width based on the FWHM of
   /// the maximum density peak
+  /// @note This only works if the maximum is sufficiently isolated since
+  /// overlapping neighboring peaks might lead to an overestimation of the
+  /// seed width.
   ///
   /// @param mainGrid The main 1-dim density grid along the z-axis
   /// @param maxZ z-position of the maximum density value

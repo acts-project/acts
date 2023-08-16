@@ -95,13 +95,16 @@ class AdaptiveGridTrackDensity {
 
   /// @brief Removes a track from the overall grid density
   ///
-  /// @param trackDensityMap Map from z bins to corresponding track density. The track density comes from a single track.
-  /// @param mainDensityMap Map from z bins to corresponding track density. The track density comes an arbitrary number of tracks.
+  /// @param trackDensityMap Map from z bins to corresponding track density.
+  /// @note The track density comes from a single track.
+  /// @param mainDensityMap Map from z bins to corresponding track density.
+  /// @note The track density comes an arbitrary number of tracks.
   void subtractTrack(const DensityMap& trackDensityMap,
                      DensityMap& mainDensityMap) const;
 
  private:
-  /// @brief Function that creates a track density map, i.e., a map of z bins to corresponding density values coming from a single track.
+  /// @brief Function that creates a track density map, i.e., a map of z bins
+  /// to corresponding density values coming from a single track.
   ///
   /// @param offset Offset in d0 direction, to account for the 2-dim part
   /// of the Gaussian track distribution
@@ -116,6 +119,9 @@ class AdaptiveGridTrackDensity {
 
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak
+  /// @note This only works if the maximum is sufficiently isolated since
+  /// overlapping neighboring peaks might lead to an overestimation of the
+  /// seed width.
   ///
   /// @param densityMap Map from z bins to corresponding track density
   /// @param maxZ z-position of the maximum density value

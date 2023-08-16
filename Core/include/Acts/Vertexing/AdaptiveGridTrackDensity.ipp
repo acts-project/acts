@@ -135,9 +135,13 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
 
   int rhmBin = zMaxBin;
   float gridValue = maxValue;
+  // Boolean indicating whether we find a filled bin that has a densityValue <=
+  // maxValue/2
+  bool binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
     if (densityMap.count(rhmBin + 1) == 0) {
+      binFilled = false;
       break;
     }
     rhmBin += 1;
@@ -145,14 +149,23 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float deltaZ1 =
-      (maxValue / 2 - densityMap.at(rhmBin - 1)) *
-      (m_cfg.binSize / (densityMap.at(rhmBin - 1) - densityMap.at(rhmBin)));
+  float rightDensity;
+  if (binFilled) {
+    rightDensity = densityMap.at(rhmBin);
+  } else {
+    rightDensity = 0;
+  }
+  float leftDensity = densityMap.at(rhmBin - 1);
+  float deltaZ1 = m_cfg.binSize * (maxValue / 2 - leftDensity) /
+                  (leftDensity - rightDensity);
+
   int lhmBin = zMaxBin;
   gridValue = maxValue;
+  binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
     if (densityMap.count(lhmBin - 1) == 0) {
+      binFilled = false;
       break;
     }
     lhmBin -= 1;
@@ -160,9 +173,15 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float deltaZ2 =
-      (maxValue / 2 - densityMap.at(lhmBin + 1)) *
-      (m_cfg.binSize / (densityMap.at(rhmBin + 1) - densityMap.at(rhmBin)));
+  rightDensity = densityMap.at(lhmBin + 1);
+  if (binFilled) {
+    leftDensity = densityMap.at(lhmBin);
+  } else {
+    leftDensity = 0;
+  }
+  float deltaZ2 = m_cfg.binSize * (rightDensity - maxValue / 2) /
+                  (rightDensity - leftDensity);
+
   float fwhm = (rhmBin - lhmBin) * m_cfg.binSize - deltaZ1 - deltaZ2;
 
   // FWHM = 2.355 * sigma
