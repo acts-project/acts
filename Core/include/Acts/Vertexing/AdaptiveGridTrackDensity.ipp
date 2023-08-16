@@ -38,8 +38,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
   }
 
   // Derive corresponding z value
-  int sign = (zBin > 0) ? +1 : -1;
-  return (zBin + sign * 0.5f) * m_cfg.binSize;
+  return zBin * m_cfg.binSize;
 }
 
 template <int trkGridSize>
@@ -79,7 +78,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     return emptyTrackDensityMap;
   }
   // Calculate bin in z direction
-  int centralZBin = int(z0 / m_cfg.binSize);
+  int centralZBin = static_cast<int>(std::floor(z0 / m_cfg.binSize - 0.5) + 1);
 
   DensityMap trackDensityMap = createTrackGrid(d0, z0, centralZBin, cov);
 
@@ -116,9 +115,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
     int zBin = firstZBin + j;
-    int sign = (zBin > 0) ? +1 : -1;
-    float z = (zBin + sign * 0.5f) * m_cfg.binSize;
-    // float z = (j - halfTrkGridSize) * m_cfg.binSize;
+    float z = zBin * m_cfg.binSize;
     trackDensityMap[zBin] = normal2D(-d0, z - z0, cov);
   }
   return trackDensityMap;
@@ -133,8 +130,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
 
   // Get z bin of max density and max density value
-  int sign = (maxZ > 0) ? +1 : -1;
-  int zMaxBin = int(maxZ / m_cfg.binSize - sign * 0.5f);
+  int zMaxBin = static_cast<int>(std::floor(maxZ / m_cfg.binSize - 0.5) + 1);
   const float maxValue = densityMap.at(zMaxBin);
 
   int rhmBin = zMaxBin;

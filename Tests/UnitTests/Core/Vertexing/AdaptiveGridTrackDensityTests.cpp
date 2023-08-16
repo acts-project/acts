@@ -51,13 +51,13 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   Covariance covMat(Covariance::Identity());
 
   BoundVector paramVec0;
-  paramVec0 << 100.0, -0.45, 0, 0, 0, 0;
+  paramVec0 << 100.0, -0.4, 0, 0, 0, 0;
   BoundVector paramVec1;
-  paramVec1 << 0.01, -0.45, 0, 0, 0, 0;
+  paramVec1 << 0.01, -0.4, 0, 0, 0, 0;
   BoundVector paramVec2;
-  paramVec2 << 0.01, 10.95, 0, 0, 0, 0;
+  paramVec2 << 0.01, 10.9, 0, 0, 0, 0;
   BoundVector paramVec3;
-  paramVec3 << 0.01, 0.95, 0, 0, 0, 0;
+  paramVec3 << 0.01, 0.9, 0, 0, 0, 0;
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -93,9 +93,9 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
-  const int trkGridSize = 15;
+  const int trkGridSize = 29;
 
-  double binSize = 0.1;  // mm
+  double binSize = 0.05;  // mm
 
   // Set up grid density with zMinMax
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
@@ -141,9 +141,9 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
-  const int trkGridSize = 15;
+  const int trkGridSize = 29;
 
-  double binSize = 0.1;  // mm
+  double binSize = 0.05;  // mm
 
   // Set up grid density with zMinMax
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
@@ -152,14 +152,14 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
   // Create some test tracks
-  Covariance covMat(Covariance::Identity());
+  Covariance covMat(Covariance::Identity() * 0.005);
 
   float z0Trk1 = 0.25;
   float z0Trk2 = -10.95;
   BoundVector paramVec1;
   paramVec1 << 0.01, z0Trk1, 0, 0, 0, 0;
   BoundVector paramVec2;
-  paramVec2 << 0.009, z0Trk2, 0, 0, 0, 0;
+  paramVec2 << 0.0095, z0Trk2, 0, 0, 0, 0;
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -188,9 +188,9 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   BOOST_CHECK_EQUAL(*res2, z0Trk2);
 
   // Add small density values around the maximum of track 1
-  const float densityToAdd = 5e-4;
-  mainDensityMap.at(1) += densityToAdd;
-  mainDensityMap.at(3) += densityToAdd;
+  const float densityToAdd = 0.5;
+  mainDensityMap.at(4) += densityToAdd;
+  mainDensityMap.at(6) += densityToAdd;
 
   auto res3 = grid.getMaxZPosition(mainDensityMap);
   BOOST_CHECK(res3.ok());
@@ -201,9 +201,9 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
-  const int trkGridSize = 15;
+  const int trkGridSize = 29;
 
-  double binSize = 0.1;  // mm
+  double binSize = 0.05;  // mm
 
   // Set up grid density with zMinMax
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
