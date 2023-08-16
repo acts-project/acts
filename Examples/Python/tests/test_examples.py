@@ -1031,9 +1031,9 @@ def test_digitization_example_input(
     else:
         # fmt: off
         filled_entries = [
-            "vol8", "vol8_lay2", "vol12_lay8_mod150", "vol12_lay10_mod114",
-            "vol12_lay10_mod150", "vol12_lay12", "vol12_lay12_mod140",
-            "vol12_lay12_mod141", "vol12_lay12_mod167", "vol13", "vol13_lay2",
+            "vol8", "vol8_lay2", "vol12_lay8_mod120", "vol12_lay10_mod120",
+            "vol12_lay10_mod144", "vol12_lay12", "vol12_lay12_mod111",
+            "vol12_lay12_mod137", "vol12_lay12_mod170", "vol13", "vol13_lay2",
             "vol14_lay2_mod93", "vol14_lay2_mod102", "vol14_lay2_mod112",
             "vol14_lay2_mod118", "vol14_lay4_mod112", "vol14_lay4_mod118",
             "vol14_lay4_mod152", "vol14_lay4_mod161", "vol16_lay4", "vol16_lay6",
