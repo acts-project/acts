@@ -15,6 +15,8 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
@@ -62,6 +64,12 @@ class CsvMeasurementReader final : public IReader {
     std::string outputSourceLinks;
     /// Output cluster collection (optional).
     std::string outputClusters;
+
+    /// Input SimHits for measurment-particle map (optional)
+    std::string inputSimHits;
+    /// Output  measurement to particle collection (optional)
+    /// @note Only filled if inputSimHits is given
+    std::string outputMeasurementParticlesMap;
   };
 
   /// Construct the cluster reader.
@@ -98,6 +106,11 @@ class CsvMeasurementReader final : public IReader {
       this, "OutputSourceLinks"};
 
   WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
+
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_outputMeasurementParticlesMap{this, "OutputMeasurementParticlesMap"};
+
+  ReadDataHandle<SimHitContainer> m_inputHits{this, "InputHits"};
 };
 
 }  // namespace ActsExamples
