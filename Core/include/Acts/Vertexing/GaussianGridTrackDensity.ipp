@@ -138,10 +138,11 @@ typename Acts::GaussianGridTrackDensity<mainGridSize,
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
     float d0, float distCtrZ, const Acts::SymMatrix2& cov) const {
   TrackGridVector trackGrid(TrackGridVector::Zero());
+  float floorHalfTrkGridSize = static_cast<float>(trkGridSize) / 2 - 0.5f;
 
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
-    float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
+    float z = (j - floorHalfTrkGridSize) * m_cfg.binSize;
     trackGrid(j) = normal2D(-d0, z - distCtrZ, cov);
   }
   return trackGrid;
