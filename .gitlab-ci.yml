@@ -167,6 +167,7 @@ build_linux_ubuntu:
       -DACTS_BUILD_ANALYSIS_APPS=ON
       -DACTS_BUILD_PLUGIN_ONNX=ON
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
+
     - ccache -z
     - cmake --build build -- -j3
     - ccache -s
@@ -277,13 +278,14 @@ linux_physmon:
       -DACTS_FORCE_ASSERTIONS=ON
       -DACTS_BUILD_ANALYSIS_APPS=ON
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
+
     - ccache -z
     - cmake --build build -- -j3
     - ccache -s
 
     - ctest --test-dir build -j$(nproc)
     - cmake --build build --target integrationtests
-
+      
     # Install main project
     - cmake --install build
 
@@ -295,6 +297,7 @@ linux_physmon:
       -DCMAKE_CXX_FLAGS=-Werror
       -DCMAKE_CXX_STANDARD=${CXXSTD}
       -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
     # Downstream build
     - cmake --build build-downstream
 
@@ -348,7 +351,7 @@ linux_ubuntu_2204_clang:
     - 'if [ "$OS" = "alma9"  ]; then export LCG_PLATFORM="centos9"; else export LCG_PLATFORM="$OS"; fi'
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
-
+      
     - git clone $CLONE_URL src
 
     - cd src
@@ -356,7 +359,7 @@ linux_ubuntu_2204_clang:
     - git submodule init
     - git submodule update
     - cd ..
-
+    
     - ccache --version
 
   script:
@@ -392,6 +395,7 @@ linux_ubuntu_2204_clang:
       -DACTS_BUILD_ALIGNMENT=ON
       -DACTS_BUILD_ANALYSIS_APPS=ON
       -DACTS_BUILD_PLUGIN_ACTSVG=ON
+
     - ccache -z
     - cmake --build build -- -j3
     - ccache -s
