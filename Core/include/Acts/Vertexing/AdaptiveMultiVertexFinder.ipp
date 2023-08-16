@@ -117,9 +117,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     }
     bool keepVertex = isGoodVertex &&
                       keepNewVertex(vtxCandidate, allVerticesPtr, fitterState);
-    ACTS_DEBUG("New vertex will be saved: "
-               << keepVertex << " " << isGoodVertex << " "
-               << keepNewVertex(vtxCandidate, allVerticesPtr, fitterState));
+    ACTS_DEBUG("New vertex will be saved: " << keepVertex);
 
     // Delete vertex from allVertices list again if it's not kept
     if (not keepVertex) {
@@ -490,14 +488,10 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
     contamination = contaminationNum / contaminationDeNom;
   }
   if (contamination > m_cfg.maximumVertexContamination) {
-    std::cout << "contamination > m_cfg.maximumVertexContamination "
-              << contamination << " " << m_cfg.maximumVertexContamination
-              << std::endl;
     return false;
   }
 
   if (isMergedVertex(vtx, allVertices)) {
-    std::cout << "isMergedVertex" << std::endl;
     return false;
   }
 
