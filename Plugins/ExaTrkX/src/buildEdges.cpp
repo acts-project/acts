@@ -43,15 +43,9 @@ torch::Tensor Acts::detail::postprocessEdgeTensor(torch::Tensor edges,
 
   // Remove duplicates
   if (removeDuplicates) {
-    // This code is wrong, but we keep it here to separate the refactor from the
-    // fix pull request Replace this after the refactor went in
-    torch::Tensor duplicate_mask = edges.index({0}) > edges.index({1});
-    edges = edges.index({Slice(), duplicate_mask});
-
-    // This is the correct code:
-    // torch::Tensor mask = edges.index({0}) > edges.index({1});
-    // edges.index_put_({Slice(), mask}, edges.index({Slice(), mask}).flip(0));
-    // edges = std::get<0>(torch::unique_dim(edges, -1, false));
+    torch::Tensor mask = edges.index({0}) > edges.index({1});
+    edges.index_put_({Slice(), mask}, edges.index({Slice(), mask}).flip(0));
+    edges = std::get<0>(torch::unique_dim(edges, -1, false));
   }
 
   // Randomly flip direction
