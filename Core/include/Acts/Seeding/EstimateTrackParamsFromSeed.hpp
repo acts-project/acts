@@ -286,7 +286,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   ActsScalar pathz = spGlobalPositions[0].dot(bField) / bField.norm();
   // The estimated time (use path length along magnetic field only if it's not
   // zero)
-  if (pathz != 0) {
+  if (pathz != 0 && vz != 0) {
     params[eBoundTime] = pathz / vz;
   } else {
     params[eBoundTime] = spGlobalPositions[0].norm() / v;

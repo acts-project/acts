@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -232,6 +232,41 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
     m_outputTree->Branch("eta_smt", &m_eta[2]);
     m_outputTree->Branch("pT_smt", &m_pT[2]);
 
+    m_outputTree->Branch("nUnbiased", &m_nParams[3]);
+    m_outputTree->Branch("unbiased", &m_hasParams[3]);
+    m_outputTree->Branch("eLOC0_ubs", &m_eLOC0[3]);
+    m_outputTree->Branch("eLOC1_ubs", &m_eLOC1[3]);
+    m_outputTree->Branch("ePHI_ubs", &m_ePHI[3]);
+    m_outputTree->Branch("eTHETA_ubs", &m_eTHETA[3]);
+    m_outputTree->Branch("eQOP_ubs", &m_eQOP[3]);
+    m_outputTree->Branch("eT_ubs", &m_eT[3]);
+    m_outputTree->Branch("res_eLOC0_ubs", &m_res_eLOC0[3]);
+    m_outputTree->Branch("res_eLOC1_ubs", &m_res_eLOC1[3]);
+    m_outputTree->Branch("res_ePHI_ubs", &m_res_ePHI[3]);
+    m_outputTree->Branch("res_eTHETA_ubs", &m_res_eTHETA[3]);
+    m_outputTree->Branch("res_eQOP_ubs", &m_res_eQOP[3]);
+    m_outputTree->Branch("res_eT_ubs", &m_res_eT[3]);
+    m_outputTree->Branch("err_eLOC0_ubs", &m_err_eLOC0[3]);
+    m_outputTree->Branch("err_eLOC1_ubs", &m_err_eLOC1[3]);
+    m_outputTree->Branch("err_ePHI_ubs", &m_err_ePHI[3]);
+    m_outputTree->Branch("err_eTHETA_ubs", &m_err_eTHETA[3]);
+    m_outputTree->Branch("err_eQOP_ubs", &m_err_eQOP[3]);
+    m_outputTree->Branch("err_eT_ubs", &m_err_eT[3]);
+    m_outputTree->Branch("pull_eLOC0_ubs", &m_pull_eLOC0[3]);
+    m_outputTree->Branch("pull_eLOC1_ubs", &m_pull_eLOC1[3]);
+    m_outputTree->Branch("pull_ePHI_ubs", &m_pull_ePHI[3]);
+    m_outputTree->Branch("pull_eTHETA_ubs", &m_pull_eTHETA[3]);
+    m_outputTree->Branch("pull_eQOP_ubs", &m_pull_eQOP[3]);
+    m_outputTree->Branch("pull_eT_ubs", &m_pull_eT[3]);
+    m_outputTree->Branch("g_x_ubs", &m_x[3]);
+    m_outputTree->Branch("g_y_ubs", &m_y[3]);
+    m_outputTree->Branch("g_z_ubs", &m_z[3]);
+    m_outputTree->Branch("px_ubs", &m_px[3]);
+    m_outputTree->Branch("py_ubs", &m_py[3]);
+    m_outputTree->Branch("pz_ubs", &m_pz[3]);
+    m_outputTree->Branch("eta_ubs", &m_eta[3]);
+    m_outputTree->Branch("pT_ubs", &m_pT[3]);
+
     m_outputTree->Branch("chi2", &m_chi2);
   }
 }
@@ -402,7 +437,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         m_z_hit.push_back(global[Acts::ePos2]);
 
         // status of the fitted track parameters
-        std::array<bool, 3> hasParams = {false, false, false};
+        std::array<bool, 4> hasParams = {false, false, false, false};
         // optional fitted track parameters
         std::optional<std::pair<Acts::BoundVector, Acts::BoundMatrix>>
             trackParamsOpt = std::nullopt;
@@ -423,11 +458,30 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
             m_nParams[2]++;
             trackParamsOpt =
                 std::make_pair(state.smoothed(), state.smoothedCovariance());
+          } else if (ipar == 3 && state.hasSmoothed()) {
+            hasParams[3] = true;
+            m_nParams[3]++;
+            // calculate the unbiased track parameters (i.e. fitted track
+            // parameters with this measurement removed) using Eq.(12a)-Eq.(12c)
+            // of NIMA 262, 444 (1987)
+            auto m = state.effectiveCalibrated();
+            auto H = state.effectiveProjector();
+            auto V = state.effectiveCalibratedCovariance();
+            auto K =
+                (state.smoothedCovariance() * H.transpose() *
+                 (H * state.smoothedCovariance() * H.transpose() - V).inverse())
+                    .eval();
+            auto unbiasedParamsVec =
+                state.smoothed() + K * (m - H * state.smoothed());
+            auto unbiasedParamsCov =
+                state.smoothedCovariance() - K * H * state.smoothedCovariance();
+            trackParamsOpt =
+                std::make_pair(unbiasedParamsVec, unbiasedParamsCov);
           }
         };
 
         // fill the fitted track parameters
-        for (unsigned int ipar = 0; ipar < 3; ++ipar) {
+        for (unsigned int ipar = 0; ipar < 4; ++ipar) {
           // get the fitted track parameters
           getTrackParams(ipar);
           if (trackParamsOpt) {
@@ -436,13 +490,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
               //
               // local hit residual info
               auto H = state.effectiveProjector();
-              auto hitCov = state.effectiveCalibratedCovariance();
-              auto resCov = hitCov + H * covariance * H.transpose();
+              auto V = state.effectiveCalibratedCovariance();
+              auto resCov = V + H * covariance * H.transpose();
               auto res = state.effectiveCalibrated() - H * parameters;
 
               m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
               m_err_x_hit.push_back(
-                  std::sqrt(hitCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                  std::sqrt(V(Acts::eBoundLoc0, Acts::eBoundLoc0)));
               m_pull_x_hit.push_back(
                   res[Acts::eBoundLoc0] /
                   std::sqrt(resCov(Acts::eBoundLoc0, Acts::eBoundLoc0)));
@@ -450,7 +504,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
               if (state.calibratedSize() >= 2) {
                 m_res_y_hit.push_back(res[Acts::eBoundLoc1]);
                 m_err_y_hit.push_back(
-                    std::sqrt(hitCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                    std::sqrt(V(Acts::eBoundLoc1, Acts::eBoundLoc1)));
                 m_pull_y_hit.push_back(
                     res[Acts::eBoundLoc1] /
                     std::sqrt(resCov(Acts::eBoundLoc1, Acts::eBoundLoc1)));
@@ -489,9 +543,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
             // track parameters error
             m_err_eLOC0[ipar].push_back(
-                std::sqrt(covariance(Acts::eBoundLoc0, Acts::eBoundLoc0)));
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, issue:2348)
+                    Acts::eBoundLoc0, Acts::eBoundLoc0)));
             m_err_eLOC1[ipar].push_back(
-                std::sqrt(covariance(Acts::eBoundLoc1, Acts::eBoundLoc1)));
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, issue:2348)
+                    Acts::eBoundLoc1, Acts::eBoundLoc1)));
             m_err_ePHI[ipar].push_back(
                 std::sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
             m_err_eTHETA[ipar].push_back(
@@ -629,7 +685,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
       m_pull_y_hit.clear();
       m_dim_hit.clear();
 
-      for (unsigned int ipar = 0; ipar < 3; ++ipar) {
+      for (unsigned int ipar = 0; ipar < 4; ++ipar) {
         m_hasParams[ipar].clear();
         m_eLOC0[ipar].clear();
         m_eLOC1[ipar].clear();
