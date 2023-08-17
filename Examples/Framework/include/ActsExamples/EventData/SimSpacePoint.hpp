@@ -113,21 +113,6 @@ class SimSpacePoint {
     return m_validDoubleMeasurementDetails;
   }
 
-  // FTF seeding needs function to say if SP is a pixel 
-  // says pixels have 1 SL 
-  bool isPixel() const {
-    if (m_sourceLinks.size() == 1) {
-      return true ;
-    }
-    else {
-      return false ; 
-    }
-  }
-
-  Scalar phi() const {
-    return std::atan(m_y/m_x)  ; 
-
-  }
  private:
   // Global position
   Scalar m_x;

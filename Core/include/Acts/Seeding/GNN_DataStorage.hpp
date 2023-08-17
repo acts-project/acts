@@ -18,7 +18,10 @@ class TrigFTF_GNN_Node {
   struct CompareByPhi {
 
     bool operator()(const TrigFTF_GNN_Node<space_point_t>*  n1, const TrigFTF_GNN_Node<space_point_t>*  n2) {
-      return n1->m_sp.phi() < n2->m_sp.phi();
+      // return n1->m_sp.phi() < n2->m_sp.phi();
+      return (std::atan(n1->m_sp.x()/n1->m_sp.y())) < (std::atan(n2->m_sp.x()/n1->m_sp.y()));
+
+      
     }
 
   };
@@ -91,7 +94,8 @@ class TrigFTF_GNN_EtaBin {
     for(unsigned int nIdx=0;nIdx<m_vn.size();nIdx++) {
 
       TrigFTF_GNN_Node<space_point_t>* pN = m_vn.at(nIdx);
-      float phi = pN->m_sp.phi();
+      // float phi = pN->m_sp.phi();
+      float phi = (std::atan(pN->m_sp.x()/pN->m_sp.y()));
       if(phi <= M_PI-dphi) continue;
       
       m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi - 2*M_PI, nIdx));
@@ -100,13 +104,15 @@ class TrigFTF_GNN_EtaBin {
 
     for(unsigned int nIdx=0;nIdx<m_vn.size();nIdx++) {
       TrigFTF_GNN_Node<space_point_t>* pN = m_vn.at(nIdx);
-      float phi = pN->m_sp.phi();
+      // float phi = pN->m_sp.phi();
+      float phi = (std::atan(pN->m_sp.x()/pN->m_sp.y()));
       m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi, nIdx));
     }
 
     for(unsigned int nIdx=0;nIdx<m_vn.size();nIdx++) {
       TrigFTF_GNN_Node<space_point_t>* pN = m_vn.at(nIdx);
-      float phi = pN->m_sp.phi();
+      // float phi = pN->m_sp.phi();
+      float phi = (std::atan(pN->m_sp.x()/pN->m_sp.y()));
       if(phi >= -M_PI + dphi) break;
       m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi + 2*M_PI, nIdx));
     }

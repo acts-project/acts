@@ -75,12 +75,10 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));    
 
 
-  std::ifstream input_ifstream(m_cfg.seedFinderConfig.fastrack_input_file.c_str(), std::ifstream::in) ;
-  Acts::FasTrackConnector input_fastrack(input_ifstream) ; 
-  // m_cfg.mGNNgeo = Acts::TrigFTF_GNN_Geometry<SimSpacePoint>(m_cfg.seedFinderConfig.input_vector, &input_fastrack);
-  mGNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(m_cfg.seedFinderConfig.input_vector, &input_fastrack) ; 
+    std::ifstream input_ifstream(m_cfg.seedFinderConfig.fastrack_input_file.c_str(), std::ifstream::in) ;
+    Acts::FasTrackConnector input_fastrack(input_ifstream) ; 
+    mGNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(m_cfg.seedFinderConfig.input_vector, &input_fastrack) ; 
 
-    // m_seedFinder = std::make_unique<Acts::SeedFinderFTF<SimSpacePoint>>(m_cfg.seedFinderConfig) ; 
       } //this is not FTF config type because it is a meber of the algs config, which is of type FTF cofig  
 
 

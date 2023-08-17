@@ -65,8 +65,6 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
   //make the vector of space points with FTF Info 
   std::vector<Acts::FTF_SP<SimSpacePoint>> Make_FTF_spacePoints(const AlgorithmContext& ctx, std::map<std::pair<int, int>,std::pair<int, int>> map) const; 
   //layer numbering 
-  // std::vector<Acts::TrigInDetSiLayer> LayerNumbering(const AlgorithmContext& ctx, std::map<std::pair<int, int>,int> map) const ; 
-
   std::vector<Acts::TrigInDetSiLayer> LayerNumbering() const ; 
 
  private: 
