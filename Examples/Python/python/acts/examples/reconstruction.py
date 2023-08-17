@@ -784,46 +784,9 @@ def addFTFSeeding(
     fastrack_inputFile = str(fastrack_inputConfigFile)
     seedFinderConfig = acts.SeedFinderFTFConfig(
         **acts.examples.defaultKWArgs(
-            rMin=seedFinderConfigArg.r[0],
-            rMax=seedFinderConfigArg.r[1],
-            deltaRMinTopSP=(
-                seedFinderConfigArg.deltaR[0]
-                if seedFinderConfigArg.deltaRTopSP[0] is None
-                else seedFinderConfigArg.deltaRTopSP[0]
-            ),
-            deltaRMaxTopSP=(
-                seedFinderConfigArg.deltaR[1]
-                if seedFinderConfigArg.deltaRTopSP[1] is None
-                else seedFinderConfigArg.deltaRTopSP[1]
-            ),
-            deltaRMinBottomSP=(
-                seedFinderConfigArg.deltaR[0]
-                if seedFinderConfigArg.deltaRBottomSP[0] is None
-                else seedFinderConfigArg.deltaRBottomSP[0]
-            ),
-            deltaRMaxBottomSP=(
-                seedFinderConfigArg.deltaR[1]
-                if seedFinderConfigArg.deltaRBottomSP[1] is None
-                else seedFinderConfigArg.deltaRBottomSP[1]
-            ),
-            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
-            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            zMin=seedFinderConfigArg.z[0],
-            zMax=seedFinderConfigArg.z[1],
-            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
-            cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
-            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             minPt=seedFinderConfigArg.minPt,
-            impactMax=seedFinderConfigArg.impactMax,
-            interactionPointCut=seedFinderConfigArg.interactionPointCut,
-            deltaZMax=seedFinderConfigArg.deltaZMax,
-            maxPtScattering=seedFinderConfigArg.maxPtScattering,
-            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
-            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
-            seedConfirmation=seedFinderConfigArg.seedConfirmation,
-            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
-            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
             fastrack_input_file = fastrack_inputFile, 
         ),
     )

@@ -178,47 +178,15 @@ void addTrackFinding(Context& ctx) {
         py::class_<Config>(m, "SeedFinderFTFConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
-    ACTS_PYTHON_MEMBER(cotThetaMax);
-    ACTS_PYTHON_MEMBER(deltaRMinBottomSP);
-    ACTS_PYTHON_MEMBER(deltaRMaxBottomSP);
-    ACTS_PYTHON_MEMBER(deltaRMinTopSP);
-    ACTS_PYTHON_MEMBER(deltaRMaxTopSP);
-    ACTS_PYTHON_MEMBER(impactMax);
-    ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(sigmaScattering);
-    ACTS_PYTHON_MEMBER(maxPtScattering);
-    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
-    ACTS_PYTHON_MEMBER(collisionRegionMin);
-    ACTS_PYTHON_MEMBER(collisionRegionMax);
-    ACTS_PYTHON_MEMBER(phiMin);
-    ACTS_PYTHON_MEMBER(phiMax);
-    ACTS_PYTHON_MEMBER(zMin);
-    ACTS_PYTHON_MEMBER(zMax);
-    ACTS_PYTHON_MEMBER(rMax);
-    ACTS_PYTHON_MEMBER(rMin);
-    ACTS_PYTHON_MEMBER(radLengthPerSeed);
-    ACTS_PYTHON_MEMBER(deltaZMax);
-    //ACTS_PYTHON_MEMBER(skipPreviousTopSP);
-    ACTS_PYTHON_MEMBER(interactionPointCut);
-    //ACTS_PYTHON_MEMBER(deltaPhiMax);
     ACTS_PYTHON_MEMBER(highland);
     ACTS_PYTHON_MEMBER(maxScatteringAngle2);
-    ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
-    // ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
-    // ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
-    ACTS_PYTHON_MEMBER(rRangeMiddleSP);
-    // ACTS_PYTHON_MEMBER(rMinMiddle);
-    // ACTS_PYTHON_MEMBER(rMaxMiddle);
-    ACTS_PYTHON_MEMBER(seedConfirmation);
-    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
-    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(fastrack_input_file);
     ACTS_PYTHON_MEMBER(m_phiSliceWidth);
     ACTS_PYTHON_MEMBER(m_nMaxPhiSlice);
     ACTS_PYTHON_MEMBER(m_useTrigSeedML);
     ACTS_PYTHON_MEMBER(input_vector);
-
-
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }  
