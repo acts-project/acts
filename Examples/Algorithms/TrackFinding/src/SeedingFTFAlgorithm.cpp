@@ -74,6 +74,12 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));    
 
+
+  std::ifstream input_ifstream(m_cfg.seedFinderConfig.fastrack_input_file.c_str(), std::ifstream::in) ;
+  Acts::FasTrackConnector input_fastrack(input_ifstream) ; 
+  // m_cfg.mGNNgeo = Acts::TrigFTF_GNN_Geometry<SimSpacePoint>(m_cfg.seedFinderConfig.input_vector, &input_fastrack);
+  mGNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(m_cfg.seedFinderConfig.input_vector, &input_fastrack) ; 
+
     // m_seedFinder = std::make_unique<Acts::SeedFinderFTF<SimSpacePoint>>(m_cfg.seedFinderConfig) ; 
       } //this is not FTF config type because it is a meber of the algs config, which is of type FTF cofig  
 
@@ -89,16 +95,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
 
   //loop over FTF_SP vector to plot the space points 
-  fstream fout;
-  fout.open("FTF_SP_output.csv", ios::out | ios::app);
-  for (auto sp : FTF_spacePoints){
-    int eta_mod_input = sp.combined_ID -sp.FTF_ID*1000 ; 
-    fout << sp.FTF_ID << ", "
-      << sp.SP->z() << ", "
-      << sp.SP->r() << ", "
-      << eta_mod_input //should hopefully be eta mod 
-      << "\n";
-  }      
+  // fstream fout;
+  // fout.open("FTF_SP_output.csv", ios::out | ios::app);
+  // for (auto sp : FTF_spacePoints){
+  //   int eta_mod_input = sp.combined_ID -sp.FTF_ID*1000 ; 
+  //   fout << sp.FTF_ID << ", "
+  //     << sp.SP->z() << ", "
+  //     << sp.SP->r() << ", "
+  //     << eta_mod_input //should hopefully be eta mod 
+  //     << "\n";
+  // }      
 
 
   for (auto sp : FTF_spacePoints){
@@ -108,7 +114,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   }   
   
   //this is now calling on a core algorithm
-  Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig);  
+  Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig, *mGNNgeo);  
 
 
   //need this function as create_coords is needed for seeds 

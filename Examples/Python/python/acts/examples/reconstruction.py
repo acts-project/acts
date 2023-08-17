@@ -788,7 +788,7 @@ def addFTFSeeding(
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             minPt=seedFinderConfigArg.minPt,
             fastrack_input_file = fastrack_inputFile, 
-            m_useClusterWidth = false, 
+            m_useClusterWidth = False, 
         ),
     )
     seedFinderOptions = acts.SeedFinderOptions(

@@ -25,7 +25,7 @@ namespace Acts {
 
 template <typename external_spacepoint_t>
 SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
-    const SeedFinderFTFConfig<external_spacepoint_t> &config)
+    const SeedFinderFTFConfig<external_spacepoint_t> &config, const TrigFTF_GNN_Geometry<external_spacepoint_t> &GNNgeo)
     : m_config(config) {
   
 
@@ -35,7 +35,7 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
 
   // TrigFTF_GNN_Geometry<external_spacepoint_t> mGNNgeo(m_config.input_vector, &input_fastrack);
 
-  m_storage = new TrigFTF_GNN_DataStorage(mGNNgeo);
+  m_storage = new TrigFTF_GNN_DataStorage(GNNgeo);
 
  
 

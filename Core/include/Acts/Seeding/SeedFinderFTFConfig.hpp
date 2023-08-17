@@ -39,7 +39,7 @@ struct SeedFinderFTFConfig {
   float m_nMaxPhiSlice ; 
   bool m_useClusterWidth = false ; 
   std::string fastrack_input_file ; 
-  std::vector<TrigInDetSiLayer> input_vector ; 
+  std::vector<TrigInDetSiLayer> input_vector ;
 
   ////
   //2 member functions 

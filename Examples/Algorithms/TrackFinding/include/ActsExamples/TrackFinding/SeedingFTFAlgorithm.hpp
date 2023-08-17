@@ -42,6 +42,7 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
     std::map<std::pair<int, int>,std::pair<int, int>> ACTS_FTF_Map ; 
 
+
   }; 
 
 
@@ -70,7 +71,9 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
  private: 
   Config m_cfg; 
-  // std::unique_ptr<Acts::SeedFinderFTF<SimSpacePoint>> m_seedFinder; 
+
+  std::unique_ptr<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>> mGNNgeo; 
+
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};
