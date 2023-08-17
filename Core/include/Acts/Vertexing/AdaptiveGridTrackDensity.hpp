@@ -62,6 +62,16 @@ class AdaptiveGridTrackDensity {
 
   AdaptiveGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
+  /// @brief Calculates the bin center from the bin number
+  /// @param bin Bin number
+  /// @return Bin center
+  float getBinCenter(int bin) const;
+
+  /// @brief Calculates the bin number corresponding to a d or z value
+  /// @param value d or z value
+  /// @return Bin number
+  int getBin(float value) const;
+
   /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between z bins and corresponding density value
   /// @return Iterator of the map entry with the highest density value
