@@ -199,11 +199,13 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
 }
 
 /// Calculate the exponential function while avoiding FPEs.
-/// @note The boundary values of -50.0 and 50.0 might need to be adapted when using this function with doubles
+/// @note The boundary values of -50.0 and 50.0 might need to be adapted when
+/// using this function with doubles
 ///
 /// @param val argument for which the exponential function should be evaluated.
 ///
-/// @return 0 in the case of underflow, std::numeric_limits<T>::infinity in the case of overflow, std::exp(val) else
+/// @return 0 in the case of underflow, std::numeric_limits<T>::infinity in the
+/// case of overflow, std::exp(val) else
 template <typename T>
 T safeExp(T val) noexcept {
   if (val < -50.0) {
