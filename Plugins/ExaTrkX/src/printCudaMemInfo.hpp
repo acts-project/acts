@@ -16,21 +16,27 @@
 
 #include <cstdint>
 
+#include <torch/torch.h>
+
 namespace {
 
 inline void printCudaMemInfo(const Acts::Logger& logger) {
 #ifndef ACTS_EXATRKX_CPUONLY
-  constexpr float kb = 1024;
-  constexpr float mb = kb * kb;
+  if (torch::cuda::is_available()) {
+    constexpr float kb = 1024;
+    constexpr float mb = kb * kb;
 
-  int device;
-  std::size_t free, total;
-  cudaMemGetInfo(&free, &total);
-  cudaGetDevice(&device);
+    int device;
+    std::size_t free, total;
+    cudaMemGetInfo(&free, &total);
+    cudaGetDevice(&device);
 
-  ACTS_VERBOSE("Current CUDA device: " << device);
-  ACTS_VERBOSE("Memory (used / total) [in MB]: " << (total - free) / mb << " / "
-                                                 << total / mb);
+    ACTS_VERBOSE("Current CUDA device: " << device);
+    ACTS_VERBOSE("Memory (used / total) [in MB]: " << (total - free) / mb
+                                                   << " / " << total / mb);
+  } else {
+    ACTS_VERBOSE("No memory info, CUDA disabled");
+  }
 #else
   ACTS_VERBOSE("No memory info, CUDA disabled");
 #endif

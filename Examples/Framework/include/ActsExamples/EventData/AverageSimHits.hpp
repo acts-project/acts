@@ -35,11 +35,9 @@ using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
 /// returned.
 inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
-    const SimHitContainer& simHits, const HitSimHitsRange& hitSimHitsRange) {
+    const SimHitContainer& simHits, const HitSimHitsRange& hitSimHitsRange,
+    const Acts::Logger& logger) {
   using namespace Acts::UnitLiterals;
-
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("averageSimHits", Acts::Logging::INFO));
 
   Acts::Vector2 avgLocal = Acts::Vector2::Zero();
   Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
@@ -61,7 +59,7 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     if (result.ok()) {
       avgLocal += result.value();
     } else {
-      ACTS_WARNING("Simulated hit "
+      ACTS_WARNING("While averaging simhit, hit "
                    << simHitIdx << " is not on the corresponding surface "
                    << surface.geometryId() << "; use [0,0] as local position");
     }
