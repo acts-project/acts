@@ -44,11 +44,9 @@ void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
 
   torch::Tensor embedTensor =
       torch::tensor(embedFeatures, options)
-          .reshape({1, numSpacepoints, m_cfg.embeddingDim});
+          .reshape({numSpacepoints, m_cfg.embeddingDim});
 
-  auto stackedEdges =
-      detail::buildEdges(embedTensor, numSpacepoints, m_cfg.embeddingDim,
-                         m_cfg.rVal, m_cfg.knnVal);
+  auto stackedEdges = detail::buildEdges(embedTensor, m_cfg.rVal, m_cfg.knnVal);
 
   stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
 

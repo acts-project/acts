@@ -74,7 +74,6 @@ build_exatrkx:
       - build/
     exclude:
       - build/**/*.o
-      - build/bin/ActsUnitTest*
       - build/bin/ActsIntegrationTest*
 
   script:
@@ -96,13 +95,24 @@ build_exatrkx:
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
       -DACTS_BUILD_PLUGIN_EXATRKX=ON
       -DACTS_BUILD_EXAMPLES_EXATRKX=ON
+      -DACTS_BUILD_UNITTESTS=ON
       -DACTS_EXATRKX_ENABLE_TORCH=ON
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
     - cmake --build build -- -j3
 
-test_exatrkx:
+test_exatrkx_unittests:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  tags:
+    - docker-gpu-nvidia
+  script:
+    - ctest --test-dir build -R ExaTrkX
+
+test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
