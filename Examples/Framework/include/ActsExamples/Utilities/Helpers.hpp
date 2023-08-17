@@ -29,16 +29,33 @@ namespace ActsExamples {
 
 namespace PlotHelpers {
 /// @brief Nested binning struct for booking plots
-struct Binning {
+class Binning {
+ public:
   Binning() = default;
 
-  Binning(std::string bTitle, int bins, float bMin, float bMax)
-      : title(std::move(bTitle)), nBins(bins), min(bMin), max(bMax){};
+  Binning(std::string title, int bins, double bMin, double bMax)
+      : m_title(std::move(title)) {
+    const auto step = (bMax - bMin) / bins;
+    m_bins.resize(bins + 1);
+    std::generate(m_bins.begin(), m_bins.end(), [&, v = bMin]() mutable {
+      auto r = v;
+      v += step;
+      return r;
+    });
+  }
 
-  std::string title;  ///< title to be displayed
-  int nBins = 0;      ///< number of bins
-  float min = 0;      ///< minimum value
-  float max = 0;      ///< maximum value
+  Binning(std::string title, std::vector<double> bins)
+      : m_title(std::move(title)), m_bins(std::move(bins)){};
+
+  const auto& title() const { return m_title; }
+  auto nBins() const { return m_bins.size() - 1; }
+  const double* data() const { return m_bins.data(); }
+  auto low() const { return m_bins.front(); }
+  auto high() const { return m_bins.back(); }
+
+ private:
+  std::string m_title;
+  std::vector<double> m_bins;
 };
 
 /// @brief book a 1D histogram
