@@ -61,7 +61,7 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(const std::vector<FTF
     bool is_Pixel = FTF_sp.SP->isPixel(); //FTF actual object then sim is pointer 
     if(!is_Pixel) continue;
 
-    m_storage->addSpacePoint(FTF_sp,(m_config.m_useTrigSeedML > 0) ); //add is a funciton FTFtype 
+    m_storage->addSpacePoint(FTF_sp,(m_config.m_useClusterWidth > 0) ); //add is a funciton FTFtype 
 
   }
 

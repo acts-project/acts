@@ -142,7 +142,7 @@ class TrigFTF_GNN_DataStorage {
     
   }
  
-  int addSpacePoint(const FTF_SP<space_point_t>& sp, bool useML ) { 
+  int addSpacePoint(const FTF_SP<space_point_t>& sp, bool useClusterWidth ) { 
 
     //found needed to search by key which is the combined ID 
     const TrigFTF_GNN_Layer<space_point_t>* pL = m_geo.getTrigFTF_GNN_LayerByKey (sp.combined_ID); //want combined ID 
@@ -161,23 +161,25 @@ class TrigFTF_GNN_DataStorage {
       float min_tau = -100.0;
       float max_tau =  100.0;
     // //cant do this bit yet as dont have cluster width, these loops just change the values on tau 
-    //   // if (useML) {
+      if (useClusterWidth) {
     //   //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
     //   //   const InDet::PixelCluster* pCL = dynamic_cast<const InDet::PixelCluster*>(osp->clusterList().first);
     //   //   float cluster_width = pCL->width().widthPhiRZ().y();
-    //   //   min_tau = 6.7*(cluster_width - 0.2);
-    //   //   max_tau = 1.6 + 0.15/(cluster_width + 0.2) + 6.1*(cluster_width - 0.2);
-    //   // }
+        float cluster_width = 1; //temporary while cluster width not available 
+        min_tau = 6.7*(cluster_width - 0.2);
+        max_tau = 1.6 + 0.15/(cluster_width + 0.2) + 6.1*(cluster_width - 0.2);
+      }
     //*dereferences pointer to then pass as ref 
       m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node<space_point_t>(*sp.SP, min_tau, max_tau)); 
     }
     else {
-    //   // if (useML) {
+      if (useClusterWidth) {
     //   //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
     //   //   const InDet::PixelCluster* pCL = dynamic_cast<const InDet::PixelCluster*>(osp->clusterList().first);
     //   //   float cluster_width = pCL->width().widthPhiRZ().y();
-    //   //   if(cluster_width > 0.2) return -3;
-    //   // }
+        float cluster_width = 1; //temporary while cluster width not available 
+        if(cluster_width > 0.2) return -3;
+      }
       m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node<space_point_t>(*sp.SP)); //add template here? add , min_tau, max_tau here for constructor 
     }   
 

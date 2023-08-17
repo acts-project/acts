@@ -184,7 +184,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(fastrack_input_file);
     ACTS_PYTHON_MEMBER(m_phiSliceWidth);
     ACTS_PYTHON_MEMBER(m_nMaxPhiSlice);
-    ACTS_PYTHON_MEMBER(m_useTrigSeedML);
+    ACTS_PYTHON_MEMBER(m_useClusterWidth);
     ACTS_PYTHON_MEMBER(input_vector);
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_STRUCT_END();
