@@ -198,10 +198,10 @@ template <int mainGridSize, int trkGridSize>
 float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
     float d, float z, const Acts::SymMatrix2& cov) const {
   float det = cov.determinant();
-  float coef = 1 / (2 * M_PI * std::sqrt(det));
+  float coef = 1 / std::sqrt(det);
   float expo =
       -1 / (2 * det) *
-      (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
+      (cov(1, 1) * d * d - (cov(0, 1) + cov(1, 0)) * d * z + cov(0, 0) * z * z);
   return coef * std::exp(expo);
 }
 
