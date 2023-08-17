@@ -31,7 +31,7 @@ namespace PlotHelpers {
 /// @brief Nested binning struct for booking plots
 class Binning {
  public:
-  Binning() = default;
+  Binning() : m_bins({0.0}) {}
 
   Binning(std::string title, int bins, double bMin, double bMax)
       : m_title(std::move(title)) {
