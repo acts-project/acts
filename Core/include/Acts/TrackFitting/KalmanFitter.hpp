@@ -535,6 +535,8 @@ class KalmanFitter {
       result.passedAgainSurfaces.push_back(&st.referenceSurface());
 
       // Reset navigation state
+      // We do not need to specify a target here since this will be handled
+      // separately in the KF actor
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping),
