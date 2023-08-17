@@ -522,20 +522,21 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
 
     double significance = 0;
     if (not m_cfg.do3dSplitting) {
-      // Use only z significance
-      if (sumCovZ > 0.) {
-        significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
-      } else {
-        return true;
+      if (sumCovZ <= 0) {
+        // TODO FIXME this should never happen
+        continue;
       }
+      // Use only z significance
+      significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
     } else {
       // Use full 3d information for significance
       SymMatrix4 sumCov = candidateCov + otherCov;
-      if (auto sumCovInverse = safeInverse(sumCov); sumCovInverse) {
-        significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
-      } else {
-        return true;
+      auto sumCovInverse = safeInverse(sumCov);
+      if (!sumCovInverse) {
+        // TODO FIXME this should never happen
+        continue;
       }
+      significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
     }
     if (significance < m_cfg.maxMergeVertexSignificance) {
       return true;

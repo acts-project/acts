@@ -8,12 +8,15 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 
-#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
 #include <torch/script.h>
 #include <torch/torch.h>
 
 #include "printCudaMemInfo.hpp"
+
+using namespace torch::indexing;
 
 namespace Acts {
 
@@ -58,18 +61,22 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
                << *std::min_element(inputValues.begin(), inputValues.end()))
   printCudaMemInfo(logger());
 
+  auto inputTensor =
+      detail::vectorToTensor2D(inputValues, m_cfg.spacepointFeatures);
+
+  // If we are on CPU, clone to get ownership (is this necessary?), else bring
+  // to device.
+  if (inputTensor.options().device() == device) {
+    inputTensor = inputTensor.clone();
+  } else {
+    inputTensor = inputTensor.to(device);
+  }
+
   // **********
   // Embedding
   // **********
 
-  const int64_t numSpacepoints = inputValues.size() / m_cfg.spacepointFeatures;
   std::vector<torch::jit::IValue> inputTensors;
-  auto opts = torch::TensorOptions().dtype(torch::kFloat32);
-  torch::Tensor inputTensor =
-      torch::from_blob(inputValues.data(),
-                       {numSpacepoints, m_cfg.spacepointFeatures}, opts)
-          .to(torch::kFloat32)
-          .to(device);
 
   // Clone models (solve memory leak? members can be const...)
   auto model = m_model->clone();
@@ -87,8 +94,7 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // Building Edges
   // ****************
 
-  auto edgeList = buildEdges(output, numSpacepoints, m_cfg.embeddingDim,
-                             m_cfg.rVal, m_cfg.knnVal);
+  auto edgeList = detail::buildEdges(output, m_cfg.rVal, m_cfg.knnVal);
 
   ACTS_VERBOSE("Shape of built edges: (" << edgeList.size(0) << ", "
                                          << edgeList.size(1));
