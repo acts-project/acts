@@ -55,7 +55,7 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // averaged position is still on the surface. the averaged global position
     // might not be on the surface anymore.
     auto result = surface.globalToLocal(gCtx, simHit.position(),
-                                        simHit.unitDirection(), 0.5_um);
+                                        simHit.direction(), 0.5_um);
     if (result.ok()) {
       avgLocal += result.value();
     } else {
@@ -66,7 +66,7 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // global position should already be at the intersection. no need to perform
     // an additional intersection call.
     avgPos4 += simHit.fourPosition();
-    avgDir += simHit.unitDirection();
+    avgDir += simHit.direction();
   }
 
   // only need to average if there are at least two inputs

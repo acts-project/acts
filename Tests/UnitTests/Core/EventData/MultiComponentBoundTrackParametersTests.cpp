@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
                       single_pars.position(GeometryContext{}));
     BOOST_CHECK_EQUAL(multi_pars.transverseMomentum(),
                       single_pars.transverseMomentum());
-    BOOST_CHECK_EQUAL(multi_pars.unitDirection(), single_pars.unitDirection());
+    BOOST_CHECK_EQUAL(multi_pars.direction(), single_pars.direction());
 
     // Check the behaviour for std::nullopt or zero covariance
     if (cov && *cov != BoundSymMatrix::Zero()) {
