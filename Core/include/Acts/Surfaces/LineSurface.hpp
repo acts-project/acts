@@ -292,8 +292,6 @@ class LineSurface : public Surface {
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
       const GeometryContext& gctx, const Vector3& position) const final;
 
-  Vector3 lineDirection(const GeometryContext& gctx) const;
-
  protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
 
