@@ -65,10 +65,10 @@ Acts::LineSurface& Acts::LineSurface::operator=(const LineSurface& other) {
 Acts::Vector3 Acts::LineSurface::localToGlobal(const GeometryContext& gctx,
                                                const Vector2& lposition,
                                                const Vector3& direction) const {
-  Vector3 unitZ0 = lineDirection(gctx);
+  Vector3 lineDirection = transform(gctx).rotation() * Vector3::UnitZ();
 
   // get the vector perpendicular to the momentum direction and the straw axis
-  Vector3 radiusAxisGlobal = unitZ0.cross(direction);
+  Vector3 radiusAxisGlobal = lineDirection.cross(direction);
   Vector3 locZinGlobal =
       transform(gctx) * Vector3(0., 0., lposition[eBoundLoc1]);
   // add eBoundLoc0 * radiusAxis
@@ -109,7 +109,7 @@ std::string Acts::LineSurface::name() const {
 Acts::RotationMatrix3 Acts::LineSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& /*position*/,
     const Vector3& direction) const {
-  Vector3 unitZ0 = lineDirection(gctx);
+  Vector3 unitZ0 = transform(gctx).rotation() * Vector3::UnitZ();
   Vector3 unitD0 = unitZ0.cross(direction).normalized();
   Vector3 unitDistance = unitD0.cross(unitZ0);
 
@@ -157,7 +157,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
   // Origin of the line surface
   Vector3 mb = transform(gctx).translation();
   // Line surface axis
-  Vector3 eb = lineDirection(gctx);
+  Vector3 eb = transform(gctx).rotation() * Vector3::UnitZ();
 
   // Now go ahead and solve for the closest approach
   Vector3 mab = mb - ma;
@@ -258,7 +258,7 @@ Acts::FreeToPathMatrix Acts::LineSurface::freeToPathDerivative(
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
-  Vector3 localZAxis = lineDirection(gctx);
+  Vector3 localZAxis = transform(gctx).rotation() * Vector3::UnitZ();
   // The local z coordinate
   double pz = pcRowVec.dot(localZAxis);
   // Cosine of angle between momentum direction and local frame z axis
@@ -288,7 +288,7 @@ Acts::AlignmentToPathMatrix Acts::LineSurface::alignmentToPathDerivative(
   // The vector between position and center
   Vector3 pcRowVec = position - center(gctx);
   // The local frame z axis
-  Vector3 localZAxis = lineDirection(gctx);
+  Vector3 localZAxis = transform(gctx).rotation() * Vector3::UnitZ();
   // The local z coordinate
   double pz = pcRowVec.dot(localZAxis);
   // Cosine of angle between momentum direction and local frame z axis
@@ -320,9 +320,4 @@ Acts::ActsMatrix<2, 3> Acts::LineSurface::localCartesianToBoundLocalDerivative(
   loc3DToLocBound << std::cos(localPhi), std::sin(localPhi), 0, 0, 0, 1;
 
   return loc3DToLocBound;
-}
-
-Acts::Vector3 Acts::LineSurface::lineDirection(
-    const GeometryContext& gctx) const {
-  return transform(gctx).linear().col(2);
 }
