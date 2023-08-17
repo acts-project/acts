@@ -137,19 +137,6 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
   return (rq.betaGamma < 10.0f) ? 0.0f : (-1.0f / qOverP);
 }
 
-inline float _computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
-                                          const RelativisticQuantities& rq) {
-  // return early in case of vacuum or zero thickness
-  if (not slab) {
-    return 0.0f;
-  }
-
-  const float Ne = slab.material().molarElectronDensity();
-  const float thickness = slab.thickness();
-  // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
-  return 4 * computeEpsilon(Ne, thickness, rq);
-}
-
 /// Convert Landau full-width-half-maximum to an equivalent Gaussian sigma,
 ///
 /// Full-width-half-maximum for a Gaussian is given as
@@ -161,6 +148,23 @@ inline float convertLandauFwhmToGaussianSigma(float fwhm) {
   return fwhm / (2 * std::sqrt(2 * std::log(2.0f)));
 }
 
+namespace detail {
+
+inline float computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
+                                         const RelativisticQuantities& rq) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
+    return 0.0f;
+  }
+
+  const float Ne = slab.material().molarElectronDensity();
+  const float thickness = slab.thickness();
+  // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
+  return 4 * computeEpsilon(Ne, thickness, rq);
+}
+
+}  // namespace detail
+
 }  // namespace
 
 float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
@@ -170,7 +174,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
@@ -195,7 +199,7 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
@@ -232,7 +236,7 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
@@ -252,7 +256,7 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
@@ -287,7 +291,7 @@ float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
@@ -297,15 +301,15 @@ float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
 
 float Acts::computeEnergyLossLandauFwhm(const MaterialSlab& slab, float m,
                                         float qOverP, float absQ) {
-  const auto rq = RelativisticQuantities(m, qOverP, absQ);
-  return _computeEnergyLossLandauFwhm(slab, rq);
+  const RelativisticQuantities rq{m, qOverP, absQ};
+  return detail::computeEnergyLossLandauFwhm(slab, rq);
 }
 
 float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
                                                float m, float qOverP,
                                                float absQ) {
-  const auto rq = RelativisticQuantities(m, qOverP, absQ);
-  const float fwhm = _computeEnergyLossLandauFwhm(slab, rq);
+  const RelativisticQuantities rq{m, qOverP, absQ};
+  const float fwhm = detail::computeEnergyLossLandauFwhm(slab, rq);
   const float sigmaE = convertLandauFwhmToGaussianSigma(fwhm);
   //  var(q/p) = (d(q/p)/dE)² * var(E)
   // d(q/p)/dE = d/dE (q/sqrt(E²-m²))
@@ -395,6 +399,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
   float dEdx = computeBremsstrahlungLossMean(m, energy);
 
   // muon- or muon+
+  // TODO magic number 8_GeV
   if ((absPdg == PdgParticle::eMuon) and (8_GeV < energy)) {
     dEdx += computeMuonDirectPairPhotoNuclearLossMean(energy);
   }
@@ -424,6 +429,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
   float derE = deriveBremsstrahlungLossMeanE(m);
 
   // muon- or muon+
+  // TODO magic number 8_GeV
   if ((absPdg == PdgParticle::eMuon) and (8_GeV < energy)) {
     derE += deriveMuonDirectPairPhotoNuclearLossMeanE(energy);
   }
