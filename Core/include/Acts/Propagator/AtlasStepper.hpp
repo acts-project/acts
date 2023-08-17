@@ -98,7 +98,7 @@ class AtlasStepper {
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
-            geoContext, pos, pars.unitDirection());
+            geoContext, pos, pars.direction());
 
         pVector[8] = transform(0, eBoundLoc0);
         pVector[16] = transform(0, eBoundLoc1);
