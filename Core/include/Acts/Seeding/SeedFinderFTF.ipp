@@ -28,12 +28,6 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
     const SeedFinderFTFConfig<external_spacepoint_t> &config)
     : m_config(config) {
   
-  //checks if internal units funciton used 
-  // if (not config.isInInternalUnits) {
-  //   throw std::runtime_error(
-  //       "SeedFinderOrthogonalConfig not in ACTS internal units in "
-  //       "SeedFinderOrthogonal");
-
 
   // std::ifstream input_ifstream(m_config.fastrack_input_file.c_str(), std::ifstream::in) ;
 

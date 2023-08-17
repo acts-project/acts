@@ -8,7 +8,6 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Utilities/KDTree.hpp"
-// #include "Acts/Seeding/GNN_DataStorage.hpp"
 
 
 #include <array>
@@ -39,7 +38,6 @@ class SeedFinderFTF {
   SeedFinderFTF(
       const SeedFinderFTFConfig<external_spacepoint_t> &config);
 
-//   ~SeedFinderFTF() = default;
   ~SeedFinderFTF(); //!!! is it dangerous not to use default? got def in ipp 
   SeedFinderFTF() = default;
   SeedFinderFTF(const SeedFinderFTF<external_spacepoint_t> &) =

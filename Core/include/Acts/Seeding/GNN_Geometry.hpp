@@ -85,16 +85,16 @@ class TrigFTF_GNN_Layer {
       if(m_nBins == 1) {
         m_bins.push_back(binCounter++);
         if(m_layer.m_type == 0) {//barrel
-    m_minRadius.push_back(m_layer.m_refCoord - 2.0);
+          m_minRadius.push_back(m_layer.m_refCoord - 2.0);
           m_maxRadius.push_back(m_layer.m_refCoord + 2.0);
-    m_minBinCoord.push_back(m_layer.m_minBound);
-    m_maxBinCoord.push_back(m_layer.m_maxBound);
+          m_minBinCoord.push_back(m_layer.m_minBound);
+          m_maxBinCoord.push_back(m_layer.m_maxBound);
         }
         else {//endcap
-    m_minRadius.push_back(m_layer.m_minBound - 2.0);
+          m_minRadius.push_back(m_layer.m_minBound - 2.0);
           m_maxRadius.push_back(m_layer.m_maxBound + 2.0);
-    m_minBinCoord.push_back(m_layer.m_minBound);
-    m_maxBinCoord.push_back(m_layer.m_maxBound);
+          m_minBinCoord.push_back(m_layer.m_minBound);
+          m_maxBinCoord.push_back(m_layer.m_maxBound);
         }
       }
       else {
@@ -103,39 +103,34 @@ class TrigFTF_GNN_Layer {
 
         for(int i=1;i<=m_nBins;i++) {
 
-    m_bins.push_back(binCounter++);
+          m_bins.push_back(binCounter++);
+          
+          float e1 = eta - 0.5*m_etaBin;
+          float e2 = eta + 0.5*m_etaBin;
     
-    float e1 = eta - 0.5*m_etaBin;
-    float e2 = eta + 0.5*m_etaBin;
-    
-    if(m_layer.m_type == 0) {//barrel
-      m_minRadius.push_back(m_layer.m_refCoord - 2.0);
+          if(m_layer.m_type == 0) {//barrel
+            m_minRadius.push_back(m_layer.m_refCoord - 2.0);
             m_maxRadius.push_back(m_layer.m_refCoord + 2.0);
-      float z1 = m_layer.m_refCoord*std::sinh(e1);
-      m_minBinCoord.push_back(z1);
-      float z2 = m_layer.m_refCoord*std::sinh(e2);
-      m_maxBinCoord.push_back(z2);
-    }
-    else {//endcap
-      float r = m_layer.m_refCoord/std::sinh(e1);
-      m_minBinCoord.push_back(r);
-      m_minRadius.push_back(r - 2.0);
-      r = m_layer.m_refCoord/std::sinh(e2);
-      m_maxBinCoord.push_back(r);
-      m_maxRadius.push_back(r + 2.0);
-      
-    }
+            float z1 = m_layer.m_refCoord*std::sinh(e1);
+            m_minBinCoord.push_back(z1);
+            float z2 = m_layer.m_refCoord*std::sinh(e2);
+            m_maxBinCoord.push_back(z2);
+          }
+          else {//endcap
+            float r = m_layer.m_refCoord/std::sinh(e1);
+            m_minBinCoord.push_back(r);
+            m_minRadius.push_back(r - 2.0);
+            r = m_layer.m_refCoord/std::sinh(e2);
+            m_maxBinCoord.push_back(r);
+            m_maxRadius.push_back(r + 2.0);
+            
+          }
     
-    eta += m_etaBin;
+          eta += m_etaBin;
         }
       }
     }
   }
-
-  // ~TrigFTF_GNN_Layer() {
-  //   m_bins.clear();
-  // }
-  // int getEtaBin(float, float) const;
 
   int getEtaBin(float zh, float rh) const {
   
