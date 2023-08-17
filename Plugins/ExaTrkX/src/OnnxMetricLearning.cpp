@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 
-#include "Acts/Plugins/ExaTrkX/buildEdges.hpp"
+#include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
 #include <onnxruntime_cxx_api.h>
 #include <torch/script.h>
@@ -44,10 +44,9 @@ void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
 
   torch::Tensor embedTensor =
       torch::tensor(embedFeatures, options)
-          .reshape({1, numSpacepoints, m_cfg.embeddingDim});
+          .reshape({numSpacepoints, m_cfg.embeddingDim});
 
-  auto stackedEdges = buildEdges(embedTensor, numSpacepoints,
-                                 m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
+  auto stackedEdges = detail::buildEdges(embedTensor, m_cfg.rVal, m_cfg.knnVal);
 
   stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
 
