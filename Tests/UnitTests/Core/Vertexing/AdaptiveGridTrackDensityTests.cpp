@@ -36,12 +36,58 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 
+BOOST_AUTO_TEST_CASE(check_density_values) {
+  using Vector2 = Eigen::Matrix<float, 2, 1>;
+  using Matrix2 = Eigen::Matrix<float, 2, 2>;
+  const int trkGridSize = 31;
+  double binSize = 0.09;
+  const float d0 = 0.4;
+  const float z0 = -0.2;
+  Vector2 impactParameters{d0, z0};
+
+  Covariance covMat(Covariance::Identity() * 0.05);
+  covMat(0, 1) = -0.02;
+  covMat(1, 0) = -0.02;
+  Matrix2 subCovMat = covMat.block<2, 2>(0, 0).cast<float>();
+  BoundVector paramVec{d0, z0, 0, 0, 0, 0};
+
+  // Create perigee surface
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
+
+  BoundTrackParameters params1(perigeeSurface, paramVec, covMat);
+
+  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+
+  // Empty map
+  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+
+  // Add first track
+  auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
+
+  float relTol = 1e-5;
+  float small = 1e-5;
+
+  auto gaussian2D = [&](Vector2 args, Vector2 mus, Matrix2 sigmas) {
+    Vector2 diffs = args - mus;
+    float coef = 1 / std::sqrt(sigmas.determinant());
+    float expo = -0.5 * diffs.transpose().dot(sigmas.inverse() * diffs);
+    return coef * std::exp(expo);
+  };
+
+  for (auto const& it : mainDensityMap) {
+    Vector2 dzVec{0., grid.getBinCenter(it.first)};
+    float correctDensity = gaussian2D(dzVec, impactParameters, subCovMat);
+    CHECK_CLOSE_OR_SMALL(it.second, correctDensity, relTol, small);
+  }
+}
+
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   const int trkGridSize = 15;
 
   double binSize = 0.1;  // mm
 
-  // Set up grid density with zMinMax
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
@@ -97,7 +143,6 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
 
   double binSize = 0.05;  // mm
 
-  // Set up grid density with zMinMax
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
@@ -145,7 +190,6 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
 
   double binSize = 0.05;  // mm
 
-  // Set up grid density with zMinMax
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
   cfg.useHighestSumZPosition = true;
 
@@ -205,7 +249,6 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
 
   double binSize = 0.05;  // mm
 
-  // Set up grid density with zMinMax
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
 
