@@ -1,20 +1,19 @@
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Seeding/GNN_Geometry.hpp"
 
 #include <algorithm>
 #include <map>
 #include <vector>
 
-#include "Acts/Seeding/GNN_Geometry.hpp"
-
 namespace Acts {
 
-constexpr size_t MAX_SEG_PER_NODE = 1000; // was 30
-constexpr size_t N_SEG_CONNS = 6;         // was 6
+constexpr size_t MAX_SEG_PER_NODE = 1000;  // was 30
+constexpr size_t N_SEG_CONNS = 6;          // was 6
 
-template <typename space_point_t> class TrigFTF_GNN_Node {
-public:
+template <typename space_point_t>
+class TrigFTF_GNN_Node {
+ public:
   struct CompareByPhi {
-
     bool operator()(const TrigFTF_GNN_Node<space_point_t> *n1,
                     const TrigFTF_GNN_Node<space_point_t> *n2) {
       // return n1->m_sp.phi() < n2->m_sp.phi();
@@ -59,13 +58,14 @@ public:
 
   const space_point_t &m_sp;
 
-  std::vector<unsigned int> m_in; // indices of the edges in the edge storage
+  std::vector<unsigned int> m_in;  // indices of the edges in the edge storage
   std::vector<unsigned int> m_out;
   float m_minCutOnTau, m_maxCutOnTau;
 };
 
-template <typename space_point_t> class TrigFTF_GNN_EtaBin {
-public:
+template <typename space_point_t>
+class TrigFTF_GNN_EtaBin {
+ public:
   TrigFTF_GNN_EtaBin() { m_vn.clear(); }
 
   ~TrigFTF_GNN_EtaBin() {
@@ -85,9 +85,7 @@ public:
   bool empty() const { return m_vn.empty(); }
 
   void generatePhiIndexing(float dphi) {
-
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
-
       TrigFTF_GNN_Node<space_point_t> *pN = m_vn.at(nIdx);
       // float phi = pN->m_sp.phi();
       float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
@@ -120,32 +118,32 @@ public:
   std::vector<std::pair<float, unsigned int>> m_vPhiNodes;
 };
 // new sp struct
-template <typename space_point_t> struct FTF_SP {
-  const space_point_t *SP; // want inside to have pointer
+template <typename space_point_t>
+struct FTF_SP {
+  const space_point_t *SP;  // want inside to have pointer
   int FTF_ID;
   int combined_ID;
   FTF_SP(const space_point_t *sp, int id, int combined_id)
       : SP(sp), FTF_ID(id), combined_ID{combined_id} {};
 };
 
-template <typename space_point_t> class TrigFTF_GNN_DataStorage {
-public:
+template <typename space_point_t>
+class TrigFTF_GNN_DataStorage {
+ public:
   TrigFTF_GNN_DataStorage(const TrigFTF_GNN_Geometry<space_point_t> &g)
       : m_geo(g) {
     m_etaBins.reserve(g.num_bins());
     for (int k = 0; k < g.num_bins(); k++) {
-      m_etaBins.emplace_back(
-          TrigFTF_GNN_EtaBin<space_point_t>()); // usde to be push
+      m_etaBins.emplace_back(TrigFTF_GNN_EtaBin<space_point_t>());
     }
   }
 
   ~TrigFTF_GNN_DataStorage() {}
 
   int addSpacePoint(const FTF_SP<space_point_t> &sp, bool useClusterWidth) {
-
     // found needed to search by key which is the combined ID
     const TrigFTF_GNN_Layer<space_point_t> *pL =
-        m_geo.getTrigFTF_GNN_LayerByKey(sp.combined_ID); // want combined ID
+        m_geo.getTrigFTF_GNN_LayerByKey(sp.combined_ID);  // want combined ID
 
     if (pL == nullptr)
       return -1;
@@ -161,14 +159,13 @@ public:
     if (isBarrel) {
       float min_tau = -100.0;
       float max_tau = 100.0;
-      // //cant do this bit yet as dont have cluster width, these loops just
-      // change the values on tau
+      // cant do this bit yet as dont have cluster width
       if (useClusterWidth) {
-        //   //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
-        //   //   const InDet::PixelCluster* pCL = dynamic_cast<const
+        //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
+        //   const InDet::PixelCluster* pCL = dynamic_cast<const
         //   InDet::PixelCluster*>(osp->clusterList().first);
-        //   //   float cluster_width = pCL->width().widthPhiRZ().y();
-        float cluster_width = 1; // temporary while cluster width not available
+        //   float cluster_width = pCL->width().widthPhiRZ().y();
+        float cluster_width = 1;  // temporary while cluster width not available
         min_tau = 6.7 * (cluster_width - 0.2);
         max_tau =
             1.6 + 0.15 / (cluster_width + 0.2) + 6.1 * (cluster_width - 0.2);
@@ -178,17 +175,16 @@ public:
           new TrigFTF_GNN_Node<space_point_t>(*sp.SP, min_tau, max_tau));
     } else {
       if (useClusterWidth) {
-        //   //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
-        //   //   const InDet::PixelCluster* pCL = dynamic_cast<const
+        //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
+        //   const InDet::PixelCluster* pCL = dynamic_cast<const
         //   InDet::PixelCluster*>(osp->clusterList().first);
-        //   //   float cluster_width = pCL->width().widthPhiRZ().y();
-        float cluster_width = 1; // temporary while cluster width not available
+        //   float cluster_width = pCL->width().widthPhiRZ().y();
+        float cluster_width = 1;  // temporary while cluster width not available
         if (cluster_width > 0.2)
           return -3;
       }
-      m_etaBins.at(binIndex).m_vn.push_back(new TrigFTF_GNN_Node<space_point_t>(
-          *sp.SP)); // add template here? add , min_tau, max_tau here for
-                    // constructor
+      m_etaBins.at(binIndex).m_vn.push_back(
+          new TrigFTF_GNN_Node<space_point_t>(*sp.SP));
     }
 
     return 0;
@@ -199,7 +195,6 @@ public:
   TrigFTF_GNN_DataStorage &operator=(const TrigFTF_GNN_DataStorage &) = delete;
 
   unsigned int numberOfNodes() const {
-
     unsigned int n = 0;
 
     for (auto &b : m_etaBins) {
@@ -208,9 +203,8 @@ public:
     return n;
   }
 
-  void
-  getConnectingNodes(std::vector<const TrigFTF_GNN_Node<space_point_t> *> &vn) {
-
+  void getConnectingNodes(
+      std::vector<const TrigFTF_GNN_Node<space_point_t> *> &vn) {
     vn.clear();
     vn.reserve(numberOfNodes());
 
@@ -244,16 +238,17 @@ public:
     return m_etaBins.at(idx);
   }
 
-protected:
+ protected:
   const TrigFTF_GNN_Geometry<space_point_t> &m_geo;
 
   std::vector<TrigFTF_GNN_EtaBin<space_point_t>> m_etaBins;
 };
 
-template <typename space_point_t> class TrigFTF_GNN_Edge {
-public:
+template <typename space_point_t>
+class TrigFTF_GNN_Edge {
+ public:
   struct CompareLevel {
-  public:
+   public:
     bool operator()(const TrigFTF_GNN_Edge *pS1, const TrigFTF_GNN_Edge *pS2) {
       return pS1->m_level > pS2->m_level;
     }
@@ -282,7 +277,7 @@ public:
   unsigned char m_nNei{0};
   float m_p[4]{};
 
-  unsigned int m_vNei[N_SEG_CONNS]{}; // global indices of the connected edges
+  unsigned int m_vNei[N_SEG_CONNS]{};  // global indices of the connected edges
 };
 
-} // namespace Acts
+}  // namespace Acts
