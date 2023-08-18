@@ -1436,9 +1436,7 @@ def addAmbiguityResolutionMLDBScan(
 def addVertexFitting(
     s,
     field,
-    seeder: Optional[
-        acts.VertexSeedFinder
-    ] = acts.VertexSeedFinder.GaussianSeeder,
+    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
