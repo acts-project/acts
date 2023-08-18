@@ -1,7 +1,7 @@
 // SeedFinderFTF.ipp
 // basing on ortho seed finder
 
-#include "Acts/Definitions/Algebra.hpp" //for M_PI
+#include "Acts/Definitions/Algebra.hpp"  //for M_PI
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
@@ -9,14 +9,13 @@
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
-#include <fstream>
-#include <iostream>
-#include <vector>
-
 #include <cmath>
+#include <fstream>
 #include <functional>
+#include <iostream>
 #include <numeric>
 #include <type_traits>
+#include <vector>
 
 // core so in ACTS namespace
 
@@ -27,21 +26,11 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
     const SeedFinderFTFConfig<external_spacepoint_t> &config,
     const TrigFTF_GNN_Geometry<external_spacepoint_t> &GNNgeo)
     : m_config(config) {
-
-  // std::ifstream input_ifstream(m_config.fastrack_input_file.c_str(),
-  // std::ifstream::in) ;
-
-  // FasTrackConnector input_fastrack(input_ifstream) ;
-
-  // TrigFTF_GNN_Geometry<external_spacepoint_t> mGNNgeo(m_config.input_vector,
-  // &input_fastrack);
-
   m_storage = new TrigFTF_GNN_DataStorage(GNNgeo);
 }
 
 template <typename external_spacepoint_t>
 SeedFinderFTF<external_spacepoint_t>::~SeedFinderFTF() {
-
   delete m_storage;
 
   m_storage = nullptr;
@@ -52,22 +41,18 @@ SeedFinderFTF<external_spacepoint_t>::~SeedFinderFTF() {
 template <typename external_spacepoint_t>
 void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(
     const std::vector<FTF_SP<external_spacepoint_t>> &FTF_SP_vect) {
-
   for (auto &FTF_sp : FTF_SP_vect) {
-
     bool is_Pixel;
-    if (FTF_sp.SP->sourceLinks().size() == 1) { // pixels have 1 SL
+    if (FTF_sp.SP->sourceLinks().size() == 1) {  // pixels have 1 SL
       is_Pixel = true;
     } else {
       is_Pixel = false;
     }
-    // bool is_Pixel = FTF_sp.SP->isPixel(); //FTF actual object then sim is
-    // pointer
     if (!is_Pixel)
       continue;
 
     m_storage->addSpacePoint(
-        FTF_sp, (m_config.m_useClusterWidth > 0)); // add is a funciton FTFtype
+        FTF_sp, (m_config.m_useClusterWidth > 0));  // add is a funciton FTFtype
   }
 
   m_config.m_phiSliceWidth = 2 * M_PI / m_config.m_nMaxPhiSlice;
@@ -99,4 +84,4 @@ SeedFinderFTF<external_spacepoint_t>::createSeeds(
   return r;
 }
 
-} // namespace Acts
+}  // namespace Acts

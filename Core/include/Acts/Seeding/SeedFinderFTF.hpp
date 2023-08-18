@@ -21,8 +21,9 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t> class SeedFinderFTF {
-public:
+template <typename external_spacepoint_t>
+class SeedFinderFTF {
+ public:
   static constexpr std::size_t NDims = 3;
 
   using seed_t = Seed<external_spacepoint_t>;
@@ -30,17 +31,14 @@ public:
   //   using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
 
   // constructors
-  //   SeedFinderFTF(
-  //       const SeedFinderFTFConfig<external_spacepoint_t> &config);
-
   SeedFinderFTF(const SeedFinderFTFConfig<external_spacepoint_t> &config,
                 const TrigFTF_GNN_Geometry<external_spacepoint_t> &GNNgeo);
 
-  ~SeedFinderFTF(); //!!! is it dangerous not to use default? got def in ipp
+  ~SeedFinderFTF();  //!!! is it dangerous not to use default? got def in ipp
   SeedFinderFTF() = default;
   SeedFinderFTF(const SeedFinderFTF<external_spacepoint_t> &) = delete;
-  SeedFinderFTF<external_spacepoint_t> &
-  operator=(const SeedFinderFTF<external_spacepoint_t> &) = delete;
+  SeedFinderFTF<external_spacepoint_t> &operator=(
+      const SeedFinderFTF<external_spacepoint_t> &) = delete;
 
   void loadSpacePoints(const std::vector<FTF_SP<external_spacepoint_t>> &);
 
@@ -57,7 +55,7 @@ public:
                                   const input_container_t &spacePoints,
                                   callable_t &&extract_coordinates) const;
 
-private:
+ private:
   enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
 
   // config object
@@ -67,6 +65,6 @@ private:
   TrigFTF_GNN_DataStorage<external_spacepoint_t> *m_storage;
 };
 
-} // namespace Acts
+}  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderFTF.ipp"

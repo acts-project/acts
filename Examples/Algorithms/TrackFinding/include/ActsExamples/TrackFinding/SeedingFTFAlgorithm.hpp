@@ -21,9 +21,8 @@
 namespace ActsExamples {
 
 class SeedingFTFAlgorithm final : public IAlgorithm {
-public:
+ public:
   struct Config {
-
     std::vector<std::string> inputSpacePoints;
 
     std::string outputSeeds;
@@ -68,7 +67,7 @@ public:
   // layer numbering
   std::vector<Acts::TrigInDetSiLayer> LayerNumbering() const;
 
-private:
+ private:
   Config m_cfg;
 
   std::unique_ptr<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>> mGNNgeo;
@@ -82,4 +81,4 @@ private:
       this, "InputSourceLinks"};
 };
 
-} // namespace ActsExamples
+}  // namespace ActsExamples
