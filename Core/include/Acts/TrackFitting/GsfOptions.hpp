@@ -35,7 +35,8 @@ struct GsfExtensions {
   using TrackStateProxy = typename traj_t::TrackStateProxy;
   using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
 
-  using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
+  using Calibrator = Delegate<void(const GeometryContext&, const SourceLink&,
+                                   TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         Direction, const Logger&)>;

@@ -209,8 +209,8 @@ class MultiComponentBoundTrackParameters {
 
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
-  Vector3 unitDirection() const {
-    return reduce([](const SingleParameters& p) { return p.unitDirection(); })
+  Vector3 direction() const {
+    return reduce([](const SingleParameters& p) { return p.direction(); })
         .normalized();
   }
 
