@@ -116,14 +116,10 @@ class AdaptiveGridTrackDensity {
   /// @brief Function that creates a track density map, i.e., a map of z bins
   /// to corresponding density values coming from a single track.
   ///
-  /// @param offset Offset in d0 direction, to account for the 2-dim part
-  /// of the Gaussian track distribution
-  /// @param cov The track covariance matrix
-  /// @param distCtrD The distance in d0 from the track position to its
-  /// bin center in the 2-dim grid
+  /// @param d0 Transverse impact parameter
+  /// @param z0 Longitudinal impact parameter
   /// @param centralZBin Central z bin of the track (where its density is the highest)
-  /// @param distCtrZ The distance in z0 from the track position to its
-  /// bin center in the 2-dim grid
+  /// @param cov 2x2 impact parameter covariance matrix
   DensityMap createTrackGrid(float d0, float z0, int centralZBin,
                              const Acts::SymMatrix2& cov) const;
 

@@ -36,7 +36,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 
-BOOST_AUTO_TEST_CASE(check_density_values) {
+BOOST_AUTO_TEST_CASE(check_density_for_gaussian) {
   using Vector2 = Eigen::Matrix<float, 2, 1>;
   using Matrix2 = Eigen::Matrix<float, 2, 2>;
   // Using a large track grid so we can choose a small bin size
