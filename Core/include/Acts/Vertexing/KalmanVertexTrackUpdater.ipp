@@ -19,6 +19,12 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   // Get the linearized track
   const LinearizedTrack& linTrack = track.linearizedState;
 
+  // Check if linearized state exists
+  if (linTrack.covarianceAtPCA.determinant() == 0.) {
+    // Track has no linearized state, returning w/o update
+    return;
+  }
+
   // Retrieve linTrack information
   const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
   const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
