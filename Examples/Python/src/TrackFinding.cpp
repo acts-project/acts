@@ -7,14 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
+#include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
@@ -32,10 +32,9 @@ namespace py = pybind11;
 using namespace ActsExamples;
 using namespace Acts;
 
-
 namespace Acts::Python {
 
-void addTrackFinding(Context& ctx) {
+void addTrackFinding(Context &ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
@@ -174,8 +173,7 @@ void addTrackFinding(Context& ctx) {
 
   {
     using Config = Acts::SeedFinderFTFConfig<SimSpacePoint>;
-    auto c =
-        py::class_<Config>(m, "SeedFinderFTFConfig").def(py::init<>());
+    auto c = py::class_<Config>(m, "SeedFinderFTFConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
     ACTS_PYTHON_MEMBER(sigmaScattering);
@@ -189,7 +187,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
-  }  
+  }
 
   {
     using seedConf = Acts::SeedConfirmationRangeConfig;
@@ -249,10 +247,10 @@ void addTrackFinding(Context& ctx) {
                                 seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SeedingFTFAlgorithm, mex,
-      "SeedingFTFAlgorithm", inputSpacePoints, outputSeeds,
-      seedFilterConfig, seedFinderConfig, seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks, trackingGeometry, ACTS_FTF_Map, fill_module_csv);
-
+      ActsExamples::SeedingFTFAlgorithm, mex, "SeedingFTFAlgorithm",
+      inputSpacePoints, outputSeeds, seedFilterConfig, seedFinderConfig,
+      seedFinderOptions, layerMappingFile, geometrySelection, inputSourceLinks,
+      trackingGeometry, ACTS_FTF_Map, fill_module_csv);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
@@ -273,7 +271,7 @@ void addTrackFinding(Context& ctx) {
 
     auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TrackFindingAlgorithm")
-                   .def(py::init<const Config&, Acts::Logging::Level>(),
+                   .def(py::init<const Config &, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
                    .def_property_readonly("config", &Alg::config)
                    .def_static("makeTrackFinderFunction",
@@ -307,12 +305,12 @@ void addTrackFinding(Context& ctx) {
                            std::pair<GeometryIdentifier,
                                      std::tuple<std::vector<double>,
                                                 std::vector<double>,
-                                                std::vector<size_t>>>>& input) {
+                                                std::vector<size_t>>>> &input) {
       std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
           converted;
       converted.reserve(input.size());
-      for (const auto& [id, cuts] : input) {
-        const auto& [bins, chi2, num] = cuts;
+      for (const auto &[id, cuts] : input) {
+        const auto &[bins, chi2, num] = cuts;
         converted.emplace_back(id, MeasurementSelectorCuts{bins, chi2, num});
       }
       return std::make_unique<MeasurementSelector::Config>(converted);
@@ -345,4 +343,4 @@ void addTrackFinding(Context& ctx) {
                                 outputProtoTracks);
 }
 
-}  // namespace Acts::Python
+} // namespace Acts::Python

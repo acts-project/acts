@@ -1,7 +1,2 @@
-target_sources(
-  ActsCore
-  PRIVATE
-    CombinatorialKalmanFilterError.cpp
-    MeasurementSelector.cpp
-    FasTrackConnector.cpp
-)
+target_sources(ActsCore PRIVATE CombinatorialKalmanFilterError
+                   .cpp MeasurementSelector.cpp FasTrackConnector.cpp)
