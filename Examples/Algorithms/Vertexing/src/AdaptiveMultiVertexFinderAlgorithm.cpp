@@ -90,6 +90,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
                               std::move(linearizer), m_cfg.bField);
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
+  finderConfig.looseConstrValue = 1e2;
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
   finderConfig.maxIterations = 200;
 
