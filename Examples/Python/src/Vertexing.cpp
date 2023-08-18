@@ -34,8 +34,7 @@ void addVertexing(Context& ctx) {
 
   py::enum_<Seeder>(m, "VertexSeedFinder")
       .value("GaussianVertexSeeder", Seeder::GaussianSeeder)
-      .value("AdaptiveGridVertexSeeder", Seeder::AdaptiveGridSeeder)
-      .export_values();
+      .value("AdaptiveGridVertexSeeder", Seeder::AdaptiveGridSeeder);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,

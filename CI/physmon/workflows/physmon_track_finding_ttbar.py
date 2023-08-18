@@ -154,7 +154,7 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
-        seeder=acts.GaussianVertexSeeder,
+        seeder=acts.VertexSeedFinder.GaussianVertexSeeder,
         associatedParticles=None,
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",
