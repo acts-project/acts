@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -168,7 +168,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
   float leftDensity = densityMap.at(rhmBin - 1);
   float deltaZ1 = m_cfg.binSize * (maxValue / 2 - leftDensity) /
-                  (leftDensity - rightDensity);
+                  (rightDensity - leftDensity);
 
   int lhmBin = zMaxBin;
   gridValue = maxValue;

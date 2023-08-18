@@ -150,6 +150,7 @@ class GaussianGridTrackDensity {
   Result<float> estimateSeedWidth(MainGridVector& mainGrid, float maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
+  /// @note This function is defined in coordinate system centered around d0 and z0
   float normal2D(float d, float z, const SymMatrix2& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have

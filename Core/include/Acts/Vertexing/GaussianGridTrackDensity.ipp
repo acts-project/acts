@@ -170,7 +170,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
 
   // Use linear approximation to find better z value for FWHM between bins
   float deltaZ1 = m_cfg.binSize * (maxValue / 2 - mainGrid(rhmBin - 1)) /
-                  (mainGrid(rhmBin - 1) - mainGrid(rhmBin));
+                  (mainGrid(rhmBin) - mainGrid(rhmBin - 1));
 
   // Find left half-maximum bin
   int lhmBin = zBin;

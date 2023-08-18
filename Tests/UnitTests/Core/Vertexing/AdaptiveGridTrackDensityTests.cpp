@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,8 +39,11 @@ using Covariance = BoundSymMatrix;
 BOOST_AUTO_TEST_CASE(check_density_values) {
   using Vector2 = Eigen::Matrix<float, 2, 1>;
   using Matrix2 = Eigen::Matrix<float, 2, 2>;
-  const int trkGridSize = 31;
-  double binSize = 0.09;
+  // Using a large track grid so we can choose a small bin size
+  const int trkGridSize = 4001;
+  // Arbitrary (but small) bin size
+  const float binSize = 3.1e-4;
+  // Arbitrary impact parameters
   const float d0 = 0.4;
   const float z0 = -0.2;
   Vector2 impactParameters{d0, z0};
@@ -63,7 +66,7 @@ BOOST_AUTO_TEST_CASE(check_density_values) {
   // Empty map
   AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
 
-  // Add first track
+  // Add track
   auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
 
   float relTol = 1e-5;
@@ -77,10 +80,76 @@ BOOST_AUTO_TEST_CASE(check_density_values) {
   };
 
   for (auto const& it : mainDensityMap) {
-    Vector2 dzVec{0., grid.getBinCenter(it.first)};
+    // Extract variables for better readability
+    int zBin = it.first;
+    float density = it.second;
+    // Argument for 2D gaussian
+    Vector2 dzVec{0., grid.getBinCenter(zBin)};
+    // Compute correct density...
     float correctDensity = gaussian2D(dzVec, impactParameters, subCovMat);
-    CHECK_CLOSE_OR_SMALL(it.second, correctDensity, relTol, small);
+    // ... and check if our result is equivalent
+    CHECK_CLOSE_OR_SMALL(density, correctDensity, relTol, small);
   }
+
+  // Analytical maximum of the Gaussian (can be obtained by expressing the
+  // exponent as (az - b)^2 + c and noting correctMaxZ = b/a)
+  float correctMaxZ =
+      -0.5 * (subCovMat(0, 1) + subCovMat(1, 0)) / subCovMat(0, 0) * d0 + z0;
+  // Analytical FWHM of the Gaussian (result similar to
+  // https://en.wikipedia.org/wiki/Full_width_at_half_maximum#Normal_distribution
+  // but the calculation needs to be slightly modified in our case)
+  float correctFWHM = 2. * std::sqrt(2 * std::log(2.) *
+                                     subCovMat.determinant() / subCovMat(0, 0));
+
+  // Estimate maximum z position and seed width
+  auto res = grid.getMaxZPositionAndWidth(mainDensityMap);
+  BOOST_CHECK(res.ok());
+
+  // Extract variables for better readability...
+  float maxZ = res.value().first;
+  float fwhm = res.value().second * 2.355f;
+
+  // ... and check if they are correct (note: the optimization is not as exact
+  // as the density values).
+  float relTolOptimization = 1e-3;
+  CHECK_CLOSE_REL(maxZ, correctMaxZ, relTolOptimization);
+  CHECK_CLOSE_REL(fwhm, correctFWHM, relTolOptimization);
+}
+
+BOOST_AUTO_TEST_CASE(check_seed_width_estimation) {
+  // Dummy track grid size (not needed for this unit test)
+  const int trkGridSize = 1;
+  float binSize = 2.;
+  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+
+  // Empty map
+  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+
+  // z-position of the maximum density
+  float correctMaxZ = -2.;
+
+  // Fill map with a triangular track density.
+  // We use an isoscele triangle with a maximum density value of 1 and a width
+  // of 20 mm. The linear approximation we use during the seed width estimation
+  // should be exact in this case.
+  for (int i = -6; i <= 4; i++) {
+    mainDensityMap[i] =
+        1.0 - 0.1 * std::abs(correctMaxZ - grid.getBinCenter(i));
+  }
+
+  // Get maximum z position and corresponding seed width
+  auto res = grid.getMaxZPositionAndWidth(mainDensityMap);
+  BOOST_CHECK(res.ok());
+
+  // Check if we found the correct maximum
+  float maxZ = res.value().first;
+  BOOST_CHECK_EQUAL(maxZ, correctMaxZ);
+
+  // Calculate full width at half maximum from seed width and check if it's
+  // correct
+  float fwhm = res.value().second * 2.355f;
+  BOOST_CHECK_EQUAL(fwhm, 10.);
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {

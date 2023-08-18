@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -141,6 +141,7 @@ class AdaptiveGridTrackDensity {
                                   float maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
+  /// @note This function is defined in coordinate system centered around d0 and z0
   float normal2D(float d, float z, const SymMatrix2& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
