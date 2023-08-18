@@ -169,7 +169,6 @@ std::map<std::pair<int, int>,std::pair<int, int>> ActsExamples::SeedingFTFAlgori
       int FTF = stoi(i[5]); 
       int eta_mod = stoi(i[6]);
       int ACTS_joint = ACTS_vol*100 + ACTS_lay ;
-      // ACTS_FTF.insert({{ACTS_joint,ACTS_mod},FTF}) ; 
       ACTS_FTF.insert({{ACTS_joint,ACTS_mod},{FTF,eta_mod}}) ; 
       //here think should have pair of new number, vol*100+layer, mod which is 0 or number 
   }
@@ -256,8 +255,7 @@ std::vector<Acts::TrigInDetSiLayer> ActsExamples::SeedingFTFAlgorithm::LayerNumb
   std::vector<Acts::TrigInDetSiLayer> input_vector ;
   std::vector<size_t> count_vector ;
 
-
-  for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) { //think this is the volume loop 
+  for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) { //think this is the volume loop  
 
     m_cfg.trackingGeometry->visitSurfaces([this, &input_vector, &count_vector](const Acts::Surface* surface) {
 
@@ -349,26 +347,19 @@ std::vector<Acts::TrigInDetSiLayer> ActsExamples::SeedingFTFAlgorithm::LayerNumb
 
         }
 
-        //temporary code for output module info to csv 
-        // int ACTS_IDs = ACTS_vol_id*100 + ACTS_lay_id; 
-        // if (filling_map.find(ACTS_IDs) != filling_map.end()) { //not end so does exist 
-        //   filling_map[ACTS_IDs][2] += center(2) ; //z 
-        //   filling_map[ACTS_IDs][3] += sqrt(center(0)*center(0)+center(1)*center(1)) ; //r 
-        //   filling_map[ACTS_IDs][4] += 1 ; //increase count
-
-        // } 
-        // else { //end so doesnt exists 
-        //   filling_map[ACTS_IDs] = {ACTS_vol_id, ACTS_lay_id,center(2),sqrt(center(0)*center(0)+center(1)*center(1)) ,1 } ;
-        // }
-
-        //print to csv for each module 
-
-        // fout << ACTS_vol_id << ", " //vol
-        // << ACTS_lay_id << ", " //lay 
-        // << mod_id << ", " //module 
-        // << center(2)  << ", " //z 
-        // << sqrt(center(0)*center(0)+center(1)*center(1))  //r 
-        // << "\n";
+        if(m_cfg.fill_module_csv){
+          fstream fout;
+          fout.open("ACTS_modules.csv", ios::out | ios::app); //add to file each time 
+          // print to csv for each module, no repeates so dont need to make map for averaging 
+          fout << ACTS_vol_id << ", " //vol
+          << ACTS_lay_id << ", " //lay 
+          << mod_id << ", " //module 
+          << FTF_id << "," //FTF id 
+          << eta_mod << "," //eta_mod 
+          << center(2)  << ", " //z 
+          << sqrt(center(0)*center(0)+center(1)*center(1))  //r 
+          << "\n";
+        }
 
 
 

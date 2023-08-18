@@ -42,6 +42,8 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
 
     std::map<std::pair<int, int>,std::pair<int, int>> ACTS_FTF_Map ; 
 
+    bool fill_module_csv = false; 
+
 
   }; 
 

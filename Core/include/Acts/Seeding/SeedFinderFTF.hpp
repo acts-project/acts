@@ -31,8 +31,8 @@ class SeedFinderFTF {
   static constexpr std::size_t NDims = 3;
 
   using seed_t = Seed<external_spacepoint_t>; 
-  using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
-  using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
+//   using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
+//   using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
 
  //constructors 
 //   SeedFinderFTF(
