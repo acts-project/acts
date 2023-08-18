@@ -36,7 +36,7 @@ namespace Test {
 
 using Covariance = BoundSymMatrix;
 
-BOOST_AUTO_TEST_CASE(check_density_for_gaussian) {
+BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   using Vector2 = Eigen::Matrix<float, 2, 1>;
   using Matrix2 = Eigen::Matrix<float, 2, 2>;
   // Using a large track grid so we can choose a small bin size
@@ -52,7 +52,8 @@ BOOST_AUTO_TEST_CASE(check_density_for_gaussian) {
   covMat(0, 1) = -0.02;
   covMat(1, 0) = -0.02;
   Matrix2 subCovMat = covMat.block<2, 2>(0, 0).cast<float>();
-  BoundVector paramVec{d0, z0, 0, 0, 0, 0};
+  BoundVector paramVec;
+  paramVec << d0, z0, 0, 0, 0, 0;
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
