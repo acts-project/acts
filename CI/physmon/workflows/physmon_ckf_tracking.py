@@ -142,7 +142,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         addVertexFitting(
             s,
             setup.field,
-            seeder=acts.VertexSeedFinder.GaussianVertexSeeder,
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
@@ -155,7 +155,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         addVertexFitting(
             s,
             setup.field,
-            seeder=acts.VertexSeedFinder.GaussianVertexSeeder,
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
@@ -171,7 +171,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             addVertexFitting(
                 s,
                 setup.field,
-                seeder=acts.VertexSeedFinder.AdaptiveGridVertexSeeder,
+                seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
                 associatedParticles=None,
                 outputProtoVertices="amvf_gridseeder_protovertices",
                 outputVertices="amvf_gridseeder_fittedVertices",

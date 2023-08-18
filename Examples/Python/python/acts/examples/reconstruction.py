@@ -1438,7 +1438,7 @@ def addVertexFitting(
     field,
     seeder: Optional[
         acts.VertexSeedFinder
-    ] = acts.VertexSeedFinder.GaussianVertexSeeder,
+    ] = acts.VertexSeedFinder.GaussianSeeder,
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
