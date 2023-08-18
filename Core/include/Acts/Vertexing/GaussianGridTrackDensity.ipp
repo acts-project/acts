@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
@@ -207,7 +208,7 @@ float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
   float expo =
       -1 / (2 * det) *
       (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
-  return coef * std::exp(expo);
+  return coef * safeExp(expo);
 }
 
 template <int mainGridSize, int trkGridSize>
