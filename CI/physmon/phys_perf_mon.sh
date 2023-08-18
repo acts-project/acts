@@ -172,6 +172,26 @@ function full_chain() {
         "AMVF ${suffix}" \
         amvf_${suffix}
 
+    if [ $suffix == seeded ]; then
+	    Examples/Scripts/generic_plotter.py \
+            $outdir/performance_amvf_gridseeder_${suffix}.root \
+            vertexing \
+            $outdir/performance_amvf_gridseeder_${suffix}_hist.root \
+            --silent \
+            --config CI/physmon/vertexing_config.yml
+        ec=$(($ec | $?))
+
+        # remove ntuple file because it's large
+        rm $outdir/performance_amvf_gridseeder_${suffix}.root
+
+        run \
+            $outdir/performance_amvf_gridseeder_${suffix}_hist.root \
+            $refdir/performance_amvf_gridseeder_${suffix}_hist.root \
+            --title "AMVF (+grid seeder) ${suffix}" \
+            -o $outdir/amvf_gridseeder_${suffix}.html \
+            -p $outdir/amvf_gridseeder_${suffix}_plots
+    fi
+
     Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_ckf_${suffix}.root \
         tracksummary \
@@ -285,6 +305,23 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         $refdir/performance_amvf_ttbar_hist.root \
         "AMVF ttbar" \
         amvf_ttbar
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/performance_amvf_gridseeder_ttbar.root \
+        vertexing \
+        $outdir/performance_amvf_gridseeder_ttbar_hist.root \
+        --silent \
+        --config CI/physmon/vertexing_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/performance_amvf_gridseeder_ttbar.root
+
+    run \
+        $outdir/performance_amvf_gridseeder_ttbar_hist.root \
+        $refdir/performance_amvf_gridseeder_ttbar_hist.root \
+        "AMVF (+grid seeder) ttbar" \
+        amvf_gridseeder_ttbar
 fi
 
 if [[ "$mode" == "all" || "$mode" == "gsf" ]]; then
