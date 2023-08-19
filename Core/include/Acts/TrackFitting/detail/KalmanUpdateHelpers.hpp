@@ -59,9 +59,6 @@ auto kalmanHandleMeasurement(
 
   trackStateProxy.setReferenceSurface(surface.getSharedPtr());
 
-  // assign the source link to the track state
-  trackStateProxy.setUncalibratedSourceLink(source_link);
-
   // Fill the track state
   trackStateProxy.predicted() = std::move(boundParams.parameters());
   if (boundParams.covariance().has_value()) {
@@ -73,7 +70,7 @@ auto kalmanHandleMeasurement(
 
   // We have predicted parameters, so calibrate the uncalibrated input
   // measuerement
-  extensions.calibrator(state.geoContext, trackStateProxy);
+  extensions.calibrator(state.geoContext, source_link, trackStateProxy);
 
   // Get and set the type flags
   auto typeFlags = trackStateProxy.typeFlags();
