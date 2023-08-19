@@ -369,10 +369,9 @@ struct GsfActor {
         old_bound.position(state.stepping.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
-    auto pathCorrection =
-        surface.pathCorrection(state.stepping.geoContext,
-                               old_bound.position(state.stepping.geoContext),
-                               old_bound.unitDirection());
+    auto pathCorrection = surface.pathCorrection(
+        state.stepping.geoContext,
+        old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
     // Emit a warning if the approximation is not valid for this x/x0
