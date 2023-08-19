@@ -38,7 +38,7 @@ clang_tidy:
         -DACTS_RUN_CLANG_TIDY=on
 
     # Main clang-tidy run during cmake compilation
-    - CI/clang_tidy/run_clang_tidy.sh clang-tidy build -j2
+    - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
 
     # Install dependencies for processing scripts
     - pip install -r CI/clang_tidy/requirements.txt
