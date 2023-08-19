@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   sBoundCov(eBoundQOverP, eBoundQOverP) = resQOverP * resQOverP;
   sBoundCov(eBoundTime, eBoundTime) = resTime * resTime;
 
-  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   // the intersection of the track with the end surface
   SurfaceIntersection intersection =

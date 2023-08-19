@@ -883,10 +883,8 @@ class CombinatorialKalmanFilter {
 
         ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
 
-        ts.setUncalibratedSourceLink(sourceLink);
-
         // now calibrate the track state
-        m_extensions.calibrator(gctx, ts);
+        m_extensions.calibrator(gctx, sourceLink, ts);
 
         result.trackStateCandidates.push_back(ts);
       }

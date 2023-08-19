@@ -34,10 +34,10 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface
-                          ->intersect(gctx, params.position(gctx),
-                                      params.unitDirection(), false)
-                          .closest();
+  auto intersection =
+      perigeeSurface
+          ->intersect(gctx, params.position(gctx), params.direction(), false)
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above.
@@ -110,8 +110,8 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // Create curvilinear track object from our parameters. This is needed for
     // the propagation. Note that we work without covariance since we don't need
     // it to compute the derivative.
-    Vector3 wiggledDir = makeDirectionUnitFromPhiTheta(paramVecCopy(eLinPhi),
-                                                       paramVecCopy(eLinTheta));
+    Vector3 wiggledDir = makeDirectionFromPhiTheta(paramVecCopy(eLinPhi),
+                                                   paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
         paramVecCopy.template head<4>(), wiggledDir, paramVecCopy(eLinQOverP));

@@ -194,7 +194,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
         // local position to be calculated
         Acts::Vector2 lPosition{0., 0.};
         auto lpResult = surface.globalToLocal(ctx.geoContext, simHit.position(),
-                                              simHit.unitDirection());
+                                              simHit.direction());
         if (not lpResult.ok()) {
           ACTS_FATAL("Global to local transformation did not succeed.");
           return ProcessCode::ABORT;

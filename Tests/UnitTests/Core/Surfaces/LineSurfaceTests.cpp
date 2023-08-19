@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   auto intersection =
       surface
           ->intersect(tgContext, displacedParameters.position(tgContext),
-                      displacedParameters.unitDirection())
+                      displacedParameters.direction())
           .closest();
   CHECK_CLOSE_ABS(intersection.pathLength(), pathLimit, eps);
 

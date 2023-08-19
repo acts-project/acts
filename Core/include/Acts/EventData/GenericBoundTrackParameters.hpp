@@ -183,7 +183,7 @@ class GenericBoundTrackParameters {
   Vector4 fourPosition(const GeometryContext& geoCtx) const {
     Vector4 pos4;
     pos4.segment<3>(ePos0) =
-        m_surface->localToGlobal(geoCtx, localPosition(), unitDirection());
+        m_surface->localToGlobal(geoCtx, localPosition(), direction());
     pos4[eTime] = m_params[eBoundTime];
     return pos4;
   }
@@ -197,16 +197,16 @@ class GenericBoundTrackParameters {
   /// select the appropriate transformation and might be a computationally
   /// expensive operation.
   Vector3 position(const GeometryContext& geoCtx) const {
-    return m_surface->localToGlobal(geoCtx, localPosition(), unitDirection());
+    return m_surface->localToGlobal(geoCtx, localPosition(), direction());
   }
   /// Time coordinate.
   Scalar time() const { return m_params[eBoundTime]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
-  Vector3 unitDirection() const {
-    return makeDirectionUnitFromPhiTheta(m_params[eBoundPhi],
-                                         m_params[eBoundTheta]);
+  Vector3 direction() const {
+    return makeDirectionFromPhiTheta(m_params[eBoundPhi],
+                                     m_params[eBoundTheta]);
   }
   /// Absolute momentum.
   Scalar absoluteMomentum() const {
@@ -217,7 +217,7 @@ class GenericBoundTrackParameters {
     return std::sin(m_params[eBoundTheta]) * absoluteMomentum();
   }
   /// Momentum three-vector.
-  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
+  Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
   Scalar charge() const {

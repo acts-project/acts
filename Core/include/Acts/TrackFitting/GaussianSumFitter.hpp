@@ -221,7 +221,7 @@ struct GaussianSumFitter {
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
-                       sParameters.unitDirection(), true)
+                       sParameters.direction(), true)
             .closest()
             .status();
 

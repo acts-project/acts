@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLink.hpp"
 #include <Acts/Plugins/Onnx/OnnxRuntimeBase.hpp>
 #include <ActsExamples/EventData/MeasurementCalibration.hpp>
 
@@ -50,7 +51,8 @@ class NeuralCalibrator : public MeasurementCalibrator {
   /// The MeasurementCalibrator interface methods
   void calibrate(
       const MeasurementContainer& measurements,
-      const ClusterContainer* clusters, const Acts::GeometryContext& /*gctx*/,
+      const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
+      const Acts::SourceLink& sourceLink,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
           trackState) const override;
 
