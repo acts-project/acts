@@ -129,12 +129,12 @@ ActsExamples::ScalingCalibrator::ScalingCalibrator(
 
 void ActsExamples::ScalingCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
-    const Acts::GeometryContext& /*gctx*/,
+    const Acts::GeometryContext& /*gctx*/, const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
-  Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
-  const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
+  trackState.setUncalibratedSourceLink(sourceLink);
+  const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
 
-  assert((sourceLink.index() < measurements.size()) and
+  assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
   Acts::GeometryIdentifier mgid;
@@ -144,7 +144,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
                 static_cast<Acts::GeometryIdentifier::Value>(m_mask[1]));
   mgid.setSensitive(sourceLink.geometryId().sensitive() *
                     static_cast<Acts::GeometryIdentifier::Value>(m_mask[0]));
-  const Cluster& cl = clusters->at(sourceLink.index());
+  const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
 
   std::visit(
@@ -168,13 +168,11 @@ void ActsExamples::ScalingCalibrator::calibrate(
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
 
-        Acts::SourceLink sl{sourceLink.geometryId(), sourceLink};
-
-        Acts::Measurement<Acts::BoundIndices, kSize> cmeas(std::move(sl),
-                                                           indices, cpar, ccov);
+        Acts::Measurement<Acts::BoundIndices, kSize> cmeas(
+            Acts::SourceLink{idxSourceLink}, indices, cpar, ccov);
 
         trackState.allocateCalibrated(cmeas.size());
         trackState.setCalibrated(cmeas);
       },
-      (measurements)[sourceLink.index()]);
+      (measurements)[idxSourceLink.index()]);
 }

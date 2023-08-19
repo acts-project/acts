@@ -142,6 +142,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         addVertexFitting(
             s,
             setup.field,
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
@@ -154,6 +155,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         addVertexFitting(
             s,
             setup.field,
+            seeder=acts.VertexSeedFinder.GaussianSeeder,
             associatedParticles=None
             if label in ["seeded", "orthogonal"]
             else "particles_input",
@@ -162,6 +164,20 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             vertexFinder=VertexFinder.AMVF,
             outputDirRoot=tp / "amvf",
         )
+
+        # Use the adaptive grid vertex seeder in combination with the AMVF
+        # To avoid having too many physmon cases, we only do this for the label "seeded"
+        if label == "seeded":
+            addVertexFitting(
+                s,
+                setup.field,
+                seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+                associatedParticles=None,
+                outputProtoVertices="amvf_gridseeder_protovertices",
+                outputVertices="amvf_gridseeder_fittedVertices",
+                vertexFinder=VertexFinder.AMVF,
+                outputDirRoot=tp / "amvf_gridseeder",
+            )
 
         s.run()
         del s
@@ -172,17 +188,28 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 tp / f"performance_{vertexing}.root",
             )
 
-        for stem in [
-            "performance_ckf",
-            "tracksummary_ckf",
-            "performance_ivf",
-            "performance_amvf",
-        ] + (
-            ["performance_seeding", "performance_ambi"]
-            if label in ["seeded", "orthogonal"]
-            else ["performance_seeding"]
-            if label == "truth_estimated"
-            else []
+        if label == "seeded":
+            vertexing = "amvf_gridseeder"
+            shutil.move(
+                tp / f"{vertexing}/performance_vertexing.root",
+                tp / f"performance_{vertexing}.root",
+            )
+
+        for stem in (
+            [
+                "performance_ckf",
+                "tracksummary_ckf",
+                "performance_ivf",
+                "performance_amvf",
+            ]
+            + (["performance_amvf_gridseeder"] if label == "seeded" else [])
+            + (
+                ["performance_seeding", "performance_ambi"]
+                if label in ["seeded", "orthogonal"]
+                else ["performance_seeding"]
+                if label == "truth_estimated"
+                else []
+            )
         ):
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"

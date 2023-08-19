@@ -70,7 +70,7 @@ void checkParameters(const GenericBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
                        eps);
@@ -84,7 +84,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
 
   // global direction for reference
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
   // convert local-to-global for reference
   const Vector2 loc(l0, l1);
   const Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);

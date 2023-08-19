@@ -205,8 +205,6 @@ BOOST_AUTO_TEST_CASE(test_self_loop_removal) {
   BOOST_CHECK(ref == postEdges);
 }
 
-// Enable this test in PR where duplicate removal is fixed
-/*
 BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
   // clang-format off
   std::vector<int64_t> edges = {
@@ -243,7 +241,6 @@ BOOST_AUTO_TEST_CASE(test_duplicate_removal) {
 
   BOOST_CHECK(ref == postEdges);
 }
-*/
 
 BOOST_AUTO_TEST_CASE(test_random_flip) {
   torch::manual_seed(seed);
