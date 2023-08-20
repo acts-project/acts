@@ -83,8 +83,8 @@ struct GeneralMixture {
       // for electrons we fall back to the Highland (extension)
       // return projection factor times sigma times gauss random
       const auto theta0 = Acts::computeMultipleScatteringTheta0(
-          slab, particle.pdg(), particle.mass(),
-          particle.charge() / particle.absoluteMomentum(), particle.charge());
+          slab, particle.pdg(), particle.mass(), particle.qOverP(),
+          particle.charge());
       theta = std::normal_distribution<double>(0.0, theta0)(generator);
     }
     // scale from planar to 3d angle

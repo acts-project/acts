@@ -30,6 +30,7 @@ class MeasurementCalibrator {
   virtual void calibrate(
       const MeasurementContainer& measurements,
       const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
+      const Acts::SourceLink& sourceLink,
       Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const = 0;
 
   virtual ~MeasurementCalibrator() = default;
@@ -46,8 +47,8 @@ class PassThroughCalibrator : public MeasurementCalibrator {
   /// @param trackState The track state to calibrate
   void calibrate(
       const MeasurementContainer& measurements,
-      const ClusterContainer* /*clusters*/,
-      const Acts::GeometryContext& /*gctx*/,
+      const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
+      const Acts::SourceLink& sourceLink,
       Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const override;
 };
 
@@ -62,6 +63,7 @@ class MeasurementCalibratorAdapter {
   MeasurementCalibratorAdapter() = delete;
 
   void calibrate(const Acts::GeometryContext& gctx,
+                 const Acts::SourceLink& sourceLink,
                  Acts::VectorMultiTrajectory::TrackStateProxy trackState) const;
 
  private:
