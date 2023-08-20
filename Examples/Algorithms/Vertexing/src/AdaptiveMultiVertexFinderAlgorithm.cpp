@@ -108,9 +108,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::executeAfterSeederChoice(
   fitterCfg.doSmoothing = true;
   Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
 
-  // Set up the vertex seed finder
-  Seeder seedFinder;
-
   typename Finder::Config finderConfig(std::move(fitter), seedFinder,
                                        ipEstimator, std::move(linearizer),
                                        m_cfg.bField);
