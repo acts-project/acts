@@ -386,10 +386,10 @@ void test_multi_stepper_surface_status_update() {
                                                                cmps);
 
   BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
   BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
@@ -486,10 +486,10 @@ void test_component_bound_state() {
                                                                cmps);
 
   BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
   BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
@@ -615,8 +615,7 @@ void test_combined_curvilinear_state_function() {
   BOOST_CHECK(
       curv_pars.fourPosition(multi_state.geoContext)
           .isApprox(check_pars.fourPosition(multi_state.geoContext), 1.e-8));
-  BOOST_CHECK(
-      curv_pars.unitDirection().isApprox(check_pars.unitDirection(), 1.e-8));
+  BOOST_CHECK(curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
   BOOST_CHECK_CLOSE(curv_pars.absoluteMomentum(), check_pars.absoluteMomentum(),
                     1.e-8);
   BOOST_CHECK_CLOSE(curv_pars.charge(), check_pars.charge(), 1.e-8);
