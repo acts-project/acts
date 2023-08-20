@@ -35,11 +35,9 @@ using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
 /// returned.
 inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
-    const SimHitContainer& simHits, const HitSimHitsRange& hitSimHitsRange) {
+    const SimHitContainer& simHits, const HitSimHitsRange& hitSimHitsRange,
+    const Acts::Logger& logger) {
   using namespace Acts::UnitLiterals;
-
-  ACTS_LOCAL_LOGGER(
-      Acts::getDefaultLogger("averageSimHits", Acts::Logging::INFO));
 
   Acts::Vector2 avgLocal = Acts::Vector2::Zero();
   Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
@@ -57,18 +55,18 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // averaged position is still on the surface. the averaged global position
     // might not be on the surface anymore.
     auto result = surface.globalToLocal(gCtx, simHit.position(),
-                                        simHit.unitDirection(), 0.5_um);
+                                        simHit.direction(), 0.5_um);
     if (result.ok()) {
       avgLocal += result.value();
     } else {
-      ACTS_WARNING("Simulated hit "
+      ACTS_WARNING("While averaging simhit, hit "
                    << simHitIdx << " is not on the corresponding surface "
                    << surface.geometryId() << "; use [0,0] as local position");
     }
     // global position should already be at the intersection. no need to perform
     // an additional intersection call.
     avgPos4 += simHit.fourPosition();
-    avgDir += simHit.unitDirection();
+    avgDir += simHit.direction();
   }
 
   // only need to average if there are at least two inputs

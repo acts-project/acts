@@ -151,8 +151,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
 
       Acts::Vector2 localIntersect =
           (invTransfrom * simHit.position()).head<2>();
-      Acts::Vector3 localDirection =
-          invTransfrom.linear() * simHit.unitDirection();
+      Acts::Vector3 localDirection = invTransfrom.linear() * simHit.direction();
 
       // compute digitization steps
       const auto thickness = dg.detectorElement->thickness();
