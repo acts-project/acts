@@ -364,9 +364,15 @@ class MultiTrajectoryTestsCommon {
 
     // use temporary measurement to reset calibrated data
     TestTrackState ttsb(rng, 2u);
-    ts.setUncalibratedSourceLink(SourceLink{ttsb.sourceLink});
     Acts::GeometryContext gctx;
-    auto meas = testSourceLinkCalibratorReturn<trajectory_t>(gctx, ts);
+    BOOST_CHECK_EQUAL(
+        ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
+        pc.sourceLink.sourceId);
+    auto meas = testSourceLinkCalibratorReturn<trajectory_t>(
+        gctx, SourceLink{ttsb.sourceLink}, ts);
+    BOOST_CHECK_EQUAL(
+        ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
+        ttsb.sourceLink.sourceId);
     auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
 
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
@@ -448,7 +454,8 @@ class MultiTrajectoryTestsCommon {
     {
       Acts::GeometryContext gctx;
       // create a temporary measurement to extract the projector matrix
-      auto meas = testSourceLinkCalibratorReturn<trajectory_t>(gctx, ts);
+      auto meas = testSourceLinkCalibratorReturn<trajectory_t>(
+          gctx, SourceLink{pc.sourceLink}, ts);
       std::visit(
           [&](const auto& m) {
             fullProj.topLeftCorner(nMeasurements, eBoundSize) = m.projector();

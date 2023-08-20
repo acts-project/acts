@@ -29,8 +29,9 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const ActsMatrix<5, 3> posJac = linTrack.positionJacobian.block<5, 3>(0, 0);
   const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
+  // TODO we could use `linTrack.weightAtPCA` but only if we would use time
   const ActsSymMatrix<5> trkParamWeight =
-      linTrack.weightAtPCA.block<5, 5>(0, 0);
+      linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Calculate S matrix
   ActsSymMatrix<3> sMat =

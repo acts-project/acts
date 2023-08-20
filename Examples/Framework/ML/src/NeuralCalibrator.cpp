@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SourceLink.hpp"
 #include <ActsExamples/EventData/NeuralCalibrator.hpp>
 
 #include <TFile.h>
@@ -67,17 +68,17 @@ ActsExamples::NeuralCalibrator::NeuralCalibrator(
 
 void ActsExamples::NeuralCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
-    const Acts::GeometryContext& gctx,
+    const Acts::GeometryContext& gctx, const Acts::SourceLink& sourceLink,
     Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
         trackState) const {
-  Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
-  const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
-  assert((sourceLink.index() < measurements.size()) and
+  trackState.setUncalibratedSourceLink(sourceLink);
+  const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
+  assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
   if (std::find(m_volumeIds.begin(), m_volumeIds.end(),
-                sourceLink.geometryId().volume()) == m_volumeIds.end()) {
-    m_fallback.calibrate(measurements, clusters, gctx, trackState);
+                idxSourceLink.geometryId().volume()) == m_volumeIds.end()) {
+    m_fallback.calibrate(measurements, clusters, gctx, sourceLink, trackState);
     return;
   }
 
@@ -88,10 +89,10 @@ void ActsExamples::NeuralCalibrator::calibrate(
   size_t matSize0 = 7u;
   size_t matSize1 = 7u;
   size_t iInput = ::detail::fillChargeMatrix(
-      input, (*clusters)[sourceLink.index()], matSize0, matSize1);
+      input, (*clusters)[idxSourceLink.index()], matSize0, matSize1);
 
-  input[iInput++] = sourceLink.geometryId().volume();
-  input[iInput++] = sourceLink.geometryId().layer();
+  input[iInput++] = idxSourceLink.geometryId().volume();
+  input[iInput++] = idxSourceLink.geometryId().layer();
   input[iInput++] = trackState.parameters()[Acts::eBoundPhi];
   input[iInput++] = trackState.parameters()[Acts::eBoundTheta];
 
@@ -148,7 +149,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
 
-        Acts::SourceLink sl{sourceLink.geometryId(), sourceLink};
+        Acts::SourceLink sl{idxSourceLink};
 
         Acts::Measurement<Acts::BoundIndices, kSize> calibrated(
             std::move(sl), indices, cpar, ccov);
@@ -156,5 +157,5 @@ void ActsExamples::NeuralCalibrator::calibrate(
         trackState.allocateCalibrated(calibrated.size());
         trackState.setCalibrated(calibrated);
       },
-      (measurements)[sourceLink.index()]);
+      measurements[idxSourceLink.index()]);
 }
