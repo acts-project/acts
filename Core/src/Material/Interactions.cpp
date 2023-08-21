@@ -145,7 +145,8 @@ inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
 /// -> sigma = fwhm / (2 * sqrt(2 * log(2)))
 ///
 inline float convertLandauFwhmToGaussianSigma(float fwhm) {
-  return fwhm / (2 * std::sqrt(2 * std::log(2.0f)));
+  // return fwhm / (2 * std::sqrt(2 * std::log(2.0f)));
+  return fwhm * 0.42466090014400953f;
 }
 
 namespace detail {
