@@ -59,7 +59,7 @@ struct TrackAtVertex {
   TrackAtVertex(const input_track_t* originalTrack,
                 std::optional<FittedMomentum> fittedMom, double chi2PerTrack)
       : originalParams(originalTrack),
-        fittedMomentum(fittedMom),
+        fittedMomentum(std::move(fittedMom)),
         chi2(chi2PerTrack) {}
 
   /// @brief Constructor used when we know the momentum after the fit with default chi2
@@ -68,7 +68,7 @@ struct TrackAtVertex {
   /// @param originalTrack Original perigee parameter
   TrackAtVertex(const input_track_t* originalTrack,
                 std::optional<FittedMomentum> fittedMom)
-      : originalParams(originalTrack), fittedMomentum(fittedMom) {}
+      : originalParams(originalTrack), fittedMomentum(std::move(fittedMom)) {}
 
   /// Original track parameters
   const input_track_t* originalParams;
