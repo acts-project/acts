@@ -698,9 +698,8 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 innerPullQOverPFitted.push_back(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
-                const auto& recoUnitDirFitted =
-                    Acts::makeDirectionUnitFromPhiTheta(recoMomFitted[0],
-                                                        recoMomFitted[1]);
+                const auto& recoUnitDirFitted = Acts::makeDirectionFromPhiTheta(
+                    recoMomFitted[0], recoMomFitted[1]);
                 double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
                 innerMomOverlapFitted.push_back(overlapFitted);
               } else {
