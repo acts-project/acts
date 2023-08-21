@@ -184,12 +184,11 @@ function full_chain() {
         # remove ntuple file because it's large
         rm $outdir/performance_amvf_gridseeder_${suffix}.root
 
-        run \
+        run_histcmp \
             $outdir/performance_amvf_gridseeder_${suffix}_hist.root \
             $refdir/performance_amvf_gridseeder_${suffix}_hist.root \
-            --title "AMVF (+grid seeder) ${suffix}" \
-            -o $outdir/amvf_gridseeder_${suffix}.html \
-            -p $outdir/amvf_gridseeder_${suffix}_plots
+            "AMVF (+grid seeder) ${suffix}" \
+            amvf_gridseeder_${suffix}
     fi
 
     Examples/Scripts/generic_plotter.py \
@@ -317,7 +316,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     # remove ntuple file because it's large
     rm $outdir/performance_amvf_gridseeder_ttbar.root
 
-    run \
+    run_histcmp \
         $outdir/performance_amvf_gridseeder_ttbar_hist.root \
         $refdir/performance_amvf_gridseeder_ttbar_hist.root \
         "AMVF (+grid seeder) ttbar" \
