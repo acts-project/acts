@@ -61,8 +61,10 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predicted() = trkPar;
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
-  ts.setUncalibratedSourceLink(SourceLink{std::move(sourceLink)});
-  testSourceLinkCalibrator<VectorMultiTrajectory>(tgContext, ts);
+  BOOST_CHECK(!ts.hasUncalibratedSourceLink());
+  testSourceLinkCalibrator<VectorMultiTrajectory>(
+      tgContext, SourceLink{std::move(sourceLink)}, ts);
+  BOOST_CHECK(ts.hasUncalibratedSourceLink());
 
   // Check that the state has storage available
   BOOST_CHECK(ts.hasPredicted());
