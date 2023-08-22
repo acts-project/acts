@@ -42,7 +42,7 @@ struct GeneralMixture {
                     Particle &particle) const {
     double theta = 0.0;
 
-    if (std::abs(particle.pdg()) != Acts::PdgParticle::eElectron) {
+    if (particle.absolutePdg() != Acts::PdgParticle::eElectron) {
       //----------------------------------------------------------------------------
       // see Mixture models of multiple scattering: computation and simulation.
       // -

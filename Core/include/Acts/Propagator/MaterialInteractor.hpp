@@ -95,9 +95,9 @@ struct MaterialInteractor {
       if (energyLoss) {
         using namespace UnitLiterals;
         ACTS_VERBOSE(d.slab << " absPdg=" << d.absPdg
-                            << " mass=" << d.mass / 1_MeV
-                            << "MeV momentum=" << d.momentum / 1_GeV
-                            << "GeV energyloss=" << d.Eloss / 1_MeV << "MeV");
+                            << " mass=" << d.mass / 1_MeV << "MeV"
+                            << " momentum=" << d.momentum / 1_GeV << "GeV"
+                            << " energyloss=" << d.Eloss / 1_MeV << "MeV");
       }
 
       // To integrate process noise, we need to transport

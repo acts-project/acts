@@ -35,6 +35,7 @@ struct StepperState {
   Vector3 pos, dir;
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
+  double absCharge = UnitConstants::e;
 };
 
 /// @brief Simplified navigator
@@ -97,6 +98,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.t = 7.;
   state.stepping.p = 8.;
   state.stepping.q = 9.;
+  state.stepping.absCharge = std::abs(state.stepping.q);
   state.stepping.covTransport = true;
   state.options.direction = Direction::Backward;
   state.navigation.currentVolume = volume.get();

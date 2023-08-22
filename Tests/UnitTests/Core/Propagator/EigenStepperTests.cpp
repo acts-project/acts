@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3 startDir = makeDirectionFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 1_GeV * startDir;
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 1_GeV,
                                         cov, ParticleHypothesis::pion());
@@ -684,7 +684,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3 startDir = makeDirectionFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 5_GeV * startDir;
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_e / 5_GeV,
                                         cov, ParticleHypothesis::pion());

@@ -57,7 +57,7 @@ void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eFreeTime], eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(),
                        p * unitDir.template head<2>().norm(), eps, eps);
@@ -80,7 +80,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps, x, y, z,
     time, phi, theta, p) {
   Vector4 pos4(x, y, z, time);
-  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   FreeTrackParameters params(pos4, phi, theta, 1 / p, std::nullopt,
                              ParticleHypothesis::pion0());
@@ -99,7 +99,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     x, y, z, time, phi, theta, p, q) {
   Vector4 pos4(x, y, z, time);
-  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   FreeTrackParameters params(pos4, phi, theta, q / p, std::nullopt,
                              ParticleHypothesis::pionLike(std::abs(q)));
@@ -118,7 +118,7 @@ BOOST_DATA_TEST_CASE(
     posSymmetric* posSymmetric* posSymmetric* ts* phis* thetas* ps* qsNonZero,
     x, y, z, time, phi, theta, p, q) {
   Vector4 pos4(x, y, z, time);
-  Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   FreeTrackParameters params(pos4, phi, theta, q / p, std::nullopt,
                              ParticleHypothesis::pionLike(std::abs(q)));

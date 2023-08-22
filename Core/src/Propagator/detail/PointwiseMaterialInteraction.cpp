@@ -12,10 +12,11 @@
 
 namespace Acts {
 namespace detail {
+
 void PointwiseMaterialInteraction::evaluatePointwiseMaterialInteraction(
     bool multipleScattering, bool energyLoss) {
   if (energyLoss) {
-    Eloss = computeEnergyLossBethe(slab, absPdg, mass, qOverP, absQ);
+    Eloss = computeEnergyLossBethe(slab, mass, qOverP, absQ);
   }
   // Compute contributions from interactions
   if (performCovarianceTransport) {
@@ -28,7 +29,7 @@ void PointwiseMaterialInteraction::covarianceContributions(
   // Compute contributions from interactions
   if (multipleScattering) {
     // TODO use momentum before or after energy loss in backward mode?
-    const auto theta0 =
+    const float theta0 =
         computeMultipleScatteringTheta0(slab, absPdg, mass, qOverP, absQ);
     // sigmaPhi = theta0 / sin(theta)
     const auto sigmaPhi = theta0 * (dir.norm() / VectorHelpers::perp(dir));
@@ -38,8 +39,8 @@ void PointwiseMaterialInteraction::covarianceContributions(
   }
   // TODO just ionisation loss or full energy loss?
   if (energyLoss) {
-    const auto sigmaQoverP =
-        computeEnergyLossLandauSigmaQOverP(slab, absPdg, mass, qOverP, absQ);
+    const float sigmaQoverP =
+        computeEnergyLossLandauSigmaQOverP(slab, mass, qOverP, absQ);
     varianceQoverP = sigmaQoverP * sigmaQoverP;
   }
 }
@@ -50,5 +51,6 @@ double PointwiseMaterialInteraction::updateVariance(
   // Protect the variance against becoming negative
   return std::max(0., variance + std::copysign(change, updateMode));
 }
+
 }  // namespace detail
 }  // end of namespace Acts

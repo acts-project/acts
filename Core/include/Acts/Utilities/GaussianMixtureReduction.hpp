@@ -85,7 +85,7 @@ auto gaussianMixtureCov(const components_t components,
   for (const auto &cmp : components) {
     const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
-    cov += weight_l * cov_l;
+    cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, issue:2347)
 
     ActsVector<D> diff = pars_l - mean;
 
