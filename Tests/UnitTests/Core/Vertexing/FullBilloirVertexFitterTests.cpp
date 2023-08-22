@@ -260,8 +260,6 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
       auto fittedVertex = fitter.fit(trksPtr, lin, vfOpts, vfState).value();
       if (!fittedVertex.tracks().empty()) {
         CHECK_CLOSE_ABS(fittedVertex.position(), trueVertex.head(3), 1_mm);
-        auto tracksAtVtx = fittedVertex.tracks();
-        auto trackAtVtx = tracksAtVtx[0];
         CHECK_CLOSE_ABS(fittedVertex.time(), trueVertex[3], 1_ns);
       }
 

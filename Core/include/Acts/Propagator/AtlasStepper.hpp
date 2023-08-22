@@ -227,6 +227,9 @@ class AtlasStepper {
       state_ready = true;
     }
 
+    /// The absolute charge as the free vector can be 1/p or q/p
+    double absCharge = UnitConstants::e;
+
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
