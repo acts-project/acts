@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
-      .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
 
   Experimental::Gx2FitterOptions gx2fOptions(
       geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
-      .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
 
   MagneticFieldContext mfContext;
   CalibrationContext calContext;
