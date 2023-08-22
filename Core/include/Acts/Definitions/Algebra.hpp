@@ -79,7 +79,7 @@ using Vector2 = ActsVector<2>;
 using Vector3 = ActsVector<3>;
 using Vector4 = ActsVector<4>;
 
-// symmetric matrices e.g. for coordinate covariance matrices
+// square matrices e.g. for coordinate covariance matrices
 using SquareMatrix2 = ActsSquareMatrix<2>;
 using SquareMatrix3 = ActsSquareMatrix<3>;
 using SquareMatrix4 = ActsSquareMatrix<4>;
