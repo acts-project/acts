@@ -317,9 +317,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   CalibrationContext calContext;
 
   const Experimental::Gx2FitterOptions gx2fOptions(
-      tgContext, mfContext, calContext, std::move(extensions),
-      PropagatorPlainOptions(), rSurface, false, false,
-      FreeToBoundCorrection(false), 5);
+      tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
+      rSurface, false, false, FreeToBoundCorrection(false), 5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};

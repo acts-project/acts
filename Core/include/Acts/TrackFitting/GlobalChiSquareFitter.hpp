@@ -341,17 +341,6 @@ class Gx2Fitter {
           auto& [boundParams, jacobian, pathLength] = *res;
           result.jacobianFromStart = jacobian * result.jacobianFromStart;
 
-          // get measurement
-          auto sl = sourcelink_it->second;
-          auto uncalibratedMeasurement =
-              sl.template get<Test::TestSourceLink>().parameters;
-          auto uncalibratedCovarianceMeasurement =
-              sl.template get<Test::TestSourceLink>().covariance;
-
-          // TODO add calibrator
-          auto measurement = uncalibratedMeasurement;
-          auto covarianceMeasurement = uncalibratedCovarianceMeasurement;
-
           // add a full TrackState entry multi trajectory
           // (this allocates storage for all components, we will set them later)
           auto fittedStates = *result.fittedStates;
@@ -370,6 +359,17 @@ class Gx2Fitter {
           trackStateProxy.predicted() = std::move(boundParams.parameters());
           auto predicted = trackStateProxy.predicted();
 
+          // We have predicted parameters, so calibrate the uncalibrated input
+          // measurement
+          extensions.calibrator(state.geoContext, sourcelink_it->second,
+                                trackStateProxy);
+
+          const size_t measdimPlaceholder = 2;
+          auto measurement =
+              trackStateProxy.template calibrated<measdimPlaceholder>();
+          auto covarianceMeasurement =
+              trackStateProxy
+                  .template calibratedCovariance<measdimPlaceholder>();
           // calculate residuals and return with covariances and jacobians
           ActsVector<2> residual;
           //          std::vector<ActsScalar> covDiagonal;
@@ -390,11 +390,6 @@ class Gx2Fitter {
 
           trackStateProxy.jacobian() = std::move(jacobian);
           trackStateProxy.pathLength() = std::move(pathLength);
-
-          // We have predicted parameters, so calibrate the uncalibrated input
-          // measuerement
-          extensions.calibrator(state.geoContext, sourcelink_it->second,
-                                trackStateProxy);
         }
       }
 
