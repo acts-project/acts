@@ -54,7 +54,7 @@ concept CommonMultiTrajectoryBackend = requires(const T& cv, HashedString key,
 
   {
     cv.template measurementCovariance_impl<2>(istate)
-    } -> std::same_as<Eigen::Map<const ActsSymMatrix<2>>>;
+    } -> std::same_as<Eigen::Map<const ActsSquareMatrix<2>>>;
 
   { cv.has_impl(key, istate) } -> std::same_as<bool>;
 
@@ -80,7 +80,7 @@ concept ConstMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
 
   {
     v.template measurementCovariance_impl<2>(istate)
-    } -> std::same_as<Eigen::Map<const ActsSymMatrix<2>>>;
+    } -> std::same_as<Eigen::Map<const ActsSquareMatrix<2>>>;
 };
 
 template <typename T>
@@ -100,7 +100,7 @@ concept MutableMultiTrajectoryBackend = CommonMultiTrajectoryBackend<T> &&
 
   {
     v.template measurementCovariance_impl<2>(istate)
-    } -> std::same_as<Eigen::Map<ActsSymMatrix<2>>>;
+    } -> std::same_as<Eigen::Map<ActsSquareMatrix<2>>>;
 
   { v.addTrackState_impl() } -> std::same_as<TrackIndexType>;
 

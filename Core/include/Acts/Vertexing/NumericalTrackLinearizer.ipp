@@ -52,8 +52,8 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   BoundVector perigeeParams = endParams.parameters();
 
   // Covariance and weight matrix at the PCA to "linPoint"
-  BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
-  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   // Vector containing the track parameters at the PCA
   // Note that we parametrize the track using the following parameters:

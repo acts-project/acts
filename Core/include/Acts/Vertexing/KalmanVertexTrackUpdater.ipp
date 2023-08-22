@@ -30,11 +30,11 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would use time
-  const ActsSymMatrix<5> trkParamWeight =
+  const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Calculate S matrix
-  ActsSymMatrix<3> sMat =
+  ActsSquareMatrix<3> sMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   const ActsVector<5> residual = linTrack.constantTerm.head<5>();
@@ -50,11 +50,11 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   newTrkMomentum(1) = correctedPhiTheta.second;
 
   // Vertex covariance and weight matrices
-  const SymMatrix3 vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
-  const SymMatrix3 vtxWeight = vtxCov.inverse();
+  const SquareMatrix3 vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
+  const SquareMatrix3 vtxWeight = vtxCov.inverse();
 
   // New track covariance matrix
-  const SymMatrix3 newTrkCov =
+  const SquareMatrix3 newTrkCov =
       -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
 
   KalmanVertexUpdater::MatrixCache matrixCache;
@@ -64,7 +64,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
       vtx, linTrack, track.weight, -1, matrixCache);
 
   // Corresponding weight matrix
-  const SymMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
+  const SquareMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
 
   // Difference in positions
   Vector3 posDiff = vtx.position() - matrixCache.newVertexPos;
@@ -79,7 +79,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
                 smParams.dot(trkParamWeight * smParams);
 
   // Fitted momentum and its covariance matrix
-  ActsSymMatrix<3> momCov =
+  ActsSquareMatrix<3> momCov =
       sMat +
       (newTrkCov).transpose() * (vtxWeight.block<3, 3>(0, 0) * newTrkCov);
   FittedMomentum fittedMom(newTrkMomentum, momCov);

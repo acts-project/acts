@@ -71,7 +71,7 @@ struct BoundTrackParametersConceptImpl {
       std::is_convertible_v<ReturnTypeParameters<T>, BoundVector>;
   constexpr static bool hasMethodCovariance =
       std::is_convertible_v<ReturnTypeCovariance<T>,
-                            std::optional<BoundSymMatrix>>;
+                            std::optional<BoundSquareMatrix>>;
   constexpr static bool hasMethodFourPositionFromContext =
       identical_to<Vector4, ReturnTypeFourPositionFromContext, const T>;
   constexpr static bool hasMethodPositionFromContext =
@@ -127,7 +127,7 @@ struct FreeTrackParametersConceptImpl {
       std::is_convertible_v<ReturnTypeParameters<T>, FreeVector>;
   constexpr static bool hasMethodCovariance =
       std::is_convertible_v<ReturnTypeCovariance<T>,
-                            std::optional<FreeSymMatrix>>;
+                            std::optional<FreeSquareMatrix>>;
   constexpr static bool hasMethodFourPosition =
       identical_to<Vector4, ReturnTypeFourPosition, const T>;
   constexpr static bool hasMethodPosition =
