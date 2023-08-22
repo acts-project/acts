@@ -161,11 +161,9 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float rightDensity;
+  float rightDensity = 0;
   if (binFilled) {
     rightDensity = densityMap.at(rhmBin);
-  } else {
-    rightDensity = 0;
   }
   float leftDensity = densityMap.at(rhmBin - 1);
   float deltaZ1 = m_cfg.binSize * (maxValue / 2 - leftDensity) /

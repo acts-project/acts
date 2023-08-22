@@ -73,7 +73,8 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   float relTol = 1e-5;
   float small = 1e-5;
 
-  auto gaussian2D = [&](Vector2 args, Vector2 mus, Matrix2 sigmas) {
+  auto gaussian2D = [&](const Vector2& args, const Vector2& mus,
+                        const Matrix2& sigmas) {
     Vector2 diffs = args - mus;
     float coef = 1 / std::sqrt(sigmas.determinant());
     float expo = -0.5 * diffs.transpose().dot(sigmas.inverse() * diffs);
