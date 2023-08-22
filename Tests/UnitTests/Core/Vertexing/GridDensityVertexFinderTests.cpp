@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 
