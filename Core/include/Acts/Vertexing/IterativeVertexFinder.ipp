@@ -231,10 +231,10 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
   auto linTrack = std::move(*result);
 
   // Calculate reduced weight
-  SymMatrix2 weightReduced =
+  SquareMatrix2 weightReduced =
       linTrack.covarianceAtPCA.template block<2, 2>(0, 0);
 
-  SymMatrix2 errorVertexReduced =
+  SquareMatrix2 errorVertexReduced =
       (linTrack.positionJacobian *
        (vertex.fullCovariance() * linTrack.positionJacobian.transpose()))
           .template block<2, 2>(0, 0);
@@ -262,7 +262,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
 
   for (const auto& trackAtVtx : tracksAtVertex) {
     // Check compatibility
-    if (trackAtVtx.trackWeight < m_cfg.cutOffTrackWeight) {
+    if (trackAtVtx.weight < m_cfg.cutOffTrackWeight) {
       // Do not remove track here, since it is not compatible with the vertex
       continue;
     }
@@ -437,7 +437,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     for (auto tracksIter = tracksBegin; tracksIter != tracksEnd;) {
       // consider only tracks that are not too tightly assigned to other
       // vertex
-      if (tracksIter->trackWeight > m_cfg.cutOffTrackWeightReassign) {
+      if (tracksIter->weight > m_cfg.cutOffTrackWeightReassign) {
         tracksIter++;
         continue;
       }
@@ -545,6 +545,6 @@ int Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::countSignificantTracks(
     const Vertex<InputTrack_t>& vtx) const {
   return std::count_if(vtx.tracks().begin(), vtx.tracks().end(),
                        [this](TrackAtVertex<InputTrack_t> trk) {
-                         return trk.trackWeight > m_cfg.cutOffTrackWeight;
+                         return trk.weight > m_cfg.cutOffTrackWeight;
                        });
 }

@@ -111,7 +111,7 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
                                 ActsFatras::Particle::Scalar theta1, float phi2,
                                 float theta2) const {
   // Rotation around the global y-axis
-  Acts::SymMatrix3 rotY = Acts::SymMatrix3::Zero();
+  Acts::SquareMatrix3 rotY = Acts::SquareMatrix3::Zero();
   rotY(0, 0) = std::cos(theta1);
   rotY(0, 2) = std::sin(theta1);
   rotY(1, 1) = 1.;
@@ -119,7 +119,7 @@ NuclearInteraction::globalAngle(ActsFatras::Particle::Scalar phi1,
   rotY(2, 2) = std::cos(theta1);
 
   // Rotation around the global z-axis
-  Acts::SymMatrix3 rotZ = Acts::SymMatrix3::Zero();
+  Acts::SquareMatrix3 rotZ = Acts::SquareMatrix3::Zero();
   rotZ(0, 0) = std::cos(phi1);
   rotZ(0, 1) = -std::sin(phi1);
   rotZ(1, 0) = std::sin(phi1);

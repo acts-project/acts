@@ -28,15 +28,15 @@ using namespace Acts::UnitLiterals;
 struct DummyComponent {
   double weight = 0.0;
   BoundVector boundPars = BoundVector::Zero();
-  BoundSymMatrix boundCov = BoundSymMatrix::Identity();
+  BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
 };
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<DummyComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSymMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
   detail::SymmetricKLDistanceMatrix mat(cmps, proj);
@@ -48,10 +48,10 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
   std::vector<DummyComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSymMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
   const std::size_t cmp_to_mask = 2;
@@ -73,10 +73,10 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
   std::vector<DummyComponent> cmps = {
-      {1. / 3., BoundVector::Constant(-2.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+0.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+1.), BoundSymMatrix::Identity()},
-      {1. / 3., BoundVector::Constant(+4.), BoundSymMatrix::Identity()}};
+      {1. / 3., BoundVector::Constant(-2.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+0.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+1.), BoundSquareMatrix::Identity()},
+      {1. / 3., BoundVector::Constant(+4.), BoundSquareMatrix::Identity()}};
 
   const auto proj = [](auto &a) -> decltype(auto) { return a; };
   detail::SymmetricKLDistanceMatrix mat(cmps, proj);
@@ -134,7 +134,7 @@ BOOST_AUTO_TEST_CASE(test_mixture_reduction) {
   for (auto i = 0ul; i < NComps; ++i) {
     DummyComponent a;
     a.boundPars = BoundVector::Zero();
-    a.boundCov = BoundSymMatrix::Identity();
+    a.boundCov = BoundSquareMatrix::Identity();
     a.weight = 1.0 / NComps;
     cmps.push_back(a);
   }

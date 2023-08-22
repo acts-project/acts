@@ -115,10 +115,11 @@ class AdaptiveMultiVertexFinder {
     bool doRealMultiVertex = true;
 
     // Decides if you want to use the ```vertexCompatibility``` of the
-    //  track (set to true) or the ```chi2Track``` (set to false) as an
+    //  track (set to true) or the ```chi2``` of the TrackAtVertex (set to
+    //  false) as an
     // estimate for a track being an outlier or not.
     // In case the track refitting is switched on in the AMVFitter, you
-    // may want to use the refitted ```chi2Track```.
+    // may want to use the refitted ```chi2```.
     bool useFastCompatibility = true;
 
     // Maximum significance on the distance between two vertices

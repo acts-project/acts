@@ -52,7 +52,8 @@ struct KalmanFitterExtensions {
   using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
-  using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
+  using Calibrator = Delegate<void(const GeometryContext&, const SourceLink&,
+                                   TrackStateProxy)>;
 
   using Smoother = Delegate<Result<void>(const GeometryContext&, traj_t&,
                                          size_t, const Logger&)>;
@@ -535,10 +536,12 @@ class KalmanFitter {
       result.passedAgainSurfaces.push_back(&st.referenceSurface());
 
       // Reset navigation state
+      // We do not need to specify a target here since this will be handled
+      // separately in the KF actor
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping),
-          &st.referenceSurface(), targetSurface);
+          &st.referenceSurface(), nullptr);
 
       // Update material effects for last measurement state in reversed
       // direction
@@ -713,9 +716,6 @@ class KalmanFitter {
 
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
-        // Assign the source link to the detached track state
-        trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
-
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
         if (boundParams.covariance().has_value()) {
@@ -727,7 +727,8 @@ class KalmanFitter {
 
         // We have predicted parameters, so calibrate the uncalibrated input
         // measuerement
-        extensions.calibrator(state.geoContext, trackStateProxy);
+        extensions.calibrator(state.geoContext, sourcelink_it->second,
+                              trackStateProxy);
 
         // If the update is successful, set covariance and
         auto updateRes = extensions.updater(state.geoContext, trackStateProxy,

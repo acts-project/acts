@@ -135,7 +135,7 @@ struct GsfActor {
   struct ParameterCache {
     ActsScalar weight = 0;
     BoundVector boundPars;
-    BoundSymMatrix boundCov;
+    BoundSquareMatrix boundCov;
   };
 
   struct TemporaryStates {
@@ -369,10 +369,9 @@ struct GsfActor {
         old_bound.position(state.stepping.geoContext), state.options.direction,
         MaterialUpdateStage::FullUpdate);
 
-    auto pathCorrection =
-        surface.pathCorrection(state.stepping.geoContext,
-                               old_bound.position(state.stepping.geoContext),
-                               old_bound.unitDirection());
+    auto pathCorrection = surface.pathCorrection(
+        state.stepping.geoContext,
+        old_bound.position(state.stepping.geoContext), old_bound.direction());
     slab.scaleThickness(pathCorrection);
 
     // Emit a warning if the approximation is not valid for this x/x0
@@ -760,7 +759,7 @@ struct GsfActor {
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
         proxy.smoothed() = BoundVector::Constant(-2);
-        proxy.smoothedCovariance() = BoundSymMatrix::Constant(-2);
+        proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
       } else {
         proxy.shareFrom(TrackStatePropMask::Predicted,
                         TrackStatePropMask::Filtered);
@@ -823,7 +822,8 @@ struct FinalStateCollector {
     }
 
     const auto& surface = *navigator.currentSurface(state.navigation);
-    std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+    std::vector<
+        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
         states;
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
