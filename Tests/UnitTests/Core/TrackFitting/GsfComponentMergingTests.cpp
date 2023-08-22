@@ -236,7 +236,7 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
           a.boundPars[eBoundTheta] = theta + dtheta;
 
           // We don't look at covariance in this test
-          a.boundCov = BoundSymMatrix::Zero();
+          a.boundCov = BoundSquareMatrix::Zero();
 
           cmps.push_back(a);
           ++p_it;

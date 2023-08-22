@@ -66,8 +66,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
 
     trackState.filtered =
         trackState.predicted + K * (calibrated - H * trackState.predicted);
-    trackState.filteredCovariance =
-        (BoundSymMatrix::Identity() - K * H) * trackState.predictedCovariance;
+    trackState.filteredCovariance = (BoundSquareMatrix::Identity() - K * H) *
+                                    trackState.predictedCovariance;
     ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
     ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 

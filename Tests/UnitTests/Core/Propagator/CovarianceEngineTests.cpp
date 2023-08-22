@@ -29,7 +29,7 @@ namespace tt = boost::test_tools;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Jacobian = BoundMatrix;
 
 /// These tests do not test for a correct covariance transport but only for the

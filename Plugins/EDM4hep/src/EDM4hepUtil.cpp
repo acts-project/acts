@@ -157,7 +157,7 @@ Parameters convertTrackParametersToEdm4hep(
     Acts::CovarianceCache covCache{freePars.value(), freeCov};
     auto [varNewCov, varNewJac] = Acts::transportCovarianceToBound(
         gctx, *refSurface, freePars.value(), covCache);
-    auto targetCov = std::get<Acts::BoundSymMatrix>(varNewCov);
+    auto targetCov = std::get<Acts::BoundSquareMatrix>(varNewCov);
 
     Acts::ActsSquareMatrix<6> J = jacobianToEdm4hep(
         targetPars[eBoundTheta], targetPars[eBoundQOverP], Bz);
