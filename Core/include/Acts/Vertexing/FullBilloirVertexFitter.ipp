@@ -31,9 +31,9 @@ struct BilloirTrack {
   Acts::ActsMatrix<Acts::eBoundSize, Acts::eBoundSize> W;  // Wi weight matrix
   Acts::ActsMatrix<Acts::eBoundSize, 4> D;  // Di (position Jacobian)
   Acts::ActsMatrix<Acts::eBoundSize, 3> E;  // Ei (momentum Jacobian)
-  Acts::ActsSquareMatrix<3> C;                 //  = sum{Ei^T Wi * Ei}
+  Acts::ActsSquareMatrix<3> C;              //  = sum{Ei^T Wi * Ei}
   Acts::ActsMatrix<4, 3> B;                 //  = Di^T * Wi * Ei
-  Acts::ActsSquareMatrix<3> Cinv;              //  = (Ei^T * Wi * Ei)^-1
+  Acts::ActsSquareMatrix<3> Cinv;           //  = (Ei^T * Wi * Ei)^-1
   Acts::Vector3 U;                          //  = Ei^T * Wi * dqi
   Acts::ActsMatrix<4, 3> BCinv;             //  = Bi * Ci^-1
   Acts::BoundVector deltaQ;

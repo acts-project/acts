@@ -57,7 +57,8 @@ std::tuple<std::array<Acts::BoundIndices, kMeasDIM>, Acts::ActsVector<kMeasDIM>,
 measurementConstituents(const DigitizedParameters& dParams) {
   std::array<Acts::BoundIndices, kMeasDIM> indices{};
   Acts::ActsVector<kMeasDIM> par;
-  Acts::ActsSquareMatrix<kMeasDIM> cov = Acts::ActsSquareMatrix<kMeasDIM>::Identity();
+  Acts::ActsSquareMatrix<kMeasDIM> cov =
+      Acts::ActsSquareMatrix<kMeasDIM>::Identity();
   for (Eigen::Index ei = 0; ei < static_cast<Eigen::Index>(kMeasDIM); ++ei) {
     indices[ei] = dParams.indices[ei];
     par[ei] = dParams.values[ei];

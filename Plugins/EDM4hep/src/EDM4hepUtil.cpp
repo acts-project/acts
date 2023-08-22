@@ -55,7 +55,7 @@ ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
 }
 
 ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
-                                     double Bz) {
+                                        double Bz) {
   // [     d      /                     pi\                                  ]
   // [------------|-atan(\tan\lambda) + --|                 0                ]
   // [d\tan\lambda\                     2 /                                  ]
@@ -159,8 +159,8 @@ Parameters convertTrackParametersToEdm4hep(
         gctx, *refSurface, freePars.value(), covCache);
     auto targetCov = std::get<Acts::BoundSymMatrix>(varNewCov);
 
-    Acts::ActsSquareMatrix<6> J = jacobianToEdm4hep(targetPars[eBoundTheta],
-                                                 targetPars[eBoundQOverP], Bz);
+    Acts::ActsSquareMatrix<6> J = jacobianToEdm4hep(
+        targetPars[eBoundTheta], targetPars[eBoundQOverP], Bz);
     Acts::ActsSquareMatrix<6> cIn = targetCov.template topLeftCorner<6, 6>();
     result.covariance = J * cIn * J.transpose();
   }

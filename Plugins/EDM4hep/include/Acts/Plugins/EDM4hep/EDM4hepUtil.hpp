@@ -46,7 +46,8 @@ struct Parameters {
 
 ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
 
-ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega, double Bz);
+ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
+                                        double Bz);
 
 void unpackCovariance(const float* from, ActsSquareMatrix<6>& to);
 void packCovariance(const ActsSquareMatrix<6>& from, float* to);
