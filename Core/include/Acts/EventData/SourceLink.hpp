@@ -20,11 +20,6 @@
 
 namespace Acts {
 
-namespace detail_sl {
-template <typename T>
-using geometry_id_t = decltype(std::declval<T>().geometryId());
-}  // namespace detail_sl
-
 class SourceLink final {
   using any_type = AnyBase<16>;
 
@@ -34,20 +29,7 @@ class SourceLink final {
   SourceLink& operator=(const SourceLink& other) = default;
   SourceLink& operator=(SourceLink&& other) = default;
 
-  /// Constructor from source link and explicit geometry id
-  /// @tparam T The source link type
-  /// @param id The geometry identifier
-  /// @param upstream The upstream source link to store
-  template <typename T, typename = std::enable_if_t<
-                            !std::is_same_v<std::decay_t<T>, SourceLink>>>
-  explicit SourceLink(GeometryIdentifier id, T&& upstream)
-      : m_geometryId{id}, m_upstream{std::move(upstream)} {
-    static_assert(!std::is_same_v<std::decay_t<T>, SourceLink>,
-                  "Cannot wrap SourceLink in SourceLink");
-  }
-
-  /// Constructor from source link only, geometry identifier is determined
-  /// automatically
+  /// Constructor from concrete sourcelink
   /// @tparam T The source link type
   /// @param upstream The upstream source link to store
   template <typename T, typename = std::enable_if_t<
@@ -80,7 +62,6 @@ class SourceLink final {
   }
 
  private:
-  GeometryIdentifier m_geometryId{};
   any_type m_upstream{};
 };
 

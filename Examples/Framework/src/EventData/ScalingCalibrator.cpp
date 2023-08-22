@@ -168,7 +168,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
         Acts::ActsVector<kSize> cpar = P * fpar;
         Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
 
-        Acts::SourceLink sl{sourceLink.geometryId(), sourceLink};
+        Acts::SourceLink sl{sourceLink};
 
         Acts::Measurement<Acts::BoundIndices, kSize> cmeas(std::move(sl),
                                                            indices, cpar, ccov);
