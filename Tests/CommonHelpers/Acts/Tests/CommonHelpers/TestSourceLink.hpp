@@ -39,7 +39,7 @@ struct TestSourceLink final {
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
   Acts::ActsVector<2> parameters;
-  Acts::ActsSymMatrix<2> covariance;
+  Acts::ActsSquareMatrix<2> covariance;
 
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
@@ -52,7 +52,7 @@ struct TestSourceLink final {
   /// Construct a source link for a 2d measurement.
   TestSourceLink(BoundIndices idx0, BoundIndices idx1,
                  const Acts::ActsVector<2>& params,
-                 const Acts::ActsSymMatrix<2>& cov,
+                 const Acts::ActsSquareMatrix<2>& cov,
                  GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
       : m_geometryId(gid),
         sourceId(sid),
@@ -82,10 +82,12 @@ std::ostream& operator<<(std::ostream& os, const TestSourceLink& sourceLink);
 /// @return The measurement used
 template <typename trajectory_t>
 Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
-    const GeometryContext& /*gctx*/,
+    const GeometryContext& /*gctx*/, const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
-  TestSourceLink sl =
-      trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
+  TestSourceLink sl = sourceLink.template get<TestSourceLink>();
+
+  trackState.setUncalibratedSourceLink(sourceLink);
+
   if ((sl.indices[0] != Acts::eBoundSize) and
       (sl.indices[1] != Acts::eBoundSize)) {
     auto meas =
@@ -112,9 +114,9 @@ Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
 /// @param trackState TrackState to calibrated
 template <typename trajectory_t>
 void testSourceLinkCalibrator(
-    const GeometryContext& gctx,
+    const GeometryContext& gctx, const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
-  testSourceLinkCalibratorReturn<trajectory_t>(gctx, trackState);
+  testSourceLinkCalibratorReturn<trajectory_t>(gctx, sourceLink, trackState);
 }
 
 }  // namespace Test

@@ -65,7 +65,7 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
         auto& cov = *optCov;
 
         if (m_cfg.dropCovariance) {
-          cov = Acts::BoundSymMatrix(cov.diagonal().asDiagonal());
+          cov = Acts::BoundSquareMatrix(cov.diagonal().asDiagonal());
         }
         if (m_cfg.covScale != 1) {
           cov *= m_cfg.covScale;

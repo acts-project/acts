@@ -195,7 +195,7 @@ struct Span {
 };
 
 template <std::size_t Dim>
-auto dist(const Span<float, Dim> &a, const Span<float, Dim> &b) {
+float dist(const Span<float, Dim> &a, const Span<float, Dim> &b) {
   float s = 0.f;
   for (auto i = 0ul; i < Dim; ++i) {
     s += (a[i] - b[i]) * (a[i] - b[i]);

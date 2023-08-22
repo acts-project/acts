@@ -79,15 +79,15 @@ class Hit {
   /// Particle four-momentum after the hit.
   const Vector4& momentum4After() const { return m_after4; }
   /// Normalized particle direction vector before the hit.
-  Vector3 unitDirectionBefore() const {
+  Vector3 directionBefore() const {
     return m_before4.segment<3>(Acts::eMom0).normalized();
   }
   /// Normalized particle direction vector the hit.
-  Vector3 unitDirectionAfter() const {
+  Vector3 directionAfter() const {
     return m_after4.segment<3>(Acts::eMom0).normalized();
   }
   /// Average normalized particle direction vector through the surface.
-  Vector3 unitDirection() const {
+  Vector3 direction() const {
     auto dir0 = m_before4.segment<3>(Acts::eMom0).normalized();
     auto dir1 = m_after4.segment<3>(Acts::eMom0).normalized();
     return ((dir0 + dir1) / 2.).segment<3>(Acts::eMom0).normalized();
