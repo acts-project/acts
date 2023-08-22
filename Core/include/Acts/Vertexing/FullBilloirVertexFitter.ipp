@@ -31,9 +31,9 @@ struct BilloirTrack {
   Acts::ActsMatrix<Acts::eBoundSize, Acts::eBoundSize> W;  // Wi weight matrix
   Acts::ActsMatrix<Acts::eBoundSize, 4> D;  // Di (position Jacobian)
   Acts::ActsMatrix<Acts::eBoundSize, 3> E;  // Ei (momentum Jacobian)
-  Acts::ActsSymMatrix<3> C;                 //  = sum{Ei^T Wi * Ei}
+  Acts::ActsSquareMatrix<3> C;                 //  = sum{Ei^T Wi * Ei}
   Acts::ActsMatrix<4, 3> B;                 //  = Di^T * Wi * Ei
-  Acts::ActsSymMatrix<3> Cinv;              //  = (Ei^T * Wi * Ei)^-1
+  Acts::ActsSquareMatrix<3> Cinv;              //  = (Ei^T * Wi * Ei)^-1
   Acts::Vector3 U;                          //  = Ei^T * Wi * dqi
   Acts::ActsMatrix<4, 3> BCinv;             //  = Bi * Ci^-1
   Acts::BoundVector deltaQ;
@@ -264,11 +264,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       ActsMatrix<4, 3> covVP = billoirTrack.B;
 
       // cov(P,P), 3x3 matrix
-      ActsSymMatrix<3> covP =
+      ActsSquareMatrix<3> covP =
           billoirTrack.Cinv +
           billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
 
-      ActsSymMatrix<7> cov;
+      ActsSquareMatrix<7> cov;
       cov.setZero();
       cov.block<4, 4>(0, 0) = covV;
       cov.block<4, 3>(0, 4) = covVP;

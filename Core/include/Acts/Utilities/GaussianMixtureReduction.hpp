@@ -80,7 +80,7 @@ auto gaussianMixtureCov(const components_t components,
                         const ActsVector<D> &mean, double sumOfWeights,
                         projector_t &&projector,
                         const angle_desc_t &angleDesc) {
-  ActsSymMatrix<D> cov = ActsSymMatrix<D>::Zero();
+  ActsSquareMatrix<D> cov = ActsSquareMatrix<D>::Zero();
 
   for (const auto &cmp : components) {
     const auto &[weight_l, pars_l, cov_l] = projector(cmp);
@@ -153,7 +153,7 @@ auto gaussianMixtureMeanCov(const components_t components,
 #endif
 
   // Define the return type
-  using RetType = std::tuple<ActsVector<D>, ActsSymMatrix<D>>;
+  using RetType = std::tuple<ActsVector<D>, ActsSquareMatrix<D>>;
 
   // Early return in case of range with length 1
   if (components.size() == 1) {

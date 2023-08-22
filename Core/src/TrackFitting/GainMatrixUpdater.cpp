@@ -31,7 +31,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
   visit_measurement(trackState.calibratedSize, [&](auto N) -> bool {
     constexpr size_t kMeasurementSize = decltype(N)::value;
     using ParametersVector = ActsVector<kMeasurementSize>;
-    using CovarianceMatrix = ActsSymMatrix<kMeasurementSize>;
+    using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
 
     typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
         trackState.calibrated};

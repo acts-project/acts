@@ -38,7 +38,7 @@ void Acts::EventDataView3D::drawCovarianceCartesian(
 
 void Acts::EventDataView3D::drawCovarianceAngular(
     IVisualization3D& helper, const Vector3& position, const Vector3& direction,
-    const ActsSymMatrix<2>& covariance, double directionScale,
+    const ActsSquareMatrix<2>& covariance, double directionScale,
     double angularErrorScale, const ViewConfig& viewConfig) {
   auto [lambda0, lambda1, theta] = decomposeCovariance(covariance);
 

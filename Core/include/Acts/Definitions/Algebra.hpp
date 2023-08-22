@@ -57,7 +57,7 @@ template <unsigned int kRows, unsigned int kCols>
 using ActsMatrix = Eigen::Matrix<ActsScalar, kRows, kCols>;
 
 template <unsigned int kSize>
-using ActsSymMatrix = Eigen::Matrix<ActsScalar, kSize, kSize>;
+using ActsSquareMatrix = Eigen::Matrix<ActsScalar, kSize, kSize>;
 
 using ActsDynamicVector = Eigen::Matrix<ActsScalar, Eigen::Dynamic, 1>;
 
@@ -80,9 +80,9 @@ using Vector3 = ActsVector<3>;
 using Vector4 = ActsVector<4>;
 
 // symmetric matrices e.g. for coordinate covariance matrices
-using SymMatrix2 = ActsSymMatrix<2>;
-using SymMatrix3 = ActsSymMatrix<3>;
-using SymMatrix4 = ActsSymMatrix<4>;
+using SymMatrix2 = ActsSquareMatrix<2>;
+using SymMatrix3 = ActsSquareMatrix<3>;
+using SymMatrix4 = ActsSquareMatrix<4>;
 
 // pure translation transformations
 using Translation2 = Eigen::Translation<ActsScalar, 2>;

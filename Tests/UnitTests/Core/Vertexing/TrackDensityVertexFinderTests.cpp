@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  SymMatrix3 constrCov = ActsSymMatrix<3>::Identity();
+  SymMatrix3 constrCov = ActsSquareMatrix<3>::Identity();
 
   Vertex<BoundTrackParameters> vertexConstraint(constraintPos);
   vertexConstraint.setCovariance(constrCov);

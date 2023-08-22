@@ -30,11 +30,11 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const ActsMatrix<5, 3> momJac = linTrack.momentumJacobian.block<5, 3>(0, 0);
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would use time
-  const ActsSymMatrix<5> trkParamWeight =
+  const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Calculate S matrix
-  ActsSymMatrix<3> sMat =
+  ActsSquareMatrix<3> sMat =
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   const ActsVector<5> residual = linTrack.constantTerm.head<5>();
@@ -117,13 +117,13 @@ Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
     const SymMatrix4& vtxWeight, const SymMatrix4& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
-  ActsSymMatrix<3> momCov =
+  ActsSquareMatrix<3> momCov =
       sMat + (newTrkCov.block<3, 3>(0, 0)).transpose() *
                  (vtxWeight.block<3, 3>(0, 0) * newTrkCov.block<3, 3>(0, 0));
 
   // Full (x,y,z,phi, theta, q/p) covariance matrix
   // To be made 7d again after switching to (x,y,z,phi, theta, q/p, t)
-  ActsSymMatrix<6> fullTrkCov(ActsSymMatrix<6>::Zero());
+  ActsSquareMatrix<6> fullTrkCov(ActsSquareMatrix<6>::Zero());
 
   fullTrkCov.block<3, 3>(0, 0) = vtxCov.block<3, 3>(0, 0);
   fullTrkCov.block<3, 3>(0, 3) = newTrkCov.block<3, 3>(0, 0);
