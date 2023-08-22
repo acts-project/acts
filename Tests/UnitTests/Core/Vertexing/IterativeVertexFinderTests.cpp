@@ -241,8 +241,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
 
         tracks.push_back(std::make_unique<BoundTrackParameters>(params));
 
-        TrackAtVertex<BoundTrackParameters> trAtVt(0., params,
-                                                   tracks.back().get());
+        TrackAtVertex<BoundTrackParameters> trAtVt(tracks.back().get(), 0.);
         tracksAtTrueVtx.push_back(trAtVt);
       }
 
@@ -460,7 +459,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
         auto params = extractParameters(paramsUT);
 
-        TrackAtVertex<InputTrack> trAtVt(0., params, tracks.back().get());
+        TrackAtVertex<InputTrack> trAtVt(tracks.back().get(), 0.);
         tracksAtTrueVtx.push_back(trAtVt);
       }
 
@@ -642,7 +641,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   //   CHECK_CLOSE_ABS(recoVtx.position(), expVtx.position, 0.001_mm);
   //   CHECK_CLOSE_ABS(recoVtx.covariance(), expVtx.covariance, 0.001_mm);
   //   BOOST_CHECK_EQUAL(recoVtx.tracks().size(), expVtx.nTracks);
-  //   CHECK_CLOSE_ABS(recoVtx.tracks()[0].trackWeight, expVtx.trk1Weight,
+  //   CHECK_CLOSE_ABS(recoVtx.tracks()[0].weight, expVtx.trk1Weight,
   //   0.003); CHECK_CLOSE_ABS(recoVtx.tracks()[0].vertexCompatibility,
   //   expVtx.trk1Comp,
   //                   0.003);
