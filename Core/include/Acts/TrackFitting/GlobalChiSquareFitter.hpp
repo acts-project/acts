@@ -54,7 +54,8 @@ struct Gx2FitterExtensions {
       typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
-  using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
+  using Calibrator = Delegate<void(const GeometryContext&, const SourceLink&,
+                                   TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         Direction, const Logger&)>;
@@ -392,7 +393,8 @@ class Gx2Fitter {
 
           // We have predicted parameters, so calibrate the uncalibrated input
           // measuerement
-          extensions.calibrator(state.geoContext, trackStateProxy);
+          extensions.calibrator(state.geoContext, sourcelink_it->second,
+                                trackStateProxy);
         }
       }
 
