@@ -28,7 +28,7 @@ namespace detail {
 /// @param cov Optional bound parameters covariance matrix
 void printBoundParameters(std::ostream& os, const Surface& surface,
                           const BoundVector& params,
-                          const BoundSymMatrix* cov = nullptr);
+                          const BoundSquareMatrix* cov = nullptr);
 
 /// Print free track parameters content to the output stream.
 ///

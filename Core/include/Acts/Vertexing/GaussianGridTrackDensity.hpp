@@ -137,7 +137,7 @@ class GaussianGridTrackDensity {
   /// bin center in the 2-dim grid
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
-  TrackGridVector createTrackGrid(int offset, const SymMatrix2& cov,
+  TrackGridVector createTrackGrid(int offset, const SquareMatrix2& cov,
                                   float distCtrD, float distCtrZ) const;
 
   /// @brief Function that estimates the seed width based on the FWHM of
@@ -150,7 +150,7 @@ class GaussianGridTrackDensity {
   Result<float> estimateSeedWidth(MainGridVector& mainGrid, float maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
-  float normal2D(float d, float z, const SymMatrix2& cov) const;
+  float normal2D(float d, float z, const SquareMatrix2& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
   /// a maximum relative deviation of 'relativeDensityDev' from the main
