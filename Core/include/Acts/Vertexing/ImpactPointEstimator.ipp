@@ -72,7 +72,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   auto intersection = planeSurface
                           ->intersect(gctx, trkParams.position(gctx),
-                                      trkParams.unitDirection(), false)
+                                      trkParams.direction(), false)
                           .closest();
 
   // Create propagator options
