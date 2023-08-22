@@ -35,7 +35,7 @@ namespace Acts {
 class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
+  using Covariance = BoundSquareMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
@@ -94,11 +94,11 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance = new BoundSymMatrix(*pars.covariance());
+        covariance = new BoundSquareMatrix(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
-            geoContext, pos, pars.unitDirection());
+            geoContext, pos, pars.direction());
 
         pVector[8] = transform(0, eBoundLoc0);
         pVector[16] = transform(0, eBoundLoc1);
@@ -227,6 +227,9 @@ class AtlasStepper {
       state_ready = true;
     }
 
+    /// The absolute charge as the free vector can be 1/p or q/p
+    double absCharge = UnitConstants::e;
+
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
@@ -307,8 +310,8 @@ class AtlasStepper {
   /// @param [in] surface Reset state will be on this surface
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface,
+      State& state, const BoundVector& boundParams,
+      const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
     update(state,
@@ -694,7 +697,7 @@ class AtlasStepper {
       state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
     }
 
-    state.covariance = new BoundSymMatrix(covariance);
+    state.covariance = new BoundSquareMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 

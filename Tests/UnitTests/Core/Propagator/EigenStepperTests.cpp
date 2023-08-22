@@ -77,7 +77,7 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 static constexpr auto eps = 3 * std::numeric_limits<double>::epsilon();
 
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
-  BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
+  BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2, absMom2,
                                  charge2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3 startDir = makeDirectionFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 1_GeV * startDir;
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 1_GeV, 1_e,
                                         cov);
@@ -683,7 +683,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
 
   // Set initial parameters for the particle track
   Covariance cov = Covariance::Identity();
-  const Vector3 startDir = makeDirectionUnitFromPhiTheta(0_degree, 90_degree);
+  const Vector3 startDir = makeDirectionFromPhiTheta(0_degree, 90_degree);
   const Vector3 startMom = 5_GeV * startDir;
   const CurvilinearTrackParameters sbtp(Vector4::Zero(), startDir, 5_GeV, 1_e,
                                         cov);

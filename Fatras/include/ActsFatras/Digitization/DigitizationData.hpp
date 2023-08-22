@@ -53,7 +53,7 @@ template <typename signal_t, size_t kSize>
 struct Cluster {
   using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
 
   /// Measured parameters.
   ParametersVector parameters = ParametersVector::Zero();

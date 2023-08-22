@@ -80,7 +80,7 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
   return CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);

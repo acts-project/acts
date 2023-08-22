@@ -76,7 +76,7 @@ class SpacePointUtility {
   std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
                                            const SourceLink& slink,
                                            const BoundVector& par,
-                                           const BoundSymMatrix& cov) const;
+                                           const BoundSquareMatrix& cov) const;
 
   /// @brief Get rho and z covariance from the local position and covariance
   /// @param gctx The current geometry context object, e.g. alignment
@@ -88,7 +88,7 @@ class SpacePointUtility {
   Vector2 rhoZCovariance(const GeometryContext& gctx,
                          const GeometryIdentifier& geoId,
                          const Vector3& globalPos,
-                         const SymMatrix2& localCov) const;
+                         const SquareMatrix2& localCov) const;
 
   /// @brief Calculate the rho and z covariance from the front and back SourceLink in the strip SP formation
   /// @param gctx The current geometry context object, e.g. alignment
@@ -101,7 +101,7 @@ class SpacePointUtility {
   Vector2 calcRhoZVars(
       const GeometryContext& gctx, const SourceLink& slinkFront,
       const SourceLink& slinkBack,
-      const std::function<std::pair<const BoundVector, const BoundSymMatrix>(
+      const std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
           SourceLink)>& paramCovAccessor,
       const Vector3& globalPos, const double theta) const;
 

@@ -25,7 +25,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
   auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.unitDirection(), false);
+                                                params.direction(), false);
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
@@ -57,7 +57,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     pca[ePos2] = pos[ePos2];
     pca[eTime] = endParams.time();
   }
-  BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
 
   // Extracting Perigee parameters and compute functions of them for later
   // usage
@@ -191,7 +191,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,

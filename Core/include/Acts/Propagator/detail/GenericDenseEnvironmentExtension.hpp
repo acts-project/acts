@@ -391,15 +391,15 @@ struct GenericDenseEnvironmentExtension {
     Acts::MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
-      g = -computeEnergyLossMean(slab, state.options.absPdgCode,
-                                 state.options.mass,
-                                 static_cast<double>(qop[0]));
+      g = -computeEnergyLossMean(
+          slab, state.options.absPdgCode, state.options.mass,
+          static_cast<double>(qop[0]), state.stepping.absCharge);
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
-      g = -computeEnergyLossMode(slab, state.options.absPdgCode,
-                                 state.options.mass,
-                                 static_cast<double>(qop[0]));
+      g = -computeEnergyLossMode(
+          slab, state.options.absPdgCode, state.options.mass,
+          static_cast<double>(qop[0]), state.stepping.absCharge);
     }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
@@ -411,12 +411,12 @@ struct GenericDenseEnvironmentExtension {
         if (state.options.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
               slab, state.options.absPdgCode, state.options.mass,
-              static_cast<double>(qop[0]));
+              static_cast<double>(qop[0]), state.stepping.absCharge);
         } else {
           // TODO path length dependence; see above
           dgdqopValue = deriveEnergyLossModeQOverP(
               slab, state.options.absPdgCode, state.options.mass,
-              static_cast<double>(qop[0]));
+              static_cast<double>(qop[0]), state.stepping.absCharge);
         }
       }
       // Calculate term for later error propagation

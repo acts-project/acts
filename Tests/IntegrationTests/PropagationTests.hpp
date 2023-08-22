@@ -61,7 +61,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   stddev[eBoundPhi] = 1_degree;
   stddev[eBoundTheta] = 1.5_degree;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
-  BoundSymMatrix corr = BoundSymMatrix::Identity();
+  BoundSquareMatrix corr = BoundSquareMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
   corr(eBoundLoc0, eBoundPhi) = corr(eBoundPhi, eBoundLoc0) = 0.25;
   corr(eBoundLoc1, eBoundTheta) = corr(eBoundTheta, eBoundLoc1) = -0.25;
@@ -69,7 +69,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundPhi, eBoundTheta) = corr(eBoundTheta, eBoundPhi) = -0.25;
   corr(eBoundPhi, eBoundQOverP) = corr(eBoundPhi, eBoundQOverP) = -0.125;
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
-  BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
+  BoundSquareMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
   Vector4 pos4 = Vector4::Zero();
   return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge, cov);
@@ -122,7 +122,7 @@ inline void checkParametersConsistency(
   // check derived parameters
   CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
-  CHECK_CLOSE_ABS(cmp.unitDirection(), ref.unitDirection(), epsDir);
+  CHECK_CLOSE_ABS(cmp.direction(), ref.direction(), epsDir);
   CHECK_CLOSE_ABS(cmp.absoluteMomentum(), ref.absoluteMomentum(), epsMom);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
@@ -158,7 +158,7 @@ template <typename charge_t>
 inline Acts::Transform3 makeCurvilinearTransform(
     const Acts::GenericBoundTrackParameters<charge_t>& params,
     const Acts::GeometryContext& geoCtx) {
-  Acts::Vector3 unitW = params.unitDirection();
+  Acts::Vector3 unitW = params.direction();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
   Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Zero();
@@ -352,8 +352,7 @@ inline void runToSurfaceTest(
   CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
                   epsPos);
   CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsPos);
-  CHECK_CLOSE_ABS(surfParams.unitDirection(), freeParams.unitDirection(),
-                  epsDir);
+  CHECK_CLOSE_ABS(surfParams.direction(), freeParams.direction(), epsDir);
   CHECK_CLOSE_ABS(surfParams.absoluteMomentum(), freeParams.absoluteMomentum(),
                   epsMom);
   CHECK_CLOSE_ABS(surfPathLength, freePathLength, epsPos);
