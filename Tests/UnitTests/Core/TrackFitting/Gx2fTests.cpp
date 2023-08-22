@@ -316,8 +316,8 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   MagneticFieldContext mfContext;
   CalibrationContext calContext;
 
-  Experimental::Gx2FitterOptions gx2fOptions(
-      tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      tgContext, mfContext, calContext, std::move(extensions), PropagatorPlainOptions(),
       rSurface, false, false, FreeToBoundCorrection(false), 5);
 
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},

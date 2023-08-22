@@ -43,8 +43,6 @@
 #include <map>
 #include <memory>
 
-#include "../../Tests/CommonHelpers/Acts/Tests/CommonHelpers/TestSourceLink.hpp"
-
 namespace Acts {
 namespace Experimental {
 
@@ -509,13 +507,13 @@ class Gx2Fitter {
       std::cout << "updated params:\n" << params << std::endl;
 
       // set up propagator and co
-      Acts::GeometryContext geoCtx;
-      Acts::MagneticFieldContext magCtx;
+      Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
+      Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
       // Set options for propagator
-      Acts::PropagatorOptions<Actors, Aborters> propagatorOptions(geoCtx,
-                                                                  magCtx);
+      PropagatorOptions propagatorOptions(geoCtx,magCtx);
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
+      gx2fActor.extensions = gx2fOptions.extensions;
 
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>
