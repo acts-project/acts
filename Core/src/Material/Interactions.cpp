@@ -26,14 +26,42 @@ constexpr float K = 0.307075_MeV * 1_cm * 1_cm;
 // Energy scale for plasma energy.
 constexpr float PlasmaEnergyScale = 28.816_eV;
 
+/// Additional derived relativistic quantities.
+struct RelativisticQuantities {
+  float q2OverBeta2 = 0.0f;
+  float beta2 = 0.0f;
+  float betaGamma = 0.0f;
+  float gamma = 0.0f;
+
+  RelativisticQuantities(float mass, float qOverP, float absQ) {
+    assert((0 < mass) and "Mass must be positive");
+    assert((qOverP != 0) and "q/p must be non-zero");
+    assert((absQ > 0) and "Absolute charge must be non-zero and positive");
+    // beta²/q² = (p/E)²/q² = p²/(q²m² + q²p²) = 1/(q² + (m²(q/p)²)
+    // q²/beta² = q² + m²(q/p)²
+    q2OverBeta2 = absQ * absQ + (mass * qOverP) * (mass * qOverP);
+    assert((q2OverBeta2 >= 0) && "Negative q2OverBeta2");
+    // 1/p = q/(qp) = (q/p)/q
+    const float mOverP = mass * std::abs(qOverP / absQ);
+    const float pOverM = 1.0f / mOverP;
+    // beta² = p²/E² = p²/(m² + p²) = 1/(1 + (m/p)²)
+    beta2 = 1.0f / (1.0f + mOverP * mOverP);
+    assert((beta2 >= 0) && "Negative beta2");
+    // beta*gamma = (p/sqrt(m² + p²))*(sqrt(m² + p²)/m) = p/m
+    betaGamma = pOverM;
+    assert((betaGamma >= 0) && "Negative betaGamma");
+    // gamma = sqrt(m² + p²)/m = sqrt(1 + (p/m)²)
+    gamma = std::sqrt(1.0f + pOverM * pOverM);
+  }
+};
+
 /// Compute q/p derivative of beta².
-inline float deriveBeta2(float qOverP, const Acts::RelativisticQuantities& rq) {
+inline float deriveBeta2(float qOverP, const RelativisticQuantities& rq) {
   return -2 / (qOverP * rq.gamma * rq.gamma);
 }
 
 /// Compute the 2 * mass * (beta * gamma)² mass term.
-inline float computeMassTerm(float mass,
-                             const Acts::RelativisticQuantities& rq) {
+inline float computeMassTerm(float mass, const RelativisticQuantities& rq) {
   return 2 * mass * rq.betaGamma * rq.betaGamma;
 }
 
@@ -46,7 +74,7 @@ inline float logDeriveMassTerm(float qOverP) {
 /// Compute the maximum energy transfer in a single collision.
 ///
 /// Uses RPP2018 eq. 33.4.
-inline float computeWMax(float mass, const Acts::RelativisticQuantities& rq) {
+inline float computeWMax(float mass, const RelativisticQuantities& rq) {
   const float mfrac = Me / mass;
   const float nominator = 2 * Me * rq.betaGamma * rq.betaGamma;
   const float denonimator = 1.0f + 2 * rq.gamma * mfrac + mfrac * mfrac;
@@ -55,7 +83,7 @@ inline float computeWMax(float mass, const Acts::RelativisticQuantities& rq) {
 
 /// Compute WMax logarithmic derivative w/ respect to q/p.
 inline float logDeriveWMax(float mass, float qOverP,
-                           const Acts::RelativisticQuantities& rq) {
+                           const RelativisticQuantities& rq) {
   // this is (q/p) * (beta/q).
   // both quantities have the same sign and the product must always be
   // positive. we can thus reuse the known (unsigned) quantity (q/beta)².
@@ -74,13 +102,12 @@ inline float logDeriveWMax(float mass, float qOverP,
 /// where (Z/A)*rho is the electron density in the material and x is the
 /// traversed length (thickness) of the material.
 inline float computeEpsilon(float molarElectronDensity, float thickness,
-                            const Acts::RelativisticQuantities& rq) {
+                            const RelativisticQuantities& rq) {
   return 0.5f * K * molarElectronDensity * thickness * rq.q2OverBeta2;
 }
 
 /// Compute epsilon logarithmic derivative w/ respect to q/p.
-inline float logDeriveEpsilon(float qOverP,
-                              const Acts::RelativisticQuantities& rq) {
+inline float logDeriveEpsilon(float qOverP, const RelativisticQuantities& rq) {
   // only need to compute d(q²/beta²)/(q²/beta²); everything else cancels.
   return 2 / (qOverP * rq.gamma * rq.gamma);
 }
@@ -88,7 +115,7 @@ inline float logDeriveEpsilon(float qOverP,
 /// Compute the density correction factor delta/2.
 inline float computeDeltaHalf(float meanExitationPotential,
                               float molarElectronDensity,
-                              const Acts::RelativisticQuantities& rq) {
+                              const RelativisticQuantities& rq) {
   /// Uses RPP2018 eq. 33.6 which is only valid for high energies.
   // only relevant for very high ernergies; use arbitrary cutoff
   if (rq.betaGamma < 10.0f) {
@@ -102,8 +129,7 @@ inline float computeDeltaHalf(float meanExitationPotential,
 }
 
 /// Compute derivative w/ respect to q/p for the density correction.
-inline float deriveDeltaHalf(float qOverP,
-                             const Acts::RelativisticQuantities& rq) {
+inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
   // original equation is of the form
   //     log(beta*gamma) + log(eplasma/I) - 1/2
   // which the resulting derivative as
@@ -111,29 +137,36 @@ inline float deriveDeltaHalf(float qOverP,
   return (rq.betaGamma < 10.0f) ? 0.0f : (-1.0f / qOverP);
 }
 
-}  // namespace
-
-Acts::RelativisticQuantities::RelativisticQuantities(float mass, float qOverP,
-                                                     float absQ) {
-  assert((0 < mass) and "Mass must be positive");
-  assert((qOverP != 0) and "q/p must be non-zero");
-  assert((absQ > 0) and "Absolute charge must be non-zero and positive");
-  // beta²/q² = (p/E)²/q² = p²/(q²m² + q²p²) = 1/(q² + (m²(q/p)²)
-  // q²/beta² = q² + m²(q/p)²
-  q2OverBeta2 = absQ * absQ + (mass * qOverP) * (mass * qOverP);
-  assert((q2OverBeta2 >= 0) && "Negative q2OverBeta2");
-  // 1/p = q/(qp) = (q/p)/q
-  const float mOverP = mass * std::abs(qOverP / absQ);
-  const float pOverM = 1.0f / mOverP;
-  // beta² = p²/E² = p²/(m² + p²) = 1/(1 + (m/p)²)
-  beta2 = 1.0f / (1.0f + mOverP * mOverP);
-  assert((beta2 >= 0) && "Negative beta2");
-  // beta*gamma = (p/sqrt(m² + p²))*(sqrt(m² + p²)/m) = p/m
-  betaGamma = pOverM;
-  assert((betaGamma >= 0) && "Negative betaGamma");
-  // gamma = sqrt(m² + p²)/m = sqrt(1 + (p/m)²)
-  gamma = std::sqrt(1.0f + pOverM * pOverM);
+/// Convert Landau full-width-half-maximum to an equivalent Gaussian sigma,
+///
+/// Full-width-half-maximum for a Gaussian is given as
+///
+///     fwhm = 2 * sqrt(2 * log(2)) * sigma
+/// -> sigma = fwhm / (2 * sqrt(2 * log(2)))
+///
+inline float convertLandauFwhmToGaussianSigma(float fwhm) {
+  // return fwhm / (2 * std::sqrt(2 * std::log(2.0f)));
+  return fwhm * 0.42466090014400953f;
 }
+
+namespace detail {
+
+inline float computeEnergyLossLandauFwhm(const Acts::MaterialSlab& slab,
+                                         const RelativisticQuantities& rq) {
+  // return early in case of vacuum or zero thickness
+  if (not slab) {
+    return 0.0f;
+  }
+
+  const float Ne = slab.material().molarElectronDensity();
+  const float thickness = slab.thickness();
+  // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
+  return 4 * computeEpsilon(Ne, thickness, rq);
+}
+
+}  // namespace detail
+
+}  // namespace
 
 float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
                                    float qOverP, float absQ) {
@@ -142,7 +175,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = Acts::RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
@@ -167,7 +200,7 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = Acts::RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
@@ -204,7 +237,7 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = Acts::RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
@@ -224,7 +257,7 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = Acts::RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float I = slab.material().meanExcitationEnergy();
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
@@ -252,22 +285,6 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab, float m,
   return eps * rel;
 }
 
-namespace {
-
-/// Convert Landau full-width-half-maximum to an equivalent Gaussian sigma,
-///
-/// Full-width-half-maximum for a Gaussian is given as
-///
-///     fwhm = 2 * sqrt(2 * log(2)) * sigma
-/// -> sigma = fwhm / (2 * sqrt(2 * log(2)))
-///
-inline float convertLandauFwhmToGaussianSigma(float fwhm) {
-  // return fwhm / (2 * std::sqrt(2 * std::log(2.0f)));
-  return fwhm * 0.42466090014400953f;
-}
-
-}  // namespace
-
 float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
                                          float qOverP, float absQ) {
   // return early in case of vacuum or zero thickness
@@ -275,7 +292,7 @@ float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
     return 0.0f;
   }
 
-  const auto rq = Acts::RelativisticQuantities(m, qOverP, absQ);
+  const RelativisticQuantities rq{m, qOverP, absQ};
   const float Ne = slab.material().molarElectronDensity();
   const float thickness = slab.thickness();
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
@@ -283,24 +300,17 @@ float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab, float m,
   return convertLandauFwhmToGaussianSigma(fwhm);
 }
 
-float Acts::computeEnergyLossLandauFwhm(
-    const MaterialSlab& slab, const Acts::RelativisticQuantities& rq) {
-  // return early in case of vacuum or zero thickness
-  if (not slab) {
-    return 0.0f;
-  }
-
-  const float Ne = slab.material().molarElectronDensity();
-  const float thickness = slab.thickness();
-  // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
-  return 4 * computeEpsilon(Ne, thickness, rq);
+float Acts::computeEnergyLossLandauFwhm(const MaterialSlab& slab, float m,
+                                        float qOverP, float absQ) {
+  const RelativisticQuantities rq{m, qOverP, absQ};
+  return detail::computeEnergyLossLandauFwhm(slab, rq);
 }
 
 float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
                                                float m, float qOverP,
                                                float absQ) {
-  const auto rq = Acts::RelativisticQuantities(m, qOverP, absQ);
-  const float fwhm = computeEnergyLossLandauFwhm(slab, rq);
+  const RelativisticQuantities rq{m, qOverP, absQ};
+  const float fwhm = detail::computeEnergyLossLandauFwhm(slab, rq);
   const float sigmaE = convertLandauFwhmToGaussianSigma(fwhm);
   //  var(q/p) = (d(q/p)/dE)² * var(E)
   // d(q/p)/dE = d/dE (q/sqrt(E²-m²))
@@ -369,8 +379,12 @@ inline float deriveMuonDirectPairPhotoNuclearLossMeanE(double energy) {
 
 }  // namespace
 
-float Acts::computeEnergyLossRadiative(const MaterialSlab& slab, int absPdg,
-                                       float m, float qOverP, float absQ) {
+float Acts::computeEnergyLossRadiative(const MaterialSlab& slab,
+                                       PdgParticle absPdg, float m,
+                                       float qOverP, float absQ) {
+  assert((absPdg == Acts::makeAbsolutePdgParticle(absPdg)) &&
+         "pdg is not absolute");
+
   // return early in case of vacuum or zero thickness
   if (not slab) {
     return 0.0f;
@@ -386,6 +400,7 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab, int absPdg,
   float dEdx = computeBremsstrahlungLossMean(m, energy);
 
   // muon- or muon+
+  // TODO magic number 8_GeV
   if ((absPdg == PdgParticle::eMuon) and (8_GeV < energy)) {
     dEdx += computeMuonDirectPairPhotoNuclearLossMean(energy);
   }
@@ -394,8 +409,11 @@ float Acts::computeEnergyLossRadiative(const MaterialSlab& slab, int absPdg,
 }
 
 float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
-                                            int absPdg, float m, float qOverP,
-                                            float absQ) {
+                                            PdgParticle absPdg, float m,
+                                            float qOverP, float absQ) {
+  assert((absPdg == Acts::makeAbsolutePdgParticle(absPdg)) &&
+         "pdg is not absolute");
+
   // return early in case of vacuum or zero thickness
   if (not slab) {
     return 0.0f;
@@ -412,6 +430,7 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
   float derE = deriveBremsstrahlungLossMeanE(m);
 
   // muon- or muon+
+  // TODO magic number 8_GeV
   if ((absPdg == PdgParticle::eMuon) and (8_GeV < energy)) {
     derE += deriveMuonDirectPairPhotoNuclearLossMeanE(energy);
   }
@@ -425,28 +444,30 @@ float Acts::deriveEnergyLossRadiativeQOverP(const MaterialSlab& slab,
   return derE * derQOverP * x;
 }
 
-float Acts::computeEnergyLossMean(const MaterialSlab& slab, int absPdg, float m,
-                                  float qOverP, float absQ) {
+float Acts::computeEnergyLossMean(const MaterialSlab& slab, PdgParticle absPdg,
+                                  float m, float qOverP, float absQ) {
   return computeEnergyLossBethe(slab, m, qOverP, absQ) +
          computeEnergyLossRadiative(slab, absPdg, m, qOverP, absQ);
 }
 
-float Acts::deriveEnergyLossMeanQOverP(const MaterialSlab& slab, int absPdg,
-                                       float m, float qOverP, float absQ) {
+float Acts::deriveEnergyLossMeanQOverP(const MaterialSlab& slab,
+                                       PdgParticle absPdg, float m,
+                                       float qOverP, float absQ) {
   return deriveEnergyLossBetheQOverP(slab, m, qOverP, absQ) +
          deriveEnergyLossRadiativeQOverP(slab, absPdg, m, qOverP, absQ);
 }
 
-float Acts::computeEnergyLossMode(const MaterialSlab& slab, int absPdg, float m,
-                                  float qOverP, float absQ) {
+float Acts::computeEnergyLossMode(const MaterialSlab& slab, PdgParticle absPdg,
+                                  float m, float qOverP, float absQ) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
   return 0.9f * computeEnergyLossLandau(slab, m, qOverP, absQ) +
          0.15f * computeEnergyLossRadiative(slab, absPdg, m, qOverP, absQ);
 }
 
-float Acts::deriveEnergyLossModeQOverP(const MaterialSlab& slab, int absPdg,
-                                       float m, float qOverP, float absQ) {
+float Acts::deriveEnergyLossModeQOverP(const MaterialSlab& slab,
+                                       PdgParticle absPdg, float m,
+                                       float qOverP, float absQ) {
   // see ATL-SOFT-PUB-2008-003 section 3 for the relative fractions
   // TODO this is inconsistent with the text of the note
   return 0.9f * deriveEnergyLossLandauQOverP(slab, m, qOverP, absQ) +
@@ -477,8 +498,11 @@ inline float theta0RossiGreisen(float xOverX0, float momentumInv,
 }  // namespace
 
 float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
-                                            int absPdg, float m, float qOverP,
-                                            float absQ) {
+                                            PdgParticle absPdg, float m,
+                                            float qOverP, float absQ) {
+  assert((absPdg == Acts::makeAbsolutePdgParticle(absPdg)) &&
+         "pdg is not absolute");
+
   // return early in case of vacuum or zero thickness
   if (not slab) {
     return 0.0f;
@@ -489,8 +513,7 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab,
   // 1/p = q/(pq) = (q/p)/q
   const float momentumInv = std::abs(qOverP / absQ);
   // q²/beta²; a smart compiler should be able to remove the unused computations
-  const float q2OverBeta2 =
-      Acts::RelativisticQuantities(m, qOverP, absQ).q2OverBeta2;
+  const float q2OverBeta2 = RelativisticQuantities(m, qOverP, absQ).q2OverBeta2;
 
   // electron or positron
   if (absPdg == PdgParticle::eElectron) {
