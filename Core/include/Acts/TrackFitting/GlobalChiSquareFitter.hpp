@@ -510,7 +510,7 @@ class Gx2Fitter {
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
       Acts::MagneticFieldContext magCtx = gx2fOptions.magFieldContext;
       // Set options for propagator
-      PropagatorOptions propagatorOptions(geoCtx,magCtx);
+      PropagatorOptions propagatorOptions(geoCtx, magCtx);
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
