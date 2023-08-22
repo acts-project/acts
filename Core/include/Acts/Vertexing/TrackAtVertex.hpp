@@ -21,11 +21,11 @@ namespace Acts {
 /// (+corresponding covariances). The updated track momenta and their
 /// covariances are saved in the following struct.
 struct FittedMomentum {
-  FittedMomentum(const Vector3& mom, const ActsSymMatrix<3>& cov)
+  FittedMomentum(const Vector3& mom, const ActsSquareMatrix<3>& cov)
       : momentum(mom), covariance(cov) {}
 
   Vector3 momentum;
-  ActsSymMatrix<3> covariance;
+  ActsSquareMatrix<3> covariance;
 };
 
 /// @struct TrackAtVertex

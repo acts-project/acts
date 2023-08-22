@@ -48,7 +48,7 @@ using AnyBoundTrackParameters = GenericBoundTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
-const BoundSymMatrix cov = BoundSymMatrix::Identity();
+const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
 template <typename charge_t>
 void checkParameters(const GenericBoundTrackParameters<charge_t>& params,

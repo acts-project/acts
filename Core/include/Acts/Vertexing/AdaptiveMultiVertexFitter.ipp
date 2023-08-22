@@ -71,14 +71,14 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       }
       // Determine if constraint vertex exist
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
-          SymMatrix4::Zero()) {
+          SquareMatrix4::Zero()) {
         currentVtx->setFullPosition(
             state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
         currentVtx->setFitQuality(
             state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
         currentVtx->setFullCovariance(
             state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance());
-      } else if (currentVtx->fullCovariance() == SymMatrix4::Zero()) {
+      } else if (currentVtx->fullCovariance() == SquareMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
       double weight =
@@ -321,7 +321,7 @@ bool Acts::AdaptiveMultiVertexFitter<
   for (auto vtx : state.vertexCollection) {
     Vector3 diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
                    vtx->fullPosition().template head<3>();
-    SymMatrix3 vtxWgt =
+    SquareMatrix3 vtxWgt =
         (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
