@@ -19,7 +19,6 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/ProtoTrackEffPurPrinter.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include <memory>
@@ -69,11 +68,10 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(numFeatures);
+    ACTS_PYTHON_MEMBER(spacepointFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_MEMBER(shuffleDirections);
     ACTS_PYTHON_STRUCT_END();
   }
   {
@@ -93,7 +91,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelPath);
-    ACTS_PYTHON_MEMBER(numFeatures);
     ACTS_PYTHON_MEMBER(cut);
     ACTS_PYTHON_MEMBER(nChunks);
     ACTS_PYTHON_MEMBER(undirected);
@@ -171,10 +168,9 @@ void addExaTrkXTrackFinding(Context &ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputClusters,
-      inputParticles, inputMeasurementParticlesMap, outputProtoTracks,
-      graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale, zScale,
-      cellCountScale, cellSumScale, clusterXScale, clusterYScale);
+      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
+      inputMeasurementSimhitsMap, outputProtoTracks, graphConstructor,
+      edgeClassifiers, trackBuilder, rScale, phiScale, zScale);
 
   {
     auto cls =
@@ -213,10 +209,6 @@ void addExaTrkXTrackFinding(Context &ctx) {
                  py::arg("spacepoints"),
                  py::arg("hook") = Acts::PipelineHook{});
   }
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ProtoTrackEffPurPrinter, mex,
-                                "ProtoTrackEffPurPrinter", testProtoTracks,
-                                refProtoTracks);
 }
 
 }  // namespace Acts::Python

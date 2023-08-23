@@ -16,8 +16,6 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <torch/torch.h>
-
 using namespace ActsExamples;
 using namespace Acts::UnitLiterals;
 
@@ -33,14 +31,18 @@ class ExamplesEdmHook : public Acts::PipelineHook {
 
   const Acts::Logger& logger() const { return *m_logger; }
 
+  struct SpacepointInfo {
+    std::size_t index;
+    const ActsFatras::Hit* hit;
+  };
+
  public:
   ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
-                  const IndexMultimap<ActsFatras::Barcode>& measHitMap,
-                  const SimParticleContainer& particles,
-                  const Acts::Logger& logger)
+                  const IndexMultimap<Index>& measHitMap,
+                  const SimHitContainer& simhits, const Acts::Logger& logger)
       : m_logger(logger.clone("MetricsHook")) {
     // Associate tracks to graph, collect momentum
-    std::unordered_map<ActsFatras::Barcode, std::vector<std::size_t>> tracks;
+    std::unordered_map<ActsFatras::Barcode, std::vector<SpacepointInfo>> tracks;
 
     for (auto i = 0ul; i < spacepoints.size(); ++i) {
       const auto measId = spacepoints[i]
@@ -50,16 +52,9 @@ class ExamplesEdmHook : public Acts::PipelineHook {
 
       auto [a, b] = measHitMap.equal_range(measId);
       for (auto it = a; it != b; ++it) {
-        auto found = particles.find(it->second);
+        const auto& hit = *simhits.nth(it->second);
 
-        if (found == particles.end()) {
-          ACTS_ERROR("could not find particle with id " << it->second);
-          continue;
-        }
-
-        // We use the spacepoint index here, since thats how edges are
-        // represented within the Exa.TrkX algorithm
-        tracks[found->particleId()].push_back(i);
+        tracks[hit.particleId()].push_back({i, &hit});
       }
     }
 
@@ -68,16 +63,24 @@ class ExamplesEdmHook : public Acts::PipelineHook {
     std::vector<int64_t> targetGraph;
 
     for (auto& [pid, track] : tracks) {
-      std::sort(track.begin(), track.end());
-      const auto pT = particles.find(pid)->transverseMomentum();
+      // Sort by hit index, so the edges are connected correctly
+      std::sort(track.begin(), track.end(), [](const auto& a, const auto& b) {
+        return a.hit->index() < b.hit->index();
+      });
+
+      // Assume that the truth momentum before the first hit is close to the
+      // truth momentum of the particles. Avoids pulling in the whole particles
+      // collection as well
+      const auto& mom4 = track.front().hit->momentum4Before();
+      const auto pT = std::hypot(mom4[Acts::eMom0], mom4[Acts::eMom1]);
 
       for (auto i = 0ul; i < track.size() - 1; ++i) {
-        truthGraph.push_back(track[i]);
-        truthGraph.push_back(track[i + 1]);
+        truthGraph.push_back(track[i].index);
+        truthGraph.push_back(track[i + 1].index);
 
         if (pT > m_targetPT && track.size() >= m_targetSize) {
-          targetGraph.push_back(track[i]);
-          targetGraph.push_back(track[i + 1]);
+          targetGraph.push_back(track[i].index);
+          targetGraph.push_back(track[i + 1].index);
         }
       }
     }
@@ -136,8 +139,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 
-  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
-  m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
+  m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitsMap);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
@@ -146,11 +149,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   auto spacepoints = m_inputSpacePoints(ctx);
 
   auto hook = std::make_unique<Acts::PipelineHook>();
-  if (m_inputParticles.isInitialized() &&
-      m_inputMeasurementMap.isInitialized()) {
-    hook = std::make_unique<ExamplesEdmHook>(spacepoints,
-                                             m_inputMeasurementMap(ctx),
-                                             m_inputParticles(ctx), logger());
+  if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
+    hook = std::make_unique<ExamplesEdmHook>(
+        spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx), logger());
   }
 
   // Convert Input data to a list of size [num_measurements x
@@ -180,7 +181,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   }
 
   // Run the pipeline
-  const auto trackCandidates = m_pipeline.run(features, spacepointIDs, *hook);
+  const auto trackCandidates =
+      m_pipeline.run(inputValues, spacepointIDs, *hook);
 
   ACTS_DEBUG("Done with pipeline, received " << trackCandidates.size()
                                              << " candidates");

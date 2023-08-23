@@ -11,7 +11,6 @@
 #include "Acts/Plugins/ExaTrkX/detail/CantorEdge.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
-#include "Acts/Utilities/ContainerPrinter.hpp"
 
 #include <cassert>
 #include <iostream>
