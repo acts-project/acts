@@ -19,10 +19,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/multi_array.hpp>
-
-class TruthGraph;
-
 namespace ActsExamples {
 
 class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
