@@ -213,7 +213,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
-    std::vector<std::optional<BoundSymMatrix>> covDeltaP(nTracks);
+    std::vector<std::optional<BoundSquareMatrix>> covDeltaP(nTracks);
 
     // Update track momenta and calculate the covariance of the track parameters
     // after the fit (TODO: parameters -> momenta).
@@ -264,11 +264,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       ActsMatrix<4, 3> covVP = billoirTrack.B;
 
       // cov(P,P), 3x3 matrix
-      ActsSymMatrix<3> covP =
+      ActsSquareMatrix<3> covP =
           billoirTrack.Cinv +
           billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
 
-      ActsSymMatrix<7> cov;
+      ActsSquareMatrix<7> cov;
       cov.setZero();
       cov.block<4, 4>(0, 0) = covV;
       cov.block<4, 3>(0, 4) = covVP;

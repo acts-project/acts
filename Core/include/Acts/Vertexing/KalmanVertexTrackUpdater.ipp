@@ -87,10 +87,10 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   ActsMatrix<4, 3> newFullTrkCov(ActsMatrix<4, 3>::Zero());
   newFullTrkCov.block<3, 3>(0, 0) = newTrkCov;
 
-  SymMatrix4 vtxFullWeight(SymMatrix4::Zero());
+  SquareMatrix4 vtxFullWeight(SquareMatrix4::Zero());
   vtxFullWeight.block<3, 3>(0, 0) = vtxWeight;
 
-  SymMatrix4 vtxFullCov(SymMatrix4::Zero());
+  SquareMatrix4 vtxFullCov(SquareMatrix4::Zero());
   vtxFullCov.block<3, 3>(0, 0) = vtxCov;
 
   Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
@@ -113,17 +113,17 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
 inline Acts::BoundMatrix
 Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
-    const SymMatrix3& sMat, const ActsMatrix<4, 3>& newTrkCov,
-    const SymMatrix4& vtxWeight, const SymMatrix4& vtxCov,
+    const SquareMatrix3& sMat, const ActsMatrix<4, 3>& newTrkCov,
+    const SquareMatrix4& vtxWeight, const SquareMatrix4& vtxCov,
     const BoundVector& newTrkParams) {
   // Now new momentum covariance
-  ActsSymMatrix<3> momCov =
+  ActsSquareMatrix<3> momCov =
       sMat + (newTrkCov.block<3, 3>(0, 0)).transpose() *
                  (vtxWeight.block<3, 3>(0, 0) * newTrkCov.block<3, 3>(0, 0));
 
   // Full (x,y,z,phi, theta, q/p) covariance matrix
   // To be made 7d again after switching to (x,y,z,phi, theta, q/p, t)
-  ActsSymMatrix<6> fullTrkCov(ActsSymMatrix<6>::Zero());
+  ActsSquareMatrix<6> fullTrkCov(ActsSquareMatrix<6>::Zero());
 
   fullTrkCov.block<3, 3>(0, 0) = vtxCov.block<3, 3>(0, 0);
   fullTrkCov.block<3, 3>(0, 3) = newTrkCov.block<3, 3>(0, 0);
