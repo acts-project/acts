@@ -391,7 +391,7 @@ class Gx2Fitter {
       }
 
       if (result.surfaceCount > 11) {
-        ACTS_WARNING("Actor: finish due to limit. Result might be garbage.");
+        ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
         result.finished = true;
       }
     }
