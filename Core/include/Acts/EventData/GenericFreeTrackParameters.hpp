@@ -32,7 +32,7 @@ class GenericFreeTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
-  using CovarianceMatrix = FreeSymMatrix;
+  using CovarianceMatrix = FreeSquareMatrix;
 
   /// Construct from a parameters vector and particle charge.
   ///
@@ -83,7 +83,7 @@ class GenericFreeTrackParameters {
         m_chargeInterpreter(std::abs(q)) {
     assert((0 <= p) and "Absolute momentum must be positive");
 
-    auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
+    auto dir = makeDirectionFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];
     m_params[eFreePos1] = pos4[ePos1];
     m_params[eFreePos2] = pos4[ePos2];
@@ -110,7 +110,7 @@ class GenericFreeTrackParameters {
                              Scalar qOverP,
                              std::optional<CovarianceMatrix> cov = std::nullopt)
       : m_params(FreeVector::Zero()), m_cov(std::move(cov)) {
-    auto dir = makeDirectionUnitFromPhiTheta(phi, theta);
+    auto dir = makeDirectionFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];
     m_params[eFreePos1] = pos4[ePos1];
     m_params[eFreePos2] = pos4[ePos2];
@@ -158,7 +158,7 @@ class GenericFreeTrackParameters {
   Scalar time() const { return m_params[eFreeTime]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
-  Vector3 unitDirection() const {
+  Vector3 direction() const {
     return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
@@ -179,7 +179,7 @@ class GenericFreeTrackParameters {
     return (transverseMagnitude / magnitude) * absoluteMomentum();
   }
   /// Momentum three-vector.
-  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
+  Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
   Scalar charge() const {
@@ -188,7 +188,7 @@ class GenericFreeTrackParameters {
 
  private:
   FreeVector m_params;
-  std::optional<FreeSymMatrix> m_cov;
+  std::optional<FreeSquareMatrix> m_cov;
   // TODO use [[no_unique_address]] once we switch to C++20
   charge_t m_chargeInterpreter;
 

@@ -18,10 +18,15 @@
 #include <type_traits>
 #include <utility>
 
+#if !defined(ACTS_SOURCELINK_SBO_SIZE)
+// Do not set this in code, use CMake!
+#define ACTS_SOURCELINK_SBO_SIZE 16
+#endif
+
 namespace Acts {
 
 class SourceLink final {
-  using any_type = AnyBase<16>;
+  using any_type = AnyBase<ACTS_SOURCELINK_SBO_SIZE>;
 
  public:
   SourceLink(const SourceLink& other) = default;

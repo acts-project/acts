@@ -31,7 +31,7 @@ class GenericCurvilinearTrackParameters
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
-  using CovarianceMatrix = BoundSymMatrix;
+  using CovarianceMatrix = BoundSquareMatrix;
 
   /// Construct from four-position, direction, absolute momentum, and charge.
   ///
@@ -81,8 +81,7 @@ class GenericCurvilinearTrackParameters
       const Vector4& pos4, Scalar phi, Scalar theta, Scalar p, Scalar q,
       std::optional<CovarianceMatrix> cov = std::nullopt)
       : Base(Surface::makeShared<PlaneSurface>(
-                 pos4.segment<3>(ePos0),
-                 makeDirectionUnitFromPhiTheta(phi, theta)),
+                 pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
              detail::transformFreeToCurvilinearParameters(
                  pos4[eTime], phi, theta, (q != Scalar(0)) ? (q / p) : (1 / p)),
              q, std::move(cov)) {
@@ -105,8 +104,7 @@ class GenericCurvilinearTrackParameters
       const Vector4& pos4, Scalar phi, Scalar theta, Scalar qOverP,
       std::optional<CovarianceMatrix> cov = std::nullopt)
       : Base(Surface::makeShared<PlaneSurface>(
-                 pos4.segment<3>(ePos0),
-                 makeDirectionUnitFromPhiTheta(phi, theta)),
+                 pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
              detail::transformFreeToCurvilinearParameters(pos4[eTime], phi,
                                                           theta, qOverP),
              std::move(cov)) {}

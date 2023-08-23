@@ -50,7 +50,7 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace EventDataView3DTest {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -233,7 +233,7 @@ static inline std::string testMeasurement(IVisualization3D& helper) {
   sourcelinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
-  SymMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
+  SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
     Vector2 loc = lPosCenter;
@@ -294,7 +294,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   sourcelinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
-  SymMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
+  SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
     Vector2 loc = lPosCenter;

@@ -89,9 +89,10 @@ SpacePointGridConfigArg = namedtuple(
         "phiBinDeflectionCoverage",
         "impactMax",
         "deltaRMax",
+        "maxPhiBins",
         "phi",  # (min,max)
     ],
-    defaults=[None] * 5 + [(None, None)] * 1,
+    defaults=[None] * 6 + [(None, None)] * 1,
 )
 
 SeedingAlgorithmConfigArg = namedtuple(
@@ -209,7 +210,7 @@ def addSeeding(
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFilterConfig.hpp
-    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax)
+    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
@@ -605,6 +606,7 @@ def addStandardSeeding(
             cotThetaMax=seedFinderConfig.cotThetaMax,
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
             impactMax=spacePointGridConfigArg.impactMax,
             zBinEdges=spacePointGridConfigArg.zBinEdges,
             phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
@@ -1434,6 +1436,7 @@ def addAmbiguityResolutionMLDBScan(
 def addVertexFitting(
     s,
     field,
+    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
@@ -1451,6 +1454,8 @@ def addVertexFitting(
     s: Sequencer
         the sequencer module to which we add the Seeding steps (returned from addVertexFitting)
     field : magnetic field
+    seeder : enum member
+        determines vertex seeder, can be acts.seeder.GaussianSeeder or acts.seeder.AdaptiveGridSeeder
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     associatedParticles : str, "associatedTruthParticles"
@@ -1523,6 +1528,7 @@ def addVertexFitting(
     elif vertexFinder == VertexFinder.AMVF:
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
+            seedFinder=seeder,
             bField=field,
             inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
@@ -1552,6 +1558,7 @@ def addVertexFitting(
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
+                bField=field,
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
@@ -1568,7 +1575,6 @@ def addSingleSeedVertexFinding(
     inputSpacePoints: Optional[str] = "spacepoints",
     outputVertices: Optional[str] = "fittedSeedVertices",
 ) -> None:
-
     from acts.examples import (
         SingleSeedVertexFinderAlgorithm,
         VertexPerformanceWriter,

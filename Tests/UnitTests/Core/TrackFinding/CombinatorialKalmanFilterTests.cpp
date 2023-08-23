@@ -221,7 +221,7 @@ struct Fixture {
     stddev[Acts::eBoundPhi] = 2_degree;
     stddev[Acts::eBoundTheta] = 2_degree;
     stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-    Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+    Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
     // all tracks close to the transverse plane along the x axis w/ small
     // variations in position, direction.
     Acts::Vector4 mStartPos0(-3_m, 0.0, 0.0, 1_ns);

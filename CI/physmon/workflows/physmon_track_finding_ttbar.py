@@ -154,6 +154,7 @@ with tempfile.TemporaryDirectory() as temp:
     addVertexFitting(
         s,
         setup.field,
+        seeder=acts.VertexSeedFinder.GaussianSeeder,
         associatedParticles=None,
         outputProtoVertices="amvf_protovertices",
         outputVertices="amvf_fittedVertices",
@@ -161,19 +162,31 @@ with tempfile.TemporaryDirectory() as temp:
         outputDirRoot=tp / "amvf",
     )
 
+    addVertexFitting(
+        s,
+        setup.field,
+        seeder=acts.VertexSeedFinder.AdaptiveGridSeeder,
+        associatedParticles=None,
+        outputProtoVertices="amvf_gridseeder_protovertices",
+        outputVertices="amvf_gridseeder_fittedVertices",
+        vertexFinder=VertexFinder.AMVF,
+        outputDirRoot=tp / "amvf_gridseeder",
+    )
+
     s.run()
     del s
 
-    vertexing = "amvf"
-    shutil.move(
-        tp / f"{vertexing}/performance_vertexing.root",
-        tp / f"performance_{vertexing}.root",
-    )
+    for vertexing in ["amvf", "amvf_gridseeder"]:
+        shutil.move(
+            tp / f"{vertexing}/performance_vertexing.root",
+            tp / f"performance_{vertexing}.root",
+        )
 
     for stem in [
         "performance_ckf",
         "tracksummary_ckf",
         "performance_amvf",
+        "performance_amvf_gridseeder",
     ] + (["performance_seeding", "performance_ambi"]):
         perf_file = tp / f"{stem}.root"
         assert perf_file.exists(), "Performance file not found"

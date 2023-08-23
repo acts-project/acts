@@ -55,10 +55,10 @@ void addInput(Context& ctx) {
                              "CsvParticleReader", inputDir, inputStem,
                              outputParticles);
 
-  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvMeasurementReader, mex,
-                             "CsvMeasurementReader", inputDir,
-                             outputMeasurements, outputMeasurementSimHitsMap,
-                             outputSourceLinks, outputClusters);
+  ACTS_PYTHON_DECLARE_READER(
+      ActsExamples::CsvMeasurementReader, mex, "CsvMeasurementReader", inputDir,
+      outputMeasurements, outputMeasurementSimHitsMap, outputSourceLinks,
+      outputClusters, outputMeasurementParticlesMap, inputSimHits);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvPlanarClusterReader, mex,
                              "CsvPlanarClusterReader", inputDir, outputClusters,

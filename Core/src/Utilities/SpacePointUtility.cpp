@@ -51,10 +51,10 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
 std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
     const GeometryContext& gctx, const SourceLink& slink,
     const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
-    const BoundSymMatrix& cov) const {
+    const BoundSquareMatrix& cov) const {
   const Surface* surface = surfaceAccessor(slink);
   Vector2 localPos(par[eBoundLoc0], par[eBoundLoc1]);
-  SymMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
+  SquareMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
   Vector3 globalPos = surface->localToGlobal(gctx, localPos, Vector3());
   RotationMatrix3 rotLocalToGlobal =
       surface->referenceFrame(gctx, globalPos, Vector3());
@@ -91,7 +91,7 @@ Vector2 SpacePointUtility::calcRhoZVars(
     const GeometryContext& gctx, const SourceLink& slinkFront,
     const SourceLink& slinkBack,
     const SourceLinkSurfaceAccessor& surfaceAccessor,
-    const std::function<std::pair<const BoundVector, const BoundSymMatrix>(
+    const std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
         SourceLink)>& paramCovAccessor,
     const Vector3& globalPos, const double theta) const {
   const auto var1 = paramCovAccessor(slinkFront).second(0, 0);
@@ -104,7 +104,7 @@ Vector2 SpacePointUtility::calcRhoZVars(
   // projection to the surface with strip1.
   double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
   double sig_y1 = sigma_y * cos(0.5 * theta) + sigma_x * sin(0.5 * theta);
-  SymMatrix2 lcov;
+  SquareMatrix2 lcov;
   lcov << sig_x1, 0, 0, sig_y1;
 
   const Surface& surface = *surfaceAccessor(slinkFront);
@@ -116,7 +116,7 @@ Vector2 SpacePointUtility::calcRhoZVars(
 Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
                                           const Surface& surface,
                                           const Vector3& globalPos,
-                                          const SymMatrix2& localCov) const {
+                                          const SquareMatrix2& localCov) const {
   Vector3 globalFakeMom(1, 1, 1);
 
   RotationMatrix3 rotLocalToGlobal =

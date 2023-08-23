@@ -591,7 +591,7 @@ class CombinatorialKalmanFilter {
       // after smoothing
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), state.options.direction,
+          state.options.direction * stepper.direction(state.stepping),
           &currentState.referenceSurface(), nullptr);
 
       // No Kalman filtering for the starting surface, but still need
@@ -883,10 +883,8 @@ class CombinatorialKalmanFilter {
 
         ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
 
-        ts.setUncalibratedSourceLink(sourceLink);
-
         // now calibrate the track state
-        m_extensions.calibrator(gctx, ts);
+        m_extensions.calibrator(gctx, sourceLink, ts);
 
         result.trackStateCandidates.push_back(ts);
       }
