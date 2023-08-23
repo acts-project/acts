@@ -8,8 +8,10 @@
 
 #pragma once
 
+#include "Acts/Plugins/ExaTrkX/Pipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -24,6 +26,15 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   struct Config {
     /// Input spacepoints collection.
     std::string inputSpacePoints;
+
+    /// Input particles (Optional). If given together with
+    /// measurementParticlesMap, the truth graph is computed and metrics can be
+    /// printed.
+    std::string inputParticles;
+
+    /// Input measurement simhit map (Optional). If given together with simhits,
+    /// the truth graph is computed and metrics can be printed.
+    std::string inputMeasurementParticlesMap;
 
     /// Output protoTracks collection.
     std::string outputProtoTracks;
@@ -58,14 +69,17 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  std::vector<std::vector<int>> runPipeline(
-      std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const;
-
   // configuration
   Config m_cfg;
 
+  Acts::Pipeline m_pipeline;
+
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>> m_inputMeasurementMap{
+      this, "InputMeasurementMap"};
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
