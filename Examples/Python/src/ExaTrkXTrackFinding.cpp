@@ -166,11 +166,12 @@ void addExaTrkXTrackFinding(Context &ctx) {
   }
 #endif
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
-      "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
-      inputMeasurementSimhitsMap, outputProtoTracks, graphConstructor,
-      edgeClassifiers, trackBuilder, rScale, phiScale, zScale);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+                                "TrackFindingAlgorithmExaTrkX",
+                                inputSpacePoints, inputSimHits, inputParticles,
+                                inputMeasurementSimhitsMap, outputProtoTracks,
+                                graphConstructor, edgeClassifiers, trackBuilder,
+                                rScale, phiScale, zScale);
 
   {
     auto cls =

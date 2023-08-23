@@ -31,18 +31,20 @@ class ExamplesEdmHook : public Acts::PipelineHook {
 
   const Acts::Logger& logger() const { return *m_logger; }
 
-  struct SpacepointInfo {
-    std::size_t index;
-    const ActsFatras::Hit* hit;
+  struct HitInfo {
+    std::size_t spacePointIndex;
+    int32_t hitIndex;
   };
 
  public:
   ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
                   const IndexMultimap<Index>& measHitMap,
-                  const SimHitContainer& simhits, const Acts::Logger& logger)
+                  const SimHitContainer& simhits,
+                  const SimParticleContainer& particles,
+                  const Acts::Logger& logger)
       : m_logger(logger.clone("MetricsHook")) {
     // Associate tracks to graph, collect momentum
-    std::unordered_map<ActsFatras::Barcode, std::vector<SpacepointInfo>> tracks;
+    std::unordered_map<ActsFatras::Barcode, std::vector<HitInfo>> tracks;
 
     for (auto i = 0ul; i < spacepoints.size(); ++i) {
       const auto measId = spacepoints[i]
@@ -54,7 +56,7 @@ class ExamplesEdmHook : public Acts::PipelineHook {
       for (auto it = a; it != b; ++it) {
         const auto& hit = *simhits.nth(it->second);
 
-        tracks[hit.particleId()].push_back({i, &hit});
+        tracks[hit.particleId()].push_back({i, hit.index()});
       }
     }
 
@@ -65,22 +67,23 @@ class ExamplesEdmHook : public Acts::PipelineHook {
     for (auto& [pid, track] : tracks) {
       // Sort by hit index, so the edges are connected correctly
       std::sort(track.begin(), track.end(), [](const auto& a, const auto& b) {
-        return a.hit->index() < b.hit->index();
+        return a.hitIndex < b.hitIndex;
       });
 
-      // Assume that the truth momentum before the first hit is close to the
-      // truth momentum of the particles. Avoids pulling in the whole particles
-      // collection as well
-      const auto& mom4 = track.front().hit->momentum4Before();
-      const auto pT = std::hypot(mom4[Acts::eMom0], mom4[Acts::eMom1]);
+      auto found = particles.find(pid);
+      if (found == particles.end()) {
+        ACTS_WARNING("Did not find " << pid << ", skip track");
+        continue;
+      }
 
       for (auto i = 0ul; i < track.size() - 1; ++i) {
-        truthGraph.push_back(track[i].index);
-        truthGraph.push_back(track[i + 1].index);
+        truthGraph.push_back(track[i].spacePointIndex);
+        truthGraph.push_back(track[i + 1].spacePointIndex);
 
-        if (pT > m_targetPT && track.size() >= m_targetSize) {
-          targetGraph.push_back(track[i].index);
-          targetGraph.push_back(track[i + 1].index);
+        if (found->transverseMomentum() > m_targetPT &&
+            track.size() >= m_targetSize) {
+          targetGraph.push_back(track[i].spacePointIndex);
+          targetGraph.push_back(track[i + 1].spacePointIndex);
         }
       }
     }
@@ -140,6 +143,7 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 
   m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
+  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
   m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitsMap);
 }
 
@@ -151,7 +155,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   auto hook = std::make_unique<Acts::PipelineHook>();
   if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
     hook = std::make_unique<ExamplesEdmHook>(
-        spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx), logger());
+        spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx),
+        m_inputParticles(ctx), logger());
   }
 
   // Convert Input data to a list of size [num_measurements x
