@@ -199,7 +199,7 @@ struct Gx2FitterResult {
 
   // collectors
   std::vector<ActsVector<2>> collectorResiduals;
-  std::vector<ActsSymMatrix<2>> collectorCovariance;
+  std::vector<ActsSquareMatrix<2>> collectorCovariance;
   std::vector<BoundMatrix> collectorJacobians;
 
   BoundMatrix jacobianFromStart = BoundMatrix::Identity();
