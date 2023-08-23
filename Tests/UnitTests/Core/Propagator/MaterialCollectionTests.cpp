@@ -31,7 +31,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
 #include <array>
@@ -63,8 +62,8 @@ CylindricalTrackingGeometry cGeometry(tgContext);
 auto tGeometry = cGeometry();
 
 // create a navigator for this tracking geometry
-Navigator navigatorES({tGeometry}, getDefaultLogger("nav", Logging::Level::VERBOSE));
-Navigator navigatorSL({tGeometry}, getDefaultLogger("nav", Logging::Level::VERBOSE));
+Navigator navigatorES({tGeometry});
+Navigator navigatorSL({tGeometry});
 
 using BField = ConstantBField;
 using EigenStepper = Acts::EigenStepper<>;
@@ -74,10 +73,10 @@ using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 const double Bz = 2_T;
 auto bField = std::make_shared<BField>(Vector3{0, 0, Bz});
 EigenStepper estepper(bField);
-EigenPropagator epropagator(std::move(estepper), std::move(navigatorES), getDefaultLogger("prop", Logging::Level::VERBOSE));
+EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
 
 StraightLineStepper slstepper;
-StraightLinePropagator slpropagator(slstepper, std::move(navigatorSL), getDefaultLogger("prop", Logging::Level::VERBOSE));
+StraightLinePropagator slpropagator(slstepper, std::move(navigatorSL));
 const int ntests = 500;
 const int skip = 0;
 bool debugModeFwd = false;
