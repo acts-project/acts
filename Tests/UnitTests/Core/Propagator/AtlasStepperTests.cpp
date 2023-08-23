@@ -52,7 +52,7 @@ namespace Test {
 
 using namespace Acts::UnitLiterals;
 using Acts::VectorHelpers::makeVector4;
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Jacobian = BoundMatrix;
 using Stepper = Acts::AtlasStepper;
 
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   auto newAbsMom = 4.2 * absMom;
   double newTime = 7.5;
   double newCharge = 1.;
-  BoundSymMatrix newCov = 8.5 * Covariance::Identity();
+  BoundSquareMatrix newCov = 8.5 * Covariance::Identity();
   CurvilinearTrackParameters cp(makeVector4(newPos, newTime), unitDir,
                                 newAbsMom, newCharge, newCov);
   FreeVector freeParams = detail::transformBoundToFreeParameters(

@@ -22,7 +22,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
                                      transportCov, freeToBoundCorrection);
   }
 
-  SmallVector<std::tuple<double, BoundVector, BoundSymMatrix>> states;
+  SmallVector<std::tuple<double, BoundVector, BoundSquareMatrix>> states;
   double accumulatedPathLength = 0.0;
 
   for (auto i = 0ul; i < numberComponents(state); ++i) {
@@ -49,7 +49,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       const auto& btp = std::get<BoundTrackParameters>(*bs);
       states.emplace_back(
           state.components[i].weight, btp.parameters(),
-          btp.covariance().value_or(Acts::BoundSymMatrix::Zero()));
+          btp.covariance().value_or(Acts::BoundSquareMatrix::Zero()));
       accumulatedPathLength +=
           std::get<double>(*bs) * state.components[i].weight;
     }
@@ -62,8 +62,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
   const auto [finalPars, cov] =
       Acts::reduceGaussianMixture(states, surface, m_finalReductionMethod);
 
-  std::optional<BoundSymMatrix> finalCov = std::nullopt;
-  if (cov != BoundSymMatrix::Zero()) {
+  std::optional<BoundSquareMatrix> finalCov = std::nullopt;
+  if (cov != BoundSquareMatrix::Zero()) {
     finalCov = cov;
   }
 
@@ -91,7 +91,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     Vector4 pos4 = Vector4::Zero();
     Vector3 dir = Vector3::Zero();
     ActsScalar qop = 0.0;
-    BoundSymMatrix cov = BoundSymMatrix::Zero();
+    BoundSquareMatrix cov = BoundSquareMatrix::Zero();
     ActsScalar pathLenth = 0.0;
     ActsScalar sumOfWeights = 0.0;
 
@@ -115,8 +115,8 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     pathLenth /= sumOfWeights;
     cov /= sumOfWeights;
 
-    std::optional<BoundSymMatrix> finalCov = std::nullopt;
-    if (cov != BoundSymMatrix::Zero()) {
+    std::optional<BoundSquareMatrix> finalCov = std::nullopt;
+    if (cov != BoundSquareMatrix::Zero()) {
       finalCov = cov;
     }
 

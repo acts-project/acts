@@ -172,7 +172,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     const double q = 1;
 
     // Construct and fill covariance matrix
-    Acts::BoundSymMatrix cov;
+    Acts::BoundSquareMatrix cov;
 
     // Variances
     cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundLoc0) =
@@ -247,7 +247,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
 
   Acts::Vertex<Acts::BoundTrackParameters> beamspotConstraint;
   Acts::Vector3 beamspotPos;
-  Acts::SymMatrix3 beamspotCov;
+  Acts::SquareMatrix3 beamspotCov;
 
   beamspotPos << m_branches.beamspot_x, m_branches.beamspot_y,
       m_branches.beamspot_z;

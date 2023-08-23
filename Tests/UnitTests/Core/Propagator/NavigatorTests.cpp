@@ -67,7 +67,7 @@ struct PropagatorState {
   struct Stepper {
     // comply with concept
     using Jacobian = BoundMatrix;
-    using Covariance = BoundSymMatrix;
+    using Covariance = BoundSquareMatrix;
     using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
     using CurvilinearState =
         std::tuple<CurvilinearTrackParameters, Jacobian, double>;
@@ -108,7 +108,8 @@ struct PropagatorState {
 
     /// State resetter
     void resetState(State& /*state*/, const BoundVector& /*boundParams*/,
-                    const BoundSymMatrix& /*cov*/, const Surface& /*surface*/,
+                    const BoundSquareMatrix& /*cov*/,
+                    const Surface& /*surface*/,
                     const double /*stepSize*/) const {}
 
     /// Global particle position accessor
