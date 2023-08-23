@@ -61,10 +61,8 @@ linkcheck_ignore = [
 
 # -- Options for HTML output --------------------------------------------------
 
-# ensure we use the RTD them when building locally
-if not on_readthedocs:
-    html_theme = "sphinx_rtd_theme"
-    extensions.append("sphinx_rtd_theme")
+html_theme = "sphinx_rtd_theme"
+extensions.append("sphinx_rtd_theme")
 
 html_theme_options = {
     "collapse_navigation": False,
