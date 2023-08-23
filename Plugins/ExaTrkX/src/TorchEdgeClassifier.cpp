@@ -64,7 +64,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   std::vector<torch::jit::IValue> inputTensors(2);
   inputTensors[0] = m_cfg.numFeatures < nodes.size(1)
                         ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}})
-                        : std::move(nodes);
+                        : nodes;
 
   const auto chunks = at::chunk(at::arange(edgeListTmp.size(1)), m_cfg.nChunks);
   for (const auto& chunk : chunks) {
@@ -94,7 +94,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
 
-  return {std::move(inputTensors[0]).toTensor(), std::move(edgesAfterCut),
+  return {std::move(nodes), std::move(edgesAfterCut),
           output.masked_select(mask)};
 }
 
