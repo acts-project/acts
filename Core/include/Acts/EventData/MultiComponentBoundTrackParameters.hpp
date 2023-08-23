@@ -33,7 +33,7 @@ template <typename charge_t>
 class MultiComponentBoundTrackParameters {
   using SingleParameters = GenericBoundTrackParameters<charge_t>;
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       m_components;
   std::shared_ptr<const Surface> m_surface;
 
@@ -73,9 +73,10 @@ class MultiComponentBoundTrackParameters {
       const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps,
       ActsScalar q)
       : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
-    static_assert(std::is_same_v<BoundSymMatrix, covariance_t> ||
-                  std::is_same_v<std::optional<BoundSymMatrix>, covariance_t>);
-    if constexpr (std::is_same_v<BoundSymMatrix, covariance_t>) {
+    static_assert(
+        std::is_same_v<BoundSquareMatrix, covariance_t> ||
+        std::is_same_v<std::optional<BoundSquareMatrix>, covariance_t>);
+    if constexpr (std::is_same_v<BoundSquareMatrix, covariance_t>) {
       for (const auto& [weight, params, cov] : cmps) {
         m_components.push_back({weight, params, cov});
       }
@@ -91,9 +92,10 @@ class MultiComponentBoundTrackParameters {
       std::shared_ptr<const Surface> surface,
       const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps)
       : m_surface(std::move(surface)) {
-    static_assert(std::is_same_v<BoundSymMatrix, covariance_t> ||
-                  std::is_same_v<std::optional<BoundSymMatrix>, covariance_t>);
-    if constexpr (std::is_same_v<BoundSymMatrix, covariance_t>) {
+    static_assert(
+        std::is_same_v<BoundSquareMatrix, covariance_t> ||
+        std::is_same_v<std::optional<BoundSquareMatrix>, covariance_t>);
+    if constexpr (std::is_same_v<BoundSquareMatrix, covariance_t>) {
       for (const auto& [weight, params, cov] : cmps) {
         m_components.push_back({weight, params, cov});
       }
@@ -117,7 +119,7 @@ class MultiComponentBoundTrackParameters {
   /// parameter.
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface, const BoundVector& params,
-      ActsScalar q, std::optional<BoundSymMatrix> cov = std::nullopt)
+      ActsScalar q, std::optional<BoundSquareMatrix> cov = std::nullopt)
       : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
     m_components.push_back({1., params, std::move(cov)});
   }
@@ -134,7 +136,7 @@ class MultiComponentBoundTrackParameters {
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface, const BoundVector& params,
-      std::optional<BoundSymMatrix> cov = std::nullopt)
+      std::optional<BoundSquareMatrix> cov = std::nullopt)
       : m_surface(std::move(surface)) {
     m_components.push_back({1., params, std::move(cov)});
   }
@@ -163,7 +165,7 @@ class MultiComponentBoundTrackParameters {
         std::get<double>(m_components[i]),
         SingleParameters(
             m_surface, std::get<BoundVector>(m_components[i]),
-            std::get<std::optional<BoundSymMatrix>>(m_components[i])));
+            std::get<std::optional<BoundSquareMatrix>>(m_components[i])));
   }
 
   /// Parameters vector.

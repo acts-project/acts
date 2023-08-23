@@ -166,7 +166,7 @@ using CovarianceMap = Eigen::Map<const Acts::ActsDynamicMatrix>;
 void Acts::detail::printBoundParameters(std::ostream& os,
                                         const Acts::Surface& surface,
                                         const Acts::BoundVector& params,
-                                        const Acts::BoundSymMatrix* cov) {
+                                        const Acts::BoundSquareMatrix* cov) {
   if (cov != nullptr) {
     printParametersCovariance(os, makeBoundNames(), kMonotonic, params, *cov);
   } else {

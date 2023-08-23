@@ -430,7 +430,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromPlanes(
   }
 
   // elements of the linear equations to solve
-  Acts::SymMatrix3 A = Acts::SymMatrix3::Zero();
+  Acts::SquareMatrix3 A = Acts::SquareMatrix3::Zero();
   Acts::Vector3 B = Acts::Vector3::Zero();
   for (const auto& triplet : tripletsWithPlanes) {
     const auto& abg = triplet.first.first;
@@ -491,17 +491,17 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromPlanes(
 template <typename spacepoint_t>
 Acts::Ray3D Acts::SingleSeedVertexFinder<spacepoint_t>::makeRayFromTriplet(
     const Acts::SingleSeedVertexFinder<spacepoint_t>::Triplet& triplet) {
-  Acts::SymMatrix3 mat;
+  Acts::SquareMatrix3 mat;
   mat.row(0) = Acts::Vector3(triplet.a.x(), triplet.a.y(), triplet.a.z());
   mat.row(1) = Acts::Vector3(triplet.b.x(), triplet.b.y(), triplet.b.z());
   mat.row(2) = Acts::Vector3(triplet.c.x(), triplet.c.y(), triplet.c.z());
 
   Acts::Vector3 mean = mat.colwise().mean();
-  Acts::SymMatrix3 cov = (mat.rowwise() - mean.transpose()).transpose() *
-                         (mat.rowwise() - mean.transpose()) / 3.;
+  Acts::SquareMatrix3 cov = (mat.rowwise() - mean.transpose()).transpose() *
+                            (mat.rowwise() - mean.transpose()) / 3.;
 
   // "cov" is self-adjoint matrix
-  Eigen::SelfAdjointEigenSolver<Acts::SymMatrix3> saes(cov);
+  Eigen::SelfAdjointEigenSolver<Acts::SquareMatrix3> saes(cov);
   // eigenvalues are sorted in increasing order
   Acts::Vector3 eivec = saes.eigenvectors().col(2);
 
@@ -536,7 +536,8 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromRays(
   }
 
   // elements of the linear equations to solve
-  Acts::SymMatrix3 A = Acts::SymMatrix3::Identity() * 2. * triplets.size();
+  Acts::SquareMatrix3 A =
+      Acts::SquareMatrix3::Identity() * 2. * triplets.size();
   Acts::Vector3 B = Acts::Vector3::Zero();
   for (const auto& triplet : tripletsWithRays) {
     // use ray saved from earlier
@@ -583,7 +584,7 @@ Acts::SingleSeedVertexFinder<spacepoint_t>::findClosestPointFromRays(
         const auto& direction = tripletsWithRays[tr].first.second;
 
         // remove this triplet from A and B
-        A -= Acts::SymMatrix3::Identity() * 2.;
+        A -= Acts::SquareMatrix3::Identity() * 2.;
         A += 2. * (direction * direction.transpose());
         B -= -2. * direction * (direction.dot(startPoint)) + 2. * startPoint;
       }

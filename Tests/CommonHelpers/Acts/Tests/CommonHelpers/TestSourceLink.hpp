@@ -39,7 +39,7 @@ struct TestSourceLink final {
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
   Acts::ActsVector<2> parameters;
-  Acts::ActsSymMatrix<2> covariance;
+  Acts::ActsSquareMatrix<2> covariance;
 
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
@@ -52,7 +52,7 @@ struct TestSourceLink final {
   /// Construct a source link for a 2d measurement.
   TestSourceLink(BoundIndices idx0, BoundIndices idx1,
                  const Acts::ActsVector<2>& params,
-                 const Acts::ActsSymMatrix<2>& cov,
+                 const Acts::ActsSquareMatrix<2>& cov,
                  GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
       : m_geometryId(gid),
         sourceId(sid),

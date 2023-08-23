@@ -31,7 +31,7 @@ class GenericCurvilinearTrackParameters
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
-  using CovarianceMatrix = BoundSymMatrix;
+  using CovarianceMatrix = BoundSquareMatrix;
 
   /// Construct from four-position, direction, absolute momentum, and charge.
   ///
