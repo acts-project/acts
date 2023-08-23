@@ -43,7 +43,7 @@ struct Parameters {
   Acts::ActsVector<6> values;
   // Dummy default
   ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
-  std::optional<Acts::BoundSquareMatrix<6>> covariance;
+  std::optional<Acts::BoundSquareMatrix> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 
