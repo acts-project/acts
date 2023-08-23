@@ -135,7 +135,7 @@ struct GsfActor {
   struct ParameterCache {
     ActsScalar weight = 0;
     BoundVector boundPars;
-    BoundSymMatrix boundCov;
+    BoundSquareMatrix boundCov;
   };
 
   struct TemporaryStates {
@@ -759,7 +759,7 @@ struct GsfActor {
         proxy.filtered() = fltMean;
         proxy.filteredCovariance() = fltCov;
         proxy.smoothed() = BoundVector::Constant(-2);
-        proxy.smoothedCovariance() = BoundSymMatrix::Constant(-2);
+        proxy.smoothedCovariance() = BoundSquareMatrix::Constant(-2);
       } else {
         proxy.shareFrom(TrackStatePropMask::Predicted,
                         TrackStatePropMask::Filtered);
@@ -822,7 +822,8 @@ struct FinalStateCollector {
     }
 
     const auto& surface = *navigator.currentSurface(state.navigation);
-    std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+    std::vector<
+        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
         states;
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {

@@ -673,13 +673,11 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               }
 
               // Save track parameters after the vertex fit
-              const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
-              if (paramsAtVtxFitted != std::nullopt) {
+              if (trk.fittedMomentum.has_value()) {
                 Acts::ActsVector<3> recoMomFitted =
-                    paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
+                    trk.fittedMomentum->momentum;
                 const Acts::ActsMatrix<3, 3>& momCovFitted =
-                    paramsAtVtxFitted->covariance()->block<3, 3>(
-                        Acts::eBoundPhi, Acts::eBoundPhi);
+                    trk.fittedMomentum->covariance;
                 innerRecoPhiFitted.push_back(recoMomFitted[0]);
                 innerRecoThetaFitted.push_back(recoMomFitted[1]);
                 innerRecoQOverPFitted.push_back(recoMomFitted[2]);
@@ -700,9 +698,12 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 innerPullQOverPFitted.push_back(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
-                const auto& recoUnitDirFitted = paramsAtVtxFitted->direction();
+                const auto& recoUnitDirFitted = Acts::makeDirectionFromPhiTheta(
+                    recoMomFitted[0], recoMomFitted[1]);
                 double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
                 innerMomOverlapFitted.push_back(overlapFitted);
+              } else {
+                ACTS_WARNING("No fitted track momentum found!");
               }
             }
           }

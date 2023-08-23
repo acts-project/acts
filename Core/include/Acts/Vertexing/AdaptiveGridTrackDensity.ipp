@@ -68,7 +68,7 @@ template <int trkGridSize>
 typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, DensityMap& mainDensityMap) const {
-  SymMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
+  SquareMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
@@ -122,7 +122,7 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(
 template <int trkGridSize>
 typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2& cov, float distCtrD, int centralZBin,
+    int offset, const Acts::SquareMatrix2& cov, float distCtrD, int centralZBin,
     float distCtrZ) const {
   DensityMap trackDensityMap;
 
@@ -192,7 +192,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
 
 template <int trkGridSize>
 float Acts::AdaptiveGridTrackDensity<trkGridSize>::normal2D(
-    float d, float z, const Acts::SymMatrix2& cov) const {
+    float d, float z, const Acts::SquareMatrix2& cov) const {
   float det = cov.determinant();
   float coef = 1 / (2 * M_PI * std::sqrt(det));
   float expo =

@@ -52,16 +52,16 @@ BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {
   boundParameters << 0., 0., VectorHelpers::phi(direction),
       VectorHelpers::theta(direction), qop, time;
 
-  BoundSymMatrix boundCovariance = 8. * BoundSymMatrix::Identity();
+  BoundSquareMatrix boundCovariance = 8. * BoundSquareMatrix::Identity();
 
   CovarianceCache covCache(tgContext, *planeSurface, position, boundParameters,
                            boundCovariance);
   // Test that the transport should be applied now
   BOOST_CHECK(covCache.applyTransport == true);
   // Test that the set covariance is 5x5 and what it has been set
-  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(covCache.covariance),
+  BOOST_CHECK_EQUAL(std::get<BoundSquareMatrix>(covCache.covariance),
                     boundCovariance);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(covCache.covariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(covCache.covariance),
                     std::bad_variant_access);
   // Test that the bound to free jacobian has a value
   BOOST_CHECK(covCache.boundToFreeJacobian.has_value());
@@ -77,33 +77,33 @@ BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {
   // Transport bound to the same bound surface
   auto covJacAtBound = transportCovarianceToBound(tgContext, *planeSurface,
                                                   freeParameters, covCache);
-  BOOST_CHECK(
-      boundCovariance.isApprox(std::get<BoundSymMatrix>(covCache.covariance)));
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(covCache.covariance),
+  BOOST_CHECK(boundCovariance.isApprox(
+      std::get<BoundSquareMatrix>(covCache.covariance)));
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(covCache.covariance),
                     std::bad_variant_access);
 
   auto variantCovariance = std::get<0>(covJacAtBound);
   auto variantJacobian = std::get<1>(covJacAtBound);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 
   // Transport bound to curvilinear on the same place
   auto covJacAtCurv = transportCovarianceToCurvilinear(direction, covCache);
-  BOOST_CHECK(
-      boundCovariance.isApprox(std::get<BoundSymMatrix>(covCache.covariance)));
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(covCache.covariance),
+  BOOST_CHECK(boundCovariance.isApprox(
+      std::get<BoundSquareMatrix>(covCache.covariance)));
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(covCache.covariance),
                     std::bad_variant_access);
 
   variantCovariance = std::get<0>(covJacAtCurv);
   variantJacobian = std::get<1>(covJacAtCurv);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 
   // Transport bound to Free on the same place
   auto covJacAtFree = transportCovarianceToFree(covCache);
   variantCovariance = std::get<0>(covJacAtFree);
   variantJacobian = std::get<1>(covJacAtFree);
-  BOOST_CHECK_THROW(std::get<BoundSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<BoundSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 
   // Transport bound to another bound surface
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(covariance_transport_bound_start) {
 
   variantCovariance = std::get<0>(covJacAtBound);
   variantJacobian = std::get<1>(covJacAtBound);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 }
 
@@ -132,15 +132,15 @@ BOOST_AUTO_TEST_CASE(covariance_transport_curvilinear_start) {
 
   auto planeSurface = Surface::makeShared<PlaneSurface>(position, direction);
 
-  BoundSymMatrix boundCovariance = 8. * BoundSymMatrix::Identity();
+  BoundSquareMatrix boundCovariance = 8. * BoundSquareMatrix::Identity();
 
   CovarianceCache covCache(position, direction, boundCovariance);
   // Test that the transport should be applied now
   BOOST_CHECK(covCache.applyTransport == true);
   // Test that the set covariance is 5x5 and what it has been set
-  BOOST_CHECK_EQUAL(std::get<BoundSymMatrix>(covCache.covariance),
+  BOOST_CHECK_EQUAL(std::get<BoundSquareMatrix>(covCache.covariance),
                     boundCovariance);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(covCache.covariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(covCache.covariance),
                     std::bad_variant_access);
 
   // Test that the bound to free jacobian has a value
@@ -159,21 +159,21 @@ BOOST_AUTO_TEST_CASE(covariance_transport_curvilinear_start) {
                                                   freeParameters, covCache);
   auto variantCovariance = std::get<0>(covJacAtBound);
   auto variantJacobian = std::get<1>(covJacAtBound);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 
   // Transport bound to curvilinear on the same place
   auto covJacAtCurv = transportCovarianceToCurvilinear(direction, covCache);
   variantCovariance = std::get<0>(covJacAtCurv);
   variantJacobian = std::get<1>(covJacAtCurv);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 
   // Transport bound to Free on the same place
   auto covJacAtFree = transportCovarianceToFree(covCache);
   variantCovariance = std::get<0>(covJacAtFree);
   variantJacobian = std::get<1>(covJacAtFree);
-  BOOST_CHECK_THROW(std::get<BoundSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<BoundSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 }
 
@@ -193,14 +193,14 @@ BOOST_AUTO_TEST_CASE(covariance_transport_free_start) {
   freeParameters << position[0], position[1], position[2], time, direction[0],
       direction[1], direction[2], qop;
 
-  FreeSymMatrix freeCovariance = 8. * FreeSymMatrix::Identity();
+  FreeSquareMatrix freeCovariance = 8. * FreeSquareMatrix::Identity();
 
   CovarianceCache covCache(freeParameters, freeCovariance);
   BOOST_CHECK(covCache.applyTransport == true);
   // Test that the set covariance is 5x5 and what it has been set
-  BOOST_CHECK_THROW(std::get<BoundSymMatrix>(covCache.covariance),
+  BOOST_CHECK_THROW(std::get<BoundSquareMatrix>(covCache.covariance),
                     std::bad_variant_access);
-  BOOST_CHECK_EQUAL(std::get<FreeSymMatrix>(covCache.covariance),
+  BOOST_CHECK_EQUAL(std::get<FreeSquareMatrix>(covCache.covariance),
                     freeCovariance);
   // Test that the bound to free jacobian has NO value
   BOOST_CHECK(not covCache.boundToFreeJacobian.has_value());
@@ -217,21 +217,21 @@ BOOST_AUTO_TEST_CASE(covariance_transport_free_start) {
 
   auto variantCovariance = std::get<0>(covJacAtBound);
   auto variantJacobian = std::get<1>(covJacAtBound);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 
   // Transport bound to curvilinear on the same place
   auto covJacAtCurv = transportCovarianceToCurvilinear(direction, covCache);
   variantCovariance = std::get<0>(covJacAtCurv);
   variantJacobian = std::get<1>(covJacAtCurv);
-  BOOST_CHECK_THROW(std::get<FreeSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<FreeSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 
   // Transport bound to Free on the same place
   auto covJacAtFree = transportCovarianceToFree(covCache);
   variantCovariance = std::get<0>(covJacAtFree);
   variantJacobian = std::get<1>(covJacAtFree);
-  BOOST_CHECK_THROW(std::get<BoundSymMatrix>(variantCovariance),
+  BOOST_CHECK_THROW(std::get<BoundSquareMatrix>(variantCovariance),
                     std::bad_variant_access);
 }
 

@@ -35,7 +35,7 @@ using AnyFreeTrackParameters = GenericFreeTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
-const FreeSymMatrix cov = FreeSymMatrix::Identity();
+const FreeSquareMatrix cov = FreeSquareMatrix::Identity();
 
 template <typename charge_t>
 void checkParameters(const GenericFreeTrackParameters<charge_t>& params,

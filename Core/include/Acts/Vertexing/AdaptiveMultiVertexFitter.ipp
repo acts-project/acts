@@ -71,14 +71,14 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
       }
       // Determine if constraint vertex exist
       if (state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance() !=
-          SymMatrix4::Zero()) {
+          SquareMatrix4::Zero()) {
         currentVtx->setFullPosition(
             state.vtxInfoMap[currentVtx].constraintVertex.fullPosition());
         currentVtx->setFitQuality(
             state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
         currentVtx->setFullCovariance(
             state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance());
-      } else if (currentVtx->fullCovariance() == SymMatrix4::Zero()) {
+      } else if (currentVtx->fullCovariance() == SquareMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
       double weight =
@@ -260,13 +260,13 @@ Acts::Result<void> Acts::
     for (const auto& trk : currentVtxInfo.trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
 
-      // Set trackWeight for current track
+      // Set weight for current track
       double currentTrkWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility,
           collectTrackToVertexCompatibilities(state, trk));
-      trkAtVtx.trackWeight = currentTrkWeight;
+      trkAtVtx.weight = currentTrkWeight;
 
-      if (trkAtVtx.trackWeight > m_cfg.minWeight) {
+      if (trkAtVtx.weight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
         if (not trkAtVtx.isLinearized || state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
@@ -321,7 +321,7 @@ bool Acts::AdaptiveMultiVertexFitter<
   for (auto vtx : state.vertexCollection) {
     Vector3 diff = state.vtxInfoMap[vtx].oldPosition.template head<3>() -
                    vtx->fullPosition().template head<3>();
-    SymMatrix3 vtxWgt =
+    SquareMatrix3 vtxWgt =
         (vtx->fullCovariance().template block<3, 3>(0, 0)).inverse();
     double relativeShift = diff.dot(vtxWgt * diff);
     if (relativeShift > m_cfg.maxRelativeShift) {
@@ -337,7 +337,7 @@ void Acts::AdaptiveMultiVertexFitter<
   for (const auto vtx : state.vertexCollection) {
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
-      if (trkAtVtx.trackWeight > m_cfg.minWeight) {
+      if (trkAtVtx.weight > m_cfg.minWeight) {
         KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
       }
     }

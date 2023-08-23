@@ -62,7 +62,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     pca[ePos2] = pos[ePos2];
     pca[eTime] = endParams.time();
   }
-  BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
 
   // Extracting Perigee parameters and compute functions of them for later
   // usage
@@ -203,7 +203,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       paramsAtPCA - positionJacobian * pca - momentumJacobian * momentumAtPCA;
 
   // The parameter weight
-  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,
