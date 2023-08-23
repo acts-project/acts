@@ -105,7 +105,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // define start parameters
-  BoundSymMatrix cov;
+  BoundSquareMatrix cov;
   // take some major correlations (off-diagonals)
   // clang-format off
     cov <<

@@ -68,7 +68,7 @@ void StraightLineStepper::transportCovarianceToBound(
 
 void StraightLineStepper::resetState(State& state,
                                      const BoundVector& boundParams,
-                                     const BoundSymMatrix& cov,
+                                     const BoundSquareMatrix& cov,
                                      const Surface& surface,
                                      const double stepSize) const {
   // Update the stepping state

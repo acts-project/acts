@@ -71,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
     params[Acts::eBoundTheta] = d.theta;
     params[Acts::eBoundQOverP] = d.qop;
 
-    Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
+    Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
     cov(Acts::eBoundLoc0, Acts::eBoundLoc0) = d.var_d0;
     cov(Acts::eBoundLoc1, Acts::eBoundLoc1) = d.var_z0;
     cov(Acts::eBoundPhi, Acts::eBoundPhi) = d.var_phi;

@@ -43,16 +43,17 @@ struct Parameters {
   Acts::ActsVector<6> values;
   // Dummy default
   ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
-  std::optional<Acts::ActsSymMatrix<6>> covariance;
+  std::optional<Acts::BoundSquareMatrix<6>> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 
-ActsSymMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
+ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
 
-ActsSymMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega, double Bz);
+ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
+                                        double Bz);
 
-void unpackCovariance(const float* from, ActsSymMatrix<6>& to);
-void packCovariance(const ActsSymMatrix<6>& from, float* to);
+void unpackCovariance(const float* from, ActsSquareMatrix<6>& to);
+void packCovariance(const ActsSquareMatrix<6>& from, float* to);
 
 Parameters convertTrackParametersToEdm4hep(const Acts::GeometryContext& gctx,
                                            double Bz,
@@ -182,7 +183,7 @@ void readTrack(const edm4hep::Track& from,
   auto unpack =
       [](const edm4hep::TrackState& trackState) -> detail::Parameters {
     detail::Parameters params;
-    params.covariance = ActsSymMatrix<6>{};
+    params.covariance = ActsSquareMatrix<6>{};
     detail::unpackCovariance(trackState.covMatrix.data(),
                              params.covariance.value());
     params.values[0] = trackState.D0;

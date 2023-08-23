@@ -33,7 +33,7 @@ class MultiComponentBoundTrackParameters {
   using Parameters = BoundTrackParameters;
   using ParticleHypothesis = Parameters::ParticleHypothesis;
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       m_components;
   std::shared_ptr<const Surface> m_surface;
 
@@ -74,9 +74,10 @@ class MultiComponentBoundTrackParameters {
       ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
-    static_assert(std::is_same_v<BoundSymMatrix, covariance_t> ||
-                  std::is_same_v<std::optional<BoundSymMatrix>, covariance_t>);
-    if constexpr (std::is_same_v<BoundSymMatrix, covariance_t>) {
+    static_assert(
+        std::is_same_v<BoundSquareMatrix, covariance_t> ||
+        std::is_same_v<std::optional<BoundSquareMatrix>, covariance_t>);
+    if constexpr (std::is_same_v<BoundSquareMatrix, covariance_t>) {
       for (const auto& [weight, params, cov] : cmps) {
         m_components.push_back({weight, params, cov});
       }
@@ -100,7 +101,7 @@ class MultiComponentBoundTrackParameters {
   /// parameter.
   MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
                                      const BoundVector& params,
-                                     std::optional<BoundSymMatrix> cov,
+                                     std::optional<BoundSquareMatrix> cov,
                                      ParticleHypothesis particleHypothesis)
       : m_surface(std::move(surface)),
         m_particleHypothesis(particleHypothesis) {
@@ -130,7 +131,7 @@ class MultiComponentBoundTrackParameters {
     return std::make_pair(
         std::get<double>(m_components[i]),
         Parameters(m_surface, std::get<BoundVector>(m_components[i]),
-                   std::get<std::optional<BoundSymMatrix>>(m_components[i]),
+                   std::get<std::optional<BoundSquareMatrix>>(m_components[i]),
                    m_particleHypothesis));
   }
 

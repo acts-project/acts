@@ -72,7 +72,7 @@ void Acts::KalmanVertexUpdater::updatePosition(
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
   const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would use time
-  const ActsSymMatrix<5> trkParamWeight =
+  const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   // Vertex to be updated
@@ -84,7 +84,7 @@ void Acts::KalmanVertexUpdater::updatePosition(
       (momJac.transpose() * (trkParamWeight * momJac)).inverse();
 
   // G_b = G_k - G_k*B_k*W_k*B_k^(T)*G_k^T
-  ActsSymMatrix<5> gBmat =
+  ActsSquareMatrix<5> gBmat =
       trkParamWeight -
       trkParamWeight *
           (momJac * (matrixCache.momWeightInv * momJac.transpose())) *
@@ -121,7 +121,7 @@ double Acts::KalmanVertexUpdater::detail::trackParametersChi2(
   const ActsVector<5> trkParams = linTrack.parametersAtPCA.head<5>();
   const ActsVector<5> constTerm = linTrack.constantTerm.head<5>();
   // TODO we could use `linTrack.weightAtPCA` but only if we would use time
-  const ActsSymMatrix<5> trkParamWeight =
+  const ActsSquareMatrix<5> trkParamWeight =
       linTrack.covarianceAtPCA.block<5, 5>(0, 0).inverse();
 
   const ActsVector<5> jacVtx = posJac * matrixCache.newVertexPos;

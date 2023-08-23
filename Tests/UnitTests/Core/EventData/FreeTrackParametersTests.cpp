@@ -34,7 +34,7 @@ using namespace Acts::UnitLiterals;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
-const FreeSymMatrix cov = FreeSymMatrix::Identity();
+const FreeSquareMatrix cov = FreeSquareMatrix::Identity();
 
 void checkParameters(const FreeTrackParameters& params, const Vector4& pos4,
                      const Vector3& unitDir, double p, double q) {

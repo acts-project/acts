@@ -265,14 +265,14 @@ void reinitializeJacobians(FreeMatrix& freeTransportJacobian,
 namespace detail {
 
 Result<BoundState> boundState(
-    const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
+    const GeometryContext& geoContext, BoundSquareMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
     FreeVector& parameters, ParticleHypothesis particleHypothesis,
     bool covTransport, double accumulatedPath, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Covariance transport
-  std::optional<BoundSymMatrix> cov = std::nullopt;
+  std::optional<BoundSquareMatrix> cov = std::nullopt;
   if (covTransport) {
     // Initialize the jacobian from start local to final local
     jacobian = BoundMatrix::Identity();
@@ -283,7 +283,7 @@ Result<BoundState> boundState(
                                transportJacobian, derivatives, jacToGlobal,
                                parameters, surface, freeToBoundCorrection);
   }
-  if (covarianceMatrix != BoundSymMatrix::Zero()) {
+  if (covarianceMatrix != BoundSquareMatrix::Zero()) {
     cov = covarianceMatrix;
   }
 
@@ -300,7 +300,7 @@ Result<BoundState> boundState(
       jacobian, accumulatedPath);
 }
 
-CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
+CurvilinearState curvilinearState(BoundSquareMatrix& covarianceMatrix,
                                   BoundMatrix& jacobian,
                                   FreeMatrix& transportJacobian,
                                   FreeVector& derivatives,
@@ -311,7 +311,7 @@ CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
   const Vector3& direction = parameters.segment<3>(eFreeDir0);
 
   // Covariance transport
-  std::optional<BoundSymMatrix> cov = std::nullopt;
+  std::optional<BoundSquareMatrix> cov = std::nullopt;
   if (covTransport) {
     // Initialize the jacobian from start local to final local
     jacobian = BoundMatrix::Identity();
@@ -322,7 +322,7 @@ CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
                                      transportJacobian, derivatives,
                                      jacToGlobal, direction);
   }
-  if (covarianceMatrix != BoundSymMatrix::Zero()) {
+  if (covarianceMatrix != BoundSquareMatrix::Zero()) {
     cov = covarianceMatrix;
   }
 
@@ -341,7 +341,7 @@ CurvilinearState curvilinearState(BoundSymMatrix& covarianceMatrix,
 }
 
 void transportCovarianceToBound(
-    const GeometryContext& geoContext, BoundSymMatrix& boundCovariance,
+    const GeometryContext& geoContext, BoundSquareMatrix& boundCovariance,
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& freeParameters, const Surface& surface,
@@ -356,9 +356,9 @@ void transportCovarianceToBound(
   if (freeToBoundCorrection) {
     BoundToFreeMatrix startBoundToFinalFreeJacobian =
         freeTransportJacobian * boundToFreeJacobian;
-    FreeSymMatrix freeCovariance = startBoundToFinalFreeJacobian *
-                                   boundCovariance *
-                                   startBoundToFinalFreeJacobian.transpose();
+    FreeSquareMatrix freeCovariance = startBoundToFinalFreeJacobian *
+                                      boundCovariance *
+                                      startBoundToFinalFreeJacobian.transpose();
 
     auto transformer =
         detail::CorrectedFreeToBoundTransformer(freeToBoundCorrection);
@@ -373,7 +373,7 @@ void transportCovarianceToBound(
           surface, geoContext, boundParams);
 
       // 2. Update the bound covariance
-      boundCovariance = std::get<BoundSymMatrix>(correctedValue);
+      boundCovariance = std::get<BoundSquareMatrix>(correctedValue);
 
       correction = true;
     }
@@ -395,7 +395,7 @@ void transportCovarianceToBound(
                         freeParameters, surface);
 }
 
-void transportCovarianceToCurvilinear(BoundSymMatrix& boundCovariance,
+void transportCovarianceToCurvilinear(BoundSquareMatrix& boundCovariance,
                                       BoundMatrix& fullTransportJacobian,
                                       FreeMatrix& freeTransportJacobian,
                                       FreeVector& freeToPathDerivatives,

@@ -46,7 +46,7 @@ namespace Test {
 using BFieldType = ConstantBField;
 using EigenStepperType = EigenStepper<>;
 using AtlasStepperType = AtlasStepper;
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();

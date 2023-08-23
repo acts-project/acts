@@ -33,7 +33,7 @@ class GenericFreeTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
-  using CovarianceMatrix = FreeSymMatrix;
+  using CovarianceMatrix = FreeSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
 
   /// Construct from a parameters vector and particle charge.
@@ -177,7 +177,7 @@ class GenericFreeTrackParameters {
 
  private:
   FreeVector m_params;
-  std::optional<FreeSymMatrix> m_cov;
+  std::optional<FreeSquareMatrix> m_cov;
   // TODO use [[no_unique_address]] once we switch to C++20
   ParticleHypothesis m_particleHypothesis;
 

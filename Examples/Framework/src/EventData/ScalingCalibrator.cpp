@@ -154,7 +154,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
 
         Acts::ActsVector<Acts::eBoundSize> fpar = E * meas.parameters();
 
-        Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
+        Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
             E * meas.covariance() * E.transpose();
 
         fpar[Acts::eBoundLoc0] += ct.x_offset;
@@ -166,7 +166,7 @@ void ActsExamples::ScalingCalibrator::calibrate(
             std::remove_reference_t<decltype(meas)>::size();
         std::array<Acts::BoundIndices, kSize> indices = meas.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;
-        Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
+        Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
 
         Acts::Measurement<Acts::BoundIndices, kSize> cmeas(
             Acts::SourceLink{idxSourceLink}, indices, cpar, ccov);

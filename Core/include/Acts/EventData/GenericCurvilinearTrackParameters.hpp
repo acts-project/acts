@@ -32,7 +32,7 @@ class GenericCurvilinearTrackParameters
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
-  using CovarianceMatrix = BoundSymMatrix;
+  using CovarianceMatrix = BoundSquareMatrix;
   using ParticleHypothesis = particle_hypothesis_t;
 
   /// Construct from four-position, direction, and qOverP.

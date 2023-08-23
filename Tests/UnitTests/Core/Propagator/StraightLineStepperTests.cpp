@@ -42,7 +42,7 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Jacobian = BoundMatrix;
 
 /// @brief Simplified propagator state
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   double time2 = 7.5;
   double absMom2 = 8.5;
   double charge2 = 1.;
-  BoundSymMatrix cov2 = 8.5 * Covariance::Identity();
+  BoundSquareMatrix cov2 = 8.5 * Covariance::Identity();
   CurvilinearTrackParameters cp2(makeVector4(pos2, time2), dir2,
                                  charge2 / absMom2, cov2,
                                  ParticleHypothesis::pion());

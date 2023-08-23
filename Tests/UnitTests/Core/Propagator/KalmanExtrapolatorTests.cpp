@@ -46,7 +46,7 @@ namespace Acts {
 namespace Test {
 
 using Jacobian = BoundMatrix;
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext tgContext = GeometryContext();
