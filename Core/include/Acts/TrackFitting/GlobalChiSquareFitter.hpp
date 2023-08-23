@@ -150,7 +150,7 @@ struct Gx2FitterOptions {
   FreeToBoundCorrection freeToBoundCorrection;
 
   /// Max number of iterations during the fit
-  const size_t nUpdateMax = 5;
+  size_t nUpdateMax = 5;
 };
 
 template <typename traj_t>
@@ -299,7 +299,7 @@ class Gx2Fitter {
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
                     const Logger& /*logger*/) const {
-      //      assert(result.fittedStates && "No MultiTrajectory set");
+      assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
         return;
@@ -323,8 +323,9 @@ class Gx2Fitter {
       //      std::string direction = state.stepping.navDir.toString();
       if (surface != nullptr) {
         ++result.surfaceCount;
-        std::cout << "Measurement surface " << surface->geometryId()
-                  << " detected." << std::endl;
+        ACTS_VERBOSE("Measurement surface " << surface->geometryId()
+                                            << " detected.");
+
         // check if measurement surface
         auto sourcelink_it = inputMeasurements->find(surface->geometryId());
 
@@ -349,8 +350,6 @@ class Gx2Fitter {
 
           // now get track state proxy back
           auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
-          //          auto trackStateProxy =
-          //          fittedStates.getTrackState(result.lastTrackIndex);
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
           // assign the source link to the track state
           trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
@@ -372,12 +371,10 @@ class Gx2Fitter {
                   .template calibratedCovariance<measdimPlaceholder>();
           // calculate residuals and return with covariances and jacobians
           ActsVector<2> residual;
-          //          std::vector<ActsScalar> covDiagonal;
           for (long i = 0; i < measurement.size(); i++) {
             residual[i] = measurement[i] - predicted[i];
-            //            covDiagonal.push_back(measurement[i] - predicted[i]);
           }
-          std::cout << "dbgMeasurement: " << measurement << std::endl;
+          ACTS_VERBOSE("Measurement in Actor:\n" << measurement);
           result.collectorResiduals.push_back(residual);
           result.collectorCovariance.push_back(covarianceMeasurement);
 
@@ -394,8 +391,7 @@ class Gx2Fitter {
       }
 
       if (result.surfaceCount > 11) {
-        std::cout << "dbgActor: finish due to limit. Result might be garbage."
-                  << std::endl;
+        ACTS_WARNING("Actor: finish due to limit. Result might be garbage.");
         result.finished = true;
       }
     }
@@ -462,12 +458,7 @@ class Gx2Fitter {
       auto geoId = sl.geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
     }
-    std::cout << "inputMeasurements.size() = " << inputMeasurements.size()
-              << std::endl;
-    //    for (const auto &p : inputMeasurements) {
-    //      std::cout << "inputMeasurements.map-loop = " <<
-    //      p.second.geometryId() << std::endl;
-    //    }
+    ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
 
     /// Fully understand Aborter, Actor, Result later
     // Create the ActionList and AbortList
@@ -487,21 +478,20 @@ class Gx2Fitter {
     BoundMatrix aMatrix = BoundMatrix::Zero();
     BoundVector bVector = BoundVector::Zero();
 
-    std::cout << "params:\n" << params << std::endl;
+    ACTS_VERBOSE("params:\n" << params);
 
     /// Actual Fitting /////////////////////////////////////////////////////////
-    std::cout << "\nStart to iterate" << std::endl;
+    ACTS_DEBUG("Start to iterate");
 
     // Iterate the fit and improve result. Abort after n steps or after
     // convergence
     for (size_t nUpdate = 0; nUpdate < gx2fOptions.nUpdateMax; nUpdate++) {
-      std::cout << "\nnUpdate = " << nUpdate + 1 << "/"
-                << gx2fOptions.nUpdateMax << "\n"
-                << std::endl;
+      ACTS_VERBOSE("nUpdate = " << nUpdate + 1 << "/"
+                                << gx2fOptions.nUpdateMax);
 
       // update params
       params.parameters() += deltaParams;
-      std::cout << "updated params:\n" << params << std::endl;
+      ACTS_VERBOSE("updated params:\n" << params);
 
       // set up propagator and co
       Acts::GeometryContext geoCtx = gx2fOptions.geoContext;
@@ -511,6 +501,7 @@ class Gx2Fitter {
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
+      gx2fActor.actorLogger = m_actorLogger.get();
 
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>
@@ -528,29 +519,12 @@ class Gx2Fitter {
       auto& propRes = *result;
       auto gx2fResult = std::move(propRes.template get<GX2FResult>());
 
-      //      std::cout << "gx2fResult.collectorResiduals.size() = "
-      //                << gx2fResult.collectorResiduals.size() << std::endl;
-      //      for (auto vec : gx2fResult.collectorResiduals) {
-      //        for (auto s : vec) {
-      //          std::cout << s << ", ";
-      //        }
-      //      }
-      //      std::cout << std::endl;
-
-      //      std::cout << "gx2fResult.collectorCovariance.size() = "
-      //                << gx2fResult.collectorCovariance.size() << std::endl;
-      //      for (auto s : gx2fResult.collectorCovariance) {
-      //        std::cout << s(0, 0) << ", " << s(0, 1) << ", " << s(1, 0) << ",
-      //        "
-      //                  << s(1, 1) << "\n";
-      //      }
-      //      std::cout << std::endl;
-
-      //            std::cout << "gx2fResult.collectorJacobians.size() = " <<
-      //            gx2fResult.collectorJacobians.size() << std::endl;
-      //            for (auto s : gx2fResult.collectorJacobians){
-      //              std::cout << s << "\n" << std::endl;
-      //            }
+      ACTS_VERBOSE("gx2fResult.collectorResiduals.size() = "
+                   << gx2fResult.collectorResiduals.size());
+      ACTS_VERBOSE("gx2fResult.collectorCovariance.size() = "
+                   << gx2fResult.collectorCovariance.size());
+      ACTS_VERBOSE("gx2fResult.collectorJacobians.size() = "
+                   << gx2fResult.collectorJacobians.size());
 
       chi2sum = 0;
       aMatrix = BoundMatrix::Zero();
@@ -597,11 +571,10 @@ class Gx2Fitter {
         deltaParams(idp, 0) = deltaParamsReduced(idp, 0);
       }
 
-      // TODO use Acts logging for this
-      std::cout << "chi2sum = " << chi2sum << std::endl;
-      std::cout << "aMatrix:\n" << aMatrix << std::endl;
-      std::cout << "bVector:\n" << bVector << std::endl;
-      std::cout << "deltaParams:\n" << deltaParams << std::endl;
+      ACTS_VERBOSE("chi2sum = " << chi2sum);
+      ACTS_VERBOSE("aMatrix:\n" << aMatrix);
+      ACTS_VERBOSE("bVector:\n" << bVector);
+      ACTS_VERBOSE("deltaParams:\n" << deltaParams);
 
       // TODO check delta params and abort
       // similar to:
@@ -609,7 +582,7 @@ class Gx2Fitter {
       //   break;
       // }
     }
-    std::cout << "Finished to iterate" << std::endl;
+    ACTS_DEBUG("Finished to iterate");
     /// Finish Fitting /////////////////////////////////////////////////////////
 
     // Calculate covariance of the fitted parameters with inverse of [a]

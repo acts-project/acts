@@ -30,12 +30,16 @@
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <vector>
 
 #include "FitterTestsCommon.hpp"
 
 using namespace Acts::UnitLiterals;
+
+Acts::Logging::Level logLevel = Acts::Logging::VERBOSE;
+const auto gx2fLogger = Acts::getDefaultLogger("Gx2f", logLevel);
 
 namespace Acts {
 namespace Test {
@@ -183,7 +187,8 @@ BOOST_AUTO_TEST_SUITE(Gx2fTest)
 // This test checks if the call to the fitter works and no errors occur in the
 // framework, without fitting and updating any parameters
 BOOST_AUTO_TEST_CASE(NoFit) {
-  std::cout << "\n\n##### Start test case NoFit #####" << std::endl;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_INFO("*** Test: NoFit -- Start");
 
   // Context objects
   Acts::GeometryContext geoCtx;
@@ -213,7 +218,7 @@ BOOST_AUTO_TEST_CASE(NoFit) {
 
   using Gx2Fitter =
       Experimental::Gx2Fitter<SimPropagator, VectorMultiTrajectory>;
-  Gx2Fitter Fitter(simPropagator);
+  Gx2Fitter Fitter(simPropagator, gx2fLogger->clone());
 
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
@@ -242,11 +247,12 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   BOOST_CHECK_EQUAL(track.parameters(), startParametersFit.parameters());
   BOOST_CHECK_EQUAL(track.covariance(), BoundMatrix::Identity());
 
-  std::cout << "##### Finished test case NoFit #####" << std::endl;
+  ACTS_INFO("*** Test: NoFit -- Finish");
 }
 
 BOOST_AUTO_TEST_CASE(Fit5Iterations) {
-  std::cout << "\n\n##### Start test case Fit5Iterations #####" << std::endl;
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_INFO("*** Test: Fit5Iterations -- Start");
 
   // Create a test context
   GeometryContext tgContext = GeometryContext();
@@ -255,7 +261,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   const size_t nSurfaces = 5;
   detector.geometry = makeToyDetector(tgContext, nSurfaces);
 
-  std::cout << "\n*** Go to propagator ***\n" << std::endl;
+  ACTS_DEBUG("Go to propagator");
 
   auto parametersMeasurements = makeParameters();
   auto startParametersFit = makeParameters(10_mm, 10_mm, 10_mm, 42_ns,
@@ -280,16 +286,14 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   auto measurements = createMeasurements(
       simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
   auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
-  std::cout << "sourceLinks.size() = " << sourceLinks.size() << std::endl;
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
 
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
 
-  std::cout << "\n*** Start fitting ***\n" << std::endl;
+  ACTS_DEBUG("Start fitting");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
 
-  std::cout << "\n*** startParameter unsmeared: ***\n"
-            << parametersMeasurements << std::endl;
-  std::cout << "\n*** startParameter fit: ***\n"
-            << startParametersFit << std::endl;
   const Surface* rSurface = &parametersMeasurements.referenceSurface();
 
   Navigator::Config cfg{detector.geometry};
@@ -306,8 +310,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
 
   using Gx2Fitter =
       Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
-
-  Gx2Fitter Fitter(rPropagator);
+  Gx2Fitter Fitter(rPropagator, gx2fLogger->clone());
 
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -344,7 +347,7 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
-  std::cout << "##### Finished test case Fit5Iterations #####" << std::endl;
+  ACTS_INFO("*** Test: Fit5Iterations -- Finish");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
