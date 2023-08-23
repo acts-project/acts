@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   CHECK_CLOSE_ABS(volMatInt.qOverP, stepper.qOverP(state.stepping), 1e-6);
   BOOST_CHECK_EQUAL(volMatInt.mass, state.stepping.particleHypothesis.mass());
   BOOST_CHECK_EQUAL(volMatInt.absPdg,
-                    state.stepping.particleHypothesis.absPdg());
+                    state.stepping.particleHypothesis.absolutePdg());
   BOOST_CHECK_EQUAL(volMatInt.performCovarianceTransport,
                     state.stepping.covTransport);
   BOOST_CHECK_EQUAL(volMatInt.navDir, state.options.direction);

@@ -183,16 +183,16 @@ class MultiComponentBoundTrackParameters {
 
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
-  Vector3 unitDirection() const {
+  Vector3 direction() const {
     return reduce([](const Parameters& p) { return p.direction(); })
         .normalized();
   }
 
   /// Phi direction.
-  Scalar phi() const { return VectorHelpers::phi(unitDirection()); }
+  Scalar phi() const { return VectorHelpers::phi(direction()); }
 
   /// Theta direction.
-  Scalar theta() const { return VectorHelpers::theta(unitDirection()); }
+  Scalar theta() const { return VectorHelpers::theta(direction()); }
 
   /// Charge over momentum.
   Scalar qOverP() const { return get<eBoundQOverP>(); }

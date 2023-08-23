@@ -71,10 +71,6 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
                                ParticleHypothesis::pion());
   BoundTrackParameters params3(perigeeSurface, paramVec3, covMat,
                                ParticleHypothesis::pion());
-  BoundTrackParameters params4(perigeeSurface, paramVec4, covMat,
-                               ParticleHypothesis::pion());
-  BoundTrackParameters params5(perigeeSurface, paramVec5, covMat,
-                               ParticleHypothesis::pion());
 
   // Empty map
   AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;

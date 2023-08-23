@@ -135,14 +135,14 @@ class GenericFreeTrackParameters {
   Scalar time() const { return m_params[eFreeTime]; }
 
   /// Phi direction.
-  Scalar phi() const { return phi(unitDirection()); }
+  Scalar phi() const { return phi(direction()); }
   /// Theta direction.
-  Scalar theta() const { return theta(unitDirection()); }
+  Scalar theta() const { return theta(direction()); }
   /// Charge over momentum.
   Scalar qOverP() const { return m_params[eFreeQOverP]; }
 
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
-  Vector3 unitDirection() const {
+  Vector3 direction() const {
     return m_params.segment<3>(eFreeDir0).normalized();
   }
   /// Absolute momentum.
@@ -163,7 +163,7 @@ class GenericFreeTrackParameters {
     return (transverseMagnitude / magnitude) * absoluteMomentum();
   }
   /// Momentum three-vector.
-  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
+  Vector3 momentum() const { return absoluteMomentum() * direction(); }
 
   /// Particle electric charge.
   Scalar charge() const {

@@ -405,22 +405,21 @@ struct GenericDenseEnvironmentExtension {
 
     auto particleHypothesis = stepper.particleHypothesis(state.stepping);
     auto mass = particleHypothesis.mass();
-    auto absPdg = particleHypothesis.absPdg();
+    auto absPdg = particleHypothesis.absolutePdg();
+    auto absQ = particleHypothesis.absoluteCharge();
 
     energy[0] = hypot(initialMomentum, mass);
     // use unit length as thickness to compute the energy loss per unit length
     Acts::MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
-      g = -computeEnergyLossMean(
-          slab, state.options.absPdgCode, state.options.mass,
-          static_cast<double>(qop[0]), state.stepping.absCharge);
+      g = -computeEnergyLossMean(slab, absPdg, mass,
+                                 static_cast<double>(qop[0]), absQ);
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
-      g = -computeEnergyLossMode(
-          slab, state.options.absPdgCode, state.options.mass,
-          static_cast<double>(qop[0]), state.stepping.absCharge);
+      g = -computeEnergyLossMode(slab, absPdg, mass,
+                                 static_cast<double>(qop[0]), absQ);
     }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
@@ -431,13 +430,11 @@ struct GenericDenseEnvironmentExtension {
       if (state.options.includeGgradient) {
         if (state.options.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
-              slab, state.options.absPdgCode, state.options.mass,
-              static_cast<double>(qop[0]), state.stepping.absCharge);
+              slab, absPdg, mass, static_cast<double>(qop[0]), absQ);
         } else {
           // TODO path length dependence; see above
           dgdqopValue = deriveEnergyLossModeQOverP(
-              slab, state.options.absPdgCode, state.options.mass,
-              static_cast<double>(qop[0]), state.stepping.absCharge);
+              slab, absPdg, mass, static_cast<double>(qop[0]), absQ);
         }
       }
       // Calculate term for later error propagation
