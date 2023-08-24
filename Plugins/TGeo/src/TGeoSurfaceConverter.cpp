@@ -96,8 +96,8 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
         double gradPhi1 = tubeSeg->GetPhi1();
         double gradPhi2 = tubeSeg->GetPhi2();
         if (not(gradPhi1 == 0. and gradPhi2 == 360.)) {
-          double phi1 = toRadian(gradPhi1 - 180.);
-          double phi2 = toRadian(gradPhi2 - 180.);
+          double phi1 = toRadian(gradPhi1);
+          double phi2 = toRadian(gradPhi2);
           if (not boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
                 "TGeoShape -> CylinderSurface (sectorial): can only be "
