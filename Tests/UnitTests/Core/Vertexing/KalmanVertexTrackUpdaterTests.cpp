@@ -160,10 +160,13 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
             .value();
 
     // Create TrackAtVertex
-    TrackAtVertex<BoundTrackParameters> trkAtVtx(&params, 0.);
+    TrackAtVertex<BoundTrackParameters> trkAtVtx(0., params, &params);
 
     // Set linearized state of trackAtVertex
     trkAtVtx.linearizedState = linTrack;
+
+    // Copy parameters for later comparison of old and new version
+    auto fittedParamsCopy = trkAtVtx.fittedParams;
 
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
@@ -172,9 +175,28 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexTrackUpdater::update<BoundTrackParameters>(trkAtVtx, vtx);
 
-    // Momentum should have changed
-    BOOST_CHECK_NE(paramVec.segment<3>(eBoundPhi),
-                   trkAtVtx.fittedMomentum.value().momentum);
+    // The old distance
+    double oldDistance =
+        ip3dEst.calculate3dDistance(geoContext, fittedParamsCopy, vtxPos, state)
+            .value();
+
+    // The new distance after update
+    double newDistance =
+        ip3dEst
+            .calculate3dDistance(geoContext, trkAtVtx.fittedParams, vtxPos,
+                                 state)
+            .value();
+    if (debug) {
+      std::cout << "Old distance: " << oldDistance << std::endl;
+      std::cout << "New distance: " << newDistance << std::endl;
+    }
+
+    // Parameters should have changed
+    BOOST_CHECK_NE(fittedParamsCopy, trkAtVtx.fittedParams);
+
+    // After update, track should be closer to the vertex
+    BOOST_CHECK(newDistance < oldDistance);
+
   }  // end for loop
 
 }  // end test case
