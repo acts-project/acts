@@ -211,18 +211,22 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test) {
        iTrack++) {
     // Index of current vertex
     int vtxIdx = (int)(iTrack / nTracksPerVtx);
-    state.vtxInfoMap[&vtxList[vtxIdx]].trackLinks.push_back(&allTracks[iTrack]);
-    state.tracksAtVerticesMap.insert(std::make_pair(
-        std::make_pair(&allTracks[iTrack], &vtxList[vtxIdx]),
-        TrackAtVertex<BoundTrackParameters>(&allTracks[iTrack], 1.)));
+    state.vtxInfoMap[&(vtxList[vtxIdx])].trackLinks.push_back(
+        &(allTracks[iTrack]));
+    state.tracksAtVerticesMap.insert(
+        std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList[vtxIdx])),
+                       TrackAtVertex<BoundTrackParameters>(
+                           1., allTracks[iTrack], &(allTracks[iTrack]))));
 
     // Use first track also for second vertex to let vtx1 and vtx2
     // share this track
     if (iTrack == 0) {
-      state.vtxInfoMap[&vtxList.at(1)].trackLinks.push_back(&allTracks[iTrack]);
-      state.tracksAtVerticesMap.insert(std::make_pair(
-          std::make_pair(&allTracks[iTrack], &vtxList.at(1)),
-          TrackAtVertex<BoundTrackParameters>(&allTracks[iTrack], 1.)));
+      state.vtxInfoMap[&(vtxList.at(1))].trackLinks.push_back(
+          &(allTracks[iTrack]));
+      state.tracksAtVerticesMap.insert(
+          std::make_pair(std::make_pair(&(allTracks[iTrack]), &(vtxList.at(1))),
+                         TrackAtVertex<BoundTrackParameters>(
+                             1., allTracks[iTrack], &(allTracks[iTrack]))));
     }
   }
 
@@ -483,7 +487,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     vtxInfo1.trackLinks.push_back(&trk);
     state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(&trk, &vtx1),
-                       TrackAtVertex<BoundTrackParameters>(&trk, 1.5)));
+                       TrackAtVertex<BoundTrackParameters>(1.5, trk, &trk)));
   }
 
   // Prepare second vertex
@@ -510,7 +514,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     vtxInfo2.trackLinks.push_back(&trk);
     state.tracksAtVerticesMap.insert(
         std::make_pair(std::make_pair(&trk, &vtx2),
-                       TrackAtVertex<BoundTrackParameters>(&trk, 1.5)));
+                       TrackAtVertex<BoundTrackParameters>(1.5, trk, &trk)));
   }
 
   state.vtxInfoMap[&vtx1] = std::move(vtxInfo1);
@@ -537,7 +541,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     std::cout << "Vertex 1, position: " << vtx1Pos << std::endl;
     std::cout << "Vertex 1, covariance: " << vtx1Cov << std::endl;
     // for (auto t : vtx1Trks) {
-    //   std::cout << "\tTrackWeight:" << t.weight << std::endl;
+    //   std::cout << "\tTrackWeight:" << t.trackWeight << std::endl;
     // }
     std::cout << "Vertex 1, chi2: " << vtx1FQ.first << std::endl;
     std::cout << "Vertex 1, ndf: " << vtx1FQ.second << std::endl;
@@ -546,7 +550,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
     std::cout << "Vertex 2, position: " << vtx2Pos << std::endl;
     std::cout << "Vertex 2, covariance: " << vtx2Cov << std::endl;
     // for (auto t : vtx2Trks) {
-    //   std::cout << "\tTrackWeight:" << t.weight << std::endl;
+    //   std::cout << "\tTrackWeight:" << t.trackWeight << std::endl;
     // }
     std::cout << "Vertex 2, chi2: " << vtx2FQ.first << std::endl;
     std::cout << "Vertex 2, ndf: " << vtx2FQ.second << std::endl;
@@ -580,7 +584,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   CHECK_CLOSE_ABS(vtx1Pos, expVtx1Pos, 0.001_mm);
   CHECK_CLOSE_ABS(vtx1Cov, expVtx1Cov, 0.001_mm);
   for (int i = 0; i < expVtx1TrkWeights.size(); i++) {
-    // CHECK_CLOSE_ABS(vtx1Trks[i].weight, expVtx1TrkWeights[i], 0.001);
+    // CHECK_CLOSE_ABS(vtx1Trks[i].trackWeight, expVtx1TrkWeights[i], 0.001);
   }
   CHECK_CLOSE_ABS(vtx1FQ.first, expVtx1chi2, 0.001);
   CHECK_CLOSE_ABS(vtx1FQ.second, expVtx1ndf, 0.001);
@@ -589,7 +593,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   CHECK_CLOSE_ABS(vtx2Pos, expVtx2Pos, 0.001_mm);
   CHECK_CLOSE_ABS(vtx2Cov, expVtx2Cov, 0.001_mm);
   for (int i = 0; i < expVtx2TrkWeights.size(); i++) {
-    // CHECK_CLOSE_ABS(vtx2Trks[i].weight, expVtx2TrkWeights[i], 0.001);
+    // CHECK_CLOSE_ABS(vtx2Trks[i].trackWeight, expVtx2TrkWeights[i], 0.001);
   }
   CHECK_CLOSE_ABS(vtx2FQ.first, expVtx2chi2, 0.001);
   CHECK_CLOSE_ABS(vtx2FQ.second, expVtx2ndf, 0.001);
