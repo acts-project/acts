@@ -14,6 +14,8 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <numeric>
+
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
