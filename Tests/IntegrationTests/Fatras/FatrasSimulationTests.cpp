@@ -193,7 +193,7 @@ BOOST_DATA_TEST_CASE(FatrasSimulation, dataset, pdg, phi, eta, p,
     const auto pid = ActsFatras::Barcode().setVertexPrimary(42).setParticle(i);
     const auto particle =
         ActsFatras::Particle(pid, pdg)
-            .setDirection(Acts::makeDirectionUnitFromPhiEta(phi, eta))
+            .setDirection(Acts::makeDirectionFromPhiEta(phi, eta))
             .setAbsoluteMomentum(p);
     input.push_back(std::move(particle));
   }
