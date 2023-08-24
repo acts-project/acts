@@ -125,7 +125,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
         [](const auto& measurement) {
           auto expander = measurement.expander();
           Acts::BoundVector par = expander * measurement.parameters();
-          Acts::BoundSymMatrix cov =
+          Acts::BoundSquareMatrix cov =
               expander * measurement.covariance() * expander.transpose();
           return std::make_pair(par, cov);
         },

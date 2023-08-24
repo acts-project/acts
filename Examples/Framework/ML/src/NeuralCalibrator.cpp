@@ -101,7 +101,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
         auto E = measurement.expander();
         auto P = measurement.projector();
         Acts::ActsVector<Acts::eBoundSize> fpar = E * measurement.parameters();
-        Acts::ActsSymMatrix<Acts::eBoundSize> fcov =
+        Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
             E * measurement.covariance() * E.transpose();
 
         input[iInput++] = fpar[Acts::eBoundLoc0];
@@ -147,7 +147,7 @@ void ActsExamples::NeuralCalibrator::calibrate(
             std::remove_reference_t<decltype(measurement)>::size();
         std::array<Acts::BoundIndices, kSize> indices = measurement.indices();
         Acts::ActsVector<kSize> cpar = P * fpar;
-        Acts::ActsSymMatrix<kSize> ccov = P * fcov * P.transpose();
+        Acts::ActsSquareMatrix<kSize> ccov = P * fcov * P.transpose();
 
         Acts::SourceLink sl{idxSourceLink};
 

@@ -80,6 +80,7 @@ struct AutodiffExtensionWrapper {
     AutodiffFreeVector pars;
     AutodiffFreeVector derivative;
     double q = 0;
+    double absCharge = 0;
     bool covTransport = false;
   };
 
@@ -120,6 +121,7 @@ struct AutodiffExtensionWrapper {
                              state.navigation};
 
     fstate.stepping.q = stepper.charge(state.stepping);
+    fstate.stepping.absCharge = state.stepping.absCharge;
 
     // Init dependent values for autodiff
     AutodiffFreeVector initial_params;

@@ -33,10 +33,10 @@ using ConstParameters = Eigen::Map<const BoundVector>;
 using ConstCovariance = Eigen::Map<const BoundMatrix>;
 
 using Measurement = Eigen::Map<ActsVector<2>>;
-using MeasurementCovariance = Eigen::Map<ActsSymMatrix<2>>;
+using MeasurementCovariance = Eigen::Map<ActsSquareMatrix<2>>;
 
 using ConstMeasurement = Eigen::Map<const ActsVector<2>>;
-using ConstMeasurementCovariance = Eigen::Map<const ActsSymMatrix<2>>;
+using ConstMeasurementCovariance = Eigen::Map<const ActsSquareMatrix<2>>;
 
 using DynamicMeasurement =
     Eigen::Map<Eigen::Matrix<Covariance::Scalar, Eigen::Dynamic, 1,

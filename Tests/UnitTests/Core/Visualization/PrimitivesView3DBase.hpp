@@ -76,7 +76,7 @@ static inline std::string run(IVisualization3D& helper) {
   ViewConfig errorVis({250, 0, 0});
   errorVis.lineThickness = 0.025;
 
-  SymMatrix2 cov = SymMatrix2::Identity();
+  SquareMatrix2 cov = SquareMatrix2::Identity();
   double s0 = 0.75;
   double s1 = 1.99;
   double r01 = 0.78;
@@ -92,7 +92,7 @@ static inline std::string run(IVisualization3D& helper) {
 
   // Error visualization: angular ---------------------------------------------
   Acts::GeometryView3D::drawSurface(helper, *plane, gctx);
-  cov = SymMatrix2::Identity();
+  cov = SquareMatrix2::Identity();
   s0 = 0.08;
   s1 = 0.035;
   r01 = 0.3;

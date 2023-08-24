@@ -59,7 +59,7 @@ namespace Test {
 
 using namespace Acts::UnitLiterals;
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
