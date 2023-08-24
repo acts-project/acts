@@ -35,7 +35,7 @@ class DD4hepDetectorElement;
 ///
 class DD4hepDetectorSurfaceFactory {
  public:
-  /// Collect the senstive surface & detector element
+  /// Collect the sensitive surface & detector element
   using DD4hepSensitiveSurface =
       std::tuple<std::shared_ptr<DD4hepDetectorElement>,
                  std::shared_ptr<Surface>>;
@@ -56,7 +56,7 @@ class DD4hepDetectorSurfaceFactory {
     std::vector<DD4hepPassiveSurface> passiveSurfaces;
     /// The created Proxies for the support surfaces
     std::vector<DD4hepPassiveSurfaceProxy> passiveSurfaceProxies;
-    /// matching and conversion statics: surfaces
+    /// matching and conversion statistics: surfaces
     std::size_t convertedSurfaces = 0;
     /// matching and conversion statistics: materials
     std::size_t convertedMaterials = 0;
@@ -107,7 +107,7 @@ class DD4hepDetectorSurfaceFactory {
   void recursiveConstruct(Cache& cache, const dd4hep::DetElement& dd4hepElement,
                           int level);
 
-  /// Method to conver a single senstive detector element
+  /// Method to convert a single sensitive detector element
   ///
   /// @param dd4hepElement the detector element
   ///
@@ -115,7 +115,7 @@ class DD4hepDetectorSurfaceFactory {
   DD4hepSensitiveSurface constructSensitiveElement(
       const dd4hep::DetElement& dd4hepElement) const;
 
-  /// Method to conver a single senstive detector element
+  /// Method to convert a single sensitive detector element
   ///
   /// @param options the factory creation option
   /// @param dd4hepElement the detector element

@@ -31,7 +31,7 @@ class DigitizationModule;
 /// The full geometrical information is provided by the TGeoDetectorElement.
 /// The DD4hepDetectorElement extends the TGeoDetectorElement by containing a
 /// segmentation for the readout.
-/// @todo what if shape conversion failes? add implementation of more than one
+/// @todo what if shape conversion fails? add implementation of more than one
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what
 /// if not used with DD4hep?
@@ -55,7 +55,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// capital and lower case
   /// characters :
   /// 	- capital      -> positive orientation of the axis
-  ///		- lower case   -> negative oriantation of the axis
+  ///		- lower case   -> negative orientation of the axis
   ///
   ///
   /// Example options are:

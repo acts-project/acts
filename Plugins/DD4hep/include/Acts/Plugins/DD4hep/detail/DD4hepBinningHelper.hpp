@@ -52,7 +52,7 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
   // Set the surface binninng parameter to true
   variantParams.set<bool>(bname, true);
   for (const auto &bv : bvals) {
-    // Gather the number of bins, 0 indicates vairable binning
+    // Gather the number of bins, 0 indicates variable binning
     int nBins =
         Acts::detail::getAttrValueOr<int>(xmlBinning, std::string("n" + bv), 0);
     // Gather the bin expansion parameter, expansion of 0 is default
