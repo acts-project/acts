@@ -18,14 +18,14 @@
 namespace Acts {
 
 template <typename traj_t>
-void voidKalmanCalibrator(const GeometryContext& /*gctx*/,
+void voidFitterCalibrator(const GeometryContext& /*gctx*/,
                           const SourceLink& /*sourceLink*/,
                           typename traj_t::TrackStateProxy /*trackState*/) {
-  throw std::runtime_error{"VoidKalmanCalibrator should not ever execute"};
+  throw std::runtime_error{"voidFitterCalibrator should not ever execute"};
 }
 
 template <typename traj_t>
-Result<void> voidKalmanUpdater(const GeometryContext& /*gctx*/,
+Result<void> voidFitterUpdater(const GeometryContext& /*gctx*/,
                                typename traj_t::TrackStateProxy trackState,
                                Direction /*direction*/,
                                const Logger& /*logger*/) {
@@ -35,7 +35,7 @@ Result<void> voidKalmanUpdater(const GeometryContext& /*gctx*/,
 }
 
 template <typename traj_t>
-Result<void> voidKalmanSmoother(const GeometryContext& /*gctx*/,
+Result<void> voidFitterSmoother(const GeometryContext& /*gctx*/,
                                 traj_t& trackStates, size_t entry,
                                 const Logger& /*logger*/) {
   trackStates.applyBackwards(entry, [](auto trackState) {

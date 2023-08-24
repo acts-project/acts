@@ -33,7 +33,7 @@
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
-#include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
+#include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -86,9 +86,9 @@ struct KalmanFitterExtensions {
 
   /// Default constructor which connects the default void components
   KalmanFitterExtensions() {
-    calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
-    updater.template connect<&voidKalmanUpdater<traj_t>>();
-    smoother.template connect<&voidKalmanSmoother<traj_t>>();
+    calibrator.template connect<&voidFitterCalibrator<traj_t>>();
+    updater.template connect<&voidFitterUpdater<traj_t>>();
+    smoother.template connect<&voidFitterSmoother<traj_t>>();
     outlierFinder.template connect<&voidOutlierFinder<traj_t>>();
     reverseFilteringLogic
         .template connect<&voidReverseFilteringLogic<traj_t>>();
