@@ -111,9 +111,18 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
 BOOST_AUTO_TEST_CASE(test_cantor_pair_functions) {
   int a = 345;
   int b = 23;
-  const auto [aa, bb] = CantorPair(a, b).inverse();
+  // Use non-sorted cantor pair to make this work
+  const auto [aa, bb] = CantorPair(a, b, false).inverse();
   BOOST_CHECK(a == aa);
   BOOST_CHECK(b == bb);
+}
+
+BOOST_AUTO_TEST_CASE(test_cantor_pair_sorted) {
+  int a = 345;
+  int b = 23;
+  CantorPair c1(a, b);
+  CantorPair c2(b, a);
+  BOOST_CHECK(c1.value() == c2.value());
 }
 
 const int emb_dim = 3;
