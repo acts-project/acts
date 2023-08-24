@@ -11,7 +11,7 @@
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "Acts/Plugins/DD4hep/detail/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
@@ -23,6 +23,8 @@
 
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
+
+using namespace Acts::detail;
 
 std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,

@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
@@ -62,5 +64,57 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
              py::overload_cast<DD4hep::DD4hepGeometryService::Config,
                                std::shared_ptr<const Acts::IMaterialDecorator>>(
                  &DD4hep::DD4hepDetector::finalize));
+  }
+
+  {
+    py::class_<Acts::DD4hepDetectorElement,
+               std::shared_ptr<Acts::DD4hepDetectorElement>>(
+        m, "DD4hepDetectorElement");
+  }
+
+  {
+    /// This method allows to test conversion of DD4hep surfaces to Acts
+    /// surfaces as a first check for detector conversion
+    m.def("convertSurfaces", [](const std::vector<std::string>& xmlFileNames,
+                                Acts::Logging::Level logLevel) {
+      ActsExamples::DD4hep::DD4hepGeometryService::Config cfg;
+      cfg.dd4hepLogLevel = logLevel;
+      cfg.xmlFileNames = xmlFileNames;
+      cfg.name = "DD4hepConvertSurfacesTestService";
+
+      ActsExamples::DD4hep::DD4hepGeometryService dd4HepService(cfg);
+      auto dd4HepGeometry = dd4HepService.geometry();
+
+      Acts::DD4hepDetectorSurfaceFactory::Cache cache;
+      Acts::DD4hepDetectorSurfaceFactory dd4HepSurfaceFactory(
+          Acts::getDefaultLogger("DD4hepDetectorSurfaceFactory", logLevel));
+      dd4HepSurfaceFactory.construct(cache, dd4HepGeometry);
+
+      // Capture the sensitive elements and the surfaces
+      using Elements =
+          std::vector<std::shared_ptr<Acts::DD4hepDetectorElement>>;
+      Elements detectorElements;
+      detectorElements.reserve(cache.sensitiveSurfaces.size());
+      using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
+      Surfaces surfaces;
+      surfaces.reserve(cache.sensitiveSurfaces.size());
+      std::for_each(cache.sensitiveSurfaces.begin(),
+                    cache.sensitiveSurfaces.end(), [&](const auto& sensitive) {
+                      detectorElements.push_back(std::get<0>(sensitive));
+                      surfaces.push_back(std::get<1>(sensitive));
+                    });
+
+      // Capture the passive surfaces
+      Surfaces passiveSurfaces;
+      passiveSurfaces.reserve(cache.passiveSurfaces.size());
+      for (const auto& passive : cache.passiveSurfaces) {
+        passiveSurfaces.push_back(passive);
+      }
+
+      // Return a convenient tuple for drawing
+      return std::tuple<Elements, Surfaces, Surfaces>(
+          std::move(detectorElements), std::move(surfaces),
+          std::move(passiveSurfaces));
+    });
   }
 }

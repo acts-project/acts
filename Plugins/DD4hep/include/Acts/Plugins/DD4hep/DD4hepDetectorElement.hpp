@@ -7,21 +7,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
-#include "DD4hep/DetElement.h"
-#include "DD4hep/Segmentations.h"
+#include <DD4hep/DetElement.h>
 
 namespace Acts {
 
 /// Forward declaration of Digitization module is enough
 class DigitizationModule;
-class ISurfaceMaterial;
 
 /// @class DD4hepDetectorElement
 ///
@@ -33,7 +31,7 @@ class ISurfaceMaterial;
 /// The full geometrical information is provided by the TGeoDetectorElement.
 /// The DD4hepDetectorElement extends the TGeoDetectorElement by containing a
 /// segmentation for the readout.
-/// @todo what if shape conversion fails? add implementation of more than one
+/// @todo what if shape conversion failes? add implementation of more than one
 /// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
 /// what
 /// if not used with DD4hep?
@@ -44,6 +42,10 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
+  /// Define a string based story
+  using Store = std::map<std::string,
+                         std::vector<std::shared_ptr<DD4hepDetectorElement>>>;
+
   /// Constructor
   /// @param detElement The DD4hep DetElement which should be linked to a
   /// surface
@@ -53,7 +55,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// capital and lower case
   /// characters :
   /// 	- capital      -> positive orientation of the axis
-  ///		- lower case   -> negative orientation of the axis
+  ///		- lower case   -> negative oriantation of the axis
   ///
   ///
   /// Example options are:

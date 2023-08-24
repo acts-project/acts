@@ -263,3 +263,38 @@ To receive the {class}`Acts::TrackingGeometry` the the global function
 `DetElement` needs to be handed over. For a valid translation, that all
 prerequisites described above are met and that the right `VariantParameters`
 are added during the DD4hep construction.
+
+## New Style 'Detector' Geometry
+
+Conversion into new style {class} `Acts::Experimental::Detector` is also supported and uses the same information flow as above.
+There is a slight difference in the material handling:
+  * passive, material surfaces are inditified either as `passive_layer` or `passive_surface`
+  * the usage of `boundary_material` is discouraged 
+
+## Tests
+
+### Surface conversion test
+
+To test if the **sensitive** and **passive** surfaces are correctly translated from `DD4hep`, the following command can be executed:
+```python
+import acts, acts.examples
+from acts.examples import dd4hep as acts_dd4hep
+
+# Create
+[ detels, ssurfs, psurfs ]  = acts_dd4hep.convertSurfaces(["../share/OpenDataDetector/xml/OpenDataDetector.xml"], acts.logging.DEBUG)
+
+
+viewContext = acts.GeometryContext()
+sensitiveRGB = [ 3, 169, 252 ]
+passiveRGB = [ 55, 88, 99 ]
+
+# Draw sensitive surfaces
+acts.examples.writeSurfacesObj(ssurfs, viewContext, sensitiveRGB, 'sensitives.obj')
+
+# Draw passive surfaces
+acts.examples.writeSurfacesObj(psurfs, viewContext, passiveRGB, 'pssives.obj')
+```
+
+The resulting `.obj` files can then be displayed accordingly.
+
+

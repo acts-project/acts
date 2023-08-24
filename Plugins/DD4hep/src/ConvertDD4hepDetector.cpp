@@ -23,9 +23,9 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
+#include "Acts/Plugins/DD4hep/detail/DD4hepConversionHelpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <array>
@@ -41,6 +41,8 @@
 #include "DD4hep/DetType.h"
 #include "DDRec/DetectorData.h"
 #include "TGeoManager.h"
+
+using namespace Acts::detail;
 
 namespace Acts {
 class IMaterialDecorator;

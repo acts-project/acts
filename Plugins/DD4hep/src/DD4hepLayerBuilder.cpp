@@ -18,8 +18,8 @@
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/detail/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -48,6 +48,8 @@
 #include "RtypesCore.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
+
+using namespace Acts::detail;
 
 Acts::DD4hepLayerBuilder::DD4hepLayerBuilder(
     const Acts::DD4hepLayerBuilder::Config& config,

@@ -12,7 +12,7 @@
 #include <DDRec/DetectorData.h>
 
 namespace Acts {
-
+namespace detail {
 /// Helper function to extract a parameter value from a dd4hep detector element
 /// from VariantParameters
 /// @tparam T The value type
@@ -88,4 +88,5 @@ inline bool hasParam(const std::string& key, dd4hep::DetElement& elt) {
 inline bool hasParams(dd4hep::DetElement& elt) {
   return elt.extension<dd4hep::rec::VariantParameters>(false) != nullptr;
 }
+}  // namespace detail
 }  // namespace Acts
