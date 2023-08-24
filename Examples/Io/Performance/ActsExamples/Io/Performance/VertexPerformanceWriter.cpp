@@ -632,8 +632,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             if (trk.originalParams->parameters() == params) {
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
-              trueMom.head(2) =
-                  Acts::makePhiThetaFromDirectionUnit(trueUnitDir);
+              trueMom.head(2) = Acts::makePhiThetaFromDirection(trueUnitDir);
               trueMom[2] = particle.qOverP();
               innerTruthPhi.push_back(trueMom[0]);
               innerTruthTheta.push_back(trueMom[1]);

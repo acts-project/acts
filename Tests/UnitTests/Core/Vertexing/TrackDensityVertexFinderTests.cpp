@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 

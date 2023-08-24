@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
 
   for (double eta : etas) {
     Vector3 pca = {5, 0, 0};
-    Vector3 dir = makeDirectionUnitFromPhiEta(M_PI_2, eta);
+    Vector3 dir = makeDirectionFromPhiEta(M_PI_2, eta);
     Vector3 pos = pca + dir;
 
     auto intersection = surface.intersect(tgContext, pos, dir);
