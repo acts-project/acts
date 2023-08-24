@@ -69,7 +69,7 @@ class DD4hepDetectorSurfaceFactory {
   /// The DD4hep detector element factory
   ///
   /// @param cfg the configuration struct
-  /// @param logger a screen output logger
+  /// @param mlogger a screen output logger
   DD4hepDetectorSurfaceFactory(
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
           "DD4hepDetectorSurfaceFactory", Acts::Logging::INFO));
