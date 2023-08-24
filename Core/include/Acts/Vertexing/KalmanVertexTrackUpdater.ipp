@@ -43,11 +43,15 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   Vector3 newTrkMomentum = sMat * momJac.transpose() * trkParamWeight *
                            (trkParams - residual - posJac * vtxPos);
 
+  // Refit track parameters
+  BoundVector newTrkParams(BoundVector::Zero());
+
   // Get phi and theta and correct for possible periodicity changes
   const auto correctedPhiTheta =
       Acts::detail::normalizePhiTheta(newTrkMomentum(0), newTrkMomentum(1));
-  newTrkMomentum(0) = correctedPhiTheta.first;
-  newTrkMomentum(1) = correctedPhiTheta.second;
+  newTrkParams(BoundIndices::eBoundPhi) = correctedPhiTheta.first;     // phi
+  newTrkParams(BoundIndices::eBoundTheta) = correctedPhiTheta.second;  // theta
+  newTrkParams(BoundIndices::eBoundQOverP) = newTrkMomentum(2);        // qOverP
 
   // Vertex covariance and weight matrices
   const SquareMatrix3 vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
@@ -61,7 +65,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
 
   // Now determine the smoothed chi2 of the track in the following
   KalmanVertexUpdater::updatePosition<input_track_t>(
-      vtx, linTrack, track.weight, -1, matrixCache);
+      vtx, linTrack, track.trackWeight, -1, matrixCache);
 
   // Corresponding weight matrix
   const SquareMatrix3& reducedVtxWeight = matrixCache.newVertexWeight;
@@ -78,16 +82,73 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   double chi2 = posDiff.dot(reducedVtxWeight * posDiff) +
                 smParams.dot(trkParamWeight * smParams);
 
-  // Fitted momentum and its covariance matrix
-  ActsSquareMatrix<3> momCov =
-      sMat +
-      (newTrkCov).transpose() * (vtxWeight.block<3, 3>(0, 0) * newTrkCov);
-  FittedMomentum fittedMom(newTrkMomentum, momCov);
+  // Not yet 4d ready. This can be removed together will all head<> statements,
+  // once time is consistently introduced to vertexing
+  ActsMatrix<4, 3> newFullTrkCov(ActsMatrix<4, 3>::Zero());
+  newFullTrkCov.block<3, 3>(0, 0) = newTrkCov;
+
+  SquareMatrix4 vtxFullWeight(SquareMatrix4::Zero());
+  vtxFullWeight.block<3, 3>(0, 0) = vtxWeight;
+
+  SquareMatrix4 vtxFullCov(SquareMatrix4::Zero());
+  vtxFullCov.block<3, 3>(0, 0) = vtxCov;
+
+  Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
+      sMat, newFullTrkCov, vtxFullWeight, vtxFullCov, newTrkParams);
+
+  // Create new refitted parameters
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(vtx.position());
+
+  BoundTrackParameters refittedPerigee = BoundTrackParameters(
+      perigeeSurface, newTrkParams, std::move(fullPerTrackCov));
 
   // Set new properties
-  track.fittedMomentum = fittedMom;
-  track.chi2 = chi2;
-  track.ndf = 2 * track.weight;
+  track.fittedParams = refittedPerigee;
+  track.chi2Track = chi2;
+  track.ndf = 2 * track.trackWeight;
 
   return;
+}
+
+inline Acts::BoundMatrix
+Acts::KalmanVertexTrackUpdater::detail::createFullTrackCovariance(
+    const SquareMatrix3& sMat, const ActsMatrix<4, 3>& newTrkCov,
+    const SquareMatrix4& vtxWeight, const SquareMatrix4& vtxCov,
+    const BoundVector& newTrkParams) {
+  // Now new momentum covariance
+  ActsSquareMatrix<3> momCov =
+      sMat + (newTrkCov.block<3, 3>(0, 0)).transpose() *
+                 (vtxWeight.block<3, 3>(0, 0) * newTrkCov.block<3, 3>(0, 0));
+
+  // Full (x,y,z,phi, theta, q/p) covariance matrix
+  // To be made 7d again after switching to (x,y,z,phi, theta, q/p, t)
+  ActsSquareMatrix<6> fullTrkCov(ActsSquareMatrix<6>::Zero());
+
+  fullTrkCov.block<3, 3>(0, 0) = vtxCov.block<3, 3>(0, 0);
+  fullTrkCov.block<3, 3>(0, 3) = newTrkCov.block<3, 3>(0, 0);
+  fullTrkCov.block<3, 3>(3, 0) = (newTrkCov.block<3, 3>(0, 0)).transpose();
+  fullTrkCov.block<3, 3>(3, 3) = momCov;
+
+  // Combined track jacobian
+  ActsMatrix<5, 6> trkJac(ActsMatrix<5, 6>::Zero());
+
+  // First row
+  trkJac(0, 0) = -std::sin(newTrkParams[2]);
+  trkJac(0, 1) = std::cos(newTrkParams[2]);
+
+  double tanTheta = std::tan(newTrkParams[3]);
+
+  // Second row
+  trkJac(1, 0) = -trkJac(0, 1) / tanTheta;
+  trkJac(1, 1) = trkJac(0, 0) / tanTheta;
+
+  trkJac.block<4, 4>(1, 2) = ActsMatrix<4, 4>::Identity();
+
+  // Full perigee track covariance
+  BoundMatrix fullPerTrackCov(BoundMatrix::Identity());
+  fullPerTrackCov.block<5, 5>(0, 0) =
+      (trkJac * (fullTrkCov * trkJac.transpose()));
+
+  return fullPerTrackCov;
 }

@@ -245,7 +245,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     if (ipSig < m_cfg.tracksMaxSignificance) {
       // Create TrackAtVertex objects, unique for each (track, vertex) pair
       fitterState.tracksAtVerticesMap.emplace(std::make_pair(trk, &vtx),
-                                              TrackAtVertex(trk));
+                                              TrackAtVertex(params, trk));
 
       // Add the original track parameters to the list for vtx
       fitterState.vtxInfoMap[&vtx].trackLinks.push_back(trk);
@@ -358,8 +358,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
     if ((trkAtVtx.vertexCompatibility < m_cfg.maxVertexChi2 &&
          m_cfg.useFastCompatibility) ||
-        (trkAtVtx.weight > m_cfg.minWeight &&
-         trkAtVtx.chi2 < m_cfg.maxVertexChi2 && !m_cfg.useFastCompatibility)) {
+        (trkAtVtx.trackWeight > m_cfg.minWeight &&
+         trkAtVtx.chi2Track < m_cfg.maxVertexChi2 &&
+         !m_cfg.useFastCompatibility)) {
       // TODO: Understand why looking for compatible tracks only in seed tracks
       // and not also in all tracks
       auto foundIter =
@@ -395,8 +396,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
     if ((trkAtVtx.vertexCompatibility < m_cfg.maxVertexChi2 &&
          m_cfg.useFastCompatibility) ||
-        (trkAtVtx.weight > m_cfg.minWeight &&
-         trkAtVtx.chi2 < m_cfg.maxVertexChi2 && !m_cfg.useFastCompatibility)) {
+        (trkAtVtx.trackWeight > m_cfg.minWeight &&
+         trkAtVtx.chi2Track < m_cfg.maxVertexChi2 &&
+         !m_cfg.useFastCompatibility)) {
       // Find and remove track from seedTracks
       auto foundSeedIter =
           std::find_if(seedTracks.begin(), seedTracks.end(),
@@ -478,7 +480,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::keepNewVertex(
   for (const auto& trk : fitterState.vtxInfoMap[&vtx].trackLinks) {
     const auto& trkAtVtx =
         fitterState.tracksAtVerticesMap.at(std::make_pair(trk, &vtx));
-    double trackWeight = trkAtVtx.weight;
+    double trackWeight = trkAtVtx.trackWeight;
     contaminationNum += trackWeight * (1. - trackWeight);
     contaminationDeNom += trackWeight * trackWeight;
   }
