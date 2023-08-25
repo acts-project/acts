@@ -84,6 +84,9 @@ struct KalmanFitterExtensions {
   /// reverse propagation
   ReverseFilteringLogic reverseFilteringLogic;
 
+  /// Retrieves the associated surface from a source link
+  SourceLinkSurfaceAccessor surfaceAccessor;
+
   /// Default constructor which connects the default void components
   KalmanFitterExtensions() {
     calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
@@ -1041,7 +1044,9 @@ class KalmanFitter {
     // for (const auto& sl : sourcelinks) {
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      auto geoId = sl.geometryId();
+      const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
+      // @TODO: This can probably change over to surface pointers as keys
+      auto geoId = surface->geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
     }
 
@@ -1174,7 +1179,10 @@ class KalmanFitter {
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), sl);
+      const Surface* surface = kfOptions.extensions.surfaceAccessor(sl);
+      // @TODO: This can probably change over to surface pointers as keys
+      auto geoId = surface->geometryId();
+      inputMeasurements.emplace(geoId, sl);
     }
 
     // Create the ActionList and AbortList

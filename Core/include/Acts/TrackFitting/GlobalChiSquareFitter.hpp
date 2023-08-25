@@ -74,6 +74,9 @@ struct Gx2FitterExtensions {
   /// outlier
   OutlierFinder outlierFinder;
 
+  /// Retrieves the associated surface from a source link
+  SourceLinkSurfaceAccessor surfaceAccessor;
+
   // TODO get an own Calibrator and Updater
   /// Default constructor which connects the default void components
   Gx2FitterExtensions() {
@@ -455,7 +458,7 @@ class Gx2Fitter {
 
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      auto geoId = sl.geometryId();
+      auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
     }
     ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
