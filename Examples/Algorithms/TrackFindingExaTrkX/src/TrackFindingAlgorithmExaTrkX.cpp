@@ -229,8 +229,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
 
   // Run the pipeline
-  const auto trackCandidates =
-      m_pipeline.run(inputValues, spacepointIDs, *hook);
+  const auto trackCandidates = m_pipeline.run(features, spacepointIDs, *hook);
 
   ACTS_DEBUG("Done with pipeline, received " << trackCandidates.size()
                                              << " candidates");

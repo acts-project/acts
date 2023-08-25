@@ -35,7 +35,7 @@ Pipeline::Pipeline(
 std::vector<std::vector<int>> Pipeline::run(std::vector<float> &features,
                                             std::vector<int> &spacepointIDs,
                                             const PipelineHook &hook) const {
-  auto [nodes, edges] = (*m_graphConstructor)(features);
+  auto [nodes, edges] = (*m_graphConstructor)(features, spacepointIDs.size());
 
   hook(nodes, edges);
 
