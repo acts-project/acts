@@ -130,7 +130,7 @@ struct PathGridSurfacesGenerator {
     auto tposition = std::move(startPosition);
     auto stepSizeY = stepSize * sin(Acts::VectorHelpers::phi(direction));
     auto stepSizeX = stepSize * cos(Acts::VectorHelpers::phi(direction));
-
+    
 
     for (std::size_t i = 0; i < numberOfSteps; i++) {
       pathCoordinates.push_back(tposition);
