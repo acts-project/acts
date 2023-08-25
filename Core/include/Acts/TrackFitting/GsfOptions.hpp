@@ -56,6 +56,9 @@ struct GsfExtensions {
   /// outlier
   OutlierFinder outlierFinder;
 
+  /// Retrieves the associated surface from a source link
+  SourceLinkSurfaceAccessor surfaceAccessor;
+
   /// Default constructor which connects the default void components
   GsfExtensions() {
     calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
