@@ -28,6 +28,24 @@ template <typename input_track_t>
 void update(TrackAtVertex<input_track_t>& track,
             const Vertex<input_track_t>& vtx);
 
+namespace detail {
+
+/// @brief reates a new covariance matrix for the
+/// refitted track parameters
+///
+/// @param sMat Track ovariance in momentum space
+/// @param newTrkCov New track covariance matrixs
+/// @param vtxWeight Vertex weight matrix
+/// @param vtxCov Vertex covariance matrix
+/// @param newTrkParams New track parameter
+inline BoundMatrix createFullTrackCovariance(const SquareMatrix3& sMat,
+                                             const ActsMatrix<4, 3>& newTrkCov,
+                                             const SquareMatrix4& vtxWeight,
+                                             const SquareMatrix4& vtxCov,
+                                             const BoundVector& newTrkParams);
+
+}  // Namespace detail
+
 }  // Namespace KalmanVertexTrackUpdater
 }  // Namespace Acts
 
