@@ -72,7 +72,7 @@ struct SteppingLogger {
     // record the propagation state
     Step step;
     step.stepSize = state.stepping.stepSize;
-    step.navDir = state.stepping.navDir;
+    step.navDir = state.options.direction;
     step.position = stepper.position(state.stepping);
     step.momentum = stepper.momentum(state.stepping);
 

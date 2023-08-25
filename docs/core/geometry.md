@@ -7,187 +7,207 @@ of higher complexity. This design has been chosen as the surface objects can be
 used together with the track propagation module and thus all geometry objects
 become natively integrated into the tracking software.
 
-## GeometryObject base class and GeometryIdentifier
+```{note}
+There is an ongoing rewrite of the geometry and navigation modules where logical layers will be modelled as volumes, see [](exp_geometry_impl).
 
-All geometry objects in Acts inherit from a virtual `GeometryObject` base class
-
-```cpp
-class GeometryObject {
- public:
-  /// Defaulted constructor
-  GeometryObject() = default;
-
-  /// Defaulted copy constructor
-  GeometryObject(const GeometryObject&) = default;
-
-  /// Constructor from a value
-  ///
-  /// @param geometryId the geometry identifier of the object
-  GeometryObject(const GeometryIdentifier& geometryId)
-      : m_geometryId(geometryId) {}
-
-  /// Assignment operator
-  ///
-  /// @param geometryId the source geometryId
-  GeometryObject& operator=(const GeometryObject& geometryId) {
-    if (&geometryId != this) {
-      m_geometryId = geometryId.m_geometryId;
-    }
-    return *this;
-  }
-
-  /// @return the geometry id by reference
-  const GeometryIdentifier& geometryId() const;
-
-  /// Force a binning position method
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the value in which you want to bin
-  ///
-  /// @return vector 3D used for the binning schema
-  virtual Vector3 binningPosition(const GeometryContext& gctx,
-                                  BinningValue bValue) const = 0;
-
-  /// Implement the binningValue
-  ///
-  /// @param gctx The current geometry context object, e.g. alignment
-  /// @param bValue is the dobule in which you want to bin
-  ///
-  /// @return float to be used for the binning schema
-  virtual double binningPositionValue(const GeometryContext& gctx,
-                                      BinningValue bValue) const;
-
-  /// Set the value
-  ///
-  /// @param geometryId the geometry identifier to be assigned
-  void assignGeometryId(const GeometryIdentifier& geometryId);
-
- protected:
-  GeometryIdentifier m_geometryId;
-};
 ```
 
-This class ensures that a unique `GeometryIdentifier` is assigned to every geometry
-object. The `GeometryIdentifier` is mainly used for fast identification of the type of
-the geometry object (as most are either extensions or containers of the
-`Surface` objects) and for the identification of the geometry surfaces after
-building, e.g. for the uploading/assigning of material to the surface after
-creation. The `GeometryIdentifier` uses a simple masking procedure for applying an
-identification schema.
+## GeometryObject base class
 
-It is used for Acts internal applications, such as material mapping, but not for
-`EventData` and `Geometry` identification in an experiment setup, for this the
-`Identifier` class is to be used and/or defined.
+All geometry objects in Acts inherit from a virtual {class}`Acts::GeometryObject` base class.
 
-```cpp
-typedef uint64_t geo_id_value;
+:::{doxygenclass} Acts::GeometryObject
+:::
 
-namespace Acts {
-
-/// @class GeometryIdentifier
-///
-///  Identifier for Geometry nodes - packing the
-///  - (Sensitive) Surfaces    - uses counting through sensitive surfaces
-///  - (Approach)  Surfaces    - uses counting approach surfaces
-///  - (Layer)     Surfaces    - uses counting confined layers
-///  - (Boundary)  Surfaces    - uses counting through boundary surfaces
-///  - Volumes                 - uses counting given by TrackingGeometry
-class GeometryIdentifier
-{
-public:
-  const static geo_id_value volume_mask    = 0xff00000000000000;
-  const static geo_id_value boundary_mask  = 0x00ff000000000000;
-  const static geo_id_value layer_mask     = 0x0000ff0000000000;
-  const static geo_id_value approach_mask  = 0x000000f000000000;
-  const static geo_id_value sensitive_mask = 0x0000000ffff00000;
-  const static geo_id_value channel_mask   = 0x00000000000fffff;
-  ...
-};
-```
 
 ```{note}
 The `binningPosition(const GeometryContext& gctx, BinningValue& bVal)` method allows to define 
 a customized position of this object when being subject to ordering in some specific binnings, e.g. in a `BinnedArray` or a `SurfaceArray`.
 ```
 
+This class ensures that a unique {class}`Acts::GeometryIdentifier` is assigned to every geometry
+object. 
+
+## Geometry identifier
+
+The {class}`Acts::GeometryIdentifier` is mainly used for fast identification of the type of
+the geometry object (as most of them are either extensions or containers of the
+{class}`Acts::Surface` objects) and for the identification of the geometry surfaces after
+building, e.g. for the uploading/assigning of material to the surface after
+creation. The {class}`Acts::GeometryIdentifier` uses a simple masking procedure for applying an
+identification schema.
+
+While it is used in Acts-internal applications such as material mapping, it is not employed for
+`EventData` and `Geometry` identification in an experiment setup. Instead, one should define and use the
+`Identifier` class in the latter case.
+
+:::{doxygenclass} Acts::GeometryIdentifier
+---
+members: kVolumeMask,kBoundaryMask,kLayerMask,kApproachMask,kSensitiveMask,kExtraMask
+---
+:::
+
+
 ## Surface classes
 
-The `Surface` class builds the core class of all geometry objects and can be
-used natively with the propagation and extrapolation modules. The common
-`Surface` virtual base defines the public interface of all surfaces. The
-different concrete `Surface` classes are defined by their respective native
-local coordinate system, while different shapes on surfaces are defined by
-`SurfaceBounds` classes which every surface must provide. In case of boundless
-surfaces, a special `InfiniteBounds` class is available.
+All classes which represent a thin surface in ACTS inherit from
+the common virtual base class {class}`Acts::Surface`, which defines
+the public interface of all surfaces. While the different concrete
+surface classes are defined by their respective native local
+coordinate system, the shapes on these surfaces are defined by classes
+that inherit from {class}`Acts::SurfaceBounds`, which every surface must provide.
+In case of boundless surfaces, a special {class}`Acts::InfiniteBounds` class is
+available.
+
+Each {class}`Acts::Surface` instance reports its type from {func}`Acts::Surface::type()`:
+
+:::{doxygenenum} Acts::Surface::SurfaceType
+:::
+
 
 | Surface Type          | Local Coordinates | Bound Types available                                                                       |
 |:----------------------|-------------------|:--------------------------------------------------------------------------------------------|
-| `ConeSurface`         | [rphi, z]         | `ConeBounds`                                                                                |
-| `CylinderSurface`     | [r, phi]          | `CylinderBounds`                                                                            |
-| `DiscSurface`         | [r, phi]          | `RadialBounds`, `DiscTrapezoidalBounds`                                                     |
-| `PlaneSurface`        | [x, y]            | `RectangleBounds`, `TrapezoidalBounds`, `TriangleBounds`,<br> `InfiniteBounds`, `EllipseBounds` |
-| `PerigeeSurface`, `StrawSurface` | [d, z] | `CylinderBounds`                                                                            |
-
-![CylinderBounds](/figures/geometry/CylinderBounds.png)
-![DiscBounds](/figures/geometry/DiscBounds.png)
-![PlaneBounds](/figures/geometry/PlaneBounds.png)
+| {class}`Acts::ConeSurface`         | $[r\phi, z]$         | {class}`Acts::ConeBounds`                                                                                |
+| {class}`Acts::CylinderSurface`     | $[r, \phi]$         | {class}`Acts::CylinderBounds`                                                                            |
+| {class}`Acts::DiscSurface`         | $[r, \phi]$         | {class}`Acts::RadialBounds`, {class}`Acts::DiscTrapezoidalBounds`                                                     |
+| {class}`Acts::PlaneSurface`        | $[x, y]$         | {class}`Acts::RectangleBounds`, {class}`Acts::TrapezoidalBounds`, <br>{class}`Acts::TriangleBounds`,{class}`Acts::InfiniteBounds`, <br> {class}`Acts::EllipseBounds` |
+| {class}`Acts::PerigeeSurface`,<br> {class}`Acts::StrawSurface` | $[d, z]$ | {class}`Acts::CylinderBounds`                                                                            |
+| {class}`Acts::LineSurface` | $[d_0, z_0]$ | {class}`Acts::LineBounds` |
 
 ```{tip}
-The coordinate systems define - in an ideal setup - also the readout measurement directions. In such a case, a track prediction from the propagation, e.g. will already be in the correct frame of the measurement and residual or compatibility checks will not need additional coordinate transformations.
+In an ideal setup, the coordinate systems also define the readout
+measurement directions. In such a case, a track prediction from the
+propagation will already be in the correct frame of the measurement and
+residual or compatibility checks will not need additional coordinate
+transformations.
 ```
+
+### Plane surface
+
+![PlaneBounds](/figures/geometry/PlaneBounds.png)
+
+:::{doxygenclass} Acts::PlaneSurface
+---
+members: globalToLocal,localToGlobal,intersect,normal
+---
+:::
+
+### Disc surface
+
+![DiscBounds](/figures/geometry/DiscBounds.png)
+
+:::{doxygenclass} Acts::DiscSurface
+---
+members: globalToLocal,localToGlobal,intersect,normal
+---
+:::
+ 
+### Cylinder surface
+
+![CylinderBounds](/figures/geometry/CylinderBounds.png)
+
+:::{doxygenclass} Acts::CylinderSurface
+---
+members: globalToLocal,localToGlobal,intersect,normal
+---
+:::
+
+### Cone surface
+
+:::{doxygenclass} Acts::ConeSurface
+---
+members: globalToLocal,localToGlobal,intersect,normal
+---
+:::
+
+### Line surface
+
+{class}`Acts::LineSurface` is a special kind of surface that depends on a reference
+direction, typically the unit momentum direction $\vec d$ of a particle. A point in
+space is considered *on surface* if and only if it coincides with the point of
+closest approach between the direction vector $\vec d$ and the line direction
+vector $\vec z$. As such, the function {func}`Acts::LineSurface::globalToLocal`
+can fail, if the argument position and direction do not fulfill this criterion.
+It is pure-virtual, meaning that it can not be instantiated on its own.
+
+:::{doxygenclass} Acts::LineSurface
+---
+members: globalToLocal,localToGlobal,intersect,normal
+---
+:::
+
+#### Straw surface
+
+:::{doxygenclass} Acts::StrawSurface
+---
+members: false
+---
+:::
+
+#### Perigee surface
+
+:::{doxygenclass} Acts::PerigeeSurface
+---
+members: false
+---
+:::
+
 
 ## Layer classes
 
-The `Layer` class is an extension of the `Surface` class that allows the
+
+The {class}`Acts::Layer` class is an extension of the {class}`Acts::Surface` class that allows the
 definition of sub surfaces (sensitive surfaces for modules, or extra material
 surfaces).
 
-The Layer can simply correspond to a 'virtual' surface in the detector
+The layer can simply correspond to a 'virtual' surface in the detector
 description or represent a more complex object that may contain:
 
-* a representing surface, which is accessible via a `representingSurface()`
-* method an array of contained surfaces, accessible via `surfaceArray()` method
+* a representing surface, which is accessible via a {func}`Acts::Layer::surfaceRepresentation`
+* an array of contained surfaces, accessible via {func}`Acts::Layer::surfaceArray` method
 * approach surfaces (i.e. boundary surface of the volume occupied by the layer)
 * surface material description on any of the confined surfaces
 
-The following illustration shows an x-y view of a cylinder layer with planar
+The following illustration shows an $xy$ view of a cylinder layer with planar
 detection modules:
 
 ![CylinderLayer](/figures/geometry/CylinderLayer.png)
 
 Modules can be sorted onto layer using all supported binning methods described
-through the `SurfaceArray` class, the binning can be adjusted to fit as good as
+through the {class}`Acts::SurfaceArray` class. The binning can be adjusted to fit as well as
 possible.
 
 ![DiscLayerEB](/figures/geometry/DiscLayerEB.png)
 
-The un-occupied space in a volume which contains a layer array is filled with
-objects of type `NavigationLayer`, which allows that in a fully static geometry
+The unoccupied space in a volume that contains a layer array is filled with
+objects of type {class}`Acts::NavigationLayer`, which allows that in a fully static geometry
 setup, every single point in a volume can be associated with a layer. Layer
-objects are confined together in a special `LayerArray` class and can be
-contained by a `TrackingVolume`.
+objects are confined together in a special {type}`Acts::LayerArray` class and can be
+contained by a {class}`Acts::TrackingVolume`.
 
 ![LayerArray](/figures/geometry/LayerArray.png)
 
 
+
 ## Volume classes
 
-The `Volume` class is a container of `BoundarySurface` objects, where each
-`BoundarySurface` is an extension of the `Surface` class with additional
-information about the attached Volumes. The normal vector of the surface
-defines an *inside* (opposite w.r.t. the normal vector) and an *outside* (along
-w.r.t. the normal vector) direction. Either a single volume or an array of
-volumes can be attached to a volume.
+The {class}`Acts::Volume` class is a container of
+{type}`Acts::BoundarySurface` objects, where each
+{type}`Acts::BoundarySurface` is an extension of the {class}`Acts::Surface`
+class with additional information about the attached volumes. The normal vector
+of the surface defines an *inside* (opposite w.r.t. the normal vector) and an
+*outside* (along w.r.t. the normal vector) direction. Either a single volume or
+an array of volumes can be attached to a volume.
 
 The simples volume class is just a collection of surfaces, where the
-`TrackingVolume` describes a volume that can contain:
+{class}`Acts::TrackingVolume` describes a volume that can contain:
 
 * an array of contained layers
 * an array of contained volumes (as a container volume)
 * an array of contained volumes (as *floating* objects)
 * a volume based material description
 
-The shape of the volume is defined by `VolumeBounds` classes that create the
+The shape of the volume is defined by {class}`Acts::VolumeBounds` classes that create the
 corresponding bounding surfaces and register the attachment to the volume itself
 at creation.
 
@@ -205,35 +225,40 @@ The basic information for any material is:
 * the radiation length X0 the nuclear interaction length L0 the atomic weight A
 * the atomic charge Z the density of the material
 
-This information is confined together in the `Material` class.
+This information is confined together in the {class}`Acts::Material` class.
 
 ```{note}
-In track reconstruction, only an effective material description is needed, i.e. non-physical values in regards of the atomic number, the elementary charge or even the density are allowed, as long as the effective relative radiation length and `A/Z x rho` ratio can be retrieved.
-This enables compatictification of the material description, as the element composition record does not have to be kept.
+In track reconstruction, only an effective material description is needed, i.e.
+non-physical values in regards of the atomic number, the elementary charge or
+even the density are allowed, as long as the effective relative radiation
+length and $A/Z \times \rho$ ratio can be retrieved.  This enables the compactification
+of the material description, as the element composition record does not have to
+be kept.
 ```
 
-Surface based material extends this material information by representative
-thickness, the corresponding object is called `MaterialSlab`. The
+Surface based material extends this material information by a representative
+thickness; the corresponding object is called {class}`Acts::MaterialSlab`. The
 thickness hereby can be arbitrarily chosen in order to regulate the material
 budget, it does not have to represent the actual thickness of a detector
-element. To attach it to a surface, a dedicated `SurfaceMaterial` class (or it's
-extensions) is used, which allows to also describe binned material.
+element. To attach it to a surface, a dedicated {class}`Acts::SurfaceMaterial`
+class (or it's extensions) is used, which allows to also describe binned
+material.
 
 Possible extensions are:
 
- * `HomogeneousSurfaceMaterial`, homogeneous material description on a surface
- * `BinnedSurfaceMaterial`, an arbitrarily binned material description with a
-    corresponding `BinUtility` object
+ * {class}`Acts::HomogeneousSurfaceMaterial`, homogeneous material description on a surface
+ * {class}`Acts::BinnedSurfaceMaterial`, an arbitrarily binned material description with a
+    corresponding {class}`Acts::BinUtility` object
 
 In addition, a dedicated extension exists to allow configuration of the material
 mapping process, that is in further described below.
 
- * `ProtoSurfaceMaterial`, only binning description (without material) to be
+ * {class}`Acts::ProtoSurfaceMaterial`, only binning description (without material) to be
    used in the material mapping process
 
 ## Geometry building
 
-The geometry building procedure follows the ATLAS TrackingGeometry philosophy of
+The geometry building procedure follows the ATLAS tracking geometry philosophy of
 a static frame of *glued* volumes, that lead the navigation flow through the
 geometry,
 
@@ -248,9 +273,9 @@ For most part of the track reconstruction, only a surface based description of
 the detector is needed, in order to allow (surface based) material integration
 and parametrization/prediction of trajectories on detection surfaces. It is thus
 necessary that the detection surfaces are described to full detail in the
-reconstruction geometry (called `TrackingGeometry`). This is guaranteed by a
+reconstruction geometry (called {class}`Acts::TrackingGeometry`). This is guaranteed by a
 proxy mechanism that connects the detection elements (conveniently called
-`DetectorElement`) to `Surface` object in the reconstruction:
+{class}`Acts::DetectorElement`) to {class}`Acts::Surface` object in the reconstruction:
 
 ![DetectorElement](/figures/geometry/DetectorElement.png)
 
@@ -259,9 +284,9 @@ proxy mechanism that connects the detection elements (conveniently called
 Very simple helper methods for 3D libraries exist, they are certainly not
 optimised, but used for templating:
 
-* `TGeoDetectorElement` connects a TGeo volume to a `Surface`
-* `DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a `Surface`
-* `Geant4DetectorElement` connects a Geant4 volume to a `Surface`
+* {class}`Acts::TGeoDetectorElement` connects a TGeo volume to a {class}`Acts::Surface`
+* {class}`Acts::DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a {class}`Acts::Surface`
+* {class}`Acts::Geant4DetectorElement` connects a Geant4 volume to a {class}`Acts::Surface`
 
 Further extensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`
 binding for the ATLAS experiment.
@@ -277,9 +302,9 @@ to specify parsing restrictions for sub detectors.
 
 ### Layer building
 
-`Surface` objects that are to be grouped on a layer should be put into a
-`SurfaceArray` and provided to the layer. Certain helper tools exist to ease the
-translation and create appropriate binning structure: The`SurfaceArrayCreator`
+{class}`Acts::Surface` objects that are to be grouped on a layer should be put into a
+{class}`Acts::SurfaceArray` and provided to the layer. Certain helper tools exist to ease the
+translation and create appropriate binning structure: The {class}`Acts::SurfaceArrayCreator`
 can create cylindrical, disc-like & planar layers, where the dimensions of the
 layer are determined by parsing the provided surfaces. Additionally, an envelope
 covering the surfaces can be chosen.
@@ -294,11 +319,11 @@ or `DD4hep`.
 
 ### Volume building, packing, and gluing
 
-The philosophy of the `TrackingGeometry` is a fully connective geometry setup,
-i.e. `TrackingVolume` objects are either pure containers for other contained
-`TrackingVolume` instances (where the contained volumes fully fill the space of
+The philosophy of the {class}`Acts::TrackingGeometry` is a fully connective geometry setup,
+i.e. {class}`Acts::TrackingVolume` objects are either pure containers for other contained
+{class}`Acts::TrackingVolume` instances (where the contained volumes fully fill the space of
 the container volume), or are fully attached via the boundary surface mechanism.
-The boundary surfaces then act as portals from one `TrackingVolume` into the
+The boundary surfaces then act as portals from one {class}`Acts::TrackingVolume` into the
 next one along the trajectory.
 
 The process to create a fully connected tracking geometry is called glueing.
@@ -309,7 +334,7 @@ possible, they are *attached*.
 ![GlueingABC](/figures/geometry/GlueingABC.png)
 ![NavigationABC](/figures/geometry/NavigationABC.png)
 
-For cylindrical detector setups, a dedicated `CylinderVolumeBuilder` is
+For cylindrical detector setups, a dedicated {class}`Acts::CylinderVolumeBuilder` is
 provided, which performs a variety of volume building, packing and gluing.
 
 ```{note}
@@ -322,8 +347,8 @@ modules that take care of the glueing process.
 For cylindrical detectors there exist a generic tracking geometry building module,
 based on KDTree and a proto description.
 
-This building procedure uses a `ProtoDetector` description which provides a 
+This building procedure uses a {class}`Acts::ProtoDetector` description which provides a 
 high level description of layers and container volumes, together with some 
 binning and ordering information.
 This proto description is then used to assign surfaces that are provided to the 
-`KDTreeTrackingGeometryBuilder` using an internal query to the KD-tree structure.
+{class}`Acts::KDTreeTrackingGeometryBuilder` using an internal query to the KD-tree structure.
