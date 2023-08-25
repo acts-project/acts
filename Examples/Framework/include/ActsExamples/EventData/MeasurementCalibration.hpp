@@ -12,6 +12,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include <ActsExamples/EventData/Measurement.hpp>
@@ -30,7 +31,7 @@ class MeasurementCalibrator {
   virtual void calibrate(
       const MeasurementContainer& measurements,
       const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
-      const Acts::SourceLink& sourceLink,
+      const Acts::CalibrationContext& cctx, const Acts::SourceLink& sourceLink,
       Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const = 0;
 
   virtual ~MeasurementCalibrator() = default;
@@ -48,7 +49,7 @@ class PassThroughCalibrator : public MeasurementCalibrator {
   void calibrate(
       const MeasurementContainer& measurements,
       const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
-      const Acts::SourceLink& sourceLink,
+      const Acts::CalibrationContext& cctx, const Acts::SourceLink& sourceLink,
       Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const override;
 };
 
@@ -63,6 +64,7 @@ class MeasurementCalibratorAdapter {
   MeasurementCalibratorAdapter() = delete;
 
   void calibrate(const Acts::GeometryContext& gctx,
+                 const Acts::CalibrationContext& cctx,
                  const Acts::SourceLink& sourceLink,
                  Acts::VectorMultiTrajectory::TrackStateProxy trackState) const;
 
