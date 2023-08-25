@@ -14,6 +14,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
@@ -394,7 +395,7 @@ class MultiTrajectoryTestsCommon {
     // check that the surface is correctly set
     BOOST_CHECK_EQUAL(&ts.referenceSurface(), pc.surface.get());
     BOOST_CHECK_EQUAL(ts.referenceSurface().geometryId(),
-                      pc.sourceLink.geometryId());
+                      pc.sourceLink.m_geometryId);
 
     // check that the track parameters are set
     BOOST_CHECK(ts.hasPredicted());
