@@ -255,7 +255,7 @@ struct CombinatorialKalmanFilterResult {
   Result<void> result{Result<void>::success()};
 
   // TODO place into options and make them accessible?
-  AbortList<PathLimitReached, EndOfWorldReached, ParticleStopped> abortList;
+  AbortList<PathLimitReached, EndOfWorldReached> abortList;
 };
 
 /// Combinatorial Kalman filter to find tracks.
