@@ -16,6 +16,8 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <numeric>
+
 using namespace ActsExamples;
 using namespace Acts::UnitLiterals;
 
@@ -147,6 +149,17 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitsMap);
 }
 
+/// Allow access to features with nice names
+enum feat : std::size_t {
+  eR = 0,
+  ePhi,
+  eZ,
+  eCellCount,
+  eCellSum,
+  eClusterX,
+  eClusterY
+};
+
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
@@ -159,31 +172,61 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
         m_inputParticles(ctx), logger());
   }
 
+  std::optional<ClusterContainer> clusters;
+  if (m_inputClusters.isInitialized()) {
+    clusters = m_inputClusters(ctx);
+  }
+
   // Convert Input data to a list of size [num_measurements x
   // measurement_features]
-  size_t num_spacepoints = spacepoints.size();
-  ACTS_INFO("Received " << num_spacepoints << " spacepoints");
+  const std::size_t numSpacepoints = spacepoints.size();
+  const std::size_t numFeatures = clusters ? 7 : 3;
+  ACTS_INFO("Received " << numSpacepoints << " spacepoints");
 
-  std::vector<float> inputValues;
+  std::vector<float> features(numSpacepoints * numFeatures);
   std::vector<int> spacepointIDs;
-  inputValues.reserve(spacepoints.size() * 3);
+
   spacepointIDs.reserve(spacepoints.size());
-  for (const auto& sp : spacepoints) {
-    float x = sp.x();
-    float y = sp.y();
-    float z = sp.z();
-    float r = sp.r();
-    float phi = std::atan2(y, x);
 
-    inputValues.push_back(r / m_cfg.rScale);
-    inputValues.push_back(phi / m_cfg.phiScale);
-    inputValues.push_back(z / m_cfg.zScale);
+  double sumCells = 0.0;
+  double sumActivation = 0.0;
 
-    // For now just take the first index since does require one single index per
-    // spacepoint
-    const auto& islink = sp.sourceLinks()[0].template get<IndexSourceLink>();
-    spacepointIDs.push_back(islink.index());
+  for (auto i = 0ul; i < numSpacepoints; ++i) {
+    const auto& sp = spacepoints[i];
+
+    // I would prefer to use a std::span or boost::span here once available
+    float* featurePtr = features.data() + i * numFeatures;
+
+    // For now just take the first index since does require one single index
+    // per spacepoint
+    const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
+    spacepointIDs.push_back(sl.index());
+
+    featurePtr[eR] = std::hypot(sp.x(), sp.y()) / m_cfg.rScale;
+    featurePtr[ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
+    featurePtr[eZ] = sp.z() / m_cfg.zScale;
+
+    if (clusters) {
+      const auto& cluster = clusters->at(sl.index());
+      const auto& chnls = cluster.channels;
+
+      featurePtr[eCellCount] = cluster.channels.size() / m_cfg.cellCountScale;
+      featurePtr[eCellSum] =
+          std::accumulate(chnls.begin(), chnls.end(), 0.0,
+                          [](double s, const Cluster::Cell& c) {
+                            return s + c.activation;
+                          }) /
+          m_cfg.cellSumScale;
+      featurePtr[eClusterX] = cluster.sizeLoc0 / m_cfg.clusterXScale;
+      featurePtr[eClusterY] = cluster.sizeLoc1 / m_cfg.clusterYScale;
+
+      sumCells += featurePtr[eCellCount];
+      sumActivation += featurePtr[eCellSum];
+    }
   }
+
+  ACTS_DEBUG("Avg cell count: " << sumCells / spacepoints.size());
+  ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
 
   // Run the pipeline
   const auto trackCandidates =
