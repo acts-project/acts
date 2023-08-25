@@ -70,8 +70,8 @@ ProcessCode PropagationAlgorithm::execute(
     auto cov = generateCovariance(rng, gauss);
 
     // execute the test for charged particles
-    Acts::BoundTrackParameters startParameters(
-        surface, pars, std::move(cov), Acts::ParticleHypothesis::pion());
+    Acts::BoundTrackParameters startParameters(surface, pars, std::move(cov),
+                                               m_cfg.particleHypothesis);
     Acts::Vector3 sPosition = startParameters.position(context.geoContext);
     Acts::Vector3 sMomentum = startParameters.momentum();
     PropagationOutput pOutput = m_cfg.propagatorImpl->execute(
