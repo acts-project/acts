@@ -58,7 +58,7 @@ class MultiWireInternalStructureBuilder
         m_logger(std::move(mlogger)) {}
 
   Acts::Experimental::InternalStructure construct(
-      const Acts::GeometryContext& gctx) const {
+      const Acts::GeometryContext& gctx) const final {
     if (not m_cfg.auxiliary.empty()) {
       ACTS_DEBUG(m_cfg.auxiliary);
     }
