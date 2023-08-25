@@ -1077,7 +1077,6 @@ class KalmanFitter {
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
     kalmanActor.calibrationContext = &kfOptions.calibrationContext.get();
     kalmanActor.extensions = kfOptions.extensions;
-
     kalmanActor.actorLogger = m_actorLogger.get();
 
     typename propagator_t::template action_list_t_result_t<
