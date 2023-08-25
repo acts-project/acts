@@ -100,7 +100,7 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
         DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
             passiveElement);
     params.set<bool>("passive_surface", true);
-    // Set the place ment and add
+    // Set the placement and add
     passiveElement.setPlacement(placedPassive);
     // Add the module elements
     layerElement.add(passiveElement);

@@ -68,7 +68,6 @@ class DD4hepDetectorSurfaceFactory {
 
   /// The DD4hep detector element factory
   ///
-  /// @param cfg the configuration struct
   /// @param mlogger a screen output logger
   DD4hepDetectorSurfaceFactory(
       std::unique_ptr<const Logger> mlogger = getDefaultLogger(
@@ -117,7 +116,6 @@ class DD4hepDetectorSurfaceFactory {
 
   /// Method to convert a single sensitive detector element
   ///
-  /// @param options the factory creation option
   /// @param dd4hepElement the detector element
   ///
   /// @return a created surface

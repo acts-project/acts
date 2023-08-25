@@ -46,7 +46,7 @@ T& ensureExtension(dd4hep::DetElement& elt) {
 /// Helper method to create a Transform3D from an xml detector
 /// component
 ///
-/// @param x_det_comp the xml detector compoment
+/// @param x_det_comp the xml detector component
 ///
 /// @return a Transform3D (DD4hep type, aka ROOT::Math type)
 Transform3D createTransform(const xml_comp_t& x_det_comp);

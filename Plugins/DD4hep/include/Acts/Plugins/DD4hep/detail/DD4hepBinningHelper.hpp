@@ -75,7 +75,7 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
     } else {
       // Variable binning detected
       variantParams.set<std::string>(bname + "_" + bv + "_type", "variable");
-      // Get the number of bins explicitely
+      // Get the number of bins explicitly
       auto boundaries =
           xmlBinning.attr<std::string>(std::string(bv + "boundaries").c_str());
       std::string del = ",";
