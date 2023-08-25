@@ -150,6 +150,7 @@ void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
+void addObj(Context& ctx);
 void addOnnx(Context& ctx);
 void addOnnxMlpack(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
@@ -399,6 +400,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
+  addObj(ctx);
   addSvg(ctx);
   addOnnx(ctx);
   addOnnxMlpack(ctx);
