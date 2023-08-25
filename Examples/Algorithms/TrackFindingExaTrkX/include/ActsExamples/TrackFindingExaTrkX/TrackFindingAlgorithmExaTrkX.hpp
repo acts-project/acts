@@ -28,7 +28,7 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   struct Config {
     /// Input spacepoints collection.
     std::string inputSpacePoints;
-    
+
     /// Input cluster information (Optional). If given, the following features
     /// are added:
     /// * cell count
