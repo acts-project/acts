@@ -137,12 +137,13 @@ void ActsExamples::ScalingCalibrator::calibrate(
   assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
+  auto geoId = trackState.referenceSurface().geometryId();
   Acts::GeometryIdentifier mgid;
-  mgid.setVolume(sourceLink.geometryId().volume() *
+  mgid.setVolume(geoId.volume() *
                  static_cast<Acts::GeometryIdentifier::Value>(m_mask[2]));
-  mgid.setLayer(sourceLink.geometryId().layer() *
+  mgid.setLayer(geoId.layer() *
                 static_cast<Acts::GeometryIdentifier::Value>(m_mask[1]));
-  mgid.setSensitive(sourceLink.geometryId().sensitive() *
+  mgid.setSensitive(geoId.sensitive() *
                     static_cast<Acts::GeometryIdentifier::Value>(m_mask[0]));
   const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);
