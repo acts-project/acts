@@ -1205,7 +1205,6 @@ def addExaTrkX(
 
     metricLearningConfig = {
         "level": customLogLevel(),
-        "spacepointFeatures": 3,
         "embeddingDim": 8,
         "rVal": 1.6,
         "knnVal": 100,
@@ -1223,10 +1222,13 @@ def addExaTrkX(
 
     if backend == ExaTrkXBackend.Torch:
         metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
+        metricLearningConfig["numFeatures"] = 3
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["nChunks"] = 10
+        filterConfig["numFeatures"] = 3
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
         gnnConfig["undirected"] = True
+        gnnConfig["numFeatures"] = 3
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
@@ -1236,6 +1238,7 @@ def addExaTrkX(
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
     elif backend == ExaTrkXBackend.Onnx:
         metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
+        metricLearningConfig["spacepointFeatures"] = 3
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 

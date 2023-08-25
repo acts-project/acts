@@ -202,6 +202,13 @@ class GenericBoundTrackParameters {
   /// Time coordinate.
   Scalar time() const { return m_params[eBoundTime]; }
 
+  /// Phi direction.
+  Scalar phi() const { return m_params[eBoundPhi]; }
+  /// Theta direction.
+  Scalar theta() const { return m_params[eBoundTheta]; }
+  /// Charge over momentum.
+  Scalar qOverP() const { return m_params[eBoundQOverP]; }
+
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
   Vector3 direction() const {
