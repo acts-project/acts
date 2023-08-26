@@ -54,8 +54,9 @@ struct Gx2FitterExtensions {
       typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
-  using Calibrator = Delegate<void(const GeometryContext&, const SourceLink&,
-                                   TrackStateProxy)>;
+  using Calibrator =
+      Delegate<void(const GeometryContext&, const CalibrationContext&,
+                    const SourceLink&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         Direction, const Logger&)>;
@@ -287,6 +288,9 @@ class Gx2Fitter {
     /// The Surface being
     SurfaceReached targetReached;
 
+    /// Calibration context for the fit
+    const CalibrationContext* calibrationContext{nullptr};
+
     /// @brief Gx2f actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagator state
@@ -363,8 +367,8 @@ class Gx2Fitter {
 
           // We have predicted parameters, so calibrate the uncalibrated input
           // measurement
-          extensions.calibrator(state.geoContext, sourcelink_it->second,
-                                trackStateProxy);
+          extensions.calibrator(state.geoContext, *calibrationContext,
+                                sourcelink_it->second, trackStateProxy);
 
           const size_t measdimPlaceholder = 2;
           auto measurement =
@@ -504,6 +508,7 @@ class Gx2Fitter {
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
+      gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
 
       typename propagator_t::template action_list_t_result_t<
