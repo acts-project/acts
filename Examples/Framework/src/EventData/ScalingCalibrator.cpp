@@ -12,6 +12,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -129,7 +130,9 @@ ActsExamples::ScalingCalibrator::ScalingCalibrator(
 
 void ActsExamples::ScalingCalibrator::calibrate(
     const MeasurementContainer& measurements, const ClusterContainer* clusters,
-    const Acts::GeometryContext& /*gctx*/, const Acts::SourceLink& sourceLink,
+    const Acts::GeometryContext& /*gctx*/,
+    const Acts::CalibrationContext& /*cctx*/,
+    const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
   trackState.setUncalibratedSourceLink(sourceLink);
   const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
@@ -137,12 +140,13 @@ void ActsExamples::ScalingCalibrator::calibrate(
   assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
+  auto geoId = trackState.referenceSurface().geometryId();
   Acts::GeometryIdentifier mgid;
-  mgid.setVolume(sourceLink.geometryId().volume() *
+  mgid.setVolume(geoId.volume() *
                  static_cast<Acts::GeometryIdentifier::Value>(m_mask[2]));
-  mgid.setLayer(sourceLink.geometryId().layer() *
+  mgid.setLayer(geoId.layer() *
                 static_cast<Acts::GeometryIdentifier::Value>(m_mask[1]));
-  mgid.setSensitive(sourceLink.geometryId().sensitive() *
+  mgid.setSensitive(geoId.sensitive() *
                     static_cast<Acts::GeometryIdentifier::Value>(m_mask[0]));
   const Cluster& cl = clusters->at(idxSourceLink.index());
   ConstantTuple ct = m_calib_maps.at(mgid).at(cl.sizeLoc0, cl.sizeLoc1);

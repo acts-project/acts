@@ -202,7 +202,8 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
                                    const MapGeometryIdTo& geometryMapper) {
   std::visit(
       [&](const auto& m) {
-        Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
+        Acts::GeometryIdentifier geoId =
+            m.sourceLink().template get<IndexSourceLink>().geometryId();
 
         if (geometryMapper) {
           // no need for digitization as we only want to identify the sensor
