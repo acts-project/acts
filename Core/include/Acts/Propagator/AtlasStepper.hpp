@@ -35,7 +35,7 @@ namespace Acts {
 class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
+  using Covariance = BoundSquareMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
@@ -94,7 +94,7 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance = new BoundSymMatrix(*pars.covariance());
+        covariance = new BoundSquareMatrix(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
@@ -310,8 +310,8 @@ class AtlasStepper {
   /// @param [in] surface Reset state will be on this surface
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface,
+      State& state, const BoundVector& boundParams,
+      const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
     update(state,
@@ -697,7 +697,7 @@ class AtlasStepper {
       state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
     }
 
-    state.covariance = new BoundSymMatrix(covariance);
+    state.covariance = new BoundSquareMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 

@@ -43,7 +43,7 @@ struct EventDataView3D {
   ///
   /// @param covariance The covariance matrix
   static inline std::array<double, 3> decomposeCovariance(
-      const ActsSymMatrix<2>& covariance) {
+      const ActsSquareMatrix<2>& covariance) {
     double c00 = covariance(eBoundLoc0, eBoundLoc0);
     double c01 = covariance(eBoundLoc0, eBoundLoc1);
     double c11 = covariance(eBoundLoc1, eBoundLoc1);
@@ -103,7 +103,7 @@ struct EventDataView3D {
   /// @param viewConfig The visualization parameters
   static void drawCovarianceCartesian(
       IVisualization3D& helper, const Vector2& lposition,
-      const SymMatrix2& covariance, const Transform3& transform,
+      const SquareMatrix2& covariance, const Transform3& transform,
       double locErrorScale = 1, const ViewConfig& viewConfig = s_viewParameter);
 
   /// Helper method to draw error cone of a direction
@@ -117,7 +117,7 @@ struct EventDataView3D {
   /// @param viewConfig The visualization parameters
   static void drawCovarianceAngular(
       IVisualization3D& helper, const Vector3& position,
-      const Vector3& direction, const ActsSymMatrix<2>& covariance,
+      const Vector3& direction, const ActsSquareMatrix<2>& covariance,
       double directionScale = 1, double angularErrorScale = 1,
       const ViewConfig& viewConfig = s_viewParameter);
 
@@ -190,7 +190,7 @@ struct EventDataView3D {
   /// TODO: Expand to 1D measurements
   static void drawMeasurement(
       IVisualization3D& helper, const Vector2& lposition,
-      const SymMatrix2& covariance, const Transform3& transform,
+      const SquareMatrix2& covariance, const Transform3& transform,
       const double locErrorScale = 1.,
       const ViewConfig& measurementConfig = s_viewMeasurement) {
     if (locErrorScale <= 0) {
@@ -257,7 +257,8 @@ struct EventDataView3D {
       // @Todo: how to draw 1D measurement?
       if (state.hasCalibrated() and state.calibratedSize() == 2) {
         const Vector2& lposition = state.template calibrated<2>();
-        const SymMatrix2 covariance = state.template calibratedCovariance<2>();
+        const SquareMatrix2 covariance =
+            state.template calibratedCovariance<2>();
         drawMeasurement(helper, lposition, covariance,
                         state.referenceSurface().transform(gctx), locErrorScale,
                         measurementConfig);

@@ -31,7 +31,7 @@ class GenericCurvilinearTrackParameters
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
-  using CovarianceMatrix = BoundSymMatrix;
+  using CovarianceMatrix = BoundSquareMatrix;
 
   /// Construct from four-position, direction, absolute momentum, and charge.
   ///
@@ -120,6 +120,18 @@ class GenericCurvilinearTrackParameters
       const GenericCurvilinearTrackParameters&) = default;
   GenericCurvilinearTrackParameters& operator=(
       GenericCurvilinearTrackParameters&&) = default;
+
+  using GenericBoundTrackParameters<charge_t>::fourPosition;
+  using GenericBoundTrackParameters<charge_t>::position;
+
+  /// Space-time position four-vector.
+  Vector4 fourPosition() const {
+    return GenericBoundTrackParameters<charge_t>::fourPosition({});
+  }
+  /// Spatial position three-vector.
+  Vector3 position() const {
+    return GenericBoundTrackParameters<charge_t>::position({});
+  }
 };
 
 }  // namespace Acts

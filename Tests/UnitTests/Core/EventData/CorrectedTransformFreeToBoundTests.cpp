@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   sBoundParams << loc0, loc1, phi, theta, qOverP, t;
 
   // the bound parameters covariance at the starting  plane
-  BoundSymMatrix sBoundCov = BoundSymMatrix::Zero();
+  BoundSquareMatrix sBoundCov = BoundSquareMatrix::Zero();
   sBoundCov(eBoundLoc0, eBoundLoc0) = resLoc0 * resLoc0;
   sBoundCov(eBoundLoc1, eBoundLoc1) = resLoc1 * resLoc1;
   sBoundCov(eBoundPhi, eBoundPhi) = resPhi * resPhi;
@@ -100,10 +100,11 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   transportJac(eFreePos2, eFreeDir2) = s;
 
   // the free covariance at the start position
-  FreeSymMatrix sFreeCov =
+  FreeSquareMatrix sFreeCov =
       boundToFreeJac * sBoundCov * boundToFreeJac.transpose();
   // the free covariance at the end position
-  FreeSymMatrix eFreeCov = transportJac * sFreeCov * transportJac.transpose();
+  FreeSquareMatrix eFreeCov =
+      transportJac * sFreeCov * transportJac.transpose();
 
   // convert free parameters to bound parameters with non-linear correction
 
@@ -121,7 +122,8 @@ BOOST_AUTO_TEST_CASE(CorrectedFreeToBoundTrackParameters) {
   BOOST_CHECK(correctedRes.has_value());
   auto correctedValue = correctedRes.value();
   BoundVector eCorrectedBoundParams = std::get<BoundVector>(correctedValue);
-  BoundSymMatrix eCorrectedBoundCov = std::get<BoundSymMatrix>(correctedValue);
+  BoundSquareMatrix eCorrectedBoundCov =
+      std::get<BoundSquareMatrix>(correctedValue);
 
   // the loc0, phi are the same as that without correction
   BOOST_CHECK_EQUAL(eCorrectedBoundParams[eBoundLoc0], loc0);

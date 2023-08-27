@@ -33,7 +33,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();

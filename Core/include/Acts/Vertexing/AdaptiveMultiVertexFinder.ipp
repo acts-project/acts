@@ -169,7 +169,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
                               Vertex<InputTrack_t>& seedVertex) const -> void {
   if (m_cfg.useBeamSpotConstraint) {
-    if (currentConstraint.fullCovariance() == SymMatrix4::Zero()) {
+    if (currentConstraint.fullCovariance() == SquareMatrix4::Zero()) {
       ACTS_WARNING(
           "No constraint provided, but useBeamSpotConstraint set to true.");
     }
@@ -183,7 +183,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     }
   } else {
     currentConstraint.setFullPosition(seedVertex.fullPosition());
-    currentConstraint.setFullCovariance(SymMatrix4::Identity() *
+    currentConstraint.setFullCovariance(SquareMatrix4::Identity() *
                                         m_cfg.looseConstrValue);
     currentConstraint.setFitQuality(m_cfg.defaultConstrFitQuality);
   }
@@ -201,7 +201,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
   // it probably should be used.
   Vertex<InputTrack_t> newVtx = vtx;
   if (not m_cfg.useVertexCovForIPEstimation) {
-    newVtx.setFullCovariance(SymMatrix4::Zero());
+    newVtx.setFullCovariance(SquareMatrix4::Zero());
   }
 
   auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
@@ -501,7 +501,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const Vertex<InputTrack_t>& vtx,
     const std::vector<Vertex<InputTrack_t>*>& allVertices) const -> bool {
   const Vector4& candidatePos = vtx.fullPosition();
-  const SymMatrix4& candidateCov = vtx.fullCovariance();
+  const SquareMatrix4& candidateCov = vtx.fullCovariance();
   const double candidateZPos = candidatePos[eZ];
   const double candidateZCov = candidateCov(eZ, eZ);
 
@@ -510,7 +510,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
       continue;
     }
     const Vector4& otherPos = otherVtx->fullPosition();
-    const SymMatrix4& otherCov = otherVtx->fullCovariance();
+    const SquareMatrix4& otherCov = otherVtx->fullCovariance();
     const double otherZPos = otherPos[eZ];
     const double otherZCov = otherCov(eZ, eZ);
 
@@ -528,7 +528,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
       significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
     } else {
       // Use full 3d information for significance
-      SymMatrix4 sumCov = candidateCov + otherCov;
+      SquareMatrix4 sumCov = candidateCov + otherCov;
       auto sumCovInverse = safeInverse(sumCov);
       if (!sumCovInverse) {
         // TODO FIXME this should never happen

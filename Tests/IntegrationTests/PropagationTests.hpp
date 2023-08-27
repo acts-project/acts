@@ -61,7 +61,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   stddev[eBoundPhi] = 1_degree;
   stddev[eBoundTheta] = 1.5_degree;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
-  BoundSymMatrix corr = BoundSymMatrix::Identity();
+  BoundSquareMatrix corr = BoundSquareMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
   corr(eBoundLoc0, eBoundPhi) = corr(eBoundPhi, eBoundLoc0) = 0.25;
   corr(eBoundLoc1, eBoundTheta) = corr(eBoundTheta, eBoundLoc1) = -0.25;
@@ -69,7 +69,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundPhi, eBoundTheta) = corr(eBoundTheta, eBoundPhi) = -0.25;
   corr(eBoundPhi, eBoundQOverP) = corr(eBoundPhi, eBoundQOverP) = -0.125;
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
-  BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
+  BoundSquareMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
   Vector4 pos4 = Vector4::Zero();
   return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge, cov);
