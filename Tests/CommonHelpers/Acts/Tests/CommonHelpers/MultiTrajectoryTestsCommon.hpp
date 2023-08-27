@@ -14,7 +14,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <random>
@@ -365,11 +367,12 @@ class MultiTrajectoryTestsCommon {
     // use temporary measurement to reset calibrated data
     TestTrackState ttsb(rng, 2u);
     Acts::GeometryContext gctx;
+    Acts::CalibrationContext cctx;
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
         pc.sourceLink.sourceId);
     auto meas = testSourceLinkCalibratorReturn<trajectory_t>(
-        gctx, SourceLink{ttsb.sourceLink}, ts);
+        gctx, cctx, SourceLink{ttsb.sourceLink}, ts);
     BOOST_CHECK_EQUAL(
         ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
         ttsb.sourceLink.sourceId);
@@ -394,7 +397,7 @@ class MultiTrajectoryTestsCommon {
     // check that the surface is correctly set
     BOOST_CHECK_EQUAL(&ts.referenceSurface(), pc.surface.get());
     BOOST_CHECK_EQUAL(ts.referenceSurface().geometryId(),
-                      pc.sourceLink.geometryId());
+                      pc.sourceLink.m_geometryId);
 
     // check that the track parameters are set
     BOOST_CHECK(ts.hasPredicted());
@@ -453,9 +456,10 @@ class MultiTrajectoryTestsCommon {
     fullProj.setZero();
     {
       Acts::GeometryContext gctx;
+      Acts::CalibrationContext cctx;
       // create a temporary measurement to extract the projector matrix
       auto meas = testSourceLinkCalibratorReturn<trajectory_t>(
-          gctx, SourceLink{pc.sourceLink}, ts);
+          gctx, cctx, SourceLink{pc.sourceLink}, ts);
       std::visit(
           [&](const auto& m) {
             fullProj.topLeftCorner(nMeasurements, eBoundSize) = m.projector();

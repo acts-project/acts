@@ -31,7 +31,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
   visit_measurement(trackState.calibratedSize, [&](auto N) -> bool {
     constexpr size_t kMeasurementSize = decltype(N)::value;
     using ParametersVector = ActsVector<kMeasurementSize>;
-    using CovarianceMatrix = ActsSymMatrix<kMeasurementSize>;
+    using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
 
     typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
         trackState.calibrated};
@@ -66,8 +66,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
 
     trackState.filtered =
         trackState.predicted + K * (calibrated - H * trackState.predicted);
-    trackState.filteredCovariance =
-        (BoundSymMatrix::Identity() - K * H) * trackState.predictedCovariance;
+    trackState.filteredCovariance = (BoundSquareMatrix::Identity() - K * H) *
+                                    trackState.predictedCovariance;
     ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
     ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 

@@ -135,7 +135,7 @@ class GaussianGridTrackDensity {
   /// bin center in the 2-dim grid
   /// @param cov The track covariance matrix
   TrackGridVector createTrackGrid(float d0, float distCtrZ,
-                                  const Acts::SymMatrix2& cov) const;
+                                  const Acts::SquareMatrix2& cov) const;
 
   /// @brief Function that estimates the seed width based on the FWHM of
   /// the maximum density peak
@@ -151,7 +151,7 @@ class GaussianGridTrackDensity {
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
   /// @note This function is defined in coordinate system centered around d0 and z0
-  float normal2D(float d, float z, const SymMatrix2& cov) const;
+  float normal2D(float d, float z, const SquareMatrix2& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
   /// a maximum relative deviation of 'relativeDensityDev' from the main

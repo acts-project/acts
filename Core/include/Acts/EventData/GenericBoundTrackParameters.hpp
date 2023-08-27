@@ -37,7 +37,7 @@ class GenericBoundTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
-  using CovarianceMatrix = BoundSymMatrix;
+  using CovarianceMatrix = BoundSquareMatrix;
 
   /// Construct from a parameters vector on the surface and particle charge.
   ///
@@ -202,6 +202,13 @@ class GenericBoundTrackParameters {
   /// Time coordinate.
   Scalar time() const { return m_params[eBoundTime]; }
 
+  /// Phi direction.
+  Scalar phi() const { return m_params[eBoundPhi]; }
+  /// Theta direction.
+  Scalar theta() const { return m_params[eBoundTheta]; }
+  /// Charge over momentum.
+  Scalar qOverP() const { return m_params[eBoundQOverP]; }
+
   /// Unit direction three-vector, i.e. the normalized momentum
   /// three-vector.
   Vector3 direction() const {
@@ -240,7 +247,7 @@ class GenericBoundTrackParameters {
 
  private:
   BoundVector m_params;
-  std::optional<BoundSymMatrix> m_cov;
+  std::optional<BoundSquareMatrix> m_cov;
   /// reference surface
   std::shared_ptr<const Surface> m_surface;
   // TODO use [[no_unique_address]] once we switch to C++20

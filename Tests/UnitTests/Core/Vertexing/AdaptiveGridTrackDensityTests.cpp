@@ -34,7 +34,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   using Vector2 = Eigen::Matrix<float, 2, 1>;
