@@ -18,6 +18,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
@@ -63,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.pathLength() = 0.;
   BOOST_CHECK(!ts.hasUncalibratedSourceLink());
   testSourceLinkCalibrator<VectorMultiTrajectory>(
-      tgContext, SourceLink{std::move(sourceLink)}, ts);
+      tgContext, CalibrationContext{}, SourceLink{std::move(sourceLink)}, ts);
   BOOST_CHECK(ts.hasUncalibratedSourceLink());
 
   // Check that the state has storage available
