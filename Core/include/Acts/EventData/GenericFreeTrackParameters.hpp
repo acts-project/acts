@@ -32,7 +32,7 @@ class GenericFreeTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
-  using CovarianceMatrix = FreeSymMatrix;
+  using CovarianceMatrix = FreeSquareMatrix;
 
   /// Construct from a parameters vector and particle charge.
   ///
@@ -157,6 +157,13 @@ class GenericFreeTrackParameters {
   /// Time coordinate.
   Scalar time() const { return m_params[eFreeTime]; }
 
+  /// Phi direction.
+  Scalar phi() const { return phi(direction()); }
+  /// Theta direction.
+  Scalar theta() const { return theta(direction()); }
+  /// Charge over momentum.
+  Scalar qOverP() const { return m_params[eFreeQOverP]; }
+
   /// Unit direction three-vector, i.e. the normalized momentum three-vector.
   Vector3 direction() const {
     return m_params.segment<3>(eFreeDir0).normalized();
@@ -188,7 +195,7 @@ class GenericFreeTrackParameters {
 
  private:
   FreeVector m_params;
-  std::optional<FreeSymMatrix> m_cov;
+  std::optional<FreeSquareMatrix> m_cov;
   // TODO use [[no_unique_address]] once we switch to C++20
   charge_t m_chargeInterpreter;
 

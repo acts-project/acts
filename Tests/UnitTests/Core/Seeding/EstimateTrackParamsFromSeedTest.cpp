@@ -80,7 +80,7 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle starts from the origin
   Vector4 mPos4(0., 0., 0., 0.);
   return CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);
@@ -128,7 +128,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           std::map<GeometryIdentifier::Value, SpacePoint> spacePoints;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
-            const auto geoId = sl.geometryId();
+            const auto geoId = sl.m_geometryId;
             const auto& layer = geoId.layer();
             auto it = spacePoints.find(layer);
             // Avoid to use space point from the same layers

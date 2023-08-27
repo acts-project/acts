@@ -34,7 +34,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   const int trkGridSize = 15;

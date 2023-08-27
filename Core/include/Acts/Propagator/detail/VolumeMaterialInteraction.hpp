@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -28,15 +29,15 @@ struct VolumeMaterialInteraction {
   /// The particle current direction
   const Vector3 dir = Vector3::Zero();
   /// The particle q/p at the interaction
-  const double qOverP = 0;
+  const float qOverP = 0;
   /// The absolute particle charge
-  const double absQ = 0;
+  const float absQ = 0;
   /// The particle momentum at the interaction
-  const double momentum = 0;
+  const float momentum = 0;
   /// The particle mass
-  const double mass = 0;
+  const float mass = 0;
   /// The particle pdg
-  const int pdg = 0;
+  const PdgParticle absPdg = eInvalid;
   /// The covariance transport decision at the interaction
   const bool performCovarianceTransport = false;
   /// The navigation direction
@@ -64,10 +65,10 @@ struct VolumeMaterialInteraction {
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
         qOverP(stepper.qOverP(state.stepping)),
-        absQ(std::abs(stepper.charge(state.stepping))),
+        absQ(state.stepping.absCharge),
         momentum(stepper.absoluteMomentum(state.stepping)),
         mass(state.options.mass),
-        pdg(state.options.absPdgCode),
+        absPdg(state.options.absPdgCode),
         performCovarianceTransport(state.stepping.covTransport),
         navDir(state.options.direction) {}
 

@@ -43,7 +43,7 @@ template <typename generator_t, size_t kSize>
 struct BoundParametersSmearer {
   using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
@@ -114,7 +114,7 @@ template <typename generator_t, size_t kSize>
 struct FreeParametersSmearer {
   using Scalar = Acts::ActsScalar;
   using ParametersVector = Acts::ActsVector<kSize>;
-  using CovarianceMatrix = Acts::ActsSymMatrix<kSize>;
+  using CovarianceMatrix = Acts::ActsSquareMatrix<kSize>;
   using Result = Acts::Result<std::pair<ParametersVector, CovarianceMatrix>>;
 
   /// Parameter indices that will be used to create the smeared measurements.
