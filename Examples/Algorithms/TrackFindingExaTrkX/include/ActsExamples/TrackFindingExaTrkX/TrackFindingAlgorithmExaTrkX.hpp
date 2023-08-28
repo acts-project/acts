@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -25,6 +27,14 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     /// Input spacepoints collection.
     std::string inputSpacePoints;
 
+    /// Input cluster information (Optional). If given, the following features
+    /// are added:
+    /// * cell count
+    /// * sum cell activations
+    /// * cluster size in local x
+    /// * cluster size in local y
+    std::string inputClusters;
+
     /// Output protoTracks collection.
     std::string outputProtoTracks;
 
@@ -38,6 +48,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     float rScale = 1.f;
     float phiScale = 1.f;
     float zScale = 1.f;
+    float cellCountScale = 1.f;
+    float cellSumScale = 1.f;
+    float clusterXScale = 1.f;
+    float clusterYScale = 1.f;
   };
 
   /// Constructor of the track finding algorithm
@@ -66,6 +80,7 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};

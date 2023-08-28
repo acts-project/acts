@@ -14,8 +14,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -45,14 +44,14 @@ namespace {
 namespace bdata = boost::unit_test::data;
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using AnyBoundTrackParameters = SingleBoundTrackParameters<AnyCharge>;
+using AnyBoundTrackParameters = GenericBoundTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
-const BoundSymMatrix cov = BoundSymMatrix::Identity();
+const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
 template <typename charge_t>
-void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
+void checkParameters(const GenericBoundTrackParameters<charge_t>& params,
                      double l0, double l1, double time, double phi,
                      double theta, double p, double q, const Vector3& pos,
                      const Vector3& unitDir) {
@@ -71,7 +70,7 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), time, eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
                        eps);
@@ -85,7 +84,7 @@ void runTest(const std::shared_ptr<const Surface>& surface, double l0,
   phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
 
   // global direction for reference
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
   // convert local-to-global for reference
   const Vector2 loc(l0, l1);
   const Vector3 pos = surface->localToGlobal(geoCtx, loc, dir);

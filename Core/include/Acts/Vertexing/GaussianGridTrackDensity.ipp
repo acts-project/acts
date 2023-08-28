@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
@@ -57,7 +58,7 @@ std::pair<int, typename Acts::GaussianGridTrackDensity<
                    mainGridSize, trkGridSize>::TrackGridVector>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, MainGridVector& mainGrid) const {
-  SymMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
+  SquareMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
@@ -138,7 +139,7 @@ template <int mainGridSize, int trkGridSize>
 typename Acts::GaussianGridTrackDensity<mainGridSize,
                                         trkGridSize>::TrackGridVector
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2& cov, float distCtrD,
+    int offset, const Acts::SquareMatrix2& cov, float distCtrD,
     float distCtrZ) const {
   TrackGridVector trackGrid(TrackGridVector::Zero());
 
@@ -201,13 +202,13 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
 
 template <int mainGridSize, int trkGridSize>
 float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
-    float d, float z, const Acts::SymMatrix2& cov) const {
+    float d, float z, const Acts::SquareMatrix2& cov) const {
   float det = cov.determinant();
   float coef = 1 / (2 * M_PI * std::sqrt(det));
   float expo =
       -1 / (2 * det) *
       (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
-  return coef * std::exp(expo);
+  return coef * safeExp(expo);
 }
 
 template <int mainGridSize, int trkGridSize>

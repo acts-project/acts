@@ -24,6 +24,7 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
+set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # external library options
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
@@ -292,6 +293,8 @@ if(ACTS_BUILD_PLUGIN_CUDA)
   enable_cuda()
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
+  # Explicitly find python so we can more easily override the version
+  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
 if(ACTS_BUILD_PLUGIN_JSON)
