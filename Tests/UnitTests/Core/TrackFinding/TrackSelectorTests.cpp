@@ -12,6 +12,7 @@
 #include "Acts/TrackFinding/TrackSelector.hpp"
 
 using namespace Acts;
+namespace bdata = boost::unit_test::data;
 
 struct MockTrack {
   double m_theta;
@@ -31,15 +32,21 @@ struct MockTrack {
   double nMeasurements() const { return m_nMeasurements; }
 };
 
+double thetaFromEta(double eta) {
+  return 2 * std::atan(std::exp(-eta));
+}
+
 BOOST_AUTO_TEST_SUITE(TrackSelectorTests)
 
-BOOST_AUTO_TEST_CASE(TestSingleBinCase) {
+std::vector<double> etaValues{-5.0, -4.5, -4.0, -3.5, -3.0, -2.5, -2.0, -1.5,
+                              -1.0, -0.5, 0.0,  0.5,  1.0,  1.5,  2.0,  2.5,
+                              3.0,  3.5,  4.0,  4.5,  5.0,  1.0};
+
+BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
   TrackSelector::Config cfgBase;
 
-  auto thetaFromEta = [](double eta) { return 2 * std::atan(std::exp(-eta)); };
-
   MockTrack baseTrack{};
-  baseTrack.m_theta = thetaFromEta(0.5);
+  baseTrack.m_theta = thetaFromEta(eta);
   baseTrack.m_phi = 0.5;
   baseTrack.m_pt = 0.5;
   baseTrack.m_loc0 = 0.5;
@@ -144,6 +151,7 @@ BOOST_AUTO_TEST_CASE(TestSingleBinCase) {
     cfg.etaMin = {-1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
+    track.m_theta = thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
     track.m_theta = thetaFromEta(-1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
@@ -155,6 +163,7 @@ BOOST_AUTO_TEST_CASE(TestSingleBinCase) {
     cfg.etaMax = {1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
+    track.m_theta = thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
     track.m_theta = thetaFromEta(1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
@@ -167,6 +176,7 @@ BOOST_AUTO_TEST_CASE(TestSingleBinCase) {
     cfg.etaMax = {1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
+    track.m_theta = thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
     track.m_theta = thetaFromEta(-1.1);
     BOOST_CHECK(!selector.isValidTrack(track));
@@ -180,6 +190,7 @@ BOOST_AUTO_TEST_CASE(TestSingleBinCase) {
     cfg.absEtaMin = {0.2};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
+    track.m_theta = thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
     track.m_theta = thetaFromEta(-0.5);
     BOOST_CHECK(selector.isValidTrack(track));
@@ -196,6 +207,7 @@ BOOST_AUTO_TEST_CASE(TestSingleBinCase) {
     cfg.absEtaMax = {1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
+    track.m_theta = thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
     track.m_theta = thetaFromEta(-0.5);
     BOOST_CHECK(selector.isValidTrack(track));
@@ -213,6 +225,7 @@ BOOST_AUTO_TEST_CASE(TestSingleBinCase) {
     cfg.absEtaMax = {1.0};
     TrackSelector selector{cfg};
     MockTrack track = baseTrack;
+    track.m_theta = thetaFromEta(0.5);
     BOOST_CHECK(selector.isValidTrack(track));
     track.m_theta = thetaFromEta(-0.5);
     BOOST_CHECK(selector.isValidTrack(track));
