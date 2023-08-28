@@ -18,6 +18,7 @@
 #include "G4LogicalVolume.hh"
 #include "G4PVPlacement.hh"
 #include "G4RotationMatrix.hh"
+#include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
 #include "G4Transform3D.hh"
 #include "G4Tubs.hh"
@@ -62,7 +63,10 @@ BOOST_AUTO_TEST_CASE(Geant4DetecturSurfaceFactory_Cylinder) {
 
   G4LogicalVolume* worldLV = new G4LogicalVolume(worldS, nullptr, "World");
 
-  G4Tubs* cylinderS = new G4Tubs("cylinder", 99, 100, 100, 0., 360.);
+  G4Tubs* cylinderS =
+      new G4Tubs("cylinder", 99, 100, 100, -M_PI * CLHEP::radian,
+                 2 * M_PI * CLHEP::radian);
+
   G4LogicalVolume* cylinderLV =
       new G4LogicalVolume(cylinderS, nullptr, "World");
   G4VPhysicalVolume* cylinderPV =
