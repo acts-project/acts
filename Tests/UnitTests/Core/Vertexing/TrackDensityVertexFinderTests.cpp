@@ -143,12 +143,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = ActsSquareMatrix<3>::Identity();
 
-  Vertex<BoundTrackParameters> beamSpot(constraintPos);
-  beamSpot.setCovariance(constrCov);
+  Vertex<BoundTrackParameters> constraint(constraintPos);
+  constraint.setCovariance(constrCov);
 
   // Finder options
   VertexingOptions<BoundTrackParameters> vertexingOptions(
-      geoContext, magFieldContext, beamSpot);
+      geoContext, magFieldContext, constraint);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>,
                                GaussianTrackDensity<BoundTrackParameters>>;
@@ -313,12 +313,12 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = SquareMatrix3::Identity();
 
-  Vertex<InputTrack> beamSpot(constraintPos);
-  beamSpot.setCovariance(constrCov);
+  Vertex<InputTrack> constraint(constraintPos);
+  constraint.setCovariance(constrCov);
 
   // Finder options
   VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
-                                                beamSpot);
+                                                constraint);
 
   std::function<BoundTrackParameters(InputTrack)> extractParameters =
       [](const InputTrack& params) { return params.parameters(); };

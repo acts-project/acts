@@ -26,19 +26,19 @@ struct VertexingOptions {
 
   /// VertexingOptions with context and beam spot constraint
   ///
-  /// @param gctx The goemetry context for this fit
-  /// @param mctx The magnetic context for this fit
-  /// @param bsConstr The beamspot constraint
-  /// @param useConstr Boolean indicating whether vertex constraint should be used
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
+  /// @param constr Vertex constraint
+  /// @param useConstr Boolean indicating whether vertex constraint should be used during the vertex fit
   VertexingOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
-                   const Vertex<input_track_t>& bsConstr,
+                   const Vertex<input_track_t>& constr,
                    const bool useConstr = true)
       : geoContext(gctx),
         magFieldContext(mctx),
-        beamSpot(bsConstr),
-        useBeamSpotConstraint(useConstr) {
-    if (useBeamSpotConstraint && beamSpot.covariance().determinant() == 0.) {
+        constraint(constr),
+        useConstraintInFit(useConstr) {
+    if (useConstraintInFit && constraint.covariance().determinant() == 0.) {
       throw std::invalid_argument(
           "Vertex constraint covariance matrix must be invertible.");
     }
@@ -46,25 +46,27 @@ struct VertexingOptions {
 
   /// VertexingOptions with context and without beam spot constraint
   ///
-  /// @param gctx The goemetry context for this fit
-  /// @param mctx The magnetic context for this fit
+  /// @param gctx Geometry context
+  /// @param mctx Magnetic field context
   VertexingOptions(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx)
       : geoContext(gctx), magFieldContext(mctx) {
-    beamSpot = Vertex<input_track_t>();
-    useBeamSpotConstraint = false;
+    constraint = Vertex<input_track_t>();
+    useConstraintInFit = false;
   }
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
   /// Context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-  /// Beam spot information. The corresponding position will be the first
-  /// estimate of each vertex position.
-  Vertex<input_track_t> beamSpot;
-  /// Boolean indicating whether we use the beam spot information during the
-  /// vertex fit. If set to true, the covariance matrix of beamSpot must be set.
-  bool useBeamSpotConstraint;
+  /// Vertex constraint. Important note: While this variable is not used during
+  /// the vertex fit if useConstraintInFit is set to false, it is always used
+  /// during vertex finding.
+  Vertex<input_track_t> constraint;
+  /// Boolean indicating whether we use the constraint information during
+  /// the vertex fit. If set to true, the covariance matrix of constraint must
+  /// be invertible.
+  bool useConstraintInFit;
 };
 
 }  // namespace Acts

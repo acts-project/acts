@@ -86,14 +86,14 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
   // Since we add a term to the chi2 when adding a vertex constraint (see Ref.
   // (1)), the number of degrees of freedom increases
-  if (vertexingOptions.useBeamSpotConstraint) {
+  if (vertexingOptions.useConstraintInFit) {
     ndf += 3;
   }
 
   std::vector<BilloirTrack<input_track_t>> billoirTracks;
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
-  Vector4 linPoint = vertexingOptions.beamSpot.fullPosition();
+  Vector4 linPoint = vertexingOptions.constraint.fullPosition();
   Vertex<input_track_t> fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
@@ -184,21 +184,21 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     // Cov(V) = Cov(deltaV)), see Ref. (1).
     // invCovV = A-sum{Bi*Ci^-1*Bi^T}
     SquareMatrix4 invCovV = billoirVertex.A - billoirVertex.sumBCinvBt;
-    if (vertexingOptions.useBeamSpotConstraint) {
+    if (vertexingOptions.useConstraintInFit) {
       // Position of vertex constraint in Billoir frame (i.e., in coordinate
       // system with origin at linPoint). This will be 0 for first iteration but
       // != 0 from second on since our first guess for the vertex position is
       // the vertex constraint position.
       Vector4 posInBilloirFrame =
-          vertexingOptions.beamSpot.fullPosition() - linPoint;
+          vertexingOptions.constraint.fullPosition() - linPoint;
 
       // For vertex constraint: T -> T + Cb^-1 (b - V0) where Cb is the
       // covariance matrix of the constraint, b is the constraint position, and
       // V0 is the vertex estimate (see Ref. (1)).
-      deltaVFac += vertexingOptions.beamSpot.fullCovariance().inverse() *
+      deltaVFac += vertexingOptions.constraint.fullCovariance().inverse() *
                    posInBilloirFrame;
       // For vertex constraint: A -> A + Cb^-1
-      invCovV += vertexingOptions.beamSpot.fullCovariance().inverse();
+      invCovV += vertexingOptions.constraint.fullCovariance().inverse();
     }
 
     // Covariance matrix of the 4D vertex position
@@ -278,15 +278,16 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
 
     // Add an additional term to chi2 if there is a vertex constraint (see Ref.
     // (1))
-    if (vertexingOptions.useBeamSpotConstraint) {
+    if (vertexingOptions.useConstraintInFit) {
       // Position of vertex constraint in Billoir frame (i.e., in coordinate
       // system with origin at linPoint).
       Vector4 posInBilloirFrame =
-          vertexingOptions.beamSpot.fullPosition() - linPoint;
+          vertexingOptions.constraint.fullPosition() - linPoint;
 
-      newChi2 += (posInBilloirFrame.transpose())
-                     .dot(vertexingOptions.beamSpot.fullCovariance().inverse() *
-                          posInBilloirFrame);
+      newChi2 +=
+          (posInBilloirFrame.transpose())
+              .dot(vertexingOptions.constraint.fullCovariance().inverse() *
+                   posInBilloirFrame);
     }
 
     if (!std::isnormal(newChi2)) {
