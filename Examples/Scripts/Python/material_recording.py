@@ -26,7 +26,11 @@ _material_recording_executed = False
 
 
 def runMaterialRecording(
-    detectorConstructionFactory, outputDir, tracksPerEvent=10000, s=None, etaRange = (-4, 4)
+    detectorConstructionFactory,
+    outputDir,
+    tracksPerEvent=10000,
+    s=None,
+    etaRange=(-4, 4),
 ):
     global _material_recording_executed
     if _material_recording_executed:
@@ -85,18 +89,23 @@ def runMaterialRecording(
     return s
 
 
-
 def main():
 
     p = argparse.ArgumentParser()
-    p.add_argument('-n', '--events', type=int, default=1000, help='Number of events to generate')
-    p.add_argument('-t', '--tracks', type=int, default=100, help='Particle tracks per event')
-    p.add_argument('-i', '--input', type=str, default='', help='GDML input file (optional)')
-                        
+    p.add_argument(
+        "-n", "--events", type=int, default=1000, help="Number of events to generate"
+    )
+    p.add_argument(
+        "-t", "--tracks", type=int, default=100, help="Particle tracks per event"
+    )
+    p.add_argument(
+        "-i", "--input", type=str, default="", help="GDML input file (optional)"
+    )
+
     args = p.parse_args()
 
     detectorConstructionFactory = None
-    if args.input != '':
+    if args.input != "":
         detectorConstructionFactory = (
             acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
         )
@@ -113,7 +122,7 @@ def main():
         detectorConstructionFactory=detectorConstructionFactory,
         tracksPerEvent=args.tracks,
         outputDir=os.getcwd(),
-        s=acts.examples.Sequencer(events=args.events, numThreads=1)
+        s=acts.examples.Sequencer(events=args.events, numThreads=1),
     ).run()
 
 
