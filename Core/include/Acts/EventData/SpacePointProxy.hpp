@@ -40,9 +40,9 @@ class SpacePointProxy {
   // copy and move operations are defaults
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ValueType& sp();
+  ValueType& externalSpacePoint();
 
-  ValueType& sp() const;
+  ValueType& externalSpacePoint() const;
 
   std::size_t index() const;
 

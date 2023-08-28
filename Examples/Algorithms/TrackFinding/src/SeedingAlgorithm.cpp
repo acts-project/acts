@@ -291,8 +291,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   SeedContainerForStorage.reserve(seeds.size());
   for (const auto& seed : seeds) {
     const auto& sps = seed.sp();
-    SeedContainerForStorage.emplace_back(*sps[0]->sp(), *sps[1]->sp(),
-                                         *sps[2]->sp(), seed.z(),
+    SeedContainerForStorage.emplace_back(*sps[0]->externalSpacePoint(), *sps[1]->externalSpacePoint(),
+                                         *sps[2]->externalSpacePoint(), seed.z(),
                                          seed.seedQuality());
   }
 

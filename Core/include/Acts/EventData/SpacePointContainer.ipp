@@ -18,7 +18,7 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     : m_config(config.toInternalUnits()),
       m_options(options.toInternalUnits()),
       m_container(container) {
-  this->initialize();
+  initialize();
 }
 
 template <typename container_t, template <typename> class holder_t>
@@ -29,14 +29,14 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     : m_config(config.toInternalUnits()),
       m_options(options.toInternalUnits()),
       m_container(std::move(container)) {
-  this->initialize();
+  initialize();
 }
 
 template <typename container_t, template <typename> class holder_t>
 void SpacePointContainer<container_t, holder_t>::initialize() {
-  m_data.resize(this->size(), m_config.useDetailedDoubleMeasurementInfo);
-  const auto& external_container = this->container();
-  for (std::size_t i(0); i < this->size(); ++i) {
+  m_data.resize(size(), m_config.useDetailedDoubleMeasurementInfo);
+  const auto& external_container = container();
+  for (std::size_t i(0); i < size(); ++i) {
     m_data.setX(i, external_container.x_impl(i) - m_options.beamPos[0]);
     m_data.setY(i, external_container.y_impl(i) - m_options.beamPos[1]);
     m_data.setZ(i, external_container.z_impl(i));
@@ -50,7 +50,7 @@ void SpacePointContainer<container_t, holder_t>::initialize() {
   // Dynamic variables
   if (m_config.useDetailedDoubleMeasurementInfo) {
     using namespace Acts::HashedStringLiteral;
-    for (std::size_t i(0); i < this->size(); ++i) {
+    for (std::size_t i(0); i < size(); ++i) {
       m_data.setTopStripVector(
           i, std::any_cast<Acts::Vector3>(
                  external_container.component_impl("TopStripVector"_hash, i)));

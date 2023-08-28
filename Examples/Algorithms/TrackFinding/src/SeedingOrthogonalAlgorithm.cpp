@@ -108,7 +108,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 
   for (const auto &seed : seeds) {
     const auto &sps = seed.sp();
-    seedsToAdd.emplace_back(*sps[0]->sp(), *sps[1]->sp(), *sps[2]->sp(),
+    seedsToAdd.emplace_back(*sps[0]->externalSpacePoint(), *sps[1]->externalSpacePoint(), *sps[2]->externalSpacePoint(),
                             seed.z(), seed.seedQuality());
   }
 
