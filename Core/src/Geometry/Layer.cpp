@@ -131,7 +131,7 @@ Acts::Layer::compatibleSurfaces(
     // intersect the end surface
     // - it is the final one don't use the boundary check at all
     SurfaceIntersection endInter = options.endObject->intersect(
-        gctx, position, options.navDir * direction, BoundaryCheck(true));
+        gctx, position, direction, BoundaryCheck(true));
     // non-valid intersection with the end surface provided at this layer
     // indicates wrong direction or faulty setup
     // -> do not return compatible surfaces since they may lead you on a wrong
@@ -148,7 +148,7 @@ Acts::Layer::compatibleSurfaces(
     // -> this avoids punch through for cylinders
     double pCorrection =
         surfaceRepresentation().pathCorrection(gctx, position, direction);
-    pathLimit = 1.5 * thickness() * pCorrection * options.navDir;
+    pathLimit = 1.5 * thickness() * pCorrection;
   }
 
   // lemma 0 : accept the surface
@@ -185,12 +185,11 @@ Acts::Layer::compatibleSurfaces(
     }
     // the surface intersection
     SurfaceIntersection sfi =
-        sf.intersect(gctx, position, options.navDir * direction, boundaryCheck);
+        sf.intersect(gctx, position, direction, boundaryCheck);
     // check if intersection is valid and pathLimit has not been exceeded
     if (sfi && detail::checkIntersection(sfi.intersection, pathLimit,
                                          overstepLimit, s_onSurfaceTolerance)) {
       // Now put the right sign on it
-      sfi.intersection.pathLength *= options.navDir;
       sIntersections.push_back(sfi);
     }
   };
@@ -250,11 +249,7 @@ Acts::Layer::compatibleSurfaces(
   sIntersections.resize(std::distance(sIntersections.begin(), it));
 
   // sort according to the path length
-  if (options.navDir == Direction::Forward) {
-    std::sort(sIntersections.begin(), sIntersections.end());
-  } else {
-    std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
-  }
+  std::sort(sIntersections.begin(), sIntersections.end());
 
   return sIntersections;
 }
@@ -272,9 +267,6 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
                    (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
                     (surfaceRepresentation().surfaceMaterial() != nullptr));
 
-  // The signed direction: solution (except overstepping) is positive
-  auto sDirection = options.navDir * direction;
-
   // The Limits: current path & overstepping
   double pLimit = options.pathLimit;
   double oLimit = options.overstepLimit;
@@ -289,15 +281,12 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
 
     if (detail::checkIntersection(isection.intersection, pLimit, oLimit,
                                   s_onSurfaceTolerance)) {
-      isection.intersection.pathLength *= options.navDir;
       return isection;
     }
 
     if (isection.alternative and
         detail::checkIntersection(isection.alternative, pLimit, oLimit,
                                   s_onSurfaceTolerance)) {
-      // Set the right sign for the path length
-      isection.alternative.pathLength *= options.navDir;
       return SurfaceIntersection(isection.alternative, isection.object);
     }
 
@@ -308,13 +297,13 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   // Approach descriptor present and resolving is necessary
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
-        gctx, position, sDirection, options.boundaryCheck);
+        gctx, position, direction, options.boundaryCheck);
     return checkIntersection(aSurface);
   }
 
   // Intersect and check the representing surface
   const Surface& rSurface = surfaceRepresentation();
   auto sIntersection =
-      rSurface.intersect(gctx, position, sDirection, options.boundaryCheck);
+      rSurface.intersect(gctx, position, direction, options.boundaryCheck);
   return checkIntersection(sIntersection);
 }

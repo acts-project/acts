@@ -97,6 +97,16 @@ jobs:
       - name: Check
         run: >
           CI/check_spelling
+  missing_includes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install clang
+        run: >
+          sudo apt-get install -y clang libeigen3-dev libboost-dev
+      - name: Check
+        run: >
+          CI/missing_include_check.sh
   fpe_masks:
     runs-on: ubuntu-latest
     steps:

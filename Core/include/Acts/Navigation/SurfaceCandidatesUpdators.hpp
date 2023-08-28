@@ -193,9 +193,11 @@ using IndexedSurfacesImpl =
     IndexedUpdatorImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
 
 /// @brief An indexed surface implementation with portal access
-template <typename grid_type>
+///
+///@tparam inexed_updator is the updator for the indexed surfaces
+template <typename grid_type, template <typename> class indexed_updator>
 using IndexedSurfacesAllPortalsImpl =
-    ChainedUpdatorImpl<IndexedSurfacesImpl<grid_type>, AllPortalsImpl>;
+    ChainedUpdatorImpl<AllPortalsImpl, indexed_updator<grid_type>>;
 
 }  // namespace Experimental
 }  // namespace Acts

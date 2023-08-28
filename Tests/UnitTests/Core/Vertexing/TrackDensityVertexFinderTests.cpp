@@ -15,7 +15,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -48,7 +48,7 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
 
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  SymMatrix3 constrCov = ActsSymMatrix<3>::Identity();
+  SquareMatrix3 constrCov = ActsSquareMatrix<3>::Identity();
 
   Vertex<BoundTrackParameters> vertexConstraint(constraintPos);
   vertexConstraint.setCovariance(constrCov);
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
 
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
-  SymMatrix3 constrCov = SymMatrix3::Identity();
+  SquareMatrix3 constrCov = SquareMatrix3::Identity();
 
   Vertex<InputTrack> vertexConstraint(constraintPos);
   vertexConstraint.setCovariance(constrCov);

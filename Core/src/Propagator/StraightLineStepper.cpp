@@ -68,16 +68,14 @@ void StraightLineStepper::transportCovarianceToBound(
 
 void StraightLineStepper::resetState(State& state,
                                      const BoundVector& boundParams,
-                                     const BoundSymMatrix& cov,
+                                     const BoundSquareMatrix& cov,
                                      const Surface& surface,
-                                     const Direction navDir,
                                      const double stepSize) const {
   // Update the stepping state
   update(state,
          detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                 boundParams),
          boundParams, cov, surface);
-  state.navDir = navDir;
   state.stepSize = ConstrainedStep(stepSize);
   state.pathAccumulated = 0.;
 

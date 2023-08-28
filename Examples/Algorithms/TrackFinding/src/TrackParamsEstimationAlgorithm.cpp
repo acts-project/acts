@@ -17,6 +17,7 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
@@ -82,6 +83,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
 
+  IndexSourceLink::SurfaceAccessor surfaceAccessor{*m_cfg.trackingGeometry};
+
   // Loop over all found seeds to estimate track parameters
   for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
@@ -92,11 +95,11 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       continue;
     }
     const auto& sourceLink = bottomSP->sourceLinks()[0];
-    auto geoId = sourceLink.geometryId();
-    const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
+    const Acts::Surface* surface = surfaceAccessor(sourceLink);
+
     if (surface == nullptr) {
-      ACTS_WARNING("surface with geoID "
-                   << geoId << " is not found in the tracking geometry");
+      ACTS_WARNING(
+          "Surface from source link is not found in the tracking geometry");
       continue;
     }
 

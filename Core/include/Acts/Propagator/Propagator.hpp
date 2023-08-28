@@ -61,7 +61,7 @@ struct PropagatorPlainOptions {
 
   /// The |pdg| code for (eventual) material integration -
   /// pion default
-  int absPdgCode = PdgParticle::ePionPlus;
+  PdgParticle absPdgCode = PdgParticle::ePionPlus;
 
   /// The mass of the particle for (eventual) material integration -
   /// pion default
@@ -136,7 +136,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
     eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
-    eoptions.maxStepSize = direction * std::abs(maxStepSize);
+    eoptions.maxStepSize = maxStepSize;
     eoptions.targetTolerance = targetTolerance;
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
@@ -162,7 +162,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
     mass = pOptions.mass;
     maxSteps = pOptions.maxSteps;
     maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
-    maxStepSize = direction * std::abs(pOptions.maxStepSize);
+    maxStepSize = pOptions.maxStepSize;
     targetTolerance = pOptions.targetTolerance;
     pathLimit = direction * std::abs(pOptions.pathLimit);
     loopProtection = pOptions.loopProtection;

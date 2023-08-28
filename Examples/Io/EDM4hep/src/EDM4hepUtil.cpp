@@ -202,7 +202,8 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
                                    const MapGeometryIdTo& geometryMapper) {
   std::visit(
       [&](const auto& m) {
-        Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
+        Acts::GeometryIdentifier geoId =
+            m.sourceLink().template get<IndexSourceLink>().geometryId();
 
         if (geometryMapper) {
           // no need for digitization as we only want to identify the sensor
@@ -278,7 +279,7 @@ void EDM4hepUtil::writeTrajectory(
     edm4hep::TrackState trackState;
 
     // This makes the hard assumption that |q| = 1
-    Acts::SingleBoundTrackParameters<Acts::SinglyCharged> parObj{
+    Acts::GenericBoundTrackParameters<Acts::SinglyCharged> parObj{
         state.referenceSurface().getSharedPtr(), state.parameters(),
         state.covariance()};
 

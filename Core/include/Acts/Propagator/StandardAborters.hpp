@@ -63,8 +63,8 @@ struct PathLimitReached {
       return true;
     }
     // Check if the maximum allowed step size has to be updated
-    double distance = state.stepping.navDir * std::abs(internalLimit) -
-                      state.stepping.pathAccumulated;
+    double distance =
+        std::abs(internalLimit) - std::abs(state.stepping.pathAccumulated);
     double tolerance = state.options.targetTolerance;
     stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
                         false);
@@ -140,7 +140,7 @@ struct SurfaceReached {
     const double tolerance = state.options.targetTolerance;
     const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
-        state.stepping.navDir * stepper.direction(state.stepping), true,
+        state.options.direction * stepper.direction(state.stepping), true,
         tolerance);
 
     // The target is reached
@@ -169,8 +169,8 @@ struct SurfaceReached {
         // Update the distance to the alternative solution
         distance = sIntersection.alternative.pathLength;
       }
-      stepper.setStepSize(state.stepping, state.stepping.navDir * distance,
-                          ConstrainedStep::aborter, false);
+      stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
+                          false);
 
       ACTS_VERBOSE("Target: 0 | "
                    << "Target stepSize (surface) updated to "
@@ -199,32 +199,6 @@ struct EndOfWorldReached {
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
     if (navigator.currentVolume(state.navigation) != nullptr) {
-      return false;
-    }
-    navigator.targetReached(state.navigation, true);
-    return true;
-  }
-};
-
-/// If the particle stopped (p=0) abort the propagation
-struct ParticleStopped {
-  ParticleStopped() = default;
-
-  /// boolean operator for abort condition without using the result
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
-  ///
-  /// @param [in,out] state The propagation state object
-  /// @param [in] stepper The stepper object
-  /// @param [in] navigator The navigator object
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator,
-                  const Logger& /*logger*/) const {
-    if (stepper.absoluteMomentum(state.stepping) > 0) {
       return false;
     }
     navigator.targetReached(state.navigation, true);

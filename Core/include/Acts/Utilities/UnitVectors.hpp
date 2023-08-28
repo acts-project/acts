@@ -26,7 +26,7 @@ namespace Acts {
 ///       unexpected implicit type conversions and forces the user to
 ///       explicitly cast mismatched input types.
 template <typename T>
-inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiEta(T phi, T eta) {
+inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiEta(T phi, T eta) {
   const auto coshEtaInv = 1 / std::cosh(eta);
   return {
       std::cos(phi) * coshEtaInv,
@@ -45,13 +45,29 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiEta(T phi, T eta) {
 ///       unexpected implicit type conversions and forces the user to
 ///       explicitly cast mismatched input types.
 template <typename T>
-inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiTheta(T phi, T theta) {
+inline Eigen::Matrix<T, 3, 1> makeDirectionFromPhiTheta(T phi, T theta) {
   const auto cosTheta = std::cos(theta);
   const auto sinTheta = std::sin(theta);
   return {
       std::cos(phi) * sinTheta,
       std::sin(phi) * sinTheta,
       cosTheta,
+  };
+}
+
+/// Construct a phi and theta angle from a direction vector.
+///
+/// @param unitDir 3D vector indicating a direction
+///
+template <typename T>
+inline Eigen::Matrix<T, 2, 1> makePhiThetaFromDirection(
+    Eigen::Matrix<T, 3, 1> unitDir) {
+  unitDir.normalize();
+  T phi = std::atan2(unitDir[1], unitDir[0]);
+  T theta = std::acos(unitDir[2]);
+  return {
+      phi,
+      theta,
   };
 }
 

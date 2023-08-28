@@ -47,3 +47,37 @@ void Acts::from_json(const nlohmann::json& j, Acts::Transform3& t) {
     t.pretranslate(Acts::Vector3(tdata[0], tdata[1], tdata[2]));
   }
 }
+
+nlohmann::json Acts::Transform3JsonConverter::toJson(const Transform3& t,
+                                                     const Options& options) {
+  nlohmann::json jTransform;
+  // Write out the translation
+  auto translation = t.translation();
+  if (translation != Acts::Vector3(0., 0., 0) or options.writeIdentity) {
+    std::array<Acts::ActsScalar, 3> tdata = {translation.x(), translation.y(),
+                                             translation.z()};
+    jTransform["translation"] = tdata;
+  } else {
+    jTransform["translation"] = nlohmann::json();
+  }
+  // Write out the rotation, could be transposed
+  auto rotation = options.transpose ? t.rotation().transpose() : t.rotation();
+  if (rotation != Acts::RotationMatrix3::Identity() or options.writeIdentity) {
+    std::array<Acts::ActsScalar, 9> rdata = {
+        rotation(0, 0), rotation(0, 1), rotation(0, 2),
+        rotation(1, 0), rotation(1, 1), rotation(1, 2),
+        rotation(2, 0), rotation(2, 1), rotation(2, 2)};
+    jTransform["rotation"] = rdata;
+  } else {
+    jTransform["rotation"] = nlohmann::json();
+  }
+  // Return the converted transform
+  return jTransform;
+}
+
+Acts::Transform3 Acts::Transform3JsonConverter::fromJson(
+    const nlohmann::json& jTransform) {
+  Transform3 t = Transform3::Identity();
+  Acts::from_json(jTransform, t);
+  return t;
+}

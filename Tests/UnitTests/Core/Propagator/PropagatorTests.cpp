@@ -14,8 +14,8 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -62,7 +62,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 /// An observer that measures the perpendicular distance
 struct PerpendicularMeasure {
@@ -114,7 +114,8 @@ struct SurfaceObserver {
                           stepper.direction(state.stepping), true)
               .intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      state.stepping.stepSize.update(distance, ConstrainedStep::actor);
+      state.stepping.stepSize.update(distance * state.options.direction,
+                                     ConstrainedStep::actor);
       // return true if you fall below tolerance
       if (std::abs(distance) <= tolerance) {
         ++result.surfaces_passed;

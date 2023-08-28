@@ -12,8 +12,8 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -74,6 +74,7 @@ struct Options {
   double stepSizeCutOff = 0.0;
   std::size_t maxRungeKuttaStepTrials = 10;
   double mass = 1.0;
+  Direction direction = defaultNDir;
   const Acts::Logger &logger = Acts::getDummyLogger();
 };
 
@@ -90,11 +91,13 @@ struct DummyPropState {
   Navigation navigation;
   GeometryContext geoContext;
 
-  DummyPropState(stepper_state_t &ss)
+  DummyPropState(Direction direction, stepper_state_t &ss)
       : stepping(ss),
         options(Options{}),
         navigation(Navigation{}),
-        geoContext(geoCtx) {}
+        geoContext(geoCtx) {
+    options.direction = direction;
+  }
 };
 
 template <typename T>
@@ -106,12 +109,12 @@ using components_t = typename T::components;
 template <typename charge_t = SinglyCharged>
 auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
                           std::optional<BoundVector> ext_pars = std::nullopt) {
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps;
-  using Opt = std::optional<BoundSymMatrix>;
+  using Opt = std::optional<BoundSquareMatrix>;
 
   auto make_random_sym_matrix = []() {
-    auto c = BoundSymMatrix::Random().eval();
+    auto c = BoundSquareMatrix::Random().eval();
     c *= c.transpose();
     return c;
   };
@@ -142,8 +145,7 @@ void test_multi_stepper_state() {
   const auto multi_pars =
       makeDefaultBoundPars<charge_t>(Cov, N, BoundVector::Ones());
 
-  MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
-                   defaultStepSize);
+  MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);
 
   MultiStepper ms(defaultBField);
 
@@ -156,7 +158,7 @@ void test_multi_stepper_state() {
     BOOST_CHECK_EQUAL(cmp.derivative(), FreeVector::Zero());
     if constexpr (not Cov) {
       BOOST_CHECK_EQUAL(cmp.jacToGlobal(), BoundToFreeMatrix::Zero());
-      BOOST_CHECK_EQUAL(cmp.cov(), BoundSymMatrix::Zero());
+      BOOST_CHECK_EQUAL(cmp.cov(), BoundSquareMatrix::Zero());
     }
   }
 
@@ -165,18 +167,13 @@ void test_multi_stepper_state() {
     BOOST_CHECK_EQUAL(cmp.pathAccumulated(), 0.);
   }
 
-  // navDir and the covTransport in the MultiEigenStepperLoop are redundant and
+  // covTransport in the MultiEigenStepperLoop is redundant and
   // thus not part of the interface. However, we want to check them for
   // consistency.
   if constexpr (Acts::Concepts::exists<components_t, MultiState>) {
     BOOST_CHECK(not state.covTransport);
     for (const auto &cmp : state.components) {
       BOOST_CHECK(cmp.state.covTransport == Cov);
-    }
-
-    BOOST_CHECK_EQUAL(state.navDir, defaultNDir);
-    for (const auto &cmp : state.components) {
-      BOOST_CHECK_EQUAL(cmp.state.navDir, defaultNDir);
     }
   }
 }
@@ -200,9 +197,9 @@ void test_multi_stepper_state_invalid() {
   // Empty component vector
   const auto multi_pars = makeDefaultBoundPars(false, 0);
 
-  BOOST_CHECK_THROW(MultiState(geoCtx, magCtx, defaultBField, multi_pars,
-                               defaultNDir, defaultStepSize),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      MultiState(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize),
+      std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(multi_eigen_stepper_state_invalid) {
@@ -218,21 +215,21 @@ void test_multi_stepper_vs_eigen_stepper() {
   using MultiStepper = multi_stepper_t;
 
   const BoundVector pars = BoundVector::Ones();
-  const BoundSymMatrix cov = BoundSymMatrix::Identity();
+  const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(4, {0.25, pars, cov});
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3::Ones().normalized());
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-  SingleBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
+  GenericBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
 
-  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
+  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
   SingleStepper::State single_state(geoCtx, defaultBField->makeCache(magCtx),
-                                    single_pars, defaultNDir, defaultStepSize);
+                                    single_pars, defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
   SingleStepper single_stepper(defaultBField);
@@ -244,12 +241,12 @@ void test_multi_stepper_vs_eigen_stepper() {
   // Do some steps and check that the results match
   for (int i = 0; i < 10; ++i) {
     // Single stepper
-    auto single_prop_state = DummyPropState(single_state);
+    auto single_prop_state = DummyPropState(defaultNDir, single_state);
     auto single_result = single_stepper.step(single_prop_state, mockNavigator);
     single_stepper.transportCovarianceToCurvilinear(single_state);
 
     // Multi stepper;
-    auto multi_prop_state = DummyPropState(multi_state);
+    auto multi_prop_state = DummyPropState(defaultNDir, multi_state);
     auto multi_result = multi_stepper.step(multi_prop_state, mockNavigator);
     multi_stepper.transportCovarianceToCurvilinear(multi_state);
 
@@ -292,9 +289,9 @@ void test_components_modifying_accessors() {
   const auto multi_pars = makeDefaultBoundPars();
 
   MultiState mutable_multi_state(geoCtx, magCtx, defaultBField, multi_pars,
-                                 defaultNDir, defaultStepSize);
+                                 defaultStepSize);
   const MultiState const_multi_state(geoCtx, magCtx, defaultBField, multi_pars,
-                                     defaultNDir, defaultStepSize);
+                                     defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 
@@ -378,7 +375,7 @@ void test_multi_stepper_surface_status_update() {
   auto right_surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
   std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
   std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
@@ -389,25 +386,25 @@ void test_multi_stepper_surface_status_update() {
                                                                cmps);
 
   BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
   BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
-                         Direction::Forward, defaultStepSize);
+                         defaultStepSize);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      Direction::Forward, defaultStepSize);
+      defaultStepSize);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
 
   // Update surface status and check
   {
-    auto status =
-        multi_stepper.updateSurfaceStatus(multi_state, *right_surface, false);
+    auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
+                                                    Direction::Forward, false);
 
     BOOST_CHECK(status == Intersection3D::Status::reachable);
 
@@ -421,18 +418,18 @@ void test_multi_stepper_surface_status_update() {
 
   // Step forward now
   {
-    auto multi_prop_state = DummyPropState(multi_state);
+    auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
-    auto single_prop_state = DummyPropState(single_state);
+    auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }
 
   // Update surface status and check again
   {
-    auto status =
-        multi_stepper.updateSurfaceStatus(multi_state, *right_surface, false);
+    auto status = multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
+                                                    Direction::Forward, false);
 
     BOOST_CHECK(status == Intersection3D::Status::onSurface);
 
@@ -446,8 +443,8 @@ void test_multi_stepper_surface_status_update() {
 
   // Start surface should be unreachable
   {
-    auto status =
-        multi_stepper.updateSurfaceStatus(multi_state, *start_surface, false);
+    auto status = multi_stepper.updateSurfaceStatus(multi_state, *start_surface,
+                                                    Direction::Forward, false);
 
     BOOST_CHECK(status == Intersection3D::Status::unreachable);
 
@@ -478,7 +475,7 @@ void test_component_bound_state() {
   auto right_surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(2, {0.5, BoundVector::Zero(), std::nullopt});
   std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
   std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
@@ -489,30 +486,32 @@ void test_component_bound_state() {
                                                                cmps);
 
   BOOST_REQUIRE(std::get<1>(multi_pars[0])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{1.0, 0.0, 0.0}, 1.e-10));
   BOOST_REQUIRE(std::get<1>(multi_pars[1])
-                    .unitDirection()
+                    .direction()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
   MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
-                         Direction::Forward, defaultStepSize);
+                         defaultStepSize);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      Direction::Forward, defaultStepSize);
+      defaultStepSize);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
 
   // Step forward now
   {
-    multi_stepper.updateSurfaceStatus(multi_state, *right_surface, false);
-    auto multi_prop_state = DummyPropState(multi_state);
+    multi_stepper.updateSurfaceStatus(multi_state, *right_surface,
+                                      Direction::Forward, false);
+    auto multi_prop_state = DummyPropState(Direction::Forward, multi_state);
     multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
-    single_stepper.updateSurfaceStatus(single_state, *right_surface, false);
-    auto single_prop_state = DummyPropState(single_state);
+    single_stepper.updateSurfaceStatus(single_state, *right_surface,
+                                       Direction::Forward, false);
+    auto single_prop_state = DummyPropState(Direction::Forward, single_state);
     single_stepper.step(single_prop_state, mockNavigator);
   }
 
@@ -552,16 +551,16 @@ void test_combined_bound_state_function() {
   // Use Ones() here, so that the angles are in correct range
   const auto pars = BoundVector::Ones().eval();
   const auto cov = []() {
-    auto c = BoundSymMatrix::Random().eval();
+    auto c = BoundSquareMatrix::Random().eval();
     c *= c.transpose();
     return c;
   }();
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(4, {0.25, pars, cov});
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
+  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
   MultiStepper multi_stepper(defaultBField);
 
@@ -596,17 +595,17 @@ void test_combined_curvilinear_state_function() {
   // Use Ones() here, so that the angles are in correct range
   const auto pars = BoundVector::Ones().eval();
   const auto cov = []() {
-    auto c = BoundSymMatrix::Random().eval();
+    auto c = BoundSquareMatrix::Random().eval();
     c *= c.transpose();
     return c;
   }();
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(4, {0.25, pars, cov});
-  SingleBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
+  GenericBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
+  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
   MultiStepper multi_stepper(defaultBField);
 
@@ -616,8 +615,7 @@ void test_combined_curvilinear_state_function() {
   BOOST_CHECK(
       curv_pars.fourPosition(multi_state.geoContext)
           .isApprox(check_pars.fourPosition(multi_state.geoContext), 1.e-8));
-  BOOST_CHECK(
-      curv_pars.unitDirection().isApprox(check_pars.unitDirection(), 1.e-8));
+  BOOST_CHECK(curv_pars.direction().isApprox(check_pars.direction(), 1.e-8));
   BOOST_CHECK_CLOSE(curv_pars.absoluteMomentum(), check_pars.absoluteMomentum(),
                     1.e-8);
   BOOST_CHECK_CLOSE(curv_pars.charge(), check_pars.charge(), 1.e-8);
@@ -636,10 +634,10 @@ void test_single_component_interface_function() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps;
   for (int i = 0; i < 4; ++i) {
-    cmps.push_back({0.25, BoundVector::Random(), BoundSymMatrix::Random()});
+    cmps.push_back({0.25, BoundVector::Random(), BoundSquareMatrix::Random()});
   }
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
@@ -647,12 +645,12 @@ void test_single_component_interface_function() {
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
 
-  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
+  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
 
-  DummyPropState multi_prop_state(multi_state);
+  DummyPropState multi_prop_state(defaultNDir, multi_state);
 
   // Check at least some properties at the moment
   auto check = [&](auto cmp) {
@@ -692,7 +690,7 @@ void remove_add_components_function() {
 
   const auto multi_pars = makeDefaultBoundPars(4);
 
-  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars, defaultNDir,
+  MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
 
   MultiStepper multi_stepper(defaultBField);
@@ -730,9 +728,9 @@ void propagator_instatiation_test_function() {
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
   PropagatorOptions options(geoCtx, magCtx);
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(4, {0.25, BoundVector::Ones().eval(),
-               BoundSymMatrix::Identity().eval()});
+               BoundSquareMatrix::Identity().eval()});
   MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
 
   // This only checks that this compiles, not that it runs without errors
