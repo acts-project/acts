@@ -121,14 +121,7 @@ SpacePointProxyIterator<container_t, read_only>::operator-(
 }
 
 template <typename container_t, bool read_only>
-template <bool, typename>
-inline typename SpacePointProxyIterator<container_t, read_only>::value_type&
-SpacePointProxyIterator<container_t, read_only>::operator*() {
-  return m_container->proxy(m_index);
-}
-
-template <typename container_t, bool read_only>
-inline typename SpacePointProxyIterator<container_t, read_only>::value_type&
+inline typename SpacePointProxyIterator<container_t, read_only>::value_type
 SpacePointProxyIterator<container_t, read_only>::operator*() const {
   return m_container->proxy(m_index);
 }

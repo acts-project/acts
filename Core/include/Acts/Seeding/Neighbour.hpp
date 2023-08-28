@@ -70,22 +70,22 @@ Neighbour<external_spacepoint_t>::Neighbour(
 
   /// First check that the first element is not already above the lower bound
   /// If so, avoid any computation and set the iterator to begin()
-  if (collection.front()->radius() > lowerBound) {
+  if (collection.front().radius() > lowerBound) {
     itr = collection.begin();
   }
   /// In case the last element is below the lower bound, that means that there
   /// can't be any element in that collection that can be considered a valuable
   /// candidate.
   /// Set the iterator to end() so that we do not run on this collection
-  else if (collection.back()->radius() < lowerBound) {
+  else if (collection.back().radius() < lowerBound) {
     itr = collection.end();
   }
   /// Cannot decide a priori. We need to find the first element suche that it's
   /// radius is > lower bound. We use a binary search in this case
   else {
     itr = std::lower_bound(collection.begin(), collection.end(), lowerBound,
-                           [](const auto* sp, const float& target) -> bool {
-                             return sp->radius() < target;
+                           [](const auto& sp, const float& target) -> bool {
+                             return sp.radius() < target;
                            });
   }
 }

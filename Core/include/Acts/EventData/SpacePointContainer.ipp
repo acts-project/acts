@@ -35,7 +35,6 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
 template <typename container_t, template <typename> class holder_t>
 void SpacePointContainer<container_t, holder_t>::initialize() {
   m_data.resize(this->size(), m_config.useDetailedDoubleMeasurementInfo);
-  m_proxies.reserve(this->size());
   const auto& external_container = this->container();
   for (std::size_t i(0); i < this->size(); ++i) {
     m_data.setX(i, external_container.x_impl(i) - m_options.beamPos[0]);
@@ -46,8 +45,6 @@ void SpacePointContainer<container_t, holder_t>::initialize() {
     m_data.setPhi(i, atan2f(m_data.y(i), m_data.x(i)));
     m_data.setVarianceR(i, external_container.varianceR_impl(i));
     m_data.setVarianceZ(i, external_container.varianceZ_impl(i));
-
-    m_proxies.emplace_back(*this, i);
   }
 
   // Dynamic variables
@@ -255,30 +252,9 @@ inline void SpacePointContainer<container_t, holder_t>::setDeltaR(
 }
 
 template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
-inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) {
-  return proxies()[n];
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline const typename SpacePointContainer<container_t, holder_t>::ProxyType&
+inline typename SpacePointContainer<container_t, holder_t>::ProxyType
 SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) const {
-  return proxies()[n];
-}
-
-template <typename container_t, template <typename> class holder_t>
-const std::vector<
-    typename SpacePointContainer<container_t, holder_t>::ProxyType>&
-SpacePointContainer<container_t, holder_t>::proxies() const {
-  return m_proxies;
-}
-
-template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
-std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>&
-SpacePointContainer<container_t, holder_t>::proxies() {
-  return m_proxies;
+  return {*this, n};
 }
 
 }  // namespace Acts
