@@ -144,9 +144,7 @@ class TrackSelector {
     /// Add a new eta bin with an upper bound of +infinity.
     /// @param callback Callback to configure the cuts for this eta bin
     /// @return Reference to this object
-    Config& addCuts(std::function<void(CutConfig&)> callback = [](auto&) {}) {
-      return addCuts(inf, std::move(callback));
-    }
+    Config& addCuts(std::function<void(CutConfig&)> callback = [](auto&) {});
 
     /// Print this configuration to an output stream
     /// @param os Output stream
@@ -270,7 +268,7 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 
 inline TrackSelector::Config& TrackSelector::Config::addCuts(
-    double etaMax, std::function<void(TrackSelector::CutConfig&)> callback) {
+    double etaMax, std::function<void(CutConfig&)> callback) {
   if (etaMax <= absEtaEdges.back()) {
     throw std::invalid_argument{
         "Abs Eta bin edges must be in increasing order"};
@@ -283,6 +281,11 @@ inline TrackSelector::Config& TrackSelector::Config::addCuts(
   absEtaEdges.push_back(etaMax);
   callback(cutSets.emplace_back());
   return *this;
+}
+
+inline TrackSelector::Config& TrackSelector::Config::addCuts(
+    std::function<void(CutConfig&)> callback) {
+  return addCuts(inf, std::move(callback));
 }
 
 inline std::size_t TrackSelector::Config::binIndex(double eta) const {
