@@ -34,7 +34,7 @@ void addObj(Context& ctx) {
     /// @param surfaces is the collection of surfaces
     /// @param viewContext is the geometry context
     /// @param viewRgb is the color of the surfaces
-    /// @param fileName is the name of the output file
+    /// @param fileName is the path to the output file
     ///
     mex.def("writeSurfacesObj",
             [](const std::vector<std::shared_ptr<Surface>>& surfaces,
