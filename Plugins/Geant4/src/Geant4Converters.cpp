@@ -100,6 +100,9 @@ Acts::Geant4ShapeConverter::cylinderBounds(const G4Tubs& g4Tubs) {
       0.5 * static_cast<ActsScalar>(g4Tubs.GetDeltaPhiAngle());
   tArray[B::eAveragePhi] = static_cast<ActsScalar>(g4Tubs.GetStartPhiAngle());
 
+  std::cout << " hPhi = " << tArray[B::eHalfPhiSector]
+            << " aPhi = " << tArray[B::eAveragePhi] << std::endl;
+
   ActsScalar thickness = g4Tubs.GetOuterRadius() - g4Tubs.GetInnerRadius();
   auto cBounds = std::make_shared<CylinderBounds>(tArray);
   return std::make_tuple(std::move(cBounds), thickness);
