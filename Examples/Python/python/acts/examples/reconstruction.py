@@ -1128,7 +1128,8 @@ def addTrackSelection(
 ) -> acts.examples.TrackSelectorAlgorithm:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    selectorConfig = acts.TrackSelector.Config(
+    # single cut config for implicit single bin eta configuration
+    selectorConfig = acts.TrackSelector.CutConfig(
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorConfig.loc0[0],
             loc0Max=trackSelectorConfig.loc0[1],
