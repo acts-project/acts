@@ -52,8 +52,9 @@ struct KalmanFitterExtensions {
   using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
-  using Calibrator = Delegate<void(const GeometryContext&, const SourceLink&,
-                                   TrackStateProxy)>;
+  using Calibrator =
+      Delegate<void(const GeometryContext&, const CalibrationContext&,
+                    const SourceLink&, TrackStateProxy)>;
 
   using Smoother = Delegate<Result<void>(const GeometryContext&, traj_t&,
                                          size_t, const Logger&)>;
@@ -324,6 +325,9 @@ class KalmanFitter {
     /// The Surface being
     SurfaceReached targetReached;
 
+    /// Calibration context for the fit
+    const CalibrationContext* calibrationContext{nullptr};
+
     /// @brief Kalman actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -587,8 +591,9 @@ class KalmanFitter {
         // do the kalman update (no need to perform covTransport here, hence no
         // point in performing globalToLocal correction)
         auto trackStateProxyRes = detail::kalmanHandleMeasurement(
-            state, stepper, extensions, *surface, sourcelink_it->second,
-            *result.fittedStates, result.lastTrackIndex, false, logger());
+            *calibrationContext, state, stepper, extensions, *surface,
+            sourcelink_it->second, *result.fittedStates, result.lastTrackIndex,
+            false, logger());
 
         if (!trackStateProxyRes.ok()) {
           return trackStateProxyRes.error();
@@ -730,8 +735,8 @@ class KalmanFitter {
 
         // We have predicted parameters, so calibrate the uncalibrated input
         // measuerement
-        extensions.calibrator(state.geoContext, sourcelink_it->second,
-                              trackStateProxy);
+        extensions.calibrator(state.geoContext, *calibrationContext,
+                              sourcelink_it->second, trackStateProxy);
 
         // If the update is successful, set covariance and
         auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
@@ -1075,6 +1080,7 @@ class KalmanFitter {
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
+    kalmanActor.calibrationContext = &kfOptions.calibrationContext.get();
     kalmanActor.extensions = kfOptions.extensions;
     kalmanActor.actorLogger = m_actorLogger.get();
 

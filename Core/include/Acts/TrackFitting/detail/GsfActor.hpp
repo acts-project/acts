@@ -111,6 +111,10 @@ struct GsfActor {
     MixtureReductionMethod reductionMethod = MixtureReductionMethod::eMaxWeight;
 
     const Logger* logger{nullptr};
+
+    /// Calibration context for the fit
+    const CalibrationContext* calibrationContext{nullptr};
+
   } m_cfg;
 
   const Logger& logger() const { return *m_cfg.logger; }
@@ -567,8 +571,9 @@ struct GsfActor {
       const auto& singleStepper = cmp.singleStepper(stepper);
 
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
-          singleState, singleStepper, m_cfg.extensions, surface, source_link,
-          tmpStates.traj, MultiTrajectoryTraits::kInvalid, false, logger());
+          *m_cfg.calibrationContext, singleState, singleStepper,
+          m_cfg.extensions, surface, source_link, tmpStates.traj,
+          MultiTrajectoryTraits::kInvalid, false, logger());
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -799,6 +804,7 @@ struct GsfActor {
     m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
     m_cfg.weightCutoff = options.weightCutoff;
     m_cfg.reductionMethod = options.stateReductionMethod;
+    m_cfg.calibrationContext = &options.calibrationContext.get();
   }
 };
 
