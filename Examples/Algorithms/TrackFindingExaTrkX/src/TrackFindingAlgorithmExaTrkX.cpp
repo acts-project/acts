@@ -24,8 +24,8 @@ using namespace Acts::UnitLiterals;
 namespace {
 
 class ExamplesEdmHook : public Acts::PipelineHook {
-  constexpr static double m_targetPT = 0.5_GeV;
-  constexpr static std::size_t m_targetSize = 3;
+  double m_targetPT = 0.5_GeV;
+  std::size_t m_targetSize = 3;
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_truthGraphHook;
@@ -43,8 +43,11 @@ class ExamplesEdmHook : public Acts::PipelineHook {
                   const IndexMultimap<Index>& measHitMap,
                   const SimHitContainer& simhits,
                   const SimParticleContainer& particles,
+                  std::size_t targetMinHits, double targetMinPT,
                   const Acts::Logger& logger)
-      : m_logger(logger.clone("MetricsHook")) {
+      : m_targetPT(targetMinPT),
+        m_targetSize(targetMinHits),
+        m_logger(logger.clone("MetricsHook")) {
     // Associate tracks to graph, collect momentum
     std::unordered_map<ActsFatras::Barcode, std::vector<HitInfo>> tracks;
 
@@ -169,7 +172,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
     hook = std::make_unique<ExamplesEdmHook>(
         spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx),
-        m_inputParticles(ctx), logger());
+        m_inputParticles(ctx), m_cfg.targetMinHits, m_cfg.targetMinPT,
+        logger());
   }
 
   std::optional<ClusterContainer> clusters;
