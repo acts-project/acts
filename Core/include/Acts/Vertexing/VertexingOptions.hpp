@@ -24,7 +24,7 @@ struct VertexingOptions {
   /// Default constructor is deleted
   VertexingOptions() = delete;
 
-  /// VertexingOptions with context and beam spot constraint
+  /// VertexingOptions with context and vertex constraint
   ///
   /// @param gctx Geometry context
   /// @param mctx Magnetic field context
@@ -44,7 +44,7 @@ struct VertexingOptions {
     }
   }
 
-  /// VertexingOptions with context and without beam spot constraint
+  /// VertexingOptions with context and without vertex constraint
   ///
   /// @param gctx Geometry context
   /// @param mctx Magnetic field context
