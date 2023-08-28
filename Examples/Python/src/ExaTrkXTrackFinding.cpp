@@ -171,8 +171,8 @@ void addExaTrkXTrackFinding(Context &ctx) {
       ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
       "TrackFindingAlgorithmExaTrkX", inputSpacePoints, inputSimHits,
       inputParticles, inputMeasurementSimhitsMap, outputProtoTracks,
-      graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale,
-      zScale.targetMinHits, targetMinPT);
+      graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale, zScale,
+      targetMinHits, targetMinPT);
 
   {
     auto cls =
