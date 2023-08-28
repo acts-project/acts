@@ -23,6 +23,8 @@ class TrackSelector {
   static constexpr double inf = std::numeric_limits<double>::infinity();
 
  public:
+  /// Configuration of a set of cuts for a single eta bin
+  /// Default construction yields a set of cuts that accepts everything.
   struct CutConfig {
     // Minimum/maximum local positions.
     double loc0Min = -inf;
@@ -45,93 +47,81 @@ class TrackSelector {
 
     std::size_t minMeasurements = 0;
 
-    CutConfig& loc0(double min, double max) {
-      loc0Min = min;
-      loc0Max = max;
-      return *this;
-    }
+    // Helper factory functions to produce a populated config object more
+    // conveniently
 
-    CutConfig& loc1(double min, double max) {
-      loc1Min = min;
-      loc1Max = max;
-      return *this;
-    }
+    /// Set loc0 acceptance range
+    /// @param min Minimum value
+    /// @param max Maximum value
+    /// @return Reference to this object
+    CutConfig& loc0(double min, double max);
 
-    CutConfig& time(double min, double max) {
-      timeMin = min;
-      timeMax = max;
-      return *this;
-    }
+    /// Set loc1 acceptance range
+    /// @param min Minimum value
+    /// @param max Maximum value
+    /// @return Reference to this object
+    CutConfig& loc1(double min, double max);
 
-    CutConfig& phi(double min, double max) {
-      phiMin = min;
-      phiMax = max;
-      return *this;
-    }
+    /// Set time acceptance range
+    /// @param min Minimum value
+    /// @param max Maximum value
+    /// @return Reference to this object
+    CutConfig& time(double min, double max);
 
-    CutConfig& eta(double min, double max) {
-      if (absEtaMin != 0.0 || absEtaMax != inf) {
-        throw std::invalid_argument(
-            "Cannot set both eta and absEta cuts in the same cut set");
-      }
-      etaMin = min;
-      etaMax = max;
-      return *this;
-    }
+    /// Set phi acceptance range
+    /// @param min Minimum value
+    /// @param max Maximum value
+    /// @return Reference to this object
+    CutConfig& phi(double min, double max);
 
-    CutConfig& absEta(double min, double max) {
-      if (etaMin != -inf || etaMax != inf) {
-        throw std::invalid_argument(
-            "Cannot set both eta and absEta cuts in the same cut set");
-      }
-      absEtaMin = min;
-      absEtaMax = max;
-      return *this;
-    }
+    /// Set the eta acceptance range
+    /// @param min Minimum value
+    /// @param max Maximum value
+    /// @return Reference to this object
+    CutConfig& eta(double min, double max);
 
-    CutConfig& pt(double min, double max) {
-      ptMin = min;
-      ptMax = max;
-      return *this;
-    }
+    /// Set the absolute eta acceptance range
+    /// @param min Minimum value
+    /// @param max Maximum value
+    /// @return Reference to this object
+    CutConfig& absEta(double min, double max);
 
-    friend std::ostream& operator<<(std::ostream& os, const CutConfig& cuts) {
-      auto print = [&](const char* name, const auto& min, const auto& max) {
-        os << " - " << min << " <= " << name << " < " << max << "\n";
-      };
+    /// Set the pt acceptance range
+    /// @param min Minimum value
+    /// @param max Maximum value
+    /// @return Reference to this object
+    CutConfig& pt(double min, double max);
 
-      print("loc0", cuts.loc0Min, cuts.loc0Max);
-      print("loc1", cuts.loc1Min, cuts.loc1Max);
-      print("time", cuts.timeMin, cuts.timeMax);
-      print("phi", cuts.phiMin, cuts.phiMax);
-      print("eta", cuts.etaMin, cuts.etaMax);
-      print("absEta", cuts.absEtaMin, cuts.absEtaMax);
-      print("pt", cuts.ptMin, cuts.ptMax);
-      os << " - " << cuts.minMeasurements << " <= nMeasurements\n";
-
-      return os;
-    }
+    /// Print this set of cuts to an output stream
+    /// @param os Output stream
+    /// @param cuts Cuts to print
+    /// @return Reference to the output stream
+    friend std::ostream& operator<<(std::ostream& os, const CutConfig& cuts);
   };
 
+  /// Main config object for the track selector. Combines a set of cut
+  /// configurations and corresponding eta bins
   struct Config {
-    // Cut sets for each eta bin
+    /// Cut sets for each eta bin
     std::vector<CutConfig> cutSets = {};
 
-    // Eta bin edges for varying cuts by eta
+    /// Eta bin edges for varying cuts by eta
     std::vector<double> absEtaEdges = {};
 
+    /// Get the number of eta bins
+    /// @return Number of eta bins
     std::size_t nEtaBins() const { return absEtaEdges.size() - 1; }
 
+    /// Construct an empty (accepts everything) configuration.
+    /// Results in a single cut set and one abs eta bin from 0 to infinity.
     Config() : cutSets{{}}, absEtaEdges{{0, inf}} {};
 
-    static Config empty(double etaMin = 0) {
-      Config cfg{};
-      cfg.cutSets.clear();
-      cfg.absEtaEdges = {etaMin};
-      return cfg;
-    }
+    /// Constructor to create a config object that is not upper-bounded.
+    /// This is useful to use the "fluent" API to populate the configurtation.
+    /// @param etaMin Minimum eta bin edge
+    Config(double etaMin) : cutSets{}, absEtaEdges{etaMin} {}
 
-    /// Constructor from a vector of eta bin edges This automatically
+    /// Constructor from a vector of eta bin edges. This automatically
     /// initializes all the cuts to be the same for all eta and be essentially
     /// no-op.
     /// @param absEtaEdgesIn is the vector of eta bin edges
@@ -140,78 +130,44 @@ class TrackSelector {
       cutSets.resize(absEtaEdges.size() - 1);
     }
 
+    /// Auto-converting constructor from a single cut configuration.
+    /// Results in a single absolut eta bin from 0 to infinity.
     Config(CutConfig cutSet) : cutSets{cutSet}, absEtaEdges{{0, inf}} {}
 
+    /// Add a new eta bin with the given upper bound.
+    /// @param etaMax Upper bound of the new eta bin
+    /// @param callback Callback to configure the cuts for this eta bin
+    /// @return Reference to this object
     Config& addCuts(
-        double etaMax,
-        std::function<void(CutConfig&)> callback = [](auto&) {}) {
-      if (etaMax <= absEtaEdges.back()) {
-        throw std::invalid_argument{
-            "Abs Eta bin edges must be in increasing order"};
-      }
+        double etaMax, std::function<void(CutConfig&)> callback = [](auto&) {});
 
-      if (etaMax < 0.0) {
-        throw std::invalid_argument{"Abs Eta bin edges must be positive"};
-      }
-
-      absEtaEdges.push_back(etaMax);
-      callback(cutSets.emplace_back());
-      return *this;
-    }
-
+    /// Add a new eta bin with an upper bound of +infinity.
+    /// @param callback Callback to configure the cuts for this eta bin
+    /// @return Reference to this object
     Config& addCuts(std::function<void(CutConfig&)> callback = [](auto&) {}) {
       return addCuts(inf, std::move(callback));
     }
 
-    friend std::ostream& operator<<(std::ostream& os, const Config& cfg) {
-      os << "TrackSelector::Config:\n";
+    /// Print this configuration to an output stream
+    /// @param os Output stream
+    /// @param cfg Configuration to print
+    /// @return Reference to the output stream
+    friend std::ostream& operator<<(std::ostream& os, const Config& cfg);
 
-      for (std::size_t i = 1; i < cfg.absEtaEdges.size(); i++) {
-        os << cfg.absEtaEdges[i - 1] << " <= eta < " << cfg.absEtaEdges[i]
-           << "\n";
-        os << cfg.cutSets[i - 1];
-      }
+    /// Get the index of the eta bin for a given eta
+    /// @param eta Eta value
+    /// @return Index of the eta bin
+    std::size_t binIndex(double eta) const;
 
-      return os;
-    }
-
-    std::size_t binIndex(double eta) const {
-      if (std::abs(eta) >= absEtaEdges.back()) {
-        throw std::invalid_argument{"Eta is outside the abs eta bin edges"};
-      }
-
-      auto binIt = std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(),
-                                    std::abs(eta));
-      std::size_t index = std::distance(absEtaEdges.begin(), binIt) - 1;
-      return index;
-    }
-
-    const CutConfig& getCuts(double eta) const {
-      return nEtaBins() == 1 ? cutSets[0] : cutSets[binIndex(eta)];
-    }
+    /// Get the cuts for a given eta
+    /// @param eta Eta value
+    /// @return Cuts for the given eta
+    const CutConfig& getCuts(double eta) const;
   };
 
   /// Constructor from a config object
   /// @param config is the configuration object
-  TrackSelector(const Config& config) : m_cfg(config) {
-    if (m_cfg.cutSets.size() != m_cfg.nEtaBins()) {
-      throw std::invalid_argument{
-          "TrackSelector cut / eta bin configuration is inconsistent"};
-    }
-
-    if (m_cfg.nEtaBins() == 1) {
-      static const std::vector<double> infVec = {0, inf};
-      bool limitEta = m_cfg.absEtaEdges != infVec;
-
-      const CutConfig& cuts = m_cfg.cutSets[0];
-
-      if (limitEta && (cuts.etaMin != -inf || cuts.etaMax != inf ||
-                       cuts.absEtaMin != 0.0 || cuts.absEtaMax != inf)) {
-        throw std::invalid_argument{
-            "Explicit eta cuts are only valid for single eta bin"};
-      }
-    }
-  }
+  TrackSelector(const Config& config);
 
   /// Select tracks from an input container and copy them into an output
   /// container
@@ -237,6 +193,125 @@ class TrackSelector {
  private:
   Config m_cfg;
 };
+
+inline TrackSelector::CutConfig& TrackSelector::CutConfig::loc0(double min,
+                                                                double max) {
+  loc0Min = min;
+  loc0Max = max;
+  return *this;
+}
+
+inline TrackSelector::CutConfig& TrackSelector::CutConfig::loc1(double min,
+                                                                double max) {
+  loc1Min = min;
+  loc1Max = max;
+  return *this;
+}
+
+inline TrackSelector::CutConfig& TrackSelector::CutConfig::time(double min,
+                                                                double max) {
+  timeMin = min;
+  timeMax = max;
+  return *this;
+}
+
+inline TrackSelector::CutConfig& TrackSelector::CutConfig::phi(double min,
+                                                               double max) {
+  phiMin = min;
+  phiMax = max;
+  return *this;
+}
+
+inline TrackSelector::CutConfig& TrackSelector::CutConfig::eta(double min,
+                                                               double max) {
+  if (absEtaMin != 0.0 || absEtaMax != inf) {
+    throw std::invalid_argument(
+        "Cannot set both eta and absEta cuts in the same cut set");
+  }
+  etaMin = min;
+  etaMax = max;
+  return *this;
+}
+
+inline TrackSelector::CutConfig& TrackSelector::CutConfig::absEta(double min,
+                                                                  double max) {
+  if (etaMin != -inf || etaMax != inf) {
+    throw std::invalid_argument(
+        "Cannot set both eta and absEta cuts in the same cut set");
+  }
+  absEtaMin = min;
+  absEtaMax = max;
+  return *this;
+}
+
+inline TrackSelector::CutConfig& TrackSelector::CutConfig::pt(double min,
+                                                              double max) {
+  ptMin = min;
+  ptMax = max;
+  return *this;
+}
+
+inline std::ostream& operator<<(std::ostream& os,
+                                const TrackSelector::CutConfig& cuts) {
+  auto print = [&](const char* name, const auto& min, const auto& max) {
+    os << " - " << min << " <= " << name << " < " << max << "\n";
+  };
+
+  print("loc0", cuts.loc0Min, cuts.loc0Max);
+  print("loc1", cuts.loc1Min, cuts.loc1Max);
+  print("time", cuts.timeMin, cuts.timeMax);
+  print("phi", cuts.phiMin, cuts.phiMax);
+  print("eta", cuts.etaMin, cuts.etaMax);
+  print("absEta", cuts.absEtaMin, cuts.absEtaMax);
+  print("pt", cuts.ptMin, cuts.ptMax);
+  os << " - " << cuts.minMeasurements << " <= nMeasurements\n";
+
+  return os;
+}
+
+inline TrackSelector::Config& TrackSelector::Config::addCuts(
+    double etaMax, std::function<void(TrackSelector::CutConfig&)> callback) {
+  if (etaMax <= absEtaEdges.back()) {
+    throw std::invalid_argument{
+        "Abs Eta bin edges must be in increasing order"};
+  }
+
+  if (etaMax < 0.0) {
+    throw std::invalid_argument{"Abs Eta bin edges must be positive"};
+  }
+
+  absEtaEdges.push_back(etaMax);
+  callback(cutSets.emplace_back());
+  return *this;
+}
+
+inline std::size_t TrackSelector::Config::binIndex(double eta) const {
+  if (std::abs(eta) >= absEtaEdges.back()) {
+    throw std::invalid_argument{"Eta is outside the abs eta bin edges"};
+  }
+
+  auto binIt =
+      std::upper_bound(absEtaEdges.begin(), absEtaEdges.end(), std::abs(eta));
+  std::size_t index = std::distance(absEtaEdges.begin(), binIt) - 1;
+  return index;
+}
+
+inline const TrackSelector::CutConfig& TrackSelector::Config::getCuts(
+    double eta) const {
+  return nEtaBins() == 1 ? cutSets[0] : cutSets[binIndex(eta)];
+}
+
+inline std::ostream& operator<<(std::ostream& os,
+                                const TrackSelector::Config& cfg) {
+  os << "TrackSelector::Config:\n";
+
+  for (std::size_t i = 1; i < cfg.absEtaEdges.size(); i++) {
+    os << cfg.absEtaEdges[i - 1] << " <= eta < " << cfg.absEtaEdges[i] << "\n";
+    os << cfg.cutSets[i - 1];
+  }
+
+  return os;
+}
 
 template <typename input_tracks_t, typename output_tracks_t>
 void TrackSelector::selectTracks(const input_tracks_t& inputTracks,
@@ -277,6 +352,27 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
          within(track.loc1(), cuts.loc1Min, cuts.loc1Max) and
          within(track.time(), cuts.timeMin, cuts.timeMax) and
          checkMin(track.nMeasurements(), cuts.minMeasurements);
+}
+
+inline TrackSelector::TrackSelector(const TrackSelector::Config& config)
+    : m_cfg(config) {
+  if (m_cfg.cutSets.size() != m_cfg.nEtaBins()) {
+    throw std::invalid_argument{
+        "TrackSelector cut / eta bin configuration is inconsistent"};
+  }
+
+  if (m_cfg.nEtaBins() == 1) {
+    static const std::vector<double> infVec = {0, inf};
+    bool limitEta = m_cfg.absEtaEdges != infVec;
+
+    const CutConfig& cuts = m_cfg.cutSets[0];
+
+    if (limitEta && (cuts.etaMin != -inf || cuts.etaMax != inf ||
+                     cuts.absEtaMin != 0.0 || cuts.absEtaMax != inf)) {
+      throw std::invalid_argument{
+          "Explicit eta cuts are only valid for single eta bin"};
+    }
+  }
 }
 
 }  // namespace Acts

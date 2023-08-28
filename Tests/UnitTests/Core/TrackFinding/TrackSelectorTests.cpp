@@ -259,7 +259,7 @@ BOOST_DATA_TEST_CASE(TestSingleBinCase, bdata::make(etaValues), eta) {
 }
 
 BOOST_AUTO_TEST_CASE(TestSingleBinEtaCutByBinEdge) {
-  TrackSelector selector{TrackSelector::Config::empty(1.0).addCuts(2.0)};
+  TrackSelector selector{TrackSelector::Config(1.0).addCuts(2.0)};
 
   BOOST_TEST_INFO_SCOPE(selector.config());
 
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE(TestMultiBinCuts) {
   auto check = [&](const char* name, const factory_ptr_t& factory,
                    const prop_ptr_t& prop) {
     BOOST_TEST_CONTEXT(name) {
-      auto cfg = TrackSelector::Config::empty();
+      auto cfg = TrackSelector::Config{0.0};
 
       cfg.addCuts(2.0, [&](auto& c) { (c.*factory)(-1.0, 1.0); })
           .addCuts([&](auto& c) { (c.*factory)(-2.0, 2.0); });
@@ -471,15 +471,15 @@ BOOST_AUTO_TEST_CASE(TestConstructor) {
 
   {
     // Invalid sequence of chained construction
-    auto cfg = TrackSelector::Config::empty(0);
+    auto cfg = TrackSelector::Config(0);
     cfg.addCuts(2.0, [](auto& c) { c.loc0(-1.0, 1.0); });
     BOOST_CHECK_THROW(cfg.addCuts(1.0), std::invalid_argument);
-    BOOST_CHECK_THROW(TrackSelector::Config::empty().addCuts(-2.0),
+    BOOST_CHECK_THROW(TrackSelector::Config(0).addCuts(-2.0),
                       std::invalid_argument);
   }
 
   {
-    auto cfg = TrackSelector::Config::empty(1.0);
+    auto cfg = TrackSelector::Config(1.0);
 
     cfg.addCuts(2.0, [](auto& c) { c.loc0(-1.0, 1.0); });
     BOOST_CHECK_EQUAL(cfg.nEtaBins(), 1);
