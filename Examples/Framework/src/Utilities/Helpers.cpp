@@ -9,7 +9,6 @@
 #include "ActsExamples/Utilities/Helpers.hpp"
 
 #include <cassert>
-#include <iostream>
 
 #include <TAxis.h>
 #include <TEfficiency.h>
@@ -71,9 +70,6 @@ void anaHisto(TH1D* inputHist, int j, TH1F* meanHist, TH1F* widthHist) {
 
 TEfficiency* bookEff(const char* effName, const char* effTitle,
                      const Binning& varBinning) {
-  // std::cout << "book eff with bins [ ";
-  // std::copy(varBinning.data(), varBinning.data()+varBinning.nBins()+1,
-  // std::ostream_iterator<double>(std::cout, " ")); std::cout << std::endl;
   TEfficiency* efficiency =
       new TEfficiency(effName, effTitle, varBinning.nBins(), varBinning.data());
   return efficiency;
