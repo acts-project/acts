@@ -36,6 +36,7 @@
 #include <vector>
 
 #include <G4RunManager.hh>
+#include <G4Transform3D.hh>
 #include <G4UserEventAction.hh>
 #include <G4UserRunAction.hh>
 #include <pybind11/pybind11.h>
@@ -211,6 +212,66 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    /// Helper function to test if the autmotaic geometry conversion works
+    ///
+    /// @param gdmlFileName is the name of the GDML file
+    /// @param sensitiveMatches is a list of strings to match sensitive volumes
+    /// @param passiveMatches is a list of strings to match passive volumes
+    mod.def("convertSurfaces", [](const std::string& gdmlFileName,
+                                  const std::vector<std::string>&
+                                      sensitiveMatches,
+                                  const std::vector<std::string>&
+                                      passiveMatches) {
+      // Initiate the detector construction & retrieve world
+      ActsExamples::GdmlDetectorConstruction gdmlContruction(gdmlFileName);
+      const auto* world = gdmlContruction.Construct();
+
+      // Create the selectors
+      auto sensitiveSelectors =
+          std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
+              sensitiveMatches, false);
+      auto passiveSelectors =
+          std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
+              passiveMatches, false);
+
+      Acts::Geant4DetectorSurfaceFactory::Cache cache;
+      Acts::Geant4DetectorSurfaceFactory::Options options;
+      options.sensitiveSurfaceSelector = sensitiveSelectors;
+      options.passiveSurfaceSelector = passiveSelectors;
+
+      G4Transform3D nominal;
+      Acts::Geant4DetectorSurfaceFactory factory;
+      factory.construct(cache, nominal, *world, options);
+
+      // Capture the sensitive elements and the surfaces
+      using Elements =
+          std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>;
+      Elements detectorElements;
+      detectorElements.reserve(cache.sensitiveSurfaces.size());
+      using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
+      Surfaces surfaces;
+      surfaces.reserve(cache.sensitiveSurfaces.size());
+      std::for_each(cache.sensitiveSurfaces.begin(),
+                    cache.sensitiveSurfaces.end(), [&](const auto& sensitive) {
+                      detectorElements.push_back(std::get<0>(sensitive));
+                      surfaces.push_back(std::get<1>(sensitive));
+                    });
+
+      // Capture the passive surfaces
+      Surfaces passiveSurfaces;
+      passiveSurfaces.reserve(cache.passiveSurfaces.size());
+      for (const auto& passive : cache.passiveSurfaces) {
+        passiveSurfaces.push_back(passive);
+      }
+
+      // Return a convenient tuple for drawing
+      return std::tuple<Elements, Surfaces, Surfaces>(
+          std::move(detectorElements), std::move(surfaces),
+          std::move(passiveSurfaces));
+    });
   }
 
   {
