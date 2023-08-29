@@ -28,6 +28,7 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 // return vector must contain weight of each seed
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
+    const Acts::SpacePointMutableData& mutableData,
     const external_spacepoint_t& bottomSP,
     const external_spacepoint_t& middleSP,
     const std::vector<const external_spacepoint_t*>& topSpVec,
@@ -88,7 +89,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
     // use deltaR instead of top radius
     float currentTopR = m_cfg.useDeltaRorTopRadius
-                            ? topSpVec[topSPIndex]->deltaR()
+                            ? mutableData.deltaR(topSpVec[topSPIndex]->index())
                             : topSpVec[topSPIndex]->radius();
     float impact = impactParametersVec[topSPIndex];
 
@@ -103,7 +104,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       }
 
       float otherTopR = m_cfg.useDeltaRorTopRadius
-                            ? topSpVec[compatibleTopSPIndex]->deltaR()
+	                    ? mutableData.deltaR(topSpVec[compatibleTopSPIndex]->index())
                             : topSpVec[compatibleTopSPIndex]->radius();
 
       // curvature difference within limits?
@@ -183,8 +184,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < bottomSP.quality() and weight < middleSP.quality() and
-          weight < topSpVec[topSPIndex]->quality()) {
+      if (weight < mutableData.quality(bottomSP.index()) and 
+	  weight < mutableData.quality(middleSP.index()) and
+          weight < mutableData.quality(topSpVec[topSPIndex]->index())) {
         continue;
       }
 
@@ -241,6 +243,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+							     Acts::SpacePointMutableData& mutableData,
     CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
     const std::size_t numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
@@ -249,11 +252,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // this collection is already sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
-  filterSeeds_1SpFixed(extended_collection, numQualitySeeds, outIt);
+  filterSeeds_1SpFixed(mutableData, extended_collection, numQualitySeeds, outIt);
 }
 
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+							     Acts::SpacePointMutableData& mutableData,
     std::vector<typename CandidatesForMiddleSp<
         const external_spacepoint_t>::value_type>& candidates,
     const std::size_t numQualitySeeds,
@@ -285,17 +289,17 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
       if (numQualitySeeds > 0 and not qualitySeed) {
         continue;
       }
-      if (bestSeedQuality < bottom->quality() and
-          bestSeedQuality < medium->quality() and
-          bestSeedQuality < top->quality()) {
+      if (bestSeedQuality < mutableData.quality(bottom->index()) and
+          bestSeedQuality < mutableData.quality(medium->index()) and
+          bestSeedQuality < mutableData.quality(top->index())) {
         continue;
       }
     }
 
     // set quality of seed components
-    bottom->setQuality(bestSeedQuality);
-    medium->setQuality(bestSeedQuality);
-    top->setQuality(bestSeedQuality);
+    mutableData.setQuality(bottom->index(), bestSeedQuality);
+    mutableData.setQuality(medium->index(), bestSeedQuality);
+    mutableData.setQuality(top->index(), bestSeedQuality);
 
     outIt = Acts::Seed<external_spacepoint_t>{*bottom, *medium, *top, zOrigin,
                                               bestSeedQuality};

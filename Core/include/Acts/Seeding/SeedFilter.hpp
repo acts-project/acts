@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/Seed.hpp"
+#include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
@@ -59,6 +60,7 @@ class SeedFilter {
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
   virtual void filterSeeds_2SpFixed(
+      const Acts::SpacePointMutableData& mutableData,
       const external_spacepoint_t& bottomSP,
       const external_spacepoint_t& middleSP,
       const std::vector<const external_spacepoint_t*>& topSpVec,
@@ -74,6 +76,7 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
+				    Acts::SpacePointMutableData& mutableData,
       CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
       const std::size_t numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
@@ -85,6 +88,7 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
+				    Acts::SpacePointMutableData& mutableData,
       std::vector<typename CandidatesForMiddleSp<
           const external_spacepoint_t>::value_type>& candidates,
       const std::size_t numQualitySeeds,

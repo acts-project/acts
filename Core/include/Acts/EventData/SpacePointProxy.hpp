@@ -54,12 +54,6 @@ class SpacePointProxy {
   float varianceR() const;
   float varianceZ() const;
 
-  float quality() const;
-  float deltaR() const;
-
-  void setQuality(const float value) const;
-  void setDeltaR(const float value) const;
-
   const Acts::Vector3& topStripVector() const;
   const Acts::Vector3& bottomStripVector() const;
   const Acts::Vector3& stripCenterDistance() const;

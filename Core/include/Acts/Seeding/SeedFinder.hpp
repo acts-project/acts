@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/Neighbour.hpp"
@@ -16,6 +17,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/EventData/SpacePointMutableData.hpp"
 
 #include <array>
 #include <limits>
@@ -61,6 +63,9 @@ class SeedFinder {
         bottomNeighbours;
     boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
         topNeighbours;
+
+    // Mutable variables for Space points used in the seeding
+    Acts::SpacePointMutableData spacePointMutableData;
   };
 
   /// The only constructor. Requires a config object.
@@ -141,6 +146,7 @@ class SeedFinder {
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
       const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      Acts::SpacePointMutableData& mutableData,
       boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
           otherSPsNeighbours,
       const external_spacepoint_t& mediumSP,

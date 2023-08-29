@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointMutableData.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 
 namespace Acts {
@@ -27,7 +28,8 @@ struct LinCircle {
 };
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(const external_spacepoint_t& sp,
+LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData,
+			       const external_spacepoint_t& sp,
                                const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
@@ -41,7 +43,8 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
-void transformCoordinates(const std::vector<const external_spacepoint_t*>& vec,
+void transformCoordinates(Acts::SpacePointMutableData& mutableData,
+			  const std::vector<const external_spacepoint_t*>& vec,
                           const external_spacepoint_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec);
 

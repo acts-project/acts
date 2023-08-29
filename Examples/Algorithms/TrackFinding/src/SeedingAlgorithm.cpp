@@ -262,6 +262,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   static thread_local std::vector<seed_type> seeds;
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
+  state.spacePointMutableData.resize(spContainer.size());
   auto stop_preparation = std::chrono::high_resolution_clock::now();
 
   auto start = std::chrono::high_resolution_clock::now();

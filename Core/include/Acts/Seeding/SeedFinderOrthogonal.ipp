@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -242,7 +243,8 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
 
 template <typename external_spacepoint_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
-    const SeedFinderOptions &options, const external_spacepoint_t &middle,
+    const SeedFinderOptions &options, 
+    Acts::SpacePointMutableData& mutableData, const external_spacepoint_t &middle,
     const std::vector<const external_spacepoint_t *> &bottom,
     const std::vector<const external_spacepoint_t *> &top,
     SeedFilterState seedFilterState,
@@ -284,8 +286,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<LinCircle> linCircleTop;
 
   // transform coordinates
-  transformCoordinates(bottom, middle, true, linCircleBottom);
-  transformCoordinates(top, middle, false, linCircleTop);
+  transformCoordinates(mutableData, bottom, middle, true, linCircleBottom);
+  transformCoordinates(mutableData, top, middle, false, linCircleTop);
 
   // sort: make index vector
   std::vector<std::size_t> sorted_bottoms(linCircleBottom.size());
@@ -474,7 +476,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     seedFilterState.zOrigin = middle.z() - rM * lb.cotTheta;
 
-    m_config.seedFilter->filterSeeds_2SpFixed(
+    m_config.seedFilter->filterSeeds_2SpFixed(mutableData,
         *bottom[b], middle, top_valid, curvatures, impactParameters,
         seedFilterState, candidates_collector);
 
@@ -484,7 +486,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
-    const SeedFinderOptions &options, const tree_t &tree,
+    const SeedFinderOptions &options, 
+    Acts::SpacePointMutableData& mutableData, const tree_t &tree,
     output_container_t &out_cont,
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
@@ -664,14 +667,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
+    filterCandidates(options, mutableData, middle, bottom_lh_v, top_lh_v, seedFilterState,
                      candidates_collector);
   }
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
+    filterCandidates(options, mutableData, middle, bottom_hl_v, top_hl_v, seedFilterState,
                      candidates_collector);
   }
   /*
@@ -679,7 +682,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    */
   if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or
       (!bottom_hl_v.empty() && !top_hl_v.empty())) {
-    m_config.seedFilter->filterSeeds_1SpFixed(
+    m_config.seedFilter->filterSeeds_1SpFixed(mutableData,
         candidates_collector, seedFilterState.numQualitySeeds,
         std::back_inserter(out_cont));
   }
@@ -741,6 +744,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   std::vector<const external_spacepoint_t *> internal_sps;
   internal_sps.reserve(spacePoints.size());
 
+  Acts::SpacePointMutableData mutableData;
+  mutableData.resize(spacePoints.size());
+
   for (const external_spacepoint_t &p : spacePoints) {
     // store x,y,z values in extent
     rRangeSPExtent.extend({p.x(), p.y(), p.z()});
@@ -790,7 +796,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       continue;
     }
 
-    processFromMiddleSP(options, tree, out_cont, middle_p);
+    processFromMiddleSP(options, mutableData, tree, out_cont, middle_p);
   }
 }
 

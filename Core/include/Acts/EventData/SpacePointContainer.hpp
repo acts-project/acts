@@ -178,12 +178,6 @@ class SpacePointContainer {
   float varianceR(const std::size_t n) const;
   float varianceZ(const std::size_t n) const;
 
-  float quality(const std::size_t n) const;
-  float deltaR(const std::size_t n) const;
-
-  void setQuality(const std::size_t n, const float value) const;
-  void setDeltaR(const std::size_t n, const float value) const;
-
   const Acts::Vector3& topStripVector(const std::size_t n) const;
   const Acts::Vector3& bottomStripVector(const std::size_t n) const;
   const Acts::Vector3& stripCenterDistance(const std::size_t n) const;

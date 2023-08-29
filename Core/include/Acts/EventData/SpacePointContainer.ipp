@@ -228,30 +228,6 @@ inline float SpacePointContainer<container_t, holder_t>::varianceZ(
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::quality(
-    const std::size_t n) const {
-  return m_data.quality(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::deltaR(
-    const std::size_t n) const {
-  return m_data.deltaR(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline void SpacePointContainer<container_t, holder_t>::setQuality(
-    const std::size_t n, const float value) const {
-  m_data.setQuality(n, value);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline void SpacePointContainer<container_t, holder_t>::setDeltaR(
-    const std::size_t n, const float value) const {
-  m_data.setDeltaR(n, value);
-}
-
-template <typename container_t, template <typename> class holder_t>
 inline typename SpacePointContainer<container_t, holder_t>::ProxyType
 SpacePointContainer<container_t, holder_t>::proxy(const std::size_t n) const {
   return {*this, n};

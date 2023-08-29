@@ -18,10 +18,10 @@
 namespace Acts {
 
 /// @class SpacePointData
-/// This class contains auxiliary and mutable data associated to the
+/// This class contains auxiliary data associated to the
 /// external space points provided by the customers
 /// These variables are used internally by the seeding algorithm, that
-/// reads and updates them
+/// reads them
 /// The variables collected here are also dynamic variables only present
 /// for strip space points
 class SpacePointData {
@@ -49,9 +49,6 @@ class SpacePointData {
   float varianceZ(const std::size_t idx) const;
   float varianceR(const std::size_t idx) const;
 
-  float quality(const std::size_t idx) const;
-  float deltaR(const std::size_t idx) const;
-
   /// @brief Setters
   void setX(const std::size_t idx, const float value);
   void setY(const std::size_t idx, const float value);
@@ -60,9 +57,6 @@ class SpacePointData {
   void setPhi(const std::size_t idx, const float value);
   void setVarianceZ(const std::size_t idx, const float value);
   void setVarianceR(const std::size_t idx, const float value);
-
-  void setQuality(const std::size_t idx, const float value) const;
-  void setDeltaR(const std::size_t idx, const float value) const;
 
   /// @brief Resize vectors
   void resize(const std::size_t n, bool resizeDynamic = false);
@@ -94,10 +88,6 @@ class SpacePointData {
   std::vector<float> m_phi{};
   std::vector<float> m_varianceR{};
   std::vector<float> m_varianceZ{};
-
-  /// Mutable variables
-  mutable std::vector<float> m_quality{};
-  mutable std::vector<float> m_deltaR{};
 
   /// dynamic variables
   std::vector<Acts::Vector3> m_topStripVector{};

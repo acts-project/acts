@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -8,7 +9,8 @@
 
 namespace Acts {
 template <typename external_spacepoint_t, typename callable_t>
-inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
+inline LinCircle transformCoordinates(Acts::SpacePointMutableData& mutableData, 
+                                      const external_spacepoint_t& sp,
                                       const external_spacepoint_t& spM,
                                       bool bottom,
                                       callable_t&& extractFunction) {
@@ -45,12 +47,12 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
                     (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
                    iDeltaR2;
 
-  sp.setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+  mutableData.setDeltaR(sp.index(), std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   return LinCircle(cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame);
 }
 
 template <typename external_spacepoint_t>
-inline void transformCoordinates(
+inline void transformCoordinates(Acts::SpacePointMutableData& mutableData,
     const std::vector<const external_spacepoint_t*>& vec,
     const external_spacepoint_t& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -115,7 +117,7 @@ inline void transformCoordinates(
     linCircleVec[idx].V = V;
     linCircleVec[idx].x = xNewFrame;
     linCircleVec[idx].y = yNewFrame;
-    sp->setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+    mutableData.setDeltaR(sp->index(), std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   }
 }
 
