@@ -117,7 +117,7 @@ class TrackSelector {
     Config() : cutSets{{}}, absEtaEdges{{0, inf}} {};
 
     /// Constructor to create a config object that is not upper-bounded.
-    /// This is useful to use the "fluent" API to populate the configurtation.
+    /// This is useful to use the "fluent" API to populate the configuration.
     /// @param etaMin Minimum eta bin edge
     Config(double etaMin) : cutSets{}, absEtaEdges{etaMin} {}
 
@@ -131,7 +131,7 @@ class TrackSelector {
     }
 
     /// Auto-converting constructor from a single cut configuration.
-    /// Results in a single absolut eta bin from 0 to infinity.
+    /// Results in a single absolute eta bin from 0 to infinity.
     Config(CutConfig cutSet) : cutSets{cutSet}, absEtaEdges{{0, inf}} {}
 
     /// Add a new eta bin with the given upper bound.
@@ -139,12 +139,14 @@ class TrackSelector {
     /// @param callback Callback to configure the cuts for this eta bin
     /// @return Reference to this object
     Config& addCuts(
-        double etaMax, std::function<void(CutConfig&)> callback = [](auto&) {});
+        double etaMax,
+        const std::function<void(CutConfig&)>& callback = [](auto&) {});
 
     /// Add a new eta bin with an upper bound of +infinity.
     /// @param callback Callback to configure the cuts for this eta bin
     /// @return Reference to this object
-    Config& addCuts(std::function<void(CutConfig&)> callback = [](auto&) {});
+    Config& addCuts(const std::function<void(CutConfig&)>& callback =
+                        [](auto&) {});
 
     /// Print this configuration to an output stream
     /// @param os Output stream
@@ -268,7 +270,7 @@ inline std::ostream& operator<<(std::ostream& os,
 }
 
 inline TrackSelector::Config& TrackSelector::Config::addCuts(
-    double etaMax, std::function<void(CutConfig&)> callback) {
+    double etaMax, const std::function<void(CutConfig&)>& callback) {
   if (etaMax <= absEtaEdges.back()) {
     throw std::invalid_argument{
         "Abs Eta bin edges must be in increasing order"};
@@ -284,7 +286,7 @@ inline TrackSelector::Config& TrackSelector::Config::addCuts(
 }
 
 inline TrackSelector::Config& TrackSelector::Config::addCuts(
-    std::function<void(CutConfig&)> callback) {
+    const std::function<void(CutConfig&)>& callback) {
   return addCuts(inf, std::move(callback));
 }
 
