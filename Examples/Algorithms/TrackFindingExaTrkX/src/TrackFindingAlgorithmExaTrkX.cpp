@@ -14,6 +14,8 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <numeric>
+
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
@@ -62,7 +64,8 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 std::vector<std::vector<int>>
 ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const {
-  auto [nodes, edges] = (*m_cfg.graphConstructor)(inputValues);
+  auto [nodes, edges] =
+      (*m_cfg.graphConstructor)(inputValues, spacepointIDs.size());
   std::any edge_weights;
 
   for (auto edgeClassifier : m_cfg.edgeClassifiers) {
@@ -75,39 +78,80 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
   return (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs);
 }
 
+/// Allow access to features with nice names
+enum feat : std::size_t {
+  eR = 0,
+  ePhi,
+  eZ,
+  eCellCount,
+  eCellSum,
+  eClusterX,
+  eClusterY
+};
+
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
   const auto& spacepoints = m_inputSpacePoints(ctx);
 
-  // Convert Input data to a list of size [num_measurements x
-  // measurement_features]
-  size_t num_spacepoints = spacepoints.size();
-  ACTS_INFO("Received " << num_spacepoints << " spacepoints");
-
-  std::vector<float> inputValues;
-  std::vector<int> spacepointIDs;
-  inputValues.reserve(spacepoints.size() * 3);
-  spacepointIDs.reserve(spacepoints.size());
-  for (const auto& sp : spacepoints) {
-    float x = sp.x();
-    float y = sp.y();
-    float z = sp.z();
-    float r = sp.r();
-    float phi = std::atan2(y, x);
-
-    inputValues.push_back(r / m_cfg.rScale);
-    inputValues.push_back(phi / m_cfg.phiScale);
-    inputValues.push_back(z / m_cfg.zScale);
-
-    // For now just take the first index since does require one single index per
-    // spacepoint
-    const auto& islink = sp.sourceLinks()[0].template get<IndexSourceLink>();
-    spacepointIDs.push_back(islink.index());
+  std::optional<ClusterContainer> clusters;
+  if (m_inputClusters.isInitialized()) {
+    clusters = m_inputClusters(ctx);
   }
 
+  // Convert Input data to a list of size [num_measurements x
+  // measurement_features]
+  const std::size_t numSpacepoints = spacepoints.size();
+  const std::size_t numFeatures = clusters ? 7 : 3;
+  ACTS_INFO("Received " << numSpacepoints << " spacepoints");
+
+  std::vector<float> features(numSpacepoints * numFeatures);
+  std::vector<int> spacepointIDs;
+
+  spacepointIDs.reserve(spacepoints.size());
+
+  double sumCells = 0.0;
+  double sumActivation = 0.0;
+
+  for (auto i = 0ul; i < numSpacepoints; ++i) {
+    const auto& sp = spacepoints[i];
+
+    // I would prefer to use a std::span or boost::span here once available
+    float* featurePtr = features.data() + i * numFeatures;
+
+    // For now just take the first index since does require one single index
+    // per spacepoint
+    const auto& sl = sp.sourceLinks()[0].template get<IndexSourceLink>();
+    spacepointIDs.push_back(sl.index());
+
+    featurePtr[eR] = std::hypot(sp.x(), sp.y()) / m_cfg.rScale;
+    featurePtr[ePhi] = std::atan2(sp.y(), sp.x()) / m_cfg.phiScale;
+    featurePtr[eZ] = sp.z() / m_cfg.zScale;
+
+    if (clusters) {
+      const auto& cluster = clusters->at(sl.index());
+      const auto& chnls = cluster.channels;
+
+      featurePtr[eCellCount] = cluster.channels.size() / m_cfg.cellCountScale;
+      featurePtr[eCellSum] =
+          std::accumulate(chnls.begin(), chnls.end(), 0.0,
+                          [](double s, const Cluster::Cell& c) {
+                            return s + c.activation;
+                          }) /
+          m_cfg.cellSumScale;
+      featurePtr[eClusterX] = cluster.sizeLoc0 / m_cfg.clusterXScale;
+      featurePtr[eClusterY] = cluster.sizeLoc1 / m_cfg.clusterYScale;
+
+      sumCells += featurePtr[eCellCount];
+      sumActivation += featurePtr[eCellSum];
+    }
+  }
+
+  ACTS_DEBUG("Avg cell count: " << sumCells / spacepoints.size());
+  ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
+
   // Run the pipeline
-  const auto trackCandidates = runPipeline(inputValues, spacepointIDs);
+  const auto trackCandidates = runPipeline(features, spacepointIDs);
 
   // Make the prototracks
   std::vector<ProtoTrack> protoTracks;

@@ -125,6 +125,8 @@ struct FitterTester {
   CubicTrackingGeometry geometryStore{geoCtx};
   std::shared_ptr<const Acts::TrackingGeometry> geometry = geometryStore();
 
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
+
   // expected number of measurements for the given detector
   constexpr static size_t nMeasurements = 6u;
 
@@ -281,8 +283,8 @@ struct FitterTester {
     Acts::Vector4 posOuter = start.fourPosition(geoCtx);
     posOuter[Acts::ePos0] = 3_m;
     Acts::CurvilinearTrackParameters startOuter(
-        posOuter, start.unitDirection(), start.absoluteMomentum(),
-        start.charge(), start.covariance());
+        posOuter, start.direction(), start.absoluteMomentum(), start.charge(),
+        start.covariance());
 
     options.referenceSurface = &startOuter.referenceSurface();
     options.propagatorPlainOptions.direction = Acts::Direction::Backward;

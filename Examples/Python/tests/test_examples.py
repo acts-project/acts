@@ -609,7 +609,7 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         numThreads=1,
         fpeMasks=[
             (
-                "Fatras/include/ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp:66",
+                "Fatras/include/ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp:65",
                 acts.FpeType.FLTUND,
                 1,
             ),
