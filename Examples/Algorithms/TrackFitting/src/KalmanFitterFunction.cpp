@@ -24,6 +24,7 @@
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
@@ -80,8 +81,13 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
   bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
-  KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
-      : fitter(std::move(f)), directFitter(std::move(df)) {}
+  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
+
+  KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
+                           const Acts::TrackingGeometry& trkGeo)
+      : fitter(std::move(f)),
+        directFitter(std::move(df)),
+        m_slSurfaceAccessor{trkGeo} {}
 
   template <typename calibrator_t>
   auto makeKfOptions(const GeneralFitterOptions& options,
@@ -106,6 +112,9 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
     kfOptions.freeToBoundCorrection = freeToBoundCorrection;
     kfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
+    kfOptions.extensions.surfaceAccessor
+        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+            &m_slSurfaceAccessor);
 
     return kfOptions;
   }
@@ -148,6 +157,7 @@ ActsExamples::makeKalmanFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
+  const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
@@ -167,7 +177,7 @@ ActsExamples::makeKalmanFitterFunction(
 
   // build the fitter function. owns the fitter object.
   auto fitterFunction = std::make_shared<KalmanFitterFunctionImpl>(
-      std::move(trackFitter), std::move(directTrackFitter));
+      std::move(trackFitter), std::move(directTrackFitter), geo);
   fitterFunction->multipleScattering = multipleScattering;
   fitterFunction->energyLoss = energyLoss;
   fitterFunction->reverseFilteringLogic.momentumThreshold =

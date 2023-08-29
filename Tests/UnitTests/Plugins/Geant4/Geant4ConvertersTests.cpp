@@ -33,6 +33,7 @@
 #include "G4Material.hh"
 #include "G4PVPlacement.hh"
 #include "G4RotationMatrix.hh"
+#include "G4SystemOfUnits.hh"
 #include "G4ThreeVector.hh"
 #include "G4Trd.hh"
 #include "G4Tubs.hh"
@@ -63,7 +64,8 @@ BOOST_AUTO_TEST_CASE(Geant4AlgebraConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4CylinderConversion) {
-  G4Tubs cylinder("Cylinder", 399., 401., 800., 0., 2 * M_PI);
+  G4Tubs cylinder("Cylinder", 399., 401., 800., -M_PI * CLHEP::radian,
+                  2 * M_PI * CLHEP::radian);
   auto [bounds, thickness] =
       Acts::Geant4ShapeConverter{}.cylinderBounds(cylinder);
   CHECK_CLOSE_ABS(bounds->get(Acts::CylinderBounds::BoundValues::eR), 400.,
@@ -79,7 +81,8 @@ BOOST_AUTO_TEST_CASE(Geant4CylinderConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4RadialConversion) {
-  G4Tubs disc("disc", 40., 400., 2., 0., 2 * M_PI);
+  G4Tubs disc("disc", 40., 400., 2., -M_PI * CLHEP::radian,
+              2 * M_PI * CLHEP::radian);
   auto [bounds, thickness] = Acts::Geant4ShapeConverter{}.radialBounds(disc);
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eMinR), 40.,
                   10e-10);
@@ -280,8 +283,8 @@ BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
   Acts::ActsScalar thickness = 1.;
   Acts::ActsScalar halfLengthZ = 200;
 
-  G4Tubs* g4Tube =
-      new G4Tubs("Tube", radius, radius + thickness, halfLengthZ, 0., 2 * M_PI);
+  G4Tubs* g4Tube = new G4Tubs("Tube", radius, radius + thickness, halfLengthZ,
+                              -M_PI * CLHEP::radian, 2 * M_PI * CLHEP::radian);
 
   G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
   G4LogicalVolume* g4TubeLog =
@@ -323,7 +326,7 @@ BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
   Acts::ActsScalar thickness = 2.;
 
   G4Tubs* g4Tube = new G4Tubs("Disc", innerRadius, outerRadius, 0.5 * thickness,
-                              0., 2 * M_PI);
+                              -M_PI * CLHEP::radian, 2 * M_PI * CLHEP::radian);
 
   G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
   G4LogicalVolume* g4TubeLog =
@@ -355,7 +358,7 @@ BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
   Acts::ActsScalar thickness = 400.;
 
   G4Tubs* g4Tube = new G4Tubs("Line", innerRadius, outerRadius, 0.5 * thickness,
-                              0., 2 * M_PI);
+                              -M_PI * CLHEP::radian, 2 * M_PI * CLHEP::radian);
 
   G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
   G4LogicalVolume* g4TubeLog =
