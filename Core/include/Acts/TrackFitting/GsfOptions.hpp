@@ -35,7 +35,9 @@ struct GsfExtensions {
   using TrackStateProxy = typename traj_t::TrackStateProxy;
   using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
 
-  using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
+  using Calibrator =
+      Delegate<void(const GeometryContext&, const CalibrationContext&,
+                    const SourceLink&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         Direction, const Logger&)>;
@@ -53,6 +55,9 @@ struct GsfExtensions {
   /// Determines whether a measurement is supposed to be considered as an
   /// outlier
   OutlierFinder outlierFinder;
+
+  /// Retrieves the associated surface from a source link
+  SourceLinkSurfaceAccessor surfaceAccessor;
 
   /// Default constructor which connects the default void components
   GsfExtensions() {

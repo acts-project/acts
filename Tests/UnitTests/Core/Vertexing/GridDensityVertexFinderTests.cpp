@@ -48,7 +48,7 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
                                                           magFieldContext);
   Vertex<BoundTrackParameters> constraintVtx;
-  constraintVtx.setCovariance(SymMatrix3::Identity());
+  constraintVtx.setCovariance(SquareMatrix3::Identity());
   vertexingOptions.vertexConstraint = constraintVtx;
 
   using Finder1 = GridDensityVertexFinder<mainGridSize, trkGridSize>;
@@ -404,7 +404,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 
@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   double covZZ1 = 0;
   if (res1.ok()) {
     BOOST_CHECK(!(*res1).empty());
-    SymMatrix3 cov = (*res1).back().covariance();
+    SquareMatrix3 cov = (*res1).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     covZZ1 = cov(eZ, eZ);
@@ -448,7 +448,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   double covZZ2 = 0;
   if (res2.ok()) {
     BOOST_CHECK(!(*res2).empty());
-    SymMatrix3 cov = (*res2).back().covariance();
+    SquareMatrix3 cov = (*res2).back().covariance();
     BOOST_CHECK(constraintVtx.covariance() != cov);
     BOOST_CHECK(cov(eZ, eZ) != 0.);
     covZZ2 = cov(eZ, eZ);

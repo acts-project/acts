@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(CsvMeasurmentRoundTrip) {
     sourceLinksOriginal.insert(sl);
 
     Acts::Vector2 p = Acts::Vector2::Random();
-    Acts::SymMatrix2 c = Acts::SymMatrix2::Random();
+    Acts::SquareMatrix2 c = Acts::SquareMatrix2::Random();
 
     // NOTE this fails:
     // auto m = Acts::makeMeasurement(sl, p, c, eBoundLoc0, eBoundTime)

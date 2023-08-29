@@ -1205,7 +1205,6 @@ def addExaTrkX(
 
     metricLearningConfig = {
         "level": customLogLevel(),
-        "spacepointFeatures": 3,
         "embeddingDim": 8,
         "rVal": 1.6,
         "knnVal": 100,
@@ -1223,10 +1222,13 @@ def addExaTrkX(
 
     if backend == ExaTrkXBackend.Torch:
         metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
+        metricLearningConfig["numFeatures"] = 3
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["nChunks"] = 10
+        filterConfig["numFeatures"] = 3
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
         gnnConfig["undirected"] = True
+        gnnConfig["numFeatures"] = 3
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
@@ -1236,6 +1238,7 @@ def addExaTrkX(
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
     elif backend == ExaTrkXBackend.Onnx:
         metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
+        metricLearningConfig["spacepointFeatures"] = 3
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
@@ -1436,6 +1439,7 @@ def addAmbiguityResolutionMLDBScan(
 def addVertexFitting(
     s,
     field,
+    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
@@ -1453,6 +1457,8 @@ def addVertexFitting(
     s: Sequencer
         the sequencer module to which we add the Seeding steps (returned from addVertexFitting)
     field : magnetic field
+    seeder : enum member
+        determines vertex seeder, can be acts.seeder.GaussianSeeder or acts.seeder.AdaptiveGridSeeder
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     associatedParticles : str, "associatedTruthParticles"
@@ -1525,6 +1531,7 @@ def addVertexFitting(
     elif vertexFinder == VertexFinder.AMVF:
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
+            seedFinder=seeder,
             bField=field,
             inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
@@ -1571,7 +1578,6 @@ def addSingleSeedVertexFinding(
     inputSpacePoints: Optional[str] = "spacepoints",
     outputVertices: Optional[str] = "fittedSeedVertices",
 ) -> None:
-
     from acts.examples import (
         SingleSeedVertexFinderAlgorithm,
         VertexPerformanceWriter,

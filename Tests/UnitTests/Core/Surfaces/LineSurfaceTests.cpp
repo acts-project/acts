@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
 
   for (double eta : etas) {
     Vector3 pca = {5, 0, 0};
-    Vector3 dir = makeDirectionUnitFromPhiEta(M_PI_2, eta);
+    Vector3 dir = makeDirectionFromPhiEta(M_PI_2, eta);
     Vector3 pos = pca + dir;
 
     auto intersection = surface.intersect(tgContext, pos, dir);
@@ -308,7 +308,7 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 
   auto intersection =
       surface->intersect(tgContext, displacedParameters.position(tgContext),
-                         displacedParameters.unitDirection());
+                         displacedParameters.direction());
   CHECK_CLOSE_ABS(intersection.intersection.pathLength, pathLimit, eps);
 
   BoundTrackParameters endParameters{surface, BoundVector::Zero(), 1};

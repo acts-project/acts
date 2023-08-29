@@ -97,6 +97,12 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   auto spBuilderConfig = Acts::SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
 
+  m_slSurfaceAccessor.emplace(
+      IndexSourceLink::SurfaceAccessor{*m_cfg.trackingGeometry});
+  spBuilderConfig.slSurfaceAccessor
+      .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+          &m_slSurfaceAccessor.value());
+
   auto spConstructor =
       [](const Acts::Vector3& pos, const Acts::Vector2& cov,
          boost::container::static_vector<Acts::SourceLink, 2> slinks)
@@ -125,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
         [](const auto& measurement) {
           auto expander = measurement.expander();
           Acts::BoundVector par = expander * measurement.parameters();
-          Acts::BoundSymMatrix cov =
+          Acts::BoundSquareMatrix cov =
               expander * measurement.covariance() * expander.transpose();
           return std::make_pair(par, cov);
         },

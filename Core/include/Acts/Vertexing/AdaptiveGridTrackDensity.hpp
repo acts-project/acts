@@ -111,8 +111,9 @@ class AdaptiveGridTrackDensity {
   /// @param centralZBin Central z bin of the track (where its density is the highest)
   /// @param distCtrZ The distance in z0 from the track position to its
   /// bin center in the 2-dim grid
-  DensityMap createTrackGrid(int offset, const SymMatrix2& cov, float distCtrD,
-                             int centralZBin, float distCtrZ) const;
+  DensityMap createTrackGrid(int offset, const SquareMatrix2& cov,
+                             float distCtrD, int centralZBin,
+                             float distCtrZ) const;
 
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak
@@ -125,7 +126,7 @@ class AdaptiveGridTrackDensity {
                                   float maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
-  float normal2D(float d, float z, const SymMatrix2& cov) const;
+  float normal2D(float d, float z, const SquareMatrix2& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
   /// a maximum relative deviation of 'relativeDensityDev' from the main
