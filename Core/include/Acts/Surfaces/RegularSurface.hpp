@@ -13,6 +13,9 @@
 
 namespace Acts {
 
+/// A physical surface which does not depend on the direction you look at it
+/// from. As such it narrows the interface of @c Surface and allows
+/// inspection without providing a global position and direction.
 class RegularSurface : public Surface {
  public:
   // Reuse all constructors from the base class

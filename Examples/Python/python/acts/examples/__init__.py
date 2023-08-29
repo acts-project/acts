@@ -358,7 +358,7 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                     n.append(self.FpeMask(loc, t, count))
                 kwargs["fpeMasks"] = n
 
-        kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
+            kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
 
         cfg = self.Config()
         if len(args) == 1 and isinstance(args[0], self.Config):
