@@ -30,8 +30,7 @@ target_link_libraries(
     ActsPluginIdentification
     ActsPluginJson
     ActsPluginLegacy
-    ActsPluginTGeo
-    ActsPluginEDM4hep)
+    ActsPluginTGeo)
 
 option(DD4HEP "Build with DD4hep" ON)
 if(DD4HEP)
