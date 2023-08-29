@@ -50,7 +50,7 @@ class NullHelper : public PodioUtil::ConversionHelper {
   }
 
   SourceLink identifierToSourceLink(PodioUtil::Identifier) const override {
-    return SourceLink{0, 0};
+    return SourceLink{0};
   }
 
   PodioUtil::Identifier sourceLinkToIdentifier(const SourceLink&) override {
