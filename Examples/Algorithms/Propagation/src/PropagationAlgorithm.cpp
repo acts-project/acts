@@ -118,12 +118,12 @@ ProcessCode PropagationAlgorithm::execute(
   return ProcessCode::SUCCESS;
 }
 
-std::optional<Acts::BoundSymMatrix> PropagationAlgorithm::generateCovariance(
+std::optional<Acts::BoundSquareMatrix> PropagationAlgorithm::generateCovariance(
     ActsExamples::RandomEngine& rnd,
     std::normal_distribution<double>& gauss) const {
   if (m_cfg.covarianceTransport) {
     // We start from the correlation matrix
-    Acts::BoundSymMatrix newCov(m_cfg.correlations);
+    Acts::BoundSquareMatrix newCov(m_cfg.correlations);
     // Then we draw errors according to the error values
     Acts::BoundVector covs_smeared = m_cfg.covariances;
     for (size_t k = 0; k < size_t(covs_smeared.size()); ++k) {

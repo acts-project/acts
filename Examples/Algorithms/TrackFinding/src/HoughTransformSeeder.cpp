@@ -529,12 +529,12 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
             [](const auto& meas) {
               auto expander = meas.expander();
               Acts::BoundVector par = expander * meas.parameters();
-              Acts::BoundSymMatrix cov =
+              Acts::BoundSquareMatrix cov =
                   expander * meas.covariance() * expander.transpose();
               // extract local position
               Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
               // extract local position covariance.
-              Acts::SymMatrix2 lcov =
+              Acts::SquareMatrix2 lcov =
                   cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
               return std::make_pair(lpar, lcov);
             },

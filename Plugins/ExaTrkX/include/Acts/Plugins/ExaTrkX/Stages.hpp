@@ -23,10 +23,12 @@ class GraphConstructionBase {
   /// Perform the graph construction
   ///
   /// @param inputValues Flattened input data
+  /// @param numNodes number of nodes. inputValues.size() / numNodes
+  /// then gives the number of features
   ///
   /// @return (node_tensor, edge_tensore)
   virtual std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues) = 0;
+      std::vector<float> &inputValues, std::size_t numNodes) = 0;
 
   virtual ~GraphConstructionBase() = default;
 };

@@ -89,8 +89,6 @@ using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 We configure the vertex finder in such a way that we do *not* use a beam spot constraint here:
 ```cpp
 Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator, linearizer);
-// We do not want to use a beamspot constraint here
-finderConfig.useBeamSpotConstraint = false;
 ```
 Create the AMVF instance and a finder state to be passed to the `find()` method below:
 ```cpp

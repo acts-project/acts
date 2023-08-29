@@ -21,11 +21,13 @@ class VectorMultiTrajectory;
 void ActsExamples::PassThroughCalibrator::calibrate(
     const MeasurementContainer& measurements,
     const ClusterContainer* /*clusters*/, const Acts::GeometryContext& /*gctx*/,
+    const Acts::CalibrationContext& /*cctx*/,
+    const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
-  Acts::SourceLink usl = trackState.getUncalibratedSourceLink();
-  const IndexSourceLink& sourceLink = usl.get<IndexSourceLink>();
+  trackState.setUncalibratedSourceLink(sourceLink);
+  const IndexSourceLink& idxSourceLink = sourceLink.get<IndexSourceLink>();
 
-  assert((sourceLink.index() < measurements.size()) and
+  assert((idxSourceLink.index() < measurements.size()) and
          "Source link index is outside the container bounds");
 
   std::visit(
@@ -33,7 +35,7 @@ void ActsExamples::PassThroughCalibrator::calibrate(
         trackState.allocateCalibrated(meas.size());
         trackState.setCalibrated(meas);
       },
-      (measurements)[sourceLink.index()]);
+      (measurements)[idxSourceLink.index()]);
 }
 
 ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(
@@ -44,7 +46,9 @@ ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(
       m_clusters{clusters} {}
 
 void ActsExamples::MeasurementCalibratorAdapter::calibrate(
-    const Acts::GeometryContext& gctx,
+    const Acts::GeometryContext& gctx, const Acts::CalibrationContext& cctx,
+    const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy trackState) const {
-  return m_calibrator.calibrate(m_measurements, m_clusters, gctx, trackState);
+  return m_calibrator.calibrate(m_measurements, m_clusters, gctx, cctx,
+                                sourceLink, trackState);
 }

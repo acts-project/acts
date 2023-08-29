@@ -33,6 +33,8 @@ namespace Acts {
 
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
+enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
@@ -160,6 +162,7 @@ class SeedFinder {
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
+  template <Acts::DetectorMeasurementInfo detailedMeasurement>
   void filterCandidates(const external_spacepoint_t& SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,

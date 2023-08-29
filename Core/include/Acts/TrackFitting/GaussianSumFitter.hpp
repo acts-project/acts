@@ -221,7 +221,7 @@ struct GaussianSumFitter {
         sParameters.referenceSurface()
             .intersect(GeometryContext{},
                        sParameters.position(GeometryContext{}),
-                       sParameters.unitDirection(), true)
+                       sParameters.direction(), true)
             .intersection.status;
 
     if (intersectionStatusStartSurface != Intersection3D::Status::onSurface) {
@@ -237,8 +237,8 @@ struct GaussianSumFitter {
     std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (auto it = begin; it != end; ++it) {
       SourceLink sl = *it;
-      auto geoId = sl.geometryId();
-      inputMeasurements.emplace(geoId, std::move(sl));
+      inputMeasurements.emplace(
+          options.extensions.surfaceAccessor(sl)->geometryId(), std::move(sl));
     }
 
     ACTS_VERBOSE(

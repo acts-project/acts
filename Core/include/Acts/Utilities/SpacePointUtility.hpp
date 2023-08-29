@@ -70,38 +70,39 @@ class SpacePointUtility {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param slink SourceLink that holds the necessary
   /// information
+  /// @param surfaceAccessor function to extract surface from SourceLink
   /// @param par local position
   /// @param cov local covariance
   /// @return vectors of the global coordinates and covariance of the SourceLink
-  std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
-                                           const SourceLink& slink,
-                                           const BoundVector& par,
-                                           const BoundSymMatrix& cov) const;
+  std::pair<Vector3, Vector2> globalCoords(
+      const GeometryContext& gctx, const SourceLink& slink,
+      const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
+      const BoundSquareMatrix& cov) const;
 
   /// @brief Get rho and z covariance from the local position and covariance
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param geoId The geometry ID
+  /// @param surface The surface associated
   /// @param globalPos The global position
   /// @param localCov The local covariance matrix
   /// @return (rho, z) components of the global covariance
-
-  Vector2 rhoZCovariance(const GeometryContext& gctx,
-                         const GeometryIdentifier& geoId,
+  Vector2 rhoZCovariance(const GeometryContext& gctx, const Surface& surface,
                          const Vector3& globalPos,
-                         const SymMatrix2& localCov) const;
+                         const SquareMatrix2& localCov) const;
 
   /// @brief Calculate the rho and z covariance from the front and back SourceLink in the strip SP formation
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param slinkFront The SourceLink on the front layer
   /// @param slinkBack The SourceLink on the back layer
   /// @param paramCovAccessor function to extract local position and covariance from SourceLink
+  /// @param surfaceAccessor function to extract surface from SourceLink
   /// @param globalPos global position
   /// @param theta The angle between the two strips
   /// @return (rho, z) components of the global covariance
   Vector2 calcRhoZVars(
       const GeometryContext& gctx, const SourceLink& slinkFront,
       const SourceLink& slinkBack,
-      const std::function<std::pair<const BoundVector, const BoundSymMatrix>(
+      const SourceLinkSurfaceAccessor& surfaceAccessor,
+      const std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
           SourceLink)>& paramCovAccessor,
       const Vector3& globalPos, const double theta) const;
 

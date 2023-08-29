@@ -373,7 +373,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         const auto hitIdx = sl.index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =
-            averageSimHits(ctx.geoContext, surface, simHits, indices);
+            averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
         // momemtum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
         float truthQOP = 0.0f;
@@ -543,10 +543,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
             // track parameters error
             m_err_eLOC0[ipar].push_back(
-                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, issue:2348)
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, #2348)
                     Acts::eBoundLoc0, Acts::eBoundLoc0)));
             m_err_eLOC1[ipar].push_back(
-                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, issue:2348)
+                std::sqrt(covariance(  // MARK: fpeMask(FLTINV, 1, #2348)
                     Acts::eBoundLoc1, Acts::eBoundLoc1)));
             m_err_ePHI[ipar].push_back(
                 std::sqrt(covariance(Acts::eBoundPhi, Acts::eBoundPhi)));
