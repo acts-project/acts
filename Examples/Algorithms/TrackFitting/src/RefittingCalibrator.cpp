@@ -11,10 +11,12 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
 namespace ActsExamples {
 
 void RefittingCalibrator::calibrate(const Acts::GeometryContext& /*gctx*/,
+                                    const Acts::CalibrationContext& /*cctx*/,
                                     const Acts::SourceLink& sourceLink,
                                     Proxy trackState) const {
   const auto sl = sourceLink.get<RefittingSourceLink>();

@@ -98,8 +98,8 @@ class NonNeutralChargedParticleHypothesis
   }
 
   static NonNeutralChargedParticleHypothesis pionLike(float absQ) {
-    return NonNeutralChargedParticleHypothesis(pion().absPdg(), pion().mass(),
-                                               absQ);
+    return NonNeutralChargedParticleHypothesis(pion().absolutePdg(),
+                                               pion().mass(), absQ);
   }
 };
 
@@ -136,7 +136,7 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
   }
 
   static ParticleHypothesis pionLike(float absQ) {
-    return ParticleHypothesis(pion().absPdg(), pion().mass(), absQ);
+    return ParticleHypothesis(pion().absolutePdg(), pion().mass(), absQ);
   }
 };
 
