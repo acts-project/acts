@@ -260,13 +260,13 @@ Acts::Result<void> Acts::
     for (const auto& trk : currentVtxInfo.trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
 
-      // Set weight for current track
+      // Set trackWeight for current track
       double currentTrkWeight = m_cfg.annealingTool.getWeight(
           state.annealingState, trkAtVtx.vertexCompatibility,
           collectTrackToVertexCompatibilities(state, trk));
-      trkAtVtx.weight = currentTrkWeight;
+      trkAtVtx.trackWeight = currentTrkWeight;
 
-      if (trkAtVtx.weight > m_cfg.minWeight) {
+      if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         // Check if linearization state exists or need to be relinearized
         if (not trkAtVtx.isLinearized || state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
@@ -337,7 +337,7 @@ void Acts::AdaptiveMultiVertexFitter<
   for (const auto vtx : state.vertexCollection) {
     for (const auto trk : state.vtxInfoMap[vtx].trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
-      if (trkAtVtx.weight > m_cfg.minWeight) {
+      if (trkAtVtx.trackWeight > m_cfg.minWeight) {
         KalmanVertexTrackUpdater::update<input_track_t>(trkAtVtx, *vtx);
       }
     }

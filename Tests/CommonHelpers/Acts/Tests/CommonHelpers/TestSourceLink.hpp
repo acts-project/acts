@@ -15,6 +15,8 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <algorithm>
 #include <array>
@@ -68,7 +70,14 @@ struct TestSourceLink final {
 
   constexpr size_t index() const { return sourceId; }
 
-  GeometryIdentifier geometryId() const { return m_geometryId; }
+  struct SurfaceAccessor {
+    const Acts::TrackingGeometry& trackingGeometry;
+
+    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+      const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+      return trackingGeometry.findSurface(testSourceLink.m_geometryId);
+    }
+  };
 };
 
 bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);
@@ -82,7 +91,8 @@ std::ostream& operator<<(std::ostream& os, const TestSourceLink& sourceLink);
 /// @return The measurement used
 template <typename trajectory_t>
 Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
-    const GeometryContext& /*gctx*/, const SourceLink& sourceLink,
+    const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
+    const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
   TestSourceLink sl = sourceLink.template get<TestSourceLink>();
 
@@ -114,9 +124,11 @@ Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
 /// @param trackState TrackState to calibrated
 template <typename trajectory_t>
 void testSourceLinkCalibrator(
-    const GeometryContext& gctx, const SourceLink& sourceLink,
+    const GeometryContext& gctx, const CalibrationContext& cctx,
+    const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
-  testSourceLinkCalibratorReturn<trajectory_t>(gctx, sourceLink, trackState);
+  testSourceLinkCalibratorReturn<trajectory_t>(gctx, cctx, sourceLink,
+                                               trackState);
 }
 
 }  // namespace Test

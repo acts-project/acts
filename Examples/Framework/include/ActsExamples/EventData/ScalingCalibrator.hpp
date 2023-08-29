@@ -52,7 +52,7 @@ class ScalingCalibrator : public MeasurementCalibrator {
   void calibrate(
       const MeasurementContainer& measurements,
       const ClusterContainer* clusters, const Acts::GeometryContext& gctx,
-      const Acts::SourceLink& sourceLink,
+      const Acts::CalibrationContext& cctx, const Acts::SourceLink& sourceLink,
       Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const override;
 
   bool needsClusters() const override { return true; }
