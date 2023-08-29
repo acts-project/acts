@@ -61,7 +61,7 @@ struct PropagatorPlainOptions {
 
   /// The |pdg| code for (eventual) material integration -
   /// pion default
-  int absPdgCode = PdgParticle::ePionPlus;
+  PdgParticle absPdgCode = PdgParticle::ePionPlus;
 
   /// The mass of the particle for (eventual) material integration -
   /// pion default

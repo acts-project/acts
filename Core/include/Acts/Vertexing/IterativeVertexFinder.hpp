@@ -95,7 +95,6 @@ class IterativeVertexFinder {
     IPEstimator ipEst;
 
     // Vertex finder configuration variables
-    bool useBeamConstraint = false;
     double significanceCutSeeding = 10;
     double maximumChi2cutForSeeding = 36.;
     int maxVertices = 50;

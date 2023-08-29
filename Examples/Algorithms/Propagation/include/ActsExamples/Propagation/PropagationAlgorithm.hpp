@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -127,7 +126,7 @@ class PropagationAlgorithm : public IAlgorithm {
     Acts::BoundVector covariances = Acts::BoundVector::Zero();
 
     /// The correlation terms
-    Acts::BoundSymMatrix correlations = Acts::BoundSymMatrix::Identity();
+    Acts::BoundSquareMatrix correlations = Acts::BoundSquareMatrix::Identity();
   };
 
   /// Constructor
@@ -156,7 +155,7 @@ class PropagationAlgorithm : public IAlgorithm {
   /// Private helper method to create a corrleated covariance matrix
   /// @param[in] rnd is the random engine
   /// @param[in] gauss is a gaussian distribution to draw from
-  std::optional<Acts::BoundSymMatrix> generateCovariance(
+  std::optional<Acts::BoundSquareMatrix> generateCovariance(
       ActsExamples::RandomEngine& rnd,
       std::normal_distribution<double>& gauss) const;
 };

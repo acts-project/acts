@@ -115,7 +115,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                              << params[Acts::eBoundQOverP]);
 
       // build the track covariance matrix using the smearing sigmas
-      Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
+      Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
       cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
           m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
       cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =

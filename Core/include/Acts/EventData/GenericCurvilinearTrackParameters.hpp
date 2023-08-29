@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
 namespace Acts {
@@ -22,16 +22,16 @@ namespace Acts {
 /// parameters and their corresponding covariance matrix are stored in
 /// curvilinear parametrization.
 ///
-/// @see SingleBoundTrackParameters
+/// @see GenericBoundTrackParameters
 template <typename charge_t>
-class SingleCurvilinearTrackParameters
-    : public SingleBoundTrackParameters<charge_t> {
-  using Base = SingleBoundTrackParameters<charge_t>;
+class GenericCurvilinearTrackParameters
+    : public GenericBoundTrackParameters<charge_t> {
+  using Base = GenericBoundTrackParameters<charge_t>;
 
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
-  using CovarianceMatrix = BoundSymMatrix;
+  using CovarianceMatrix = BoundSquareMatrix;
 
   /// Construct from four-position, direction, absolute momentum, and charge.
   ///
@@ -40,7 +40,7 @@ class SingleCurvilinearTrackParameters
   /// @param p Absolute momentum
   /// @param q Particle charge
   /// @param cov Curvilinear bound parameters covariance matrix
-  SingleCurvilinearTrackParameters(
+  GenericCurvilinearTrackParameters(
       const Vector4& pos4, const Vector3& dir, Scalar p, Scalar q,
       std::optional<CovarianceMatrix> cov = std::nullopt)
       : Base(Surface::makeShared<PlaneSurface>(pos4.segment<3>(ePos0), dir),
@@ -61,7 +61,7 @@ class SingleCurvilinearTrackParameters
   /// ambiguities, i.e. the charge interpretation type is default-constructible.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  SingleCurvilinearTrackParameters(
+  GenericCurvilinearTrackParameters(
       const Vector4& pos4, const Vector3& dir, Scalar qOverP,
       std::optional<CovarianceMatrix> cov = std::nullopt)
       : Base(Surface::makeShared<PlaneSurface>(pos4.segment<3>(ePos0), dir),
@@ -77,12 +77,11 @@ class SingleCurvilinearTrackParameters
   /// @param p Absolute momentum
   /// @param q Particle charge
   /// @param cov Curvilinear bound parameters covariance matrix
-  SingleCurvilinearTrackParameters(
+  GenericCurvilinearTrackParameters(
       const Vector4& pos4, Scalar phi, Scalar theta, Scalar p, Scalar q,
       std::optional<CovarianceMatrix> cov = std::nullopt)
       : Base(Surface::makeShared<PlaneSurface>(
-                 pos4.segment<3>(ePos0),
-                 makeDirectionUnitFromPhiTheta(phi, theta)),
+                 pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
              detail::transformFreeToCurvilinearParameters(
                  pos4[eTime], phi, theta, (q != Scalar(0)) ? (q / p) : (1 / p)),
              q, std::move(cov)) {
@@ -101,27 +100,38 @@ class SingleCurvilinearTrackParameters
   /// ambiguities, i.e. the charge interpretation type is default-constructible.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  SingleCurvilinearTrackParameters(
+  GenericCurvilinearTrackParameters(
       const Vector4& pos4, Scalar phi, Scalar theta, Scalar qOverP,
       std::optional<CovarianceMatrix> cov = std::nullopt)
       : Base(Surface::makeShared<PlaneSurface>(
-                 pos4.segment<3>(ePos0),
-                 makeDirectionUnitFromPhiTheta(phi, theta)),
+                 pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
              detail::transformFreeToCurvilinearParameters(pos4[eTime], phi,
                                                           theta, qOverP),
              std::move(cov)) {}
 
   /// Parameters are not default constructible due to the charge type.
-  SingleCurvilinearTrackParameters() = delete;
-  SingleCurvilinearTrackParameters(const SingleCurvilinearTrackParameters&) =
+  GenericCurvilinearTrackParameters() = delete;
+  GenericCurvilinearTrackParameters(const GenericCurvilinearTrackParameters&) =
       default;
-  SingleCurvilinearTrackParameters(SingleCurvilinearTrackParameters&&) =
+  GenericCurvilinearTrackParameters(GenericCurvilinearTrackParameters&&) =
       default;
-  ~SingleCurvilinearTrackParameters() = default;
-  SingleCurvilinearTrackParameters& operator=(
-      const SingleCurvilinearTrackParameters&) = default;
-  SingleCurvilinearTrackParameters& operator=(
-      SingleCurvilinearTrackParameters&&) = default;
+  ~GenericCurvilinearTrackParameters() = default;
+  GenericCurvilinearTrackParameters& operator=(
+      const GenericCurvilinearTrackParameters&) = default;
+  GenericCurvilinearTrackParameters& operator=(
+      GenericCurvilinearTrackParameters&&) = default;
+
+  using GenericBoundTrackParameters<charge_t>::fourPosition;
+  using GenericBoundTrackParameters<charge_t>::position;
+
+  /// Space-time position four-vector.
+  Vector4 fourPosition() const {
+    return GenericBoundTrackParameters<charge_t>::fourPosition({});
+  }
+  /// Spatial position three-vector.
+  Vector3 position() const {
+    return GenericBoundTrackParameters<charge_t>::position({});
+  }
 };
 
 }  // namespace Acts

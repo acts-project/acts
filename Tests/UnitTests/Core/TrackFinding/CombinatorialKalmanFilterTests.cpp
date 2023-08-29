@@ -12,9 +12,9 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -221,7 +221,7 @@ struct Fixture {
     stddev[Acts::eBoundPhi] = 2_degree;
     stddev[Acts::eBoundTheta] = 2_degree;
     stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-    Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+    Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
     // all tracks close to the transverse plane along the x axis w/ small
     // variations in position, direction.
     Acts::Vector4 mStartPos0(-3_m, 0.0, 0.0, 1_ns);
@@ -249,7 +249,7 @@ struct Fixture {
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
       for (auto& sl : measurements.sourceLinks) {
-        sourceLinks.emplace(sl.geometryId(), std::move(sl));
+        sourceLinks.emplace(sl.m_geometryId, std::move(sl));
       }
     }
   }
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
   // Set the target surface
-  options.referenceSurface = &(*pSurface);
+  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
   // Set the target surface
-  options.referenceSurface = &(*pSurface);
+  options.smoothingTargetSurface = pSurface.get();
 
   Fixture::TestSourceLinkAccessor slAccessor;
   slAccessor.container = &f.sourceLinks;

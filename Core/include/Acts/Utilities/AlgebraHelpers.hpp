@@ -167,14 +167,16 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
   }
 }
 
-/// Calculate the inverse of an Eigen matrix after checking if it can be
-/// numerically inverted. This allows to catch potential FPEs before they occur.
+/// FPE "safe" functions
 ///
 /// Our main motivation for this is that users might have a strict FPE policy
 /// which would flag every single occurrence as a failure and then sombody has
 /// to investigate. Since we are processing a high number of events and floating
 /// point numbers sometimes work in mysterious ways the caller of this function
 /// might want to hide FPEs and handle them in a more controlled way.
+
+/// Calculate the inverse of an Eigen matrix after checking if it can be
+/// numerically inverted. This allows to catch potential FPEs before they occur.
 ///
 /// @tparam Derived Eigen derived concrete type
 /// @tparam Result Eigen result type defaulted to input type
@@ -194,6 +196,27 @@ std::optional<ResultType> safeInverse(const MatrixType& m) noexcept {
   }
 
   return std::nullopt;
+}
+
+/// Calculate the exponential function while avoiding FPEs.
+/// @note The boundary values of -50.0 and 50.0 might need to be adapted when
+/// using this function with doubles
+///
+/// @param val argument for which the exponential function should be evaluated.
+///
+/// @return 0 in the case of underflow, std::numeric_limits<T>::infinity in the
+/// case of overflow, std::exp(val) else
+template <typename T>
+T safeExp(T val) noexcept {
+  if (val < -50.0) {
+    return 0.0;
+  }
+
+  if (val > 50.0) {
+    return std::numeric_limits<T>::infinity();
+  }
+
+  return std::exp(val);
 }
 
 }  // namespace Acts

@@ -15,7 +15,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -94,7 +94,7 @@ Estimator makeEstimator(double bZ) {
 }
 
 // Construct a diagonal track covariance w/ reasonable values.
-Acts::BoundSymMatrix makeBoundParametersCovariance() {
+Acts::BoundSquareMatrix makeBoundParametersCovariance() {
   BoundVector stddev;
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 100_um;
@@ -106,7 +106,7 @@ Acts::BoundSymMatrix makeBoundParametersCovariance() {
 }
 
 // Construct a diagonal vertex covariance w/ reasonable values.
-Acts::SymMatrix4 makeVertexCovariance() {
+Acts::SquareMatrix4 makeVertexCovariance() {
   Vector4 stddev;
   stddev[ePos0] = 10_um;
   stddev[ePos1] = 10_um;

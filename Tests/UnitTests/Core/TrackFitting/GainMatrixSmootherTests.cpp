@@ -27,7 +27,7 @@ using namespace Acts;
 using namespace Acts::Test;
 
 using ParametersVector = Acts::BoundVector;
-using CovarianceMatrix = Acts::BoundSymMatrix;
+using CovarianceMatrix = Acts::BoundSquareMatrix;
 using Jacobian = Acts::BoundMatrix;
 
 const Acts::GeometryContext tgContext;

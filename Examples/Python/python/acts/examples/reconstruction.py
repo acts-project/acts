@@ -36,11 +36,11 @@ SeedFinderConfigArg = namedtuple(
         "impactMax",
         "deltaPhiMax",
         "interactionPointCut",
-        "arithmeticAverageCotTheta",
         "deltaZMax",
         "maxPtScattering",
         "zBinEdges",
         "zBinsCustomLooping",
+        "skipZMiddleBinSearch",
         "rRangeMiddleSP",
         "useVariableMiddleSPRange",
         "binSizeR",
@@ -88,9 +88,10 @@ SpacePointGridConfigArg = namedtuple(
         "phiBinDeflectionCoverage",
         "impactMax",
         "deltaRMax",
+        "maxPhiBins",
         "phi",  # (min,max)
     ],
-    defaults=[None] * 5 + [(None, None)] * 1,
+    defaults=[None] * 6 + [(None, None)] * 1,
 )
 
 SeedingAlgorithmConfigArg = namedtuple(
@@ -200,15 +201,17 @@ def addSeeding(
         Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
+        Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
         Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, deltaZMax, maxPtScattering, zBinEdges, zBinsCustomLooping, skipZMiddleBinSearch, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFilterConfig.hpp
-    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax)
+    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, maxPhiBins, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
@@ -539,11 +542,11 @@ def addStandardSeeding(
             minPt=seedFinderConfigArg.minPt,
             impactMax=seedFinderConfigArg.impactMax,
             interactionPointCut=seedFinderConfigArg.interactionPointCut,
-            arithmeticAverageCotTheta=seedFinderConfigArg.arithmeticAverageCotTheta,
             deltaZMax=seedFinderConfigArg.deltaZMax,
             maxPtScattering=seedFinderConfigArg.maxPtScattering,
             zBinEdges=seedFinderConfigArg.zBinEdges,
             zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            skipZMiddleBinSearch=seedFinderConfigArg.skipZMiddleBinSearch,
             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
             binSizeR=seedFinderConfigArg.binSizeR,
@@ -603,6 +606,7 @@ def addStandardSeeding(
             cotThetaMax=seedFinderConfig.cotThetaMax,
             phiMin=spacePointGridConfigArg.phi[0],
             phiMax=spacePointGridConfigArg.phi[1],
+            maxPhiBins=spacePointGridConfigArg.maxPhiBins,
             impactMax=spacePointGridConfigArg.impactMax,
             zBinEdges=spacePointGridConfigArg.zBinEdges,
             phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
@@ -1201,7 +1205,6 @@ def addExaTrkX(
 
     metricLearningConfig = {
         "level": customLogLevel(),
-        "spacepointFeatures": 3,
         "embeddingDim": 8,
         "rVal": 1.6,
         "knnVal": 100,
@@ -1219,10 +1222,13 @@ def addExaTrkX(
 
     if backend == ExaTrkXBackend.Torch:
         metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
+        metricLearningConfig["numFeatures"] = 3
         filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["nChunks"] = 10
+        filterConfig["numFeatures"] = 3
         gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
         gnnConfig["undirected"] = True
+        gnnConfig["numFeatures"] = 3
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
@@ -1232,6 +1238,7 @@ def addExaTrkX(
         trackBuilder = acts.examples.BoostTrackBuilding(customLogLevel())
     elif backend == ExaTrkXBackend.Onnx:
         metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
+        metricLearningConfig["spacepointFeatures"] = 3
         filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
         gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
@@ -1432,6 +1439,7 @@ def addAmbiguityResolutionMLDBScan(
 def addVertexFitting(
     s,
     field,
+    seeder: Optional[acts.VertexSeedFinder] = acts.VertexSeedFinder.GaussianSeeder,
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
@@ -1449,6 +1457,8 @@ def addVertexFitting(
     s: Sequencer
         the sequencer module to which we add the Seeding steps (returned from addVertexFitting)
     field : magnetic field
+    seeder : enum member
+        determines vertex seeder, can be acts.seeder.GaussianSeeder or acts.seeder.AdaptiveGridSeeder
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     associatedParticles : str, "associatedTruthParticles"
@@ -1521,6 +1531,7 @@ def addVertexFitting(
     elif vertexFinder == VertexFinder.AMVF:
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
+            seedFinder=seeder,
             bField=field,
             inputTrajectories=trajectories,
             inputTrackParameters=trackParameters,
@@ -1550,6 +1561,7 @@ def addVertexFitting(
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
+                bField=field,
                 minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
@@ -1566,7 +1578,6 @@ def addSingleSeedVertexFinding(
     inputSpacePoints: Optional[str] = "spacepoints",
     outputVertices: Optional[str] = "fittedSeedVertices",
 ) -> None:
-
     from acts.examples import (
         SingleSeedVertexFinderAlgorithm,
         VertexPerformanceWriter,
