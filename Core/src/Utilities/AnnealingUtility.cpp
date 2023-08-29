@@ -8,6 +8,9 @@
 
 #include "Acts/Utilities/AnnealingUtility.hpp"
 
+#include "Acts/Utilities/AlgebraHelpers.hpp"
+
+namespace {
 /// @brief Gaussian-like function for weight calculation
 /// Note: Factor 2 in denominator is included in inverse temperature
 ///
@@ -15,9 +18,10 @@
 /// @param invTemp Denominator 1/(2 * temperature)
 ///
 /// @return exp(-chi2 * invTemp)
-static double computeAnnealingWeight(double chi2, double invTemp) {
-  return std::exp(-chi2 * invTemp);
+double computeAnnealingWeight(double chi2, double invTemp) {
+  return Acts::safeExp(-chi2 * invTemp);
 }
+}  // namespace
 
 Acts::AnnealingUtility::Config::Config() = default;
 
