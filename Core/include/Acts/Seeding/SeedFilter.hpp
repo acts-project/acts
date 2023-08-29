@@ -75,7 +75,7 @@ class SeedFilter {
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
       CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
-      std::size_t& numQualitySeeds,
+      const std::size_t numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 
@@ -87,7 +87,7 @@ class SeedFilter {
   virtual void filterSeeds_1SpFixed(
       std::vector<typename CandidatesForMiddleSp<
           const external_spacepoint_t>::value_type>& candidates,
-      std::size_t& numQualitySeeds,
+      const std::size_t numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 

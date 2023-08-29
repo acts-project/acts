@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -66,7 +67,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   if (topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
     std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
-              [&invHelixDiameterVec](const size_t& i1, const size_t& i2) {
+              [&invHelixDiameterVec](const size_t i1, const size_t i2) {
                 return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
               });
   }
@@ -241,7 +242,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     CandidatesForMiddleSp<const external_spacepoint_t>& candidates_collector,
-    std::size_t& numQualitySeeds,
+    const std::size_t numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
   // retrieve all candidates
@@ -255,7 +256,7 @@ template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::vector<typename CandidatesForMiddleSp<
         const external_spacepoint_t>::value_type>& candidates,
-    std::size_t& numQualitySeeds,
+    const std::size_t numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
   if (m_experimentCuts != nullptr) {

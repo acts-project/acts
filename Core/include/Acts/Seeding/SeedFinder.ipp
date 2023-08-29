@@ -65,7 +65,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   }
 
   // Get the middle space point candidates
-  const auto& middleSPs = grid.at(middleSPsIdx);
+  const std::vector<external_spacepoint_t>& middleSPs = grid.at(middleSPsIdx);
 
   // neighbours
   // clear previous results
@@ -84,7 +84,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         grid, idx, middleSPs.front().radius() + m_config.deltaRMinTopSP);
   }
 
-  for (const auto& spM : middleSPs) {
+  for (const external_spacepoint_t& spM : middleSPs) {
     const float rM = spM.radius();
 
     // check if spM is outside our radial region of interest
@@ -232,7 +232,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   float deltaZ = 0.;
 
   for (auto& otherSPCol : otherSPsNeighbours) {
-    const auto& otherSPs = grid.at(otherSPCol.index);
+    const std::vector<external_spacepoint_t>& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
       continue;
     }
@@ -244,7 +244,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     // find the first SP inside the radius region of interest and update
     // the iterator so we don't need to look at the other SPs again
     for (; min_itr != otherSPs.end(); ++min_itr) {
-      const auto& otherSP = *min_itr;
+      const external_spacepoint_t& otherSP = *min_itr;
       if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
         // if r-distance is too big, try next SP in bin
         if ((rM - otherSP.radius()) <= deltaRMaxSP) {
@@ -263,7 +263,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     otherSPCol.itr = min_itr;
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
-      const auto& otherSP = *min_itr;
+      const external_spacepoint_t& otherSP = *min_itr;
 
       if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
         deltaR = (rM - otherSP.radius());
