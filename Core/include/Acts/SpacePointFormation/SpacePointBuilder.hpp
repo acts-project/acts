@@ -12,6 +12,7 @@
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
@@ -85,6 +86,7 @@ class SpacePointBuilder {
   std::function<spacepoint_t(Acts::Vector3, Acts::Vector2,
                              boost::container::static_vector<SourceLink, 2>)>
       m_spConstructor;
+
   /// the logging instance
   std::unique_ptr<const Acts::Logger> m_logger;
 

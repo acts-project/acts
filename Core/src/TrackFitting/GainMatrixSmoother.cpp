@@ -65,8 +65,8 @@ Result<void> GainMatrixSmoother::calculate(
   // If not, make one (could do more) attempt to replace it with the
   // nearest semi-positive def matrix,
   // but it could still be non semi-positive
-  BoundSymMatrix smoothedCov = smoothedCovariance(ts);
-  if (not detail::covariance_helper<BoundSymMatrix>::validate(smoothedCov)) {
+  BoundSquareMatrix smoothedCov = smoothedCovariance(ts);
+  if (not detail::covariance_helper<BoundSquareMatrix>::validate(smoothedCov)) {
     ACTS_DEBUG(
         "Smoothed covariance is not positive definite. Could result in "
         "negative covariance!");

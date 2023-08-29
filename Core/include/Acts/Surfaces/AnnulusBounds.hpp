@@ -203,10 +203,10 @@ class AnnulusBounds : public DiscBounds {
 
   /// Private helper method
   Vector2 closestOnSegment(const Vector2& a, const Vector2& b, const Vector2& p,
-                           const SymMatrix2& weight) const;
+                           const SquareMatrix2& weight) const;
 
   /// Private helper method
-  double squaredNorm(const Vector2& v, const SymMatrix2& weight) const;
+  double squaredNorm(const Vector2& v, const SquareMatrix2& weight) const;
 };
 
 inline SurfaceBounds::BoundsType AnnulusBounds::type() const {

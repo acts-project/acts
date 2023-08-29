@@ -14,24 +14,24 @@ Acts::CovarianceCache::CovarianceCache(const GeometryContext& gctx,
                                        const Surface& surface,
                                        const Vector3& position,
                                        const BoundVector& boundParameters,
-                                       const BoundSymMatrix& boundCovariance)
+                                       const BoundSquareMatrix& boundCovariance)
     : applyTransport(true), atSurface(&surface), atPosition(position) {
-  covariance.template emplace<BoundSymMatrix>(boundCovariance);
+  covariance.template emplace<BoundSquareMatrix>(boundCovariance);
   boundToFreeJacobian = surface.boundToFreeJacobian(gctx, boundParameters);
 }
 
 Acts::CovarianceCache::CovarianceCache(const Vector3& position,
                                        const Vector3& direction,
-                                       const BoundSymMatrix& boundCovariance)
+                                       const BoundSquareMatrix& boundCovariance)
     : applyTransport(true), atPosition(position) {
-  covariance.emplace<BoundSymMatrix>(boundCovariance);
+  covariance.emplace<BoundSquareMatrix>(boundCovariance);
   boundToFreeJacobian = detail::curvilinearToFreeJacobian(direction);
 }
 
 Acts::CovarianceCache::CovarianceCache(const FreeVector& freeParameters,
-                                       const FreeSymMatrix& freeCovariance)
+                                       const FreeSquareMatrix& freeCovariance)
     : applyTransport(true), atPosition(freeParameters.segment<3>(eFreePos0)) {
-  covariance.emplace<FreeSymMatrix>(freeCovariance);
+  covariance.emplace<FreeSquareMatrix>(freeCovariance);
   anglesToDirectionJacobian =
       detail::anglesToDirectionJacobian(freeParameters.segment<3>(eFreeDir0));
   directionToAnglesJacobian =
@@ -49,8 +49,8 @@ Acts::transportCovarianceToBound(const GeometryContext& gctx,
         gctx, freeParameters, cCache.boundToFreeJacobian.value(),
         cCache.freeTransportJacobian, cCache.freeToPathDerivatives, surface);
     // Perform the transport
-    const auto& covariance = std::get<BoundSymMatrix>(cCache.covariance);
-    BoundSymMatrix newCovariance =
+    const auto& covariance = std::get<BoundSquareMatrix>(cCache.covariance);
+    BoundSquareMatrix newCovariance =
         ftJacobian * covariance * ftJacobian.transpose();
     return {newCovariance, ftJacobian};
   } else {
@@ -60,8 +60,8 @@ Acts::transportCovarianceToBound(const GeometryContext& gctx,
         cCache.anglesToDirectionJacobian.value(), cCache.freeTransportJacobian,
         cCache.freeToPathDerivatives, surface);
     // Perform the transport
-    const auto& covariance = std::get<FreeSymMatrix>(cCache.covariance);
-    BoundSymMatrix newCovariance =
+    const auto& covariance = std::get<FreeSquareMatrix>(cCache.covariance);
+    BoundSquareMatrix newCovariance =
         ftJacobian * covariance * ftJacobian.transpose();
     return {newCovariance, ftJacobian};
   }
@@ -77,8 +77,8 @@ Acts::transportCovarianceToCurvilinear(const Vector3& direction,
         direction, cCache.boundToFreeJacobian.value(),
         cCache.freeTransportJacobian, cCache.freeToPathDerivatives);
     // Perform the transport
-    const auto& covariance = std::get<BoundSymMatrix>(cCache.covariance);
-    BoundSymMatrix newCovariance =
+    const auto& covariance = std::get<BoundSquareMatrix>(cCache.covariance);
+    BoundSquareMatrix newCovariance =
         ftJacobian * covariance * ftJacobian.transpose();
     return {newCovariance, ftJacobian};
   } else {
@@ -88,8 +88,8 @@ Acts::transportCovarianceToCurvilinear(const Vector3& direction,
         cCache.anglesToDirectionJacobian.value(), cCache.freeTransportJacobian,
         cCache.freeToPathDerivatives);
     // Perform the transport
-    const auto& covariance = std::get<FreeSymMatrix>(cCache.covariance);
-    BoundSymMatrix newCovariance =
+    const auto& covariance = std::get<FreeSquareMatrix>(cCache.covariance);
+    BoundSquareMatrix newCovariance =
         ftJacobian * covariance * ftJacobian.transpose();
     return {newCovariance, ftJacobian};
   }
@@ -102,8 +102,8 @@ Acts::transportCovarianceToFree(CovarianceCache& cCache) {
     const auto ftJacobian = detail::boundToFreeTransportJacobian(
         cCache.boundToFreeJacobian.value(), cCache.freeTransportJacobian);
     // Perform the transport
-    const auto& covariance = std::get<BoundSymMatrix>(cCache.covariance);
-    FreeSymMatrix newCovariance =
+    const auto& covariance = std::get<BoundSquareMatrix>(cCache.covariance);
+    FreeSquareMatrix newCovariance =
         ftJacobian * covariance * ftJacobian.transpose();
     return {newCovariance, ftJacobian};
   } else {
@@ -112,8 +112,8 @@ Acts::transportCovarianceToFree(CovarianceCache& cCache) {
         cCache.directionToAnglesJacobian.value(),
         cCache.anglesToDirectionJacobian.value(), cCache.freeTransportJacobian);
     // Perform the transport
-    const auto& covariance = std::get<FreeSymMatrix>(cCache.covariance);
-    FreeSymMatrix newCovariance =
+    const auto& covariance = std::get<FreeSquareMatrix>(cCache.covariance);
+    FreeSquareMatrix newCovariance =
         ftJacobian * covariance * ftJacobian.transpose();
     return {newCovariance, ftJacobian};
   }

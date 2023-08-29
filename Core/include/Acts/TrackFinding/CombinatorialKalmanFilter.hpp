@@ -255,7 +255,7 @@ struct CombinatorialKalmanFilterResult {
   Result<void> result{Result<void>::success()};
 
   // TODO place into options and make them accessible?
-  AbortList<PathLimitReached, EndOfWorldReached, ParticleStopped> abortList;
+  AbortList<PathLimitReached, EndOfWorldReached> abortList;
 };
 
 /// Combinatorial Kalman filter to find tracks.
@@ -340,6 +340,9 @@ class CombinatorialKalmanFilter {
 
     /// Whether to run smoothing to get fitted parameter
     bool smoothing = true;
+
+    /// Calibration context for the finding run
+    const CalibrationContext* calibrationContext{nullptr};
 
     /// @brief CombinatorialKalmanFilter actor operation
     ///
@@ -883,10 +886,8 @@ class CombinatorialKalmanFilter {
 
         ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
 
-        ts.setUncalibratedSourceLink(sourceLink);
-
         // now calibrate the track state
-        m_extensions.calibrator(gctx, ts);
+        m_extensions.calibrator(gctx, calibrationContext, sourceLink, ts);
 
         result.trackStateCandidates.push_back(ts);
       }
@@ -1358,6 +1359,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
     combKalmanActor.smootherLogger = m_smootherLogger.get();
+    combKalmanActor.calibrationContext = &tfOptions.calibrationContext.get();
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
