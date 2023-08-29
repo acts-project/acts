@@ -62,7 +62,7 @@ struct BetheHeitler {
                                           1.0);
 
     const auto u = gDist(generator);
-    const auto z = std::exp(-u);  // MARK: fpeMask(FLTUND, 1, issue:2346)
+    const auto z = std::exp(-u);  // MARK: fpeMask(FLTUND, 1, #2346)
     const auto sampledEnergyLoss =
         std::abs(scaleFactor * particle.energy() * (z - 1.));
 
