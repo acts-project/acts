@@ -198,7 +198,10 @@ class ConstPodioTrackStateContainer final
   ConstPodioTrackStateContainer(const PodioUtil::ConversionHelper& helper,
                                 const podio::Frame& frame,
                                 const std::string& suffix = "")
-      : m_helper{helper} {
+      : m_helper{helper},
+        m_collection{nullptr},
+        m_params{nullptr},
+        m_jacs{nullptr} {
     std::string s = suffix.empty() ? suffix : "_" + suffix;
 
     std::vector<std::string> available = frame.getAvailableCollections();
@@ -605,9 +608,10 @@ class MutablePodioTrackStateContainer final
     data.measdim = measdim;
   }
 
-  void setUncalibratedSourceLink_impl(IndexType istate, SourceLink sourceLink) {
+  void setUncalibratedSourceLink_impl(IndexType istate,
+                                      const SourceLink& sourceLink) {
     PodioUtil::Identifier id =
-        m_helper.get().sourceLinkToIdentifier(std::move(sourceLink));
+        m_helper.get().sourceLinkToIdentifier(sourceLink);
     m_collection->at(istate).data().uncalibratedIdentifier = id;
   }
 

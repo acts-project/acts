@@ -55,18 +55,21 @@ BOOST_AUTO_TEST_SUITE(PodioTrackConversion)
 class NullHelper : public PodioUtil::ConversionHelper {
  public:
   std::optional<PodioUtil::Identifier> surfaceToIdentifier(
-      const Surface&) const override {
+      const Surface& /*surface*/) const override {
     return {};
   }
-  const Surface* identifierToSurface(PodioUtil::Identifier) const override {
+  const Surface* identifierToSurface(
+      PodioUtil::Identifier /*identifier*/) const override {
     return nullptr;
   }
 
-  SourceLink identifierToSourceLink(PodioUtil::Identifier) const override {
+  SourceLink identifierToSourceLink(
+      PodioUtil::Identifier /*identifier*/) const override {
     return SourceLink{0};
   }
 
-  PodioUtil::Identifier sourceLinkToIdentifier(const SourceLink&) override {
+  PodioUtil::Identifier sourceLinkToIdentifier(
+      const SourceLink& /*sourceLink*/) override {
     return 0;
   }
 };
