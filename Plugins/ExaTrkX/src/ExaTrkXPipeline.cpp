@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/Pipeline.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 
 namespace Acts {
 
-Pipeline::Pipeline(
+ExaTrkXPipeline::ExaTrkXPipeline(
     std::shared_ptr<GraphConstructionBase> graphConstructor,
     std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
     std::shared_ptr<TrackBuildingBase> trackBuilder,
@@ -32,9 +32,9 @@ Pipeline::Pipeline(
   }
 }
 
-std::vector<std::vector<int>> Pipeline::run(std::vector<float> &features,
-                                            std::vector<int> &spacepointIDs,
-                                            const PipelineHook &hook) const {
+std::vector<std::vector<int>> ExaTrkXPipeline::run(
+    std::vector<float> &features, std::vector<int> &spacepointIDs,
+    const ExaTrkXHook &hook) const {
   auto [nodes, edges] = (*m_graphConstructor)(features, spacepointIDs.size());
 
   hook(nodes, edges);

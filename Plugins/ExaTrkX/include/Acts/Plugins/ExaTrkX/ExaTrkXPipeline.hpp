@@ -20,22 +20,23 @@
 
 namespace Acts {
 
-class PipelineHook {
+class ExaTrkXHook {
  public:
-  virtual ~PipelineHook(){};
+  virtual ~ExaTrkXHook(){};
   virtual void operator()(const std::any &, const std::any &) const {};
 };
 
-class Pipeline {
+class ExaTrkXPipeline {
  public:
-  Pipeline(std::shared_ptr<GraphConstructionBase> graphConstructor,
-           std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
-           std::shared_ptr<TrackBuildingBase> trackBuilder,
-           std::unique_ptr<const Acts::Logger> logger);
+  ExaTrkXPipeline(
+      std::shared_ptr<GraphConstructionBase> graphConstructor,
+      std::vector<std::shared_ptr<EdgeClassificationBase>> edgeClassifiers,
+      std::shared_ptr<TrackBuildingBase> trackBuilder,
+      std::unique_ptr<const Acts::Logger> logger);
 
   std::vector<std::vector<int>> run(std::vector<float> &features,
                                     std::vector<int> &spacepointIDs,
-                                    const PipelineHook &hook = {}) const;
+                                    const ExaTrkXHook &hook = {}) const;
 
  private:
   std::unique_ptr<const Acts::Logger> m_logger;

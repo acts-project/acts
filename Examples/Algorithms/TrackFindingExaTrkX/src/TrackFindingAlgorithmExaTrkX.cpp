@@ -23,7 +23,7 @@ using namespace Acts::UnitLiterals;
 
 namespace {
 
-class ExamplesEdmHook : public Acts::PipelineHook {
+class ExamplesEdmHook : public Acts::ExaTrkXHook {
   double m_targetPT = 0.5_GeV;
   std::size_t m_targetSize = 3;
 
@@ -168,7 +168,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // Read input data
   auto spacepoints = m_inputSpacePoints(ctx);
 
-  auto hook = std::make_unique<Acts::PipelineHook>();
+  auto hook = std::make_unique<Acts::ExaTrkXHook>();
   if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
     hook = std::make_unique<ExamplesEdmHook>(
         spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx),

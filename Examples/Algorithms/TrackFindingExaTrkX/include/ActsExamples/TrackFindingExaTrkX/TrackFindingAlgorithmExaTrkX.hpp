@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/ExaTrkX/Pipeline.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -89,7 +89,7 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   // configuration
   Config m_cfg;
 
-  Acts::Pipeline m_pipeline;
+  Acts::ExaTrkXPipeline m_pipeline;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
