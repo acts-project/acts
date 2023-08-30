@@ -358,7 +358,19 @@ linux_ubuntu_2204_clang:
   before_script:
     - 'echo "LCG_VERSION: ${LCG_VERSION}"'
     - 'echo "COMPILER: ${COMPILER}"'
-    - 'if [ "$OS" = "alma9"  ]; then export LCG_PLATFORM="centos9"; else export LCG_PLATFORM="$OS"; fi'
+
+    # Figure out LCG platform name based on version number and OS
+    - >
+      if [ "$OS" = "alma9"  ]; then 
+        if [ "$LCG_VERSION" = "104" ]; then 
+          export LCG_PLATFORM="el9"
+        else
+          export LCG_PLATFORM="centos9"
+        fi
+      else 
+        export LCG_PLATFORM="$OS"
+      fi
+
     - 'echo "LCG_PLATFORM: ${LCG_PLATFORM}"'
     - source /cvmfs/sft.cern.ch/lcg/views/LCG_${LCG_VERSION}/x86_64-${LCG_PLATFORM}-${COMPILER}-opt/setup.sh
       
@@ -417,14 +429,11 @@ lcg_102b:
   <<: *lcg_base_job
 
   variables:
-    LCG_VERSION: "102b"
+    LCG_VERSION: "102b_ATLAS"
 
   parallel:
     matrix:
       - OS: [centos7]
-        COMPILER: [gcc11]
-
-      - OS: [centos8, alma9]
         COMPILER: [gcc11]
 
 lcg_103:
@@ -439,16 +448,34 @@ lcg_103:
         COMPILER: 
           - gcc11
           - gcc12
-          # currently failing:
-          # - clang12
-          # - clang15
+          - clang12 # crashes due to compiler bug with configuration
+          - clang15
 
       - OS: [alma9]
         COMPILER: 
           - gcc11
           - gcc12
 
-  rules:
-    - if: '$COMPILER == "clang12" || $COMPILER == "clang15"'
-      allow_failure: true
-    - when: on_success
+lcg_104:
+  <<: *lcg_base_job
+
+  variables:
+    LCG_VERSION: "104"
+
+  parallel:
+    matrix:
+      - OS: [centos7]
+        COMPILER: 
+          - gcc11
+          - gcc12
+
+      - OS: [alma9]
+        COMPILER: 
+          - gcc11
+          - gcc12
+          - gcc13
+          - clang16
+
+      - OS: [centos8]
+        COMPILER: [gcc11]
+
