@@ -32,7 +32,8 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
   if (num_slinks == 1) {  // pixel SP formation
     auto slink = sourceLinks.at(0);
     auto [param, cov] = opt.paramCovAccessor(sourceLinks.at(0));
-    auto gPosCov = m_spUtility->globalCoords(gctx, slink, param, cov);
+    auto gPosCov = m_spUtility->globalCoords(
+        gctx, slink, m_config.slSurfaceAccessor, param, cov);
     gPos = gPosCov.first;
     gCov = gPosCov.second;
   } else if (num_slinks == 2) {  // strip SP formation
@@ -75,6 +76,7 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
              (spParams.firstBtmToTop.norm() * spParams.secondBtmToTop.norm()));
 
     gCov = m_spUtility->calcRhoZVars(gctx, sourceLinks.at(0), sourceLinks.at(1),
+                                     m_config.slSurfaceAccessor,
                                      opt.paramCovAccessor, gPos, theta);
 
   } else {
@@ -106,12 +108,12 @@ void SpacePointBuilder<spacepoint_t>::makeSourceLinkPairs(
       const auto& slinkBack = slinksBack[j];
 
       const auto [paramFront, covFront] = pairOpt.paramCovAccessor(slinkFront);
-      const auto [gposFront, gcovFront] =
-          m_spUtility->globalCoords(gctx, slinkFront, paramFront, covFront);
+      const auto [gposFront, gcovFront] = m_spUtility->globalCoords(
+          gctx, slinkFront, m_config.slSurfaceAccessor, paramFront, covFront);
 
       const auto [paramBack, covBack] = pairOpt.paramCovAccessor(slinkBack);
-      const auto [gposBack, gcovBack] =
-          m_spUtility->globalCoords(gctx, slinkBack, paramBack, covBack);
+      const auto [gposBack, gcovBack] = m_spUtility->globalCoords(
+          gctx, slinkBack, m_config.slSurfaceAccessor, paramBack, covBack);
 
       auto res = m_spUtility->differenceOfMeasurementsChecked(
           gposFront, gposBack, pairOpt.vertex, pairOpt.diffDist,

@@ -150,6 +150,7 @@ void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
+void addObj(Context& ctx);
 void addOnnx(Context& ctx);
 void addOnnxMlpack(Context& ctx);
 void addOnnxNeuralCalibrator(Context& ctx);
@@ -282,17 +283,20 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   ACTS_PYTHON_MEMBER(fpeStackTraceLength);
   ACTS_PYTHON_STRUCT_END();
 
-  auto fpem = py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
-                  .def(py::init<>())
-                  .def(py::init<std::string, Acts::FpeType, std::size_t>())
-                  .def("__repr__", [](const Sequencer::FpeMask& self) {
-                    std::stringstream ss;
-                    ss << self;
-                    return ss.str();
-                  });
+  auto fpem =
+      py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
+          .def(py::init<>())
+          .def(py::init<std::string, std::pair<unsigned int, unsigned int>,
+                        Acts::FpeType, std::size_t>())
+          .def("__repr__", [](const Sequencer::FpeMask& self) {
+            std::stringstream ss;
+            ss << self;
+            return ss.str();
+          });
 
   ACTS_PYTHON_STRUCT_BEGIN(fpem, Sequencer::FpeMask);
-  ACTS_PYTHON_MEMBER(loc);
+  ACTS_PYTHON_MEMBER(file);
+  ACTS_PYTHON_MEMBER(lines);
   ACTS_PYTHON_MEMBER(type);
   ACTS_PYTHON_MEMBER(count);
   ACTS_PYTHON_STRUCT_END();
@@ -399,6 +403,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
+  addObj(ctx);
   addSvg(ctx);
   addOnnx(ctx);
   addOnnxMlpack(ctx);

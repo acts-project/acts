@@ -42,7 +42,7 @@ with _src.open() as fh:
         if m is None:
             continue
         (name,) = m.groups()
-        _locs[_name_to_type[name]] = f"{_src}:{i+1}"
+        _locs[_name_to_type[name]] = (str(_src), (i + 1, i + 2))
 
 
 class FpeMaker(acts.examples.IAlgorithm):
@@ -193,7 +193,6 @@ def test_fpe_rearm(fpe_type):
 
 
 def test_fpe_masking_single(fpe_type):
-
     trigger = getattr(acts.FpeMonitor, f"_trigger_{_names[fpe_type].lower()}")
 
     def func(context):
@@ -209,7 +208,7 @@ def test_fpe_masking_single(fpe_type):
         numThreads=-1,
         failOnFirstFpe=True,
         fpeMasks=[
-            acts.examples.Sequencer.FpeMask(_locs[fpe_type], fpe_type, 1),
+            acts.examples.Sequencer.FpeMask(*_locs[fpe_type], fpe_type, 1),
         ],
     )
 
@@ -225,7 +224,7 @@ def test_fpe_masking_single(fpe_type):
         numThreads=-1,
         failOnFirstFpe=True,
         fpeMasks=[
-            acts.examples.Sequencer.FpeMask(_locs[fpe_type], fpe_type, 3),
+            acts.examples.Sequencer.FpeMask(*_locs[fpe_type], fpe_type, 3),
         ],
     )
 
@@ -241,7 +240,8 @@ def test_fpe_masking_single(fpe_type):
 def test_masking_load_yaml(fpe_type, tmp_path, monkeypatch):
     def eq(self, other):
         return (
-            self.loc == other.loc
+            self.file == other.file
+            and self.lines == other.lines
             and self.type == other.type
             and self.count == other.count
         )
@@ -251,7 +251,7 @@ def test_masking_load_yaml(fpe_type, tmp_path, monkeypatch):
     import yaml
 
     masks = [
-        acts.examples.Sequencer.FpeMask(_locs[fpe_type], fpe_type, 1),
+        acts.examples.Sequencer.FpeMask(*_locs[fpe_type], fpe_type, 1),
     ]
     file = tmp_path / "fpe_mask.yml"
     with file.open("w") as fh:
