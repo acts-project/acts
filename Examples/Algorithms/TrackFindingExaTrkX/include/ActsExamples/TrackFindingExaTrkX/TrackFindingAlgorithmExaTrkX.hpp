@@ -8,10 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXPipeline.hpp"
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
@@ -35,6 +38,13 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     /// * cluster size in local y
     std::string inputClusters;
 
+    /// Input simhits (Optional).
+    std::string inputSimHits;
+    /// Input measurement simhit map (Optional).
+    std::string inputParticles;
+    /// Input measurement simhit map (Optional).
+    std::string inputMeasurementSimhitsMap;
+
     /// Output protoTracks collection.
     std::string outputProtoTracks;
 
@@ -52,6 +62,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
     float cellSumScale = 1.f;
     float clusterXScale = 1.f;
     float clusterYScale = 1.f;
+
+    /// Target graph properties
+    std::size_t targetMinHits = 3;
+    double targetMinPT = 500 * Acts::UnitConstants::MeV;
   };
 
   /// Constructor of the track finding algorithm
@@ -72,11 +86,10 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  std::vector<std::vector<int>> runPipeline(
-      std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const;
-
   // configuration
   Config m_cfg;
+
+  Acts::ExaTrkXPipeline m_pipeline;
 
   ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
                                                             "InputSpacePoints"};
@@ -84,6 +97,12 @@ class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
 
   WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
                                                            "OutputProtoTracks"};
+
+  // for truth graph
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementMap{
+      this, "InputMeasurementMap"};
 };
 
 }  // namespace ActsExamples
