@@ -236,10 +236,10 @@ int main(int argc, char** argv) {
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                   << ") ";
         sp = seed->sp()[1];
-        std::cout << sp->sp()->layer << " (" << sp->x() << ", " << sp->y()
+        std::cout << sp->externalSpacePoint()->layer << " (" << sp->x() << ", " << sp->y()
                   << ", " << sp->z() << ") ";
         sp = seed->sp()[2];
-        std::cout << sp->sp()->layer << " (" << sp->x() << ", " << sp->y()
+        std::cout << sp->externalSpacePoint()->layer << " (" << sp->x() << ", " << sp->y()
                   << ", " << sp->z() << ") ";
         std::cout << std::endl;
       }
