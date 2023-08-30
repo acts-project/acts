@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -62,6 +62,16 @@ class AdaptiveGridTrackDensity {
 
   AdaptiveGridTrackDensity(const Config& cfg) : m_cfg(cfg) {}
 
+  /// @brief Calculates the bin center from the bin number
+  /// @param bin Bin number
+  /// @return Bin center
+  float getBinCenter(int bin) const;
+
+  /// @brief Calculates the bin number corresponding to a d or z value
+  /// @param value d or z value
+  /// @return Bin number
+  int getBin(float value) const;
+
   /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between z bins and corresponding density value
   /// @return Iterator of the map entry with the highest density value
@@ -95,28 +105,29 @@ class AdaptiveGridTrackDensity {
 
   /// @brief Removes a track from the overall grid density
   ///
-  /// @param trackDensityMap Map from z bins to corresponding track density. The track density comes from a single track.
-  /// @param mainDensityMap Map from z bins to corresponding track density. The track density comes an arbitrary number of tracks.
+  /// @param trackDensityMap Map from z bins to corresponding track density.
+  /// @note The track density comes from a single track.
+  /// @param mainDensityMap Map from z bins to corresponding track density.
+  /// @note The track density comes an arbitrary number of tracks.
   void subtractTrack(const DensityMap& trackDensityMap,
                      DensityMap& mainDensityMap) const;
 
  private:
-  /// @brief Function that creates a track density map, i.e., a map of z bins to corresponding density values coming from a single track.
+  /// @brief Function that creates a track density map, i.e., a map of z bins
+  /// to corresponding density values coming from a single track.
   ///
-  /// @param offset Offset in d0 direction, to account for the 2-dim part
-  /// of the Gaussian track distribution
-  /// @param cov The track covariance matrix
-  /// @param distCtrD The distance in d0 from the track position to its
-  /// bin center in the 2-dim grid
+  /// @param d0 Transverse impact parameter
+  /// @param z0 Longitudinal impact parameter
   /// @param centralZBin Central z bin of the track (where its density is the highest)
-  /// @param distCtrZ The distance in z0 from the track position to its
-  /// bin center in the 2-dim grid
-  DensityMap createTrackGrid(int offset, const SquareMatrix2& cov,
-                             float distCtrD, int centralZBin,
-                             float distCtrZ) const;
+  /// @param cov 2x2 impact parameter covariance matrix
+  DensityMap createTrackGrid(float d0, float z0, int centralZBin,
+                             const Acts::SquareMatrix2& cov) const;
 
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak
+  /// @note This only works if the maximum is sufficiently isolated since
+  /// overlapping neighboring peaks might lead to an overestimation of the
+  /// seed width.
   ///
   /// @param densityMap Map from z bins to corresponding track density
   /// @param maxZ z-position of the maximum density value
@@ -126,6 +137,7 @@ class AdaptiveGridTrackDensity {
                                   float maxZ) const;
 
   /// @brief Helper to retrieve values according to a 2-dim normal distribution
+  /// @note This function is defined in coordinate system centered around d0 and z0
   float normal2D(float d, float z, const SquareMatrix2& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
