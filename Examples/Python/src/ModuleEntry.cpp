@@ -283,17 +283,20 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   ACTS_PYTHON_MEMBER(fpeStackTraceLength);
   ACTS_PYTHON_STRUCT_END();
 
-  auto fpem = py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
-                  .def(py::init<>())
-                  .def(py::init<std::string, Acts::FpeType, std::size_t>())
-                  .def("__repr__", [](const Sequencer::FpeMask& self) {
-                    std::stringstream ss;
-                    ss << self;
-                    return ss.str();
-                  });
+  auto fpem =
+      py::class_<Sequencer::FpeMask>(sequencer, "_FpeMask")
+          .def(py::init<>())
+          .def(py::init<std::string, std::pair<unsigned int, unsigned int>,
+                        Acts::FpeType, std::size_t>())
+          .def("__repr__", [](const Sequencer::FpeMask& self) {
+            std::stringstream ss;
+            ss << self;
+            return ss.str();
+          });
 
   ACTS_PYTHON_STRUCT_BEGIN(fpem, Sequencer::FpeMask);
-  ACTS_PYTHON_MEMBER(loc);
+  ACTS_PYTHON_MEMBER(file);
+  ACTS_PYTHON_MEMBER(lines);
   ACTS_PYTHON_MEMBER(type);
   ACTS_PYTHON_MEMBER(count);
   ACTS_PYTHON_STRUCT_END();
