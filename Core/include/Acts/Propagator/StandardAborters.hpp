@@ -206,30 +206,4 @@ struct EndOfWorldReached {
   }
 };
 
-/// If the particle stopped (p=0) abort the propagation
-struct ParticleStopped {
-  ParticleStopped() = default;
-
-  /// boolean operator for abort condition without using the result
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  /// @tparam stepper_t Type of the stepper
-  /// @tparam navigator_t Type of the navigator
-  ///
-  /// @param [in,out] state The propagation state object
-  /// @param [in] stepper The stepper object
-  /// @param [in] navigator The navigator object
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator,
-                  const Logger& /*logger*/) const {
-    if (stepper.absoluteMomentum(state.stepping) > 0) {
-      return false;
-    }
-    navigator.targetReached(state.navigation, true);
-    return true;
-  }
-};
-
 }  // namespace Acts

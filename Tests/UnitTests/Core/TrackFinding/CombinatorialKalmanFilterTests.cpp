@@ -249,7 +249,7 @@ struct Fixture {
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
       for (auto& sl : measurements.sourceLinks) {
-        sourceLinks.emplace(sl.geometryId(), std::move(sl));
+        sourceLinks.emplace(sl.m_geometryId, std::move(sl));
       }
     }
   }

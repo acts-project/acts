@@ -37,6 +37,7 @@
 #include <ratio>
 #include <regex>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <typeinfo>
 
@@ -655,9 +656,17 @@ std::pair<std::string, std::size_t> Sequencer::fpeMaskCount(
     const boost::stacktrace::stacktrace& st, Acts::FpeType type) const {
   for (const auto& frame : st) {
     std::string loc = Acts::FpeMonitor::getSourceLocation(frame);
-    for (const auto& [filt, fType, count] : m_cfg.fpeMasks) {
-      if (boost::algorithm::ends_with(loc, filt) && fType == type) {
-        return {filt, count};
+    auto it = loc.find_last_of(':');
+    std::string locFile = loc.substr(0, it);
+    unsigned int locLine = std::stoi(loc.substr(it + 1));
+    for (const auto& [file, lines, fType, count] : m_cfg.fpeMasks) {
+      const auto [start, end] = lines;
+      if (boost::algorithm::ends_with(locFile, file) &&
+          (start <= locLine && locLine < end) && fType == type) {
+        std::string ls = start + 1 == end ? std::to_string(start)
+                                          : "(" + std::to_string(start) + ", " +
+                                                std::to_string(end) + "]";
+        return {file + ":" + ls, count};
       }
     }
   }
@@ -672,6 +681,19 @@ Acts::FpeMonitor::Result Sequencer::fpeResult() const {
         [](const auto& lhs, const auto& rhs) { return lhs.merged(rhs); }));
   }
   return merged;
+}
+
+std::ostream& operator<<(std::ostream& os,
+                         const ActsExamples::Sequencer::FpeMask& m) {
+  os << "FpeMask(" << m.file << ":";
+
+  if (m.lines.first + 1 == m.lines.second) {
+    os << m.lines.first;
+  } else {
+    os << "(" << m.lines.first << ", " << m.lines.second << "]";
+  }
+  os << ", " << m.type << " <= " << m.count << ")";
+  return os;
 }
 
 }  // namespace ActsExamples
