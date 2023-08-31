@@ -46,7 +46,8 @@ async def check(token: str, repo: str):
                             first = False
                             exp = m.group(1)
                             for m in re.findall(
-                                r"fpeMask\((\w+), ?(\d+) ?, ?issue: ?(\d+)\)", exp
+                                r"fpeMask(?:Begin)?\( ?(\w+), ?(\d+) ?, ?#(\d+) ?\)",
+                                exp,
                             ):
                                 fpeType, count, number = m
 
