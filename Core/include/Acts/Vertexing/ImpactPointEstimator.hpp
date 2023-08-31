@@ -93,9 +93,12 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return Distance
-  Result<double> calculate3dDistance(const GeometryContext& gctx,
-                                     const BoundTrackParameters& trkParams,
-                                     const Vector3& vtxPos, State& state) const;
+  // TODO rename function
+  template <unsigned int nDim = 3>
+  Result<double> calculateDistance(const GeometryContext& gctx,
+                                   const BoundTrackParameters& trkParams,
+                                   const ActsVector<nDim>& vtxPos,
+                                   State& state) const;
 
   /// @brief Creates track parameters bound to plane
   /// at point of closest approach in 3d to given
@@ -204,12 +207,12 @@ class ImpactPointEstimator {
   /// @param momDir Momentum direction at the 3D PCA
   /// @note Will be filled by the method
   /// @param state The state object
-  Result<void> getDistanceAndMomentum(const GeometryContext& gctx,
-                                      const BoundTrackParameters& trkParams,
-                                      const Vector3& vtxPos, Vector3& deltaR,
-                                      Vector3& momDir, State& state,
-                                      const ActsScalar& massHypothesis = 0.13957018,
-                                      const ActsScalar& chargeHypothesis = 1.) const;
+  template <unsigned int nDim = 3>
+  Result<void> getDistanceAndMomentum(
+      const GeometryContext& gctx, const BoundTrackParameters& trkParams,
+      const ActsVector<nDim>& vtxPos, ActsVector<nDim>& deltaR, Vector3& momDir,
+      State& state, const ActsScalar& massHypothesis = 0.13957018,
+      const ActsScalar& chargeHypothesis = 1.) const;
 };
 
 }  // namespace Acts

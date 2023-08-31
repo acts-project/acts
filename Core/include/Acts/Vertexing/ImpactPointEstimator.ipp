@@ -13,16 +13,16 @@
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
+template <unsigned int nDim>
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    calculate3dDistance(const GeometryContext& gctx,
-                        const BoundTrackParameters& trkParams,
-                        const Vector3& vtxPos, State& state) const {
-  Vector3 deltaR;
+    calculateDistance(const GeometryContext& gctx,
+                      const BoundTrackParameters& trkParams,
+                      const ActsVector<nDim>& vtxPos, State& state) const {
+  ActsVector<nDim> deltaR;
   Vector3 momDir;
-
-  auto res =
-      getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
+  auto res = getDistanceAndMomentum<nDim>(gctx, trkParams, vtxPos, deltaR,
+                                          momDir, state);
 
   if (!res.ok()) {
     return res.error();
@@ -44,7 +44,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   Vector3 momDir;
 
   auto res =
-      getDistanceAndMomentum(gctx, trkParams, vtxPos, deltaR, momDir, state);
+      getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, deltaR, momDir, state);
 
   if (!res.ok()) {
     return res.error();
@@ -79,7 +79,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
   auto intersection = planeSurface->intersect(gctx, trkParams.position(gctx),
-                                              trkParams.unitDirection(), false);
+                                              trkParams.direction(), false);
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
 
@@ -118,8 +118,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   Vector3 vertexLocPlane = vertexPos - surfaceOrigin;
 
   // local x/y vertex position
-  Vector2 vertexLocXY{vertexLocPlane.dot(xDir),
-                      vertexLocPlane.dot(yDir)};
+  Vector2 vertexLocXY{vertexLocPlane.dot(xDir), vertexLocPlane.dot(yDir)};
 
   // track covariance
   if (not trkParams->covariance().has_value()) {
@@ -195,14 +194,21 @@ Acts::Result<double> Acts::ImpactPointEstimator<
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
+template <unsigned int nDim>
 Acts::Result<void>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
-                           const Vector3& vtxPos, Vector3& deltaR,
-                           Vector3& momDir, State& state,
-                           const ActsScalar& massHypothesis,
+                           const ActsVector<nDim>& vtxPos,
+                           ActsVector<nDim>& deltaR, Vector3& momDir,
+                           State& state, const ActsScalar& massHypothesis,
                            const ActsScalar& chargeHypothesis) const {
+  if (nDim != 3 && nDim != 4) {
+    throw std::invalid_argument(
+        "The number of dimensions N must be either 3 or 4 but was set to " +
+        std::to_string(nDim) + ".");
+  }
+
   // Reference point R
   Vector3 refPoint = trkParams.referenceSurface().center(gctx);
 
@@ -266,7 +272,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // 3D PCA (point P' in the reference)
   Vector3 pca3D = helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
-  // TODO: get charge and mass hypothesis from track parameters once this is possible
+  // TODO: get charge and mass hypothesis from track parameters once this is
+  // possible
   ActsScalar p = std::abs(chargeHypothesis / qOvP);
   // Speed in units of c
   ActsScalar beta = p / std::hypot(p, massHypothesis);
