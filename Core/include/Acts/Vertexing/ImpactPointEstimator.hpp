@@ -89,11 +89,10 @@ class ImpactPointEstimator {
   ///
   /// @param gctx The geometry context
   /// @param trkParams Track parameters
-  /// @param vtxPos Position to calculate distance to
+  /// @param vtxPos 3D or 4D position to calculate the distance to
   /// @param state The state object
   ///
   /// @return Distance
-  // TODO rename function
   template <unsigned int nDim = 3>
   Result<double> calculateDistance(const GeometryContext& gctx,
                                    const BoundTrackParameters& trkParams,

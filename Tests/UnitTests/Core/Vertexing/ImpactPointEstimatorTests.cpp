@@ -149,7 +149,8 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   // frame. it should be equal if the track is a transverse track w/ theta =
   // 90deg. in that case there might be numerical deviations and we need to
   // check that it is less or equal within the numerical tolerance.
-  BOOST_CHECK((dist3 < distT) or (std::abs(dist3 - distT) < 1_um));
+  BOOST_CHECK((dist3 < distT) or
+              (theta == 90_degree and std::abs(dist3 - distT) < 1_nm));
 
   // estimate parameters at the closest point in 3d
   auto res = ipEstimator.estimate3DImpactParameters(
@@ -176,6 +177,51 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   BOOST_CHECK_GT(compatibility, 0);
 }
 
+BOOST_AUTO_TEST_CASE(Distance4D) {
+  using Propagator = Acts::Propagator<Stepper>;
+  auto field = std::make_shared<MagneticField>(Vector3(0, 0, 2_T));
+  Stepper stepper(field);
+  auto propagator = std::make_shared<Propagator>(std::move(stepper));
+  Estimator::Config cfg(field, propagator);
+  Estimator ipEstimator(cfg);
+  Estimator::State state(magFieldCache());
+
+  // Vertex position
+  Vector3 vtxPos(1_mm, -1_mm, 10_mm);
+
+  // Perigee surface at vertex position
+  auto vtxPerigeeSurface = Surface::makeShared<PerigeeSurface>(vtxPos);
+
+  // Track parameter vector for a track that originates at the vertex
+  BoundVector paramVec;
+  paramVec[eBoundLoc0] = 0.;
+  paramVec[eBoundLoc1] = 0.;
+  paramVec[eBoundTime] = 1_ns;
+  paramVec[eBoundPhi] = 45_degree;
+  paramVec[eBoundTheta] = 45_degree;
+  paramVec[eBoundQOverP] = 1_e / 10_GeV;
+
+  BoundTrackParameters params(vtxPerigeeSurface, paramVec,
+                              makeBoundParametersCovariance());
+
+  // Reference point
+  Vector3 refPoint(2_mm, -2_mm, -5_mm);
+
+  // Perigee surface at vertex position
+  auto refPerigeeSurface = Surface::makeShared<PerigeeSurface>(refPoint);
+
+  // Propagate to the 2D PCA of the reference point
+  PropagatorOptions pOptions(geoContext, magFieldContext);
+  auto intersection = refPerigeeSurface->intersect(
+      geoContext, params.position(geoContext), params.direction(), false);
+
+  pOptions.direction =
+      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+
+  // Propagate to the PCA of linPointPos
+  auto result = propagator->propagate(params, *refPerigeeSurface, pOptions);
+  BOOST_CHECK(result.ok());
+}
 // Compare calculations w/ known good values from Athena.
 //
 // Checks the results for a single track with the same test values as in Athena
@@ -205,7 +251,7 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
   auto distance =
       ipEstimator.calculateDistance<3>(geoContext, params1, vtxPos, state)
           .value();
-  CHECK_CLOSE_ABS(distance, 3.10391_mm, 0.00001_mm);
+  CHECK_CLOSE_ABS(distance, 3.10391_mm, 10_nm);
 
   auto res2 = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, params1, vtxPos, state);
