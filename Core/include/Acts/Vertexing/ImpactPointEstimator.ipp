@@ -267,23 +267,24 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Momentum direction at the 3D PCA.
   // Note that we have thetaV = thetaP = theta since the polar angle does not
   // change in a constant B field.
-  momDir = Vector3(sinTheta * cosPhi, sinPhi * sinTheta, std::cos(theta));
+  momDir = Vector3(cosPhi * sinTheta, sinPhi * sinTheta, std::cos(theta));
 
   // 3D PCA (point P' in the reference)
-  Vector3 pca3D = helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
+  ActsVector<nDim> pca;
+  pca.template head<3>() =
+      helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
-  // TODO: get charge and mass hypothesis from track parameters once this is
-  // possible
-  ActsScalar p = std::abs(chargeHypothesis / qOvP);
-  // Speed in units of c
-  ActsScalar beta = p / std::hypot(p, massHypothesis);
+  if (nDim == 4) {
+    // TODO: get charge and mass hypothesis from track parameters once this is
+    // possible
+    ActsScalar p = std::abs(chargeHypothesis / qOvP);
+    // Speed in units of c
+    ActsScalar beta = p / std::hypot(p, massHypothesis);
 
-  ActsScalar pcaTime = tP - rho / (beta * sinTheta) * (phi - phiP);
-
-  //ACTS_VERBOSE("Time when PCA is reached: " << pcaTime << "\n");
-
+    pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
+  }
   // Vector pointing from the vertex position to the 3D PCA
-  deltaR = pca3D - vtxPos;
+  deltaR = pca - vtxPos;
 
   return {};
 }
