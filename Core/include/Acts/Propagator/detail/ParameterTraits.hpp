@@ -32,10 +32,8 @@ using stepper_bound_parameters_type_t =
 template <typename stepper_t>
 struct stepper_curvilinear_parameters {
   using result_type = decltype(std::declval<stepper_t>().curvilinearState(
-      std::declval<typename stepper_t::State&>(),
-      std::declval<bool>()));
-  using type =
-      std::decay_t<decltype(std::get<0>(std::declval<result_type>()))>;
+      std::declval<typename stepper_t::State&>(), std::declval<bool>()));
+  using type = std::decay_t<decltype(std::get<0>(std::declval<result_type>()))>;
 };
 
 template <typename stepper_t>

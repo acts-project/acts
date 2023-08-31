@@ -165,7 +165,8 @@ auto Acts::Propagator<S, N>::propagate(
     /// Convert into return type and fill the result object
     auto curvState = m_stepper.curvilinearState(state.stepping);
     // Fill the end parameters
-    inputResult.endParameters = std::get<StepperCurvilinearTrackParameters>(curvState);
+    inputResult.endParameters =
+        std::get<StepperCurvilinearTrackParameters>(curvState);
     // Only fill the transport jacobian when covariance transport was done
     if (state.stepping.covTransport) {
       inputResult.transportJacobian = std::get<Jacobian>(curvState);

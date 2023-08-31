@@ -272,7 +272,8 @@ struct GaussianSumFitter {
           detail::IsMultiComponentBoundParameters<start_parameters_t>;
 
       typename propagator_t::template action_list_t_result_t<
-          MultiComponentCurvilinearTrackParameters<SinglyCharged>, decltype(fwdPropOptions.actionList)>
+          MultiComponentCurvilinearTrackParameters<SinglyCharged>,
+          decltype(fwdPropOptions.actionList)>
           inputResult;
 
       auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
@@ -341,7 +342,8 @@ struct GaussianSumFitter {
       using PM = TrackStatePropMask;
 
       typename propagator_t::template action_list_t_result_t<
-          MultiComponentBoundTrackParameters<SinglyCharged>, decltype(bwdPropOptions.actionList)>
+          MultiComponentBoundTrackParameters<SinglyCharged>,
+          decltype(bwdPropOptions.actionList)>
           inputResult;
 
       // Unfortunately we must construct the result type here to be able to
@@ -441,13 +443,14 @@ struct GaussianSumFitter {
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
-      
-      const auto [finalPars, finalCov] =
-          Acts::reduceGaussianMixture(params.components(), params.referenceSurface(), options.stateReductionMethod);
-      
+
+      const auto [finalPars, finalCov] = Acts::reduceGaussianMixture(
+          params.components(), params.referenceSurface(),
+          options.stateReductionMethod);
+
       track.parameters() = finalPars;
       track.covariance() = finalCov;
-      
+
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
       if (trackContainer.hasColumn(

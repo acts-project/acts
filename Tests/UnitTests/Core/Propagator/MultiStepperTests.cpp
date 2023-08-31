@@ -107,9 +107,9 @@ using components_t = typename T::components;
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
 // supplied
 template <typename charge_t = SinglyCharged>
-auto makeDefaultBoundPars(std::size_t n = 4, std::optional<BoundVector> ext_pars = std::nullopt) {
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      cmps;
+auto makeDefaultBoundPars(std::size_t n = 4,
+                          std::optional<BoundVector> ext_pars = std::nullopt) {
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps;
 
   auto make_random_sym_matrix = []() {
     auto c = BoundSquareMatrix::Random().eval();
@@ -211,8 +211,8 @@ void test_multi_stepper_vs_eigen_stepper() {
   const BoundVector pars = BoundVector::Ones();
   const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      cmps(4, {0.25, pars, cov});
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps(
+      4, {0.25, pars, cov});
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3::Ones().normalized());
@@ -369,8 +369,8 @@ void test_multi_stepper_surface_status_update() {
   auto right_surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      cmps(2, {0.5, BoundVector::Zero(), BoundSquareMatrix::Identity()});
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps(
+      2, {0.5, BoundVector::Zero(), BoundSquareMatrix::Identity()});
   std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
   std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
@@ -469,8 +469,8 @@ void test_component_bound_state() {
   auto right_surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3{1.0, 0.0, 0.0}, Vector3{1.0, 0.0, 0.0});
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      cmps(2, {0.5, BoundVector::Zero(), BoundSquareMatrix::Identity()});
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps(
+      2, {0.5, BoundVector::Zero(), BoundSquareMatrix::Identity()});
   std::get<BoundVector>(cmps[0])[eBoundTheta] = M_PI_2;
   std::get<BoundVector>(cmps[1])[eBoundTheta] = -M_PI_2;
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
@@ -550,8 +550,8 @@ void test_combined_bound_state_function() {
     return c;
   }();
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      cmps(4, {0.25, pars, cov});
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps(
+      4, {0.25, pars, cov});
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
@@ -594,8 +594,8 @@ void test_combined_curvilinear_state_function() {
     return c;
   }();
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      cmps(4, {0.25, pars, cov});
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps(
+      4, {0.25, pars, cov});
   GenericBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
 
   MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
@@ -628,8 +628,7 @@ void test_single_component_interface_function() {
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      cmps;
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps;
   for (int i = 0; i < 4; ++i) {
     cmps.push_back({0.25, BoundVector::Random(), BoundSquareMatrix::Random()});
   }
@@ -722,9 +721,9 @@ void propagator_instatiation_test_function() {
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
   PropagatorOptions options(geoCtx, magCtx);
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      cmps(4, {0.25, BoundVector::Ones().eval(),
-               BoundSquareMatrix::Identity().eval()});
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps(
+      4,
+      {0.25, BoundVector::Ones().eval(), BoundSquareMatrix::Identity().eval()});
   MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
 
   // This only checks that this compiles, not that it runs without errors

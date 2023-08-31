@@ -31,8 +31,7 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
   std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> a;
   a.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
-      b;
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> b;
   b.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
@@ -62,11 +61,10 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
         surface, BoundVector::Ones(), cov);
 
     const auto multi_pars = [&]() {
-      std::vector<
-          std::tuple<double, BoundVector, BoundSquareMatrix>>
-          a;
+      std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> a;
       for (int i = 0; i < 4; ++i) {
-        a.push_back({0.25, single_pars.parameters(), *single_pars.covariance()});
+        a.push_back(
+            {0.25, single_pars.parameters(), *single_pars.covariance()});
       }
       return MultiComponentBoundTrackParameters<SinglyCharged>(surface, a);
     }();

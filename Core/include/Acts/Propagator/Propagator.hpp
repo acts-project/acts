@@ -216,17 +216,19 @@ class Propagator final {
   /// Re-define bound track parameters dependent on the stepper
   using StepperBoundTrackParameters =
       detail::stepper_bound_parameters_type_t<stepper_t>;
-  static_assert(Concepts::BoundTrackParametersConcept<StepperBoundTrackParameters>,
-                "Stepper bound track parameters do not fulfill bound "
-                "parameters concept.");
+  static_assert(
+      Concepts::BoundTrackParametersConcept<StepperBoundTrackParameters>,
+      "Stepper bound track parameters do not fulfill bound "
+      "parameters concept.");
 
   /// Re-define curvilinear track parameters dependent on the stepper
   using StepperCurvilinearTrackParameters =
       detail::stepper_curvilinear_parameters_type_t<stepper_t>;
-  static_assert(Concepts::BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
-                "Stepper bound track parameters do not fulfill bound "
-                "parameters concept.");
-  
+  static_assert(
+      Concepts::BoundTrackParametersConcept<StepperCurvilinearTrackParameters>,
+      "Stepper bound track parameters do not fulfill bound "
+      "parameters concept.");
+
   using Jacobian = BoundMatrix;
   using BoundState = std::tuple<StepperBoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
@@ -431,8 +433,9 @@ class Propagator final {
   template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      StepperBoundTrackParameters, typename propagator_options_t::action_list_type>>
+  Result<
+      action_list_t_result_t<StepperBoundTrackParameters,
+                             typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
 
@@ -458,8 +461,9 @@ class Propagator final {
   template <typename parameters_t, typename propagator_options_t,
             typename target_aborter_t = SurfaceReached,
             typename path_aborter_t = PathLimitReached>
-  Result<action_list_t_result_t<
-      StepperBoundTrackParameters, typename propagator_options_t::action_list_type>>
+  Result<
+      action_list_t_result_t<StepperBoundTrackParameters,
+                             typename propagator_options_t::action_list_type>>
   propagate(
       const parameters_t& start, const Surface& target,
       const propagator_options_t& options,
