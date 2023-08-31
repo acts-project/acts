@@ -120,9 +120,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               std::move(linearizer), bField);
 
-  // TODO: test this as well!
-  // finderConfig.useBeamSpotConstraint = false;
-
   Finder finder(finderConfig);
   Finder::State state;
 
@@ -148,10 +145,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+  // TODO: test without using beam spot constraint
+  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -308,13 +305,12 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
     userTracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
-
   Vertex<InputTrack> constraintVtx;
   constraintVtx.setPosition(std::get<BeamSpotData>(csvData).position());
   constraintVtx.setCovariance(std::get<BeamSpotData>(csvData).covariance());
 
-  vertexingOptions.vertexConstraint = constraintVtx;
+  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
+                                                constraintVtx);
 
   auto findResult = finder.find(userTracksPtr, vertexingOptions, state);
 
@@ -417,9 +413,6 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
                               std::move(linearizer), bField);
 
-  // TODO: test this as well!
-  // finderConfig.useBeamSpotConstraint = false;
-
   Finder finder(finderConfig);
   Finder::State state;
 
@@ -445,10 +438,10 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+  // TODO: test using beam spot constraint
+  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);
@@ -593,10 +586,9 @@ BOOST_AUTO_TEST_CASE(
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+  Vertex<BoundTrackParameters> bsConstr = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, bsConstr);
 
   auto t1 = std::chrono::system_clock::now();
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);

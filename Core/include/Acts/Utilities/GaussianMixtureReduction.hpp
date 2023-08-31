@@ -85,7 +85,7 @@ auto gaussianMixtureCov(const components_t components,
   for (const auto &cmp : components) {
     const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
-    cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, issue:2347)
+    cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
 
     ActsVector<D> diff = pars_l - mean;
 
@@ -195,8 +195,10 @@ auto gaussianMixtureMeanCov(const components_t components,
 
   std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
 
+  // MARK: fpeMaskBegin(FLTUND, 1, #2347)
   const auto cov =
       gaussianMixtureCov(components, mean, sumOfWeights, projector, angleDesc);
+  // MARK: fpeMaskEnd(FLTUND)
 
   return RetType{mean, cov};
 }
