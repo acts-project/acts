@@ -213,8 +213,6 @@ struct ExpSafeLimit<float> {
 };
 
 /// Calculate the exponential function while avoiding FPEs.
-/// @note The boundary values of -50.0 and 50.0 might need to be adapted when
-/// using this function with doubles
 ///
 /// @param val argument for which the exponential function should be evaluated.
 ///
