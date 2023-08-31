@@ -118,8 +118,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector,
-                                DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       std::vector<const Surface*> backwardSequence(
@@ -170,7 +169,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts) {
-      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector>;
+      using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
@@ -273,7 +272,7 @@ struct GaussianSumFitter {
           detail::IsMultiComponentBoundParameters<start_parameters_t>;
 
       typename propagator_t::template action_list_t_result_t<
-          CurvilinearTrackParameters, decltype(fwdPropOptions.actionList)>
+          MultiComponentCurvilinearTrackParameters<SinglyCharged>, decltype(fwdPropOptions.actionList)>
           inputResult;
 
       auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
@@ -287,7 +286,7 @@ struct GaussianSumFitter {
 
         MultiComponentBoundTrackParameters<Charge> params(
             sParameters.referenceSurface().getSharedPtr(),
-            sParameters.parameters(), sParameters.covariance());
+            sParameters.parameters(), *sParameters.covariance());
 
         return m_propagator.propagate(params, fwdPropOptions,
                                       std::move(inputResult));
@@ -342,7 +341,7 @@ struct GaussianSumFitter {
       using PM = TrackStatePropMask;
 
       typename propagator_t::template action_list_t_result_t<
-          BoundTrackParameters, decltype(bwdPropOptions.actionList)>
+          MultiComponentBoundTrackParameters<SinglyCharged>, decltype(bwdPropOptions.actionList)>
           inputResult;
 
       // Unfortunately we must construct the result type here to be able to
@@ -442,17 +441,20 @@ struct GaussianSumFitter {
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
-      track.parameters() = params.parameters();
-      track.covariance() = params.covariance().value();
+      
+      const auto [finalPars, finalCov] =
+          Acts::reduceGaussianMixture(params.components(), params.referenceSurface(), options.stateReductionMethod);
+      
+      track.parameters() = finalPars;
+      track.covariance() = finalCov;
+      
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
 
       if (trackContainer.hasColumn(
               hashString(GsfConstants::kFinalMultiComponentStateColumn))) {
         ACTS_DEBUG("Add final multi-component state to track")
-        const auto& fsr = bwdResult->template get<
-            Acts::detail::FinalStateCollector::result_type>();
         track.template component<GsfConstants::FinalMultiComponentState>(
-            GsfConstants::kFinalMultiComponentStateColumn) = fsr.pars;
+            GsfConstants::kFinalMultiComponentStateColumn) = std::move(params);
       }
     }
 

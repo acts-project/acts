@@ -15,7 +15,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include <Acts/EventData/Charge.hpp>
-#include <Acts/EventData/MultiComponentBoundTrackParameters.hpp>
+#include <Acts/EventData/MultiComponentTrackParameters.hpp>
 #include <Acts/Surfaces/PlaneSurface.hpp>
 
 #include <algorithm>
@@ -31,7 +31,7 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
   std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> a;
   a.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
       b;
   b.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
 }
 
 BOOST_AUTO_TEST_CASE(test_accessors) {
-  using cov_t = std::optional<BoundSquareMatrix>;
+  using cov_t = BoundSquareMatrix;
   for (const auto &cov : {cov_t{}, cov_t{BoundSquareMatrix::Identity()},
                           cov_t{BoundSquareMatrix::Identity()}}) {
     auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
@@ -63,10 +63,10 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
 
     const auto multi_pars = [&]() {
       std::vector<
-          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+          std::tuple<double, BoundVector, BoundSquareMatrix>>
           a;
       for (int i = 0; i < 4; ++i) {
-        a.push_back({0.25, single_pars.parameters(), single_pars.covariance()});
+        a.push_back({0.25, single_pars.parameters(), *single_pars.covariance()});
       }
       return MultiComponentBoundTrackParameters<SinglyCharged>(surface, a);
     }();
@@ -83,12 +83,6 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
     BOOST_CHECK_EQUAL(multi_pars.transverseMomentum(),
                       single_pars.transverseMomentum());
     BOOST_CHECK_EQUAL(multi_pars.direction(), single_pars.direction());
-
-    // Check the behaviour for std::nullopt or zero covariance
-    if (cov && *cov != BoundSquareMatrix::Zero()) {
-      BOOST_CHECK_EQUAL(*multi_pars.covariance(), *single_pars.covariance());
-    } else {
-      BOOST_CHECK(not multi_pars.covariance());
-    }
+    BOOST_CHECK_EQUAL(multi_pars.covariance(), *single_pars.covariance());
   }
 }

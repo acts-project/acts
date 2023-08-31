@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
+#include "Acts/EventData/MultiComponentTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -805,46 +805,6 @@ struct GsfActor {
     m_cfg.weightCutoff = options.weightCutoff;
     m_cfg.reductionMethod = options.stateReductionMethod;
     m_cfg.calibrationContext = &options.calibrationContext.get();
-  }
-};
-
-/// An actor that collects the final multi component state once the propagation
-/// finished
-struct FinalStateCollector {
-  using MultiPars = Acts::Experimental::GsfConstants::FinalMultiComponentState;
-
-  struct result_type {
-    MultiPars pars;
-  };
-
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& navigator, result_type& result,
-                  const Logger& /*logger*/) const {
-    if (not(navigator.targetReached(state.navigation) and
-            navigator.currentSurface(state.navigation))) {
-      return;
-    }
-
-    const auto& surface = *navigator.currentSurface(state.navigation);
-    std::vector<
-        std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
-        states;
-
-    for (auto cmp : stepper.componentIterable(state.stepping)) {
-      auto singleState = cmp.singleState(state);
-      auto bs = cmp.singleStepper(stepper).boundState(singleState.stepping,
-                                                      surface, true);
-
-      if (bs.ok()) {
-        const auto& btp = std::get<BoundTrackParameters>(*bs);
-        states.emplace_back(cmp.weight(), btp.parameters(), btp.covariance());
-      }
-    }
-
-    result.pars =
-        typename MultiPars::value_type(surface.getSharedPtr(), states);
   }
 };
 

@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 
 #include <cmath>
 #include <memory>
@@ -26,14 +27,12 @@ namespace Acts {
 /// @note This class holds shared ownership on its reference surface.
 /// @note The accessors for parameters, covariance, position, etc.
 /// are the weighted means of the components.
-/// @note If all covariances are zero, the accessor for the total
-/// covariance does return std::nullopt;
 /// TODO Add constructor from range and projector maybe?
 template <typename charge_t>
 class MultiComponentBoundTrackParameters {
   using SingleParameters = GenericBoundTrackParameters<charge_t>;
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>>
       m_components;
   std::shared_ptr<const Surface> m_surface;
 
@@ -67,41 +66,20 @@ class MultiComponentBoundTrackParameters {
   using CovarianceMatrix = typename SingleParameters::CovarianceMatrix;
 
   /// Construct from multiple components with charge scalar q
-  template <typename covariance_t>
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
-      const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps,
+      const std::vector<std::tuple<double, BoundVector, CovarianceMatrix>>& cmps,
       ActsScalar q)
-      : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
-    static_assert(
-        std::is_same_v<BoundSquareMatrix, covariance_t> ||
-        std::is_same_v<std::optional<BoundSquareMatrix>, covariance_t>);
-    if constexpr (std::is_same_v<BoundSquareMatrix, covariance_t>) {
-      for (const auto& [weight, params, cov] : cmps) {
-        m_components.push_back({weight, params, cov});
-      }
-    } else {
-      m_components = cmps;
-    }
+      : m_components(cmps), m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
   }
 
   /// Construct from multiple components with charge_t
-  template <typename covariance_t, typename T = charge_t,
+  template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
-      const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps)
-      : m_surface(std::move(surface)) {
-    static_assert(
-        std::is_same_v<BoundSquareMatrix, covariance_t> ||
-        std::is_same_v<std::optional<BoundSquareMatrix>, covariance_t>);
-    if constexpr (std::is_same_v<BoundSquareMatrix, covariance_t>) {
-      for (const auto& [weight, params, cov] : cmps) {
-        m_components.push_back({weight, params, cov});
-      }
-    } else {
-      m_components = cmps;
-    }
+      const std::vector<std::tuple<double, BoundVector, CovarianceMatrix>>& cmps)
+      : m_components(cmps), m_surface(std::move(surface)) {
   }
 
   /// Construct from a parameters vector on the surface and particle charge.
@@ -119,9 +97,9 @@ class MultiComponentBoundTrackParameters {
   /// parameter.
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface, const BoundVector& params,
-      ActsScalar q, std::optional<BoundSquareMatrix> cov = std::nullopt)
+      ActsScalar q, CovarianceMatrix cov)
       : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
-    m_components.push_back({1., params, std::move(cov)});
+    m_components.push_back({1., params, cov});
   }
 
   /// Construct from a parameters vector on the surface.
@@ -135,10 +113,9 @@ class MultiComponentBoundTrackParameters {
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   MultiComponentBoundTrackParameters(
-      std::shared_ptr<const Surface> surface, const BoundVector& params,
-      std::optional<BoundSquareMatrix> cov = std::nullopt)
+      std::shared_ptr<const Surface> surface, const BoundVector& params, CovarianceMatrix cov)
       : m_surface(std::move(surface)) {
-    m_components.push_back({1., params, std::move(cov)});
+    m_components.push_back({1., params, cov});
   }
 
   /// Parameters are not default constructible due to the charge type.
@@ -165,7 +142,7 @@ class MultiComponentBoundTrackParameters {
         std::get<double>(m_components[i]),
         SingleParameters(
             m_surface, std::get<BoundVector>(m_components[i]),
-            std::get<std::optional<BoundSquareMatrix>>(m_components[i])));
+            std::get<BoundSquareMatrix>(m_components[i])));
   }
 
   /// Parameters vector.
@@ -174,16 +151,10 @@ class MultiComponentBoundTrackParameters {
   }
 
   /// Optional covariance matrix.
-  std::optional<CovarianceMatrix> covariance() const {
-    const auto ret = reduce([](const SingleParameters& p) {
-      return p.covariance() ? *p.covariance() : CovarianceMatrix::Zero();
+  CovarianceMatrix covariance() const {
+    return reduce([](const SingleParameters& p) {
+      return *p.covariance();
     });
-
-    if (ret == CovarianceMatrix::Zero()) {
-      return std::nullopt;
-    } else {
-      return ret;
-    }
   }
 
   /// Space-time position four-vector.
@@ -237,6 +208,83 @@ class MultiComponentBoundTrackParameters {
   Scalar charge() const {
     return reduce([](const SingleParameters& p) { return p.charge(); });
   }
+};
+
+/// This class mimics the behaviour of the curvilinear parameters for ordinary
+/// track parameters. To adopt this concept, a "common surface" is constructed,
+/// and all parameters are projected onto this surface. The use of this is
+/// questionable, and if the result is reasonable depends largely on the initial
+/// multi component state. However, the propagator infrastructure forces the
+/// existance of this type
+/// @tparam charge_t Helper type to interpret the particle charge/momentum
+template <typename charge_t>
+class MultiComponentCurvilinearTrackParameters
+    : public MultiComponentBoundTrackParameters<charge_t> {
+  using covariance_t = BoundSquareMatrix;
+ public:
+  // template <typename covariance_t>
+  using ConstructionTuple = std::tuple<double, Acts::Vector4, Acts::Vector3,
+                                       ActsScalar, covariance_t>;
+
+ private:
+  using Base = MultiComponentBoundTrackParameters<charge_t>;
+
+  // template <typename covariance_t>
+  using BaseConstructionTuple =
+      std::tuple<std::shared_ptr<Acts::Surface>,
+                 std::vector<std::tuple<double, BoundVector, covariance_t>>,
+                 ActsScalar>;
+
+  /// We need this helper function in order to construct the base class properly
+  // template <typename covariance_t>
+  static BaseConstructionTuple construct(
+      const std::vector<ConstructionTuple>& curvi) {
+    // TODO where to get a geometry context here
+    Acts::GeometryContext gctx{};
+
+    // Construct and average surface
+    Acts::Vector3 avgPos = Acts::Vector3::Zero();
+    Acts::Vector3 avgDir = Acts::Vector3::Zero();
+    for (const auto& [w, pos4, dir, qop, cov] : curvi) {
+      avgPos += w * pos4.template segment<3>(0);
+      avgDir += w * dir;
+    }
+
+    auto s = Surface::makeShared<PlaneSurface>(avgPos, avgDir);
+
+    std::vector<std::tuple<double, BoundVector, covariance_t>> bound;
+    bound.reserve(curvi.size());
+
+    // Project the position onto the surface, keep everything else as is
+    for (const auto& [w, pos4, dir, qop, cov] : curvi) {
+      Vector3 newPos =
+          s->intersect(gctx, pos4.template segment<3>(eFreePos0), dir, false)
+              .intersection.position;
+      
+      BoundVector bv =
+          detail::transformFreeToCurvilinearParameters(pos4[eTime], dir, qop);
+          
+      // Because of the projection this should never fail
+      bv.template segment<2>(eBoundLoc0) = *(s->globalToLocal(gctx, newPos, dir));
+      
+      bound.emplace_back(w, bv, cov);
+    }
+
+    // TODO bring this first to compile then check qop
+    return {s, bound, {}};
+  }
+
+  // Private constructor from a tuple
+  // template <typename covariance_t>
+  MultiComponentCurvilinearTrackParameters(
+      const BaseConstructionTuple& t)
+      : Base(std::get<0>(t), std::get<1>(t), std::get<2>(t)) {}
+
+ public:
+  // template <typename covariance_t>
+  MultiComponentCurvilinearTrackParameters(
+      const std::vector<ConstructionTuple>& cmps)
+      : MultiComponentCurvilinearTrackParameters(construct(cmps)) {}
 };
 
 }  // namespace Acts
