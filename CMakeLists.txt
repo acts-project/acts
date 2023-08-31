@@ -24,6 +24,7 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
+set(ACTS_SOURCELINK_SBO_SIZE "" CACHE STRING "Customize the SBO size used by SourceLink")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # external library options
 option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
@@ -181,7 +182,7 @@ endif()
 # minimal dependency versions. they are defined here in a single place so
 # they can be easily upgraded, although they might not be used if the
 # dependency is included via `add_subdirectory(...)`.
-set(_acts_actsvg_version 0.4.33)
+set(_acts_actsvg_version 0.4.35)
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
@@ -270,15 +271,8 @@ endmacro()
 # find packages explicitly for each component even if this means searching for
 # the same package twice. This avoids having complex if/else trees to sort out
 # when a particular package is actually needed.
+
 # plugin dependencies
-if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
-  if(ACTS_USE_SYSTEM_PYBIND11) 
-    find_package(pybind11 CONFIG REQUIRED)
-  else()
-    add_subdirectory(thirdparty/pybind11)
-  endif()
-endif()
 if(ACTS_BUILD_PLUGIN_ACTSVG)
   if(ACTS_USE_SYSTEM_ACTSVG)
     message(STATUS "Using system installation of actsvg")
@@ -299,6 +293,8 @@ if(ACTS_BUILD_PLUGIN_CUDA)
   enable_cuda()
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
+  # Explicitly find python so we can more easily override the version
+  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
 if(ACTS_BUILD_PLUGIN_JSON)
@@ -345,9 +341,15 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
     find_package(TorchScatter REQUIRED)
   endif()
 endif()
-
 if(ACTS_BUILD_PLUGIN_ONNX OR ACTS_EXATRKX_ENABLE_ONNX)
   find_package(OnnxRuntime ${_acts_onnxruntime_version} REQUIRED)
+endif()
+if(ACTS_BUILD_PLUGIN_EDM4HEP)
+  find_package(podio ${_acts_podio_version} REQUIRED CONFIG)
+  find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
+endif()
+if(ACTS_BUILD_PLUGIN_GEANT4)
+  find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
 endif()
 
 # examples dependencies
@@ -359,17 +361,18 @@ if(ACTS_BUILD_EXAMPLES)
   check_root_compatibility()
   add_subdirectory(thirdparty/dfelibs)
 endif()
+if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
+  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
+  if(ACTS_USE_SYSTEM_PYBIND11) 
+    find_package(pybind11 CONFIG REQUIRED)
+  else()
+    add_subdirectory(thirdparty/pybind11)
+  endif()
+endif()
 if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDG4 DDDetectors)
 elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
-endif()
-if(ACTS_BUILD_PLUGIN_EDM4HEP)
-  find_package(podio ${_acts_podio_version} REQUIRED CONFIG)
-  find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
-endif()
-if(ACTS_BUILD_EXAMPLES_GEANT4)
-  find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)
 endif()
 if(ACTS_BUILD_EXAMPLES_HEPMC3)
   find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
@@ -377,14 +380,13 @@ endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   find_package(Pythia8 REQUIRED)
 
-if(DEFINED CMAKE_CXX_STANDARD)
-  if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
-    message(WARNING "ACTS is configured to build with C++20."
-      "As of version 309, Pythia8 does not compile under C++20."
-      "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
+  if(DEFINED CMAKE_CXX_STANDARD)
+    if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
+      message(WARNING "ACTS is configured to build with C++20."
+        "As of version 309, Pythia8 does not compile under C++20."
+        "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
+    endif()
   endif()
-endif()
-
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
@@ -393,7 +395,7 @@ if(ACTS_BUILD_DOCS)
 endif()
 
 if(ACTS_CUSTOM_SCALARTYPE)
-    message(STATUS "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}")
+  message(STATUS "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}")
 endif()
 
 # core library, core plugins, and other components

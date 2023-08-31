@@ -54,7 +54,7 @@ class Measurement {
   /// Vector type containing for measured parameter values.
   using ParametersVector = ActsVector<kSize>;
   /// Matrix type for the measurement covariance.
-  using CovarianceMatrix = ActsSymMatrix<kSize>;
+  using CovarianceMatrix = ActsSquareMatrix<kSize>;
   /// Vector type containing all parameters in the same space.
   using FullParametersVector = ActsVector<kFullSize>;
   using ProjectionMatrix = ActsMatrix<kSize, kFullSize>;

@@ -109,10 +109,6 @@ BOOST_AUTO_TEST_CASE(DecayWidthTime) {
   CHECK_CLOSE_REL(hbar / 1.42_GeV, 4.635295432723526e-10_fs, 1e-7);
 }
 
-BOOST_AUTO_TEST_CASE(Charge) {
-  CHECK_CLOSE_REL(1_C, 6.241509074460763e18_e, eps);
-}
-
 BOOST_AUTO_TEST_CASE(MagneticField) {
   CHECK_CLOSE_REL(10_kGauss, 1_T, eps);
   CHECK_CLOSE_REL(1_kGauss, 1000_Gauss, eps);
@@ -128,10 +124,14 @@ BOOST_AUTO_TEST_CASE(MomentumRadius) {
 }
 
 BOOST_AUTO_TEST_CASE(PhysicalConstants) {
-  using namespace Acts::PhysicalConstants;
+  using Acts::PhysicalConstants::hbar;
   // see https://en.wikipedia.org/wiki/Planck_constant
   CHECK_CLOSE_REL(hbar, 6.62607015e-34 * 1_J * 1_s / (2 * M_PI), 1e-6);
   CHECK_CLOSE_REL(hbar, 4.135667696e-15 * 1_eV * 1_s / (2 * M_PI), 1e-7);
+
+  using Acts::PhysicalConstants::c;
+  // we really want c to be 1
+  BOOST_CHECK(c == 1.0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

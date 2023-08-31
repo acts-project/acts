@@ -13,8 +13,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -34,14 +33,14 @@ namespace {
 using namespace Acts;
 using namespace Acts::UnitLiterals;
 using AnyCurvilinearTrackParameters =
-    SingleCurvilinearTrackParameters<AnyCharge>;
+    GenericCurvilinearTrackParameters<AnyCharge>;
 
 constexpr auto eps = 8 * std::numeric_limits<ActsScalar>::epsilon();
 const GeometryContext geoCtx;
-const BoundSymMatrix cov = BoundSymMatrix::Identity();
+const BoundSquareMatrix cov = BoundSquareMatrix::Identity();
 
 template <typename charge_t>
-void checkParameters(const SingleCurvilinearTrackParameters<charge_t>& params,
+void checkParameters(const GenericCurvilinearTrackParameters<charge_t>& params,
                      double phi, double theta, double p, double q,
                      const Vector4& pos4, const Vector3& unitDir) {
   const auto qOverP = (q != 0) ? (q / p) : (1 / p);
@@ -60,7 +59,7 @@ void checkParameters(const SingleCurvilinearTrackParameters<charge_t>& params,
   CHECK_CLOSE_OR_SMALL(params.fourPosition(geoCtx), pos4, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.position(geoCtx), pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.time(), pos4[eTime], eps, eps);
-  CHECK_CLOSE_OR_SMALL(params.unitDirection(), unitDir, eps, eps);
+  CHECK_CLOSE_OR_SMALL(params.direction(), unitDir, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.absoluteMomentum(), p, eps, eps);
   CHECK_CLOSE_OR_SMALL(params.transverseMomentum(), p * std::sin(theta), eps,
                        eps);
@@ -84,7 +83,7 @@ BOOST_DATA_TEST_CASE(
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   NeutralCurvilinearTrackParameters params(pos4, dir, 1 / p);
   checkParameters(params, phi, theta, p, 0_e, pos4, dir);
@@ -103,7 +102,7 @@ BOOST_DATA_TEST_CASE(
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   CurvilinearTrackParameters params(pos4, dir, q / p);
   checkParameters(params, phi, theta, p, q, pos4, dir);
@@ -122,7 +121,7 @@ BOOST_DATA_TEST_CASE(
   // phi is ill-defined in forward/backward tracks
   const auto phi = ((0 < theta) and (theta < M_PI)) ? phiInput : 0.0;
   const Vector4 pos4(x, y, z, time);
-  const Vector3 dir = makeDirectionUnitFromPhiTheta(phi, theta);
+  const Vector3 dir = makeDirectionFromPhiTheta(phi, theta);
 
   AnyCurvilinearTrackParameters params(pos4, dir, p, q);
   checkParameters(params, phi, theta, p, q, pos4, dir);

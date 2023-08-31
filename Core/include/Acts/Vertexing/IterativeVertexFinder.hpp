@@ -95,7 +95,7 @@ class IterativeVertexFinder {
     IPEstimator ipEst;
 
     /// Vertex finder configuration variables
-    bool useBeamConstraint = false;
+    
     /// Tracks that are within a distance of
     ///
     /// significanceCutSeeding * sqrt(sigma(d0)^2+sigma(z0)^2)

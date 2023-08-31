@@ -43,7 +43,7 @@ ActsExamples::ProcessCode ActsExamples::ParticlesPrinter::execute(
     ACTS_INFO("    process_type: " << particle.process())
     ACTS_INFO("    position:     " << particle.position().transpose() / 1_mm
                                    << " mm");
-    ACTS_INFO("    direction:    " << particle.unitDirection().transpose());
+    ACTS_INFO("    direction:    " << particle.direction().transpose());
     ACTS_INFO("    time:         " << particle.time() / 1_ns << " ns");
     ACTS_INFO("    |p|:          " << particle.absoluteMomentum() / 1_GeV
                                    << " GeV");

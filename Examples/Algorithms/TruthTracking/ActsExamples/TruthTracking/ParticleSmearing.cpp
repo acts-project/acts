@@ -63,8 +63,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
     for (const auto& particle : vtxParticles) {
       const auto time = particle.time();
-      const auto phi = Acts::VectorHelpers::phi(particle.unitDirection());
-      const auto theta = Acts::VectorHelpers::theta(particle.unitDirection());
+      const auto phi = Acts::VectorHelpers::phi(particle.direction());
+      const auto theta = Acts::VectorHelpers::theta(particle.direction());
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
       const auto q = particle.charge();
@@ -107,7 +107,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                                         ctx.geoContext,
                                         Acts::Vector2{params[Acts::eBoundLoc0],
                                                       params[Acts::eBoundLoc1]},
-                                        particle.unitDirection() * p)
+                                        particle.direction() * p)
                                     .transpose()
                              << ", " << params[Acts::eBoundTime] << ", "
                              << params[Acts::eBoundPhi] << ", "
@@ -115,7 +115,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                              << params[Acts::eBoundQOverP]);
 
       // build the track covariance matrix using the smearing sigmas
-      Acts::BoundSymMatrix cov = Acts::BoundSymMatrix::Zero();
+      Acts::BoundSquareMatrix cov = Acts::BoundSquareMatrix::Zero();
       cov(Acts::eBoundLoc0, Acts::eBoundLoc0) =
           m_cfg.initialVarInflation[Acts::eBoundLoc0] * sigmaD0 * sigmaD0;
       cov(Acts::eBoundLoc1, Acts::eBoundLoc1) =

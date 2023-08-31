@@ -9,8 +9,8 @@
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -238,6 +238,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       float t_pT = NaNfloat;
       float t_d0 = NaNfloat;
       float t_z0 = NaNfloat;
+      float t_qop = NaNfloat;
 
       // Get the perigee surface
       Acts::Surface* pSurface = nullptr;
@@ -272,23 +273,24 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           t_vx = particle.position().x();
           t_vy = particle.position().y();
           t_vz = particle.position().z();
-          t_px = t_p * particle.unitDirection().x();
-          t_py = t_p * particle.unitDirection().y();
-          t_pz = t_p * particle.unitDirection().z();
-          t_theta = theta(particle.unitDirection());
-          t_phi = phi(particle.unitDirection());
-          t_eta = eta(particle.unitDirection());
-          t_pT = t_p * perp(particle.unitDirection());
+          t_px = t_p * particle.direction().x();
+          t_py = t_p * particle.direction().y();
+          t_pz = t_p * particle.direction().z();
+          t_theta = theta(particle.direction());
+          t_phi = phi(particle.direction());
+          t_eta = eta(particle.direction());
+          t_pT = t_p * perp(particle.direction());
+          t_qop = particle.qOverP();
 
           if (pSurface != nullptr) {
             auto intersection =
                 pSurface->intersect(ctx.geoContext, particle.position(),
-                                    particle.unitDirection(), false);
+                                    particle.direction(), false);
             auto position = intersection.intersection.position;
 
             // get the truth perigee parameter
             auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,
-                                                    particle.unitDirection());
+                                                    particle.direction());
             if (lpResult.ok()) {
               t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
               t_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
@@ -330,13 +332,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Initialize the fitted track parameters info
       std::array<float, Acts::eBoundSize> param = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
-      std::array<float, Acts::eBoundSize> res = {NaNfloat, NaNfloat, NaNfloat,
-                                                 NaNfloat, NaNfloat, NaNfloat};
       std::array<float, Acts::eBoundSize> error = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
-      std::array<float, Acts::eBoundSize> pull = {NaNfloat, NaNfloat, NaNfloat,
-                                                  NaNfloat, NaNfloat, NaNfloat};
       bool hasFittedParams = false;
+      bool hasFittedCov = false;
       if (traj.hasTrackParameters(trackTip)) {
         hasFittedParams = true;
         const auto& boundParam = traj.trackParameters(trackTip);
@@ -345,23 +344,31 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           param[i] = parameter[i];
         }
 
+        if (boundParam.covariance().has_value()) {
+          hasFittedCov = true;
+          const auto& covariance = *boundParam.covariance();
+          for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
+            error[i] = std::sqrt(covariance(i, i));
+          }
+        }
+      }
+
+      std::array<float, Acts::eBoundSize> res = {NaNfloat, NaNfloat, NaNfloat,
+                                                 NaNfloat, NaNfloat, NaNfloat};
+      std::array<float, Acts::eBoundSize> pull = {NaNfloat, NaNfloat, NaNfloat,
+                                                  NaNfloat, NaNfloat, NaNfloat};
+      if (foundMajorityParticle && hasFittedParams) {
         res = {param[Acts::eBoundLoc0] - t_d0,
                param[Acts::eBoundLoc1] - t_z0,
                Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
                                                  static_cast<float>(2 * M_PI)),
                param[Acts::eBoundTheta] - t_theta,
-               param[Acts::eBoundQOverP] - t_charge / t_p,
+               param[Acts::eBoundQOverP] - t_qop,
                param[Acts::eBoundTime] - t_time};
 
-        if (boundParam.covariance().has_value()) {
-          const auto& covariance = *boundParam.covariance();
+        if (hasFittedCov) {
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-            error[i] = std::sqrt(covariance(i, i));
-            if (error[i] != 0.0) {
-              pull[i] = res[i] / error[i];
-            } else {
-              pull[i] = std::numeric_limits<double>::quiet_NaN();
-            }
+            pull[i] = res[i] / error[i];  // MARK: fpeMask(FLTINV, 1, #2284)
           }
         }
       }

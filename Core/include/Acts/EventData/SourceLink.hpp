@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Any.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <cassert>
@@ -17,50 +18,28 @@
 #include <type_traits>
 #include <utility>
 
+#if !defined(ACTS_SOURCELINK_SBO_SIZE)
+// Do not set this in code, use CMake!
+#define ACTS_SOURCELINK_SBO_SIZE 16
+#endif
+
 namespace Acts {
 
-namespace detail_sl {
-template <typename T>
-using geometry_id_t = decltype(std::declval<T>().geometryId());
-}  // namespace detail_sl
-
 class SourceLink final {
-  using any_type = AnyBase<16>;
+  using any_type = AnyBase<ACTS_SOURCELINK_SBO_SIZE>;
 
  public:
-  /// Getter for the geometry identifier
-  /// @return The GeometryIdentifier
-  constexpr GeometryIdentifier geometryId() const { return m_geometryId; }
-
   SourceLink(const SourceLink& other) = default;
   SourceLink(SourceLink&& other) = default;
   SourceLink& operator=(const SourceLink& other) = default;
   SourceLink& operator=(SourceLink&& other) = default;
 
-  /// Constructor from source link and explicit geometry id
-  /// @tparam T The source link type
-  /// @param id The geometry identifier
-  /// @param upstream The upstream source link to store
-  template <typename T, typename = std::enable_if_t<
-                            !std::is_same_v<std::decay_t<T>, SourceLink>>>
-  explicit SourceLink(GeometryIdentifier id, T&& upstream)
-      : m_geometryId{id}, m_upstream{std::move(upstream)} {
-    static_assert(!std::is_same_v<std::decay_t<T>, SourceLink>,
-                  "Cannot wrap SourceLink in SourceLink");
-  }
-
-  /// Constructor from source link only, geometry identifier is determined
-  /// automatically
+  /// Constructor from concrete sourcelink
   /// @tparam T The source link type
   /// @param upstream The upstream source link to store
   template <typename T, typename = std::enable_if_t<
-                            Concepts::exists<detail_sl::geometry_id_t, T> &&
                             !std::is_same_v<std::decay_t<T>, SourceLink>>>
-  explicit SourceLink(T&& upstream) : m_geometryId{upstream.geometryId()} {
-    static_assert(
-        std::is_same_v<detail_sl::geometry_id_t<T>, GeometryIdentifier>,
-        "geometryId method does not return a geometry id type");
-
+  explicit SourceLink(T&& upstream) {
     static_assert(!std::is_same_v<std::decay_t<T>, SourceLink>,
                   "Cannot wrap SourceLink in SourceLink");
 
@@ -88,7 +67,6 @@ class SourceLink final {
   }
 
  private:
-  GeometryIdentifier m_geometryId{};
   any_type m_upstream{};
 };
 
@@ -125,5 +103,8 @@ struct SourceLinkAdapterIterator {
 
   BaseIterator m_iterator;
 };
+
+/// Delegate to unpack the surface associated with a source link
+using SourceLinkSurfaceAccessor = Delegate<const Surface*(const SourceLink&)>;
 
 }  // namespace Acts

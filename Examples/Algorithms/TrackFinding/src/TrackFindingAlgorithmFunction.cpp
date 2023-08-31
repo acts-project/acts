@@ -74,9 +74,10 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Navigator navigator(cfg);
-  Propagator propagator(std::move(stepper), std::move(navigator));
-  CKF trackFinder(std::move(propagator), logger.cloneWithSuffix("CKF"));
+  Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
+  Propagator propagator(std::move(stepper), std::move(navigator),
+                        logger.cloneWithSuffix("Propagator"));
+  CKF trackFinder(std::move(propagator), logger.cloneWithSuffix("Finder"));
 
   // build the track finder functions. owns the track finder object.
   return std::make_shared<TrackFinderFunctionImpl>(std::move(trackFinder));

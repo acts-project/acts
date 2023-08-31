@@ -96,7 +96,10 @@ void addGeometry(Context& ctx) {
         .def("visitSurfaces",
              [](Acts::TrackingGeometry& self, py::function& func) {
                self.visitSurfaces(func);
-             });
+             })
+        .def_property_readonly(
+            "worldVolume",
+            &Acts::TrackingGeometry::highestTrackingVolumeShared);
   }
 
   {
@@ -110,6 +113,11 @@ void addGeometry(Context& ctx) {
                                                     bounds);
             },
             "r"_a, "halfZ"_a);
+  }
+
+  {
+    py::class_<Acts::TrackingVolume, Acts::Volume,
+               std::shared_ptr<Acts::TrackingVolume>>(m, "TrackingVolume");
   }
 
   {
@@ -240,6 +248,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(vsConfig, VolumeStructureBuilder::Config);
     ACTS_PYTHON_MEMBER(boundsType);
     ACTS_PYTHON_MEMBER(boundValues);
+    ACTS_PYTHON_MEMBER(transform);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }

@@ -64,6 +64,11 @@ class TrackingGeometry {
   /// @return plain pointer to the world volume
   const TrackingVolume* highestTrackingVolume() const;
 
+  /// Access to the world volume
+  /// @return shared pointer to the world volume
+  const std::shared_ptr<const TrackingVolume>& highestTrackingVolumeShared()
+      const;
+
   /// return the lowest tracking Volume
   ///
   /// @param gctx The current geometry context object, e.g. alignment

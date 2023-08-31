@@ -80,12 +80,12 @@ auto gaussianMixtureCov(const components_t components,
                         const ActsVector<D> &mean, double sumOfWeights,
                         projector_t &&projector,
                         const angle_desc_t &angleDesc) {
-  ActsSymMatrix<D> cov = ActsSymMatrix<D>::Zero();
+  ActsSquareMatrix<D> cov = ActsSquareMatrix<D>::Zero();
 
   for (const auto &cmp : components) {
     const auto &[weight_l, pars_l, cov_l] = projector(cmp);
 
-    cov += weight_l * cov_l;
+    cov += weight_l * cov_l;  // MARK: fpeMask(FLTUND, 1, #2347)
 
     ActsVector<D> diff = pars_l - mean;
 
@@ -153,7 +153,7 @@ auto gaussianMixtureMeanCov(const components_t components,
 #endif
 
   // Define the return type
-  using RetType = std::tuple<ActsVector<D>, ActsSymMatrix<D>>;
+  using RetType = std::tuple<ActsVector<D>, ActsSquareMatrix<D>>;
 
   // Early return in case of range with length 1
   if (components.size() == 1) {
@@ -195,8 +195,10 @@ auto gaussianMixtureMeanCov(const components_t components,
 
   std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
 
+  // MARK: fpeMaskBegin(FLTUND, 1, #2347)
   const auto cov =
       gaussianMixtureCov(components, mean, sumOfWeights, projector, angleDesc);
+  // MARK: fpeMaskEnd(FLTUND)
 
   return RetType{mean, cov};
 }
@@ -221,7 +223,7 @@ template <typename mixture_t, typename projector_t = Acts::Identity>
 auto reduceGaussianMixture(const mixture_t &mixture, const Surface &surface,
                            MixtureReductionMethod method,
                            projector_t &&projector = projector_t{}) {
-  using R = std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>;
+  using R = std::tuple<Acts::BoundVector, Acts::BoundSquareMatrix>;
   const auto [mean, cov] =
       detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
         return detail::gaussianMixtureMeanCov(mixture, projector, desc);

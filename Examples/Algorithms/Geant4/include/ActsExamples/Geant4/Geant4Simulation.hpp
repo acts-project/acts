@@ -135,8 +135,8 @@ class Geant4Simulation final : public Geant4SimulationBase {
     std::vector<std::string> materialMappings = {"Silicon"};
 
     std::shared_ptr<const Acts::Volume> killVolume;
-
     double killAfterTime = std::numeric_limits<double>::infinity();
+    bool killSecondaries = false;
 
     bool recordHitsOfSecondaries = true;
 

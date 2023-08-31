@@ -376,14 +376,14 @@ class TrackProxy {
 
   /// Get a unit vector along the track direction at the reference surface
   /// @return The direction unit vector
-  Vector3 unitDirection() const {
-    return makeDirectionUnitFromPhiTheta(phi(), theta());
+  Vector3 direction() const {
+    return makeDirectionFromPhiTheta(phi(), theta());
   }
 
   /// Get the global momentum vector
   /// @return the global momentum vector
   Vector3 momentum() const {
-    return absoluteMomentum() * unitDirection();
+    return absoluteMomentum() * direction();
   }
 
   /// Get a range over the track states of this track. Return value is
@@ -540,7 +540,7 @@ class TrackProxy {
 
     if (copyTrackStates) {
       // append track states (cheap), but they're in the wrong order
-      for (auto srcTrackState : other.trackStates()) {
+      for (const auto& srcTrackState : other.trackStates()) {
         auto destTrackState = appendTrackState(srcTrackState.getMask());
         if (srcTrackState.hasCalibrated()) {
           destTrackState.allocateCalibrated(srcTrackState.calibratedSize());

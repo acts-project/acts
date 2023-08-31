@@ -10,8 +10,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
@@ -40,22 +40,23 @@ static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 namespace detail {
 struct Parameters {
   Acts::ActsVector<6> values;
-  std::optional<Acts::ActsSymMatrix<6>> covariance;
+  std::optional<Acts::ActsSquareMatrix<6>> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 
-ActsSymMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
+ActsSquareMatrix<6> jacobianToEdm4hep(double theta, double qOverP, double Bz);
 
-ActsSymMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega, double Bz);
+ActsSquareMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
+                                        double Bz);
 
-void unpackCovariance(const float* from, ActsSymMatrix<6>& to);
-void packCovariance(const ActsSymMatrix<6>& from, float* to);
+void unpackCovariance(const float* from, ActsSquareMatrix<6>& to);
+void packCovariance(const ActsSquareMatrix<6>& from, float* to);
 
 Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
-    const SingleBoundTrackParameters<SinglyCharged>& params);
+    const GenericBoundTrackParameters<SinglyCharged>& params);
 
-SingleBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
+GenericBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params);
 
 }  // namespace detail
@@ -102,7 +103,7 @@ void writeTrack(
     trackState.location = edm4hep::TrackState::AtOther;
 
     // This makes the hard assumption that |q| = 1
-    SingleBoundTrackParameters<SinglyCharged> params{
+    GenericBoundTrackParameters<SinglyCharged> params{
         state.referenceSurface().getSharedPtr(), state.parameters(),
         state.covariance()};
 
@@ -133,7 +134,7 @@ void writeTrack(
   auto& ipState = outTrackStates.emplace_back();
 
   // Convert the track parameters at the IP
-  SingleBoundTrackParameters<SinglyCharged> trackParams{
+  GenericBoundTrackParameters<SinglyCharged> trackParams{
       track.referenceSurface().getSharedPtr(), track.parameters(),
       track.covariance()};
 
@@ -179,7 +180,7 @@ void readTrack(const edm4hep::Track& from,
   auto unpack =
       [](const edm4hep::TrackState& trackState) -> detail::Parameters {
     detail::Parameters params;
-    params.covariance = ActsSymMatrix<6>{};
+    params.covariance = ActsSquareMatrix<6>{};
     detail::unpackCovariance(trackState.covMatrix.data(),
                              params.covariance.value());
     params.values[0] = trackState.D0;
