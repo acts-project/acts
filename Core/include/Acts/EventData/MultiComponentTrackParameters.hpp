@@ -222,21 +222,17 @@ class MultiComponentCurvilinearTrackParameters
   using covariance_t = BoundSquareMatrix;
 
  public:
-  // template <typename covariance_t>
   using ConstructionTuple = std::tuple<double, Acts::Vector4, Acts::Vector3,
                                        ActsScalar, covariance_t>;
 
  private:
   using Base = MultiComponentBoundTrackParameters<charge_t>;
 
-  // template <typename covariance_t>
   using BaseConstructionTuple =
       std::tuple<std::shared_ptr<Acts::Surface>,
-                 std::vector<std::tuple<double, BoundVector, covariance_t>>,
-                 ActsScalar>;
+                 std::vector<std::tuple<double, BoundVector, covariance_t>>>;
 
   /// We need this helper function in order to construct the base class properly
-  // template <typename covariance_t>
   static BaseConstructionTuple construct(
       const std::vector<ConstructionTuple>& curvi) {
     // TODO where to get a geometry context here
@@ -271,17 +267,14 @@ class MultiComponentCurvilinearTrackParameters
       bound.emplace_back(w, bv, cov);
     }
 
-    // TODO bring this first to compile then check qop
-    return {s, bound, {}};
+    return {s, bound};
   }
 
-  // Private constructor from a tuple
-  // template <typename covariance_t>
+  /// Private constructor from a tuple
   MultiComponentCurvilinearTrackParameters(const BaseConstructionTuple& t)
-      : Base(std::get<0>(t), std::get<1>(t), std::get<2>(t)) {}
+      : Base(std::get<0>(t), std::get<1>(t)) {}
 
  public:
-  // template <typename covariance_t>
   MultiComponentCurvilinearTrackParameters(
       const std::vector<ConstructionTuple>& cmps)
       : MultiComponentCurvilinearTrackParameters(construct(cmps)) {}
