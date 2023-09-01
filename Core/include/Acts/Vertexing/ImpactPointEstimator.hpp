@@ -118,6 +118,20 @@ class ImpactPointEstimator {
       const BoundTrackParameters& trkParams, const Vector3& vtxPos,
       State& state) const;
 
+  /// @brief Estimates the compatibility of a
+  /// track to a vertex position based on the 3d
+  /// distance between the track and the vertex
+  ///
+  /// @param gctx The Geometry context
+  /// @param trkParams Track parameters at point of closest
+  /// approach in 3d as retrieved by estimate3DImpactParameters
+  /// @param vertexPos The vertex position
+  ///
+  /// @return The compatibility value
+  Result<double> get3dVertexCompatibility(const GeometryContext& gctx,
+                                          const BoundTrackParameters* trkParams,
+                                          const Vector3& vertexPos) const;
+
   /// @brief Calculate the distance between a track and a vertex by finding the corresponding 3D PCA.
   /// Returns also the momentum direction at the 3D PCA.
   ///
@@ -134,20 +148,6 @@ class ImpactPointEstimator {
                          const ActsVector<nDim>& vtxPos, State& state,
                          const ActsScalar& massHypothesis = 0.13957018,
                          const ActsScalar& chargeHypothesis = 1.) const;
-
-  /// @brief Estimates the compatibility of a
-  /// track to a vertex position based on the 3d
-  /// distance between the track and the vertex
-  ///
-  /// @param gctx The Geometry context
-  /// @param trkParams Track parameters at point of closest
-  /// approach in 3d as retrieved by estimate3DImpactParameters
-  /// @param vertexPos The vertex position
-  ///
-  /// @return The compatibility value
-  Result<double> get3dVertexCompatibility(const GeometryContext& gctx,
-                                          const BoundTrackParameters* trkParams,
-                                          const Vector3& vertexPos) const;
 
   /// @brief Estimates the impact parameters and their errors of a given
   /// track w.r.t. a vertex by propagating the trajectory state
