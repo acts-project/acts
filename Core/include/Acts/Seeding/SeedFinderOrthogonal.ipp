@@ -790,7 +790,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
         middle.z() > m_config.zOutermostLayers.second) {
       continue;
     }
-    float spPhi = std::atan2(middle.y(), middle.x());
+    float spPhi = middle.phi();
     if (spPhi > m_config.phiMax or spPhi < m_config.phiMin) {
       continue;
     }

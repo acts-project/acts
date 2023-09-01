@@ -203,8 +203,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-    const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
-    const float& uIP2, const float& cosPhiM, const float& sinPhiM) const {
+    const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
+    const float uIP2, const float cosPhiM, const float sinPhiM) const {
   float impactMax = m_config.impactMax;
   if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
     impactMax = -impactMax;
@@ -222,12 +222,12 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   linCircleVec.reserve(nsp);
   outVec.reserve(nsp);
 
-  const float& rM = mediumSP.radius();
-  const float& xM = mediumSP.x();
-  const float& yM = mediumSP.y();
-  const float& zM = mediumSP.z();
-  const float& varianceRM = mediumSP.varianceR();
-  const float& varianceZM = mediumSP.varianceZ();
+  const float rM = mediumSP.radius();
+  const float xM = mediumSP.x();
+  const float yM = mediumSP.y();
+  const float zM = mediumSP.z();
+  const float varianceRM = mediumSP.varianceR();
+  const float varianceZM = mediumSP.varianceZ();
 
   float vIPAbs = 0;
   if (m_config.interactionPointCut) {
