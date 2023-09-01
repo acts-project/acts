@@ -28,6 +28,7 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -225,6 +226,9 @@ BOOST_AUTO_TEST_CASE(NoFit) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   Experimental::Gx2FitterOptions gx2fOptions(
       geoCtx, magCtx, calCtx, extensions, PropagatorPlainOptions(), rSurface,
@@ -315,6 +319,9 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
       .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   MagneticFieldContext mfContext;
   CalibrationContext calContext;

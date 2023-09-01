@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
@@ -99,7 +100,8 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
 
     std::visit(
         [&](const auto& m) {
-          Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();
+          Acts::GeometryIdentifier geoId =
+              m.sourceLink().template get<IndexSourceLink>().geometryId();
           // MEASUREMENT information ------------------------------------
 
           // Encoded geometry identifier. same for all hits on the module

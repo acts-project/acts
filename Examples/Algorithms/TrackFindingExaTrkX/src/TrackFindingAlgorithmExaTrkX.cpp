@@ -8,6 +8,8 @@
 
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchTruthGraphMetricsHook.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -16,35 +18,120 @@
 
 #include <numeric>
 
+using namespace ActsExamples;
+using namespace Acts::UnitLiterals;
+
+namespace {
+
+class ExamplesEdmHook : public Acts::ExaTrkXHook {
+  double m_targetPT = 0.5_GeV;
+  std::size_t m_targetSize = 3;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_truthGraphHook;
+  std::unique_ptr<Acts::TorchTruthGraphMetricsHook> m_targetGraphHook;
+
+  const Acts::Logger& logger() const { return *m_logger; }
+
+  struct HitInfo {
+    std::size_t spacePointIndex;
+    int32_t hitIndex;
+  };
+
+ public:
+  ExamplesEdmHook(const SimSpacePointContainer& spacepoints,
+                  const IndexMultimap<Index>& measHitMap,
+                  const SimHitContainer& simhits,
+                  const SimParticleContainer& particles,
+                  std::size_t targetMinHits, double targetMinPT,
+                  const Acts::Logger& logger)
+      : m_targetPT(targetMinPT),
+        m_targetSize(targetMinHits),
+        m_logger(logger.clone("MetricsHook")) {
+    // Associate tracks to graph, collect momentum
+    std::unordered_map<ActsFatras::Barcode, std::vector<HitInfo>> tracks;
+
+    for (auto i = 0ul; i < spacepoints.size(); ++i) {
+      const auto measId = spacepoints[i]
+                              .sourceLinks()[0]
+                              .template get<IndexSourceLink>()
+                              .index();
+
+      auto [a, b] = measHitMap.equal_range(measId);
+      for (auto it = a; it != b; ++it) {
+        const auto& hit = *simhits.nth(it->second);
+
+        tracks[hit.particleId()].push_back({i, hit.index()});
+      }
+    }
+
+    // Collect edges for truth graph and target graph
+    std::vector<int64_t> truthGraph;
+    std::vector<int64_t> targetGraph;
+
+    for (auto& [pid, track] : tracks) {
+      // Sort by hit index, so the edges are connected correctly
+      std::sort(track.begin(), track.end(), [](const auto& a, const auto& b) {
+        return a.hitIndex < b.hitIndex;
+      });
+
+      auto found = particles.find(pid);
+      if (found == particles.end()) {
+        ACTS_WARNING("Did not find " << pid << ", skip track");
+        continue;
+      }
+
+      for (auto i = 0ul; i < track.size() - 1; ++i) {
+        truthGraph.push_back(track[i].spacePointIndex);
+        truthGraph.push_back(track[i + 1].spacePointIndex);
+
+        if (found->transverseMomentum() > m_targetPT &&
+            track.size() >= m_targetSize) {
+          targetGraph.push_back(track[i].spacePointIndex);
+          targetGraph.push_back(track[i + 1].spacePointIndex);
+        }
+      }
+    }
+
+    m_truthGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
+        truthGraph, logger.clone());
+    m_targetGraphHook = std::make_unique<Acts::TorchTruthGraphMetricsHook>(
+        targetGraph, logger.clone());
+  }
+
+  ~ExamplesEdmHook(){};
+
+  void operator()(const std::any& nodes, const std::any& edges) const override {
+    ACTS_INFO("Metrics for total graph:");
+    (*m_truthGraphHook)(nodes, edges);
+    ACTS_INFO("Metrics for target graph (pT > "
+              << m_targetPT / Acts::UnitConstants::GeV
+              << " GeV, nHits >= " << m_targetSize << "):");
+    (*m_targetGraphHook)(nodes, edges);
+  }
+};
+
+}  // namespace
+
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
     : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
-      m_cfg(std::move(config)) {
+      m_cfg(std::move(config)),
+      m_pipeline(m_cfg.graphConstructor, m_cfg.edgeClassifiers,
+                 m_cfg.trackBuilder, logger().clone()) {
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing spacepoint input collection");
   }
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing protoTrack output collection");
   }
-  if (!m_cfg.graphConstructor) {
-    throw std::invalid_argument("Missing graph construction module");
-  }
-  if (!m_cfg.trackBuilder) {
-    throw std::invalid_argument("Missing track building module");
-  }
-  if (m_cfg.edgeClassifiers.empty() or
-      not std::all_of(m_cfg.edgeClassifiers.begin(),
-                      m_cfg.edgeClassifiers.end(),
-                      [](const auto& a) { return static_cast<bool>(a); })) {
-    throw std::invalid_argument("Missing graph construction module");
-  }
 
   // Sanitizer run with dummy input to detect configuration issues
-  // TODO This would be quite helpful I think, but currently it does not work in
-  // general because the stages do not expose the number of node features.
+  // TODO This would be quite helpful I think, but currently it does not work
+  // in general because the stages do not expose the number of node features.
   // However, this must be addressed anyways when we also want to allow to
-  // configure this more flexible with e.g. cluster information as input. So for
-  // now, we disable this.
+  // configure this more flexible with e.g. cluster information as input. So
+  // for now, we disable this.
 #if 0
   if( m_cfg.sanitize ) {
   Eigen::VectorXf dummyInput = Eigen::VectorXf::Random(3 * 15);
@@ -59,23 +146,10 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 
   m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
   m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
-}
 
-std::vector<std::vector<int>>
-ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
-    std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const {
-  auto [nodes, edges] =
-      (*m_cfg.graphConstructor)(inputValues, spacepointIDs.size());
-  std::any edge_weights;
-
-  for (auto edgeClassifier : m_cfg.edgeClassifiers) {
-    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(nodes, edges);
-    nodes = newNodes;
-    edges = newEdges;
-    edge_weights = newWeights;
-  }
-
-  return (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs);
+  m_inputSimHits.maybeInitialize(m_cfg.inputSimHits);
+  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
+  m_inputMeasurementMap.maybeInitialize(m_cfg.inputMeasurementSimhitsMap);
 }
 
 /// Allow access to features with nice names
@@ -92,7 +166,15 @@ enum feat : std::size_t {
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& spacepoints = m_inputSpacePoints(ctx);
+  auto spacepoints = m_inputSpacePoints(ctx);
+
+  auto hook = std::make_unique<Acts::ExaTrkXHook>();
+  if (m_inputSimHits.isInitialized() && m_inputMeasurementMap.isInitialized()) {
+    hook = std::make_unique<ExamplesEdmHook>(
+        spacepoints, m_inputMeasurementMap(ctx), m_inputSimHits(ctx),
+        m_inputParticles(ctx), m_cfg.targetMinHits, m_cfg.targetMinPT,
+        logger());
+  }
 
   std::optional<ClusterContainer> clusters;
   if (m_inputClusters.isInitialized()) {
@@ -151,7 +233,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   ACTS_DEBUG("Avg activation: " << sumActivation / sumCells);
 
   // Run the pipeline
-  const auto trackCandidates = runPipeline(features, spacepointIDs);
+  const auto trackCandidates = m_pipeline.run(features, spacepointIDs, *hook);
+
+  ACTS_DEBUG("Done with pipeline, received " << trackCandidates.size()
+                                             << " candidates");
 
   // Make the prototracks
   std::vector<ProtoTrack> protoTracks;
