@@ -102,6 +102,13 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeProperties) {
   for (const auto& outside : outsides) {
     BOOST_CHECK(!box.inside(outside, s_onSurfaceTolerance));
   }
+
+  // Check the binning value positions
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::binX), hx, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::binY), hy, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::binZ), hz, s_epsilon);
+  CHECK_CLOSE_ABS(box.binningBorder(Acts::binR), std::sqrt(hx * hx + hy * hy),
+                  s_epsilon);
 }
 
 BOOST_AUTO_TEST_CASE(CuboidVolumeBoundarySurfaces) {
