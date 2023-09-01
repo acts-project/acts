@@ -12,12 +12,14 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -272,7 +274,6 @@ class MultiEigenStepperLoop
     SmallVector<Component> components;
 
     bool covTransport = false;
-    Direction navDir;
     double pathAccumulated = 0.;
     std::size_t steps = 0;
 
@@ -297,9 +298,7 @@ class MultiEigenStepperLoop
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] bfield the shared magnetic filed provider
     /// @param [in] multipars The track multi-component track-parameters at start
-    /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
-    /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
     template <typename charge_t>
@@ -307,10 +306,8 @@ class MultiEigenStepperLoop
         const GeometryContext& gctx, const MagneticFieldContext& mctx,
         const std::shared_ptr<const MagneticFieldProvider>& bfield,
         const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        Direction ndir = Direction::Forward,
-        double ssize = std::numeric_limits<double>::max(),
-        double stolerance = s_onSurfaceTolerance)
-        : navDir(ndir), geoContext(gctx), magContext(mctx) {
+        double ssize = std::numeric_limits<double>::max())
+        : geoContext(gctx), magContext(mctx) {
       if (multipars.components().empty()) {
         throw std::invalid_argument(
             "Cannot construct MultiEigenStepperLoop::State with empty "
@@ -321,10 +318,9 @@ class MultiEigenStepperLoop
 
       for (auto i = 0ul; i < multipars.components().size(); ++i) {
         const auto [weight, singlePars] = multipars[i];
-        components.push_back(
-            {SingleState(gctx, bfield->makeCache(mctx), std::move(singlePars),
-                         ndir, ssize, stolerance),
-             weight, Intersection3D::Status::onSurface});
+        components.push_back({SingleState(gctx, bfield->makeCache(mctx),
+                                          std::move(singlePars), ssize),
+                              weight, Intersection3D::Status::onSurface});
       }
 
       if (std::get<2>(multipars.components().front())) {
@@ -338,11 +334,8 @@ class MultiEigenStepperLoop
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const MultiComponentBoundTrackParameters<charge_t>& par,
-                  Direction navDir = Direction::Forward,
-                  double ssize = std::numeric_limits<double>::max(),
-                  double stolerance = s_onSurfaceTolerance) const {
-    return State(gctx, mctx, SingleStepper::m_bField, par, navDir, ssize,
-                 stolerance);
+                  double ssize = std::numeric_limits<double>::max()) const {
+    return State(gctx, mctx, SingleStepper::m_bField, par, ssize);
   }
 
   /// @brief Resets the state
@@ -351,15 +344,14 @@ class MultiEigenStepperLoop
   /// @param [in] boundParams Parameters in bound parametrisation
   /// @param [in] cov Covariance matrix
   /// @param [in] surface The reference surface of the bound parameters
-  /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const Direction navDir = Direction::Forward,
+      State& state, const BoundVector& boundParams,
+      const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     for (auto& component : state.components) {
       SingleStepper::resetState(component.state, boundParams, cov, surface,
-                                navDir, stepSize);
+                                stepSize);
     }
   }
 
@@ -616,12 +608,12 @@ class MultiEigenStepperLoop
   /// the component number is again modified
   template <typename charge_t>
   Result<ComponentProxy> addComponent(
-      State& state, const SingleBoundTrackParameters<charge_t>& pars,
+      State& state, const GenericBoundTrackParameters<charge_t>& pars,
       double weight) const {
     state.components.push_back(
         {SingleState(state.geoContext,
-                     SingleStepper::m_bField->makeCache(state.magContext), pars,
-                     state.navDir),
+                     SingleStepper::m_bField->makeCache(state.magContext),
+                     pars),
          weight, Intersection3D::Status::onSurface});
 
     return ComponentProxy{state.components.back(), state};
@@ -687,12 +679,16 @@ class MultiEigenStepperLoop
   /// It checks the status to the reference surface & updates
   /// the step size accordingly
   ///
-  /// @param state [in,out] The stepping state (thread-local cache)
-  /// @param surface [in] The surface provided
-  /// @param bcheck [in] The boundary check for this status update
-  /// @param logger [in] A @c Loggerinstance
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] surface The surface provided
+  /// @param [in] navDir The navigation direction
+  /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] surfaceTolerance Surface tolerance used for intersection
+  /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, Direction navDir,
+      const BoundaryCheck& bcheck,
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     using Status = Intersection3D::Status;
 
@@ -700,7 +696,8 @@ class MultiEigenStepperLoop
 
     for (auto& component : state.components) {
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
-          *this, component.state, surface, bcheck, logger);
+          *this, component.state, surface, navDir, bcheck, surfaceTolerance,
+          logger);
       ++counts[static_cast<std::size_t>(component.status)];
     }
 

@@ -12,6 +12,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <random>
 
@@ -116,10 +117,12 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   ts.chi2() = pc.chi2;
   ts.pathLength() = pc.pathLength;
   // source link defines the uncalibrated measurement
-  ts.setUncalibratedSourceLink(Acts::SourceLink{pc.sourceLink});
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-    testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{}, ts);
+    testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{},
+                                           Acts::CalibrationContext{},
+                                           SourceLink{pc.sourceLink}, ts);
+    assert(ts.hasUncalibratedSourceLink());
   }
 }
 

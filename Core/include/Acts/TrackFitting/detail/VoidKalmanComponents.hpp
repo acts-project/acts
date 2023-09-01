@@ -8,8 +8,11 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
@@ -18,6 +21,8 @@ namespace Acts {
 
 template <typename traj_t>
 void voidKalmanCalibrator(const GeometryContext& /*gctx*/,
+                          const CalibrationContext& /*cctx*/,
+                          const SourceLink& /*sourceLink*/,
                           typename traj_t::TrackStateProxy /*trackState*/) {
   throw std::runtime_error{"VoidKalmanCalibrator should not ever execute"};
 }
@@ -55,4 +60,8 @@ bool voidReverseFilteringLogic(
   return false;
 }
 
+inline const Surface* voidSurfaceAccessor(const SourceLink& /*sourceLink*/) {
+  throw std::runtime_error{"voidSurfaceAccessor should not ever execute"};
+  return nullptr;
+}
 }  // namespace Acts

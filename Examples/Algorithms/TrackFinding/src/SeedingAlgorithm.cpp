@@ -229,8 +229,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_inputSpacePoints) {
     for (const auto& spacePoint : (*isp)(ctx)) {
-      // since the event store owns the space points, their pointers should be
-      // stable and we do not need to create local copies.
+      // since the event store owns the space
+      // points, their pointers should be stable and
+      // we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
     }
   }

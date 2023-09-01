@@ -152,6 +152,10 @@ class Particle {
   constexpr ProcessType process() const { return m_process; }
   /// PDG particle number that identifies the type.
   constexpr Acts::PdgParticle pdg() const { return m_pdg; }
+  /// Absolute PDG particle number.
+  constexpr Acts::PdgParticle absolutePdg() const {
+    return Acts::makeAbsolutePdgParticle(m_pdg);
+  }
   /// Particle charge.
   constexpr Scalar charge() const { return m_charge; }
   /// Particle absolute charge.

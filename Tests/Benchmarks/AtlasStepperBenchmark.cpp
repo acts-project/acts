@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
   using BField_type = ConstantBField;
   using Stepper_type = AtlasStepper;
   using Propagator_type = Propagator<Stepper_type>;
-  using Covariance = BoundSymMatrix;
+  using Covariance = BoundSquareMatrix;
 
   auto bField =
       std::make_shared<BField_type>(Vector3{0, 0, BzInT * UnitConstants::T});

@@ -37,7 +37,7 @@
 
 namespace Acts {
 template <class charge_t>
-class SingleBoundTrackParameters;
+class GenericBoundTrackParameters;
 
 /// @brief straight line stepper based on Surface intersection
 ///
@@ -47,7 +47,7 @@ class SingleBoundTrackParameters;
 class StraightLineStepper {
  public:
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
+  using Covariance = BoundSquareMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
@@ -65,7 +65,6 @@ class StraightLineStepper {
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
     ///
@@ -73,18 +72,16 @@ class StraightLineStepper {
     template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
-                   const SingleBoundTrackParameters<charge_t>& par,
-                   Direction ndir = Direction::Forward,
+                   const GenericBoundTrackParameters<charge_t>& par,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
         : absCharge(std::abs(par.charge())),
-          navDir(ndir),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           tolerance(stolerance),
           geoContext(gctx) {
       (void)mctx;
       pars.template segment<3>(eFreePos0) = par.position(gctx);
-      pars.template segment<3>(eFreeDir0) = par.unitDirection();
+      pars.template segment<3>(eFreeDir0) = par.direction();
       pars[eFreeTime] = par.time();
       pars[eFreeQOverP] = par.parameters()[eBoundQOverP];
       if (par.covariance()) {
@@ -92,7 +89,7 @@ class StraightLineStepper {
         const auto& surface = par.referenceSurface();
         // set the covariance transport flag to true and copy
         covTransport = true;
-        cov = BoundSymMatrix(*par.covariance());
+        cov = BoundSquareMatrix(*par.covariance());
         jacToGlobal = surface.boundToFreeJacobian(gctx, par.parameters());
       }
     }
@@ -119,9 +116,6 @@ class StraightLineStepper {
     bool covTransport = false;
     Covariance cov = Covariance::Zero();
 
-    /// Navigation direction, this is needed for searching
-    Direction navDir;
-
     /// accummulated path length state
     double pathAccumulated = 0.;
 
@@ -147,11 +141,10 @@ class StraightLineStepper {
   template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
-                  Direction navDir = Direction::Forward,
+                  const GenericBoundTrackParameters<charge_t>& par,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx, mctx, par, navDir, ssize, stolerance};
+    return State{gctx, mctx, par, ssize, stolerance};
   }
 
   /// @brief Resets the state
@@ -160,11 +153,10 @@ class StraightLineStepper {
   /// @param [in] boundParams Parameters in bound parametrisation
   /// @param [in] cov Covariance matrix
   /// @param [in] surface The reset @c State will be on this surface
-  /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const Direction navDir = Direction::Forward,
+      State& state, const BoundVector& boundParams,
+      const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const;
 
   /// Get the field for the stepping, this gives back a zero field
@@ -242,13 +234,17 @@ class StraightLineStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger A logger instance
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, Direction navDir,
+      const BoundaryCheck& bcheck,
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<StraightLineStepper>(
-        *this, state, surface, bcheck, logger);
+        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -393,7 +389,7 @@ class StraightLineStepper {
   Result<double> step(propagator_state_t& state,
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
-    const auto h = state.stepping.stepSize.value();
+    const auto h = state.stepping.stepSize.value() * state.options.direction;
     const double p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
@@ -405,7 +401,7 @@ class StraightLineStepper {
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
       FreeMatrix D = FreeMatrix::Identity();
-      D.block<3, 3>(0, 4) = ActsSymMatrix<3>::Identity() * h;
+      D.block<3, 3>(0, 4) = ActsSquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
       D(3, 7) = h * state.options.mass * state.options.mass *

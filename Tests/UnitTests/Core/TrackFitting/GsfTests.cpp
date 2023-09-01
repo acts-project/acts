@@ -14,10 +14,10 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -68,6 +68,8 @@ using namespace Acts::Experimental;
 
 Acts::GainMatrixUpdater kfUpdater;
 
+FitterTester tester;
+
 GsfExtensions<VectorMultiTrajectory> getExtensions() {
   GsfExtensions<VectorMultiTrajectory> extensions;
   extensions.calibrator
@@ -75,10 +77,11 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(
+          &tester.surfaceAccessor);
   return extensions;
 }
-
-FitterTester tester;
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
@@ -98,14 +101,14 @@ auto makeDefaultGsfOptions() {
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
-// the function so that it can also be used as SingleBoundTrackParameters for
+// the function so that it can also be used as GenericBoundTrackParameters for
 // the MeasurementsCreator
 template <typename charge_t>
-struct MultiCmpsParsInterface : public SingleBoundTrackParameters<charge_t> {
+struct MultiCmpsParsInterface : public GenericBoundTrackParameters<charge_t> {
   MultiComponentBoundTrackParameters<charge_t> multi_pars;
 
   MultiCmpsParsInterface(const MultiComponentBoundTrackParameters<charge_t> &p)
-      : SingleBoundTrackParameters<charge_t>(
+      : GenericBoundTrackParameters<charge_t>(
             p.referenceSurface().getSharedPtr(), p.parameters(),
             p.covariance()),
         multi_pars(p) {}
@@ -124,7 +127,7 @@ auto makeParameters() {
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
@@ -141,7 +144,7 @@ auto makeParameters() {
   Acts::BoundVector deltaQOP = Acts::BoundVector::Zero();
   deltaQOP[eBoundQOverP] = 0.01_GeV;
 
-  std::vector<std::tuple<double, BoundVector, BoundSymMatrix>> cmps = {
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps = {
       {0.2, cp.parameters(), cov},
       {0.2, cp.parameters() + deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() + deltaLOC0 - deltaLOC1 - deltaQOP, cov},

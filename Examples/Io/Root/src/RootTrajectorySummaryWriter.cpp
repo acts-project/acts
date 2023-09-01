@@ -9,8 +9,8 @@
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -368,8 +368,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
         if (hasFittedCov) {
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
-            pull[i] =
-                res[i] / error[i];  // MARK: fpeMask(FLTINV, 1, issue: 2284)
+            pull[i] = res[i] / error[i];  // MARK: fpeMask(FLTINV, 1, #2284)
           }
         }
       }

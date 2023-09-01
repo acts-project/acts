@@ -80,6 +80,7 @@ int main(int argc, char const* argv[]) {
   }
   const auto thickness = atof(argv[1]) * 1_mm;
   const auto pdg = static_cast<Acts::PdgParticle>(atoi(argv[2]));
+  const auto absPdg = Acts::makeAbsolutePdgParticle(pdg);
   const auto mass = Acts::findMass(pdg).value_or(0);
   const auto charge = Acts::findCharge(pdg).value_or(0);
   const auto pmin = atof(argv[3]) * 1_GeV;
@@ -98,13 +99,14 @@ int main(int argc, char const* argv[]) {
     const auto qOverP = charge / p;
 
     // TODO make mean/mode configurable by command line
-    const auto delta = computeEnergyLossMean(slab, pdg, mass, qOverP, charge);
+    const auto delta =
+        computeEnergyLossMean(slab, absPdg, mass, qOverP, charge);
     const auto deltaIon =
-        Acts::computeEnergyLossBethe(slab, pdg, mass, qOverP, charge);
+        Acts::computeEnergyLossBethe(slab, mass, qOverP, charge);
     const auto deltaRad =
-        computeEnergyLossRadiative(slab, pdg, mass, qOverP, charge);
+        computeEnergyLossRadiative(slab, absPdg, mass, qOverP, charge);
     const auto sigma =
-        Acts::computeEnergyLossLandauSigma(slab, pdg, mass, qOverP, charge);
+        Acts::computeEnergyLossLandauSigma(slab, mass, qOverP, charge);
 
     printLine(std::cout, mass, p, delta, deltaIon, deltaRad, sigma);
   }
