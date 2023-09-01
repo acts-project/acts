@@ -35,6 +35,7 @@ struct ImpactParametersAndSigma {
 /// @class ImpactPointEstimator
 ///
 /// @brief Estimator for impact point calculations
+/// TODO: Add reference
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
@@ -123,11 +124,9 @@ class ImpactPointEstimator {
   /// @param gctx Geometry context
   /// @param trkParams Track parameters
   /// @param vtxPos Vertex position
-  /// @param deltaR Vector pointing from vertex to 3D PCA
-  /// @note Will be filled by the method
-  /// @param momDir Momentum direction at the 3D PCA
-  /// @note Will be filled by the method
   /// @param state The state object
+  /// @param massHypothesis Mass hypothesis
+  /// @param chargeHypothesis Charge hypothesis
   template <unsigned int nDim = 3>
   Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
   getDistanceAndMomentum(const GeometryContext& gctx,
