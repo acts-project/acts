@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -464,13 +465,13 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   if constexpr (detailedMeasurement ==
                 Acts::DetectorMeasurementInfo::eDefault) {
     std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
-              [&state](const std::size_t& a, const std::size_t& b) -> bool {
+              [&state](const std::size_t a, const std::size_t b) -> bool {
                 return state.linCircleBottom[a].cotTheta <
                        state.linCircleBottom[b].cotTheta;
               });
 
     std::sort(sorted_tops.begin(), sorted_tops.end(),
-              [&state](const std::size_t& a, const std::size_t& b) -> bool {
+              [&state](const std::size_t a, const std::size_t b) -> bool {
                 return state.linCircleTop[a].cotTheta <
                        state.linCircleTop[b].cotTheta;
               });
@@ -486,7 +487,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   // clear previous results and then loop on bottoms and tops
   state.candidates_collector.clear();
 
-  for (const std::size_t& b : sorted_bottoms) {
+  for (const std::size_t b : sorted_bottoms) {
     // break if we reached the last top SP
     if (t0 == numTopSP) {
       break;
@@ -543,7 +544,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     }
 
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
-      const std::size_t& t = sorted_tops[index_t];
+      const std::size_t t = sorted_tops[index_t];
 
       auto lt = state.linCircleTop[t];
 
