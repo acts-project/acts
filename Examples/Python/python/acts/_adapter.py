@@ -31,7 +31,9 @@ def _make_config_adapter(fn):
                 try:
                     setattr(cfg, k, v)
                 except TypeError as e:
-                    raise RuntimeError("{}: Failed to set {}={}".format(type(cfg), k, v)) from e
+                    raise RuntimeError(
+                        "{}: Failed to set {}={}".format(type(cfg), k, v)
+                    ) from e
             else:
                 _kwargs[k] = v
         try:
