@@ -205,11 +205,11 @@ template <typename T>
 struct ExpSafeLimit {};
 template <>
 struct ExpSafeLimit<double> {
-  constexpr static double value = 700.0;
+  constexpr static double value = 500.0;
 };
 template <>
 struct ExpSafeLimit<float> {
-  constexpr static float value = 85.0;
+  constexpr static float value = 50.0;
 };
 
 /// Calculate the exponential function while avoiding FPEs.
