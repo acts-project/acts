@@ -13,13 +13,12 @@
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-template <unsigned int nDim>
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    calculateDistance(const GeometryContext& gctx,
-                      const BoundTrackParameters& trkParams,
-                      const ActsVector<nDim>& vtxPos, State& state) const {
-  auto res = getDistanceAndMomentum<nDim>(gctx, trkParams, vtxPos, state);
+    calculate3DDistance(const GeometryContext& gctx,
+                        const BoundTrackParameters& trkParams,
+                        const Vector3& vtxPos, State& state) const {
+  auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
     return res.error();

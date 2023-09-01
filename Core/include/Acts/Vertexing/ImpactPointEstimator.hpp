@@ -89,15 +89,13 @@ class ImpactPointEstimator {
   ///
   /// @param gctx The geometry context
   /// @param trkParams Track parameters
-  /// @param vtxPos 3D or 4D position to calculate the distance to
+  /// @param vtxPos 3D position to calculate the distance to
   /// @param state The state object
   ///
   /// @return Distance
-  template <unsigned int nDim = 3>
-  Result<double> calculateDistance(const GeometryContext& gctx,
-                                   const BoundTrackParameters& trkParams,
-                                   const ActsVector<nDim>& vtxPos,
-                                   State& state) const;
+  Result<double> calculate3DDistance(const GeometryContext& gctx,
+                                     const BoundTrackParameters& trkParams,
+                                     const Vector3& vtxPos, State& state) const;
 
   /// @brief Creates track parameters bound to plane
   /// at point of closest approach in 3d to given

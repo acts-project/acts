@@ -120,7 +120,7 @@ Acts::SquareMatrix4 makeVertexCovariance() {
 
 BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
 
-// Check `calculateDistance`, `estimate3DImpactParameters`, and
+// Check `calculate3DDistance`, `estimate3DImpactParameters`, and
 // `get3dVertexCompatibility`.
 BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
                      l0, t0, phi, theta, p, q) {
@@ -144,7 +144,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   // initial distance to the reference position in the perigee frame
   double distT = std::hypot(d0, l0);
   double dist3 =
-      ipEstimator.calculateDistance<3>(geoContext, myTrack, refPosition, state)
+      ipEstimator.calculate3DDistance(geoContext, myTrack, refPosition, state)
           .value();
   // estimated 3D distance should be less than the 2d distance in the perigee
   // frame. it should be equal if the track is a transverse track w/ theta =
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
 
   // Compare w/ desired result from Athena unit test
   auto distance =
-      ipEstimator.calculateDistance<3>(geoContext, params1, vtxPos, state)
+      ipEstimator.calculate3DDistance(geoContext, params1, vtxPos, state)
           .value();
   CHECK_CLOSE_ABS(distance, 3.10391_mm, 10_nm);
 
