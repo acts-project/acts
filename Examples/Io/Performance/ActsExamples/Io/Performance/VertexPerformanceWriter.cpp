@@ -632,8 +632,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
             if (trk.originalParams->parameters() == params) {
               const auto& trueUnitDir = particle.direction();
               Acts::ActsVector<3> trueMom;
-              trueMom.head(2) =
-                  Acts::makePhiThetaFromDirectionUnit(trueUnitDir);
+              trueMom.head(2) = Acts::makePhiThetaFromDirection(trueUnitDir);
               trueMom[2] = particle.qOverP();
               innerTruthPhi.push_back(trueMom[0]);
               innerTruthTheta.push_back(trueMom[1]);
@@ -673,11 +672,13 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
               }
 
               // Save track parameters after the vertex fit
-              if (trk.fittedMomentum.has_value()) {
+              const auto paramsAtVtxFitted = propagateToVtx(trk.fittedParams);
+              if (paramsAtVtxFitted != std::nullopt) {
                 Acts::ActsVector<3> recoMomFitted =
-                    trk.fittedMomentum->momentum;
+                    paramsAtVtxFitted->parameters().segment(Acts::eBoundPhi, 3);
                 const Acts::ActsMatrix<3, 3>& momCovFitted =
-                    trk.fittedMomentum->covariance;
+                    paramsAtVtxFitted->covariance()->block<3, 3>(
+                        Acts::eBoundPhi, Acts::eBoundPhi);
                 innerRecoPhiFitted.push_back(recoMomFitted[0]);
                 innerRecoThetaFitted.push_back(recoMomFitted[1]);
                 innerRecoQOverPFitted.push_back(recoMomFitted[2]);
@@ -698,12 +699,9 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
                 innerPullQOverPFitted.push_back(
                     pull(diffMomFitted[2], momCovFitted(2, 2), "q/p"));
 
-                const auto& recoUnitDirFitted = Acts::makeDirectionFromPhiTheta(
-                    recoMomFitted[0], recoMomFitted[1]);
+                const auto& recoUnitDirFitted = paramsAtVtxFitted->direction();
                 double overlapFitted = trueUnitDir.dot(recoUnitDirFitted);
                 innerMomOverlapFitted.push_back(overlapFitted);
-              } else {
-                ACTS_WARNING("No fitted track momentum found!");
               }
             }
           }

@@ -446,10 +446,9 @@ lcg_103:
       - OS: [alma9]
         COMPILER: 
           - gcc11
-          # currently failing
-          # - gcc12
+          - gcc12
 
   rules:
-    - if: '$COMPILER == "clang12" || $COMPILER == "gcc12" || $COMPILER == "clang15"'
+    - if: '$COMPILER == "clang12" || $COMPILER == "clang15"'
       allow_failure: true
     - when: on_success

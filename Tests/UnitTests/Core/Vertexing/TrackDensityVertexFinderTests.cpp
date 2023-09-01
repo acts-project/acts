@@ -139,18 +139,16 @@ BOOST_AUTO_TEST_CASE(track_density_finder_constr_test) {
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
 
-  // Finder options
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = ActsSquareMatrix<3>::Identity();
 
-  Vertex<BoundTrackParameters> vertexConstraint(constraintPos);
-  vertexConstraint.setCovariance(constrCov);
+  Vertex<BoundTrackParameters> constraint(constraintPos);
+  constraint.setCovariance(constrCov);
 
-  vertexingOptions.vertexConstraint = vertexConstraint;
+  // Finder options
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, constraint);
   using Finder =
       TrackDensityVertexFinder<DummyVertexFitter<>,
                                GaussianTrackDensity<BoundTrackParameters>>;
@@ -251,7 +249,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_random_test) {
     double charge = etaDist(gen) > 0 ? 1 : -1;
 
     // project the position on the surface
-    Vector3 direction = makeDirectionUnitFromPhiEta(phi, eta);
+    Vector3 direction = makeDirectionFromPhiEta(phi, eta);
     auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
     pos = intersection.intersection.position;
 
@@ -311,17 +309,16 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   // From Athena VertexSeedFinderTestAlg
   double const expectedZResult = -13.013;
 
-  // Finder options
-  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext);
-
   // Create constraint for seed finding
   Vector3 constraintPos{1.7_mm, 1.3_mm, -6_mm};
   SquareMatrix3 constrCov = SquareMatrix3::Identity();
 
-  Vertex<InputTrack> vertexConstraint(constraintPos);
-  vertexConstraint.setCovariance(constrCov);
+  Vertex<InputTrack> constraint(constraintPos);
+  constraint.setCovariance(constrCov);
 
-  vertexingOptions.vertexConstraint = vertexConstraint;
+  // Finder options
+  VertexingOptions<InputTrack> vertexingOptions(geoContext, magFieldContext,
+                                                constraint);
 
   std::function<BoundTrackParameters(InputTrack)> extractParameters =
       [](const InputTrack& params) { return params.parameters(); };

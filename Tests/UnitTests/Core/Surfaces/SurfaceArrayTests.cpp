@@ -261,6 +261,25 @@ BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement) {
   BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
 }
 
+BOOST_AUTO_TEST_CASE(SurfaceArray_manyElementsSingleLookup) {
+  double w = 3, h = 4;
+  auto bounds = std::make_shared<const RectangleBounds>(w, h);
+  auto srf0 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+  auto srf1 = Surface::makeShared<PlaneSurface>(Transform3::Identity(), bounds);
+
+  std::vector<const Surface*> sfPointers = {srf0.get(), srf1.get()};
+  std::vector<std::shared_ptr<const Surface>> surfaces = {srf0, srf1};
+
+  auto singleLookUp =
+      std::make_unique<Acts::SurfaceArray::SingleElementLookup>(sfPointers);
+
+  SurfaceArray sa(std::move(singleLookUp), surfaces);
+
+  auto binContent = sa.at(Vector3(42, 42, 42));
+  BOOST_CHECK_EQUAL(binContent.size(), 2u);
+  BOOST_CHECK_EQUAL(sa.surfaces().size(), 2u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 

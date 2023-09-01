@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,16 @@
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
+
+template <int trkGridSize>
+float Acts::AdaptiveGridTrackDensity<trkGridSize>::getBinCenter(int bin) const {
+  return bin * m_cfg.binSize;
+}
+
+template <int trkGridSize>
+int Acts::AdaptiveGridTrackDensity<trkGridSize>::getBin(float value) const {
+  return static_cast<int>(std::floor(value / m_cfg.binSize - 0.5) + 1);
+}
 
 template <int trkGridSize>
 typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap::const_iterator
@@ -21,6 +31,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::highestDensityEntry(
       });
   return maxEntry;
 }
+
 template <int trkGridSize>
 Acts::Result<float>
 Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
@@ -39,8 +50,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::getMaxZPosition(
   }
 
   // Derive corresponding z value
-  int sign = (zBin > 0) ? +1 : -1;
-  return (zBin + sign * 0.5f) * m_cfg.binSize;
+  return getBinCenter(zBin);
 }
 
 template <int trkGridSize>
@@ -72,30 +82,17 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
-  // Calculate offset in d direction to central bin at z-axis
-  int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
+  // Calculate bin in d direction
+  int centralDBin = getBin(d0);
   // Check if current track affects grid density
-  // in central bins at z-axis
-  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
+  if (std::abs(centralDBin) > (trkGridSize - 1) / 2.) {
     DensityMap emptyTrackDensityMap;
     return emptyTrackDensityMap;
   }
-  // Calculate bin in z
-  int centralZBin = int(z0 / m_cfg.binSize);
+  // Calculate bin in z direction
+  int centralZBin = getBin(z0);
 
-  // Calculate the positions of the bin centers
-  float binCtrD = dOffset * m_cfg.binSize;
-
-  int sign = (z0 > 0) ? +1 : -1;
-  float binCtrZ = (centralZBin + sign * 0.5f) * m_cfg.binSize;
-
-  // Calculate the distance between IP values and their
-  // corresponding bin centers
-  float distCtrD = d0 - binCtrD;
-  float distCtrZ = z0 - binCtrZ;
-
-  DensityMap trackDensityMap =
-      createTrackGrid(dOffset, cov, distCtrD, centralZBin, distCtrZ);
+  DensityMap trackDensityMap = createTrackGrid(d0, z0, centralZBin, cov);
 
   for (const auto& densityEntry : trackDensityMap) {
     int zBin = densityEntry.first;
@@ -122,19 +119,16 @@ void Acts::AdaptiveGridTrackDensity<trkGridSize>::subtractTrack(
 template <int trkGridSize>
 typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
-    int offset, const Acts::SquareMatrix2& cov, float distCtrD, int centralZBin,
-    float distCtrZ) const {
+    float d0, float z0, int centralZBin, const Acts::SquareMatrix2& cov) const {
   DensityMap trackDensityMap;
 
   int halfTrkGridSize = (trkGridSize - 1) / 2;
-  float i = halfTrkGridSize + offset;
-  float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-
   int firstZBin = centralZBin - halfTrkGridSize;
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
-    float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-    trackDensityMap[firstZBin + j] = normal2D(d + distCtrD, z + distCtrZ, cov);
+    int zBin = firstZBin + j;
+    float z = getBinCenter(zBin);
+    trackDensityMap[zBin] = normal2D(-d0, z - z0, cov);
   }
   return trackDensityMap;
 }
@@ -148,15 +142,18 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
 
   // Get z bin of max density and max density value
-  int sign = (maxZ > 0) ? +1 : -1;
-  int zMaxBin = int(maxZ / m_cfg.binSize - sign * 0.5f);
+  int zMaxBin = getBin(maxZ);
   const float maxValue = densityMap.at(zMaxBin);
 
   int rhmBin = zMaxBin;
   float gridValue = maxValue;
+  // Boolean indicating whether we find a filled bin that has a densityValue <=
+  // maxValue/2
+  bool binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
     if (densityMap.count(rhmBin + 1) == 0) {
+      binFilled = false;
       break;
     }
     rhmBin += 1;
@@ -164,14 +161,21 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float deltaZ1 =
-      (maxValue / 2 - densityMap.at(rhmBin - 1)) *
-      (m_cfg.binSize / (densityMap.at(rhmBin - 1) - densityMap.at(rhmBin)));
+  float rightDensity = 0;
+  if (binFilled) {
+    rightDensity = densityMap.at(rhmBin);
+  }
+  float leftDensity = densityMap.at(rhmBin - 1);
+  float deltaZ1 = m_cfg.binSize * (maxValue / 2 - leftDensity) /
+                  (rightDensity - leftDensity);
+
   int lhmBin = zMaxBin;
   gridValue = maxValue;
+  binFilled = true;
   while (gridValue > maxValue / 2) {
     // Check if we are still operating on continuous z values
     if (densityMap.count(lhmBin - 1) == 0) {
+      binFilled = false;
       break;
     }
     lhmBin -= 1;
@@ -179,9 +183,15 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float deltaZ2 =
-      (maxValue / 2 - densityMap.at(lhmBin + 1)) *
-      (m_cfg.binSize / (densityMap.at(rhmBin + 1) - densityMap.at(rhmBin)));
+  rightDensity = densityMap.at(lhmBin + 1);
+  if (binFilled) {
+    leftDensity = densityMap.at(lhmBin);
+  } else {
+    leftDensity = 0;
+  }
+  float deltaZ2 = m_cfg.binSize * (rightDensity - maxValue / 2) /
+                  (rightDensity - leftDensity);
+
   float fwhm = (rhmBin - lhmBin) * m_cfg.binSize - deltaZ1 - deltaZ2;
 
   // FWHM = 2.355 * sigma
@@ -194,10 +204,10 @@ template <int trkGridSize>
 float Acts::AdaptiveGridTrackDensity<trkGridSize>::normal2D(
     float d, float z, const Acts::SquareMatrix2& cov) const {
   float det = cov.determinant();
-  float coef = 1 / (2 * M_PI * std::sqrt(det));
+  float coef = 1 / std::sqrt(det);
   float expo =
       -1 / (2 * det) *
-      (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
+      (cov(1, 1) * d * d - (cov(0, 1) + cov(1, 0)) * d * z + cov(0, 0) * z * z);
   return coef * safeExp(expo);
 }
 
@@ -209,43 +219,43 @@ int Acts::AdaptiveGridTrackDensity<trkGridSize>::highestDensitySumBin(
 
   // The global maximum
   auto firstMax = highestDensityEntry(densityMap);
-  int zFirstMax = firstMax->first;
+  int zBinFirstMax = firstMax->first;
   float valueFirstMax = firstMax->second;
-  float firstSum = getDensitySum(densityMap, zFirstMax);
+  float firstSum = getDensitySum(densityMap, zBinFirstMax);
   float densityDeviation = valueFirstMax * m_cfg.maxRelativeDensityDev;
 
   // Get the second highest maximum
-  densityMap.at(zFirstMax) = 0;
+  densityMap.at(zBinFirstMax) = 0;
   auto secondMax = highestDensityEntry(densityMap);
-  int zSecondMax = secondMax->first;
+  int zBinSecondMax = secondMax->first;
   float valueSecondMax = secondMax->second;
   float secondSum = 0;
   if (valueFirstMax - valueSecondMax < densityDeviation) {
-    secondSum = getDensitySum(densityMap, zSecondMax);
+    secondSum = getDensitySum(densityMap, zBinSecondMax);
   }
 
   // Get the third highest maximum
-  densityMap.at(zSecondMax) = 0;
+  densityMap.at(zBinSecondMax) = 0;
   auto thirdMax = highestDensityEntry(densityMap);
-  int zThirdMax = thirdMax->first;
+  int zBinThirdMax = thirdMax->first;
   float valueThirdMax = thirdMax->second;
   float thirdSum = 0;
   if (valueFirstMax - valueThirdMax < densityDeviation) {
-    thirdSum = getDensitySum(densityMap, zThirdMax);
+    thirdSum = getDensitySum(densityMap, zBinThirdMax);
   }
 
   // Revert back to original values
-  densityMap.at(zFirstMax) = valueFirstMax;
-  densityMap.at(zSecondMax) = valueSecondMax;
+  densityMap.at(zBinFirstMax) = valueFirstMax;
+  densityMap.at(zBinSecondMax) = valueSecondMax;
 
   // Return the z-bin position of the highest density sum
   if (secondSum > firstSum && secondSum > thirdSum) {
-    return zSecondMax;
+    return zBinSecondMax;
   }
   if (thirdSum > secondSum && thirdSum > firstSum) {
-    return zThirdMax;
+    return zBinThirdMax;
   }
-  return zFirstMax;
+  return zBinFirstMax;
 }
 
 template <int trkGridSize>

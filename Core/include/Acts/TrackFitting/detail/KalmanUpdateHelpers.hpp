@@ -12,6 +12,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
@@ -35,9 +36,9 @@ namespace detail {
 template <typename propagator_state_t, typename stepper_t,
           typename extensions_t, typename traj_t>
 auto kalmanHandleMeasurement(
-    propagator_state_t &state, const stepper_t &stepper,
-    const extensions_t &extensions, const Surface &surface,
-    const SourceLink &source_link, traj_t &fittedStates,
+    const CalibrationContext &calibrationContext, propagator_state_t &state,
+    const stepper_t &stepper, const extensions_t &extensions,
+    const Surface &surface, const SourceLink &source_link, traj_t &fittedStates,
     const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
@@ -70,7 +71,8 @@ auto kalmanHandleMeasurement(
 
   // We have predicted parameters, so calibrate the uncalibrated input
   // measuerement
-  extensions.calibrator(state.geoContext, source_link, trackStateProxy);
+  extensions.calibrator(state.geoContext, calibrationContext, source_link,
+                        trackStateProxy);
 
   // Get and set the type flags
   auto typeFlags = trackStateProxy.typeFlags();
