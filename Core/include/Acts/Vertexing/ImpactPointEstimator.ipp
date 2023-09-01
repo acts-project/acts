@@ -61,18 +61,25 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Vector perpendicular to momDir and orthogonalDeltaR
   Vector3 perpDir = momDir.cross(orthogonalDeltaR);
 
-  // Coordinate system with origin at the vertex position and z-axis in momentum
-  // direction
-  Transform3 thePlane;
-  // Rotation (i.e., coordinate axes)
-  thePlane.matrix().block(0, 0, 3, 1) = orthogonalDeltaR;
-  thePlane.matrix().block(0, 1, 3, 1) = perpDir;
-  thePlane.matrix().block(0, 2, 3, 1) = momDir;
-  // Translation (i.e., origin)
-  thePlane.matrix().block(0, 3, 3, 1) = vtxPos;
+  // Cartesian coordinate system with:
+  // -) origin at the vertex position
+  // -) z-axis in momentum direction
+  // -) x-axis approximately in direction of the 3D PCA (slight deviations
+  // because it was modified to make if orthogonal to momDir)
+  // -) y-axis is calculated to be orthogonal to x- and z-axis
+  // The transformation is represented by a 4x4 matrix with 0 0 0 1 in the last
+  // column.
+  Transform3 coordinateSystem;
+  // First three columns correspond to coordinate system axes
+  coordinateSystem.matrix().block<3, 1>(0, 0) = orthogonalDeltaR;
+  coordinateSystem.matrix().block<3, 1>(0, 1) = perpDir;
+  coordinateSystem.matrix().block<3, 1>(0, 2) = momDir;
+  // Fourth column corresponds to origin of the coordinate system
+  coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos;
 
+  // Surface with normal vector in direction of the z axis of coordinateSystem
   std::shared_ptr<PlaneSurface> planeSurface =
-      Surface::makeShared<PlaneSurface>(thePlane);
+      Surface::makeShared<PlaneSurface>(coordinateSystem);
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
@@ -81,7 +88,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
 
-  // Propagate to the new surface
+  // Propagate to the surface; intersection corresponds to an estimate of the 3D
+  // PCA. If deltaR and momDir were orthogonal the calculation would be exact.
   auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
   if (result.ok()) {
     return *result->endParameters;
@@ -200,7 +208,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
                            const ActsVector<nDim>& vtxPos, State& state,
                            const ActsScalar& massHypothesis,
                            const ActsScalar& chargeHypothesis) const {
-  if (nDim != 3 && nDim != 4) {
+  if (nDim != 3 and nDim != 4) {
     throw std::invalid_argument(
         "The number of dimensions N must be either 3 or 4 but was set to " +
         std::to_string(nDim) + ".");
