@@ -310,23 +310,17 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
       });
 
-  std::vector<float> tanLM;
-  std::vector<float> tanMT;
-
-  tanLM.reserve(bottom.size());
-  tanMT.reserve(top.size());
-
-  size_t numBotSP = bottom.size();
   size_t numTopSP = top.size();
+  
+  std::vector<float> deltasR_MT;
+  std::vector<float> deltasZ_MT;
+  
+  deltasR_MT.reserve(numTopSP);
+  deltasZ_MT.reserve(numTopSP);
 
-  for (size_t b = 0; b < numBotSP; b++) {
-    tanLM.push_back(std::atan2(middle.radius() - bottom[b]->radius(),
-                               middle.z() - bottom[b]->z()));
-  }
-
-  for (size_t t = 0; t < numTopSP; t++) {
-    tanMT.push_back(std::atan2(top[t]->radius() - middle.radius(),
-                               top[t]->z() - middle.z()));
+  for (size_t t = 0; t < numTopSP; ++t) {
+    deltasR_MT.push_back(top[t]->radius() - middle.radius());
+    deltasZ_MT.push_back(top[t]->z() - middle.z());
   }
 
   size_t t0 = 0;
@@ -344,6 +338,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     float ErB = lb.Er;
     float iDeltaRB = lb.iDeltaR;
 
+    float deltaR_BM = middle.radius() - bottom[b]->radius();
+    float deltaZ_BM = middle.z() - bottom[b]->z();
+    
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
     float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
@@ -380,7 +377,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       auto lt = linCircleTop[t];
       float cotThetaT = lt.cotTheta;
 
-      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
+      float deltaR_MT = deltasR_MT[t];
+      float deltaZ_MT = deltasZ_MT[t];
+      
+      if (std::abs( (deltaR_BM*deltaZ_MT - deltaR_MT*deltaZ_BM) / (deltaZ_BM*deltaZ_MT + deltaR_BM*deltaR_MT)) > 0.0050000416670833376) {
         continue;
       }
 
