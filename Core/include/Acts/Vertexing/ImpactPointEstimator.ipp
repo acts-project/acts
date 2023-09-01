@@ -152,7 +152,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Use Newton optimization method to iteratively change phi until we arrive at
   // the 3D PCA
-  auto res = performNewtonOptimization(helixCenter, vtxPos, phi, theta, rho);
+  auto res = performNewtonOptimization(helixCenter, vtxPos.template head<3>(),
+                                       phi, theta, rho);
   if (!res.ok()) {
     return res.error();
   }

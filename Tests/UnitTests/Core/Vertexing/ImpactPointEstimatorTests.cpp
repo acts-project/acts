@@ -74,7 +74,8 @@ auto thetas = bd::make({90_degree, 20_degree, 160_degree});
 auto ps = bd::make({0.4_GeV, 1_GeV, 10_GeV});
 auto qs = bd::make({-1_e, 1_e});
 // Cartesian products over all parameters
-auto tracks = d0s * l0s * t0s * phis * thetas * ps * qs;
+auto tracksWithoutIPs = t0s * phis * thetas * ps * qs;
+auto tracks = d0s * l0s * tracksWithoutIPs;
 
 // vertex parameters dataset
 auto vx0s = bd::make({0_um, -10_um, 10_um});
@@ -177,7 +178,8 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   BOOST_CHECK_GT(compatibility, 0);
 }
 
-BOOST_AUTO_TEST_CASE(Distance4D) {
+BOOST_DATA_TEST_CASE(Distance4D, tracksWithoutIPs* vertices, t0, phi, theta, p,
+                     q, vx0, vy0, vz0, vt0) {
   using Propagator = Acts::Propagator<Stepper>;
   auto field = std::make_shared<MagneticField>(Vector3(0, 0, 2_T));
   Stepper stepper(field);
@@ -187,24 +189,36 @@ BOOST_AUTO_TEST_CASE(Distance4D) {
   Estimator::State state(magFieldCache());
 
   // Vertex position
-  Vector3 vtxPos(1_mm, -1_mm, 10_mm);
+  Vector4 vtxPos(vx0, vy0, vz0, vt0);
 
   // Perigee surface at vertex position
-  auto vtxPerigeeSurface = Surface::makeShared<PerigeeSurface>(vtxPos);
+  auto vtxPerigeeSurface =
+      Surface::makeShared<PerigeeSurface>(vtxPos.head<3>());
 
   // Track parameter vector for a track that originates at the vertex
   BoundVector paramVec;
   paramVec[eBoundLoc0] = 0.;
   paramVec[eBoundLoc1] = 0.;
-  paramVec[eBoundTime] = 1_ns;
-  paramVec[eBoundPhi] = 45_degree;
-  paramVec[eBoundTheta] = 45_degree;
-  paramVec[eBoundQOverP] = 1_e / 10_GeV;
+  paramVec[eBoundTime] = t0;
+  paramVec[eBoundPhi] = phi;
+  paramVec[eBoundTheta] = theta;
+  paramVec[eBoundQOverP] = q / p;
 
   BoundTrackParameters params(vtxPerigeeSurface, paramVec,
                               makeBoundParametersCovariance());
 
-  // Reference point
+  // Correct quantities for checking if IP estimation worked
+  // Time of the track with respect to the vertex
+  ActsScalar corrTimeDiff = t0 - vt0;
+
+  // Momentum direction at vertex (i.e., at 3D PCA)
+  double cosPhi = std::cos(phi);
+  double sinPhi = std::sin(phi);
+  double sinTheta = std::sin(theta);
+  Vector3 corrMomDir =
+      Vector3(cosPhi * sinTheta, sinPhi * sinTheta, std::cos(theta));
+
+  // Arbitrary reference point
   Vector3 refPoint(2_mm, -2_mm, -5_mm);
 
   // Perigee surface at vertex position
@@ -214,14 +228,37 @@ BOOST_AUTO_TEST_CASE(Distance4D) {
   PropagatorOptions pOptions(geoContext, magFieldContext);
   auto intersection = refPerigeeSurface->intersect(
       geoContext, params.position(geoContext), params.direction(), false);
-
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
-
-  // Propagate to the PCA of linPointPos
   auto result = propagator->propagate(params, *refPerigeeSurface, pOptions);
   BOOST_CHECK(result.ok());
+
+  const auto& refParams = *result->endParameters;
+  // BoundVector refParamVec = refParams.parameters();
+
+  // Find 4D distance and momentum of the track at the vertex starting from the
+  // perigee representation at the reference position
+  auto distAndMom =
+      ipEstimator
+          .getDistanceAndMomentum<4>(geoContext, refParams, vtxPos, state)
+          .value();
+
+  ActsVector<4> distVec = distAndMom.first;
+  Vector3 momDir = distAndMom.second;
+
+  // Check quantities:
+  // Spatial distance should be 0 as track passes through the vertex
+  ActsScalar dist = distVec.head<3>().norm();
+  CHECK_CLOSE_ABS(dist, 0., 30_nm);
+  // Distance in time should correspond to the time of the track in a coordinate
+  // system with the vertex as the origin since the track passes exactly through
+  // the vertex
+  CHECK_CLOSE_OR_SMALL(distVec[3], corrTimeDiff, 1e-5, 1e-4);
+  // Momentum direction should correspond to the momentum direction at the
+  // vertex
+  CHECK_CLOSE_OR_SMALL(momDir, corrMomDir, 1e-5, 1e-4);
 }
+
 // Compare calculations w/ known good values from Athena.
 //
 // Checks the results for a single track with the same test values as in Athena
