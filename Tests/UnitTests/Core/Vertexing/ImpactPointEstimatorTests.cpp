@@ -121,7 +121,7 @@ Acts::SquareMatrix4 makeVertexCovariance() {
 BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
 
 // Check `calculate3DDistance`, `estimate3DImpactParameters`, and
-// `get3dVertexCompatibility`.
+// `get3DVertexCompatibility`.
 BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
                      l0, t0, phi, theta, p, q) {
   BoundVector par;
@@ -173,7 +173,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   // this is a chi2-like value and should always be positive
   auto compatibility =
       ipEstimator
-          .get3dVertexCompatibility(geoContext, &trackAtIP3d, refPosition)
+          .get3DVertexCompatibility(geoContext, &trackAtIP3d, refPosition)
           .value();
   BOOST_CHECK_GT(compatibility, 0);
 }

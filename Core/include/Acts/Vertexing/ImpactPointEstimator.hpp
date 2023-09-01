@@ -99,7 +99,7 @@ class ImpactPointEstimator {
                                      const Vector3& vtxPos, State& state) const;
 
   /// @brief Creates track parameters bound to plane
-  /// at point of closest approach in 3d to given
+  /// at point of closest approach in 3D to given
   /// reference position. The parameters and errors
   /// are defined on the plane intersecting the track
   /// at point of closest approach, with track orthogonal
@@ -119,16 +119,16 @@ class ImpactPointEstimator {
       State& state) const;
 
   /// @brief Estimates the compatibility of a
-  /// track to a vertex position based on the 3d
+  /// track to a vertex position based on the 3D
   /// distance between the track and the vertex
   ///
   /// @param gctx The Geometry context
   /// @param trkParams Track parameters at point of closest
-  /// approach in 3d as retrieved by estimate3DImpactParameters
+  /// approach in 3D as retrieved by estimate3DImpactParameters
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
-  Result<double> get3dVertexCompatibility(const GeometryContext& gctx,
+  Result<double> get3DVertexCompatibility(const GeometryContext& gctx,
                                           const BoundTrackParameters* trkParams,
                                           const Vector3& vertexPos) const;
 
