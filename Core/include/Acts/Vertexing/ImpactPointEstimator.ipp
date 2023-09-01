@@ -19,17 +19,14 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     calculateDistance(const GeometryContext& gctx,
                       const BoundTrackParameters& trkParams,
                       const ActsVector<nDim>& vtxPos, State& state) const {
-  ActsVector<nDim> deltaR;
-  Vector3 momDir;
-  auto res = getDistanceAndMomentum<nDim>(gctx, trkParams, vtxPos, deltaR,
-                                          momDir, state);
+  auto res = getDistanceAndMomentum<nDim>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
     return res.error();
   }
 
   // Return distance
-  return deltaR.norm();
+  return res.value().first.norm();
 }
 
 template <typename input_track_t, typename propagator_t,
@@ -40,18 +37,20 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
                                const Acts::MagneticFieldContext& mctx,
                                const BoundTrackParameters& trkParams,
                                const Vector3& vtxPos, State& state) const {
-  Vector3 deltaR;
-  Vector3 momDir;
-
-  auto res =
-      getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, deltaR, momDir, state);
+  auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
     return res.error();
   }
 
-  // Normalize vector pointing from vertex to 3D PCA
+  // Vector pointing from vertex to 3D PCA
+  Vector3 deltaR = res.value().first;
+
+  // Get corresponding unit vector
   deltaR.normalize();
+
+  // Momentum direction at vtxPos
+  Vector3 momDir = res.value().second;
 
   // To understand why deltaR and momDir are not orthogonal, let us look at the
   // x-y-plane. Since we computed the 3D PCA, the 2D distance between the vertex
@@ -195,13 +194,12 @@ Acts::Result<double> Acts::ImpactPointEstimator<
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 template <unsigned int nDim>
-Acts::Result<void>
+Acts::Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
-                           const ActsVector<nDim>& vtxPos,
-                           ActsVector<nDim>& deltaR, Vector3& momDir,
-                           State& state, const ActsScalar& massHypothesis,
+                           const ActsVector<nDim>& vtxPos, State& state,
+                           const ActsScalar& massHypothesis,
                            const ActsScalar& chargeHypothesis) const {
   if (nDim != 3 && nDim != 4) {
     throw std::invalid_argument(
@@ -267,7 +265,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Momentum direction at the 3D PCA.
   // Note that we have thetaV = thetaP = theta since the polar angle does not
   // change in a constant B field.
-  momDir = Vector3(cosPhi * sinTheta, sinPhi * sinTheta, std::cos(theta));
+  Vector3 momDir =
+      Vector3(cosPhi * sinTheta, sinPhi * sinTheta, std::cos(theta));
 
   // 3D PCA (point P' in the reference)
   ActsVector<nDim> pca;
@@ -284,9 +283,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
   }
   // Vector pointing from the vertex position to the 3D PCA
-  deltaR = pca - vtxPos;
+  ActsVector<nDim> deltaR = pca - vtxPos;
 
-  return {};
+  return std::make_pair(deltaR, momDir);
 }
 
 template <typename input_track_t, typename propagator_t,

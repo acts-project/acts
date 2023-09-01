@@ -207,11 +207,12 @@ class ImpactPointEstimator {
   /// @note Will be filled by the method
   /// @param state The state object
   template <unsigned int nDim = 3>
-  Result<void> getDistanceAndMomentum(
-      const GeometryContext& gctx, const BoundTrackParameters& trkParams,
-      const ActsVector<nDim>& vtxPos, ActsVector<nDim>& deltaR, Vector3& momDir,
-      State& state, const ActsScalar& massHypothesis = 0.13957018,
-      const ActsScalar& chargeHypothesis = 1.) const;
+  Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
+  getDistanceAndMomentum(const GeometryContext& gctx,
+                         const BoundTrackParameters& trkParams,
+                         const ActsVector<nDim>& vtxPos, State& state,
+                         const ActsScalar& massHypothesis = 0.13957018,
+                         const ActsScalar& chargeHypothesis = 1.) const;
 };
 
 }  // namespace Acts
