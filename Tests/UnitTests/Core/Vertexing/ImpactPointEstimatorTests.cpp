@@ -323,7 +323,7 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
                              makeBoundParametersCovariance());
 
   Vector3 direction{0., 1., 0.};
-  auto lifetimes_signs = ipEstimator.getLifetimesSignOfTrack(
+  auto lifetimes_signs = ipEstimator.getLifetimeSignOfTrack(
       track, ip_vtx, direction, geoContext, magFieldContext);
 
   // Check if the result is OK

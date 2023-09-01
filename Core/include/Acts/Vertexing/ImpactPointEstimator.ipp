@@ -398,11 +398,11 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<std::pair<double, double>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    getLifetimesSignOfTrack(const BoundTrackParameters& track,
-                            const Vertex<input_track_t>& vtx,
-                            const Acts::Vector3& direction,
-                            const GeometryContext& gctx,
-                            const MagneticFieldContext& mctx) const {
+    getLifetimeSignOfTrack(const BoundTrackParameters& track,
+                           const Vertex<input_track_t>& vtx,
+                           const Acts::Vector3& direction,
+                           const GeometryContext& gctx,
+                           const MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 

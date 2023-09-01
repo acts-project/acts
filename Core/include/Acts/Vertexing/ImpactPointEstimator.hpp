@@ -172,8 +172,8 @@ class ImpactPointEstimator {
   /// @param gctx  The geometry context
   /// @param mctx  The magnetic field context
   ///
-  /// @return A pair holding the sign for the 2D an Z lifetimes
-  Result<std::pair<double, double>> getLifetimesSignOfTrack(
+  /// @return A pair holding the sign for the 2D and Z lifetimes
+  Result<std::pair<double, double>> getLifetimeSignOfTrack(
       const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
       const Acts::Vector3& direction, const GeometryContext& gctx,
       const MagneticFieldContext& mctx) const;
