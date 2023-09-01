@@ -119,6 +119,25 @@ class ImpactPointEstimator {
       const BoundTrackParameters& trkParams, const Vector3& vtxPos,
       State& state) const;
 
+  /// @brief Calculate the distance between a track and a vertex by finding the corresponding 3D PCA.
+  /// Returns also the momentum direction at the 3D PCA.
+  ///
+  /// @param gctx Geometry context
+  /// @param trkParams Track parameters
+  /// @param vtxPos Vertex position
+  /// @param deltaR Vector pointing from vertex to 3D PCA
+  /// @note Will be filled by the method
+  /// @param momDir Momentum direction at the 3D PCA
+  /// @note Will be filled by the method
+  /// @param state The state object
+  template <unsigned int nDim = 3>
+  Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
+  getDistanceAndMomentum(const GeometryContext& gctx,
+                         const BoundTrackParameters& trkParams,
+                         const ActsVector<nDim>& vtxPos, State& state,
+                         const ActsScalar& massHypothesis = 0.13957018,
+                         const ActsScalar& chargeHypothesis = 1.) const;
+
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
   /// distance between the track and the vertex
@@ -195,24 +214,6 @@ class ImpactPointEstimator {
   Result<double> performNewtonOptimization(const Vector3& helixCenter,
                                            const Vector3& vtxPos, double phi,
                                            double theta, double rho) const;
-
-  /// @brief Helper function to calculate the distance between a track and a vertex by finding the corresponding 3D PCA. Returns also the momentum at the 3D PCA.
-  ///
-  /// @param gctx Geometry context
-  /// @param trkParams Track parameters
-  /// @param vtxPos Vertex position
-  /// @param deltaR Vector pointing from vertex to 3D PCA
-  /// @note Will be filled by the method
-  /// @param momDir Momentum direction at the 3D PCA
-  /// @note Will be filled by the method
-  /// @param state The state object
-  template <unsigned int nDim = 3>
-  Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
-  getDistanceAndMomentum(const GeometryContext& gctx,
-                         const BoundTrackParameters& trkParams,
-                         const ActsVector<nDim>& vtxPos, State& state,
-                         const ActsScalar& massHypothesis = 0.13957018,
-                         const ActsScalar& chargeHypothesis = 1.) const;
 };
 
 }  // namespace Acts

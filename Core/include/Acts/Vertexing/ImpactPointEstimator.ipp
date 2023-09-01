@@ -93,106 +93,6 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
-Acts::Result<double>
-Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    get3dVertexCompatibility(const GeometryContext& gctx,
-                             const BoundTrackParameters* trkParams,
-                             const Vector3& vertexPos) const {
-  if (trkParams == nullptr) {
-    return VertexingError::EmptyInput;
-  }
-
-  // surface rotation
-  RotationMatrix3 surfaceAxes =
-      trkParams->referenceSurface().transform(gctx).rotation();
-  // Surface translation
-  Vector3 surfaceOrigin =
-      trkParams->referenceSurface().transform(gctx).translation();
-
-  // x and y direction of plane
-  Vector3 xDir = surfaceAxes.col(0);
-  Vector3 yDir = surfaceAxes.col(1);
-
-  // transform vertex position in local plane reference frame
-  Vector3 vertexLocPlane = vertexPos - surfaceOrigin;
-
-  // local x/y vertex position
-  Vector2 vertexLocXY{vertexLocPlane.dot(xDir), vertexLocPlane.dot(yDir)};
-
-  // track covariance
-  if (not trkParams->covariance().has_value()) {
-    return VertexingError::NoCovariance;
-  }
-  auto cov = trkParams->covariance();
-  SquareMatrix2 weightXY = cov->block<2, 2>(0, 0).inverse();
-
-  // 2-dim residual
-  Vector2 xyRes =
-      Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
-      vertexLocXY;
-
-  // return chi2
-  return xyRes.dot(weightXY * xyRes);
-}
-
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
-Acts::Result<double> Acts::ImpactPointEstimator<
-    input_track_t, propagator_t,
-    propagator_options_t>::performNewtonOptimization(const Vector3& helixCenter,
-                                                     const Vector3& vtxPos,
-                                                     double phi, double theta,
-                                                     double rho) const {
-  double sinPhi = std::sin(phi);
-  double cosPhi = std::cos(phi);
-
-  int nIter = 0;
-  bool hasConverged = false;
-
-  double cotTheta = 1. / std::tan(theta);
-
-  double xO = helixCenter.x();
-  double yO = helixCenter.y();
-  double zO = helixCenter.z();
-
-  double xVtx = vtxPos.x();
-  double yVtx = vtxPos.y();
-  double zVtx = vtxPos.z();
-
-  // Iterate until convergence is reached or the maximum amount of iterations is
-  // exceeded
-  while (!hasConverged && nIter < m_cfg.maxIterations) {
-    double derivative = rho * ((xVtx - xO) * cosPhi + (yVtx - yO) * sinPhi +
-                               (zVtx - zO + rho * phi * cotTheta) * cotTheta);
-    double secDerivative = rho * (-(xVtx - xO) * sinPhi + (yVtx - yO) * cosPhi +
-                                  rho * cotTheta * cotTheta);
-
-    if (secDerivative < 0.) {
-      return VertexingError::NumericFailure;
-    }
-
-    double deltaPhi = -derivative / secDerivative;
-
-    phi += deltaPhi;
-    sinPhi = std::sin(phi);
-    cosPhi = std::cos(phi);
-
-    nIter += 1;
-
-    if (std::abs(deltaPhi) < m_cfg.precision) {
-      hasConverged = true;
-    }
-  }  // end while loop
-
-  if (!hasConverged) {
-    // max iterations reached but did not converge
-    return VertexingError::NotConverged;
-  }
-  return phi;
-}
-
-template <typename input_track_t, typename propagator_t,
-          typename propagator_options_t>
 template <unsigned int nDim>
 Acts::Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
@@ -286,6 +186,50 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   ActsVector<nDim> deltaR = pca - vtxPos;
 
   return std::make_pair(deltaR, momDir);
+}
+
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
+Acts::Result<double>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+    get3dVertexCompatibility(const GeometryContext& gctx,
+                             const BoundTrackParameters* trkParams,
+                             const Vector3& vertexPos) const {
+  if (trkParams == nullptr) {
+    return VertexingError::EmptyInput;
+  }
+
+  // surface rotation
+  RotationMatrix3 surfaceAxes =
+      trkParams->referenceSurface().transform(gctx).rotation();
+  // Surface translation
+  Vector3 surfaceOrigin =
+      trkParams->referenceSurface().transform(gctx).translation();
+
+  // x and y direction of plane
+  Vector3 xDir = surfaceAxes.col(0);
+  Vector3 yDir = surfaceAxes.col(1);
+
+  // transform vertex position in local plane reference frame
+  Vector3 vertexLocPlane = vertexPos - surfaceOrigin;
+
+  // local x/y vertex position
+  Vector2 vertexLocXY{vertexLocPlane.dot(xDir), vertexLocPlane.dot(yDir)};
+
+  // track covariance
+  if (not trkParams->covariance().has_value()) {
+    return VertexingError::NoCovariance;
+  }
+  auto cov = trkParams->covariance();
+  SquareMatrix2 weightXY = cov->block<2, 2>(0, 0).inverse();
+
+  // 2-dim residual
+  Vector2 xyRes =
+      Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
+      vertexLocXY;
+
+  // return chi2
+  return xyRes.dot(weightXY * xyRes);
 }
 
 template <typename input_track_t, typename propagator_t,
@@ -470,4 +414,60 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       (direction.cross(trkmom)).dot(trkmom.cross(vtx.position() - trkpos));
 
   return sign >= 0. ? 1. : -1.;
+}
+
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
+Acts::Result<double> Acts::ImpactPointEstimator<
+    input_track_t, propagator_t,
+    propagator_options_t>::performNewtonOptimization(const Vector3& helixCenter,
+                                                     const Vector3& vtxPos,
+                                                     double phi, double theta,
+                                                     double rho) const {
+  double sinPhi = std::sin(phi);
+  double cosPhi = std::cos(phi);
+
+  int nIter = 0;
+  bool hasConverged = false;
+
+  double cotTheta = 1. / std::tan(theta);
+
+  double xO = helixCenter.x();
+  double yO = helixCenter.y();
+  double zO = helixCenter.z();
+
+  double xVtx = vtxPos.x();
+  double yVtx = vtxPos.y();
+  double zVtx = vtxPos.z();
+
+  // Iterate until convergence is reached or the maximum amount of iterations is
+  // exceeded
+  while (!hasConverged && nIter < m_cfg.maxIterations) {
+    double derivative = rho * ((xVtx - xO) * cosPhi + (yVtx - yO) * sinPhi +
+                               (zVtx - zO + rho * phi * cotTheta) * cotTheta);
+    double secDerivative = rho * (-(xVtx - xO) * sinPhi + (yVtx - yO) * cosPhi +
+                                  rho * cotTheta * cotTheta);
+
+    if (secDerivative < 0.) {
+      return VertexingError::NumericFailure;
+    }
+
+    double deltaPhi = -derivative / secDerivative;
+
+    phi += deltaPhi;
+    sinPhi = std::sin(phi);
+    cosPhi = std::cos(phi);
+
+    nIter += 1;
+
+    if (std::abs(deltaPhi) < m_cfg.precision) {
+      hasConverged = true;
+    }
+  }  // end while loop
+
+  if (!hasConverged) {
+    // max iterations reached but did not converge
+    return VertexingError::NotConverged;
+  }
+  return phi;
 }
