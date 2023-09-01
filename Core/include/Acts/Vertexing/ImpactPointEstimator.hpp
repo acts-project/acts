@@ -121,8 +121,8 @@ class ImpactPointEstimator {
       State& state) const;
 
   /// @brief Estimates the compatibility of a
-  /// track to a vertex position based on the 3D
-  /// distance between the track and the vertex
+  /// track to a vertex based on their 3D distance
+  /// and the track covariance
   ///
   /// @param gctx The Geometry context
   /// @param trkParams Track parameters at point of closest

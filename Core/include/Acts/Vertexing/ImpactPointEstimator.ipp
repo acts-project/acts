@@ -109,22 +109,24 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return VertexingError::EmptyInput;
   }
 
-  // surface rotation
+  // Orientation of the surface (i.e., axes of the corresponding coordinate
+  // system)
   RotationMatrix3 surfaceAxes =
       trkParams->referenceSurface().transform(gctx).rotation();
-  // Surface translation
+  // Origin of the surface coordinate system
   Vector3 surfaceOrigin =
       trkParams->referenceSurface().transform(gctx).translation();
 
-  // x and y direction of plane
-  Vector3 xDir = surfaceAxes.col(0);
-  Vector3 yDir = surfaceAxes.col(1);
+  // x- and y-axis of the surface coordinate system
+  Vector3 xAxis = surfaceAxes.col(0);
+  Vector3 yAxis = surfaceAxes.col(1);
 
-  // transform vertex position in local plane reference frame
-  Vector3 vertexLocPlane = vertexPos - surfaceOrigin;
+  // Vector pointing from the surface origin to the vertex position
+  Vector3 originToVertex =
+      vertexPos - surfaceOrigin;  // TODO print this variable
 
-  // local x/y vertex position
-  Vector2 vertexLocXY{vertexLocPlane.dot(xDir), vertexLocPlane.dot(yDir)};
+  // x- and y-coordinate of the vertex in the surface coordinate system
+  Vector2 localVertexXY{originToVertex.dot(xAxis), originToVertex.dot(yAxis)};
 
   // track covariance
   if (not trkParams->covariance().has_value()) {
@@ -136,7 +138,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // 2-dim residual
   Vector2 xyRes =
       Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
-      vertexLocXY;
+      localVertexXY;
 
   // return chi2
   return xyRes.dot(weightXY * xyRes);
