@@ -39,8 +39,8 @@ class SpacePointData {
   ~SpacePointData() = default;
 
   /// @brief Getters
-  const float quality(std::size_t idx) const;
-  const float deltaR(std::size_t idx) const;
+  float quality(std::size_t idx) const;
+  float deltaR(std::size_t idx) const;
 
   /// @brief Setters
   void setQuality(std::size_t idx, const float value);
@@ -99,11 +99,11 @@ class SpacePointData {
   std::vector<Acts::Vector3> m_topStripCenterPosition{};
 };
 
-inline const float SpacePointData::quality(std::size_t idx) const {
+inline float SpacePointData::quality(std::size_t idx) const {
   return m_quality[idx];
 }
 
-inline const float SpacePointData::deltaR(std::size_t idx) const {
+inline float SpacePointData::deltaR(std::size_t idx) const {
   return m_deltaR[idx];
 }
 

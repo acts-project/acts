@@ -250,6 +250,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         &candidates_collector,
     Acts::SpacePointData &spacePointData) const {
   float rM = middle.radius();
+  float zM = middle.z();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
 
@@ -257,8 +258,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   if (m_config.seedConfirmation == true) {
     // check if middle SP is in the central or forward region
     SeedConfirmationRangeConfig seedConfRange =
-        (middle.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-         middle.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+        (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
             ? m_config.forwardSeedConfirmationRange
             : m_config.centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the middle SP is
@@ -301,13 +302,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
   std::sort(
       sorted_bottoms.begin(), sorted_bottoms.end(),
-      [&linCircleBottom](const std::size_t &a, const std::size_t &b) -> bool {
+      [&linCircleBottom](const std::size_t a, const std::size_t b) -> bool {
         return linCircleBottom[a].cotTheta < linCircleBottom[b].cotTheta;
       });
 
   std::sort(
       sorted_tops.begin(), sorted_tops.end(),
-      [&linCircleTop](const std::size_t &a, const std::size_t &b) -> bool {
+      [&linCircleTop](const std::size_t a, const std::size_t b) -> bool {
         return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
       });
 
@@ -320,8 +321,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   deltasZ_MT.reserve(numTopSP);
 
   for (size_t t = 0; t < numTopSP; ++t) {
-    deltasR_MT.push_back(top[t]->radius() - middle.radius());
-    deltasZ_MT.push_back(top[t]->z() - middle.z());
+    deltasR_MT.push_back(top[t]->radius() - rM);
+    deltasZ_MT.push_back(top[t]->z() - zM);
   }
 
   size_t t0 = 0;
@@ -339,8 +340,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     float ErB = lb.Er;
     float iDeltaRB = lb.iDeltaR;
 
-    float deltaR_BM = middle.radius() - bottom[b]->radius();
-    float deltaZ_BM = middle.z() - bottom[b]->z();
+    float deltaR_BM = rM - bottom[b]->radius();
+    float deltaZ_BM = zM - bottom[b]->z();
     
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
@@ -429,6 +430,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         continue;
       }
 
+      float S = std::sqrt(S2);
+	    
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
       float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
@@ -437,7 +440,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
-        if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) >
+        if (B2 == 0 or options.pTPerHelixRadius * S / B >
                            2. * m_config.maxPtScattering) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
@@ -463,7 +466,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         top_valid.push_back(top[t]);
         // inverse diameter is signed depending if the curvature is
         // positive/negative in phi
-        curvatures.push_back(B / std::sqrt(S2));
+        curvatures.push_back(B / S);
         impactParameters.push_back(Im);
       }
     }
@@ -473,7 +476,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       continue;
     }
 
-    seedFilterState.zOrigin = middle.z() - rM * lb.cotTheta;
+    seedFilterState.zOrigin = zM - rM * lb.cotTheta;
 
     m_config.seedFilter->filterSeeds_2SpFixed(
         spacePointData, *bottom[b], middle, top_valid, curvatures,
