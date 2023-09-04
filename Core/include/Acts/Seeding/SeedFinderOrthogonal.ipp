@@ -404,7 +404,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (lb.cotTheta - lt.cotTheta < 0) {
+        if (deltaCotTheta < 0) {
 	  break;
         }
         t0 = index_t;
