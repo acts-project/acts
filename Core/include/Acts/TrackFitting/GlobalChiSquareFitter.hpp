@@ -32,6 +32,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
+#include "Acts/TrackFitting/GlobalChiSquareFitterError.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
@@ -602,9 +603,8 @@ class Gx2Fitter {
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
               .inverse();
     } else if (gx2fOptions.nUpdateMax > 0) {
-      // TODO
-      std::cout << "det(a) == 0. This shouldn't happen. Implement real ERROR"
-                << std::endl;
+      ACTS_ERROR("det(a) == 0. This should not happen ever.");
+      return Experimental::GlobalChiSquareFitterError::DetAIsZero;
     }
 
     // Prepare track for return
