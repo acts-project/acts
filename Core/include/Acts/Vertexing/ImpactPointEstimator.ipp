@@ -114,6 +114,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return VertexingError::NoCovariance;
   }
 
+  // Retrieve track weight matrix
+  auto cov = trkParams->covariance();
+  SquareMatrix2 weightXY = cov->block<2, 2>(0, 0).inverse();
+
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)
   RotationMatrix3 surfaceAxes =
@@ -133,10 +137,6 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // x- and y-coordinate of the vertex in the surface coordinate system
   Vector2 localVertexXY{originToVertex.dot(xAxis), originToVertex.dot(yAxis)};
-
-  // Retrieve weight matrix
-  auto cov = trkParams->covariance();
-  SquareMatrix2 weightXY = cov->block<2, 2>(0, 0).inverse();
 
   // 2-dimensional residual
   Vector2 xyRes =
