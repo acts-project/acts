@@ -1,3 +1,4 @@
+set(unittest_extra_libraries ActsPluginActSVG)
 add_unittest(DetectorVolumeUpdators DetectorVolumeUpdatorsTests.cpp)
 add_unittest(DetectorVolumeFinders DetectorVolumeFindersTests.cpp)
 add_unittest(NavigationState NavigationStateTests.cpp)
