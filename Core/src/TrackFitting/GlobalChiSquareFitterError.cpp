@@ -12,7 +12,7 @@
 
 namespace {
 
-class KalmanFitterErrorCategory : public std::error_category {
+class GlobalChiSquareFitterErrorCategory : public std::error_category {
  public:
   // Return a short descriptive name for the category.
   const char* name() const noexcept final {
@@ -36,6 +36,6 @@ class KalmanFitterErrorCategory : public std::error_category {
 
 std::error_code Acts::Experimental::make_error_code(
     Acts::Experimental::GlobalChiSquareFitterError e) {
-  static KalmanFitterErrorCategory c;
+  static GlobalChiSquareFitterErrorCategory c;
   return {static_cast<int>(e), c};
 }
