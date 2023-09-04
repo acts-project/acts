@@ -167,7 +167,15 @@ class SpacePointContainer {
 
   const container_t& container() const;
 
-  ProxyType proxy(const std::size_t n) const;
+  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  ProxyType& proxy(const std::size_t n);
+
+  const ProxyType& proxy(const std::size_t n) const;
+
+  const std::vector<ProxyType>& proxies() const;
+
+  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  std::vector<ProxyType>& proxies();
 
  private:
   float x(const std::size_t n) const;
@@ -188,6 +196,7 @@ class SpacePointContainer {
   Acts::SpacePointContainerOptions m_options;
   Acts::SpacePointData m_data;
   holder_t<container_t> m_container;
+  std::vector<ProxyType> m_proxies;
 };
 
 }  // namespace Acts
