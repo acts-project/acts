@@ -313,16 +313,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       });
 
   size_t numTopSP = top.size();
-  
-  std::vector<float> deltasR_MT;
-  std::vector<float> deltasZ_MT;
-  
-  deltasR_MT.reserve(numTopSP);
-  deltasZ_MT.reserve(numTopSP);
 
+  std::vector<float> tanMT(numTopSP);
   for (size_t t = 0; t < numTopSP; ++t) {
-    deltasR_MT.push_back(top[t]->radius() - rM);
-    deltasZ_MT.push_back(top[t]->z() - zM);
+    tanMT[t] = std::atan2(top[t]->radius() - middle.radius(),
+			  top[t]->z() - middle.z());
   }
 
   size_t t0 = 0;
@@ -335,8 +330,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     const auto& lb = linCircleBottom[b];
 
-    float deltaR_BM = rM - bottom[b]->radius();
-    float deltaZ_BM = zM - bottom[b]->z();
+    float tanLM = std::atan2(rM - bottom[b]->radius(),
+			     zM - bottom[b]->z());
     
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + lb.cotTheta * lb.cotTheta);
@@ -443,11 +438,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         continue;
       }
 
-      float deltaR_MT = deltasR_MT[t];
-      float deltaZ_MT = deltasZ_MT[t];
-      
-      if (std::abs(deltaR_BM*deltaZ_MT - deltaR_MT*deltaZ_BM) > std::abs(deltaZ_BM*deltaZ_MT + deltaR_BM*deltaR_MT) * 0.0050000416670833376) {
-	continue;
+      if (std::abs(tanLM - tanMT[t]) > 0.005) {
+        continue;
       }
 
       // A and B allow calculation of impact params in U/V plane with linear
