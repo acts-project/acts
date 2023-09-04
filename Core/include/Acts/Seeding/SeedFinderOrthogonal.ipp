@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -365,7 +364,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
       const auto &lt = linCircleTop[t];
-      
+
       if (std::abs(tanLM - tanMT[t]) > 0.005) {
         continue;
       }
