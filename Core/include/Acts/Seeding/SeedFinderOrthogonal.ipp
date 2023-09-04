@@ -333,18 +333,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       break;
     }
 
-    auto lb = linCircleBottom[b];
-    float cotThetaB = lb.cotTheta;
-    float Vb = lb.V;
-    float Ub = lb.U;
-    float ErB = lb.Er;
-    float iDeltaRB = lb.iDeltaR;
+    const auto& lb = linCircleBottom[b];
 
     float deltaR_BM = rM - bottom[b]->radius();
     float deltaZ_BM = zM - bottom[b]->z();
     
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float iSinTheta2 = (1. + lb.cotTheta * lb.cotTheta);
     float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
@@ -376,24 +371,50 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
-      auto lt = linCircleTop[t];
-      float cotThetaT = lt.cotTheta;
-
-      float deltaR_MT = deltasR_MT[t];
-      float deltaZ_MT = deltasZ_MT[t];
-      
-      if (std::abs( (deltaR_BM*deltaZ_MT - deltaR_MT*deltaZ_BM) / (deltaZ_BM*deltaZ_MT + deltaR_BM*deltaR_MT)) > 0.0050000416670833376) {
-        continue;
-      }
+      const auto& lt = linCircleTop[t];
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = lt.Er + ErB +
-                     2 * (cotThetaB * lt.cotTheta * varianceRM + varianceZM) *
-                         iDeltaRB * lt.iDeltaR;
+      float error2 = lt.Er + lb.Er +
+                     2 * (lb.cotTheta * lt.cotTheta * varianceRM + varianceZM) *
+                         lb.iDeltaR * lt.iDeltaR;
 
-      float deltaCotTheta = cotThetaB - lt.cotTheta;
+      float deltaCotTheta = lb.cotTheta - lt.cotTheta;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+
+      float dU = lt.U - lb.U;
+
+      // A and B are evaluated as a function of the circumference parameters
+      // x_0 and y_0
+      float A = (lt.V - lb.V) / dU;
+      float S2 = 1. + A * A;
+      float B = lb.V - A * lb.U;
+      float B2 = B * B;
+      float S = std::sqrt(S2);
+	    
+      // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
+      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
+      // from rad to deltaCotTheta
+      float p2scatterSigma = B2 / S2 * sigmaSquaredPtDependent;
+      if (!std::isinf(m_config.maxPtScattering)) {
+        // if pT > maxPtScattering, calculate allowed scattering angle using
+        // maxPtScattering instead of pt.
+        if (B2 == 0 or options.pTPerHelixRadius * S >
+                           B * 2. * m_config.maxPtScattering) {
+          float pTscatterSigma =
+	    (m_config.highland / m_config.maxPtScattering) *
+	    m_config.sigmaScattering;
+          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
+        }
+      }
+      // if deltaTheta larger than allowed scattering for calculated pT, skip
+      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+        if (lb.cotTheta - lt.cotTheta < 0) {
+	  break;
+        }
+        t0 = index_t;
+	continue;
+      }
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -409,52 +430,24 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         // skip top SPs based on cotTheta sorting when producing triplets
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
-        if (cotThetaB - cotThetaT < 0) {
-          break;
+        if (deltaCotTheta < 0) {
+	  break;
         }
         t0 = index_t + 1;
-        continue;
+	continue;
       }
 
-      float dU = lt.U - Ub;
-
-      // A and B are evaluated as a function of the circumference parameters
-      // x_0 and y_0
-      float A = (lt.V - Vb) / dU;
-      float S2 = 1. + A * A;
-      float B = Vb - A * Ub;
-      float B2 = B * B;
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
       if (S2 < B2 * options.minHelixDiameter2) {
         continue;
       }
 
-      float S = std::sqrt(S2);
-	    
-      // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
-      float iHelixDiameter2 = B2 / S2;
-      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
-      // from rad to deltaCotTheta
-      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
-      if (!std::isinf(m_config.maxPtScattering)) {
-        // if pT > maxPtScattering, calculate allowed scattering angle using
-        // maxPtScattering instead of pt.
-        if (B2 == 0 or options.pTPerHelixRadius * S / B >
-                           2. * m_config.maxPtScattering) {
-          float pTscatterSigma =
-              (m_config.highland / m_config.maxPtScattering) *
-              m_config.sigmaScattering;
-          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-        }
-      }
-      // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (cotThetaB - cotThetaT < 0) {
-          break;
-        }
-        t0 = index_t;
-        continue;
+      float deltaR_MT = deltasR_MT[t];
+      float deltaZ_MT = deltasZ_MT[t];
+      
+      if (std::abs(deltaR_BM*deltaZ_MT - deltaR_MT*deltaZ_BM) > std::abs(deltaZ_BM*deltaZ_MT + deltaR_BM*deltaR_MT) * 0.0050000416670833376) {
+	continue;
       }
 
       // A and B allow calculation of impact params in U/V plane with linear
