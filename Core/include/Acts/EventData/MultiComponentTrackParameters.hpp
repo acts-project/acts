@@ -27,12 +27,15 @@ namespace Acts {
 /// @note This class holds shared ownership on its reference surface.
 /// @note The accessors for parameters, covariance, position, etc.
 /// are the weighted means of the components.
+/// @note If all covariances are zero, the accessor for the total
+/// covariance does return std::nullopt;
 /// TODO Add constructor from range and projector maybe?
 template <typename charge_t>
 class MultiComponentBoundTrackParameters {
   using SingleParameters = GenericBoundTrackParameters<charge_t>;
 
-  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> m_components;
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+      m_components;
   std::shared_ptr<const Surface> m_surface;
 
   // TODO use [[no_unique_address]] once we switch to C++20
@@ -65,23 +68,42 @@ class MultiComponentBoundTrackParameters {
   using CovarianceMatrix = typename SingleParameters::CovarianceMatrix;
 
   /// Construct from multiple components with charge scalar q
+  template <typename covariance_t>
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
-      const std::vector<std::tuple<double, BoundVector, CovarianceMatrix>>&
-          cmps,
+      const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps,
       ActsScalar q)
-      : m_components(cmps),
-        m_surface(std::move(surface)),
-        m_chargeInterpreter(std::abs(q)) {}
+      : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
+    static_assert(
+        std::is_same_v<BoundSquareMatrix, covariance_t> ||
+        std::is_same_v<std::optional<BoundSquareMatrix>, covariance_t>);
+    if constexpr (std::is_same_v<BoundSquareMatrix, covariance_t>) {
+      for (const auto& [weight, params, cov] : cmps) {
+        m_components.push_back({weight, params, cov});
+      }
+    } else {
+      m_components = cmps;
+    }
+  }
 
   /// Construct from multiple components with charge_t
-  template <typename T = charge_t,
+  template <typename covariance_t, typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   MultiComponentBoundTrackParameters(
       std::shared_ptr<const Surface> surface,
-      const std::vector<std::tuple<double, BoundVector, CovarianceMatrix>>&
-          cmps)
-      : m_components(cmps), m_surface(std::move(surface)) {}
+      const std::vector<std::tuple<double, BoundVector, covariance_t>>& cmps)
+      : m_surface(std::move(surface)) {
+    static_assert(
+        std::is_same_v<BoundSquareMatrix, covariance_t> ||
+        std::is_same_v<std::optional<BoundSquareMatrix>, covariance_t>);
+    if constexpr (std::is_same_v<BoundSquareMatrix, covariance_t>) {
+      for (const auto& [weight, params, cov] : cmps) {
+        m_components.push_back({weight, params, cov});
+      }
+    } else {
+      m_components = cmps;
+    }
+  }
 
   /// Construct from a parameters vector on the surface and particle charge.
   ///
@@ -96,11 +118,11 @@ class MultiComponentBoundTrackParameters {
   /// below that that also take the charge as an input. The charge sign is
   /// only used in debug builds to check for consistency with the q/p
   /// parameter.
-  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                                     const BoundVector& params, ActsScalar q,
-                                     CovarianceMatrix cov)
+  MultiComponentBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const BoundVector& params,
+      ActsScalar q, std::optional<BoundSquareMatrix> cov = std::nullopt)
       : m_surface(std::move(surface)), m_chargeInterpreter(std::abs(q)) {
-    m_components.push_back({1., params, cov});
+    m_components.push_back({1., params, std::move(cov)});
   }
 
   /// Construct from a parameters vector on the surface.
@@ -113,11 +135,11 @@ class MultiComponentBoundTrackParameters {
   /// ambiguities, i.e. the charge type is default-constructible.
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  MultiComponentBoundTrackParameters(std::shared_ptr<const Surface> surface,
-                                     const BoundVector& params,
-                                     CovarianceMatrix cov)
+  MultiComponentBoundTrackParameters(
+      std::shared_ptr<const Surface> surface, const BoundVector& params,
+      std::optional<BoundSquareMatrix> cov = std::nullopt)
       : m_surface(std::move(surface)) {
-    m_components.push_back({1., params, cov});
+    m_components.push_back({1., params, std::move(cov)});
   }
 
   /// Parameters are not default constructible due to the charge type.
@@ -142,8 +164,9 @@ class MultiComponentBoundTrackParameters {
   std::pair<double, SingleParameters> operator[](std::size_t i) const {
     return std::make_pair(
         std::get<double>(m_components[i]),
-        SingleParameters(m_surface, std::get<BoundVector>(m_components[i]),
-                         std::get<BoundSquareMatrix>(m_components[i])));
+        SingleParameters(
+            m_surface, std::get<BoundVector>(m_components[i]),
+            std::get<std::optional<BoundSquareMatrix>>(m_components[i])));
   }
 
   /// Parameters vector.
@@ -152,8 +175,16 @@ class MultiComponentBoundTrackParameters {
   }
 
   /// Optional covariance matrix.
-  CovarianceMatrix covariance() const {
-    return reduce([](const SingleParameters& p) { return *p.covariance(); });
+  std::optional<CovarianceMatrix> covariance() const {
+    const auto ret = reduce([](const SingleParameters& p) {
+      return p.covariance() ? *p.covariance() : CovarianceMatrix::Zero();
+    });
+
+    if (ret == CovarianceMatrix::Zero()) {
+      return std::nullopt;
+    } else {
+      return ret;
+    }
   }
 
   /// Space-time position four-vector.

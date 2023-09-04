@@ -446,7 +446,9 @@ struct GaussianSumFitter {
 
       const auto [finalPars, finalCov] = Acts::reduceGaussianMixture(
           params.components(), params.referenceSurface(),
-          options.stateReductionMethod);
+          options.stateReductionMethod, [](auto& t) {
+            return std::tie(std::get<0>(t), std::get<1>(t), *std::get<2>(t));
+          });
 
       track.parameters() = finalPars;
       track.covariance() = finalCov;
