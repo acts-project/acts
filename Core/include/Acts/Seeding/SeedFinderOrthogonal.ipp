@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -364,6 +365,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
       const auto &lt = linCircleTop[t];
+      
+      if (std::abs(tanLM - tanMT[t]) > 0.005) {
+        continue;
+      }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
@@ -373,40 +378,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       float deltaCotTheta = lb.cotTheta - lt.cotTheta;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-
-      float dU = lt.U - lb.U;
-
-      // A and B are evaluated as a function of the circumference parameters
-      // x_0 and y_0
-      float A = (lt.V - lb.V) / dU;
-      float S2 = 1. + A * A;
-      float B = lb.V - A * lb.U;
-      float B2 = B * B;
-      float S = std::sqrt(S2);
-
-      // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
-      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
-      // from rad to deltaCotTheta
-      float p2scatterSigma = B2 / S2 * sigmaSquaredPtDependent;
-      if (!std::isinf(m_config.maxPtScattering)) {
-        // if pT > maxPtScattering, calculate allowed scattering angle using
-        // maxPtScattering instead of pt.
-        if (B2 == 0 or
-            options.pTPerHelixRadius * S > B * 2. * m_config.maxPtScattering) {
-          float pTscatterSigma =
-              (m_config.highland / m_config.maxPtScattering) *
-              m_config.sigmaScattering;
-          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
-        }
-      }
-      // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (deltaCotTheta < 0) {
-          break;
-        }
-        t0 = index_t;
-        continue;
-      }
 
       // Apply a cut on the compatibility between the r-z slope of the two
       // seed segments. This is done by comparing the squared difference
@@ -429,13 +400,43 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         continue;
       }
 
+      float dU = lt.U - lb.U;
+
+      // A and B are evaluated as a function of the circumference parameters
+      // x_0 and y_0
+      float A = (lt.V - lb.V) / dU;
+      float S2 = 1. + A * A;
+      float B = lb.V - A * lb.U;
+      float B2 = B * B;
+      float S = std::sqrt(S2);
+
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
       if (S2 < B2 * options.minHelixDiameter2) {
         continue;
       }
 
-      if (std::abs(tanLM - tanMT[t]) > 0.005) {
+      // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
+      // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
+      // from rad to deltaCotTheta
+      float p2scatterSigma = B2 / S2 * sigmaSquaredPtDependent;
+      if (!std::isinf(m_config.maxPtScattering)) {
+        // if pT > maxPtScattering, calculate allowed scattering angle using
+        // maxPtScattering instead of pt.
+        if (B2 == 0 or
+            options.pTPerHelixRadius * S > B * 2. * m_config.maxPtScattering) {
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
+          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
+        }
+      }
+      // if deltaTheta larger than allowed scattering for calculated pT, skip
+      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+        if (deltaCotTheta < 0) {
+          break;
+        }
+        t0 = index_t;
         continue;
       }
 
