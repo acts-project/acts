@@ -108,7 +108,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
-  
+
   // Track covariance needs to be set
   if (not trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
@@ -127,8 +127,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   Vector3 yAxis = surfaceAxes.col(1);
 
   // Vector pointing from the surface origin to the vertex position
-  // TODO: I think the vertex should always be at the surfaceOrigin since the track parameters should be obtained by estimate3DImpactParameters. 
-  Vector3 originToVertex = vertexPos - surfaceOrigin; 
+  // TODO: I think the vertex should always be at the surfaceOrigin since the
+  // track parameters should be obtained by estimate3DImpactParameters.
+  Vector3 originToVertex = vertexPos - surfaceOrigin;
 
   // x- and y-coordinate of the vertex in the surface coordinate system
   Vector2 localVertexXY{originToVertex.dot(xAxis), originToVertex.dot(yAxis)};
@@ -366,7 +367,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (vtxVarZ >= 0) {
     ipAndSigma.sigmaz0 =
         std::sqrt(vtxVarZ + perigeeCov(BoundIndices::eBoundLoc1,
-                                        BoundIndices::eBoundLoc1));
+                                       BoundIndices::eBoundLoc1));
   } else {
     ipAndSigma.sigmaz0 = std::sqrt(
         perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));

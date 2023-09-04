@@ -36,8 +36,7 @@ auto Acts::ZScanVertexFinder<vfitter_t>::find(
 
     if (ipas.sigmad0 > 0) {
       // calculate z0
-      z0AndWeight.first =
-          ipas.z0 + vertexingOptions.constraint.position().z();
+      z0AndWeight.first = ipas.z0 + vertexingOptions.constraint.position().z();
 
       // calculate chi2 of IP
       double chi2IP = std::pow(ipas.d0 / ipas.sigmad0, 2);
