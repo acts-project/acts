@@ -17,7 +17,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
-namespace Acts {
+namespace Acts::detail {
 
 template <typename traj_t>
 void voidFitterCalibrator(const GeometryContext& /*gctx*/,
@@ -64,4 +64,4 @@ inline const Surface* voidSurfaceAccessor(const SourceLink& /*sourceLink*/) {
   throw std::runtime_error{"voidSurfaceAccessor should not ever execute"};
   return nullptr;
 }
-}  // namespace Acts
+}  // namespace Acts::detail

@@ -94,9 +94,9 @@ struct CombinatorialKalmanFilterExtensions {
 
   /// Default constructor which connects the default void components
   CombinatorialKalmanFilterExtensions() {
-    calibrator.template connect<&voidFitterCalibrator<traj_t>>();
-    updater.template connect<&voidFitterUpdater<traj_t>>();
-    smoother.template connect<&voidFitterSmoother<traj_t>>();
+    calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
+    updater.template connect<&detail::voidFitterUpdater<traj_t>>();
+    smoother.template connect<&detail::voidFitterSmoother<traj_t>>();
     branchStopper.connect<voidBranchStopper>();
     measurementSelector.template connect<voidMeasurementSelector>();
   }
