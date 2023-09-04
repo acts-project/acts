@@ -109,12 +109,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return VertexingError::EmptyInput;
   }
 
-  // Track covariance needs to be set
+  // Retrieve weight matrix of the track's local x- and y-coordinate. For this,
+  // the covariance needs to be set.
   if (not trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
-
-  // Retrieve track weight matrix
   auto cov = trkParams->covariance();
   SquareMatrix2 weightXY = cov->block<2, 2>(0, 0).inverse();
 
