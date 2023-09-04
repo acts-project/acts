@@ -21,15 +21,12 @@
 namespace Acts {
 
 struct ImpactParametersAndSigma {
-  double IPd0 = 0.;
-  double IPz0 = 0.;
-  double IPz0SinTheta = 0.;
+  // Impact parameters ...
+  double d0 = 0.;
+  double z0 = 0.;
+  // ... and their standard deviations
   double sigmad0 = 0.;
   double sigmaz0 = 0.;
-  double sigmaz0SinTheta = 0.;
-  double PVsigmad0 = 0.;
-  double PVsigmaz0 = 0.;
-  double PVsigmaz0SinTheta = 0.;
 };
 
 /// @class ImpactPointEstimator
@@ -151,12 +148,11 @@ class ImpactPointEstimator {
                          const ActsScalar& massHypothesis = 0.13957018,
                          const ActsScalar& chargeHypothesis = 1.) const;
 
-  /// @brief Estimates the impact parameters and their errors of a given
-  /// track w.r.t. a vertex by propagating the trajectory state
-  /// towards the vertex position.
+  /// @brief Calculates the impact parameters of a track w.r.t. a vertex. The corresponding  
+  /// errors are approximated by summing the variances of the track and the vertex.
   ///
-  /// @param track Track to estimate IP from
-  /// @param vtx Vertex the track belongs to
+  /// @param track Track whose impact parameters are calculated
+  /// @param vtx Vertex corresponding to the track
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
   Result<ImpactParametersAndSigma> estimateImpactParameters(
@@ -205,7 +201,8 @@ class ImpactPointEstimator {
   /// @param helixCenter Position of the helix center
   /// @param vtxPos Vertex position
   /// @param phi Azimuthal momentum angle
-  /// @note Modifying phi corresponds to moving along the track. This function optimizes phi until we reach a 3D PCA.
+  /// @note Modifying phi corresponds to moving along the track. This function 
+  /// optimizes phi until we reach a 3D PCA.
   /// @param theta Polar momentum angle (constant along the track)
   /// @param rho Signed helix radius
   ///

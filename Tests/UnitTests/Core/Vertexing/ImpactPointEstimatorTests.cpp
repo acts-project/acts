@@ -380,8 +380,8 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
           .estimateImpactParameters(track, myConstraint, geoContext,
                                     magFieldContext)
           .value();
-  BOOST_CHECK_NE(output.IPd0, 0.);
-  BOOST_CHECK_NE(output.IPz0, 0.);
+  BOOST_CHECK_NE(output.d0, 0.);
+  BOOST_CHECK_NE(output.z0, 0.);
   // TODO what about the other struct members? can the parameter space be
   // restricted further?
 }

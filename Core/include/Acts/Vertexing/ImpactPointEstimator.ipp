@@ -108,6 +108,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
+  
+  // Track covariance needs to be set
+  if (not trkParams->covariance().has_value()) {
+    return VertexingError::NoCovariance;
+  }
 
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)
@@ -122,20 +127,17 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   Vector3 yAxis = surfaceAxes.col(1);
 
   // Vector pointing from the surface origin to the vertex position
-  Vector3 originToVertex =
-      vertexPos - surfaceOrigin;  // TODO print this variable
+  // TODO: I think the vertex should always be at the surfaceOrigin since the track parameters should be obtained by estimate3DImpactParameters. 
+  Vector3 originToVertex = vertexPos - surfaceOrigin; 
 
   // x- and y-coordinate of the vertex in the surface coordinate system
   Vector2 localVertexXY{originToVertex.dot(xAxis), originToVertex.dot(yAxis)};
 
-  // track covariance
-  if (not trkParams->covariance().has_value()) {
-    return VertexingError::NoCovariance;
-  }
+  // Retrieve weight matrix
   auto cov = trkParams->covariance();
   SquareMatrix2 weightXY = cov->block<2, 2>(0, 0).inverse();
 
-  // 2-dim residual
+  // 2-dimensional residual
   Vector2 xyRes =
       Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
       localVertexXY;
@@ -325,83 +327,52 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 
   const auto& propRes = *result;
+
+  // Check if the covariance matrix of the Perigee parameters exists
+  if (not propRes.endParameters->covariance().has_value()) {
+    return VertexingError::NoCovariance;
+  }
+
+  // Extract Perigee parameters and corresponding covariance matrix
   const auto& params = propRes.endParameters->parameters();
   const double d0 = params[BoundIndices::eBoundLoc0];
   const double z0 = params[BoundIndices::eBoundLoc1];
   const double phi = params[BoundIndices::eBoundPhi];
-  const double theta = params[BoundIndices::eBoundTheta];
-
-  const double sinPhi = std::sin(phi);
-  const double sinTheta = std::sin(theta);
-  const double cosPhi = std::cos(phi);
-  const double cosTheta = std::cos(theta);
-
-  SquareMatrix2 vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
-
-  // Covariance of perigee parameters after propagation to perigee surface
-  if (not propRes.endParameters->covariance().has_value()) {
-    return VertexingError::NoCovariance;
-  }
   const auto& perigeeCov = *(propRes.endParameters->covariance());
 
-  Vector2 d0JacXY(-sinPhi, cosPhi);
+  // Covariance matrix of the vertex's x- and y-coordinate
+  SquareMatrix2 vtxCovXY = vtx.covariance().template block<2, 2>(0, 0);
+  // Variance of the vertex's z-cooridnate
+  double vtxVarZ = vtx.covariance()(eZ, eZ);
 
-  ImpactParametersAndSigma newIPandSigma;
+  // TODO: is this Jacobian correct?
+  Vector2 d0JacXY(-std::sin(phi), std::cos(phi));
 
-  newIPandSigma.IPd0 = d0;
-  double d0_PVcontrib = d0JacXY.transpose() * (vrtXYCov * d0JacXY);
+  ImpactParametersAndSigma ipAndSigma;
+
+  // TODO fixme: d0_PVcontrib and vtxVarZ should always be >= 0
+  ipAndSigma.d0 = d0;
+  double d0_PVcontrib = d0JacXY.transpose() * (vtxCovXY * d0JacXY);
   if (d0_PVcontrib >= 0) {
-    newIPandSigma.sigmad0 =
+    ipAndSigma.sigmad0 =
         std::sqrt(d0_PVcontrib + perigeeCov(BoundIndices::eBoundLoc0,
                                             BoundIndices::eBoundLoc0));
-    newIPandSigma.PVsigmad0 = std::sqrt(d0_PVcontrib);
   } else {
-    newIPandSigma.sigmad0 = std::sqrt(
+    ipAndSigma.sigmad0 = std::sqrt(
         perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
-    newIPandSigma.PVsigmad0 = 0;
   }
 
-  SquareMatrix2 covPerigeeZ0Theta;
-  covPerigeeZ0Theta(0, 0) =
-      perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
-  covPerigeeZ0Theta(0, 1) =
-      perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundTheta);
-  covPerigeeZ0Theta(1, 0) =
-      perigeeCov(BoundIndices::eBoundTheta, BoundIndices::eBoundLoc1);
-  covPerigeeZ0Theta(1, 1) =
-      perigeeCov(BoundIndices::eBoundTheta, BoundIndices::eBoundTheta);
-
-  double vtxZZCov = vtx.covariance()(eZ, eZ);
-
-  Vector2 z0JacZ0Theta(sinTheta, z0 * cosTheta);
-
-  if (vtxZZCov >= 0) {
-    newIPandSigma.IPz0SinTheta = z0 * sinTheta;
-    newIPandSigma.sigmaz0SinTheta = std::sqrt(
-        z0JacZ0Theta.transpose() * (covPerigeeZ0Theta * z0JacZ0Theta) +
-        sinTheta * vtxZZCov * sinTheta);
-
-    newIPandSigma.PVsigmaz0SinTheta = std::sqrt(sinTheta * vtxZZCov * sinTheta);
-    newIPandSigma.IPz0 = z0;
-    newIPandSigma.sigmaz0 =
-        std::sqrt(vtxZZCov + perigeeCov(BoundIndices::eBoundLoc1,
+  ipAndSigma.z0 = z0;
+  if (vtxVarZ >= 0) {
+    ipAndSigma.sigmaz0 =
+        std::sqrt(vtxVarZ + perigeeCov(BoundIndices::eBoundLoc1,
                                         BoundIndices::eBoundLoc1));
-    newIPandSigma.PVsigmaz0 = std::sqrt(vtxZZCov);
   } else {
-    // Remove contribution from PV
-    newIPandSigma.IPz0SinTheta = z0 * sinTheta;
-    double sigma2z0sinTheta =
-        (z0JacZ0Theta.transpose() * (covPerigeeZ0Theta * z0JacZ0Theta));
-    newIPandSigma.sigmaz0SinTheta = std::sqrt(sigma2z0sinTheta);
-    newIPandSigma.PVsigmaz0SinTheta = 0;
-
-    newIPandSigma.IPz0 = z0;
-    newIPandSigma.sigmaz0 = std::sqrt(
+    ipAndSigma.sigmaz0 = std::sqrt(
         perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
-    newIPandSigma.PVsigmaz0 = 0;
   }
 
-  return newIPandSigma;
+  return ipAndSigma;
 }
 
 template <typename input_track_t, typename propagator_t,

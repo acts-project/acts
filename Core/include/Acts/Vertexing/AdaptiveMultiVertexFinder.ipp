@@ -214,8 +214,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
 
   double significance = 0.;
   if (ipas.sigmad0 > 0 && ipas.sigmaz0 > 0) {
-    significance = std::sqrt(std::pow(ipas.IPd0 / ipas.sigmad0, 2) +
-                             std::pow(ipas.IPz0 / ipas.sigmaz0, 2));
+    significance = std::sqrt(std::pow(ipas.d0 / ipas.sigmad0, 2) +
+                             std::pow(ipas.z0 / ipas.sigmaz0, 2));
   }
 
   return significance;
