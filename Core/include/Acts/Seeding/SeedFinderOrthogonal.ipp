@@ -425,10 +425,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
 
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
-      float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
+      float p2scatterSigma = B2 / S2 * sigmaSquaredPtDependent;
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
@@ -786,7 +785,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
         middle.z() > m_config.zOutermostLayers.second) {
       continue;
     }
-    float spPhi = std::atan2(middle.y(), middle.x());
+    float spPhi = middle.phi();
     if (spPhi > m_config.phiMax or spPhi < m_config.phiMin) {
       continue;
     }
