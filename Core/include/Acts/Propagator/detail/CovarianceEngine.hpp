@@ -58,7 +58,7 @@ namespace detail {
 ///   - the stepwise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
-    const GeometryContext& geoContext, BoundSymMatrix& covarianceMatrix,
+    const GeometryContext& geoContext, BoundSquareMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
     FreeVector& parameters, bool covTransport, double accumulatedPath,
@@ -87,7 +87,7 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
 ///   - the stepweise jacobian towards it (from last bound)
 ///   - and the path length (from start - for ordering)
 std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
-    BoundSymMatrix& covarianceMatrix, BoundMatrix& jacobian,
+    BoundSquareMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
     bool covTransport, double accumulatedPath);
@@ -110,7 +110,7 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
 /// @note No check is done if the position is actually on the surface
 ///
 void transportCovarianceToBound(
-    const GeometryContext& geoContext, BoundSymMatrix& boundCovariance,
+    const GeometryContext& geoContext, BoundSquareMatrix& boundCovariance,
     BoundMatrix& fullTransportJacobian, FreeMatrix& freeTransportJacobian,
     FreeVector& freeToPathDerivatives, BoundToFreeMatrix& boundToFreeJacobian,
     FreeVector& freeParameters, const Surface& surface,
@@ -128,7 +128,7 @@ void transportCovarianceToBound(
 /// parametrisation to free parameters
 /// @param [in] direction Normalised direction vector
 ///
-void transportCovarianceToCurvilinear(BoundSymMatrix& boundCovariance,
+void transportCovarianceToCurvilinear(BoundSquareMatrix& boundCovariance,
                                       BoundMatrix& fullTransportJacobian,
                                       FreeMatrix& freeTransportJacobian,
                                       FreeVector& freeToPathDerivatives,

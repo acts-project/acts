@@ -390,7 +390,6 @@ def itkSeedingAlgConfig(
         deltaRMaxBottomSP = 150 * u.mm
         deltaZMax = float("inf") * u.mm
         interactionPointCut = True
-        arithmeticAverageCotTheta = False
         impactMax = 2 * u.mm
         zBinsCustomLooping = [
             1,
@@ -461,7 +460,6 @@ def itkSeedingAlgConfig(
         deltaRMaxBottomSP = deltaRMaxTopSP
         deltaZMax = 900 * u.mm
         interactionPointCut = False
-        arithmeticAverageCotTheta = True
         impactMax = 20 * u.mm
         zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
         zBinNeighborsTop = [
@@ -533,7 +531,6 @@ def itkSeedingAlgConfig(
         impactMax=impactMax,
         deltaPhiMax=deltaPhiMax,
         interactionPointCut=interactionPointCut,
-        arithmeticAverageCotTheta=arithmeticAverageCotTheta,
         deltaZMax=deltaZMax,
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,

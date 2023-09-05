@@ -58,7 +58,8 @@ class SequenceConfigurationException : public std::runtime_error {
 class Sequencer {
  public:
   struct FpeMask {
-    std::string loc;
+    std::string file;
+    std::pair<std::size_t, std::size_t> lines;
     Acts::FpeType type;
     std::size_t count;
   };
@@ -186,9 +187,7 @@ class Sequencer {
   const Acts::Logger &logger() const { return *m_logger; }
 };
 
-inline std::ostream &operator<<(std::ostream &os, const Sequencer::FpeMask &m) {
-  os << "FpeMask(" << m.loc << ", " << m.type << " <= " << m.count << ")";
-  return os;
-}
+std::ostream &operator<<(std::ostream &os,
+                         const ActsExamples::Sequencer::FpeMask &m);
 
 }  // namespace ActsExamples

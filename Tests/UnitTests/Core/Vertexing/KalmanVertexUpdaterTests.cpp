@@ -49,7 +49,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundTrackParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SymMatrix4::Identity() * 0.01);
+    vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters>(vtx,

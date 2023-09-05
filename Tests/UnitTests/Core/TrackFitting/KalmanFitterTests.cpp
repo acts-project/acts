@@ -69,7 +69,7 @@ Acts::CurvilinearTrackParameters makeParameters() {
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
   return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
@@ -95,6 +95,9 @@ auto makeDefaultKalmanFitterOptions() {
       &kfUpdater);
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
+  extensions.surfaceAccessor
+      .connect<&Acts::Test::TestSourceLink::SurfaceAccessor::operator()>(
+          &tester.surfaceAccessor);
 
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
                              extensions, PropagatorPlainOptions());

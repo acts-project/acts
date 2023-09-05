@@ -27,7 +27,7 @@ auto Acts::EigenStepper<E, A>::makeState(
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundVector& boundParams,
-                                          const BoundSymMatrix& cov,
+                                          const BoundSquareMatrix& cov,
                                           const Surface& surface,
                                           const double stepSize) const {
   // Update the stepping state

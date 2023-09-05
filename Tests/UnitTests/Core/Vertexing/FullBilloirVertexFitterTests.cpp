@@ -50,7 +50,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Linearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
 
 // Create a test context
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   Vertex<BoundTrackParameters> constraint;
   Vertex<InputTrack> customConstraint;
   // Some arbitrary values
-  SymMatrix4 covMatVtx = SymMatrix4::Zero();
+  SquareMatrix4 covMatVtx = SquareMatrix4::Zero();
   double ns2 = Acts::UnitConstants::ns * Acts::UnitConstants::ns;
   covMatVtx(0, 0) = 30_mm2;
   covMatVtx(1, 1) = 30_mm2;
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         billoirFitter.fit(emptyVector, linearizer, vfOptions, state).value();
 
     Vector3 origin(0., 0., 0.);
-    SymMatrix4 zeroMat = SymMatrix4::Zero();
+    SquareMatrix4 zeroMat = SquareMatrix4::Zero();
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 

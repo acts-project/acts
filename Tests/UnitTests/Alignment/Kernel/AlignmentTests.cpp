@@ -213,7 +213,7 @@ CurvilinearTrackParameters makeParameters() {
   stddev[eBoundPhi] = 0.5_degree;
   stddev[eBoundTheta] = 0.5_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   auto loc0 = 0. + stddev[eBoundLoc0] * normalDist(rng);
   auto loc1 = 0. + stddev[eBoundLoc1] * normalDist(rng);
@@ -293,7 +293,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Construct the KalmanFitter options
 
-  KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, getExtensions(),
+  auto extensions = getExtensions();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+  KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, extensions,
                                 PropagatorPlainOptions());
 
   // Construct an non-updating alignment updater
@@ -339,8 +343,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   BOOST_CHECK_EQUAL(alignState.alignedSurfaces.size(), 5);
   // Check the measurements covariance
   BOOST_CHECK_EQUAL(alignState.measurementCovariance.rows(), 12);
-  const SymMatrix2 measCov = alignState.measurementCovariance.block<2, 2>(2, 2);
-  SymMatrix2 cov2D;
+  const SquareMatrix2 measCov =
+      alignState.measurementCovariance.block<2, 2>(2, 2);
+  SquareMatrix2 cov2D;
   cov2D << 30_um * 30_um, 0, 0, 50_um * 50_um;
   CHECK_CLOSE_ABS(measCov, cov2D, 1e-10);
   // Check the track parameters covariance matrix. Its rows/columns scales

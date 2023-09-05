@@ -62,7 +62,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 MagneticFieldContext mfContext = MagneticFieldContext();
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 /// An observer that measures the perpendicular distance
 struct PerpendicularMeasure {

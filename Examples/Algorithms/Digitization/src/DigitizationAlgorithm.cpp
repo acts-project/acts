@@ -286,7 +286,7 @@ ActsExamples::DigitizationAlgorithm::channelizing(
 
   auto driftedSegment =
       m_surfaceDrift.toReadout(gctx, surface, geoCfg.thickness, hit.position(),
-                               hit.unitDirection(), driftDir);
+                               hit.direction(), driftDir);
   auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
   if (maskedSegmentRes.ok()) {
     auto maskedSegment = maskedSegmentRes.value();

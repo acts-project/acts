@@ -18,6 +18,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
@@ -30,7 +31,7 @@ using namespace Acts;
 using namespace Acts::Test;
 
 using ParametersVector = Acts::BoundVector;
-using CovarianceMatrix = Acts::BoundSymMatrix;
+using CovarianceMatrix = Acts::BoundSquareMatrix;
 using Jacobian = Acts::BoundMatrix;
 
 constexpr double tol = 1e-6;
@@ -43,7 +44,7 @@ BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixUpdater)
 BOOST_AUTO_TEST_CASE(Update) {
   // Make dummy measurement
   Vector2 measPar(-0.1, 0.45);
-  SymMatrix2 measCov = Vector2(0.04, 0.1).asDiagonal();
+  SquareMatrix2 measCov = Vector2(0.04, 0.1).asDiagonal();
   auto sourceLink = TestSourceLink(eBoundLoc0, eBoundLoc1, measPar, measCov);
 
   // Make dummy track parameters
@@ -61,8 +62,10 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predicted() = trkPar;
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
-  ts.setUncalibratedSourceLink(SourceLink{std::move(sourceLink)});
-  testSourceLinkCalibrator<VectorMultiTrajectory>(tgContext, ts);
+  BOOST_CHECK(!ts.hasUncalibratedSourceLink());
+  testSourceLinkCalibrator<VectorMultiTrajectory>(
+      tgContext, CalibrationContext{}, SourceLink{std::move(sourceLink)}, ts);
+  BOOST_CHECK(ts.hasUncalibratedSourceLink());
 
   // Check that the state has storage available
   BOOST_CHECK(ts.hasPredicted());

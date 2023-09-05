@@ -48,8 +48,12 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   c10::InferenceMode guard(true);
   const torch::Device device(m_deviceType);
 
-  const auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
-  const auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
+  auto nodes = std::any_cast<torch::Tensor>(inputNodes).to(device);
+  auto edgeList = std::any_cast<torch::Tensor>(inputEdges).to(device);
+
+  if (m_cfg.numFeatures > nodes.size(1)) {
+    throw std::runtime_error("requested more features then available");
+  }
 
   std::vector<at::Tensor> results;
   results.reserve(m_cfg.nChunks);
@@ -58,7 +62,9 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
       m_cfg.undirected ? torch::cat({edgeList, edgeList.flip(0)}, 1) : edgeList;
 
   std::vector<torch::jit::IValue> inputTensors(2);
-  inputTensors[0] = nodes;
+  inputTensors[0] = m_cfg.numFeatures < nodes.size(1)
+                        ? nodes.index({Slice{}, Slice{None, m_cfg.numFeatures}})
+                        : nodes;
 
   const auto chunks = at::chunk(at::arange(edgeListTmp.size(1)), m_cfg.nChunks);
   for (const auto& chunk : chunks) {
@@ -76,10 +82,8 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
     output = output.index({Slice(None, output.size(0) / 2)});
   }
 
-  results.clear();
-
-  ACTS_VERBOSE("Size after filtering network: " << output.size(0));
-  ACTS_VERBOSE("Slice of filtered output:\n"
+  ACTS_VERBOSE("Size after classifier: " << output.size(0));
+  ACTS_VERBOSE("Slice of classified output:\n"
                << output.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
   printCudaMemInfo(logger());
 
@@ -87,10 +91,11 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   torch::Tensor edgesAfterCut = edgeList.index({Slice(), mask});
   edgesAfterCut = edgesAfterCut.to(torch::kInt64);
 
-  ACTS_VERBOSE("Size after filter cut: " << edgesAfterCut.size(1));
+  ACTS_VERBOSE("Size after score cut: " << edgesAfterCut.size(1));
   printCudaMemInfo(logger());
 
-  return {nodes, edgesAfterCut, output.masked_select(mask)};
+  return {std::move(nodes), std::move(edgesAfterCut),
+          output.masked_select(mask)};
 }
 
 }  // namespace Acts
