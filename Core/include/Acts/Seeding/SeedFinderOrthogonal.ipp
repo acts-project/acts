@@ -340,10 +340,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     auto lb = linCircleBottom[b];
-    float Vb = lb.V;
-    float Ub = lb.U;
-    float ErB = lb.Er;
-    float iDeltaRB = lb.iDeltaR;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + lb.cotTheta * lb.cotTheta);
@@ -386,9 +382,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = lt.Er + ErB +
+      float error2 = lt.Er + lb.Er +
                      2 * (lb.cotTheta * lt.cotTheta * varianceRM + varianceZM) *
-                         iDeltaRB * lt.iDeltaR;
+                         lb.iDeltaR * lt.iDeltaR;
 
       float deltaCotTheta = lb.cotTheta - lt.cotTheta;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
@@ -407,20 +403,20 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         // skip top SPs based on cotTheta sorting when producing triplets
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
-        if (lb.cotTheta - lt.cotTheta < 0) {
+        if (deltaCotTheta < 0) {
           break;
         }
         t0 = index_t + 1;
         continue;
       }
 
-      float dU = lt.U - Ub;
+      float dU = lt.U - lb.U;
 
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A = (lt.V - Vb) / dU;
+      float A = (lt.V - lb.V) / dU;
       float S2 = 1. + A * A;
-      float B = Vb - A * Ub;
+      float B = lb.V - A * lb.U;
       float B2 = B * B;
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
@@ -446,7 +442,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (lb.cotTheta - lt.cotTheta < 0) {
+        if (deltaCotTheta < 0) {
           break;
         }
         t0 = index_t;
