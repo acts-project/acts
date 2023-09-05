@@ -259,12 +259,21 @@ class TrackProxy {
     return component<IndexType>(hashString("tipIndex"));
   }
 
+  IndexType stemIndex() const {
+    return component<IndexType>(hashString("stemIndex"));
+  }
+
   /// Get a mutable reference to the tip index, i.e. the entry point into the
   /// track container
   /// @return mutable reference to the tip index
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexType& tipIndex() {
     return component<IndexType>(hashString("tipIndex"));
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  IndexType& stemIndex() {
+    return component<IndexType>(hashString("stemIndex"));
   }
 
   /// Get the reference surface of the track (e.g. the perigee)
@@ -399,6 +408,25 @@ class TrackProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStatesReversed() {
     return m_container->reverseTrackStateRange(m_index);
+  }
+
+  auto trackStates() const {
+    return m_container->forwardTrackStateRange(m_index);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto trackStates() {
+    return m_container->forwardTrackStateRange(m_index);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void linkForward() {
+    IndexType last = kInvalid;
+    for (auto ts : trackStatesReversed()) {
+      ts.template component<IndexType>(hashString("next")) = last;
+      last = ts.index();
+    }
+    stemIndex() = last;
   }
 
   /// Append a track state to this track. This will modify the tip index to
@@ -580,9 +608,12 @@ class TrackProxy {
     IndexType next = kInvalid;
     IndexType prev = kInvalid;
 
+    stemIndex() = tipIndex();
+
     while (current != kInvalid) {
       auto ts = m_container->trackStateContainer().getTrackState(current);
       prev = ts.previous();
+      ts.template component<IndexType>(hashString("next")) = prev;
       ts.previous() = next;
       next = current;
       tipIndex() = current;
