@@ -118,7 +118,7 @@ test_exatrkx_python:
   tags:
     - docker-gpu-nvidia
   script:
-    - apt-get update -y || true # TODO revert
+    - apt-get update -y
     - apt-get install -y python3 libxxhash0
     - source /usr/local/bin/thisroot.sh
     - source build/python/setup.sh

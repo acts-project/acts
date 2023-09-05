@@ -76,14 +76,12 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
 
   // GCC12+ in Release throws an overread warning here due to the move.
   // This is from inside boost code, so best we can do is to suppress it.
-#if defined(__GNUC__) && !defined(__clang__)
+#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
 #pragma GCC diagnostic push
-#if __GNUC__ >= 11
 #pragma GCC diagnostic ignored "-Wstringop-overread"
 #endif
-#endif
   return std::make_tuple(std::move(bottoms), global_index, std::move(tops));
-#if defined(__GNUC__) && !defined(__clang__)
+#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
 }
