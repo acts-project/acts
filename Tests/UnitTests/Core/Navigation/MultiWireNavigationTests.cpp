@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(Navigation_in_Indexed_Surfaces) {
 
   sOptions.style = candidates_style;
 
-  for (const auto sfc : nState.surfaceCandidates) {
+  for (const auto& sfc : nState.surfaceCandidates) {
     if (!sfc.portal) {
       auto activatedBin = actsvg::draw::rectangle(
           "bin",
