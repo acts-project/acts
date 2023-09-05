@@ -115,7 +115,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return VertexingError::NoCovariance;
   }
   auto cov = trkParams->covariance();
-  SquareMatrix2 weightXY = cov->block<2, 2>(0, 0).inverse();
+  SquareMatrix2 xyWeight = cov->block<2, 2>(0, 0).inverse();
 
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)
@@ -130,7 +130,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   Vector3 yAxis = surfaceAxes.col(1);
 
   // Vector pointing from the surface origin to the vertex position
-  // TODO: I think the vertex should always be at the surfaceOrigin since the
+  // TODO: The vertex should always be at the surfaceOrigin since the
   // track parameters should be obtained by estimate3DImpactParameters.
   Vector3 originToVertex = vertexPos - surfaceOrigin;
 
@@ -143,7 +143,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       localVertexXY;
 
   // return chi2
-  return xyRes.dot(weightXY * xyRes);
+  return xyRes.dot(xyWeight * xyRes);
 }
 
 template <typename input_track_t, typename propagator_t,
@@ -317,7 +317,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-  pOptions.direction = Direction::Backward;
+  auto intersection = perigeeSurface->intersect(gctx, track.position(gctx),
+                                                track.direction(), false);
+  pOptions.direction =
+      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
 
   // Do the propagation to linPoint
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
@@ -337,26 +340,28 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const auto& params = propRes.endParameters->parameters();
   const double d0 = params[BoundIndices::eBoundLoc0];
   const double z0 = params[BoundIndices::eBoundLoc1];
-  const double phi = params[BoundIndices::eBoundPhi];
   const auto& perigeeCov = *(propRes.endParameters->covariance());
 
-  // Covariance matrix of the vertex's x- and y-coordinate
-  SquareMatrix2 vtxCovXY = vtx.covariance().template block<2, 2>(0, 0);
-  // Variance of the vertex's z-cooridnate
+  // Vertex variances
+  // TODO: By looking at sigmad0 and sigmaz0 we neglect the offdiagonal terms
+  // (i.e., we approximate the vertex as a sphere rather than an ellipsoid).
+  // Using the full covariance matrix might furnish better results.
+  double vtxVarX = vtx.covariance()(eX, eX);
+  double vtxVarY = vtx.covariance()(eY, eY);
   double vtxVarZ = vtx.covariance()(eZ, eZ);
-
-  // TODO: is this Jacobian correct?
-  Vector2 d0JacXY(-std::sin(phi), std::cos(phi));
 
   ImpactParametersAndSigma ipAndSigma;
 
-  // TODO fixme: d0_PVcontrib and vtxVarZ should always be >= 0
   ipAndSigma.d0 = d0;
-  double d0_PVcontrib = d0JacXY.transpose() * (vtxCovXY * d0JacXY);
-  if (d0_PVcontrib >= 0) {
+  // Variance of the vertex extent in the x-y-plane
+  double vtxVar2DExtent = vtxVarX + vtxVarY;
+  // TODO: vtxVar2DExtent and vtxVarZ should always be >= 0. We need to throw an
+  // error here once https://github.com/acts-project/acts/issues/2231 is
+  // resolved.
+  if (vtxVar2DExtent >= 0) {
     ipAndSigma.sigmad0 =
-        std::sqrt(d0_PVcontrib + perigeeCov(BoundIndices::eBoundLoc0,
-                                            BoundIndices::eBoundLoc0));
+        std::sqrt(vtxVar2DExtent + perigeeCov(BoundIndices::eBoundLoc0,
+                                              BoundIndices::eBoundLoc0));
   } else {
     ipAndSigma.sigmad0 = std::sqrt(
         perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
