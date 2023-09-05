@@ -312,20 +312,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
       });
 
-  std::vector<float> tanLM;
   std::vector<float> tanMT;
-
-  tanLM.reserve(bottom.size());
   tanMT.reserve(top.size());
 
-  size_t numBotSP = bottom.size();
   size_t numTopSP = top.size();
-
-  for (size_t b = 0; b < numBotSP; b++) {
-    tanLM.push_back(std::atan2(middle.radius() - bottom[b]->radius(),
-                               zM - bottom[b]->z()));
-  }
-
   for (size_t t = 0; t < numTopSP; t++) {
     tanMT.push_back(std::atan2(top[t]->radius() - middle.radius(),
                                top[t]->z() - zM));
@@ -372,11 +362,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     curvatures.clear();
     impactParameters.clear();
 
+    float tanLM = std::atan2(middle.radius() - bottom[b]->radius(),
+			     zM - bottom[b]->z());
+    
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
       auto lt = linCircleTop[t];
 
-      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
+      if (std::abs(tanLM - tanMT[t]) > 0.005) {
         continue;
       }
 
@@ -418,6 +411,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       float S2 = 1. + A * A;
       float B = lb.V - A * lb.U;
       float B2 = B * B;
+      float S = std::sqrt(S2);
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
       if (S2 < B2 * options.minHelixDiameter2) {
@@ -431,8 +425,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
-        if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) >
-                           2. * m_config.maxPtScattering) {
+        if (B2 == 0 or options.pTPerHelixRadius * S >
+                           2. * B * m_config.maxPtScattering) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
               m_config.sigmaScattering;
@@ -457,7 +451,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         top_valid.push_back(top[t]);
         // inverse diameter is signed depending if the curvature is
         // positive/negative in phi
-        curvatures.push_back(B / std::sqrt(S2));
+        curvatures.push_back(B / S);
         impactParameters.push_back(Im);
       }
     }
