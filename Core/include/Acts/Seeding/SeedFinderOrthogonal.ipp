@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -305,17 +306,29 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         return linCircleBottom[a].cotTheta < linCircleBottom[b].cotTheta;
       });
 
-  std::sort(sorted_tops.begin(), sorted_tops.end(),
-            [&linCircleTop](const std::size_t a, const std::size_t b) -> bool {
-              return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
-            });
+  std::sort(
+      sorted_tops.begin(), sorted_tops.end(),
+      [&linCircleTop](const std::size_t a, const std::size_t b) -> bool {
+        return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
+      });
 
+  std::vector<float> tanLM;
+  std::vector<float> tanMT;
+
+  tanLM.reserve(bottom.size());
+  tanMT.reserve(top.size());
+
+  size_t numBotSP = bottom.size();
   size_t numTopSP = top.size();
 
-  std::vector<float> tanMT(numTopSP);
-  for (size_t t = 0; t < numTopSP; ++t) {
-    tanMT[t] = std::atan2(top[t]->radius() - middle.radius(),
-                          top[t]->z() - middle.z());
+  for (size_t b = 0; b < numBotSP; b++) {
+    tanLM.push_back(std::atan2(middle.radius() - bottom[b]->radius(),
+                               zM - bottom[b]->z()));
+  }
+
+  for (size_t t = 0; t < numTopSP; t++) {
+    tanMT.push_back(std::atan2(top[t]->radius() - middle.radius(),
+                               top[t]->z() - zM));
   }
 
   size_t t0 = 0;
@@ -326,12 +339,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       break;
     }
 
-    const auto &lb = linCircleBottom[b];
-
-    float tanLM = std::atan2(rM - bottom[b]->radius(), zM - bottom[b]->z());
+    auto lb = linCircleBottom[b];
+    float cotThetaB = lb.cotTheta;
+    float Vb = lb.V;
+    float Ub = lb.U;
+    float ErB = lb.Er;
+    float iDeltaRB = lb.iDeltaR;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = (1. + lb.cotTheta * lb.cotTheta);
+    float iSinTheta2 = (1. + cotThetaB * cotThetaB);
     float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
@@ -363,19 +379,20 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
-      const auto &lt = linCircleTop[t];
+      auto lt = linCircleTop[t];
+      float cotThetaT = lt.cotTheta;
 
-      if (std::abs(tanLM - tanMT[t]) > 0.005) {
+      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
         continue;
       }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = lt.Er + lb.Er +
-                     2 * (lb.cotTheta * lt.cotTheta * varianceRM + varianceZM) *
-                         lb.iDeltaR * lt.iDeltaR;
+      float error2 = lt.Er + ErB +
+                     2 * (cotThetaB * lt.cotTheta * varianceRM + varianceZM) *
+                         iDeltaRB * lt.iDeltaR;
 
-      float deltaCotTheta = lb.cotTheta - lt.cotTheta;
+      float deltaCotTheta = cotThetaB - lt.cotTheta;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
       // Apply a cut on the compatibility between the r-z slope of the two
@@ -392,23 +409,21 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         // skip top SPs based on cotTheta sorting when producing triplets
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
-        if (deltaCotTheta < 0) {
+        if (cotThetaB - cotThetaT < 0) {
           break;
         }
         t0 = index_t + 1;
         continue;
       }
 
-      float dU = lt.U - lb.U;
+      float dU = lt.U - Ub;
 
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A = (lt.V - lb.V) / dU;
+      float A = (lt.V - Vb) / dU;
       float S2 = 1. + A * A;
-      float B = lb.V - A * lb.U;
+      float B = Vb - A * Ub;
       float B2 = B * B;
-      float S = std::sqrt(S2);
-
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
       if (S2 < B2 * options.minHelixDiameter2) {
@@ -416,14 +431,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
 
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
+      float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = B2 / S2 * sigmaSquaredPtDependent;
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
-        if (B2 == 0 or
-            options.pTPerHelixRadius * S > B * 2. * m_config.maxPtScattering) {
+        if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) >
+                           2. * m_config.maxPtScattering) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
               m_config.sigmaScattering;
@@ -432,7 +448,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (deltaCotTheta < 0) {
+        if (cotThetaB - cotThetaT < 0) {
           break;
         }
         t0 = index_t;
@@ -448,7 +464,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         top_valid.push_back(top[t]);
         // inverse diameter is signed depending if the curvature is
         // positive/negative in phi
-        curvatures.push_back(B / S);
+        curvatures.push_back(B / std::sqrt(S2));
         impactParameters.push_back(Im);
       }
     }
@@ -776,7 +792,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
         middle.z() > m_config.zOutermostLayers.second) {
       continue;
     }
-    float spPhi = middle.phi();
+    float spPhi = std::atan2(middle.y(), middle.x());
     if (spPhi > m_config.phiMax or spPhi < m_config.phiMin) {
       continue;
     }
