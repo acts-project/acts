@@ -1156,7 +1156,8 @@ class MultiTrajectory {
     return range_t{getTrackState(iendpoint)};
   }
 
-  /// Range for the track states from @p iendpoint to the trajectory start
+  /// Range for the track states from @p iendpoint to the trajectory start,
+  /// i.e from the outside in.
   /// @param iendpoint Trajectory entry point to start from
   /// @return Iterator pair to iterate over
   /// @note Mutable version
@@ -1171,6 +1172,12 @@ class MultiTrajectory {
     return range_t{getTrackState(iendpoint)};
   }
 
+  /// Range for the track states from @p istartpoint to the trajectory end,
+  /// i.e from inside out
+  /// @param istartpoint Trajectory state index for the innermost track
+  ///        state to start from
+  /// @return Iterator pair to iterate over
+  /// @note Const version
   auto forwardTrackStateRange(IndexType istartpoint) const {
     using range_t =
         detail_lt::TrackStateRange<false, Derived, MeasurementSizeMax, true>;
@@ -1181,6 +1188,11 @@ class MultiTrajectory {
     return range_t{getTrackState(istartpoint)};
   }
 
+  /// Range for the track states from @p istartpoint to the trajectory end,
+  /// i.e from inside out
+  /// @param istartpoint Trajectory state index for the innermost track
+  ///        state to start from
+  /// @return Iterator pair to iterate over
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto forwardTrackStateRange(IndexType istartpoint) {
     using range_t =

@@ -626,10 +626,13 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
   t.appendTrackState();
 
   BOOST_CHECK_THROW(t.trackStates(), std::invalid_argument);
+  BOOST_CHECK(!t.innermostTrackState().has_value());
 
   t.linkForward();
 
   BOOST_CHECK_EQUAL(t.stemIndex(), stem.index());
+  BOOST_CHECK_EQUAL(t.innermostTrackState().value().index(), stem.index());
+  t.innermostTrackState()->predicted().setRandom();
 
   std::vector<IndexType> indices;
   for (auto ts : t.trackStatesReversed()) {
@@ -648,6 +651,8 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
                                 act.end());
 
   t.reverseTrackStates();
+  BOOST_CHECK_EQUAL(t.innermostTrackState().value().index(), indices.back());
+  t.innermostTrackState()->predicted().setRandom();
 
   act.clear();
   for (auto ts : t.trackStates()) {
