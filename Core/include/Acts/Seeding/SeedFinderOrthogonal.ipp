@@ -340,14 +340,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     auto lb = linCircleBottom[b];
-    float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
     float Ub = lb.U;
     float ErB = lb.Er;
     float iDeltaRB = lb.iDeltaR;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float iSinTheta2 = (1. + lb.cotTheta * lb.cotTheta);
     float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
@@ -380,7 +379,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
       auto lt = linCircleTop[t];
-      float cotThetaT = lt.cotTheta;
 
       if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
         continue;
@@ -389,10 +387,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
       float error2 = lt.Er + ErB +
-                     2 * (cotThetaB * lt.cotTheta * varianceRM + varianceZM) *
+                     2 * (lb.cotTheta * lt.cotTheta * varianceRM + varianceZM) *
                          iDeltaRB * lt.iDeltaR;
 
-      float deltaCotTheta = cotThetaB - lt.cotTheta;
+      float deltaCotTheta = lb.cotTheta - lt.cotTheta;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
       // Apply a cut on the compatibility between the r-z slope of the two
@@ -409,7 +407,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         // skip top SPs based on cotTheta sorting when producing triplets
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
-        if (cotThetaB - cotThetaT < 0) {
+        if (lb.cotTheta - lt.cotTheta < 0) {
           break;
         }
         t0 = index_t + 1;
@@ -448,7 +446,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (cotThetaB - cotThetaT < 0) {
+        if (lb.cotTheta - lt.cotTheta < 0) {
           break;
         }
         t0 = index_t;
