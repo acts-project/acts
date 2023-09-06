@@ -66,6 +66,8 @@ class Intersection {
 
   Status status() const { return m_status; }
 
+  /// Comparison function for forward order i.e. intersection closest to -inf
+  /// will be first.
   static bool forwardOrder(const Intersection& aIntersection,
                            const Intersection& bIntersection) {
     auto a = aIntersection.pathLength();
@@ -73,6 +75,8 @@ class Intersection {
     return a < b;
   }
 
+  /// Comparison function for closest order i.e. intersection closest to 0 will
+  /// be first.
   static bool closestOrder(const Intersection& aIntersection,
                            const Intersection& bIntersection) {
     if ((aIntersection.status() == Status::unreachable) &&
@@ -225,17 +229,13 @@ class ObjectMultiIntersection {
 
   const representation_t* representation() const { return m_representation; }
 
-  template <std::uint8_t index>
-  ObjectIntersection<object_t, representation_t> get() const {
-    return {m_intersections[index], m_object, m_representation, index};
-  }
-
-  ObjectIntersection<object_t, representation_t> get(std::uint8_t index) const {
+  ObjectIntersection<object_t, representation_t> operator[](
+      std::uint8_t index) const {
     return {m_intersections[index], m_object, m_representation, index};
   }
 
   std::array<ObjectIntersection<object_t, representation_t>, 2> split() const {
-    return {get<0>(), get<1>()};
+    return {operator[](0), operator[](1)};
   }
 
   ObjectIntersection<object_t, representation_t> closest() const {

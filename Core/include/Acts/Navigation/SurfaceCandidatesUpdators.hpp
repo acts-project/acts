@@ -48,7 +48,7 @@ inline static void updateCandidates(const GeometryContext& gctx,
     // TODO surface tolerance
     auto sIntersection = sRep.intersect(gctx, position, direction,
                                         c.boundaryCheck, s_onSurfaceTolerance);
-    c.objectIntersection = sIntersection.get(c.objectIntersection.index());
+    c.objectIntersection = sIntersection[c.objectIntersection.index()];
   }
   // Sort and stuff non-allowed solutions to the end
   std::sort(

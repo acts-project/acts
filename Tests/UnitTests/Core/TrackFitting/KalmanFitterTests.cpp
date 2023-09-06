@@ -80,10 +80,10 @@ Acts::CurvilinearTrackParameters makeParameters() {
 const FitterTester tester;
 
 // reconstruction propagator and fitter
+const auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
 const auto kfZeroPropagator =
     makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
-const auto kfZero = KalmanFitter(
-    kfZeroPropagator, getDefaultLogger("KalmanFilter", Logging::INFO));
+const auto kfZero = KalmanFitter(kfZeroPropagator);
 
 std::default_random_engine rng(42);
 
@@ -95,9 +95,6 @@ auto makeDefaultKalmanFitterOptions() {
       &kfUpdater);
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
-  extensions.surfaceAccessor
-      .connect<&Acts::Test::TestSourceLink::SurfaceAccessor::operator()>(
-          &tester.surfaceAccessor);
 
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
                              extensions, PropagatorPlainOptions());
