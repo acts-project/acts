@@ -15,9 +15,9 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    calculate3DDistance(const GeometryContext& gctx,
-                        const BoundTrackParameters& trkParams,
-                        const Vector3& vtxPos, State& state) const {
+    calculateDistance(const GeometryContext& gctx,
+                      const BoundTrackParameters& trkParams,
+                      const Vector3& vtxPos, State& state) const {
   auto res = getDistanceAndMomentum<3>(gctx, trkParams, vtxPos, state);
 
   if (!res.ok()) {
@@ -130,9 +130,6 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     subCovMat(2, 2) = covMat.value()(eBoundTime, eBoundTime);
   }
   ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
-
-  std::cout << "\n covMat:\n" << covMat.value();
-  std::cout << "\n subCovMat:\n" << subCovMat;
 
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)

@@ -100,9 +100,9 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return Distance
-  Result<double> calculate3DDistance(const GeometryContext& gctx,
-                                     const BoundTrackParameters& trkParams,
-                                     const Vector3& vtxPos, State& state) const;
+  Result<double> calculateDistance(const GeometryContext& gctx,
+                                   const BoundTrackParameters& trkParams,
+                                   const Vector3& vtxPos, State& state) const;
 
   /// @brief Creates track parameters bound to plane
   /// at point of closest approach in 3D to given
@@ -124,9 +124,8 @@ class ImpactPointEstimator {
       const BoundTrackParameters& trkParams, const Vector3& vtxPos,
       State& state) const;
 
-  /// @brief Estimates the compatibility of a
-  /// track to a vertex based on their 3D distance
-  /// and the track covariance
+  /// @brief Estimates the compatibility of a track to a vertex based on their
+  /// 3D or 4D distance and the track covariance.
   ///
   /// @param gctx The Geometry context
   /// @param trkParams Track parameters at point of closest
@@ -139,8 +138,8 @@ class ImpactPointEstimator {
       const GeometryContext& gctx, const BoundTrackParameters* trkParams,
       const ActsVector<nDim>& vertexPos) const;
 
-  /// @brief Calculate the distance between a track and a vertex by finding the corresponding 3D PCA.
-  /// Returns also the momentum direction at the 3D PCA.
+  /// @brief Calculate the distance between a track and a vertex by finding the
+  /// corresponding 3D PCA. Returns also the momentum direction at the 3D PCA.
   ///
   /// @param gctx Geometry context
   /// @param trkParams Track parameters
