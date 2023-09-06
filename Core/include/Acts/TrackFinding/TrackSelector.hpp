@@ -195,6 +195,7 @@ class TrackSelector {
 
  private:
   EtaBinnedConfig m_cfg;
+  bool m_isUnbinned;
 };
 
 inline TrackSelector::Config& TrackSelector::Config::loc0(double min,
@@ -345,19 +346,36 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
   };
 
   const auto theta = track.theta();
-  const auto eta = -std::log(std::tan(theta / 2));
-  const auto absEta = std::abs(eta);
 
-  if (absEta < m_cfg.absEtaEdges.front() ||
-      absEta >= m_cfg.absEtaEdges.back()) {
-    return false;
+  constexpr double kUnset = -std::numeric_limits<double>::infinity();
+
+  double _eta = kUnset;
+  double _absEta = kUnset;
+
+  auto absEta = [&]() {
+    if (_absEta == kUnset) {
+      _eta = -std::log(std::tan(theta / 2));
+      _absEta = std::abs(_eta);
+    }
+    return _absEta;
+  };
+
+  const Config* cutsPtr{nullptr};
+  if (!m_isUnbinned) {
+    if (absEta() < m_cfg.absEtaEdges.front() ||
+        _absEta >= m_cfg.absEtaEdges.back()) {
+      return false;
+    }
+    cutsPtr = &m_cfg.getCuts(_eta);
+  } else {
+    cutsPtr = &m_cfg.cutSets.front();
   }
 
-  const Config& cuts = m_cfg.getCuts(eta);
+  const Config& cuts = *cutsPtr;
 
   return within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) and
-         within(std::abs(eta), cuts.absEtaMin, cuts.absEtaMax) and
-         within(eta, cuts.etaMin, cuts.etaMax) and
+         within(absEta(), cuts.absEtaMin, cuts.absEtaMax) and
+         within(_eta, cuts.etaMin, cuts.etaMax) and
          within(track.phi(), cuts.phiMin, cuts.phiMax) and
          within(track.loc0(), cuts.loc0Min, cuts.loc0Max) and
          within(track.loc1(), cuts.loc1Min, cuts.loc1Max) and
@@ -373,9 +391,11 @@ inline TrackSelector::TrackSelector(
         "TrackSelector cut / eta bin configuration is inconsistent"};
   }
 
+  m_isUnbinned = false;
   if (m_cfg.nEtaBins() == 1) {
     static const std::vector<double> infVec = {0, inf};
     bool limitEta = m_cfg.absEtaEdges != infVec;
+    m_isUnbinned = !limitEta;  // single bin, no eta edges given
 
     const Config& cuts = m_cfg.cutSets[0];
 
