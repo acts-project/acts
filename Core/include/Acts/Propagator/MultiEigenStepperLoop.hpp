@@ -274,10 +274,7 @@ class MultiEigenStepperLoop
     /// The components of which the state consists
     SmallVector<Component> components;
 
-    /// We don't run this ever without cov transport
-    /// NOTE I would like to set this to constexpr static, but the stepper
-    /// concept doesn't like it. Maybe with C++20...
-    bool covTransport = true;
+    bool covTransport = false;
     double pathAccumulated = 0.;
     std::size_t steps = 0;
 
@@ -325,6 +322,10 @@ class MultiEigenStepperLoop
         components.push_back({SingleState(gctx, bfield->makeCache(mctx),
                                           std::move(singlePars), ssize),
                               weight, Intersection3D::Status::onSurface});
+      }
+
+      if (std::get<2>(multipars.components().front())) {
+        covTransport = true;
       }
     }
   };
