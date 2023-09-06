@@ -122,6 +122,13 @@ class CuboidVolumeBounds : public VolumeBounds {
                                   const Vector3& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
 
+  /// Binning borders in double
+  ///
+  /// @param bValue is the binning schema used
+  ///
+  /// @return float offset to be used for the binning
+  double binningBorder(BinningValue bValue) const final;
+
   /// Access to the bound values
   /// @param bValue the class nested enum for the array access
   double get(BoundValues bValue) const { return m_values[bValue]; }
