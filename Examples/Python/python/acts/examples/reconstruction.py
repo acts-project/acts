@@ -953,7 +953,7 @@ def addCKFTracks(
             [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
         trackSelectorCfg=acts.TrackSelector.Config(
-            acts.TrackSelector.CutConfig(
+            acts.TrackSelector.Config(
                 **acts.examples.defaultKWArgs(
                     loc0Min=trackSelectorConfig.loc0[0],
                     loc0Max=trackSelectorConfig.loc0[1],
@@ -1132,7 +1132,7 @@ def addTrackSelection(
 
     # single cut config for implicit single bin eta configuration
     selectorConfig = acts.TrackSelector.Config(
-        acts.TrackSelector.CutConfig(
+        acts.TrackSelector.Config(
             **acts.examples.defaultKWArgs(
                 loc0Min=trackSelectorConfig.loc0[0],
                 loc0Max=trackSelectorConfig.loc0[1],
