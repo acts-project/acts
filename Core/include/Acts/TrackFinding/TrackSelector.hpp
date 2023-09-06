@@ -196,6 +196,7 @@ class TrackSelector {
  private:
   EtaBinnedConfig m_cfg;
   bool m_isUnbinned;
+  bool m_noEtaCuts;
 };
 
 inline TrackSelector::Config& TrackSelector::Config::loc0(double min,
@@ -374,8 +375,8 @@ bool TrackSelector::isValidTrack(const track_proxy_t& track) const {
   const Config& cuts = *cutsPtr;
 
   return within(track.transverseMomentum(), cuts.ptMin, cuts.ptMax) and
-         within(absEta(), cuts.absEtaMin, cuts.absEtaMax) and
-         within(_eta, cuts.etaMin, cuts.etaMax) and
+         (m_noEtaCuts || (within(absEta(), cuts.absEtaMin, cuts.absEtaMax) and
+                          within(_eta, cuts.etaMin, cuts.etaMax))) and
          within(track.phi(), cuts.phiMin, cuts.phiMax) and
          within(track.loc0(), cuts.loc0Min, cuts.loc0Max) and
          within(track.loc1(), cuts.loc1Min, cuts.loc1Max) and
@@ -403,6 +404,14 @@ inline TrackSelector::TrackSelector(
                      cuts.absEtaMin != 0.0 || cuts.absEtaMax != inf)) {
       throw std::invalid_argument{
           "Explicit eta cuts are only valid for single eta bin"};
+    }
+  }
+
+  m_noEtaCuts = m_isUnbinned;
+  for (const auto& cuts : m_cfg.cutSets) {
+    if (cuts.etaMin != -inf || cuts.etaMax != inf || cuts.absEtaMin != 0.0 ||
+        cuts.absEtaMax != inf) {
+      m_noEtaCuts = false;
     }
   }
 }
