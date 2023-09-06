@@ -11,6 +11,7 @@ dependencies and are thus disabled by default.
    autodiff
    dd4hep
    exatrkx
+   geant4
    json
    tgeo
    MLAlgorithms

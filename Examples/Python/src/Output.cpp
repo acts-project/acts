@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -143,6 +143,26 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(passiveView);
     ACTS_PYTHON_MEMBER(gridView);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  // Bindings for the binning in e.g., CKFPerformanceWriter
+  {
+    py::class_<PlotHelpers::Binning>(mex, "Binning")
+        .def(py::init<std::string, int, double, double>(), "title"_a, "bins"_a,
+             "bMin"_a, "bMax"_a)
+        .def(py::init<std::string, std::vector<double>>(), "title"_a, "bins"_a);
+
+    py::class_<EffPlotTool::Config>(mex, "EffPlotToolConfig")
+        .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
+             "varBinning"_a);
+
+    py::class_<FakeRatePlotTool::Config>(mex, "FakeRatePlotToolConfig")
+        .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
+             "varBinning"_a);
+
+    py::class_<DuplicationPlotTool::Config>(mex, "DuplicationPlotToolConfig")
+        .def(py::init<std::map<std::string, PlotHelpers::Binning>>(),
+             "varBinning"_a);
   }
 
   // ROOT WRITERS

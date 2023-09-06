@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,16 +29,33 @@ namespace ActsExamples {
 
 namespace PlotHelpers {
 /// @brief Nested binning struct for booking plots
-struct Binning {
-  Binning() = default;
+class Binning {
+ public:
+  Binning() : m_bins({0.0}) {}
 
-  Binning(std::string bTitle, int bins, float bMin, float bMax)
-      : title(std::move(bTitle)), nBins(bins), min(bMin), max(bMax){};
+  Binning(std::string title, int bins, double bMin, double bMax)
+      : m_title(std::move(title)) {
+    const auto step = (bMax - bMin) / bins;
+    m_bins.resize(bins + 1);
+    std::generate(m_bins.begin(), m_bins.end(), [&, v = bMin]() mutable {
+      auto r = v;
+      v += step;
+      return r;
+    });
+  }
 
-  std::string title;  ///< title to be displayed
-  int nBins = 0;      ///< number of bins
-  float min = 0;      ///< minimum value
-  float max = 0;      ///< maximum value
+  Binning(std::string title, std::vector<double> bins)
+      : m_title(std::move(title)), m_bins(std::move(bins)){};
+
+  const auto& title() const { return m_title; }
+  auto nBins() const { return m_bins.size() - 1; }
+  const double* data() const { return m_bins.data(); }
+  auto low() const { return m_bins.front(); }
+  auto high() const { return m_bins.back(); }
+
+ private:
+  std::string m_title;
+  std::vector<double> m_bins;
 };
 
 /// @brief book a 1D histogram
