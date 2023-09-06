@@ -164,6 +164,7 @@ class ImpactPointEstimator {
   /// @param vtx Vertex corresponding to the track
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
+  /// @param calculateTimeIP If true, the difference in time is computed
   Result<ImpactParametersAndSigma> getImpactParameters(
       const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
