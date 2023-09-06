@@ -104,14 +104,14 @@ template <unsigned int nDim>
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getVertexCompatibility(const GeometryContext& gctx,
-                             const BoundTrackParameters* trkParams,
-                             const ActsVector<nDim>& vertexPos) const {
+                           const BoundTrackParameters* trkParams,
+                           const ActsVector<nDim>& vertexPos) const {
   if (nDim != 3 and nDim != 4) {
     throw std::invalid_argument(
         "The number of dimensions N must be either 3 or 4 but was set to " +
         std::to_string(nDim) + ".");
   }
-  
+
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -122,14 +122,14 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return VertexingError::NoCovariance;
   }
   auto covMat = trkParams->covariance();
-  ActsSquareMatrix<nDim-1> subCovMat;
+  ActsSquareMatrix<nDim - 1> subCovMat;
   subCovMat.template block<2, 2>(0, 0) = covMat->block<2, 2>(0, 0);
   if (nDim == 4) {
     subCovMat.template block<2, 1>(0, 2) = covMat->block<2, 1>(0, eBoundTime);
     subCovMat.template block<1, 2>(2, 0) = covMat->block<1, 2>(eBoundTime, 0);
     subCovMat(2, 2) = covMat.value()(eBoundTime, eBoundTime);
   }
-  ActsSquareMatrix<nDim-1> weight = subCovMat.inverse();
+  ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
   std::cout << "\n covMat:\n" << covMat.value();
   std::cout << "\n subCovMat:\n" << subCovMat;
@@ -148,15 +148,20 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Vector pointing from the surface origin to the vertex position
   // TODO: The vertex should always be at the surfaceOrigin since the
-  // track parameters should be obtained by estimate3DImpactParameters. Therefore, originToVertex should always be 0, which is currently not the case.
+  // track parameters should be obtained by estimate3DImpactParameters.
+  // Therefore, originToVertex should always be 0, which is currently not the
+  // case.
   Vector3 originToVertex = vertexPos.template head<3>() - surfaceOrigin;
 
-  // x-, y-, and possibly time-coordinate of the vertex and the track in the surface coordinate system
-  ActsVector<nDim-1> localVertexCoords;
-  localVertexCoords.template head<2>() = Vector2(originToVertex.dot(xAxis), originToVertex.dot(yAxis));
+  // x-, y-, and possibly time-coordinate of the vertex and the track in the
+  // surface coordinate system
+  ActsVector<nDim - 1> localVertexCoords;
+  localVertexCoords.template head<2>() =
+      Vector2(originToVertex.dot(xAxis), originToVertex.dot(yAxis));
 
-  ActsVector<nDim-1> localTrackCoords;
-  localTrackCoords.template head<2>() = Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]);
+  ActsVector<nDim - 1> localTrackCoords;
+  localTrackCoords.template head<2>() =
+      Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]);
 
   // Fill time coordinates if we check the 4D vertex compatibility
   if (nDim == 4) {
@@ -165,7 +170,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 
   // residual
-  ActsVector<nDim-1> residual = localTrackCoords - localVertexCoords;
+  ActsVector<nDim - 1> residual = localTrackCoords - localVertexCoords;
 
   // return chi2
   return residual.dot(weight * residual);
