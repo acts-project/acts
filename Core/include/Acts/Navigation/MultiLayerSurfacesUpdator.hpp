@@ -117,7 +117,8 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
 };
 
 struct PathGridSurfacesGenerator {
-  std::vector<Vector3> operator()(Vector3 startPosition, Vector3 direction,
+  std::vector<Vector3> operator()(Vector3 startPosition,
+                                  const Vector3& direction,
                                   ActsScalar stepSizeY,
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
