@@ -14,6 +14,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -59,7 +60,8 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(perigeeSurface, paramVec, covMat);
+  BoundTrackParameters params1(perigeeSurface, paramVec, covMat,
+                               ParticleHypothesis::pion());
 
   AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
   AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
