@@ -202,9 +202,9 @@ struct Gx2FitterResult {
   Result<void> result{Result<void>::success()};
 
   // collectors
-  std::vector<ActsVector<2>> collectorResiduals;
-  std::vector<ActsSquareMatrix<2>> collectorCovariance;
-  std::vector<BoundMatrix> collectorJacobians;
+  std::vector<ActsScalar> collectorResiduals;
+  std::vector<ActsScalar> collectorCovariances;
+  std::vector<BoundVector> collectorProjectedJacobians;
 
   BoundMatrix jacobianFromStart = BoundMatrix::Identity();
 
@@ -377,20 +377,21 @@ class Gx2Fitter {
               trackStateProxy
                   .template calibratedCovariance<measdimPlaceholder>();
           // calculate residuals and return with covariances and jacobians
-          ActsVector<2> residual;
+          auto projJacobian =
+              (trackStateProxy.effectiveProjector() * result.jacobianFromStart)
+                  .eval();
           for (long i = 0; i < measurement.size(); i++) {
-            residual[i] = measurement[i] - predicted[i];
+            result.collectorResiduals.push_back(measurement[i] - predicted[i]);
+            result.collectorCovariances.push_back(covarianceMeasurement(i, i));
+            result.collectorProjectedJacobians.push_back(projJacobian.row(i));
+            /// does this also work with 1d?
           }
           ACTS_VERBOSE("Measurement in Actor:\n" << measurement);
-          result.collectorResiduals.push_back(residual);
-          result.collectorCovariance.push_back(covarianceMeasurement);
 
           if (boundParams.covariance().has_value()) {
             trackStateProxy.predictedCovariance() =
                 std::move(*boundParams.covariance());
           }
-
-          result.collectorJacobians.push_back(result.jacobianFromStart);
 
           trackStateProxy.jacobian() = std::move(jacobian);
           trackStateProxy.pathLength() = std::move(pathLength);
@@ -529,10 +530,10 @@ class Gx2Fitter {
 
       ACTS_VERBOSE("gx2fResult.collectorResiduals.size() = "
                    << gx2fResult.collectorResiduals.size());
-      ACTS_VERBOSE("gx2fResult.collectorCovariance.size() = "
-                   << gx2fResult.collectorCovariance.size());
-      ACTS_VERBOSE("gx2fResult.collectorJacobians.size() = "
-                   << gx2fResult.collectorJacobians.size());
+      ACTS_VERBOSE("gx2fResult.collectorCovariances.size() = "
+                   << gx2fResult.collectorCovariances.size());
+      ACTS_VERBOSE("gx2fResult.collectorProjectedJacobians.size() = "
+                   << gx2fResult.collectorProjectedJacobians.size());
 
       chi2sum = 0;
       aMatrix = BoundMatrix::Zero();
@@ -541,27 +542,15 @@ class Gx2Fitter {
       // TODO generalize for non-2D measurements
       for (size_t iMeas = 0; iMeas < gx2fResult.collectorResiduals.size();
            iMeas++) {
-        ActsMatrix<2, eBoundSize> proj;
-
-        for (size_t i_ = 0; i_ < 2; i_++) {
-          for (size_t j_ = 0; j_ < eBoundSize; j_++) {
-            proj(i_, j_) = 0;
-          }
-        }
-        proj(0, 0) = 1;
-        proj(1, 1) = 1;
-
         const auto ri = gx2fResult.collectorResiduals[iMeas];
-        const auto covi = gx2fResult.collectorCovariance[iMeas];
-        const auto coviInv = covi.inverse();
+        const auto covi = gx2fResult.collectorCovariances[iMeas];
         const auto projectedJacobian =
-            proj * gx2fResult.collectorJacobians[iMeas];
+            gx2fResult.collectorProjectedJacobians[iMeas];
 
-        const double chi2meas = (ri.transpose() * coviInv * ri).eval()(0);
+        const double chi2meas = ri / covi * ri;
         const BoundMatrix aMatrixMeas =
-            projectedJacobian.transpose() * coviInv * projectedJacobian;
-        const BoundVector bVectorMeas =
-            projectedJacobian.transpose() * coviInv * ri;
+            projectedJacobian * projectedJacobian.transpose() / covi;
+        const BoundVector bVectorMeas = projectedJacobian / covi * ri;
 
         chi2sum += chi2meas;
         aMatrix += aMatrixMeas;
