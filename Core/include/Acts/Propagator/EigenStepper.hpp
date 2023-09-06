@@ -226,7 +226,7 @@ class EigenStepper {
   /// Particle hypothesis
   ///
   /// @param state [in] The stepping state (thread-local cache)
-  ParticleHypothesis particleHypothesis(const State& state) const {
+  const ParticleHypothesis& particleHypothesis(const State& state) const {
     return state.particleHypothesis;
   }
 

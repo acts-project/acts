@@ -77,7 +77,7 @@ struct GenericDenseEnvironmentExtension {
             typename navigator_t>
   int bid(const propagator_state_t& state, const stepper_t& stepper,
           const navigator_t& navigator) const {
-    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     auto absQ = particleHypothesis.absoluteCharge();
     auto mass = particleHypothesis.mass();
 
@@ -124,7 +124,7 @@ struct GenericDenseEnvironmentExtension {
     using std::hypot;
 
     auto q = stepper.charge(state.stepping);
-    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     auto mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
@@ -184,7 +184,7 @@ struct GenericDenseEnvironmentExtension {
     // using because of autodiff
     using std::hypot;
 
-    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     auto mass = particleHypothesis.mass();
 
     // Evaluate the new momentum
@@ -282,7 +282,7 @@ struct GenericDenseEnvironmentExtension {
 
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
-    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     auto mass = particleHypothesis.mass();
 
     D = FreeMatrix::Identity();
@@ -403,7 +403,7 @@ struct GenericDenseEnvironmentExtension {
     // using because of autodiff
     using std::hypot;
 
-    auto particleHypothesis = stepper.particleHypothesis(state.stepping);
+    const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
     auto mass = particleHypothesis.mass();
     auto absPdg = particleHypothesis.absolutePdg();
     auto absQ = particleHypothesis.absoluteCharge();

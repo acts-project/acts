@@ -29,9 +29,12 @@ using NeutralCurvilinearTrackParameters =
 using NeutralFreeTrackParameters =
     GenericFreeTrackParameters<NeutralParticleHypothesis>;
 
+/// @brief BoundTrackParameters can hold any kind of charge
 using BoundTrackParameters = GenericBoundTrackParameters<ParticleHypothesis>;
+/// @brief CurvilinearTrackParameters can hold any kind of charge
 using CurvilinearTrackParameters =
     GenericCurvilinearTrackParameters<ParticleHypothesis>;
+/// @brief FreeTrackParameters can hold any kind of charge
 using FreeTrackParameters = GenericFreeTrackParameters<ParticleHypothesis>;
 
 }  // namespace Acts

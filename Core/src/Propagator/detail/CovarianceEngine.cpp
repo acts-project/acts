@@ -268,7 +268,7 @@ Result<BoundState> boundState(
     const GeometryContext& geoContext, BoundSquareMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
-    FreeVector& parameters, ParticleHypothesis particleHypothesis,
+    FreeVector& parameters, const ParticleHypothesis& particleHypothesis,
     bool covTransport, double accumulatedPath, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Covariance transport
@@ -306,7 +306,7 @@ CurvilinearState curvilinearState(BoundSquareMatrix& covarianceMatrix,
                                   FreeVector& derivatives,
                                   BoundToFreeMatrix& jacToGlobal,
                                   const FreeVector& parameters,
-                                  ParticleHypothesis particleHypothesis,
+                                  const ParticleHypothesis& particleHypothesis,
                                   bool covTransport, double accumulatedPath) {
   const Vector3& direction = parameters.segment<3>(eFreeDir0);
 

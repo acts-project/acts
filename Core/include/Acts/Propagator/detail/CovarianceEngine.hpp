@@ -62,7 +62,7 @@ Result<std::tuple<BoundTrackParameters, BoundMatrix, double>> boundState(
     const GeometryContext& geoContext, BoundSquareMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
-    FreeVector& parameters, ParticleHypothesis particleHypothesis,
+    FreeVector& parameters, const ParticleHypothesis& particleHypothesis,
     bool covTransport, double accumulatedPath, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection =
         FreeToBoundCorrection(false));
@@ -92,7 +92,7 @@ std::tuple<CurvilinearTrackParameters, BoundMatrix, double> curvilinearState(
     BoundSquareMatrix& covarianceMatrix, BoundMatrix& jacobian,
     FreeMatrix& transportJacobian, FreeVector& derivatives,
     BoundToFreeMatrix& jacToGlobal, const FreeVector& parameters,
-    ParticleHypothesis particleHypothesis, bool covTransport,
+    const ParticleHypothesis& particleHypothesis, bool covTransport,
     double accumulatedPath);
 
 /// @brief Method for on-demand covariance transport of a bound/curvilinear to

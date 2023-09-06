@@ -247,6 +247,11 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
     m_referenceSurfaces[itrack] = std::move(surface);
   }
 
+  void setParticleHypothesis_impl(
+      IndexType itrack, const ParticleHypothesis& particleHypothesis) {
+    m_particleHypothesis[itrack] = particleHypothesis;
+  }
+
   // END INTERFACE
 };
 

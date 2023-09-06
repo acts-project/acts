@@ -371,6 +371,13 @@ class TrackProxy {
     return component<ParticleHypothesis, hashString("particleHypothesis")>();
   }
 
+  /// Set a new particle hypothesis for this track
+  /// @param particleHypothesis The particel hypothesis to set
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setParticleHypothesis(const ParticleHypothesis &particleHypothesis) {
+    m_container->container().setParticleHypothesis_impl(m_index, particleHypothesis);
+  }
+
   /// Get the charge of the tack
   /// @note this depends on the charge hypothesis
   /// @return The absolute track momentum
@@ -571,6 +578,7 @@ class TrackProxy {
 
     parameters() = other.parameters();
     covariance() = other.covariance();
+    setParticleHypothesis(other.particleHypothesis());
     if (other.hasReferenceSurface()) {
       setReferenceSurface(other.referenceSurface().getSharedPtr());
     }
