@@ -25,8 +25,8 @@ struct ImpactParametersAndSigma {
   double d0 = 0.;
   double z0 = 0.;
   // ... and their standard deviations
-  double sigmad0 = 0.;
-  double sigmaz0 = 0.;
+  double sigmaD0 = 0.;
+  double sigmaZ0 = 0.;
 };
 
 /// @class ImpactPointEstimator
@@ -148,15 +148,15 @@ class ImpactPointEstimator {
                          const ActsScalar& massHypothesis = 0.13957018,
                          const ActsScalar& chargeHypothesis = 1.) const;
 
-  /// @brief Calculates the impact parameters of a track w.r.t. a vertex. The corresponding
-  /// errors are approximated by summing the variances of the track and the
-  /// vertex.
+  /// @brief Calculates the impact parameters of a track w.r.t. a vertex. The
+  /// corresponding errors are approximated by summing the variances of the
+  /// track and the vertex.
   ///
   /// @param track Track whose impact parameters are calculated
   /// @param vtx Vertex corresponding to the track
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
-  Result<ImpactParametersAndSigma> estimateImpactParameters(
+  Result<ImpactParametersAndSigma> getImpactParameters(
       const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
 

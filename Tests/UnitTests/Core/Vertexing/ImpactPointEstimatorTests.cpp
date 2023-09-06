@@ -347,7 +347,7 @@ BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
   BOOST_CHECK((*sign3d) > 0.);
 }
 
-// Check `.estimateImpactParameters`.
+// Check `.getImpactParameters`.
 BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
                      phi, theta, p, q, vx0, vy0, vz0, vt0) {
   BoundVector par;
@@ -377,8 +377,7 @@ BOOST_DATA_TEST_CASE(SingeTrackImpactParameters, tracks* vertices, d0, l0, t0,
   // check that computed impact parameters are meaningful
   ImpactParametersAndSigma output =
       ipEstimator
-          .estimateImpactParameters(track, myConstraint, geoContext,
-                                    magFieldContext)
+          .getImpactParameters(track, myConstraint, geoContext, magFieldContext)
           .value();
   BOOST_CHECK_NE(output.d0, 0.);
   BOOST_CHECK_NE(output.z0, 0.);

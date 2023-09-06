@@ -304,14 +304,10 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
 Acts::Result<Acts::ImpactParametersAndSigma>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    estimateImpactParameters(const BoundTrackParameters& track,
-                             const Vertex<input_track_t>& vtx,
-                             const GeometryContext& gctx,
-                             const Acts::MagneticFieldContext& mctx) const {
-  // estimating the d0 and its significance by propagating the trajectory state
-  // towards
-  // the vertex position. By this time the vertex should NOT contain this
-  // trajectory anymore
+    getImpactParameters(const BoundTrackParameters& track,
+                        const Vertex<input_track_t>& vtx,
+                        const GeometryContext& gctx,
+                        const Acts::MagneticFieldContext& mctx) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
@@ -343,7 +339,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const auto& perigeeCov = *(propRes.endParameters->covariance());
 
   // Vertex variances
-  // TODO: By looking at sigmad0 and sigmaz0 we neglect the offdiagonal terms
+  // TODO: By looking at sigmaD0 and sigmaZ0 we neglect the offdiagonal terms
   // (i.e., we approximate the vertex as a sphere rather than an ellipsoid).
   // Using the full covariance matrix might furnish better results.
   double vtxVarX = vtx.covariance()(eX, eX);
@@ -359,21 +355,21 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // error here once https://github.com/acts-project/acts/issues/2231 is
   // resolved.
   if (vtxVar2DExtent >= 0) {
-    ipAndSigma.sigmad0 =
+    ipAndSigma.sigmaD0 =
         std::sqrt(vtxVar2DExtent + perigeeCov(BoundIndices::eBoundLoc0,
                                               BoundIndices::eBoundLoc0));
   } else {
-    ipAndSigma.sigmad0 = std::sqrt(
+    ipAndSigma.sigmaD0 = std::sqrt(
         perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
   }
 
   ipAndSigma.z0 = z0;
   if (vtxVarZ >= 0) {
-    ipAndSigma.sigmaz0 =
+    ipAndSigma.sigmaZ0 =
         std::sqrt(vtxVarZ + perigeeCov(BoundIndices::eBoundLoc1,
                                        BoundIndices::eBoundLoc1));
   } else {
-    ipAndSigma.sigmaz0 = std::sqrt(
+    ipAndSigma.sigmaZ0 = std::sqrt(
         perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
   }
 
