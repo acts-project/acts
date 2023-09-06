@@ -138,7 +138,6 @@ struct GenericDefaultExtension {
     /// This evaluation is based on dt/ds = 1/v = 1/(beta * c) with the velocity
     /// v, the speed of light c and beta = v/c. This can be re-written as dt/ds
     /// = sqrt(m^2/p^2 + c^{-2}) with the mass m and the momentum p.
-    using std::hypot;
     auto m = stepper.particleHypothesis(state.stepping).mass();
     auto p = stepper.absoluteMomentum(state.stepping);
     auto dtds = hypot(1, m / p);
