@@ -135,11 +135,7 @@ def necBarrelPec(
     )
 
 
-def get_odd_light(geoContext, gdmlFile, sMatches, pMatches, llevel=logging.VERBOSE):
-    # Convert the detector surfaces to GDML
-    [elements, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
-        gdmlFile, sMatches, pMatches
-    )
+def build_odd_light(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERBOSE):
 
     # Build the geometry context & a kdtree for the surfaces
     sensitivesKdt = KdtSurfaces2D(geoContext, ssurfaces, [Binning.z, Binning.r])
@@ -312,9 +308,13 @@ def main():
     )
     args = p.parse_args()
     geoContext = GeometryContext()
-    odd_light = get_odd_light(
-        geoContext, args.input, [args.sensitives], [args.passives], logging.DEBUG
+
+    # Convert the detector surfaces to GDML
+    [elements, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
+        args.input, [args.sensitives], [args.passives]
     )
+
+    odd_light = build_odd_light(geoContext, ssurfaces, psurfaces, logging.DEBUG)
 
 
 if "__main__" == __name__:
