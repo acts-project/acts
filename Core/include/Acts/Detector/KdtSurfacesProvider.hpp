@@ -145,7 +145,7 @@ class KdtSurfaces {
   /// Helper method to calculate the center of gravity in the
   /// casted frame (i.e. query frame)
   ///
-  /// @param cQueries are the casted query poisitions
+  /// @param cQueries are the casted query positions
   /// @note will do nothing if vector size is equal to 1
   ///
   /// @note no checking on qQueries.empty() is done as the
