@@ -24,7 +24,9 @@ struct ImpactParametersAndSigma {
   // Impact parameters ...
   double d0 = 0.;
   double z0 = 0.;
-  // ... and their standard deviations
+  // ... and their standard deviations wrt a vertex, e.g.:
+  // sigmaD0 = sqrt(Var(X) + Var(Y) + Var(d0)),
+  // where X and Y are the x- and y-coordinate of the vertex
   double sigmaD0 = 0.;
   double sigmaZ0 = 0.;
 };
