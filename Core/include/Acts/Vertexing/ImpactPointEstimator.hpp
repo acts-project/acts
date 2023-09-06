@@ -134,9 +134,10 @@ class ImpactPointEstimator {
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
-  Result<double> get3DVertexCompatibility(const GeometryContext& gctx,
-                                          const BoundTrackParameters* trkParams,
-                                          const Vector3& vertexPos) const;
+  template <unsigned int nDim = 3>
+  Result<double> getVertexCompatibility(const GeometryContext& gctx,
+                                        const BoundTrackParameters* trkParams,
+                                        const ActsVector<nDim>& vertexPos) const;
 
   /// @brief Calculate the distance between a track and a vertex by finding the corresponding 3D PCA.
   /// Returns also the momentum direction at the 3D PCA.

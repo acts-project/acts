@@ -100,11 +100,18 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t>
+template <unsigned int nDim>
 Acts::Result<double>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
-    get3DVertexCompatibility(const GeometryContext& gctx,
+    getVertexCompatibility(const GeometryContext& gctx,
                              const BoundTrackParameters* trkParams,
-                             const Vector3& vertexPos) const {
+                             const ActsVector<nDim>& vertexPos) const {
+  if (nDim != 3 and nDim != 4) {
+    throw std::invalid_argument(
+        "The number of dimensions N must be either 3 or 4 but was set to " +
+        std::to_string(nDim) + ".");
+  }
+  
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
   }
@@ -114,8 +121,18 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (not trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
-  auto cov = trkParams->covariance();
-  SquareMatrix2 xyWeight = cov->block<2, 2>(0, 0).inverse();
+  auto covMat = trkParams->covariance();
+  ActsSquareMatrix<nDim-1> subCovMat;
+  subCovMat.template block<2, 2>(0, 0) = covMat->block<2, 2>(0, 0);
+  if (nDim == 4) {
+    subCovMat.template block<2, 1>(0, 2) = covMat->block<2, 1>(0, eBoundTime);
+    subCovMat.template block<1, 2>(2, 0) = covMat->block<1, 2>(eBoundTime, 0);
+    subCovMat(2, 2) = covMat.value()(eBoundTime, eBoundTime);
+  }
+  ActsSquareMatrix<nDim-1> weight = subCovMat.inverse();
+
+  std::cout << "\n covMat:\n" << covMat.value();
+  std::cout << "\n subCovMat:\n" << subCovMat;
 
   // Orientation of the surface (i.e., axes of the corresponding coordinate
   // system)
@@ -131,19 +148,27 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Vector pointing from the surface origin to the vertex position
   // TODO: The vertex should always be at the surfaceOrigin since the
-  // track parameters should be obtained by estimate3DImpactParameters.
-  Vector3 originToVertex = vertexPos - surfaceOrigin;
+  // track parameters should be obtained by estimate3DImpactParameters. Therefore, originToVertex should always be 0, which is currently not the case.
+  Vector3 originToVertex = vertexPos.template head<3>() - surfaceOrigin;
 
-  // x- and y-coordinate of the vertex in the surface coordinate system
-  Vector2 localVertexXY{originToVertex.dot(xAxis), originToVertex.dot(yAxis)};
+  // x-, y-, and possibly time-coordinate of the vertex and the track in the surface coordinate system
+  ActsVector<nDim-1> localVertexCoords;
+  localVertexCoords.template head<2>() = Vector2(originToVertex.dot(xAxis), originToVertex.dot(yAxis));
 
-  // 2-dimensional residual
-  Vector2 xyRes =
-      Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]) -
-      localVertexXY;
+  ActsVector<nDim-1> localTrackCoords;
+  localTrackCoords.template head<2>() = Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]);
+
+  // Fill time coordinates if we check the 4D vertex compatibility
+  if (nDim == 4) {
+    localVertexCoords(2) = vertexPos(3);
+    localTrackCoords(2) = trkParams->parameters()[eTime];
+  }
+
+  // residual
+  ActsVector<nDim-1> residual = localTrackCoords - localVertexCoords;
 
   // return chi2
-  return xyRes.dot(xyWeight * xyRes);
+  return residual.dot(weight * residual);
 }
 
 template <typename input_track_t, typename propagator_t,
