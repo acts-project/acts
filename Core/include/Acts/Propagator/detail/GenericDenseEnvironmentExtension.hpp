@@ -136,7 +136,6 @@ struct GenericDenseEnvironmentExtension {
       initialMomentum = stepper.absoluteMomentum(state.stepping);
       currentMomentum = initialMomentum;
       qop[0] = q / initialMomentum;
-      qop[0] = stepper.qOverP(state.stepping);
       initializeEnergyLoss(state, stepper);
       // Evaluate k
       knew = qop[0] * stepper.direction(state.stepping).cross(bField);
