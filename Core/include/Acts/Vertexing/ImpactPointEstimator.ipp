@@ -163,7 +163,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Fill time coordinates if we check the 4D vertex compatibility
   if (nDim == 4) {
     localVertexCoords(2) = vertexPos(3);
-    localTrackCoords(2) = trkParams->parameters()[eTime];
+    localTrackCoords(2) = trkParams->parameters()[eBoundTime];
   }
 
   // residual

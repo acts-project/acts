@@ -75,7 +75,8 @@ auto ps = bd::make({0.4_GeV, 1_GeV, 10_GeV});
 auto qs = bd::make({-1_e, 1_e});
 // Cartesian products over all parameters
 auto tracksWithoutIPs = t0s * phis * thetas * ps * qs;
-auto tracks = d0s * l0s * tracksWithoutIPs;
+auto IPs = d0s * l0s;
+auto tracks = IPs * tracksWithoutIPs;
 
 // vertex parameters dataset
 auto vx0s = bd::make({0_um, -10_um, 10_um});
@@ -95,11 +96,12 @@ Estimator makeEstimator(double bZ) {
 }
 
 // Construct a diagonal track covariance w/ reasonable values.
-Acts::BoundSquareMatrix makeBoundParametersCovariance() {
+Acts::BoundSquareMatrix makeBoundParametersCovariance(
+    double stdDevTime = 30_ps) {
   BoundVector stddev;
   stddev[eBoundLoc0] = 15_um;
   stddev[eBoundLoc1] = 100_um;
-  stddev[eBoundTime] = 5_ns;
+  stddev[eBoundTime] = stdDevTime;
   stddev[eBoundPhi] = 1_degree;
   stddev[eBoundTheta] = 1_degree;
   stddev[eBoundQOverP] = 1_e / 100_GeV;
@@ -116,6 +118,10 @@ Acts::SquareMatrix4 makeVertexCovariance() {
   return stddev.cwiseProduct(stddev).asDiagonal();
 }
 
+// random value between 0 and 1
+std::uniform_real_distribution<> uniformDist(0.0, 1.0);
+// random sign
+std::uniform_real_distribution<> signDist(-1, 1);
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(VertexingImpactPointEstimator)
@@ -234,7 +240,6 @@ BOOST_DATA_TEST_CASE(Distance4D, tracksWithoutIPs* vertices, t0, phi, theta, p,
   BOOST_CHECK(result.ok());
 
   const auto& refParams = *result->endParameters;
-  // BoundVector refParamVec = refParams.parameters();
 
   // Find 4D distance and momentum of the track at the vertex starting from the
   // perigee representation at the reference position
@@ -257,6 +262,81 @@ BOOST_DATA_TEST_CASE(Distance4D, tracksWithoutIPs* vertices, t0, phi, theta, p,
   // Momentum direction should correspond to the momentum direction at the
   // vertex
   CHECK_CLOSE_OR_SMALL(momDir, corrMomDir, 1e-5, 1e-4);
+}
+
+BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
+                     vz0, vt0) {
+  // Set up RNG
+  int seed = 31415;
+  std::mt19937 gen(seed);
+
+  // Impact point estimator
+  Estimator ipEstimator = makeEstimator(2_T);
+
+  // Vertex position
+  Vector4 vtxPos(vx0, vy0, vz0, vt0);
+
+  // Dummy coordinate system with origin at vertex
+  Transform3 coordinateSystem;
+  // First three columns correspond to coordinate system axes
+  coordinateSystem.matrix().block<3, 1>(0, 0) = Vector3(1., 0., 0.);
+  coordinateSystem.matrix().block<3, 1>(0, 1) = Vector3(0., 1., 0.);
+  coordinateSystem.matrix().block<3, 1>(0, 2) = Vector3(0., 0., 1.);
+  // Fourth column corresponds to origin of the coordinate system
+  coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos.head<3>();
+
+  // Dummy plane surface
+  std::shared_ptr<PlaneSurface> planeSurface =
+      Surface::makeShared<PlaneSurface>(coordinateSystem);
+
+  // Create two track parameter vectors that are alike except that one is closer
+  // to the vertex in time. Note that momenta don't play a role in the
+  // computation and we leave their values uninitialized.
+  double timeDiffFactor = uniformDist(gen);
+  double timeDiffClose = timeDiffFactor * 0.1_ps;
+  double timeDiffFar = timeDiffFactor * 0.11_ps;
+
+  double sgnClose = signDist(gen) < 0 ? -1. : 1.;
+  double sgnFar = signDist(gen) < 0 ? -1. : 1.;
+
+  BoundVector paramVecClose;
+  paramVecClose[eBoundLoc0] = d0;
+  paramVecClose[eBoundLoc1] = l0;
+  paramVecClose[eBoundTime] = vt0 + sgnClose * timeDiffClose;
+
+  BoundVector paramVecFar = paramVecClose;
+  paramVecFar[eBoundTime] = vt0 + sgnFar * timeDiffFar;
+
+  // Track whose time is similar to the vertex time
+  BoundTrackParameters paramsClose(planeSurface, paramVecClose,
+                                   makeBoundParametersCovariance(30_ns));
+
+  // Track whose time is similar to the vertex time but with a larger time
+  // variance
+  BoundTrackParameters paramsCloseLargerCov(
+      planeSurface, paramVecClose, makeBoundParametersCovariance(31_ns));
+
+  // Track whose time differs slightly more from the vertex time
+  BoundTrackParameters paramsFar(planeSurface, paramVecFar,
+                                 makeBoundParametersCovariance(30_ns));
+
+  // Calculate the 4D vertex compatibilities of the three tracks
+  double compatibilityClose =
+      ipEstimator.getVertexCompatibility<4>(geoContext, &paramsClose, vtxPos)
+          .value();
+  double compatibilityCloseLargerCov =
+      ipEstimator
+          .getVertexCompatibility<4>(geoContext, &paramsCloseLargerCov, vtxPos)
+          .value();
+  double compatibilityFar =
+      ipEstimator.getVertexCompatibility<4>(geoContext, &paramsFar, vtxPos)
+          .value();
+
+  // The track who is closer in time must have a better (i.e., smaller)
+  // compatibility
+  BOOST_CHECK(compatibilityClose < compatibilityFar);
+  // The track with the larger covariance must be the most compatible
+  BOOST_CHECK(compatibilityCloseLargerCov < compatibilityClose);
 }
 
 // Compare calculations w/ known good values from Athena.
