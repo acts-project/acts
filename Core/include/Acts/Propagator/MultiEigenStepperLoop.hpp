@@ -771,12 +771,10 @@ class MultiEigenStepperLoop
     const Surface& surface = *oIntersection.representation();
 
     for (auto& component : state.components) {
-      auto intersection =
-          surface
-              .intersect(component.state.geoContext,
-                         SingleStepper::position(component.state),
-                         SingleStepper::direction(component.state), true)
-              .get(oIntersection.index());
+      auto intersection = surface.intersect(
+          component.state.geoContext, SingleStepper::position(component.state),
+          SingleStepper::direction(component.state),
+          true)[oIntersection.index()];
 
       // We don't know whatever was done to manipulate the intersection before
       // (e.g. in Layer.ipp:240), so we trust and just adjust the sign
