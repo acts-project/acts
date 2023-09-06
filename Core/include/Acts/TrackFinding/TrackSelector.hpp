@@ -150,7 +150,8 @@ class TrackSelector {
     /// @param os Output stream
     /// @param cfg Configuration to print
     /// @return Reference to the output stream
-    friend std::ostream& operator<<(std::ostream& os, const Config& cfg);
+    friend std::ostream& operator<<(std::ostream& os,
+                                    const EtaBinnedConfig& cfg);
 
     /// Get the index of the eta bin for a given eta
     /// @param eta Eta value
