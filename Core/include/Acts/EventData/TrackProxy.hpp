@@ -359,7 +359,7 @@ class TrackProxy {
 
   /// Get the particle hypothesis
   /// @return the particle hypothesis
-  const ParticleHypothesis& particleHypothesis() const {
+  ParticleHypothesis particleHypothesis() const {
     return component<ParticleHypothesis, hashString("particleHypothesis")>();
   }
 
