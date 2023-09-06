@@ -29,7 +29,7 @@ Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
   // almost always 2
   boost::container::small_vector<SurfaceIntersection, 2> sIntersections;
   sIntersections.reserve(m_surfaceCache.size());
-  for (auto sf : m_surfaceCache) {
+  for (const auto& sf : m_surfaceCache) {
     auto sfIntersection = sf->intersect(gctx, position, direction, bcheck);
     for (const auto& intersection : sfIntersection.split()) {
       if (intersection && intersection.pathLength() >= 0) {
