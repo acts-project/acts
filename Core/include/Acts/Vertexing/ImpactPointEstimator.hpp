@@ -29,6 +29,11 @@ struct ImpactParametersAndSigma {
   // where X and Y are the x- and y-coordinate of the vertex
   double sigmaD0 = 0.;
   double sigmaZ0 = 0.;
+  // Absolute difference in time between the vertex and the track at the 2D PCA
+  // ...
+  std::optional<double> deltaT = std::nullopt;
+  // ... and standard deviation wrt a vertex
+  std::optional<double> sigmaDeltaT = std::nullopt;
 };
 
 /// @class ImpactPointEstimator
@@ -160,7 +165,8 @@ class ImpactPointEstimator {
   /// @param mctx The magnetic field context
   Result<ImpactParametersAndSigma> getImpactParameters(
       const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
-      const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
+      const GeometryContext& gctx, const MagneticFieldContext& mctx,
+      bool calculateTimeIP = false) const;
 
   /// @brief Estimates the sign of the 2D and Z lifetime of a given track
   /// w.r.t. a vertex and a direction (e.g. a jet direction)

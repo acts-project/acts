@@ -307,7 +307,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getImpactParameters(const BoundTrackParameters& track,
                         const Vertex<input_track_t>& vtx,
                         const GeometryContext& gctx,
-                        const Acts::MagneticFieldContext& mctx) const {
+                        const Acts::MagneticFieldContext& mctx,
+                        bool calculateTimeIP) const {
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
@@ -351,10 +352,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   ipAndSigma.d0 = d0;
   // Variance of the vertex extent in the x-y-plane
   double vtxVar2DExtent = vtxVarX + vtxVarY;
-  // TODO: vtxVar2DExtent and vtxVarZ should always be >= 0. We need to throw an
-  // error here once https://github.com/acts-project/acts/issues/2231 is
-  // resolved.
-  if (vtxVar2DExtent >= 0) {
+  // TODO: vtxVar2DExtent, vtxVarZ, and vtxVarT should always be >= 0. We need
+  // to throw an error here once
+  // https://github.com/acts-project/acts/issues/2231 is resolved.
+  if (vtxVar2DExtent > 0) {
     ipAndSigma.sigmaD0 =
         std::sqrt(vtxVar2DExtent + perigeeCov(BoundIndices::eBoundLoc0,
                                               BoundIndices::eBoundLoc0));
@@ -364,13 +365,26 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 
   ipAndSigma.z0 = z0;
-  if (vtxVarZ >= 0) {
+  if (vtxVarZ > 0) {
     ipAndSigma.sigmaZ0 =
         std::sqrt(vtxVarZ + perigeeCov(BoundIndices::eBoundLoc1,
                                        BoundIndices::eBoundLoc1));
   } else {
     ipAndSigma.sigmaZ0 = std::sqrt(
         perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
+  }
+
+  if (calculateTimeIP) {
+    ipAndSigma.deltaT = std::abs(vtx.time() - params[BoundIndices::eBoundTime]);
+    double vtxVarT = vtx.fullCovariance()(eTime, eTime);
+    if (vtxVarT > 0) {
+      ipAndSigma.sigmaDeltaT =
+          std::sqrt(vtxVarT + perigeeCov(BoundIndices::eBoundTime,
+                                         BoundIndices::eBoundTime));
+    } else {
+      ipAndSigma.sigmaDeltaT = std::sqrt(
+          perigeeCov(BoundIndices::eBoundTime, BoundIndices::eBoundTime));
+    }
   }
 
   return ipAndSigma;
