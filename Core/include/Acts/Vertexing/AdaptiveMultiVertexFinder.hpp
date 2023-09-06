@@ -81,10 +81,6 @@ class AdaptiveMultiVertexFinder {
 
     std::shared_ptr<const MagneticFieldProvider> bField;
 
-    // Use a beam spot constraint, vertexConstraint in VertexingOptions
-    // has to be set in this case
-    bool useBeamSpotConstraint = true;
-
     // Max z interval used for adding tracks to fit:
     // When adding a new vertex to the multi vertex fit,
     // only the tracks whose z at PCA is closer
@@ -249,8 +245,10 @@ class AdaptiveMultiVertexFinder {
   /// @brief Sets constraint vertex after seeding
   ///
   /// @param currentConstraint Vertex constraint
+  /// @param useVertexConstraintInFit Indicates whether constraint is used during vertex fit
   /// @param seedVertex Seed vertex
   void setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
+                                 bool useVertexConstraintInFit,
                                  Vertex<InputTrack_t>& seedVertex) const;
 
   /// @brief Calculates the IP significance of a track to a given vertex
@@ -318,12 +316,13 @@ class AdaptiveMultiVertexFinder {
   /// @param vtx The vertex candidate
   /// @param seedTracks The seed tracks
   /// @param fitterState The vertex fitter state
+  /// @param useVertexConstraintInFit Indicates whether constraint is used in the vertex fit
   ///
   /// @return pair(nCompatibleTracks, isGoodVertex)
   std::pair<int, bool> checkVertexAndCompatibleTracks(
       Vertex<InputTrack_t>& vtx,
       const std::vector<const InputTrack_t*>& seedTracks,
-      FitterState_t& fitterState) const;
+      FitterState_t& fitterState, bool useVertexConstraintInFit) const;
 
   /// @brief Method that removes all tracks that are compatible with
   /// current vertex from seedTracks

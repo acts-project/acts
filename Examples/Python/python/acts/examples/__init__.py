@@ -1,6 +1,6 @@
 import sys, inspect
 from pathlib import Path
-from typing import Optional, Protocol, Union, List, Dict
+from typing import Optional, Protocol, Union, List, Dict, Tuple
 import os
 import re
 
@@ -43,7 +43,6 @@ for module in [
 
 
 def _makeLayerTriplet(*args, **kwargs):
-
     if len(args) == 1:
         _type = type(args[0])
         negative = central = positive = args[0]
@@ -142,7 +141,8 @@ _patchKwargsConstructor(TGeoDetector.Config.Volume, proc=_process_volume_interva
 
 def NamedTypeArgs(**namedTypeArgs):
     """Decorator to move args of a named type (eg. `namedtuple` or `Enum`) to kwargs based on type, so user doesn't need to specify the key name.
-    Also allows the keyword argument to be converted from a built-in type (eg. `tuple` or `int`)."""
+    Also allows the keyword argument to be converted from a built-in type (eg. `tuple` or `int`).
+    """
 
     namedTypeClasses = {c: a for a, c in namedTypeArgs.items()}
 
@@ -344,21 +344,23 @@ def defaultLogging(
 
 
 class Sequencer(ActsPythonBindings._examples._Sequencer):
-
     _autoFpeMasks: Optional[List["FpeMask"]] = None
 
     def __init__(self, *args, **kwargs):
-
+        # if we have the argument already in kwargs, we optionally convert them from tuples
         if "fpeMasks" in kwargs:
             m = kwargs["fpeMasks"]
             if isinstance(m, list) and len(m) > 0 and isinstance(m[0], tuple):
                 n = []
                 for loc, fpe, count in m:
+                    file, lines = self.FpeMask.parse_loc(loc)
                     t = _fpe_types_to_enum[fpe] if isinstance(fpe, str) else fpe
-                    n.append(self.FpeMask(loc, t, count))
+                    n.append(self.FpeMask(file, lines, t, count))
                 kwargs["fpeMasks"] = n
 
-            kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
+        kwargs["fpeMasks"] = kwargs.get("fpeMasks", []) + self._getAutoFpeMasks()
+
+        self._printFpeSummary(kwargs["fpeMasks"])
 
         cfg = self.Config()
         if len(args) == 1 and isinstance(args[0], self.Config):
@@ -407,25 +409,52 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
         ) -> Dict[str, Dict[str, int]]:
             out = {}
             for mask in masks:
-                out.setdefault(mask.loc, {})
-                out[mask.loc][mask.type.name] = mask.count
+                loc_str = f"{mask.file}:"
+                start, end = mask.lines
+                if start == end - 1:
+                    loc_str += str(start)
+                else:
+                    loc_str += f"({start}, {end}]"
+                out.setdefault(loc_str, {})
+                out[loc_str][mask.type.name] = mask.count
 
                 return out
+
+        @staticmethod
+        def parse_loc(loc: str) -> Tuple[str, Tuple[int, int]]:
+            file, lines = loc.split(":", 1)
+
+            if m := re.match(r"^\((\d+) ?, ?(\d+)\]$", lines.strip()):
+                start, end = map(int, m.groups())
+            elif m := re.match(r"^(\d+) ?- ?(\d+)$", lines.strip()):
+                start, end = map(int, m.groups())
+                end += 1  # assumption here is that it's inclusive
+            else:
+                start = int(lines)
+                end = start + 1
+
+            return file, (start, end)
 
         @classmethod
         def fromDict(cls, d: Dict[str, Dict[str, int]]) -> List["FpeMask"]:
             out = []
             for loc, types in d.items():
+                file, lines = cls.parse_loc(loc)
+
                 for fpe, count in types.items():
-                    out.append(cls(loc, cls._fpe_types_to_enum[fpe], count))
+                    out.append(cls(file, lines, cls._fpe_types_to_enum[fpe], count))
             return out
+
+    @classmethod
+    def srcdir(cls) -> Path:
+        return Path(cls._sourceLocation).parent.parent.parent.parent
 
     @classmethod
     def _getAutoFpeMasks(cls) -> List[FpeMask]:
         if cls._autoFpeMasks is not None:
             return cls._autoFpeMasks
 
-        srcdir = Path(cls._sourceLocation).parent.parent.parent.parent
+        srcdir = cls.srcdir()
 
         cls._autoFpeMasks = []
 
@@ -441,21 +470,157 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                 f = root / f
                 #  print(f)
                 with f.open("r") as fh:
-                    for i, line in enumerate(fh, start=1):
-                        if m := re.match(r".*\/\/ ?MARK: ?(fpeMask.*)$", line):
-                            exp = m.group(1)
-                            for m in re.findall(
-                                r"fpeMask\((\w+), ?(\d+) ?, ?issue: ?(\d+)\)", exp
-                            ):
-                                fpeType, count, _ = m
-                                count = int(count)
-                                rel = f.relative_to(srcdir)
-                                cls._autoFpeMasks.append(
-                                    cls.FpeMask(
-                                        f"{rel}:{i}",
-                                        cls.FpeMask._fpe_types_to_enum[fpeType],
-                                        count,
-                                    )
+                    lines = fh.readlines()
+                for i, line in enumerate(lines):
+                    if m := re.match(r".*\/\/ ?MARK: ?(fpeMask\(.*)$", line):
+                        exp = m.group(1)
+                        for m in re.findall(
+                            r"fpeMask\( ?(\w+), ?(\d+) ?, ?#(\d+) ?\)", exp
+                        ):
+                            fpeType, count, _ = m
+                            count = int(count)
+                            rel = f.relative_to(srcdir)
+                            cls._autoFpeMasks.append(
+                                cls.FpeMask(
+                                    str(rel),
+                                    (i + 1, i + 2),
+                                    cls.FpeMask._fpe_types_to_enum[fpeType],
+                                    count,
                                 )
+                            )
+
+                    if m := re.match(
+                        r".*\/\/ ?MARK: ?fpeMaskBegin\( ?(\w+), ?(\d+) ?, ?#?(\d+) ?\)",
+                        line,
+                    ):
+                        fpeType, count, _ = m.groups()
+                        count = int(count)
+                        rel = f.relative_to(srcdir)
+
+                        start = i + 1
+                        end = None
+
+                        # look for end marker
+                        for j, line2 in enumerate(lines[i:]):
+                            if m := re.match(
+                                r".*\/\/ ?MARK: ?fpeMaskEnd\( ?(\w+) ?\)$", line2
+                            ):
+                                endType = m.group(1)
+                                if endType == fpeType:
+                                    end = i + j + 1
+                                    break
+
+                        if end is None:
+                            raise ValueError(
+                                f"Found fpeMaskBegin but no fpeMaskEnd for {rel}:{start}"
+                            )
+                        cls._autoFpeMasks.append(
+                            cls.FpeMask(
+                                str(rel),
+                                (start, end + 1),
+                                cls.FpeMask._fpe_types_to_enum[fpeType],
+                                count,
+                            )
+                        )
 
         return cls._autoFpeMasks
+
+    @classmethod
+    def _printFpeSummary(cls, masks: List[FpeMask]):
+        if len(masks) == 0:
+            return
+
+        # Try to make a nice summary with rich, or fallback to a plain text one
+        try:
+            import rich
+
+            have_rich = True
+        except ImportError:
+            have_rich = False
+
+        error = False
+        srcdir = cls.srcdir()
+
+        if not have_rich or not sys.stdout.isatty():
+            print("FPE masks:")
+            for mask in masks:
+                s = f"{mask.file}:{mask.lines[0]}: {mask.type.name}: {mask.count}"
+
+                full_path = srcdir / mask.file
+                if not full_path.exists():
+                    print(f"- {s}\n  [File at {full_path} does not exist!]")
+                    error = True
+                else:
+                    print(f"- {s}")
+
+        else:
+            import rich
+            import rich.rule
+            import rich.panel
+            from rich.markdown import Markdown as md
+            import rich.syntax
+            import rich.table
+            import rich.text
+
+            rich.print(rich.rule.Rule("FPE masks"))
+
+            for i, mask in enumerate(masks):
+                if i > 0:
+                    rich.print(rich.rule.Rule())
+                full_path = srcdir / mask.file
+                if not full_path.exists():
+                    rich.print(
+                        rich.panel.Panel(
+                            md(f"File at **{full_path}** does not exist"),
+                            title=f"{mask}",
+                            style="red",
+                        )
+                    )
+                    error = True
+                    continue
+
+                start, end = mask.lines
+                start = max(0, start - 2)
+                end += 2
+                rich.print(
+                    rich.panel.Panel(
+                        rich.syntax.Syntax.from_path(
+                            full_path,
+                            line_numbers=True,
+                            line_range=(start, end),
+                            highlight_lines=list(range(*mask.lines)),
+                        ),
+                        title=f"{mask}",
+                        subtitle=f"{full_path}",
+                    )
+                )
+
+            rich.print(rich.rule.Rule())
+
+            table = rich.table.Table(title="FPE Summary", expand=True)
+            table.add_column("File")
+            table.add_column("Lines")
+            table.add_column("FPE type")
+            table.add_column("Mask limit")
+
+            for mask in masks:
+                start, end = mask.lines
+                if start + 1 == end:
+                    line_str = str(start)
+                else:
+                    line_str = f"({start}-{end}]"
+
+                full_path = srcdir / mask.file
+
+                table.add_row(
+                    str(mask.file),
+                    line_str,
+                    mask.type.name,
+                    str(mask.count),
+                    style="red" if not full_path.exists() else None,
+                )
+
+            rich.print(table)
+
+        if error:
+            raise RuntimeError("Sequencer FPE masking configuration has errors")
