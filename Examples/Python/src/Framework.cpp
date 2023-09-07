@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
@@ -15,7 +16,6 @@
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "Acts/Plugins/Python/Utilities.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -146,21 +146,6 @@ void addFramework(Context& ctx) {
           .def(py::init_alias<const std::string&, Acts::Logging::Level>(),
                py::arg("name"), py::arg("level"))
           .def("execute", &IAlgorithm::execute);
-
-  py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
-      .def(py::init<>())
-      .def("setVolume", &Acts::GeometryIdentifier::setVolume)
-      .def("setLayer", &Acts::GeometryIdentifier::setLayer)
-      .def("setBoundary", &Acts::GeometryIdentifier::setBoundary)
-      .def("setApproach", &Acts::GeometryIdentifier::setApproach)
-      .def("setSensitive", &Acts::GeometryIdentifier::setSensitive)
-      .def("setExtra", &Acts::GeometryIdentifier::setExtra)
-      .def("volume", &Acts::GeometryIdentifier::volume)
-      .def("layer", &Acts::GeometryIdentifier::layer)
-      .def("boundary", &Acts::GeometryIdentifier::boundary)
-      .def("approach", &Acts::GeometryIdentifier::approach)
-      .def("sensitive", &Acts::GeometryIdentifier::sensitive)
-      .def("extra", &Acts::GeometryIdentifier::extra);
 
   using ActsExamples::Sequencer;
   using Config = Sequencer::Config;
@@ -299,7 +284,6 @@ void addFramework(Context& ctx) {
   py::class_<RandomNumbers::Config>(randomNumbers, "Config")
       .def(py::init<>())
       .def_readwrite("seed", &RandomNumbers::Config::seed);
-
 }
 
 }  // namespace Acts::Python
