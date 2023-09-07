@@ -74,7 +74,16 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
           m_group->m_bins[m_current_localBins[INDEX::Z]],
           m_group->m_grid.get());
 
+  // GCC12+ in Release throws an overread warning here due to the move.
+  // This is from inside boost code, so best we can do is to suppress it.
+#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overread"
+#endif
   return std::make_tuple(std::move(bottoms), global_index, std::move(tops));
+#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 }
 
 template <typename external_spacepoint_t>
