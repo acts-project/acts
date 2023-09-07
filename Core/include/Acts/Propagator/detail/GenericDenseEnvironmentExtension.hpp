@@ -11,6 +11,7 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/Interactions.hpp"
@@ -78,8 +79,8 @@ struct GenericDenseEnvironmentExtension {
   int bid(const propagator_state_t& state, const stepper_t& stepper,
           const navigator_t& navigator) const {
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    auto absQ = particleHypothesis.absoluteCharge();
-    auto mass = particleHypothesis.mass();
+    float absQ = particleHypothesis.absoluteCharge();
+    float mass = particleHypothesis.mass();
 
     // Check for valid particle properties
     if (absQ == 0. || mass == 0. ||
@@ -123,9 +124,9 @@ struct GenericDenseEnvironmentExtension {
     // using because of autodiff
     using std::hypot;
 
-    auto q = stepper.charge(state.stepping);
+    double q = stepper.charge(state.stepping);
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    auto mass = particleHypothesis.mass();
+    float mass = particleHypothesis.mass();
 
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
@@ -184,7 +185,7 @@ struct GenericDenseEnvironmentExtension {
     using std::hypot;
 
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    auto mass = particleHypothesis.mass();
+    float mass = particleHypothesis.mass();
 
     // Evaluate the new momentum
     auto newMomentum =
@@ -282,7 +283,7 @@ struct GenericDenseEnvironmentExtension {
     auto& sd = state.stepping.stepData;
     auto dir = stepper.direction(state.stepping);
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    auto mass = particleHypothesis.mass();
+    float mass = particleHypothesis.mass();
 
     D = FreeMatrix::Identity();
     const double half_h = h * 0.5;
@@ -403,9 +404,9 @@ struct GenericDenseEnvironmentExtension {
     using std::hypot;
 
     const auto& particleHypothesis = stepper.particleHypothesis(state.stepping);
-    auto mass = particleHypothesis.mass();
-    auto absPdg = particleHypothesis.absolutePdg();
-    auto absQ = particleHypothesis.absoluteCharge();
+    float mass = particleHypothesis.mass();
+    PdgParticle absPdg = particleHypothesis.absolutePdg();
+    float absQ = particleHypothesis.absoluteCharge();
 
     energy[0] = hypot(initialMomentum, mass);
     // use unit length as thickness to compute the energy loss per unit length
