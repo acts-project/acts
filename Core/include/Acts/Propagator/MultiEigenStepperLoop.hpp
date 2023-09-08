@@ -79,6 +79,10 @@ struct WeightedComponentReducerLoop {
 
   template <typename stepper_state_t>
   static ActsScalar absoluteMomentum(const stepper_state_t& s) {
+    std::cout << "gsf absoluteMomentum " << s.particleHypothesis.mass() << " "
+              << s.particleHypothesis.absoluteCharge() << " "
+              << s.particleHypothesis.absolutePdg() << std::endl;
+
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [&s](const auto& sum, const auto& cmp) -> ActsScalar {
@@ -89,6 +93,10 @@ struct WeightedComponentReducerLoop {
 
   template <typename stepper_state_t>
   static Vector3 momentum(const stepper_state_t& s) {
+    std::cout << "gsf momentum " << s.particleHypothesis.mass() << " "
+              << s.particleHypothesis.absoluteCharge() << " "
+              << s.particleHypothesis.absolutePdg() << std::endl;
+
     return std::accumulate(
         s.components.begin(), s.components.end(), Vector3::Zero().eval(),
         [&s](const auto& sum, const auto& cmp) -> Vector3 {
@@ -101,6 +109,10 @@ struct WeightedComponentReducerLoop {
 
   template <typename stepper_state_t>
   static ActsScalar charge(const stepper_state_t& s) {
+    std::cout << "gsf charge " << s.particleHypothesis.mass() << " "
+              << s.particleHypothesis.absoluteCharge() << " "
+              << s.particleHypothesis.absolutePdg() << std::endl;
+
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
         [&s](const auto& sum, const auto& cmp) -> ActsScalar {

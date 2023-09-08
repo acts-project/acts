@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/ActsVersion.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -373,6 +374,18 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   py::class_<RandomNumbers::Config>(randomNumbers, "Config")
       .def(py::init<>())
       .def_readwrite("seed", &RandomNumbers::Config::seed);
+
+  py::class_<Acts::ParticleHypothesis>(m, "ParticleHypothesis")
+      .def("__str__",
+           [](const Acts::ParticleHypothesis& particleHypothesis) {
+             std::stringstream os;
+             particleHypothesis.toStream(os);
+             return os.str();
+           })
+      .def_property_readonly_static("muon", Acts::ParticleHypothesis::muon)
+      .def_property_readonly_static("pion", Acts::ParticleHypothesis::pion)
+      .def_property_readonly_static("electron",
+                                    Acts::ParticleHypothesis::electron);
 
   addUnits(ctx);
   addLogging(ctx);

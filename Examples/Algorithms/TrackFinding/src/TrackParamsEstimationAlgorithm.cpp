@@ -124,8 +124,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     } else {
       const auto& params = optParams.value();
       trackParameters.emplace_back(surface->getSharedPtr(), params,
-                                   m_covariance,
-                                   Acts::ParticleHypothesis::pion());
+                                   m_covariance, m_cfg.particleHypothesis);
     }
   }
 

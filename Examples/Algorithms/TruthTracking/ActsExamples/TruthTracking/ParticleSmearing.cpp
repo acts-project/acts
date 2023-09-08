@@ -69,8 +69,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
       const auto q = particle.charge();
-      //const auto particleHypothesis = particle.hypothesis();
-      const auto particleHypothesis = Acts::ParticleHypothesis::pion();
+      const auto particleHypothesis =
+          m_cfg.particleHypothesis.value_or(particle.hypothesis());
 
       // compute momentum-dependent resolutions
       const double sigmaD0 =
