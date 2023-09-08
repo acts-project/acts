@@ -1406,7 +1406,8 @@ def addAmbiguityResolutionMLDBScan(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import AmbiguityResolutionMLDBScanAlgorithm    
+    from acts.examples import AmbiguityResolutionMLDBScanAlgorithm
+
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     alg = AmbiguityResolutionMLDBScanAlgorithm(
