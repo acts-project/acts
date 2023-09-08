@@ -329,7 +329,7 @@ class MultiEigenStepperLoop
         covTransport = true;
       }
     }
-  };  // namespace Acts
+  };
 
   /// Construct and initialize a state
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
