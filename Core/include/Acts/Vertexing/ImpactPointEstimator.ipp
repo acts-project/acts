@@ -116,8 +116,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return VertexingError::EmptyInput;
   }
 
-  // Retrieve weight matrix of the track's local x- and y-coordinate. For this,
-  // the covariance needs to be set.
+  // Retrieve weight matrix of the track's local x-, y-, and time-coordinate
+  // (the latter only if nDim = 4). For this, the covariance needs to be set.
   if (not trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
