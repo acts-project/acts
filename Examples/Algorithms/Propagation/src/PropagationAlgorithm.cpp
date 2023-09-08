@@ -55,9 +55,9 @@ ProcessCode PropagationAlgorithm::execute(
     double z0 = m_cfg.z0Sigma * gauss(rng);
     double phi = phiDist(rng);
     double eta = etaDist(rng);
-    double theta = 2 * atan(exp(-eta));
+    double theta = 2 * std::atan(std::exp(-eta));
     double pt = ptDist(rng);
-    double p = pt / sin(theta);
+    double p = pt / std::sin(theta);
     double charge = qDist(rng) > 0.5 ? 1. : -1.;
     double qop = charge / p;
     double t = m_cfg.tSigma * gauss(rng);
