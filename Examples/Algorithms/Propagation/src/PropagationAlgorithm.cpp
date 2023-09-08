@@ -81,7 +81,7 @@ ProcessCode PropagationAlgorithm::execute(
     if (m_cfg.recordMaterialInteractions &&
         !pOutput.second.materialInteractions.empty()) {
       // Create a recorded material track
-      RecordedMaterialTrack rmTrack;
+      RecordedMaterialTrack rmTrack{};
       // Start position
       rmTrack.first.first = std::move(sPosition);
       // Start momentum
@@ -89,7 +89,7 @@ ProcessCode PropagationAlgorithm::execute(
       // The material
       rmTrack.second = std::move(pOutput.second);
       // push it it
-      recordedMaterial[it] = (std::move(rmTrack));
+      recordedMaterial[it] = std::move(rmTrack);
     }
   }
 
