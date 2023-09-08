@@ -100,7 +100,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
 
       pos4 += state.components[i].weight * cp.fourPosition(state.geoContext);
       dir += state.components[i].weight * cp.direction();
-      qop += state.components[i].weight * cp.qOverP();
+      qop += state.components[i].weight * (cp.charge() / cp.absoluteMomentum());
       if (cp.covariance()) {
         cov += state.components[i].weight * *cp.covariance();
       }
