@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -184,7 +184,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   BOOST_CHECK_GT(compatibility, 0);
 }
 
-BOOST_DATA_TEST_CASE(Distance4D, tracksWithoutIPs* vertices, t0, phi, theta, p,
+BOOST_DATA_TEST_CASE(TIMEATPCA, tracksWithoutIPs* vertices, t0, phi, theta, p,
                      q, vx0, vy0, vz0, vt0) {
   using Propagator = Acts::Propagator<Stepper>;
   auto field = std::make_shared<MagneticField>(Vector3(0, 0, 2_T));

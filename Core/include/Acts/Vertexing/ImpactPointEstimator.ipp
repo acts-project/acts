@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -68,7 +68,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // because it was modified to make if orthogonal to momDir)
   // -) y-axis is calculated to be orthogonal to x- and z-axis
   // The transformation is represented by a 4x4 matrix with 0 0 0 1 in the last
-  // column.
+  // row.
   Transform3 coordinateSystem;
   // First three columns correspond to coordinate system axes
   coordinateSystem.matrix().block<3, 1>(0, 0) = orthogonalDeltaR;
@@ -255,7 +255,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
   double qOvP = trkParams.parameters()[BoundIndices::eBoundQOverP];
   double tP = trkParams.parameters()[BoundIndices::eBoundTime];
-  // Functions of Perigee parameters for later use
+  // Functions of the polar angle theta for later use
   double sinTheta = std::sin(theta);
   double cotTheta = 1. / std::tan(theta);
 

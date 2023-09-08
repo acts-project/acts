@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -79,7 +79,7 @@ class ImpactPointEstimator {
     std::shared_ptr<const propagator_t> propagator;
     /// Max. number of iterations in Newton method
     int maxIterations = 20;
-    /// Desired precision in deltaPhi in Newton method
+    /// Desired precision of deltaPhi in Newton method
     double precision = 1.e-10;
     /// Minimum q/p value
     double minQoP = 1e-15;
@@ -92,7 +92,7 @@ class ImpactPointEstimator {
   /// @param cfg Configuration object
   ImpactPointEstimator(const Config& cfg) : m_cfg(cfg) {}
 
-  /// @brief Calculates 3D distance between a track and a 3D point
+  /// @brief Calculates 3D distance between a track and a vertex
   ///
   /// @param gctx The geometry context
   /// @param trkParams Track parameters
@@ -104,13 +104,13 @@ class ImpactPointEstimator {
                                    const BoundTrackParameters& trkParams,
                                    const Vector3& vtxPos, State& state) const;
 
-  /// @brief Creates track parameters bound to plane
-  /// at point of closest approach in 3D to given
-  /// reference position. The parameters and errors
-  /// are defined on the plane intersecting the track
-  /// at point of closest approach, with track orthogonal
-  /// to the plane and center of the plane defined as the
-  /// given reference point (vertex).
+  /// @brief Estimates the track parameters at the 3D PCA (i.e., a point of
+  /// minimal 3D distance) to a vertex. The track parameters are defined wrt a
+  /// reference plane that has its origin at the vertex position and whose
+  /// z-axis points in the direction of the track momentum. The plane's x-axis
+  /// points approximately from the vertex to the 3D PCA (it is only approximate
+  /// because we force it to be orthogonal to the z-axis). The y-axis is
+  /// calculated as a cross product between x- and z-axis.
   ///
   /// @param gctx The geometry context
   /// @param mctx The magnetic field context
@@ -118,7 +118,7 @@ class ImpactPointEstimator {
   /// @param vtxPos Reference position (vertex)
   /// @param state The state object
   ///
-  /// @return New track params
+  /// @return Track paramaters at the 3D PCA
   Result<BoundTrackParameters> estimate3DImpactParameters(
       const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
       const BoundTrackParameters& trkParams, const Vector3& vtxPos,
