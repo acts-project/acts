@@ -413,13 +413,13 @@ struct GenericDenseEnvironmentExtension {
     Acts::MaterialSlab slab(material, 1);
     // Use the same energy loss throughout the step.
     if (state.options.meanEnergyLoss) {
-      g = -computeEnergyLossMean(slab, absPdg, mass,
-                                 static_cast<double>(qop[0]), absQ);
+      g = -computeEnergyLossMean(slab, absPdg, mass, static_cast<float>(qop[0]),
+                                 absQ);
     } else {
       // TODO using the unit path length is not quite right since the most
       //      probably energy loss is not independent from the path length.
-      g = -computeEnergyLossMode(slab, absPdg, mass,
-                                 static_cast<double>(qop[0]), absQ);
+      g = -computeEnergyLossMode(slab, absPdg, mass, static_cast<float>(qop[0]),
+                                 absQ);
     }
     // Change of the momentum per path length
     // dPds = dPdE * dEds
@@ -430,11 +430,11 @@ struct GenericDenseEnvironmentExtension {
       if (state.options.includeGgradient) {
         if (state.options.meanEnergyLoss) {
           dgdqopValue = deriveEnergyLossMeanQOverP(
-              slab, absPdg, mass, static_cast<double>(qop[0]), absQ);
+              slab, absPdg, mass, static_cast<float>(qop[0]), absQ);
         } else {
           // TODO path length dependence; see above
           dgdqopValue = deriveEnergyLossModeQOverP(
-              slab, absPdg, mass, static_cast<double>(qop[0]), absQ);
+              slab, absPdg, mass, static_cast<float>(qop[0]), absQ);
         }
       }
       // Calculate term for later error propagation
