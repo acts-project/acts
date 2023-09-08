@@ -109,8 +109,13 @@ class GenericParticleHypothesis {
   }
 
   std::ostream& toStream(std::ostream& os) const {
-    os << "ParticleHypothesis{absPdg=" << absolutePdg() << ", mass=" << mass()
-       << ", absCharge=" << absoluteCharge() << "}";
+    os << "ParticleHypothesis{absPdg=";
+    if (auto shortString = pdgToShortAbsString(absolutePdg())) {
+      os << *shortString;
+    } else {
+      os << absolutePdg();
+    }
+    os << ", mass=" << mass() << ", absCharge=" << absoluteCharge() << "}";
     return os;
   }
 
