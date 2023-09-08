@@ -118,7 +118,7 @@ class ImpactPointEstimator {
   /// @param vtxPos Reference position (vertex)
   /// @param state The state object
   ///
-  /// @return Track paramaters at the 3D PCA
+  /// @return Track parameters at the 3D PCA
   Result<BoundTrackParameters> estimate3DImpactParameters(
       const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
       const BoundTrackParameters& trkParams, const Vector3& vtxPos,
