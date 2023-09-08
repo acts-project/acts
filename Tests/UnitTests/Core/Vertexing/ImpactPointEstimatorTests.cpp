@@ -194,14 +194,17 @@ BOOST_DATA_TEST_CASE(TIMEATPCA, tracksWithoutIPs* vertices, t0, phi, theta, p,
   Estimator ipEstimator(cfg);
   Estimator::State state(magFieldCache());
 
-  // Vertex position
+  // Vertex position and vertex object
   Vector4 vtxPos(vx0, vy0, vz0, vt0);
+  Vertex<BoundTrackParameters> vtx(vtxPos, makeVertexCovariance(), {});
 
   // Perigee surface at vertex position
   auto vtxPerigeeSurface =
       Surface::makeShared<PerigeeSurface>(vtxPos.head<3>());
 
-  // Track parameter vector for a track that originates at the vertex
+  // Track parameter vector for a track that originates at the vertex.
+  // Note that 2D and 3D PCA coincide since the track passes exactly through the
+  // vertex.
   BoundVector paramVec;
   paramVec[eBoundLoc0] = 0.;
   paramVec[eBoundLoc1] = 0.;
@@ -241,27 +244,47 @@ BOOST_DATA_TEST_CASE(TIMEATPCA, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
   const auto& refParams = *result->endParameters;
 
-  // Find 4D distance and momentum of the track at the vertex starting from the
-  // perigee representation at the reference position
-  auto distAndMom =
-      ipEstimator
-          .getDistanceAndMomentum<4>(geoContext, refParams, vtxPos, state)
-          .value();
+  BOOST_TEST_CONTEXT(
+      "Check time at 2D PCA (i.e., function getImpactParameters)") {
+    // Calculate impact parameters
+    auto ipParams = ipEstimator
+                        .getImpactParameters(refParams, vtx, geoContext,
+                                             magFieldContext, true)
+                        .value();
+    // Spatial impact parameters should be 0 because the track passes through
+    // the vertex
+    CHECK_CLOSE_ABS(ipParams.d0, 0., 30_nm);
+    CHECK_CLOSE_ABS(ipParams.z0, 0., 100_nm);
+    // Time impact parameter should correspond to the time where the track
+    // passes through the vertex
+    CHECK_CLOSE_OR_SMALL(ipParams.deltaT.value(), std::abs(corrTimeDiff), 1e-5,
+                         1e-3);
+  }
 
-  ActsVector<4> distVec = distAndMom.first;
-  Vector3 momDir = distAndMom.second;
+  BOOST_TEST_CONTEXT(
+      "Check time at 3D PCA (i.e., function getDistanceAndMomentum)") {
+    // Find 4D distance and momentum of the track at the vertex starting from
+    // the perigee representation at the reference position
+    auto distAndMom =
+        ipEstimator
+            .getDistanceAndMomentum<4>(geoContext, refParams, vtxPos, state)
+            .value();
 
-  // Check quantities:
-  // Spatial distance should be 0 as track passes through the vertex
-  ActsScalar dist = distVec.head<3>().norm();
-  CHECK_CLOSE_ABS(dist, 0., 30_nm);
-  // Distance in time should correspond to the time of the track in a coordinate
-  // system with the vertex as the origin since the track passes exactly through
-  // the vertex
-  CHECK_CLOSE_OR_SMALL(distVec[3], corrTimeDiff, 1e-5, 1e-4);
-  // Momentum direction should correspond to the momentum direction at the
-  // vertex
-  CHECK_CLOSE_OR_SMALL(momDir, corrMomDir, 1e-5, 1e-4);
+    ActsVector<4> distVec = distAndMom.first;
+    Vector3 momDir = distAndMom.second;
+
+    // Check quantities:
+    // Spatial distance should be 0 as track passes through the vertex
+    ActsScalar dist = distVec.head<3>().norm();
+    CHECK_CLOSE_ABS(dist, 0., 30_nm);
+    // Distance in time should correspond to the time of the track in a
+    // coordinate system with the vertex as the origin since the track passes
+    // exactly through the vertex
+    CHECK_CLOSE_OR_SMALL(distVec[3], corrTimeDiff, 1e-5, 1e-4);
+    // Momentum direction should correspond to the momentum direction at the
+    // vertex
+    CHECK_CLOSE_OR_SMALL(momDir, corrMomDir, 1e-5, 1e-4);
+  }
 }
 
 BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
