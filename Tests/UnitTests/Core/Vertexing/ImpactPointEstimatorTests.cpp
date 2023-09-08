@@ -279,9 +279,7 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
   // Dummy coordinate system with origin at vertex
   Transform3 coordinateSystem;
   // First three columns correspond to coordinate system axes
-  coordinateSystem.matrix().block<3, 1>(0, 0) = Vector3(1., 0., 0.);
-  coordinateSystem.matrix().block<3, 1>(0, 1) = Vector3(0., 1., 0.);
-  coordinateSystem.matrix().block<3, 1>(0, 2) = Vector3(0., 0., 1.);
+  coordinateSystem.matrix().block<3, 3>(0, 0) = ActsSquareMatrix<3>::Identity();
   // Fourth column corresponds to origin of the coordinate system
   coordinateSystem.matrix().block<3, 1>(0, 3) = vtxPos.head<3>();
 
@@ -291,15 +289,17 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 
   // Create two track parameter vectors that are alike except that one is closer
   // to the vertex in time. Note that momenta don't play a role in the
-  // computation and we leave their values uninitialized.
+  // computation and we set the angles and q/p to 0.
+  // Time offsets
   double timeDiffFactor = uniformDist(gen);
   double timeDiffClose = timeDiffFactor * 0.1_ps;
   double timeDiffFar = timeDiffFactor * 0.11_ps;
 
+  // Different random signs for the time offsets
   double sgnClose = signDist(gen) < 0 ? -1. : 1.;
   double sgnFar = signDist(gen) < 0 ? -1. : 1.;
 
-  BoundVector paramVecClose;
+  BoundVector paramVecClose = BoundVector::Zero();
   paramVecClose[eBoundLoc0] = d0;
   paramVecClose[eBoundLoc1] = l0;
   paramVecClose[eBoundTime] = vt0 + sgnClose * timeDiffClose;
