@@ -126,6 +126,8 @@ class ImpactPointEstimator {
 
   /// @brief Estimates the compatibility of a track to a vertex based on their
   /// 3D or 4D distance and the track covariance.
+  /// @note Confusingly, a *smaller* compatibility means that a track is *more*
+  /// compatible.
   ///
   /// @param gctx The Geometry context
   /// @param trkParams Track parameters at point of closest
