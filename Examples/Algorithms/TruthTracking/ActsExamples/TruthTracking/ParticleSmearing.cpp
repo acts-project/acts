@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -68,7 +69,8 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
       const auto pt = particle.transverseMomentum();
       const auto p = particle.absoluteMomentum();
       const auto q = particle.charge();
-      const auto particleHypothesis = particle.hypothesis();
+      //const auto particleHypothesis = particle.hypothesis();
+      const auto particleHypothesis = Acts::ParticleHypothesis::pion();
 
       // compute momentum-dependent resolutions
       const double sigmaD0 =
