@@ -174,8 +174,8 @@ def addSeeding(
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     truthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg = TruthEstimatedSeedingAlgorithmConfigArg(),
     particleHypothesis: Optional[
-        acts.examples.ParticleHypothesis
-    ] = acts.examples.ParticleHypothesis.pion,
+        acts.ParticleHypothesis
+    ] = acts.ParticleHypothesis.pion,
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -221,7 +221,7 @@ def addSeeding(
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
-    particleHypothesis : Optional[acts.examples.ParticleHypothesis]
+    particleHypothesis : Optional[acts.ParticleHypothesis]
         The hypothesis used for track finding. Defaults to pion.
     inputParticles : str, "particles"
         input particles name in the WhiteBoard
@@ -394,7 +394,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialVarInflation: List[float],
-    particleHypothesis: Optional[acts.examples.ParticleHypothesis],
+    particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
 ):
     """adds algorithm that would mimic detector response uncertainties for truth seeding
