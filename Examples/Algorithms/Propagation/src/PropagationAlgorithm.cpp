@@ -80,7 +80,7 @@ ProcessCode PropagationAlgorithm::execute(
     propagationSteps.push_back(std::move(pOutput.first));
     if (m_cfg.recordMaterialInteractions &&
         !pOutput.second.materialInteractions.empty()) {
-      // Create a recorded material track wit start position, momentum and the
+      // Create a recorded material track with start position, momentum and the
       // material
       recordedMaterial.emplace(
           it, std::make_pair(std::make_pair(sPosition, sMomentum),
