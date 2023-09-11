@@ -145,7 +145,6 @@ class VectorMultiTrajectoryBase {
 
  protected:
   struct IndexData {
-    IndexType iprevious = kInvalid;
     IndexType ipredicted = kInvalid;
     IndexType ifiltered = kInvalid;
     IndexType ismoothed = kInvalid;
@@ -230,7 +229,7 @@ class VectorMultiTrajectoryBase {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "previous"_hash:
-        return &instance.m_index[istate].iprevious;
+        return &instance.m_previous[istate];
       case "predicted"_hash:
         return &instance.m_index[istate].ipredicted;
       case "filtered"_hash:
