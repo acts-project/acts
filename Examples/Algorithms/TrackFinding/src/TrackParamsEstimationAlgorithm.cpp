@@ -54,7 +54,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
   m_outputSeeds.maybeInitialize(m_cfg.outputSeeds);
-  m_outputSeeds.maybeInitialize(m_cfg.outputProtoTracks);
+  m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 
   // Set up the track parameters covariance (the same for all tracks)
   m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
