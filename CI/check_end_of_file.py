@@ -51,7 +51,9 @@ def main():
             else:
                 failed.append(file)
             if args.github:
-                print(f"::error file={file},line={len(lines)+1},title=missing newline")
+                print(
+                    f"::error file={{file}},line={{len(lines)+1}},title={{missing newline}}"
+                )
         elif args.reject_multiple_newlines and lines[-1] == "\n":
             print(f"Multiple newlines at end of file: {file}")
             if args.fix:
@@ -63,7 +65,7 @@ def main():
                 failed.append(file)
             if args.github:
                 print(
-                    f"::error file={file},line={len(lines)+1},title=multiple newlines"
+                    f"::error file={{file}},line={{len(lines)+1}},title={{multiple newlines}}"
                 )
 
     if failed:
