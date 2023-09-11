@@ -170,7 +170,8 @@ struct SurfaceReached {
 
     const double pLimit =
         state.stepping.stepSize.value(ConstrainedStep::aborter);
-    const double oLimit = stepper.overstepLimit(state.stepping);
+    // TODO
+    const double oLimit = 10 * stepper.overstepLimit(state.stepping);
 
     for (const auto& intersection : sIntersection.split()) {
       if (detail::checkIntersection(intersection.intersection(), pLimit, oLimit,

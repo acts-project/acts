@@ -1418,7 +1418,7 @@ class AtlasStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = 200 * UnitConstants::um;
+  double m_overstepLimit = 100 * UnitConstants::um;
 };
 
 }  // namespace Acts
