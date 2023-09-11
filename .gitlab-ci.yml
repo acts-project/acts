@@ -429,7 +429,7 @@ lcg_102b:
   <<: *lcg_base_job
 
   variables:
-    LCG_VERSION: "102b_ATLAS_23"
+    LCG_VERSION: "102b"
 
   parallel:
     matrix:
