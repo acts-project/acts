@@ -346,8 +346,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     while (origTsIt != orig.trackStatesReversed().end() &&
            readTsIt != read.trackStatesReversed().end()) {
       BOOST_TEST_INFO_SCOPE("TS: #" << tsi);
-      auto nextMeas =
-          std::find_if(origTsIt, orig.trackStatesReversed().end(), [](const auto& ts) {
+      auto nextMeas = std::find_if(
+          origTsIt, orig.trackStatesReversed().end(), [](const auto& ts) {
             return ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
           });
       BOOST_CHECK(nextMeas != orig.trackStatesReversed().end());
