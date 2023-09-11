@@ -235,7 +235,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   NeutralCurvilinearTrackParameters start(
       makeVector4(mTrack.first.first, 0), mTrack.first.second,
       1 / mTrack.first.second.norm(), std::nullopt,
-      NeutralParticleHypothesis::photon());
+      NeutralParticleHypothesis::geantino());
 
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
