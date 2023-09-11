@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import sys
 import argparse
 from subprocess import check_output
@@ -40,6 +41,8 @@ def main():
     failed = []
 
     for file in files:
+        file = os.path.normpath(file)
+
         with open(file) as f:
             lines = f.readlines()
 
@@ -52,7 +55,7 @@ def main():
                 failed.append(file)
             if args.github:
                 print(
-                    f"::error file={file},line={len(lines)+1},title=End of file check::missing newline"
+                    f"::error file={file},line={len(lines)},title=End of file check::missing newline"
                 )
         elif args.reject_multiple_newlines and lines[-1] == "\n":
             print(f"Multiple newlines at end of file: {file}")
@@ -65,7 +68,7 @@ def main():
                 failed.append(file)
             if args.github:
                 print(
-                    f"::error file={{{file}}},line={{{len(lines)+1}}},title=End of file check::multiple newlines"
+                    f"::error file={{{file}}},line={{{len(lines)}}},title=End of file check::multiple newlines"
                 )
 
     if failed:
