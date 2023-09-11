@@ -54,6 +54,8 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     std::string inputSeeds;
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
+    /// Output seed collection (optional)
+    std::string outputSeeds;
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
@@ -102,6 +104,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 };
 
 }  // namespace ActsExamples
