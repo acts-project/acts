@@ -75,19 +75,6 @@ class KdtSurfaces {
         fillCasts(r, rc, std::make_integer_sequence<std::size_t, kDIM>{});
         castedReferences.push_back(rc);
       }
-      // DEBUG info
-      if (s->type() == Acts::Surface::SurfaceType::Cylinder) {
-        std::cout << "Cylinder surface with " << references.size()
-                  << " references and " << castedReferences.size()
-                  << " casted references" << std::endl;
-        std::cout << " Results in the following casted references: "
-                  << std::endl;
-        auto cc = cog(castedReferences);
-        std::for_each(cc.begin(), cc.end(),
-                      [](auto& v) { std::cout << " " << v; });
-        std::cout << std::endl;
-      }
-
       // Calculate the center of gravity in casted frame
       kdtEntries.push_back({cog(castedReferences), s});
     }
