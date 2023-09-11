@@ -127,8 +127,8 @@ AmbiguityResolutionConfig = namedtuple(
 
 AmbiguityResolutionMLConfig = namedtuple(
     "AmbiguityResolutionMLConfig",
-    ["nMeasurementsMin"],
-    defaults=[None] * 1,
+    ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
+    defaults=[None] * 3,
 )
 
 AmbiguityResolutionMLDBScanConfig = namedtuple(
@@ -1341,10 +1341,11 @@ def addAmbiguityResolutionML(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     from acts.examples.onnx import AmbiguityResolutionMLAlgorithm
+    from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    alg = AmbiguityResolutionMLAlgorithm(
+    algML = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
@@ -1353,11 +1354,24 @@ def addAmbiguityResolutionML(
             nMeasurementsMin=config.nMeasurementsMin,
         ),
     )
-    s.addAlgorithm(alg)
+
+    algGreedy = GreedyAmbiguityResolutionAlgorithm(
+        level=customLogLevel(),
+        inputTracks=algML.config.outputTracks,
+        outputTracks="filteredTrajectoriesMLGreedy",
+        **acts.examples.defaultKWArgs(
+            maximumSharedHits=config.maximumSharedHits,
+            nMeasurementsMin=config.nMeasurementsMin,
+            maximumIterations=config.maximumIterations,
+        ),
+    )
+
+    s.addAlgorithm(algML)
+    s.addAlgorithm(algGreedy)
 
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
-        inputTracks=alg.config.outputTracks,
+        inputTracks=algGreedy.config.outputTracks,
         outputTrajectories="trajectories-from-solved-tracks",
     )
     s.addAlgorithm(trackConverter)
