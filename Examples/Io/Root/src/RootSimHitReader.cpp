@@ -97,11 +97,13 @@ ActsExamples::RootSimHitReader::RootSimHitReader(
 
   // Re-Enable all branches
   m_inputChain->SetBranchStatus("*", true);
+  ACTS_DEBUG("Event range: " << availableEvents().first << " - "
+                             << availableEvents().second);
 }
 
 std::pair<size_t, size_t> ActsExamples::RootSimHitReader::availableEvents()
     const {
-  return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back())};
+  return {std::get<0>(m_eventMap.front()), std::get<0>(m_eventMap.back()) + 1};
 }
 
 ActsExamples::ProcessCode ActsExamples::RootSimHitReader::read(

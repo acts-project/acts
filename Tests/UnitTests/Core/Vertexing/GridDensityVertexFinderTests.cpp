@@ -78,7 +78,17 @@ std::uniform_real_distribution<double> etaDist(-4., 4.);
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
   bool debugMode = true;
 
-  const int mainGridSize = 3000;
+  // Note that the AdaptiveGridTrackDensity and the GaussianGridTrackDensity
+  // only furnish exactly the same results for uneven mainGridSize, where the
+  // binnings of the two track densities align. For even mainGridSize the
+  // binning of GaussianGridTrackDensity is:
+  // ..., [-binSize, 0), [0, binSize), ...
+  // and the binning of AdaptiveGridTrackDensity is:
+  // ..., [-0.5*binSize, 0.5*binSize), [0.5*binSize, 1.5*binSize), ...
+  // This is because the AdaptiveGridTrackDensity always has 0 as a bin center.
+  // As a consequence of these different binnings, results would be shifted for
+  // binSize/2 if mainGridSize is even.
+  const int mainGridSize = 3001;
   const int trkGridSize = 35;
 
   Covariance covMat = Covariance::Identity();
@@ -99,7 +109,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
   using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30.01 * 1_mm);
   AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
@@ -185,7 +195,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
   bool debugMode = true;
 
-  const int mainGridSize = 3000;
+  const int mainGridSize = 3001;
   const int trkGridSize = 35;
 
   Covariance covMat = Covariance::Identity();
@@ -212,7 +222,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
   using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30.01 * 1_mm);
   adaptiveDensityConfig.useHighestSumZPosition = true;
   AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
@@ -350,7 +360,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
   bool debugMode = true;
 
-  const int mainGridSize = 3000;
+  const int mainGridSize = 3001;
   const int trkGridSize = 35;
 
   Covariance covMat = Covariance::Identity();
@@ -375,7 +385,7 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
   using AdaptiveGridDensity = AdaptiveGridTrackDensity<trkGridSize>;
   // Use custom grid density here with same bin size as Finder1
-  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30. * 1_mm);
+  AdaptiveGridDensity::Config adaptiveDensityConfig(2. / 30.01 * 1_mm);
   AdaptiveGridDensity adaptiveDensity(adaptiveDensityConfig);
 
   using Finder2 = AdaptiveGridDensityVertexFinder<trkGridSize>;
