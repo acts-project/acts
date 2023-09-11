@@ -257,12 +257,12 @@ void addTrackFinding(Context& ctx) {
       yMin, yMax, houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
       localMaxWindowSize, kA);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParamsEstimationAlgorithm,
-                                mex, "TrackParamsEstimationAlgorithm",
-                                inputSeeds, outputTrackParameters, outputSeeds,
-                                trackingGeometry, magneticField, bFieldMin,
-                                sigmaLoc0, sigmaLoc1, sigmaPhi, sigmaTheta,
-                                sigmaQOverP, sigmaT0, initialVarInflation);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackParamsEstimationAlgorithm, mex,
+      "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
+      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+      magneticField, bFieldMin, sigmaLoc0, sigmaLoc1, sigmaPhi, sigmaTheta,
+      sigmaQOverP, sigmaT0, initialVarInflation);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
