@@ -420,7 +420,7 @@ class StraightLineStepper {
   }
 
  private:
-  double m_overstepLimit = 100 * UnitConstants::um;
+  double m_overstepLimit = s_onSurfaceTolerance;
 };
 
 }  // namespace Acts
