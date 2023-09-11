@@ -36,7 +36,7 @@ Possible implementations of this type of conversions can be seen in the correspo
 
 #### Inspecting surface conversion within python
 
-The `ActsExampels` python bindings allow to conveniently test the conversion of `Geant4` volumes into sensitive and passive surfaces, assume you have a GDML file called `detector.gdml` where `Geant4PhysVolume` objects can be identified by a certain string, e.g. names containing the flag `Sensitive`, or `Passive`. Also multiple match strings are allowed. The converted surfaces can then be displayed with `.obj` (part of the Core functionality) or as `.svg` files (if `ACTS_BUILD_PLUGIN_ACTSVG` is switched on)
+The `ActsExamples` python bindings allow to conveniently test the conversion of `Geant4` volumes into sensitive and passive surfaces, assuming you have a GDML file called `detector.gdml` where `Geant4PhysVolume` objects can be identified by a certain string, e.g. names containing the flag `Sensitive`, or `Passive`. Also multiple match strings are allowed. The converted surfaces can then be displayed with `.obj` (part of the Core functionality) or as `.svg` files (if `ACTS_BUILD_PLUGIN_ACTSVG` is switched on)
 
 ```python
   # import the necessary modules
@@ -63,14 +63,14 @@ The `ActsExampels` python bindings allow to conveniently test the conversion of 
 
 ## Building a Detector from Geant4 input
 
-In order to build a `Acts::Detector` object from `Geant4` input, the following steps needs to be done
+In order to build an `Acts::Detector` object from `Geant4` input, the following steps needs to be done
  * a conversion of `Geant4PhysVolume` objects into `Acts::Surface`  and `Acts::DetectorVolume` objects (see before)
  * a build sequence needs to be defined and the converted objects identified
 
- There are several helper methods and tools that can be used, many of them accessible through python bindings, one core component is the selection and assignment of surfaces to dedicated volume. This can be done using e.g. a KDT structure, this can be tested with:
+ There are several helper methods and tools that can be used, many of them accessible through python bindings. One core component is the selection and assignment of surfaces to dedicated volume. This can be done using e.g. a KDT structure, this can be tested with:
 
  ```python
-  # Create a KDT tree from all surfaces binned in z and r
+  # Create a KDTree from all surfaces binned in z and r
   surfacesKdt = acts.KdtSurfaces2D(buildContext, surfaces, [acts.Binning.z, acts.Binning.r])
 
   # Define a query range and select

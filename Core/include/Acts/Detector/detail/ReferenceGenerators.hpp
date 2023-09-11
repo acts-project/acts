@@ -62,6 +62,7 @@ struct BinningValueReferenceGenerator {
 /// indexed grid.
 ///
 /// @tparam nSEGS the number of segments to be used for the polyhedron
+/// approximation of arcs between vertices
 /// @tparam aBARY if true, the barycenter of the polyhedron is added
 ///
 /// The grid filling then completes the empty bins in between and

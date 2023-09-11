@@ -290,7 +290,7 @@ def main():
         "--input",
         type=str,
         default="odd-light.gdml",
-        help="GDML input file (optional)",
+        help="GDML input file.",
     )
     p.add_argument(
         "-s",
