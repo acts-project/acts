@@ -31,7 +31,7 @@ namespace Experimental {
 ///
 template <size_t kDIM = 2u, size_t bSize = 100u,
           typename reference_generator =
-              detail::PolyhedronReferenceGenerator<1, false>>
+              detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
@@ -54,7 +54,7 @@ class KdtSurfaces {
               const std::vector<std::shared_ptr<Surface>>& surfaces,
               const std::array<BinningValue, kDIM>& casts,
               const reference_generator& rgen =
-                  detail::PolyhedronReferenceGenerator<1, false>{})
+                  detail::PolyhedronReferenceGenerator<1u, false>{})
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
     // Simple check if the dimension is correct
     if (kDIM == 0u) {
@@ -176,7 +176,7 @@ class KdtSurfaces {
 /// configuration level that are then connected to an InternalStructureBuilder
 template <size_t kDIM = 2u, size_t bSize = 100u,
           typename reference_generator =
-              detail::PolyhedronReferenceGenerator<1, false>>
+              detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfacesProvider : public ISurfacesProvider {
  public:
   /// The prefilled surfaces in a KD tree structure, it is generally shared
