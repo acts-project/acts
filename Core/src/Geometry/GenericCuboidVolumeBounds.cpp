@@ -6,10 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
+#if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+#include <Eigen/Core>
+#if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -90,6 +98,10 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     // z is normal in local coordinates
     // Volume local to surface local
     Transform3 vol2srf;
+
+    // GCC13+ Complains about maybe uninitialized memory inside Eigen's SVD code
+    // This warning is ignored in this compilation unit by using the pragma at
+    // the top of this file.
     vol2srf = (Eigen::Quaternion<Transform3::Scalar>().setFromTwoVectors(
         normal, Vector3::UnitZ()));
 
