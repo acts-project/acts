@@ -486,7 +486,8 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
           // the module transform from the position
           double modulePhi = phi(ringModulePosition);
           // the center position of the modules
-          Acts::Vector3 moduleCenter(side * ringModulePosition);
+          Acts::Vector3 moduleCenter(ringModulePosition);
+          moduleCenter.z() *= side;
           // the rotation matrix of the module
           Acts::Vector3 moduleLocalY(cos(modulePhi), sin(modulePhi), 0.);
           // take different axis to have the same readout direction

@@ -73,18 +73,19 @@ void addExampleAlgorithms(Context& ctx) {
   }
 
   {
+    using EtaBinnedConfig = Acts::TrackSelector::EtaBinnedConfig;
     using Config = Acts::TrackSelector::Config;
-    using CutConfig = Acts::TrackSelector::CutConfig;
 
     auto tool = py::class_<Acts::TrackSelector>(m, "TrackSelector")
-                    .def(py::init<const Config&>(), py::arg("config"));
+                    .def(py::init<const Config&>(), py::arg("config"))
+                    .def(py::init<const EtaBinnedConfig&>(), py::arg("config"));
 
     {
-      auto c = py::class_<CutConfig>(tool, "CutConfig").def(py::init<>());
+      auto c = py::class_<Config>(tool, "Config").def(py::init<>());
 
       patchKwargsConstructor(c);
 
-      ACTS_PYTHON_STRUCT_BEGIN(c, CutConfig);
+      ACTS_PYTHON_STRUCT_BEGIN(c, Config);
       ACTS_PYTHON_MEMBER(loc0Min);
       ACTS_PYTHON_MEMBER(loc0Max);
       ACTS_PYTHON_MEMBER(loc1Min);
@@ -102,24 +103,23 @@ void addExampleAlgorithms(Context& ctx) {
       ACTS_PYTHON_MEMBER(minMeasurements);
       ACTS_PYTHON_STRUCT_END();
 
-      pythonRangeProperty(c, "loc0", &CutConfig::loc0Min, &CutConfig::loc0Max);
-      pythonRangeProperty(c, "loc1", &CutConfig::loc1Min, &CutConfig::loc1Max);
-      pythonRangeProperty(c, "time", &CutConfig::timeMin, &CutConfig::timeMax);
-      pythonRangeProperty(c, "phi", &CutConfig::phiMin, &CutConfig::phiMax);
-      pythonRangeProperty(c, "eta", &CutConfig::etaMin, &CutConfig::etaMax);
-      pythonRangeProperty(c, "absEta", &CutConfig::absEtaMin,
-                          &CutConfig::absEtaMax);
-      pythonRangeProperty(c, "pt", &CutConfig::ptMin, &CutConfig::ptMax);
+      pythonRangeProperty(c, "loc0", &Config::loc0Min, &Config::loc0Max);
+      pythonRangeProperty(c, "loc1", &Config::loc1Min, &Config::loc1Max);
+      pythonRangeProperty(c, "time", &Config::timeMin, &Config::timeMax);
+      pythonRangeProperty(c, "phi", &Config::phiMin, &Config::phiMax);
+      pythonRangeProperty(c, "eta", &Config::etaMin, &Config::etaMax);
+      pythonRangeProperty(c, "absEta", &Config::absEtaMin, &Config::absEtaMax);
+      pythonRangeProperty(c, "pt", &Config::ptMin, &Config::ptMax);
     }
 
     {
-      auto c = py::class_<Config>(tool, "Config")
+      auto c = py::class_<EtaBinnedConfig>(tool, "EtaBinnedConfig")
                    .def(py::init<>())
-                   .def(py::init<const CutConfig&>());
+                   .def(py::init<const Config&>());
 
-      c.def_property_readonly("nEtaBins", &Config::nEtaBins);
+      c.def_property_readonly("nEtaBins", &EtaBinnedConfig::nEtaBins);
 
-      ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+      ACTS_PYTHON_STRUCT_BEGIN(c, EtaBinnedConfig);
       ACTS_PYTHON_MEMBER(cutSets);
       ACTS_PYTHON_MEMBER(absEtaEdges);
       ACTS_PYTHON_STRUCT_END();

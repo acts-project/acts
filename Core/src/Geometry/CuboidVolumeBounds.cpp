@@ -103,3 +103,14 @@ void Acts::CuboidVolumeBounds::buildSurfaceBounds() {
   m_zxBounds = std::make_shared<const RectangleBounds>(get(eHalfLengthZ),
                                                        get(eHalfLengthX));
 }
+
+double Acts::CuboidVolumeBounds::binningBorder(BinningValue bValue) const {
+  if (bValue <= binZ) {
+    return m_values[bValue];
+  }
+  if (bValue == binR) {
+    return std::sqrt(m_values[binX] * m_values[binX] +
+                     m_values[binY] * m_values[binY]);
+  }
+  return 0.0;
+}
