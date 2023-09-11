@@ -105,7 +105,14 @@ class CylindricalDetectorVolume:
 
 class CylindricalDetectorContainer:
     def __init__(
-        self, name, extent, volumes, layers=None, binning=[], rootbuilder = None, loglevel=logging.INFO
+        self,
+        name,
+        extent,
+        volumes,
+        layers=None,
+        binning=[],
+        rootbuilder=None,
+        loglevel=logging.INFO,
     ):
         """Create a cylindrical container builder from  volumes or layer definitions
 
@@ -182,6 +189,6 @@ class CylindricalDetectorContainer:
         containerConfig = CylindricalContainerBuilder.Config()
         containerConfig.builders = builders
         containerConfig.binning = [self._binning]
-        containerConfig.rootVolumeFinderBuiilder = self._rootbuilder
+        containerConfig.rootVolumeFinderBuilder = self._rootbuilder
         containerConfig.auxiliary = "Container[" + self._name + "]"
         return CylindricalContainerBuilder(containerConfig, self._name, self._loglevel)

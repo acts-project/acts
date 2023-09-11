@@ -6,26 +6,25 @@ import acts.examples
 import acts.examples.odd_light as odd_light
 from acts.examples import geant4 as acts_g4
 
-from acts import (
-    GeometryContext,
-    logging
-)
+from acts import GeometryContext, logging
+
 
 def volumeAssociationTest(sequencer, ntests, tdetector):
 
     rnd = acts.examples.RandomNumbers(seed=42)
 
     alg = acts.examples.VolumeAssociationTest(
-        name='VolumeAssociation',
-        ntests = ntests,
-        detector = tdetector,
+        name="VolumeAssociation",
+        ntests=ntests,
+        detector=tdetector,
         randomNumbers=rnd,
-        randomRange=[ 1100, 3100],
+        randomRange=[1100, 3100],
         level=logging.DEBUG,
     )
     # Add the algorithm to the sequenceer
     sequencer.addAlgorithm(alg)
     return sequencer
+
 
 def main():
     # Parse the command line arguments
@@ -54,9 +53,8 @@ def main():
     p.add_argument(
         "-n", "--events", type=int, default=1000, help="Number of events to generate"
     )
-    p.add_argument(
-        "-t", "--tests", type=int, default=1000, help="Tests per track")
-       
+    p.add_argument("-t", "--tests", type=int, default=10000, help="Tests per track")
+
     args = p.parse_args()
     geoContext = GeometryContext()
 

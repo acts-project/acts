@@ -12,7 +12,7 @@ from acts import (
     GeometryContext,
     KdtSurfaces2D,
     KdtSurfacesProvider2D,
-    IndexedRootVolumeFinderBuilder
+    IndexedRootVolumeFinderBuilder,
     logging,
     ProtoBinning,
 )
@@ -132,7 +132,7 @@ def necBarrelPec(
         volumes=[nec, barrel, pec],
         layers=None,
         binning=Binning.z,
-        rootbuilder = None, 
+        rootbuilder=None,
         loglevel=llevel,
     )
 
@@ -265,7 +265,7 @@ def get_detector(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERB
     )
 
     # Container of beam pipe and pixel
-    rootBuilder = IndexedRootVolumeFinderBuilder([binning.z, binning.r])
+    rootBuilder = IndexedRootVolumeFinderBuilder([Binning.z, Binning.r])
 
     det = detector.CylindricalDetectorContainer(
         name="ODD",
@@ -273,7 +273,7 @@ def get_detector(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERB
         volumes=[bp, pix, pst, sstrip, lstrip],
         layers=None,
         binning=Binning.r,
-        rootbuilder = rootBuilder, 
+        rootbuilder=rootBuilder,
         loglevel=llevel,
     )
 
