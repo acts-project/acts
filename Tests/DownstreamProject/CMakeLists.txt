@@ -8,7 +8,6 @@ find_package(
   COMPONENTS
     Core
     Fatras
-    PluginAutodiff
     PluginIdentification
     PluginJson
     PluginLegacy

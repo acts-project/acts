@@ -8,6 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Plugins/ExaTrkX/detail/CantorEdge.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/TensorVectorConversion.hpp"
 #include "Acts/Plugins/ExaTrkX/detail/buildEdges.hpp"
 
@@ -16,6 +17,8 @@
 
 #include <Eigen/Core>
 #include <torch/torch.h>
+
+using CantorPair = Acts::detail::CantorEdge<int>;
 
 #define PRINT 0
 
@@ -26,24 +29,6 @@ float distance(const at::Tensor &a, const at::Tensor &b) {
   return std::sqrt(((a - b) * (a - b)).sum().item().to<float>());
 }
 
-struct CantorPair {
-  int value;
-
-  CantorPair(int x, int y) : value(y + ((x + y) * (x + y + 1)) / 2) {}
-
-  std::pair<int, int> inverse() const {
-    auto f = [](int w) -> int { return (w * (w + 1)) / 2; };
-    auto q = [](int w) -> int {
-      return std::floor((std::sqrt(8 * w + 1) - 1) / 2);
-    };
-
-    auto y = value - f(q(value));
-    auto x = q(value) - y;
-
-    return {x, y};
-  }
-};
-
 #if PRINT
 std::ostream &operator<<(std::ostream &os, CantorPair p) {
   auto [a, b] = p.inverse();
@@ -51,14 +36,6 @@ std::ostream &operator<<(std::ostream &os, CantorPair p) {
   return os;
 }
 #endif
-
-bool operator<(CantorPair a, CantorPair b) {
-  return a.value < b.value;
-}
-
-bool operator==(CantorPair a, CantorPair b) {
-  return a.value == b.value;
-}
 
 template <typename edge_builder_t>
 void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
@@ -134,9 +111,18 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn,
 BOOST_AUTO_TEST_CASE(test_cantor_pair_functions) {
   int a = 345;
   int b = 23;
-  const auto [aa, bb] = CantorPair(a, b).inverse();
+  // Use non-sorted cantor pair to make this work
+  const auto [aa, bb] = CantorPair(a, b, false).inverse();
   BOOST_CHECK(a == aa);
   BOOST_CHECK(b == bb);
+}
+
+BOOST_AUTO_TEST_CASE(test_cantor_pair_sorted) {
+  int a = 345;
+  int b = 23;
+  CantorPair c1(a, b);
+  CantorPair c2(b, a);
+  BOOST_CHECK(c1.value() == c2.value());
 }
 
 const int emb_dim = 3;

@@ -118,7 +118,7 @@ test_exatrkx_python:
   tags:
     - docker-gpu-nvidia
   script:
-    - apt-get update -y || true # TODO revert
+    - apt-get update -y
     - apt-get install -y python3 libxxhash0
     - source /usr/local/bin/thisroot.sh
     - source build/python/setup.sh
@@ -394,7 +394,7 @@ linux_ubuntu_2204_clang:
       -DACTS_BUILD_PLUGIN_JSON=ON
       -DACTS_BUILD_FATRAS=ON
       -DACTS_BUILD_PLUGIN_LEGACY=ON
-      -DACTS_BUILD_PLUGIN_AUTODIFF=ON
+      -DACTS_BUILD_PLUGIN_AUTODIFF=OFF
       -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
       -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
       -DACTS_BUILD_EXAMPLES_GEANT4=ON
@@ -446,10 +446,9 @@ lcg_103:
       - OS: [alma9]
         COMPILER: 
           - gcc11
-          # currently failing
-          # - gcc12
+          - gcc12
 
   rules:
-    - if: '$COMPILER == "clang12" || $COMPILER == "gcc12" || $COMPILER == "clang15"'
+    - if: '$COMPILER == "clang12" || $COMPILER == "clang15"'
       allow_failure: true
     - when: on_success
