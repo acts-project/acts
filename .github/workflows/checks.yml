@@ -70,7 +70,7 @@ jobs:
       - uses: actions/setup-python@v4
       - name: Check
         run: >
-          CI/check_end_of_file.sh .
+          CI/check_end_of_file.py . --reject-multiple-newlines --exclude "thirdparty/*"
   boost_test_macro:
     runs-on: ubuntu-latest
     steps:

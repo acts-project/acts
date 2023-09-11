@@ -2,38 +2,62 @@
 
 import sys
 import argparse
+from subprocess import check_output
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("input", nargs="+")
+    p.add_argument("input")
+    p.add_argument("--exclude", nargs="+")
     p.add_argument("--fix", action="store_true")
     p.add_argument("--reject-multiple-newlines", action="store_true")
-
     args = p.parse_args()
+
+    files = (
+        str(
+            check_output(
+                [
+                    "find",
+                    args.input,
+                    "-iname",
+                    "*.cpp",
+                    "-or",
+                    "-iname",
+                    "*.hpp",
+                    "-or",
+                    "-iname",
+                    "*.ipp",
+                ]
+                + sum((["-not", "-path", exclude] for exclude in args.exclude), [])
+            ),
+            "utf-8",
+        )
+        .strip()
+        .split("\n")
+    )
 
     failed = []
 
-    for filename in args.input:
-        with open(filename) as f:
+    for file in files:
+        with open(file) as f:
             lines = f.readlines()
 
         if not lines[-1].endswith("\n"):
-            print(f"Missing newline at end of file: {filename}")
+            print(f"Missing newline at end of file: {file}")
             if args.fix:
-                with open(filename, "a") as f:
+                with open(file, "a") as f:
                     f.write("\n")
             else:
-                failed.append(filename)
+                failed.append(file)
         elif args.reject_multiple_newlines and lines[-1] == "\n":
-            print(f"Multiple newlines at end of file: {filename}")
+            print(f"Multiple newlines at end of file: {file}")
             if args.fix:
                 while lines[-1] == "\n":
                     lines.pop(-1)
-                with open(filename, "w") as f:
+                with open(file, "w") as f:
                     f.write("".join(lines))
             else:
-                failed.append(filename)
+                failed.append(file)
 
     if failed:
         print(f"failed for files: {' '.join(failed)}")
