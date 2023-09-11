@@ -15,9 +15,11 @@
 #pragma GCC diagnostic pop
 #endif
 
+#include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
+// comment to preserve ordering
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
-#include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
