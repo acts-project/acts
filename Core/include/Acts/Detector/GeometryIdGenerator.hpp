@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <any>
-#include <optional>
 
 namespace Acts {
 
@@ -22,28 +22,53 @@ namespace Experimental {
 class Portal;
 class DetectorVolume;
 
-/// @brief This is a geometry ID generator for a layered container volume
+/// @brief This is the default implementation of the geometry id generator
 ///
-/// It can optionally reverse the labelling and override existing ids
-/// It also allows to optionally set a volume id by configuration
-class ContainerGeometryIdGenerator : public IGeometryIdGenerator {
+/// It is a simple counter based generator that assigns ids to the geometry
+/// and increments the counter for each object type.
+///
+/// Sub counter, i.e. for the sensitive surfaces, are reset after the volume
+/// call, such that a new volume or layer volume would start from coutner 0
+/// again.
+///
+/// If the generator is configured to override existing ids, it will do so
+/// and not respect previously assigned ids.
+///
+/// If the generator is configured in container mode, it will increase the
+/// layer id for each layer volume with confined surfaces.
+///
+class GeometryIdGenerator : public IGeometryIdGenerator {
  public:
   /// @brief  Nested config struct
   struct Config {
-    /// Allow overriding of already existing sub ids
+    /// Container mode
+    bool containerMode = false;
+    /// Container id (if container mode), will not be incremented
+    unsigned int containerId = 0u;
+    /// Force override existing ids
     bool overrideExistingIds = false;
-    /// Reverse labelling
-    bool reverse = false;
-    /// Optional volume id
-    std::optional<unsigned int> volumeId = std::nullopt;
+  };
+
+  /// @brief Nested cache struct
+  struct Cache {
+    /// Cache count of the volume, for non-container mode
+    unsigned int volumeCount = 0u;
+    /// Cache count of the layer volume, for container mode
+    unsigned int layerCount = 0u;
+    /// Cache count of the portal surfaces
+    unsigned int portalCount = 0u;
+    /// Cache count of passive surfaces
+    unsigned int passiveCount = 0u;
+    /// Cache count of sensitive surfaces
+    unsigned int sensitiveCount = 0u;
   };
 
   /// @brief Constructor with config
   ///
   /// @param cfg is the geometry configuration object
-  ContainerGeometryIdGenerator(const Config& cfg) : m_cfg(cfg) {}
+  GeometryIdGenerator(const Config& cfg) : m_cfg(cfg) {}
 
-  virtual ~ContainerGeometryIdGenerator() = default;
+  virtual ~GeometryIdGenerator() = default;
 
   /// @brief  Interface method to generata a geometry id cache
   /// @return a geometry id cache decorated in a std::any object
@@ -71,6 +96,11 @@ class ContainerGeometryIdGenerator : public IGeometryIdGenerator {
                         Surface& surface) const final override;
 
  private:
+  /// @brief Helper method to get the volume id from the cache
+  /// @param cache the provided cache
+  /// @return a valid geometry identifier
+  GeometryIdentifier volumeId(Cache& cache) const;
+
   Config m_cfg;
 };
 
