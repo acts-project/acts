@@ -127,8 +127,8 @@ AmbiguityResolutionConfig = namedtuple(
 
 AmbiguityResolutionMLConfig = namedtuple(
     "AmbiguityResolutionMLConfig",
-    ["nMeasurementsMin"],
-    defaults=[None] * 1,
+    ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
+    defaults=[None] * 3,
 )
 
 AmbiguityResolutionMLDBScanConfig = namedtuple(
@@ -953,24 +953,22 @@ def addCKFTracks(
             [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
         trackSelectorCfg=acts.TrackSelector.Config(
-            acts.TrackSelector.CutConfig(
-                **acts.examples.defaultKWArgs(
-                    loc0Min=trackSelectorConfig.loc0[0],
-                    loc0Max=trackSelectorConfig.loc0[1],
-                    loc1Min=trackSelectorConfig.loc1[0],
-                    loc1Max=trackSelectorConfig.loc1[1],
-                    timeMin=trackSelectorConfig.time[0],
-                    timeMax=trackSelectorConfig.time[1],
-                    phiMin=trackSelectorConfig.phi[0],
-                    phiMax=trackSelectorConfig.phi[1],
-                    etaMin=trackSelectorConfig.eta[0],
-                    etaMax=trackSelectorConfig.eta[1],
-                    absEtaMin=trackSelectorConfig.absEta[0],
-                    absEtaMax=trackSelectorConfig.absEta[1],
-                    ptMin=trackSelectorConfig.pt[0],
-                    ptMax=trackSelectorConfig.pt[1],
-                    minMeasurements=trackSelectorConfig.nMeasurementsMin,
-                )
+            **acts.examples.defaultKWArgs(
+                loc0Min=trackSelectorConfig.loc0[0],
+                loc0Max=trackSelectorConfig.loc0[1],
+                loc1Min=trackSelectorConfig.loc1[0],
+                loc1Max=trackSelectorConfig.loc1[1],
+                timeMin=trackSelectorConfig.time[0],
+                timeMax=trackSelectorConfig.time[1],
+                phiMin=trackSelectorConfig.phi[0],
+                phiMax=trackSelectorConfig.phi[1],
+                etaMin=trackSelectorConfig.eta[0],
+                etaMax=trackSelectorConfig.eta[1],
+                absEtaMin=trackSelectorConfig.absEta[0],
+                absEtaMax=trackSelectorConfig.absEta[1],
+                ptMin=trackSelectorConfig.pt[0],
+                ptMax=trackSelectorConfig.pt[1],
+                minMeasurements=trackSelectorConfig.nMeasurementsMin,
             )
         )
         if trackSelectorConfig is not None
@@ -1132,24 +1130,22 @@ def addTrackSelection(
 
     # single cut config for implicit single bin eta configuration
     selectorConfig = acts.TrackSelector.Config(
-        acts.TrackSelector.CutConfig(
-            **acts.examples.defaultKWArgs(
-                loc0Min=trackSelectorConfig.loc0[0],
-                loc0Max=trackSelectorConfig.loc0[1],
-                loc1Min=trackSelectorConfig.loc1[0],
-                loc1Max=trackSelectorConfig.loc1[1],
-                timeMin=trackSelectorConfig.time[0],
-                timeMax=trackSelectorConfig.time[1],
-                phiMin=trackSelectorConfig.phi[0],
-                phiMax=trackSelectorConfig.phi[1],
-                etaMin=trackSelectorConfig.eta[0],
-                etaMax=trackSelectorConfig.eta[1],
-                absEtaMin=trackSelectorConfig.absEta[0],
-                absEtaMax=trackSelectorConfig.absEta[1],
-                ptMin=trackSelectorConfig.pt[0],
-                ptMax=trackSelectorConfig.pt[1],
-                minMeasurements=trackSelectorConfig.nMeasurementsMin,
-            )
+        **acts.examples.defaultKWArgs(
+            loc0Min=trackSelectorConfig.loc0[0],
+            loc0Max=trackSelectorConfig.loc0[1],
+            loc1Min=trackSelectorConfig.loc1[0],
+            loc1Max=trackSelectorConfig.loc1[1],
+            timeMin=trackSelectorConfig.time[0],
+            timeMax=trackSelectorConfig.time[1],
+            phiMin=trackSelectorConfig.phi[0],
+            phiMax=trackSelectorConfig.phi[1],
+            etaMin=trackSelectorConfig.eta[0],
+            etaMax=trackSelectorConfig.eta[1],
+            absEtaMin=trackSelectorConfig.absEta[0],
+            absEtaMax=trackSelectorConfig.absEta[1],
+            ptMin=trackSelectorConfig.pt[0],
+            ptMax=trackSelectorConfig.pt[1],
+            minMeasurements=trackSelectorConfig.nMeasurementsMin,
         )
     )
 
@@ -1345,10 +1341,11 @@ def addAmbiguityResolutionML(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     from acts.examples.onnx import AmbiguityResolutionMLAlgorithm
+    from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    alg = AmbiguityResolutionMLAlgorithm(
+    algML = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
@@ -1357,11 +1354,24 @@ def addAmbiguityResolutionML(
             nMeasurementsMin=config.nMeasurementsMin,
         ),
     )
-    s.addAlgorithm(alg)
+
+    algGreedy = GreedyAmbiguityResolutionAlgorithm(
+        level=customLogLevel(),
+        inputTracks=algML.config.outputTracks,
+        outputTracks="filteredTrajectoriesMLGreedy",
+        **acts.examples.defaultKWArgs(
+            maximumSharedHits=config.maximumSharedHits,
+            nMeasurementsMin=config.nMeasurementsMin,
+            maximumIterations=config.maximumIterations,
+        ),
+    )
+
+    s.addAlgorithm(algML)
+    s.addAlgorithm(algGreedy)
 
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
-        inputTracks=alg.config.outputTracks,
+        inputTracks=algGreedy.config.outputTracks,
         outputTrajectories="trajectories-from-solved-tracks",
     )
     s.addAlgorithm(trackConverter)
