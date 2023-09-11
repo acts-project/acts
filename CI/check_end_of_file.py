@@ -11,6 +11,7 @@ def main():
     p.add_argument("--exclude", nargs="+")
     p.add_argument("--fix", action="store_true")
     p.add_argument("--reject-multiple-newlines", action="store_true")
+    p.add_argument("--github", action="store_true")
     args = p.parse_args()
 
     files = (
@@ -49,6 +50,8 @@ def main():
                     f.write("\n")
             else:
                 failed.append(file)
+            if args.github:
+                print(f"::error file={file},line={len(lines)+1},title=missing newline")
         elif args.reject_multiple_newlines and lines[-1] == "\n":
             print(f"Multiple newlines at end of file: {file}")
             if args.fix:
@@ -58,6 +61,10 @@ def main():
                     f.write("".join(lines))
             else:
                 failed.append(file)
+            if args.github:
+                print(
+                    f"::error file={file},line={len(lines)+1},title=multiple newlines"
+                )
 
     if failed:
         print(f"failed for files: {' '.join(failed)}")
