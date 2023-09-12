@@ -94,7 +94,7 @@ class CylindricalDetectorVolume:
         # Return the builder
         return DetectorVolumeBuilder(volConfig, self._name, self._loglevel)
 
-    def prependtName(self, parent):
+    def prependName(self, parent):
         """Allows to set the name from a parent"""
         self._name = parent + "_" + self._name
 
@@ -134,9 +134,7 @@ class CylindricalDetectorContainer:
 
     def builder(self):
         "Return the associated builder"
-        orthogonal = Binning.r
-        if self._binning == Binning.r:
-            orthogonal = Binning.z
+        orthogonal = Binning.r if self._binning == Binning.r else Binning.z
 
         builders = []
         # If the container is defined by volumes, just fill the builders
@@ -162,7 +160,8 @@ class CylindricalDetectorContainer:
                         ).builder()
                     ]
                 # Layer volume insertion
-                layer.prependtName(self._name)
+                layer.prependName(self._name)
+
                 builders += [layer.builder()]
                 # Update reference and increment the counter
                 bReference = bRange[1]

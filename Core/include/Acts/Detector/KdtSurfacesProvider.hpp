@@ -31,7 +31,7 @@ namespace Experimental {
 ///
 template <size_t kDIM = 2u, size_t bSize = 100u,
           typename reference_generator =
-              detail::PolyhedronReferenceGenerator<1, false>>
+              detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfaces {
  public:
   /// Broadcast the surface KDT type
@@ -54,7 +54,7 @@ class KdtSurfaces {
               const std::vector<std::shared_ptr<Surface>>& surfaces,
               const std::array<BinningValue, kDIM>& casts,
               const reference_generator& rgen =
-                  detail::PolyhedronReferenceGenerator<1, false>{})
+                  detail::PolyhedronReferenceGenerator<1u, false>{})
       : m_kdt(nullptr), m_casts(casts), m_rGenerator(rgen) {
     // Simple check if the dimension is correct
     if (kDIM == 0u) {
@@ -75,19 +75,6 @@ class KdtSurfaces {
         fillCasts(r, rc, std::make_integer_sequence<std::size_t, kDIM>{});
         castedReferences.push_back(rc);
       }
-      // DEBUG info
-      if (s->type() == Acts::Surface::SurfaceType::Cylinder) {
-        std::cout << "Cylinder surface with " << references.size()
-                  << " references and " << castedReferences.size()
-                  << " casted references" << std::endl;
-        std::cout << " Results in the following casted references: "
-                  << std::endl;
-        auto cc = cog(castedReferences);
-        std::for_each(cc.begin(), cc.end(),
-                      [](auto& v) { std::cout << " " << v; });
-        std::cout << std::endl;
-      }
-
       // Calculate the center of gravity in casted frame
       kdtEntries.push_back({cog(castedReferences), s});
     }
@@ -176,7 +163,7 @@ class KdtSurfaces {
 /// configuration level that are then connected to an InternalStructureBuilder
 template <size_t kDIM = 2u, size_t bSize = 100u,
           typename reference_generator =
-              detail::PolyhedronReferenceGenerator<1, false>>
+              detail::PolyhedronReferenceGenerator<1u, false>>
 class KdtSurfacesProvider : public ISurfacesProvider {
  public:
   /// The prefilled surfaces in a KD tree structure, it is generally shared
