@@ -155,7 +155,7 @@ BOOST_DATA_TEST_CASE(RandomPlanarSurfaceMask,
 
     if (index == 0) {
       std::ofstream shape;
-      const auto centerXY = surface->center(geoCtx).segment<2>(0);
+      const Acts::Vector2 centerXY = surface->center(geoCtx).segment<2>(0);
 
       // 0 - write the shape
       shape.open("PlanarSurfaceMask" + name + "Borders.csv");
