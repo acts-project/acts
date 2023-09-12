@@ -50,7 +50,11 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   }
 
   m_inputSeeds.initialize(m_cfg.inputSeeds);
+  m_inputTracks.maybeInitialize(m_cfg.inputProtoTracks);
+
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
+  m_outputSeeds.maybeInitialize(m_cfg.outputSeeds);
+  m_outputTracks.maybeInitialize(m_cfg.outputProtoTracks);
 
   // Set up the track parameters covariance (the same for all tracks)
   m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
@@ -80,6 +84,22 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   TrackParametersContainer trackParameters;
   trackParameters.reserve(seeds.size());
+
+  std::optional<SimSeedContainer> outputSeeds;
+  if (m_outputSeeds.isInitialized()) {
+    outputSeeds->reserve(seeds.size());
+  }
+
+  const ProtoTrackContainer* inputTracks = nullptr;
+  std::optional<ProtoTrackContainer> outputTracks;
+  if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
+    if (seeds.size() != inputTracks->size()) {
+      ACTS_FATAL("Inconsistent number of seeds and prototracks");
+      return ProcessCode::ABORT;
+    }
+    inputTracks = &m_inputTracks(ctx);
+    outputTracks->reserve(seeds.size());
+  }
 
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
 
@@ -125,11 +145,25 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       double charge = std::copysign(1, params[Acts::eBoundQOverP]);
       trackParameters.emplace_back(surface->getSharedPtr(), params, charge,
                                    m_covariance);
+      if (outputSeeds) {
+        outputSeeds->push_back(seed);
+      }
+      if (outputTracks && inputTracks != nullptr) {
+        outputTracks->push_back(inputTracks->at(iseed));
+      }
     }
   }
 
   ACTS_VERBOSE("Estimated " << trackParameters.size() << " track parameters");
 
   m_outputTrackParameters(ctx, std::move(trackParameters));
+  if (m_outputSeeds.isInitialized()) {
+    m_outputSeeds(ctx, std::move(*outputSeeds));
+  }
+
+  if (m_outputTracks.isInitialized()) {
+    m_outputTracks(ctx, std::move(*outputTracks));
+  }
+
   return ProcessCode::SUCCESS;
 }
