@@ -13,6 +13,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/MultiLayerSurfacesUpdator.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
@@ -185,6 +186,13 @@ struct AdditionalSurfacesImpl : public INavigationDelegate {
 template <typename grid_type>
 using IndexedSurfacesImpl =
     IndexedUpdatorImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
+
+/// @brief  An indexed multi layer surface implementation access
+///
+/// @tparam grid_type is the grid type used for this indexed lookup
+template <typename grid_type>
+using MultiLayerSurfacesImpl =
+    MultiLayerSurfacesUpdatorImpl<grid_type, PathGridSurfacesGenerator>;
 
 /// @brief An indexed surface implementation with portal access
 ///
