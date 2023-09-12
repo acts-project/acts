@@ -448,7 +448,7 @@ lcg_103:
         COMPILER: 
           - gcc11
           - gcc12
-          - clang12 # crashes due to compiler bug with configuration
+          # - clang12 # crashes due to compiler bug with configuration
           - clang15
 
       - OS: [alma9]
