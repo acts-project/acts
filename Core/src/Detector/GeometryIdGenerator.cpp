@@ -68,9 +68,10 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
 
   auto rGeoID = surface.geometryId();
   auto geoID = volumeId(ccache, false);
-
-  if ((rGeoID.sensitive() == 0 and rGeoID.passive() == 0) or
-      m_cfg.overrideExistingIds) {
+  if (not m_cfg.overrideExistingIds and rGeoID.value() != 0) {
+    return;
+  } else if ((rGeoID.sensitive() == 0 and rGeoID.passive() == 0) or
+             m_cfg.overrideExistingIds) {
     if (surface.associatedDetectorElement() != nullptr) {
       geoID.setSensitive(++ccache.sensitiveCount);
       ACTS_VERBOSE("Assigning sensitive id " << ccache.sensitiveCount);
