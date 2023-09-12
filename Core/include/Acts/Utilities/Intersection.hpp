@@ -46,30 +46,32 @@ class Intersection {
   /// Status enum
   using Status = IntersectionStatus;
 
-  /// Default constructor
-  Intersection() = default;
-
   /// Constructor with arguments
   ///
   /// @param position is the position of the intersection
   /// @param pathLength is the path length to the intersection
   /// @param status is an enum indicating the status of the intersection
-  Intersection(const Position& position, double pathLength, Status status)
+  constexpr Intersection(const Position& position, double pathLength,
+                         Status status)
       : m_position(position), m_pathLength(pathLength), m_status(status) {}
 
   /// Returns whether the intersection was successful or not
-  explicit operator bool() const { return m_status != Status::missed; }
+  constexpr explicit operator bool() const {
+    return m_status != Status::missed;
+  }
 
-  const Position& position() const { return m_position; }
+  constexpr const Position& position() const { return m_position; }
 
-  ActsScalar pathLength() const { return m_pathLength; }
+  constexpr ActsScalar pathLength() const { return m_pathLength; }
 
-  Status status() const { return m_status; }
+  constexpr Status status() const { return m_status; }
+
+  constexpr static Intersection invalid() { return Intersection(); }
 
   /// Comparison function for forward order i.e. intersection closest to -inf
   /// will be first.
-  static bool forwardOrder(const Intersection& aIntersection,
-                           const Intersection& bIntersection) {
+  constexpr static bool forwardOrder(const Intersection& aIntersection,
+                                     const Intersection& bIntersection) {
     auto a = aIntersection.pathLength();
     auto b = bIntersection.pathLength();
     return a < b;
@@ -77,8 +79,8 @@ class Intersection {
 
   /// Comparison function for closest order i.e. intersection closest to 0 will
   /// be first.
-  static bool closestOrder(const Intersection& aIntersection,
-                           const Intersection& bIntersection) {
+  constexpr static bool closestOrder(const Intersection& aIntersection,
+                                     const Intersection& bIntersection) {
     if ((aIntersection.status() == Status::unreachable) &&
         (bIntersection.status() != Status::unreachable)) {
       return false;
@@ -100,6 +102,8 @@ class Intersection {
   ActsScalar m_pathLength = std::numeric_limits<double>::infinity();
   /// The Status of the intersection
   Status m_status = Status::unreachable;
+
+  constexpr Intersection() = default;
 };
 
 using Intersection2D = Intersection<2>;
@@ -111,9 +115,6 @@ using MultiIntersection3D = std::array<Intersection3D, 2>;
 template <typename object_t, typename representation_t = object_t>
 class ObjectIntersection {
  public:
-  /// Default constructor
-  ObjectIntersection() = default;
-
   /// Object intersection - symmetric setup
   ///
   /// @param intersection is the intersection
@@ -121,8 +122,8 @@ class ObjectIntersection {
   /// @param index is the intersection index
   template <typename T = representation_t,
             std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
-  ObjectIntersection(const Intersection3D& intersection, const object_t* object,
-                     std::uint8_t index = 0)
+  constexpr ObjectIntersection(const Intersection3D& intersection,
+                               const object_t* object, std::uint8_t index = 0)
       : m_intersection(intersection),
         m_object(object),
         m_representation(object),
@@ -134,79 +135,83 @@ class ObjectIntersection {
   /// @param object is the object to be instersected
   /// @param representation is the object representation
   /// @param index is the intersection index
-  ObjectIntersection(const Intersection3D& intersection, const object_t* object,
-                     const representation_t* representation,
-                     std::uint8_t index = 0)
+  constexpr ObjectIntersection(const Intersection3D& intersection,
+                               const object_t* object,
+                               const representation_t* representation,
+                               std::uint8_t index = 0)
       : m_intersection(intersection),
         m_object(object),
         m_representation(representation),
         m_index(index) {}
 
   /// Returns whether the intersection was successful or not
-  explicit operator bool() const { return m_intersection.operator bool(); }
+  constexpr explicit operator bool() const {
+    return m_intersection.operator bool();
+  }
 
-  const Intersection3D& intersection() const { return m_intersection; }
+  constexpr const Intersection3D& intersection() const {
+    return m_intersection;
+  }
 
-  const Intersection3D::Position& position() const {
+  constexpr const Intersection3D::Position& position() const {
     return m_intersection.position();
   }
 
-  ActsScalar pathLength() const { return m_intersection.pathLength(); }
+  constexpr ActsScalar pathLength() const {
+    return m_intersection.pathLength();
+  }
 
-  Intersection3D::Status status() const { return m_intersection.status(); }
+  constexpr Intersection3D::Status status() const {
+    return m_intersection.status();
+  }
 
-  const object_t* object() const { return m_object; }
+  constexpr const object_t* object() const { return m_object; }
 
-  const representation_t* representation() const { return m_representation; }
+  constexpr const representation_t* representation() const {
+    return m_representation;
+  }
 
-  std::uint8_t index() const { return m_index; }
+  constexpr std::uint8_t index() const { return m_index; }
 
-  static bool forwardOrder(const ObjectIntersection& aIntersection,
-                           const ObjectIntersection& bIntersection) {
+  constexpr static ObjectIntersection invalid() { return ObjectIntersection(); }
+
+  constexpr static bool forwardOrder(const ObjectIntersection& aIntersection,
+                                     const ObjectIntersection& bIntersection) {
     return Intersection3D::forwardOrder(aIntersection.intersection(),
                                         bIntersection.intersection());
   }
 
-  static bool closestOrder(const ObjectIntersection& aIntersection,
-                           const ObjectIntersection& bIntersection) {
+  constexpr static bool closestOrder(const ObjectIntersection& aIntersection,
+                                     const ObjectIntersection& bIntersection) {
     return Intersection3D::closestOrder(aIntersection.intersection(),
                                         bIntersection.intersection());
   }
 
  private:
   /// The intersection itself
-  Intersection3D m_intersection;
+  Intersection3D m_intersection = Intersection3D::invalid();
   /// The object that was (tried to be) intersected
   const object_t* m_object = nullptr;
   /// The representation of this object
   const representation_t* m_representation = nullptr;
   /// The intersection index
   std::uint8_t m_index = 0;
+
+  constexpr ObjectIntersection() = default;
 };
 
 /// @brief class extensions to return also the object and a representation
 template <typename object_t, typename representation_t = object_t>
 class ObjectMultiIntersection {
- private:
-  /// The intersections
-  MultiIntersection3D m_intersections;
-  /// The object that was (tried to be) intersected
-  const object_t* m_object = nullptr;
-  /// The representation of this object
-  const representation_t* m_representation = nullptr;
-
  public:
-  /// Default constructor
-  ObjectMultiIntersection() = default;
-
   /// Object intersection - symmetric setup
   ///
   /// @param intersections are the intersections
   /// @param object is the object to be instersected
   template <typename T = representation_t,
             std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
-  ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                          const object_t* object)
+  constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
+                                    const object_t* object)
       : m_intersections(intersections),
         m_object(object),
         m_representation(object) {}
@@ -216,34 +221,45 @@ class ObjectMultiIntersection {
   /// @param intersections are the intersections
   /// @param object is the object to be instersected
   /// @param representation is the object representation
-  ObjectMultiIntersection(const MultiIntersection3D& intersections,
-                          const object_t* object,
-                          const representation_t* representation)
+  constexpr ObjectMultiIntersection(const MultiIntersection3D& intersections,
+                                    const object_t* object,
+                                    const representation_t* representation)
       : m_intersections(intersections),
         m_object(object),
         m_representation(representation) {}
 
-  std::size_t size() const { return m_intersections.size(); }
-
-  const object_t* object() const { return m_object; }
-
-  const representation_t* representation() const { return m_representation; }
-
-  ObjectIntersection<object_t, representation_t> operator[](
+  constexpr ObjectIntersection<object_t, representation_t> operator[](
       std::uint8_t index) const {
     return {m_intersections[index], m_object, m_representation, index};
   }
 
-  std::array<ObjectIntersection<object_t, representation_t>, 2> split() const {
+  constexpr std::size_t size() const { return m_intersections.size(); }
+
+  constexpr const object_t* object() const { return m_object; }
+
+  constexpr const representation_t* representation() const {
+    return m_representation;
+  }
+
+  constexpr std::array<ObjectIntersection<object_t, representation_t>, 2>
+  split() const {
     return {operator[](0), operator[](1)};
   }
 
-  ObjectIntersection<object_t, representation_t> closest() const {
+  constexpr ObjectIntersection<object_t, representation_t> closest() const {
     auto splitIntersections = split();
     return *std::min_element(
         splitIntersections.begin(), splitIntersections.end(),
         ObjectIntersection<object_t, representation_t>::closestOrder);
   }
+
+ private:
+  /// The intersections
+  MultiIntersection3D m_intersections;
+  /// The object that was (tried to be) intersected
+  const object_t* m_object = nullptr;
+  /// The representation of this object
+  const representation_t* m_representation = nullptr;
 };
 
 namespace detail {

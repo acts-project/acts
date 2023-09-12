@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 /// Surface derived class stub
@@ -86,7 +87,8 @@ class SurfaceStub : public Surface {
       const ActsScalar /*tolerance*/) const final {
     Intersection3D stubIntersection(Vector3(20., 0., 0.), 20.,
                                     Intersection3D::Status::reachable);
-    return SurfaceMultiIntersection({stubIntersection, {}}, this);
+    return SurfaceMultiIntersection(
+        {stubIntersection, Intersection3D::invalid()}, this);
   }
 
   /// Return properly formatted class name

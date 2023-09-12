@@ -38,7 +38,7 @@ Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
     }
   }
   if (sIntersections.empty()) {
-    return SurfaceIntersection();
+    return SurfaceIntersection::invalid();
   }
   return *std::min_element(sIntersections.begin(), sIntersections.end(),
                            SurfaceIntersection::forwardOrder);

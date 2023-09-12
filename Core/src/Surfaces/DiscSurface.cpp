@@ -323,7 +323,7 @@ Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
   }
   return {{Intersection3D(intersection.position(), intersection.pathLength(),
                           status),
-           Intersection3D()},
+           Intersection3D::invalid()},
           this};
 }
 

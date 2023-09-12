@@ -168,7 +168,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
   // small number so `u` does not explode
   if (std::abs(denom) < std::abs(tolerance)) {
     // return a false intersection
-    return {{}, this};
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
   }
 
   double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
@@ -191,7 +191,7 @@ Acts::SurfaceMultiIntersection Acts::LineSurface::intersect(
     }
   }
 
-  return {{Intersection3D(result, u, status), {}}, this};
+  return {{Intersection3D(result, u, status), Intersection3D::invalid()}, this};
 }
 
 Acts::BoundToFreeMatrix Acts::LineSurface::boundToFreeJacobian(

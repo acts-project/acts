@@ -512,7 +512,7 @@ Acts::TrackingVolume::compatibleBoundaries(
     }
 
     ACTS_VERBOSE("No intersection accepted");
-    return BoundaryIntersection();
+    return BoundaryIntersection::invalid();
   };
 
   /// Helper function to process boundary surfaces

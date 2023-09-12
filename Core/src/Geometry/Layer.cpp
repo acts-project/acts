@@ -251,7 +251,8 @@ Acts::Layer::compatibleSurfaces(
       });
 
   // resize to remove all items that are past the unique range
-  sIntersections.resize(std::distance(sIntersections.begin(), it));
+  sIntersections.resize(std::distance(sIntersections.begin(), it),
+                        SurfaceIntersection::invalid());
 
   // sort according to the path length
   std::sort(sIntersections.begin(), sIntersections.end(),
@@ -288,7 +289,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
     }
 
     // Return an invalid one
-    return SurfaceIntersection();
+    return SurfaceIntersection::invalid();
   };
 
   // Approach descriptor present and resolving is necessary
