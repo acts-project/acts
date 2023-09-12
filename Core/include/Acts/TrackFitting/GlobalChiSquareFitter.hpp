@@ -393,7 +393,7 @@ class Gx2Fitter {
 
           for (long i = 0; i < measurement.size(); i++) {
             if (covarianceMeasurement(i, i) < 1e-10) {
-              ACTS_WARNING("Invalid covariance of measurement: cov("
+              ACTS_VERBOSE("Invalid covariance of measurement: cov("
                            << i << "," << i << ") ~ 0")
               continue;
             }
