@@ -29,6 +29,7 @@ class IRootVolumeFinderBuilder {
   /// The virtual interface definition for root volume finder builders
   ///
   /// @param gctx the geometry context at the creation of the internal structure
+  /// @param rootVoluems the root volumes to be used for the search
   ///
   /// @return a shared detector object
   virtual DetectorVolumeUpdator construct(
