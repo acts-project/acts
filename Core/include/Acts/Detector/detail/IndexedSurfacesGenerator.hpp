@@ -75,12 +75,8 @@ struct IndexedSurfacesGenerator {
       bvArray[ibv] = bv;
     }
 
-    // The indexed surfaces delegate
-    // IndexedSurfacesImpl<GridType> indexedSurfaces(std::move(grid), bvArray,
-    // transform);
     indexed_updator<GridType> indexedSurfaces(std::move(grid), bvArray,
                                               transform);
-
     // Fill the bin indices
     IndexedGridFiller filler{binExpansion};
     filler.oLogger = oLogger->cloneWithSuffix("_filler");
