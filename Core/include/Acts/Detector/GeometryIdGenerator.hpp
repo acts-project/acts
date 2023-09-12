@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <any>
 
@@ -45,6 +46,8 @@ class GeometryIdGenerator : public IGeometryIdGenerator {
     bool containerMode = false;
     /// Container id (if container mode), will not be incremented
     unsigned int containerId = 0u;
+    /// Resetting mode
+    bool resetSubCounters = true;
     /// Force override existing ids
     bool overrideExistingIds = false;
   };
@@ -66,7 +69,11 @@ class GeometryIdGenerator : public IGeometryIdGenerator {
   /// @brief Constructor with config
   ///
   /// @param cfg is the geometry configuration object
-  GeometryIdGenerator(const Config& cfg) : m_cfg(cfg) {}
+  /// @param mlogger is the logging instance
+  GeometryIdGenerator(const Config& cfg,
+                      std::unique_ptr<const Logger> mlogger = getDefaultLogger(
+                          "GeometryIdGenerator", Logging::INFO))
+      : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
   virtual ~GeometryIdGenerator() = default;
 
@@ -97,11 +104,21 @@ class GeometryIdGenerator : public IGeometryIdGenerator {
 
  private:
   /// @brief Helper method to get the volume id from the cache
+  ///
   /// @param cache the provided cache
+  /// @param incrementLayer if true, the layer counter is incremented
+  ///
   /// @return a valid geometry identifier
-  GeometryIdentifier volumeId(Cache& cache) const;
+  GeometryIdentifier volumeId(Cache& cache, bool incrementLayer = true) const;
 
+  /// Configuration object
   Config m_cfg;
+
+  /// Private access method to the logger
+  const Logger& logger() const { return *m_logger; }
+
+  /// logging instance
+  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // namespace Experimental

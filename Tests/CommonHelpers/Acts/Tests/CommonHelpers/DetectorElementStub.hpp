@@ -6,14 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///////////////////////////////////////////////////////////////////
-// DetectorElementStub.h, Acts project, Generic Detector plugin
-///////////////////////////////////////////////////////////////////
-
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
@@ -37,6 +35,24 @@ class DetectorElementStub : public DetectorElementBase {
 
   DetectorElementStub(const Transform3& transform)
       : DetectorElementBase(), m_elementTransform(transform) {}
+
+  /// Constructor for single sided detector element
+  /// - bound to a Line Surface
+  ///
+  /// @param transform is the transform that element the layer in 3D frame
+  /// @param cBounds is the cylindrical bounds
+  /// @param thickness is the module thickness
+  /// @param material is the (optional) Surface material associated to it
+  DetectorElementStub(
+      const Transform3& transform,
+      const std::shared_ptr<const CylinderBounds>& cBounds, double thickness,
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr)
+      : DetectorElementBase(),
+        m_elementTransform(transform),
+        m_elementThickness(thickness) {
+    m_elementSurface = Surface::makeShared<CylinderSurface>(cBounds, *this);
+    m_elementSurface->assignSurfaceMaterial(std::move(material));
+  }
 
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
