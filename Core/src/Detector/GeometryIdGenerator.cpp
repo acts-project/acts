@@ -67,9 +67,10 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
   auto& ccache = std::any_cast<Cache&>(cache);
 
   auto rGeoID = surface.geometryId();
+  auto geoID = volumeId(ccache, false);
+
   if ((rGeoID.sensitive() == 0 and rGeoID.passive() == 0) or
       m_cfg.overrideExistingIds) {
-    GeometryIdentifier geoID = volumeId(ccache, false);
     if (surface.associatedDetectorElement() != nullptr) {
       geoID.setSensitive(++ccache.sensitiveCount);
       ACTS_VERBOSE("Assigning sensitive id " << ccache.sensitiveCount);
@@ -78,6 +79,12 @@ void Acts::Experimental::GeometryIdGenerator::assignGeometryId(
       geoID.setPassive(++ccache.passiveCount);
     }
     surface.assignGeometryId(geoID);
+  } else if (rGeoID.sensitive() != 0 or rGeoID.passive() != 0) {
+    ACTS_VERBOSE(
+        "Surface already has a geometry id, only setting volume and layer id.");
+    rGeoID.setVolume(geoID.volume());
+    rGeoID.setLayer(geoID.layer());
+    surface.assignGeometryId(rGeoID);
   }
 }
 

@@ -48,6 +48,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     std::shared_ptr<IRootVolumeFinderBuilder> rootVolumeFinderBuilder = nullptr;
     /// The geometry id generator
     std::shared_ptr<const IGeometryIdGenerator> geoIdGenerator = nullptr;
+    /// An eventual reverse geometry id generation
+    bool geoIdReverseGen = false;
     /// Auxiliary information, mainly for screen output
     std::string auxiliary = "";
   };
