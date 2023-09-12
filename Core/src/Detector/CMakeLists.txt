@@ -17,4 +17,7 @@ target_sources(
     ProtoDetector.cpp
     GeometryIdGenerator.cpp
     VolumeStructureBuilder.cpp
+    MultiWireStructureBuilder.cpp
+
+    
 )
