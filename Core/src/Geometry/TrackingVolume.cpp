@@ -481,7 +481,11 @@ Acts::TrackingVolume::compatibleBoundaries(
       [&](SurfaceMultiIntersection& smIntersection,
           const BoundarySurface* bSurface) -> BoundaryIntersection {
     for (const auto& sIntersection : smIntersection.split()) {
-      if (options.forceIntersectBoundaries and sIntersection.pathLength() > 0) {
+      if (!sIntersection) {
+        continue;
+      }
+
+      if (options.forceIntersectBoundaries) {
         const bool coCriterion =
             std::abs(sIntersection.pathLength()) < std::abs(oLimit);
         ACTS_VERBOSE("Forcing intersection with surface "

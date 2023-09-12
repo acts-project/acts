@@ -282,8 +282,8 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   auto findValidIntersection =
       [&](const SurfaceMultiIntersection& sfmi) -> SurfaceIntersection {
     for (const auto& sfi : sfmi.split()) {
-      if (detail::checkIntersection(sfi.intersection(), pLimit, oLimit,
-                                    s_onSurfaceTolerance)) {
+      if (sfi && detail::checkIntersection(sfi.intersection(), pLimit, oLimit,
+                                           s_onSurfaceTolerance)) {
         return sfi;
       }
     }
