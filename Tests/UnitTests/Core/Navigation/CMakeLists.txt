@@ -3,3 +3,5 @@ add_unittest(DetectorVolumeFinders DetectorVolumeFindersTests.cpp)
 add_unittest(NavigationState NavigationStateTests.cpp)
 add_unittest(NavigationStateUpdators NavigationStateUpdatorsTests.cpp)
 add_unittest(DetectorNavigator DetectorNavigatorTests.cpp)
+add_unittest(MultiWireNavigation MultiWireNavigationTests.cpp)
+
