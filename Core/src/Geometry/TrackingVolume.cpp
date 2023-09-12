@@ -496,7 +496,8 @@ Acts::TrackingVolume::compatibleBoundaries(
                        << std::abs(sIntersection.pathLength())
                        << " < overstep limit " << std::abs(oLimit));
           return BoundaryIntersection(sIntersection.intersection(), bSurface,
-                                      sIntersection.object());
+                                      sIntersection.object(),
+                                      sIntersection.index());
         }
         ACTS_VERBOSE("Can't force intersection: ");
         ACTS_VERBOSE("- intersection path length "
@@ -511,7 +512,8 @@ Acts::TrackingVolume::compatibleBoundaries(
               sIntersection.intersection(), pLimit, oLimit,
               s_onSurfaceTolerance, logger)) {
         return BoundaryIntersection(sIntersection.intersection(), bSurface,
-                                    sIntersection.object());
+                                    sIntersection.object(),
+                                    sIntersection.index());
       }
     }
 
@@ -613,7 +615,8 @@ Acts::TrackingVolume::compatibleLayers(
             (atIntersection.object() != options.targetSurface) && withinLimit) {
           // create a layer intersection
           lIntersections.push_back(LayerIntersection(
-              atIntersection.intersection(), tLayer, atIntersection.object()));
+              atIntersection.intersection(), tLayer, atIntersection.object(),
+              atIntersection.index()));
         }
       }
       // move to next one or break because you reached the end layer

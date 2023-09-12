@@ -467,7 +467,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                         ->intersect(esState.geoContext, es.position(esState),
                                     navDir * es.direction(esState), false)
                         .closest(),
-                    false);
+                    navDir, false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setValue(navDir * stepSize);
   es.updateStepSize(esState,
@@ -475,7 +475,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                         ->intersect(esState.geoContext, es.position(esState),
                                     navDir * es.direction(esState), false)
                         .closest(),
-                    true);
+                    navDir, true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction

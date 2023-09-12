@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
           ->intersect(state.geoContext, stepper.position(state),
                       navDir * stepper.direction(state), false)
           .closest(),
-      false);
+      navDir, false);
   BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
@@ -587,7 +587,7 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
           ->intersect(state.geoContext, stepper.position(state),
                       navDir * stepper.direction(state), false)
           .closest(),
-      true);
+      navDir, true);
   BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 

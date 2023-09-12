@@ -155,7 +155,7 @@ struct PropagatorState {
     template <typename object_intersection_t>
     void updateStepSize(State& state,
                         const object_intersection_t& oIntersection,
-                        bool release = true) const {
+                        Direction /*direction*/, bool release = true) const {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 

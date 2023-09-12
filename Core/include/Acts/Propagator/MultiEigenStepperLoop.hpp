@@ -767,26 +767,17 @@ class MultiEigenStepperLoop
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+                      Direction direction, bool release = true) const {
     const Surface& surface = *oIntersection.representation();
 
     for (auto& component : state.components) {
       auto intersection = surface.intersect(
           component.state.geoContext, SingleStepper::position(component.state),
-          SingleStepper::direction(component.state),
+          direction * SingleStepper::direction(component.state),
           true)[oIntersection.index()];
 
-      // We don't know whatever was done to manipulate the intersection before
-      // (e.g. in Layer.ipp:240), so we trust and just adjust the sign
-      if (std::signbit(oIntersection.pathLength()) !=
-          std::signbit(intersection.pathLength())) {
-        intersection = SurfaceIntersection(
-            Intersection3D(intersection.position(), -intersection.pathLength(),
-                           intersection.status()),
-            intersection.object(), intersection.representation());
-      }
-
-      SingleStepper::updateStepSize(component.state, intersection, release);
+      SingleStepper::updateStepSize(component.state, intersection, direction,
+                                    release);
     }
   }
 

@@ -822,7 +822,8 @@ class Navigator {
             state.navigation.navLayerIndex = state.navigation.navLayers.size();
             // The stepper updates the step size ( single / multi component)
             stepper.updateStepSize(state.stepping,
-                                   state.navigation.navSurface(), true);
+                                   state.navigation.navSurface(),
+                                   state.options.direction, true);
             ACTS_VERBOSE(volInfo(state)
                          << "Navigation stepSize updated to "
                          << stepper.outputStepSize(state.stepping));
@@ -978,7 +979,7 @@ class Navigator {
       if (not state.navigation.navBoundaries.empty()) {
         // Set to the first and return to the stepper
         stepper.updateStepSize(state.stepping, state.navigation.navBoundary(),
-                               true);
+                               state.options.direction, true);
         ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                     << stepper.outputStepSize(state.stepping));
         return true;
@@ -1178,7 +1179,7 @@ class Navigator {
       state.navigation.navSurfaceIndex = 0;
       // The stepper updates the step size ( single / multi component)
       stepper.updateStepSize(state.stepping, state.navigation.navSurface(),
-                             true);
+                             state.options.direction, true);
       ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                   << stepper.outputStepSize(state.stepping));
       return true;
@@ -1252,7 +1253,7 @@ class Navigator {
         ACTS_VERBOSE(volInfo(state) << "Target at layer.");
         // The stepper updates the step size ( single / multi component)
         stepper.updateStepSize(state.stepping, state.navigation.navLayer(),
-                               true);
+                               state.options.direction, true);
         ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                     << stepper.outputStepSize(state.stepping));
         return true;

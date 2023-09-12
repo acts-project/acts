@@ -403,7 +403,7 @@ class AtlasStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+                      Direction /*direction*/, bool release = true) const {
     detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
   }
 
