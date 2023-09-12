@@ -6,17 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
-#include <Eigen/Core>
-#if defined(__GNUC__) && __GNUC__ >= 13 && !defined(__clang__)
-#pragma GCC diagnostic pop
-#endif
-
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
-// comment to preserve ordering
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
