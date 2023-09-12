@@ -370,44 +370,91 @@ class Gx2Fitter {
           extensions.calibrator(state.geoContext, *calibrationContext,
                                 sourcelink_it->second, trackStateProxy);
 
-          const size_t measdimPlaceholder = 2;
-          auto measurement =
-              trackStateProxy.template calibrated<measdimPlaceholder>();
-          auto covarianceMeasurement =
-              trackStateProxy
-                  .template calibratedCovariance<measdimPlaceholder>();
-          // calculate residuals and return with covariances and jacobians
-          auto projJacobian =
-              (trackStateProxy.effectiveProjector() * result.jacobianFromStart)
-                  .eval();
-          auto projPredicted =
-              (trackStateProxy.effectiveProjector() * predicted).eval();
-
-          ACTS_VERBOSE(
-              "Processing and collecting measurements in Actor:\n"
-              << "\tMeasurement:\t" << measurement.transpose()
-              << "\n\tPredicted:\t" << predicted.transpose()
-              << "\n\tProjector:\t" << trackStateProxy.effectiveProjector()
-              << "\n\tProjected Jacobian:\t" << projJacobian
-              << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
-
-          for (long i = 0; i < measurement.size(); i++) {
-            if (covarianceMeasurement(i, i) < 1e-10) {
-              ACTS_VERBOSE("Invalid covariance of measurement: cov("
-                           << i << "," << i << ") ~ 0")
-              continue;
-            }
-
-            result.collectorResiduals.push_back(measurement[i] -
-                                                projPredicted[i]);
-            result.collectorCovariances.push_back(covarianceMeasurement(i, i));
-            result.collectorProjectedJacobians.push_back(projJacobian.row(i));
+          if (trackStateProxy.calibratedSize() == 1) {
+            const size_t measdimPlaceholder = 1;
+            auto measurement =
+                trackStateProxy.template calibrated<measdimPlaceholder>();
+            auto covarianceMeasurement =
+                trackStateProxy
+                    .template calibratedCovariance<measdimPlaceholder>();
+            // calculate residuals and return with covariances and jacobians
+            auto projJacobian = (trackStateProxy.effectiveProjector() *
+                                 result.jacobianFromStart)
+                                    .eval();
+            auto projPredicted =
+                (trackStateProxy.effectiveProjector() * predicted).eval();
 
             ACTS_VERBOSE(
-                "\tSplitting the measurement:\n"
-                << "\t\tResidual:\t" << measurement[i] - projPredicted[i]
-                << "\n\t\tCovariance:\t" << covarianceMeasurement(i, i)
-                << "\n\t\tProjected Jacobian:\t" << projJacobian.row(i));
+                "Processing and collecting measurements in Actor:\n"
+                << "\tMeasurement:\t" << measurement.transpose()
+                << "\n\tPredicted:\t" << predicted.transpose()
+                << "\n\tProjector:\t" << trackStateProxy.effectiveProjector()
+                << "\n\tProjected Jacobian:\t" << projJacobian
+                << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
+
+            for (long i = 0; i < measurement.size(); i++) {
+              if (covarianceMeasurement(i, i) < 1e-10) {
+                ACTS_VERBOSE("Invalid covariance of measurement: cov("
+                             << i << "," << i << ") ~ 0")
+                continue;
+              }
+
+              result.collectorResiduals.push_back(measurement[i] -
+                                                  projPredicted[i]);
+              result.collectorCovariances.push_back(
+                  covarianceMeasurement(i, i));
+              result.collectorProjectedJacobians.push_back(projJacobian.row(i));
+
+              ACTS_VERBOSE(
+                  "\tSplitting the measurement:\n"
+                  << "\t\tResidual:\t" << measurement[i] - projPredicted[i]
+                  << "\n\t\tCovariance:\t" << covarianceMeasurement(i, i)
+                  << "\n\t\tProjected Jacobian:\t" << projJacobian.row(i));
+            }
+          } else if (trackStateProxy.calibratedSize() == 2) {
+            const size_t measdimPlaceholder = 2;
+            auto measurement =
+                trackStateProxy.template calibrated<measdimPlaceholder>();
+            auto covarianceMeasurement =
+                trackStateProxy
+                    .template calibratedCovariance<measdimPlaceholder>();
+            // calculate residuals and return with covariances and jacobians
+            auto projJacobian = (trackStateProxy.effectiveProjector() *
+                                 result.jacobianFromStart)
+                                    .eval();
+            auto projPredicted =
+                (trackStateProxy.effectiveProjector() * predicted).eval();
+
+            ACTS_VERBOSE(
+                "Processing and collecting measurements in Actor:\n"
+                << "\tMeasurement:\t" << measurement.transpose()
+                << "\n\tPredicted:\t" << predicted.transpose()
+                << "\n\tProjector:\t" << trackStateProxy.effectiveProjector()
+                << "\n\tProjected Jacobian:\t" << projJacobian
+                << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
+
+            for (long i = 0; i < measurement.size(); i++) {
+              if (covarianceMeasurement(i, i) < 1e-10) {
+                ACTS_VERBOSE("Invalid covariance of measurement: cov("
+                             << i << "," << i << ") ~ 0")
+                continue;
+              }
+
+              result.collectorResiduals.push_back(measurement[i] -
+                                                  projPredicted[i]);
+              result.collectorCovariances.push_back(
+                  covarianceMeasurement(i, i));
+              result.collectorProjectedJacobians.push_back(projJacobian.row(i));
+
+              ACTS_VERBOSE(
+                  "\tSplitting the measurement:\n"
+                  << "\t\tResidual:\t" << measurement[i] - projPredicted[i]
+                  << "\n\t\tCovariance:\t" << covarianceMeasurement(i, i)
+                  << "\n\t\tProjected Jacobian:\t" << projJacobian.row(i));
+            }
+          } else {
+            ACTS_INFO(
+                "Only measurements of 1 and 2 dimensions are implemented yet.");
           }
 
           if (boundParams.covariance().has_value()) {
