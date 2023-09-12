@@ -380,13 +380,35 @@ class Gx2Fitter {
           auto projJacobian =
               (trackStateProxy.effectiveProjector() * result.jacobianFromStart)
                   .eval();
+          auto projPredicted =
+              (trackStateProxy.effectiveProjector() * predicted).eval();
+
+          ACTS_VERBOSE(
+              "Processing and collecting measurements in Actor:\n"
+              << "\tMeasurement:\t" << measurement.transpose()
+              << "\n\tPredicted:\t" << predicted.transpose()
+              << "\n\tProjector:\t" << trackStateProxy.effectiveProjector()
+              << "\n\tProjected Jacobian:\t" << projJacobian
+              << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
+
           for (long i = 0; i < measurement.size(); i++) {
-            result.collectorResiduals.push_back(measurement[i] - predicted[i]);
+            if (covarianceMeasurement(i, i) < 1e-10) {
+              ACTS_WARNING("Invalid covariance of measurement: cov("
+                           << i << "," << i << ") ~ 0")
+              continue;
+            }
+
+            result.collectorResiduals.push_back(measurement[i] -
+                                                projPredicted[i]);
             result.collectorCovariances.push_back(covarianceMeasurement(i, i));
             result.collectorProjectedJacobians.push_back(projJacobian.row(i));
-            /// does this also work with 1d?
+
+            ACTS_VERBOSE(
+                "\tSplitting the measurement:\n"
+                << "\t\tResidual:\t" << measurement[i] - projPredicted[i]
+                << "\n\t\tCovariance:\t" << covarianceMeasurement(i, i)
+                << "\n\t\tProjected Jacobian:\t" << projJacobian.row(i));
           }
-          ACTS_VERBOSE("Measurement in Actor:\n" << measurement);
 
           if (boundParams.covariance().has_value()) {
             trackStateProxy.predictedCovariance() =
@@ -398,7 +420,7 @@ class Gx2Fitter {
         }
       }
 
-      if (result.surfaceCount > 11) {
+      if (result.surfaceCount > 17) {
         ACTS_INFO("Actor: finish due to limit. Result might be garbage.");
         result.finished = true;
       }
@@ -580,6 +602,7 @@ class Gx2Fitter {
       // }
     }
     ACTS_DEBUG("Finished to iterate");
+    ACTS_VERBOSE("final params:\n" << params);
     /// Finish Fitting /////////////////////////////////////////////////////////
 
     // Calculate covariance of the fitted parameters with inverse of [a]
