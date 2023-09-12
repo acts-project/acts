@@ -80,10 +80,10 @@ Acts::CurvilinearTrackParameters makeParameters() {
 const FitterTester tester;
 
 // reconstruction propagator and fitter
+auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
 const auto kfZeroPropagator =
     makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
-const auto kfZero = KalmanFitter(
-    kfZeroPropagator, getDefaultLogger("KalmanFilter", Logging::INFO));
+const auto kfZero = KalmanFitter(kfZeroPropagator, std::move(kfLogger));
 
 std::default_random_engine rng(42);
 
