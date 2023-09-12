@@ -9,6 +9,7 @@ set(_python_install_dir "python/acts")
 
 pybind11_add_module(ActsPythonBindings 
   src/ModuleEntry.cpp
+  src/Framework.cpp
   src/Base.cpp
   src/Detector.cpp
   src/Material.cpp
