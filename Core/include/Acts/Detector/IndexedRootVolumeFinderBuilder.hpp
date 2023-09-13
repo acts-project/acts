@@ -24,7 +24,7 @@ class DetectorVolume;
 
 /// @brief This is the interface for builders that create root volume finder
 /// delegates
-class IndexedRootVolumeFinderBuilder : public IRootVolumeFinderBuilder {
+class IndexedRootVolumeFinderBuilder final : public IRootVolumeFinderBuilder {
  public:
   /// @brief Constructor with binning casts
   /// @param binning the cast values for the grid binning

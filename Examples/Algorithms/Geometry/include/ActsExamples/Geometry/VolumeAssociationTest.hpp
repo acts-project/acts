@@ -23,7 +23,7 @@ namespace ActsExamples {
 struct AlgorithmContext;
 
 /// This is a test algorithm that checks the unique volume identification
-/// and association for Detector objects and legacy TrackingGeometry objects
+/// and association for Detector objects
 class VolumeAssociationTest final : public IAlgorithm {
  public:
   /// Nested Configuration struct
@@ -40,14 +40,14 @@ class VolumeAssociationTest final : public IAlgorithm {
     std::shared_ptr<const Acts::Experimental::Detector> detector = nullptr;
   };
 
-  /// Construct the smearing algorithm.
+  /// Construct the  volume association test algorithm
   ///
   /// @param cfg is the algorithm configuration
   /// @param level is the logging level
   VolumeAssociationTest(const Config& cfg,
                         Acts::Logging::Level level = Acts::Logging::INFO);
 
-  /// Build measurement from simulation hits at input.
+  /// Run the random point association test
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure

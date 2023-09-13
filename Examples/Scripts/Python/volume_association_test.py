@@ -58,7 +58,7 @@ def main():
     args = p.parse_args()
     geoContext = GeometryContext()
 
-    # Convert the detector surfaces to GDML
+    # Convert the detector surfaces from GDML
     [elements, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
         args.input, [args.sensitives], [args.passives]
     )

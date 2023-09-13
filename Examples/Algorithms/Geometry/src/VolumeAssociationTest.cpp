@@ -13,6 +13,9 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 
 #include <exception>
+#include <memory>
+#include <string>
+#include <vector>
 
 ActsExamples::VolumeAssociationTest::VolumeAssociationTest(
     const Config& cfg, Acts::Logging::Level level)

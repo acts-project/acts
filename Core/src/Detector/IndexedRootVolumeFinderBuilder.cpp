@@ -33,7 +33,7 @@ void fillGridIndices2D(
           if (casts ==
               std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR}) {
             Acts::Vector3 zrPosition{v1, 0., v0};
-            for (auto [iv, v] : Acts::enumerate(rootVolumes)) {
+            for (const auto [iv, v] : Acts::enumerate(rootVolumes)) {
               if (v->inside(gctx, zrPosition)) {
                 typename Grid2D::point_t p{v0, v1};
                 grid.atPosition(p) = iv;

@@ -188,27 +188,10 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
   // The return boundaries
   std::array<std::vector<ActsScalar>, 3u> boundaries;
 
-  // The map for collecting
-  std::array<std::map<ActsScalar, size_t>, 3u> valueMaps;
-  auto& rMap = valueMaps[0u];
-  auto& zMap = valueMaps[1u];
-  auto& phiMap = valueMaps[2u];
-
-  auto fillMap = [&](std::map<ActsScalar, size_t>& map,
-                     const std::array<ActsScalar, 2u>& values) {
-    for (auto v : values) {
-      if (map.find(v) != map.end()) {
-        ++map[v];
-      } else {
-        map[v] = 1u;
-      }
-    }
-  };
-
   // Loop over the volumes and collect boundaries
   for (const auto& v : volumes) {
     if (v->volumeBounds().type() == VolumeBounds::BoundsType::eCylinder) {
-      auto bValues = v->volumeBounds().values();
+      const auto& bValues = v->volumeBounds().values();
       // The min/max values
       ActsScalar rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
       ActsScalar rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
@@ -224,18 +207,17 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
       ActsScalar phiMin = phiCenter - phiSector;
       ActsScalar phiMax = phiCenter + phiSector;
       // Fill the maps
-      fillMap(rMap, {rMin, rMax});
-      fillMap(zMap, {zMin, zMax});
-      fillMap(phiMap, {phiMin, phiMax});
+      boundaries[0].push_back(rMin);
+      boundaries[0].push_back(rMax);
+      boundaries[1].push_back(zMin);
+      boundaries[1].push_back(zMax);
+      boundaries[2].push_back(phiMin);
+      boundaries[2].push_back(phiMax);
     }
   }
 
-  for (auto [im, map] : enumerate(valueMaps)) {
-    for (auto [key, value] : map) {
-      boundaries[im].push_back(key);
-    }
-    std::sort(boundaries[im].begin(), boundaries[im].end());
-  }
+  std::for_each(boundaries.begin(), boundaries.end(),
+                [](auto& b) { std::sort(b.begin(), b.end()); });
 
   ACTS_VERBOSE("- did yield " << boundaries[0u].size() << " boundaries in R.");
   ACTS_VERBOSE("- did yield " << boundaries[1u].size() << " boundaries in z.");
