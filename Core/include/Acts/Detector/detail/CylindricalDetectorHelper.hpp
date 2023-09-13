@@ -206,7 +206,7 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
           bValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
       ActsScalar phiMin = phiCenter - phiSector;
       ActsScalar phiMax = phiCenter + phiSector;
-      // Fill the maps
+      // Fill the sets
       uniqueBoundaries[0].insert(rMin);
       uniqueBoundaries[0].insert(rMax);
       uniqueBoundaries[1].insert(zMin);
