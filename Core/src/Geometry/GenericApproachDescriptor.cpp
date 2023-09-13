@@ -25,14 +25,16 @@ void Acts::GenericApproachDescriptor::registerLayer(const Layer& lay) {
 
 Acts::SurfaceIntersection Acts::GenericApproachDescriptor::approachSurface(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, const BoundaryCheck& bcheck) const {
+    const Vector3& direction, const BoundaryCheck& bcheck, double pLimit,
+    double oLimit, double tolerance) const {
   // almost always 2
   boost::container::small_vector<SurfaceIntersection, 2> sIntersections;
   sIntersections.reserve(m_surfaceCache.size());
   for (const auto& sf : m_surfaceCache) {
     auto sfIntersection = sf->intersect(gctx, position, direction, bcheck);
     for (const auto& intersection : sfIntersection.split()) {
-      if (intersection && intersection.pathLength() >= 0) {
+      if (intersection &&
+          detail::checkIntersection(intersection, pLimit, oLimit, tolerance)) {
         sIntersections.push_back(intersection);
       }
     }

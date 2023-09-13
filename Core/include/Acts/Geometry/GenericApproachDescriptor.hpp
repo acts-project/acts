@@ -59,9 +59,12 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param bcheck The boundary check prescription
   ///
   /// @return : a @c SurfaceIntersection
-  SurfaceIntersection approachSurface(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck) const override;
+  SurfaceIntersection approachSurface(const GeometryContext& gctx,
+                                      const Vector3& position,
+                                      const Vector3& direction,
+                                      const BoundaryCheck& bcheck,
+                                      double pLimit, double oLimit,
+                                      double tolerance) const override;
 
   /// return all contained surfaces of this approach descriptor
   const std::vector<const Surface*>& containedSurfaces() const override;

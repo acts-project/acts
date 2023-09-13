@@ -277,13 +277,15 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   // The Limits: current path & overstepping
   double pLimit = options.pathLimit;
   double oLimit = options.overstepLimit;
+  // TODO this should be configurable
+  double tolerance = s_onSurfaceTolerance;
 
   // Helper function to find valid intersection
   auto findValidIntersection =
       [&](const SurfaceMultiIntersection& sfmi) -> SurfaceIntersection {
     for (const auto& sfi : sfmi.split()) {
       if (sfi && detail::checkIntersection(sfi.intersection(), pLimit, oLimit,
-                                           s_onSurfaceTolerance)) {
+                                           tolerance)) {
         return sfi;
       }
     }
@@ -295,7 +297,8 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   // Approach descriptor present and resolving is necessary
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
-        gctx, position, direction, options.boundaryCheck);
+        gctx, position, direction, options.boundaryCheck, pLimit, oLimit,
+        tolerance);
     return aSurface;
   }
 

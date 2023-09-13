@@ -45,9 +45,12 @@ class ApproachDescriptor {
   /// @param bcheck is the boundary check directive
   ///
   /// @return is a surface intersection
-  virtual SurfaceIntersection approachSurface(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck) const = 0;
+  virtual SurfaceIntersection approachSurface(const GeometryContext& gctx,
+                                              const Vector3& position,
+                                              const Vector3& direction,
+                                              const BoundaryCheck& bcheck,
+                                              double pLimit, double oLimit,
+                                              double tolerance) const = 0;
 
   /// Get all the contained surfaces
   /// @return all contained surfaces of this approach descriptor
