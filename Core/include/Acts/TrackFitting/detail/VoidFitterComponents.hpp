@@ -8,24 +8,27 @@
 
 #pragma once
 
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
-namespace Acts {
+namespace Acts::detail {
 
 template <typename traj_t>
-void voidKalmanCalibrator(const GeometryContext& /*gctx*/,
+void voidFitterCalibrator(const GeometryContext& /*gctx*/,
+                          const CalibrationContext& /*cctx*/,
                           const SourceLink& /*sourceLink*/,
                           typename traj_t::TrackStateProxy /*trackState*/) {
-  throw std::runtime_error{"VoidKalmanCalibrator should not ever execute"};
+  throw std::runtime_error{"voidFitterCalibrator should not ever execute"};
 }
 
 template <typename traj_t>
-Result<void> voidKalmanUpdater(const GeometryContext& /*gctx*/,
+Result<void> voidFitterUpdater(const GeometryContext& /*gctx*/,
                                typename traj_t::TrackStateProxy trackState,
                                Direction /*direction*/,
                                const Logger& /*logger*/) {
@@ -35,7 +38,7 @@ Result<void> voidKalmanUpdater(const GeometryContext& /*gctx*/,
 }
 
 template <typename traj_t>
-Result<void> voidKalmanSmoother(const GeometryContext& /*gctx*/,
+Result<void> voidFitterSmoother(const GeometryContext& /*gctx*/,
                                 traj_t& trackStates, size_t entry,
                                 const Logger& /*logger*/) {
   trackStates.applyBackwards(entry, [](auto trackState) {
@@ -57,4 +60,8 @@ bool voidReverseFilteringLogic(
   return false;
 }
 
-}  // namespace Acts
+inline const Surface* voidSurfaceAccessor(const SourceLink& /*sourceLink*/) {
+  throw std::runtime_error{"voidSurfaceAccessor should not ever execute"};
+  return nullptr;
+}
+}  // namespace Acts::detail

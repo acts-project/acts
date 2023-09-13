@@ -21,6 +21,7 @@ class VectorMultiTrajectory;
 void ActsExamples::PassThroughCalibrator::calibrate(
     const MeasurementContainer& measurements,
     const ClusterContainer* /*clusters*/, const Acts::GeometryContext& /*gctx*/,
+    const Acts::CalibrationContext& /*cctx*/,
     const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy& trackState) const {
   trackState.setUncalibratedSourceLink(sourceLink);
@@ -45,8 +46,9 @@ ActsExamples::MeasurementCalibratorAdapter::MeasurementCalibratorAdapter(
       m_clusters{clusters} {}
 
 void ActsExamples::MeasurementCalibratorAdapter::calibrate(
-    const Acts::GeometryContext& gctx, const Acts::SourceLink& sourceLink,
+    const Acts::GeometryContext& gctx, const Acts::CalibrationContext& cctx,
+    const Acts::SourceLink& sourceLink,
     Acts::VectorMultiTrajectory::TrackStateProxy trackState) const {
-  return m_calibrator.calibrate(m_measurements, m_clusters, gctx, sourceLink,
-                                trackState);
+  return m_calibrator.calibrate(m_measurements, m_clusters, gctx, cctx,
+                                sourceLink, trackState);
 }

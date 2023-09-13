@@ -32,8 +32,8 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
-#include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
-#include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
+#include "Acts/TrackFitting/GlobalChiSquareFitterError.hpp"
+#include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -54,8 +54,9 @@ struct Gx2FitterExtensions {
       typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
   using Parameters = typename TrackStateProxy::Parameters;
 
-  using Calibrator = Delegate<void(const GeometryContext&, const SourceLink&,
-                                   TrackStateProxy)>;
+  using Calibrator =
+      Delegate<void(const GeometryContext&, const CalibrationContext&,
+                    const SourceLink&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
                                         Direction, const Logger&)>;
@@ -74,12 +75,15 @@ struct Gx2FitterExtensions {
   /// outlier
   OutlierFinder outlierFinder;
 
-  // TODO get an own Calibrator and Updater
+  /// Retrieves the associated surface from a source link
+  SourceLinkSurfaceAccessor surfaceAccessor;
+
+  // @TODO get an own Calibrator and Updater
   /// Default constructor which connects the default void components
   Gx2FitterExtensions() {
-    calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
-    updater.template connect<&voidKalmanUpdater<traj_t>>();
-    outlierFinder.template connect<&voidOutlierFinder<traj_t>>();
+    calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
+    updater.template connect<&detail::voidFitterUpdater<traj_t>>();
+    outlierFinder.template connect<&detail::voidOutlierFinder<traj_t>>();
   }
 };
 
@@ -284,6 +288,9 @@ class Gx2Fitter {
     /// The Surface being
     SurfaceReached targetReached;
 
+    /// Calibration context for the fit
+    const CalibrationContext* calibrationContext{nullptr};
+
     /// @brief Gx2f actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagator state
@@ -360,8 +367,8 @@ class Gx2Fitter {
 
           // We have predicted parameters, so calibrate the uncalibrated input
           // measurement
-          extensions.calibrator(state.geoContext, sourcelink_it->second,
-                                trackStateProxy);
+          extensions.calibrator(state.geoContext, *calibrationContext,
+                                sourcelink_it->second, trackStateProxy);
 
           const size_t measdimPlaceholder = 2;
           auto measurement =
@@ -455,7 +462,7 @@ class Gx2Fitter {
 
     for (; it != end; ++it) {
       SourceLink sl = *it;
-      auto geoId = sl.geometryId();
+      auto geoId = gx2fOptions.extensions.surfaceAccessor(sl)->geometryId();
       inputMeasurements.emplace(geoId, std::move(sl));
     }
     ACTS_VERBOSE("inputMeasurements.size() = " << inputMeasurements.size());
@@ -501,6 +508,7 @@ class Gx2Fitter {
       auto& gx2fActor = propagatorOptions.actionList.template get<GX2FActor>();
       gx2fActor.inputMeasurements = &inputMeasurements;
       gx2fActor.extensions = gx2fOptions.extensions;
+      gx2fActor.calibrationContext = &gx2fOptions.calibrationContext.get();
       gx2fActor.actorLogger = m_actorLogger.get();
 
       typename propagator_t::template action_list_t_result_t<
@@ -594,9 +602,8 @@ class Gx2Fitter {
           aMatrix.topLeftCorner<reducedMatrixSize, reducedMatrixSize>()
               .inverse();
     } else if (gx2fOptions.nUpdateMax > 0) {
-      // TODO
-      std::cout << "det(a) == 0. This shouldn't happen. Implement real ERROR"
-                << std::endl;
+      ACTS_ERROR("det(a) == 0. This should not happen ever.");
+      return Experimental::GlobalChiSquareFitterError::DetAIsZero;
     }
 
     // Prepare track for return
