@@ -12,6 +12,7 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/KdtSurfacesProvider.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/interface/IDetectorBuilder.hpp"
@@ -19,6 +20,7 @@
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -28,6 +30,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 
 #include <array>
 #include <memory>
@@ -55,6 +58,25 @@ struct GeometryIdentifierHookBinding : public Acts::GeometryIdentifierHook {
 namespace Acts::Python {
 void addGeometry(Context& ctx) {
   auto m = ctx.get("main");
+
+  {
+    py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
+        .def(py::init<>())
+        .def(py::init<Acts::GeometryIdentifier::Value>())
+        .def("setVolume", &Acts::GeometryIdentifier::setVolume)
+        .def("setLayer", &Acts::GeometryIdentifier::setLayer)
+        .def("setBoundary", &Acts::GeometryIdentifier::setBoundary)
+        .def("setApproach", &Acts::GeometryIdentifier::setApproach)
+        .def("setSensitive", &Acts::GeometryIdentifier::setSensitive)
+        .def("setExtra", &Acts::GeometryIdentifier::setExtra)
+        .def("volume", &Acts::GeometryIdentifier::volume)
+        .def("layer", &Acts::GeometryIdentifier::layer)
+        .def("boundary", &Acts::GeometryIdentifier::boundary)
+        .def("approach", &Acts::GeometryIdentifier::approach)
+        .def("sensitive", &Acts::GeometryIdentifier::sensitive)
+        .def("extra", &Acts::GeometryIdentifier::extra);
+  }
+
   {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         .def("geometryId",
@@ -129,6 +151,24 @@ void addGeometry(Context& ctx) {
           hook->callable = callable;
           return hook;
         }));
+  }
+
+  {
+    py::class_<Acts::Extent>(m, "Extent")
+        .def(py::init(
+            [](const std::vector<std::tuple<Acts::BinningValue,
+                                            std::array<Acts::ActsScalar, 2u>>>&
+                   franges) {
+              Acts::Extent extent;
+              for (const auto& [bval, frange] : franges) {
+                extent.set(bval, frange[0], frange[1]);
+              }
+              return extent;
+            }))
+        .def("range", [](const Acts::Extent& self, Acts::BinningValue bval) {
+          return std::array<Acts::ActsScalar, 2u>{self.min(bval),
+                                                  self.max(bval)};
+        });
   }
 }
 
@@ -221,6 +261,39 @@ void addExperimentalGeometry(Context& ctx) {
                std::shared_ptr<LayerStructureBuilder::SurfacesHolder>>(
         lsBuilder, "SurfacesHolder")
         .def(py::init<std::vector<std::shared_ptr<Surface>>>());
+  }
+
+  {
+    using Range2D = Acts::RangeXD<2u, Acts::ActsScalar>;
+    using KdtSurfaces2D = Acts::Experimental::KdtSurfaces<2u, 100u>;
+    using KdtSurfacesProvider2D =
+        Acts::Experimental::KdtSurfacesProvider<2u, 100u>;
+
+    py::class_<Range2D>(m, "Range2D")
+        .def(py::init([](const std::array<Acts::ActsScalar, 2u>& range0,
+                         const std::array<Acts::ActsScalar, 2u>& range1) {
+          Range2D range;
+          range[0].shrink(range0[0], range0[1]);
+          range[1].shrink(range1[0], range1[1]);
+          return range;
+        }));
+
+    py::class_<KdtSurfaces2D, std::shared_ptr<KdtSurfaces2D>>(m,
+                                                              "KdtSurfaces2D")
+        .def(py::init<const GeometryContext&,
+                      const std::vector<std::shared_ptr<Acts::Surface>>&,
+                      const std::array<Acts::BinningValue, 2u>&>())
+        .def("surfaces", [](KdtSurfaces2D& self, const Range2D& range) {
+          return self.surfaces(range);
+        });
+
+    py::class_<KdtSurfacesProvider2D, Acts::Experimental::ISurfacesProvider,
+               std::shared_ptr<KdtSurfacesProvider2D>>(m,
+                                                       "KdtSurfacesProvider2D")
+        .def(py::init(
+            [](std::shared_ptr<KdtSurfaces2D> kdt, const Extent& extent) {
+              return std::make_shared<KdtSurfacesProvider2D>(kdt, extent);
+            }));
   }
 
   {
