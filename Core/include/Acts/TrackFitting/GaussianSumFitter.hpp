@@ -289,10 +289,10 @@ struct GaussianSumFitter {
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), sParameters.covariance());
 
-        return m_propagator.propagate(params, fwdPropOptions,
+        return m_propagator.propagate(params, fwdPropOptions, true,
                                       std::move(inputResult));
       } else {
-        return m_propagator.propagate(sParameters, fwdPropOptions,
+        return m_propagator.propagate(sParameters, fwdPropOptions, true,
                                       std::move(inputResult));
       }
     }();
