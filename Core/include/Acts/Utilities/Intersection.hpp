@@ -14,7 +14,10 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <limits>
+
+#include <boost/container/static_vector.hpp>
 
 namespace Acts {
 
@@ -109,7 +112,10 @@ class Intersection {
 using Intersection2D = Intersection<2>;
 using Intersection3D = Intersection<3>;
 
-using MultiIntersection3D = std::array<Intersection3D, 2>;
+static constexpr std::uint8_t s_maximumNumberOfIntersections = 2;
+using MultiIntersection3D =
+    boost::container::static_vector<Intersection3D,
+                                    s_maximumNumberOfIntersections>;
 
 /// @brief class extensions to return also the object and a representation
 template <typename object_t, typename representation_t = object_t>
@@ -204,6 +210,10 @@ class ObjectIntersection {
 template <typename object_t, typename representation_t = object_t>
 class ObjectMultiIntersection {
  public:
+  using Split = boost::container::static_vector<
+      ObjectIntersection<object_t, representation_t>,
+      s_maximumNumberOfIntersections>;
+
   /// Object intersection - symmetric setup
   ///
   /// @param intersections are the intersections
@@ -241,9 +251,13 @@ class ObjectMultiIntersection {
     return m_representation;
   }
 
-  constexpr std::array<ObjectIntersection<object_t, representation_t>, 2>
-  split() const {
-    return {operator[](0), operator[](1)};
+  constexpr Split split() const {
+    Split result;
+    result.reserve(size());
+    for (std::size_t i = 0; i < size(); ++i) {
+      result.push_back(operator[](i));
+    }
+    return result;
   }
 
   constexpr ObjectIntersection<object_t, representation_t> closest() const {
