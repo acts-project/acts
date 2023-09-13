@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <sstream>
+#include <variant>
 
 namespace Acts {
 
@@ -55,9 +56,10 @@ struct MaterialInteractor {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
-    // In case of Volume material update the result of the previous step
-    if (recordInteractions && !result.materialInteractions.empty() &&
-        result.materialInteractions.back().volume != nullptr &&
+    // In case of Volume material (i.e. surface pointer is nullptr)
+    // -> update the result of the previous step
+    if (recordInteractions && !result.materialInteractions.empty() and
+        result.materialInteractions.back().surface == nullptr and
         result.materialInteractions.back().updatedVolumeStep == false) {
       updateResult(state, stepper, result);
     }
@@ -72,7 +74,7 @@ struct MaterialInteractor {
     }
     // We only have material interactions if there is potential material
     const Surface* surface = navigator.currentSurface(state.navigation);
-    const TrackingVolume* volume = navigator.currentVolume(state.navigation);
+    const auto* volume = navigator.currentVolume(state.navigation);
 
     if (not(surface and surface->surfaceMaterial()) and
         not(volume and volume->volumeMaterial())) {
@@ -113,9 +115,9 @@ struct MaterialInteractor {
       d.updateState(state, stepper, mode);
       // Record the result
       recordResult(d, result);
-    } else if (recordInteractions && volume and volume->volumeMaterial()) {
+    } else if (recordInteractions and volume and volume->volumeMaterial()) {
       // Prepare relevant input particle properties
-      detail::VolumeMaterialInteraction d(volume, state, stepper);
+      detail::VolumeMaterialInteraction d(volume->geometryId(), state, stepper);
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
       if (not d.evaluateMaterialSlab(state, navigator)) {
@@ -146,7 +148,6 @@ struct MaterialInteractor {
       mi.sigmaTheta2 = d.varianceTheta;
       mi.sigmaQoP2 = d.varianceQoverP;
       mi.surface = d.surface;
-      mi.volume = nullptr;
       mi.pathCorrection = d.pathCorrection;
       mi.materialSlab = d.slab;
       result.materialInteractions.push_back(std::move(mi));
@@ -165,7 +166,7 @@ struct MaterialInteractor {
     mi.time = d.time;
     mi.direction = d.dir;
     mi.surface = nullptr;
-    mi.volume = d.volume;
+    mi.interactionID = d.volumeID;
     mi.pathCorrection = d.pathCorrection;
     mi.materialSlab = d.slab;
     result.materialInteractions.push_back(std::move(mi));

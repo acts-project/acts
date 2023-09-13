@@ -472,8 +472,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
 
       // check if we have reached the end of the volume or the last hit of the
       // track.
-      if ((rmIter + 1) == rMaterial.end() ||
-          !volIter->volume->inside((rmIter + 1)->position, s_epsilon)) {
+      if ((rmIter + 1) == rMaterial.end()) {
         // find the boundary surface corresponding to the end of the volume
         while (sfIter != mappingSurfaces.end()) {
           if (sfIter->surface->geometryId().volume() == lastID.volume() ||
@@ -499,8 +498,7 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
           sfIter++;
         }
       }
-      rmIter->volume = volIter->volume;
-      rmIter->intersectionID = currentID;
+      rmIter->interactionID = currentID;
       rmIter->intersection = rmIter->position;
     }
     ++rmIter;

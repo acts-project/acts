@@ -213,13 +213,13 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
         if (m_cfg.readCachedSurfaceInformation) {
           // add the surface information to the interaction this allows the
           // mapping to be speed up
-          mInteraction.intersectionID =
+          mInteraction.interactionID =
               Acts::GeometryIdentifier((*m_sur_id)[is]);
           mInteraction.intersection =
               Acts::Vector3((*m_sur_x)[is], (*m_sur_y)[is], (*m_sur_z)[is]);
           mInteraction.pathCorrection = (*m_sur_pathCorrection)[is];
         } else {
-          mInteraction.intersectionID = Acts::GeometryIdentifier();
+          mInteraction.interactionID = Acts::GeometryIdentifier();
           mInteraction.intersection = Acts::Vector3(0, 0, 0);
         }
         rmTrack.second.materialInteractions.push_back(std::move(mInteraction));

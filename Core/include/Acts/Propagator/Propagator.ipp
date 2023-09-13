@@ -24,10 +24,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   m_navigator.initialize(state, m_stepper);
   // Pre-Stepping call to the action list
   state.options.actionList(state, m_stepper, m_navigator, result, logger());
-  // assume negative outcome, only set to true later if we actually have
-  // a positive outcome.
 
-  // start at true, if we don't begin the stepping loop we're fine.
+  // Termination flag true for pre-setting aborter check
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
@@ -36,7 +34,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
     // Stepping loop
     ACTS_VERBOSE("Starting stepping loop.");
 
-    terminatedNormally = false;  // priming error condition
+    // Assume a negative outcome, but let the loop prove us wrong
+    terminatedNormally = false;
 
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
@@ -69,7 +68,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
     ACTS_VERBOSE("Propagation terminated without going into stepping loop.");
   }
 
-  // if we didn't terminate normally (via aborters) set navigation break.
+  // If we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
   if (!terminatedNormally) {
     m_navigator.navigationBreak(state.navigation, true);

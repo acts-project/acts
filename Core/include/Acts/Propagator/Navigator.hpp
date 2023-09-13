@@ -53,6 +53,7 @@ struct NavigationOptions {
 
   /// Target surface to exclude
   const Surface* targetSurface = nullptr;
+
   /// External surface identifier for which the boundary check is ignored
   std::vector<GeometryIdentifier> externalSurfaces = {};
 
@@ -102,6 +103,9 @@ class Navigator {
       boost::container::small_vector<BoundaryIntersection, 4>;
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
+
+  /// Expose the volume type
+  using VolumeType = TrackingVolume;
 
   /// The navigation stage
   enum struct Stage : int {
@@ -270,6 +274,10 @@ class Navigator {
 
   const Surface* targetSurface(const State& state) const {
     return state.targetSurface;
+  }
+
+  bool endOfWorldReached(const State& state) const {
+    return (state.currentVolume == nullptr);
   }
 
   bool targetReached(const State& state) const { return state.targetReached; }

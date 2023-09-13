@@ -108,7 +108,7 @@ class VolumeMaterialMapper {
     /// The binning for each geometry ID
     std::map<const GeometryIdentifier, BinUtility> materialBin;
 
-    /// The surface material of the input tracking geometry
+    /// The surface material of the input  geometry
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
 

@@ -210,7 +210,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   // Check if the material interactions are associated with a surface. If yes we
   // simply need to loop over them and accumulate the material
-  if (rMaterial.begin()->intersectionID != GeometryIdentifier()) {
+  if (rMaterial.begin()->interactionID != GeometryIdentifier()) {
     ACTS_VERBOSE(
         "Material surfaces are associated with the material interaction. The "
         "association interaction/surfaces won't be performed again.");
@@ -406,7 +406,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     // intersection
     rmIter->surface = sfIter->surface;
     rmIter->intersection = sfIter->position;
-    rmIter->intersectionID = currentID;
+    rmIter->interactionID = currentID;
     rmIter->pathCorrection = currentPathCorrection;
     // Switch to next material
     ++rmIter;
@@ -452,7 +452,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
         Acts::MaterialInteraction noMaterial;
         noMaterial.surface = mSurface.surface;
         noMaterial.intersection = mSurface.position;
-        noMaterial.intersectionID = mgID;
+        noMaterial.interactionID = mgID;
         rMaterial.push_back(noMaterial);
       }
     }
@@ -470,7 +470,7 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
   auto rmIter = rMaterial.begin();
   while (rmIter != rMaterial.end()) {
     // get the current interaction information
-    GeometryIdentifier currentID = rmIter->intersectionID;
+    GeometryIdentifier currentID = rmIter->interactionID;
     Vector3 currentPos = rmIter->intersection;
     auto currentAccMaterial = mState.accumulatedMaterial.find(currentID);
 

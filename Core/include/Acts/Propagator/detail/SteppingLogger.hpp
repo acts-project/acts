@@ -26,18 +26,17 @@ class TrackingVolume;
 
 namespace detail {
 
-/// @brief the step information for
+/// @brief A step length logger for debugging the stepping
+///
 struct Step {
   ConstrainedStep stepSize;
   Direction navDir;
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
-  const TrackingVolume* volume = nullptr;
+  GeometryIdentifier volumeID = GeometryIdentifier(0u);
 };
 
-/// @brief a step length logger for debugging the stepping
-///
 /// It simply logs the constrained step length per step
 struct SteppingLogger {
   /// Simple result struct to be returned
@@ -77,11 +76,11 @@ struct SteppingLogger {
     step.momentum = stepper.momentum(state.stepping);
 
     if (navigator.currentSurface(state.navigation) != nullptr) {
-      // hang on to surface
       step.surface = navigator.currentSurface(state.navigation)->getSharedPtr();
     }
-
-    step.volume = navigator.currentVolume(state.navigation);
+    if (navigator.currentVolume(state.navigation) != nullptr) {
+      step.volumeID = navigator.currentVolume(state.navigation)->geometryId();
+    }
     result.steps.push_back(std::move(step));
   }
 };

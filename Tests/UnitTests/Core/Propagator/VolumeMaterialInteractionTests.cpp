@@ -28,12 +28,21 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
+/// @brief Mockup ConstraintStep
+struct ConstrainedStep {
+  ActsScalar step = 0.;
+
+  ActsScalar value() const { return step; }
+};
+
 /// @brief Simplified stepper state
 struct StepperState {
   Vector3 pos, dir;
   double t = 0, p = 0, q = 0;
   bool covTransport = false;
   double absCharge = UnitConstants::e;
+
+  ConstrainedStep stepSize = ConstrainedStep{1.};
 };
 
 /// @brief Simplified navigator
@@ -103,8 +112,8 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   Navigator navigator;
 
   // Build the VolumeMaterialInteraction & test assignments
-  detail::VolumeMaterialInteraction volMatInt(volume.get(), state, stepper);
-  BOOST_CHECK_EQUAL(volMatInt.volume, volume.get());
+  detail::VolumeMaterialInteraction volMatInt(volume->geometryId(), state,
+                                              stepper);
   BOOST_CHECK_EQUAL(volMatInt.pos, stepper.position(state.stepping));
   BOOST_CHECK_EQUAL(volMatInt.time, stepper.time(state.stepping));
   BOOST_CHECK_EQUAL(volMatInt.dir, stepper.direction(state.stepping));

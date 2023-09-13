@@ -10,18 +10,23 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
+
+class T4ackingVolume;
+class DetectorVolume;
+
 namespace detail {
 
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
-  /// Data from the propagation state
-  const TrackingVolume* volume = nullptr;
+  /// Volume information, either TrackingVolume or DetectorVolume
+  GeometryIdentifier volumeID;
   /// The particle current position
   const Vector3 pos = Vector3::Zero();
   /// The particle current time
@@ -53,14 +58,14 @@ struct VolumeMaterialInteraction {
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   ///
-  /// @param [in] vVolume The current volume
+  /// @param [in] vVId is the volume id
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  VolumeMaterialInteraction(const TrackingVolume* vVolume,
+  VolumeMaterialInteraction(const GeometryIdentifier& vVId,
                             const propagator_state_t& state,
                             const stepper_t& stepper)
-      : volume(vVolume),
+      : volumeID(vVId),
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
@@ -91,7 +96,7 @@ struct VolumeMaterialInteraction {
       slab = MaterialSlab(navigator.currentVolume(state.navigation)
                               ->volumeMaterial()
                               ->material(pos),
-                          1);  // state.stepping.StepSize
+                          state.stepping.stepSize.value());
     } else {
       slab = MaterialSlab();
     }

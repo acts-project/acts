@@ -33,6 +33,9 @@ namespace Experimental {
 
 class DetectorNavigator {
  public:
+  /// Expose the volume type
+  using VolumeType = DetectorVolume;
+
   struct Config {
     /// Detector for this Navigation
     const Detector* detector = nullptr;
@@ -92,12 +95,12 @@ class DetectorNavigator {
     // TODO fill state
   }
 
-  const Surface* currentSurface(const State& state) const {
-    return state.currentSurface;
+  const DetectorVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
   }
 
-  const TrackingVolume* currentVolume(const State& /*state*/) const {
-    return nullptr;  // TODO we do not have a tracking volume
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
   }
 
   const IVolumeMaterial* currentVolumeMaterial(const State& state) const {
@@ -110,6 +113,10 @@ class DetectorNavigator {
 
   const Surface* targetSurface(const State& state) const {
     return state.targetSurface;
+  }
+
+  bool endOfWorldReached(const State& state) const {
+    return (state.currentVolume == nullptr);
   }
 
   bool targetReached(const State& state) const { return state.targetReached; }

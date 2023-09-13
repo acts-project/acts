@@ -281,8 +281,8 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       // Store surface information
       if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
-        if (mint.intersectionID.value() != 0) {
-          m_sur_id.push_back(mint.intersectionID.value());
+        if (mint.interactionID.value() != 0) {
+          m_sur_id.push_back(mint.interactionID.value());
           m_sur_pathCorrection.push_back(mint.pathCorrection);
           m_sur_x.push_back(mint.intersection.x());
           m_sur_y.push_back(mint.intersection.y());
@@ -325,23 +325,6 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
           m_sur_type.push_back(-1);
           m_sur_range_min.push_back(0);
           m_sur_range_max.push_back(0);
-        }
-      }
-
-      // store volume information
-      if (m_cfg.storeVolume) {
-        const Acts::Volume* volume = mint.volume;
-        Acts::GeometryIdentifier vlayerID;
-        if (volume != nullptr) {
-          vlayerID = volume->geometryId();
-          m_vol_id.push_back(vlayerID.value());
-        } else {
-          vlayerID.setVolume(0);
-          vlayerID.setBoundary(0);
-          vlayerID.setLayer(0);
-          vlayerID.setApproach(0);
-          vlayerID.setSensitive(0);
-          m_vol_id.push_back(vlayerID.value());
         }
       }
 

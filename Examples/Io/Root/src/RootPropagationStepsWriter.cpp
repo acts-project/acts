@@ -149,8 +149,8 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
         }
       }
       // a current volume overwrites the surface tagged one
-      if (step.volume != nullptr) {
-        volumeID = step.volume->geometryId().volume();
+      if (step.volumeID.volume() != 0u) {
+        volumeID = step.volumeID.volume();
       }
       // now fill
       m_sensitiveID.push_back(sensitiveID);
