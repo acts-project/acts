@@ -199,7 +199,7 @@ struct EndOfWorldReached {
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
     bool endOfWorld = navigator.endOfWorldReached(state.navigation);
-    navigator.targetReached(state.navigation, true);
+    navigator.targetReached(state.navigation, endOfWorld);
     return endOfWorld;
   }
 };

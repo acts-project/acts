@@ -17,10 +17,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
-
-class T4ackingVolume;
-class DetectorVolume;
-
 namespace detail {
 
 /// @brief Struct to handle volume material interaction

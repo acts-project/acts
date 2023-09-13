@@ -104,9 +104,6 @@ class Navigator {
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
-  /// Expose the volume type
-  using VolumeType = TrackingVolume;
-
   /// The navigation stage
   enum struct Stage : int {
     undefined = 0,

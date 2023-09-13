@@ -35,9 +35,6 @@ class DirectNavigator {
   using SurfaceSequence = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
-  /// Expose the volume type
-  using VolumeType = TrackingVolume;
-
   DirectNavigator(std::unique_ptr<const Logger> _logger =
                       getDefaultLogger("DirectNavigator", Logging::INFO))
       : m_logger{std::move(_logger)} {}

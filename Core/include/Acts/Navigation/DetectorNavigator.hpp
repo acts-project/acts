@@ -33,9 +33,6 @@ namespace Experimental {
 
 class DetectorNavigator {
  public:
-  /// Expose the volume type
-  using VolumeType = DetectorVolume;
-
   struct Config {
     /// Detector for this Navigation
     const Detector* detector = nullptr;
@@ -54,7 +51,7 @@ class DetectorNavigator {
   /// It acts as an internal state which is
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
-  struct State : public NavigationState {
+  struct State final : public NavigationState {
     /// Navigation state - external state: the start surface
     const Surface* startSurface = nullptr;
     /// Navigation state - external state: the current surface

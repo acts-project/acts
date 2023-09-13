@@ -32,7 +32,7 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         level=acts.logging.INFO,
         randomNumberSvc=rnd,
         ntests=1000,
-        sterileLogger=True,
+        sterileLogger=False,
         propagationStepCollection="propagation-steps",
     )
 
