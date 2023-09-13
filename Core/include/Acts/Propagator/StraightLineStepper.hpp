@@ -220,8 +220,7 @@ class StraightLineStepper {
   /// Overstep limit
   ///
   /// @param state The stepping state (thread-local cache)
-  double overstepLimit(const State& state) const {
-    (void)state;
+  double overstepLimit(const State& /*state*/) const {
     return -m_overstepLimit;
   }
 
