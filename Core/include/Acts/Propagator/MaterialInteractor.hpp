@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <sstream>
-#include <variant>
 
 namespace Acts {
 
