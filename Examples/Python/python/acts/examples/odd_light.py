@@ -338,7 +338,7 @@ def main():
         "--input",
         type=str,
         default="odd-light.gdml",
-        help="GDML input file (optional)",
+        help="GDML input file.",
     )
     p.add_argument(
         "-s",
@@ -361,7 +361,6 @@ def main():
     [elements, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
         args.input, [args.sensitives], [args.passives]
     )
-
     odd_light = get_detector(geoContext, ssurfaces, psurfaces, acts.logging.DEBUG)
 
 

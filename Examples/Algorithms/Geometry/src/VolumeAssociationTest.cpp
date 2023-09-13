@@ -14,6 +14,10 @@
 
 #include <exception>
 
+#include <memory>
+#include <string>
+#include <vector>
+
 ActsExamples::VolumeAssociationTest::VolumeAssociationTest(
     const Config& cfg, Acts::Logging::Level level)
     : IAlgorithm(cfg.name, level), m_cfg(cfg) {

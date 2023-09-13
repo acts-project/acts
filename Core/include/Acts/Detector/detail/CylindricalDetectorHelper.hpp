@@ -186,29 +186,12 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
                                                 << " volumes.");
 
   // The return boundaries
-  std::array<std::vector<ActsScalar>, 3u> boundaries;
-
-  // The map for collecting
-  std::array<std::map<ActsScalar, size_t>, 3u> valueMaps;
-  auto& rMap = valueMaps[0u];
-  auto& zMap = valueMaps[1u];
-  auto& phiMap = valueMaps[2u];
-
-  auto fillMap = [&](std::map<ActsScalar, size_t>& map,
-                     const std::array<ActsScalar, 2u>& values) {
-    for (auto v : values) {
-      if (map.find(v) != map.end()) {
-        ++map[v];
-      } else {
-        map[v] = 1u;
-      }
-    }
-  };
+  std::array<std::set<ActsScalar>, 3u> uniqueBoundaries;
 
   // Loop over the volumes and collect boundaries
   for (const auto& v : volumes) {
     if (v->volumeBounds().type() == VolumeBounds::BoundsType::eCylinder) {
-      auto bValues = v->volumeBounds().values();
+      const auto& bValues = v->volumeBounds().values();
       // The min/max values
       ActsScalar rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
       ActsScalar rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
@@ -223,26 +206,29 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
           bValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
       ActsScalar phiMin = phiCenter - phiSector;
       ActsScalar phiMax = phiCenter + phiSector;
-      // Fill the maps
-      fillMap(rMap, {rMin, rMax});
-      fillMap(zMap, {zMin, zMax});
-      fillMap(phiMap, {phiMin, phiMax});
+      // Fill the sets
+      uniqueBoundaries[0].insert(rMin);
+      uniqueBoundaries[0].insert(rMax);
+      uniqueBoundaries[1].insert(zMin);
+      uniqueBoundaries[1].insert(zMax);
+      uniqueBoundaries[2].insert(phiMin);
+      uniqueBoundaries[2].insert(phiMax);
     }
   }
 
-  for (auto [im, map] : enumerate(valueMaps)) {
-    for (auto [key, value] : map) {
-      boundaries[im].push_back(key);
-    }
-    std::sort(boundaries[im].begin(), boundaries[im].end());
-  }
-
-  ACTS_VERBOSE("- did yield " << boundaries[0u].size() << " boundaries in R.");
-  ACTS_VERBOSE("- did yield " << boundaries[1u].size() << " boundaries in z.");
-  ACTS_VERBOSE("- did yield " << boundaries[2u].size()
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[0u].size()
+                              << " boundaries in R.");
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[1u].size()
+                              << " boundaries in z.");
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[2u].size()
                               << " boundaries in phi.");
 
-  return boundaries;
+  return {{std::vector<ActsScalar>(uniqueBoundaries[0].begin(),
+                                   uniqueBoundaries[0].end()),
+           std::vector<ActsScalar>(uniqueBoundaries[1].begin(),
+                                   uniqueBoundaries[1].end()),
+           std::vector<ActsScalar>(uniqueBoundaries[2].begin(),
+                                   uniqueBoundaries[2].end())}};
 }
 
 }  // namespace CylindricalDetectorHelper

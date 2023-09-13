@@ -33,7 +33,7 @@ void fillGridIndices2D(
           if (casts ==
               std::array<Acts::BinningValue, 2u>{Acts::binZ, Acts::binR}) {
             Acts::Vector3 zrPosition{v1, 0., v0};
-            for (auto [iv, v] : Acts::enumerate(rootVolumes)) {
+            for (const auto [iv, v] : Acts::enumerate(rootVolumes)) {
               if (v->inside(gctx, zrPosition)) {
                 typename Grid2D::point_t p{v0, v1};
                 grid.atPosition(p) = iv;
@@ -49,7 +49,7 @@ void fillGridIndices2D(
 
 Acts::Experimental::IndexedRootVolumeFinderBuilder::
     IndexedRootVolumeFinderBuilder(std::vector<Acts::BinningValue> binning)
-    : m_casts(binning) {
+    : m_casts(std::move(binning)) {
   if (m_casts != std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR}) {
     throw std::invalid_argument("Online (z,r) binning is currently supported.");
   }
