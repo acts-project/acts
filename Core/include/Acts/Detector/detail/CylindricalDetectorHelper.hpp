@@ -186,7 +186,7 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
                                                 << " volumes.");
 
   // The return boundaries
-  std::array<std::vector<ActsScalar>, 3u> boundaries;
+  std::array<std::set<ActsScalar>, 3u> uniqueBoundaries;
 
   // Loop over the volumes and collect boundaries
   for (const auto& v : volumes) {
@@ -207,24 +207,28 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
       ActsScalar phiMin = phiCenter - phiSector;
       ActsScalar phiMax = phiCenter + phiSector;
       // Fill the maps
-      boundaries[0].push_back(rMin);
-      boundaries[0].push_back(rMax);
-      boundaries[1].push_back(zMin);
-      boundaries[1].push_back(zMax);
-      boundaries[2].push_back(phiMin);
-      boundaries[2].push_back(phiMax);
+      uniqueBoundaries[0].insert(rMin);
+      uniqueBoundaries[0].insert(rMax);
+      uniqueBoundaries[1].insert(zMin);
+      uniqueBoundaries[1].insert(zMax);
+      uniqueBoundaries[2].insert(phiMin);
+      uniqueBoundaries[2].insert(phiMax);
     }
   }
 
-  std::for_each(boundaries.begin(), boundaries.end(),
-                [](auto& b) { std::sort(b.begin(), b.end()); });
-
-  ACTS_VERBOSE("- did yield " << boundaries[0u].size() << " boundaries in R.");
-  ACTS_VERBOSE("- did yield " << boundaries[1u].size() << " boundaries in z.");
-  ACTS_VERBOSE("- did yield " << boundaries[2u].size()
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[0u].size()
+                              << " boundaries in R.");
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[1u].size()
+                              << " boundaries in z.");
+  ACTS_VERBOSE("- did yield " << uniqueBoundaries[2u].size()
                               << " boundaries in phi.");
 
-  return boundaries;
+  return {{std::vector<ActsScalar>(uniqueBoundaries[0].begin(),
+                                   uniqueBoundaries[0].end()),
+           std::vector<ActsScalar>(uniqueBoundaries[1].begin(),
+                                   uniqueBoundaries[1].end()),
+           std::vector<ActsScalar>(uniqueBoundaries[2].begin(),
+                                   uniqueBoundaries[2].end())}};
 }
 
 }  // namespace CylindricalDetectorHelper
