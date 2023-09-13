@@ -21,6 +21,8 @@
 namespace Acts {
 namespace Experimental {
 
+class IRootVolumeFinderBuilder;
+
 /// @brief A dedicated container builder for cylindrical detector containers
 ///
 /// It relies on the detailed implementation of the CylindricalDetectorHelper
@@ -41,6 +43,8 @@ class CylindricalContainerBuilder : public IDetectorComponentBuilder {
     std::vector<std::shared_ptr<const IDetectorComponentBuilder>> builders = {};
     /// Binning prescription of attachment
     std::vector<BinningValue> binning = {};
+    /// The root volume finder
+    std::shared_ptr<IRootVolumeFinderBuilder> rootVolumeFinderBuilder = nullptr;
     /// Auxiliary information, mainly for screen output
     std::string auxiliary = "";
   };
