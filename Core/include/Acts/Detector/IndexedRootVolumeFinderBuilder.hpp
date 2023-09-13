@@ -33,13 +33,13 @@ class IndexedRootVolumeFinderBuilder : public IRootVolumeFinderBuilder {
   /// The virtual interface definition for root volume finder builders
   ///
   /// @param gctx the geometry context at the creation of the internal structure
-  /// @param rootVoluems the root volumes to be used for the finder
+  /// @param rootVolumes the root volumes to be used for the finder
   ///
   /// @return a shared detector object
   DetectorVolumeUpdator construct(
       const GeometryContext& gctx,
-      const std::vector<std::shared_ptr<DetectorVolume>>& rootVoluems)
-      const final override;
+      const std::vector<std::shared_ptr<DetectorVolume>>& rootVolumes)
+      const final;
 
  private:
   std::vector<Acts::BinningValue> m_casts;

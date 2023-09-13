@@ -49,7 +49,7 @@ void fillGridIndices2D(
 
 Acts::Experimental::IndexedRootVolumeFinderBuilder::
     IndexedRootVolumeFinderBuilder(std::vector<Acts::BinningValue> binning)
-    : m_casts(binning) {
+    : m_casts(std::move(binning)) {
   if (m_casts != std::vector<Acts::BinningValue>{Acts::binZ, Acts::binR}) {
     throw std::invalid_argument("Online (z,r) binning is currently supported.");
   }

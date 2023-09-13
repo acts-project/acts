@@ -42,9 +42,9 @@ class VolumeAssociationTest final : public IAlgorithm {
 
   /// Construct the smearing algorithm.
   ///
-  /// @param config is the algorithm configuration
+  /// @param cfg is the algorithm configuration
   /// @param level is the logging level
-  VolumeAssociationTest(const Config& config,
+  VolumeAssociationTest(const Config& cfg,
                         Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Build measurement from simulation hits at input.
