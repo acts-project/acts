@@ -364,9 +364,7 @@ class AtlasStepper {
   }
 
   /// Overstep limit
-  double overstepLimit(const State& /*state*/) const {
-    return m_overstepLimit;
-  }
+  double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
 
   /// Time access
   double time(const State& state) const { return state.pVector[3]; }
