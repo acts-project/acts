@@ -103,6 +103,7 @@ class HelicalTrackLinearizer {
   /// @param linPoint Point which defines the Perigee.
   /// @note Transverse plane of the Perigee corresponding to @p linPoint is
   /// parallel to the global x-y plane
+  /// @param perigeeSurface Perigee surface belonging to @p linPoint
   /// @param gctx Geometry context
   /// @param mctx Magnetic field context
   /// @param state Linearizer state object
@@ -110,6 +111,7 @@ class HelicalTrackLinearizer {
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
                                          const Vector4& linPoint,
+                                         const Surface& perigeeSurface,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::MagneticFieldContext& mctx,
                                          State& state) const;

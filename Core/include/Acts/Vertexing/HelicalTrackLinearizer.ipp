@@ -13,16 +13,12 @@ template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
         const BoundTrackParameters& params, const Vector4& linPoint,
-        const Acts::GeometryContext& gctx,
+        const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
         const Acts::MagneticFieldContext& mctx, State& state) const {
-  // Make Perigee surface at linPointPos, transverse plane of Perigee
-  // corresponds the global x-y plane
-  Vector3 linPointPos = VectorHelpers::position(linPoint);
-  const std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(linPointPos);
-
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
+
+  Vector3 linPointPos = VectorHelpers::position(linPoint);
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -32,8 +28,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.direction(), false);
+  auto intersection = perigeeSurface.intersect(gctx, params.position(gctx),
+                                               params.direction(), false);
 
   // Setting the propagation direction using the intersection length from
   // above
@@ -43,7 +39,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
 
   // Propagate to the PCA of linPointPos
-  auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
+  auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
   if (not result.ok()) {
     return result.error();
   }

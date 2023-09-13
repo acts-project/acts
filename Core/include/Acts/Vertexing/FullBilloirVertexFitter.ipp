@@ -94,6 +94,11 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
   std::vector<Vector3> trackMomenta;
   // Initial guess of the 4D vertex position
   Vector4 linPoint = vertexingOptions.constraint.fullPosition();
+  Vector3 linPointPos = VectorHelpers::position(linPoint);
+  // Make Perigee surface at linPointPos, transverse plane of Perigee
+  // corresponds the global x-y plane
+  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(linPointPos);
   Vertex<input_track_t> fittedVertex;
 
   for (int nIter = 0; nIter < m_cfg.maxIterations; ++nIter) {
@@ -108,7 +113,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       const auto& trackParams = extractParameters(*trackContainer);
 
       auto result = linearizer.linearizeTrack(
-          trackParams, linPoint, vertexingOptions.geoContext,
+          trackParams, linPoint, *perigeeSurface, vertexingOptions.geoContext,
           vertexingOptions.magFieldContext, state.linearizerState);
       if (!result.ok()) {
         return result.error();
