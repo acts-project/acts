@@ -39,7 +39,7 @@ ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
     throw std::invalid_argument("Missing output tracks parameters collection");
   }
   if (m_cfg.randomNumbers == nullptr) {
-    throw std::invalid_argument("No random number generator provided");
+    throw std::invalid_argument("Missing random numbers tool");
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
