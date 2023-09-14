@@ -276,7 +276,7 @@ struct GaussianSumFitter {
           CurvilinearTrackParameters, decltype(fwdPropOptions.actionList)>
           inputResult;
 
-      auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
+      auto& r = inputResult.template get<typename GsfActor::result_type>();
 
       r.fittedStates = &trackContainer.trackStateContainer();
 
@@ -301,7 +301,8 @@ struct GaussianSumFitter {
       return return_error_or_abort(fwdResult.error());
     }
 
-    auto& fwdGsfResult = fwdResult->template get<detail::GsfResult<traj_t>>();
+    auto& fwdGsfResult =
+        fwdResult->template get<typename GsfActor::result_type>();
 
     if (!fwdGsfResult.result.ok()) {
       return return_error_or_abort(fwdGsfResult.result.error());
@@ -356,7 +357,7 @@ struct GaussianSumFitter {
               std::declval<decltype(bwdPropOptions)>(),
               std::declval<decltype(inputResult)>()));
 
-      auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
+      auto& r = inputResult.template get<typename GsfActor::result_type>();
 
       r.fittedStates = &trackContainer.trackStateContainer();
 
@@ -387,7 +388,8 @@ struct GaussianSumFitter {
       return return_error_or_abort(bwdResult.error());
     }
 
-    auto& bwdGsfResult = bwdResult->template get<detail::GsfResult<traj_t>>();
+    auto& bwdGsfResult =
+        bwdResult->template get<typename GsfActor::result_type>();
 
     if (!bwdGsfResult.result.ok()) {
       return return_error_or_abort(bwdGsfResult.result.error());

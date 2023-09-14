@@ -31,7 +31,7 @@
 namespace Acts {
 namespace detail {
 
-template <typename traj_t>
+template <typename traj_t, typename component_cache_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
   traj_t* fittedStates{nullptr};
@@ -58,6 +58,9 @@ struct GsfResult {
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
+
+  // Internal: component cache to avoid reallocation
+  std::vector<component_cache_t> componentCache;
 };
 
 /// The actor carrying out the GSF algorithm
@@ -66,8 +69,34 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
+  /// Stores meta information about the components
+  struct MetaCache {
+    /// Where to find the parent component in the MultiTrajectory
+    MultiTrajectoryTraits::IndexType parentIndex = 0;
+
+    /// Other quantities TODO are they really needed here? seems they are
+    /// reinitialized to Identity etc.
+    BoundMatrix jacobian;
+    BoundToFreeMatrix jacToGlobal;
+    FreeMatrix jacTransport;
+    FreeVector derivative;
+
+    /// We need to preserve the path length
+    ActsScalar pathLength = 0;
+  };
+
+  /// Stores parameters of a gaussian component
+  struct ParameterCache {
+    ActsScalar weight = 0;
+    BoundVector boundPars;
+    BoundSquareMatrix boundCov;
+  };
+
+  /// Broadcast Cache Type
+  using ComponentCache = std::tuple<ParameterCache, MetaCache>;
+
   /// Broadcast the result_type
-  using result_type = GsfResult<traj_t>;
+  using result_type = GsfResult<traj_t, ComponentCache>;
 
   // Actor configuration
   struct Config {
@@ -119,37 +148,11 @@ struct GsfActor {
 
   const Logger& logger() const { return *m_cfg.logger; }
 
-  /// Stores meta information about the components
-  struct MetaCache {
-    /// Where to find the parent component in the MultiTrajectory
-    MultiTrajectoryTraits::IndexType parentIndex = 0;
-
-    /// Other quantities TODO are they really needed here? seems they are
-    /// reinitialized to Identity etc.
-    BoundMatrix jacobian;
-    BoundToFreeMatrix jacToGlobal;
-    FreeMatrix jacTransport;
-    FreeVector derivative;
-
-    /// We need to preserve the path length
-    ActsScalar pathLength = 0;
-  };
-
-  /// Stores parameters of a gaussian component
-  struct ParameterCache {
-    ActsScalar weight = 0;
-    BoundVector boundPars;
-    BoundSquareMatrix boundCov;
-  };
-
   struct TemporaryStates {
     traj_t traj;
     std::vector<MultiTrajectoryTraits::IndexType> tips;
     std::map<MultiTrajectoryTraits::IndexType, double> weights;
   };
-
-  /// Broadcast Cache Type
-  using ComponentCache = std::tuple<ParameterCache, MetaCache>;
 
   /// @brief GSF actor operation
   ///
@@ -301,7 +304,10 @@ struct GsfActor {
         return;
       }
 
-      std::vector<ComponentCache> componentCache;
+      // Reuse memory over all calls to the Actor in a single propagation
+      std::vector<ComponentCache>& componentCache = result.componentCache;
+      componentCache.clear();
+
       convoluteComponents(state, stepper, navigator, tmpStates, componentCache);
 
       if (componentCache.empty()) {
