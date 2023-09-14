@@ -46,11 +46,11 @@ Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
           radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<const CylinderBounds> cbounds,
-    const Acts::DetectorElementBase& detelement)
-    : Surface(detelement), m_bounds(std::move(cbounds)) {
+    const std::shared_ptr<const CylinderBounds>& cbounds,
+    const DetectorElementBase& detelement)
+    : Surface(detelement), m_bounds(cbounds) {
   /// surfaces representing a detector element must have bounds
-  assert(cbounds);
+  throw_assert(cbounds, "CylinderBounds must not be nullptr");
 }
 
 Acts::CylinderSurface::CylinderSurface(

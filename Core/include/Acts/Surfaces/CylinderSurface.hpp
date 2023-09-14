@@ -50,7 +50,7 @@ class CylinderSurface : public Surface {
   ///
   /// @param cbounds are the provided cylinder bounds (shared)
   /// @param detelement is the linked detector element to this surface
-  CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
+  CylinderSurface(const std::shared_ptr<const CylinderBounds>& cbounds,
                   const DetectorElementBase& detelement);
 
   /// Constructor from Transform3 and CylinderBounds
