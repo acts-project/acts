@@ -71,16 +71,6 @@ struct GsfActor {
 
   /// Stores meta information about the components
   struct MetaCache {
-    /// Where to find the parent component in the MultiTrajectory
-    MultiTrajectoryTraits::IndexType parentIndex = 0;
-
-    /// Other quantities TODO are they really needed here? seems they are
-    /// reinitialized to Identity etc.
-    BoundMatrix jacobian;
-    BoundToFreeMatrix jacToGlobal;
-    FreeMatrix jacTransport;
-    FreeVector derivative;
-
     /// We need to preserve the path length
     ActsScalar pathLength = 0;
   };
@@ -350,11 +340,6 @@ struct GsfActor {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
       MetaCache mcache;
-      mcache.parentIndex = idx;
-      mcache.jacobian = cmp.jacobian();
-      mcache.jacToGlobal = cmp.jacToGlobal();
-      mcache.jacTransport = cmp.jacTransport();
-      mcache.derivative = cmp.derivative();
       mcache.pathLength = cmp.pathAccumulated();
 
       BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
@@ -549,9 +534,9 @@ struct GsfActor {
       cmp.pathAccumulated() = meta.pathLength;
 
       // TODO check if they are not anyways reset to identity or zero
-      cmp.jacobian() = meta.jacobian;
-      cmp.derivative() = meta.derivative;
-      cmp.jacTransport() = meta.jacTransport;
+      cmp.jacobian() = Acts::BoundMatrix::Identity();
+      cmp.derivative() = Acts::FreeVector::Zero();
+      cmp.jacTransport() = Acts::FreeMatrix::Identity();
     }
   }
 
