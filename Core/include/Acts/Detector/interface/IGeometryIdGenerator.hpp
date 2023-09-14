@@ -35,7 +35,7 @@ class IGeometryIdGenerator {
   /// The virtual interface definition for assigning a geometry id to
   /// a detector volume
   ///
-  /// @param cache is the cahce object for e.g. object counting
+  /// @param cache is the cache object for e.g. object counting
   /// @param dVolume the detector volume to assign the geometry id to
   virtual void assignGeometryId(GeoIdCache& cache,
                                 DetectorVolume& dVolume) const = 0;
@@ -43,14 +43,14 @@ class IGeometryIdGenerator {
   /// The virtual interface definition for assigning a geometry id to
   /// a portal
   ///
-  /// @param cache is the cahce object for e.g. object counting
+  /// @param cache is the cache object for e.g. object counting
   /// @param portal the portal to assign the geometry id to
   virtual void assignGeometryId(GeoIdCache& cache, Portal& portal) const = 0;
 
-  /// @brief  The virutal interface definition for assigning a geometry id to
+  /// @brief  The virtual interface definition for assigning a geometry id to
   /// a surface
   ///
-  /// @param cache is the cahce object for e.g. object counting
+  /// @param cache is the cache object for e.g. object counting
   /// @param surface the surface to assign the geometry id to
   virtual void assignGeometryId(GeoIdCache& cache, Surface& surface) const = 0;
 };

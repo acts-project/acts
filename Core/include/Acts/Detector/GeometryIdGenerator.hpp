@@ -29,7 +29,7 @@ class DetectorVolume;
 /// and increments the counter for each object type.
 ///
 /// Sub counter, i.e. for the sensitive surfaces, are reset after the volume
-/// call, such that a new volume or layer volume would start from coutner 0
+/// call, such that a new volume or layer volume would start from counter 0
 /// again.
 ///
 /// If the generator is configured to override existing ids, it will do so
@@ -83,21 +83,21 @@ class GeometryIdGenerator final : public IGeometryIdGenerator {
 
   /// @brief Method for assigning a geometry id to a detector volume
   ///
-  /// @param cache is the cahce object for e.g. object counting
+  /// @param cache is the cache object for e.g. object counting
   /// @param dVolume the detector volume to assign the geometry id to
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
                         DetectorVolume& dVolume) const final;
 
   /// @brief Method for assigning a geometry id to a portal
   ///
-  /// @param cache is the cahce object for e.g. object counting
+  /// @param cache is the cache object for e.g. object counting
   /// @param portal the portal to assign the geometry id to
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
                         Portal& portal) const final;
 
   /// @brief Method for assigning a geometry id to a surface
   ///
-  /// @param cache is the cahce object for e.g. object counting
+  /// @param cache is the cache object for e.g. object counting
   /// @param surface the surface to assign the geometry id to
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
                         Surface& surface) const final;

@@ -100,7 +100,7 @@ Acts::GeometryIdentifier Acts::Experimental::GeometryIdGenerator::volumeId(
       ++cache.layerCount;
     }
     geoID.setLayer(cache.layerCount);
-    ACTS_VERBOSE("Container mode: assiging volume id "
+    ACTS_VERBOSE("Container mode: assigning volume id "
                  << m_cfg.containerId << ", layer id " << cache.layerCount);
   }
   return geoID;
