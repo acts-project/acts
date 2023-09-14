@@ -58,7 +58,7 @@ struct GsfResult {
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
-  
+
   // Internal: component cache to avoid reallocation
   std::vector<component_cache_t> componentCache;
 };
@@ -68,7 +68,7 @@ template <typename bethe_heitler_approx_t, typename traj_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
-  
+
   /// Stores meta information about the components
   struct MetaCache {
     /// Where to find the parent component in the MultiTrajectory
@@ -305,9 +305,9 @@ struct GsfActor {
       }
 
       // Reuse memory over all calls to the Actor in a single propagation
-      std::vector<ComponentCache> &componentCache = result.componentCache;
+      std::vector<ComponentCache>& componentCache = result.componentCache;
       componentCache.clear();
-      
+
       convoluteComponents(state, stepper, navigator, tmpStates, componentCache);
 
       if (componentCache.empty()) {
