@@ -4,6 +4,7 @@ target_sources(
     KalmanFitterError.cpp
     GainMatrixUpdater.cpp
     GainMatrixSmoother.cpp
+    GlobalChiSquareFitterError.cpp
     GsfError.cpp
     GsfUtils.cpp
     BetheHeitlerApprox.cpp
