@@ -192,6 +192,11 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
             DigitizedParameters dParameters;
 
+            if (simHit.depositedEnergy() < m_cfg.minEnergyDeposit) {
+              ACTS_VERBOSE("Skip hit because energy deposit to small")
+              continue;
+            }
+
             // Geometric part - 0, 1, 2 local parameters are possible
             if (not digitizer.geometric.indices.empty()) {
               ACTS_VERBOSE("Configured to geometric digitize "
