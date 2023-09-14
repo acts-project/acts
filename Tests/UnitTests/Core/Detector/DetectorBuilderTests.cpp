@@ -73,13 +73,13 @@ class CompBuilder final : public Acts::Experimental::IDetectorComponentBuilder {
 class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
  public:
   Acts::Experimental::IGeometryIdGenerator::GeoIdCache generateCache()
-      const final override {
+      const final {
     return std::any();
   }
 
   void assignGeometryId(
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::DetectorVolume& dVolume) const final override {
+      Acts::Experimental::DetectorVolume& dVolume) const final {
     for (auto [is, s] : Acts::enumerate(dVolume.surfacePtrs())) {
       Acts::GeometryIdentifier geoID;
       geoID.setSensitive(is + 1);
@@ -89,11 +89,11 @@ class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
 
   void assignGeometryId(
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::Portal& /*portal*/) const final override {}
+      Acts::Experimental::Portal& /*portal*/) const final {}
 
   void assignGeometryId(
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Surface& /*surface*/) const final override {}
+      Acts::Surface& /*surface*/) const final {}
 };
 
 Acts::GeometryContext tContext;

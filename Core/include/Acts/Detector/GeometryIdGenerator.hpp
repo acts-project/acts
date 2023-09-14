@@ -38,7 +38,7 @@ class DetectorVolume;
 /// If the generator is configured in container mode, it will increase the
 /// layer id for each layer volume with confined surfaces.
 ///
-class GeometryIdGenerator : public IGeometryIdGenerator {
+class GeometryIdGenerator final : public IGeometryIdGenerator {
  public:
   /// @brief  Nested config struct
   struct Config {
@@ -75,32 +75,32 @@ class GeometryIdGenerator : public IGeometryIdGenerator {
                           "GeometryIdGenerator", Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
-  virtual ~GeometryIdGenerator() = default;
+  ~GeometryIdGenerator() final = default;
 
   /// @brief  Interface method to generata a geometry id cache
   /// @return a geometry id cache decorated in a std::any object
-  IGeometryIdGenerator::GeoIdCache generateCache() const final override;
+  IGeometryIdGenerator::GeoIdCache generateCache() const final;
 
   /// @brief Method for assigning a geometry id to a detector volume
   ///
   /// @param cache is the cahce object for e.g. object counting
   /// @param dVolume the detector volume to assign the geometry id to
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
-                        DetectorVolume& dVolume) const final override;
+                        DetectorVolume& dVolume) const final;
 
   /// @brief Method for assigning a geometry id to a portal
   ///
   /// @param cache is the cahce object for e.g. object counting
   /// @param portal the portal to assign the geometry id to
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
-                        Portal& portal) const final override;
+                        Portal& portal) const final;
 
   /// @brief Method for assigning a geometry id to a surface
   ///
   /// @param cache is the cahce object for e.g. object counting
   /// @param surface the surface to assign the geometry id to
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
-                        Surface& surface) const final override;
+                        Surface& surface) const final;
 
  private:
   /// @brief Helper method to get the volume id from the cache

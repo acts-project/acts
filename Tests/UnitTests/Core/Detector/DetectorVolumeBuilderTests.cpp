@@ -84,13 +84,13 @@ class InternalSurfaceBuilder : public IInternalStructureBuilder {
 class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
  public:
   Acts::Experimental::IGeometryIdGenerator::GeoIdCache generateCache()
-      const final override {
+      const final {
     return std::any();
   }
 
   void assignGeometryId(
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::DetectorVolume& dVolume) const final override {
+      Acts::Experimental::DetectorVolume& dVolume) const final {
     for (auto [is, s] : Acts::enumerate(dVolume.surfacePtrs())) {
       Acts::GeometryIdentifier geoID;
       geoID.setPassive(is + 1);
@@ -100,11 +100,11 @@ class SurfaceGeoIdGenerator : public Acts::Experimental::IGeometryIdGenerator {
 
   void assignGeometryId(
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::Portal& /*portal*/) const final override {}
+      Acts::Experimental::Portal& /*portal*/) const final {}
 
   void assignGeometryId(
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Surface& /*surface*/) const final override {}
+      Acts::Surface& /*surface*/) const final {}
 };
 
 /// @brief  Mockup internal surface builder

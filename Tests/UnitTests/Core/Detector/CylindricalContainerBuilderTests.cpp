@@ -100,12 +100,12 @@ class VolumeGeoIdGenerator : public IGeometryIdGenerator {
     unsigned int volumeCount = 0;
   };
 
-  IGeometryIdGenerator::GeoIdCache generateCache() const final override {
+  IGeometryIdGenerator::GeoIdCache generateCache() const final {
     return Cache{0};
   }
 
   void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
-                        DetectorVolume& dVolume) const final override {
+                        DetectorVolume& dVolume) const final {
     auto& ccache = std::any_cast<Cache&>(cache);
     ccache.volumeCount += 1;
     Acts::GeometryIdentifier geoID;
@@ -115,11 +115,11 @@ class VolumeGeoIdGenerator : public IGeometryIdGenerator {
 
   void assignGeometryId(
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Experimental::Portal& /*portal*/) const final override {}
+      Acts::Experimental::Portal& /*portal*/) const final {}
 
   void assignGeometryId(
       Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
-      Acts::Surface& /*surface*/) const final override {}
+      Acts::Surface& /*surface*/) const final {}
 };
 
 BOOST_AUTO_TEST_SUITE(Detector)
