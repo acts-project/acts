@@ -93,11 +93,13 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   const ProtoTrackContainer* inputTracks = nullptr;
   std::optional<ProtoTrackContainer> outputTracks;
   if (m_inputTracks.isInitialized() && m_outputTracks.isInitialized()) {
-    if (seeds.size() != inputTracks->size()) {
+    const auto& inputTracksRef = m_inputTracks(ctx);
+    if (seeds.size() != inputTracksRef.size()) {
       ACTS_FATAL("Inconsistent number of seeds and prototracks");
       return ProcessCode::ABORT;
     }
-    inputTracks = &m_inputTracks(ctx);
+    inputTracks = &inputTracksRef;
+    outputTracks.emplace();
     outputTracks->reserve(seeds.size());
   }
 
