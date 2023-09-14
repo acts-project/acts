@@ -137,6 +137,7 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
     m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
     m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
+    m_outputTree->Branch("CovMat", &m_CovMat);
   }
 }
 
@@ -334,6 +335,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
       std::array<float, Acts::eBoundSize> error = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
+
+      TMatrixD CovMatrixTrack(Acts::eBoundSize, Acts::eBoundSize);
+      CovMatrixTrack.UnitMatrix();
+
       bool hasFittedParams = false;
       bool hasFittedCov = false;
       if (traj.hasTrackParameters(trackTip)) {
@@ -349,6 +354,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           const auto& covariance = *boundParam.covariance();
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
             error[i] = std::sqrt(covariance(i, i));
+            for (unsigned int j =0; j < Acts::eBoundSize; j++) {
+              CovMatrixTrack[i][j] = covariance(i, j);
+            }
           }
         }
       }
@@ -404,6 +412,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       m_pull_eT_fit.push_back(pull[Acts::eBoundTime]);
 
       m_hasFittedParams.push_back(hasFittedParams);
+      m_CovMat.push_back(CovMatrixTrack);
+      
     }  // all subtrajectories
   }    // all trajectories
 
@@ -469,6 +479,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_pull_eTHETA_fit.clear();
   m_pull_eQOP_fit.clear();
   m_pull_eT_fit.clear();
+
+  m_CovMat.clear();
 
   return ProcessCode::SUCCESS;
 }
