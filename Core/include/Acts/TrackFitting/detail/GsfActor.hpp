@@ -69,21 +69,15 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
-  /// Stores meta information about the components
-  struct MetaCache {
-    /// We need to preserve the path length
-    ActsScalar pathLength = 0;
-  };
-
   /// Stores parameters of a gaussian component
   struct ParameterCache {
     ActsScalar weight = 0;
-    BoundVector boundPars;
-    BoundSquareMatrix boundCov;
+    BoundVector boundPars = BoundVector::Zero();
+    BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
   };
 
   /// Broadcast Cache Type
-  using ComponentCache = std::tuple<ParameterCache, MetaCache>;
+  using ComponentCache = std::tuple<ParameterCache>;
 
   /// Broadcast the result_type
   using result_type = GsfResult<traj_t, ComponentCache>;
@@ -339,14 +333,11 @@ struct GsfActor {
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
-      MetaCache mcache;
-      mcache.pathLength = cmp.pathAccumulated();
-
       BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
                                  proxy.filtered(), proxy.filteredCovariance());
 
       applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
-                        mcache, componentCache);
+                        componentCache);
     }
   }
 
@@ -354,7 +345,7 @@ struct GsfActor {
   void applyBetheHeitler(const propagator_state_t& state,
                          const navigator_t& navigator,
                          const BoundTrackParameters& old_bound,
-                         const double old_weight, const MetaCache& metaCache,
+                         const double old_weight,
                          std::vector<ComponentCache>& componentCaches) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
@@ -429,7 +420,7 @@ struct GsfActor {
 
       // Set the remaining things and push to vector
       componentCaches.push_back(
-          {ParameterCache{new_weight, new_pars, new_cov}, metaCache});
+          {ParameterCache{new_weight, new_pars, new_cov}});
     }
   }
 
@@ -516,7 +507,7 @@ struct GsfActor {
     stepper.clearComponents(state.stepping);
 
     // Finally loop over components
-    for (const auto& [pcache, meta] : componentCache) {
+    for (const auto& [pcache] : componentCache) {
       const auto& [weight, pars, cov] = pcache;
 
       // Add the component to the stepper
@@ -531,7 +522,7 @@ struct GsfActor {
 
       auto& cmp = *res;
       cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext, pars);
-      cmp.pathAccumulated() = meta.pathLength;
+      cmp.pathAccumulated() = state.stepping.pathAccumulated;
 
       // TODO check if they are not anyways reset to identity or zero
       cmp.jacobian() = Acts::BoundMatrix::Identity();
