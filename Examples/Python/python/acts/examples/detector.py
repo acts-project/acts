@@ -102,6 +102,7 @@ class CylindricalDetectorVolume:
         """Return the extent of the volume in order to create gap volumes"""
         return self._extent
 
+
 class CylindricalDetectorContainer:
     def __init__(
         self,

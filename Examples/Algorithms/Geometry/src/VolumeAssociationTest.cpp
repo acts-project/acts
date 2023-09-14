@@ -13,7 +13,6 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 
 #include <exception>
-
 #include <memory>
 #include <string>
 #include <vector>
