@@ -23,6 +23,7 @@
 #include <vector>
 
 #include <TMatrixD.h>
+
 #include "vectorMatrix_dict.cxx"
 
 class TFile;
@@ -187,7 +188,7 @@ class RootTrajectorySummaryWriter final
   std::vector<float> m_pull_eQOP_fit;  ///< Fitted parameters eQOP pull of track
   std::vector<float> m_pull_eT_fit;    ///< Fitted parameters eT pull of track
 
-  std::vector<TMatrixD> m_CovMat; // full covariance matrix of track
+  std::vector<TMatrixD> m_CovMat;  // full covariance matrix of track
 };
 
 }  // namespace ActsExamples

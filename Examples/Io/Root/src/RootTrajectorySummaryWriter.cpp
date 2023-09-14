@@ -354,7 +354,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           const auto& covariance = *boundParam.covariance();
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
             error[i] = std::sqrt(covariance(i, i));
-            for (unsigned int j =0; j < Acts::eBoundSize; j++) {
+            for (unsigned int j = 0; j < Acts::eBoundSize; j++) {
               CovMatrixTrack[i][j] = covariance(i, j);
             }
           }
@@ -413,7 +413,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
       m_hasFittedParams.push_back(hasFittedParams);
       m_CovMat.push_back(CovMatrixTrack);
-      
+
     }  // all subtrajectories
   }    // all trajectories
 
