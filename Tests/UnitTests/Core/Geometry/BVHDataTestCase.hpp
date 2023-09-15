@@ -108,7 +108,7 @@ BOOST_DATA_TEST_CASE(
 
     auto sensitiveID = step.surface->geometryId().sensitive();
     if (sensitiveID != 0) {
-      actHits.push_back(step.surface.get());
+      actHits.push_back(step.surface);
     }
   }
 
