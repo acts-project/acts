@@ -212,6 +212,60 @@ struct Gx2FitterResult {
   size_t surfaceCount = 0;
 };
 
+/// Collector for the GX2F Actor
+/// The collector prepares each measurement for the actual fitting process. Each
+/// n-dimensional measurement is split into n 1-dimensional linearly independent
+/// measurements. Then the collector saves the following information:
+/// - Residual: Calculated from measurement and prediction
+/// - Covariance: The covariance of the measurement
+/// - Projected Jacobian: This implicitly contains the measurement type
+/// It also checks if the covariance is above a threshold, to detect and avoid
+/// too small covariances for a stable fit.
+///
+/// @tparam measDim Number of dimensions of the measurement
+/// @tparam traj_t The trajectory type
+///
+/// @param trackStateProxy is the current track state
+/// @param result is the mutable result/cache object
+/// @param logger a logger instance
+template <size_t measDim, typename traj_t>
+void collector(typename traj_t::TrackStateProxy& trackStateProxy,
+               Gx2FitterResult<traj_t>& result, const Logger& logger) {
+  auto predicted = trackStateProxy.predicted();
+  auto measurement = trackStateProxy.template calibrated<measDim>();
+  auto covarianceMeasurement =
+      trackStateProxy.template calibratedCovariance<measDim>();
+  // calculate residuals and return with covariances and jacobians
+  auto projJacobian =
+      (trackStateProxy.effectiveProjector() * result.jacobianFromStart).eval();
+  auto projPredicted =
+      (trackStateProxy.effectiveProjector() * predicted).eval();
+
+  ACTS_VERBOSE("Processing and collecting measurements in Actor:\n"
+               << "\tMeasurement:\t" << measurement.transpose()
+               << "\n\tPredicted:\t" << predicted.transpose()
+               << "\n\tProjector:\t" << trackStateProxy.effectiveProjector()
+               << "\n\tProjected Jacobian:\t" << projJacobian
+               << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
+
+  for (size_t i = 0; i < measDim; i++) {
+    if (covarianceMeasurement(i, i) < 1e-10) {
+      ACTS_WARNING("Invalid covariance of measurement: cov(" << i << "," << i
+                                                             << ") ~ 0")
+      continue;
+    }
+
+    result.collectorResiduals.push_back(measurement[i] - projPredicted[i]);
+    result.collectorCovariances.push_back(covarianceMeasurement(i, i));
+    result.collectorProjectedJacobians.push_back(projJacobian.row(i));
+
+    ACTS_VERBOSE("\tSplitting the measurement:\n"
+                 << "\t\tResidual:\t" << measurement[i] - projPredicted[i]
+                 << "\n\t\tCovariance:\t" << covarianceMeasurement(i, i)
+                 << "\n\t\tProjected Jacobian:\t" << projJacobian.row(i));
+  }
+}
+
 /// Global Chi Square fitter (GX2F) implementation.
 ///
 /// @tparam propagator_t Type of the propagation class
@@ -363,7 +417,6 @@ class Gx2Fitter {
 
           // Fill the track state
           trackStateProxy.predicted() = std::move(boundParams.parameters());
-          auto predicted = trackStateProxy.predicted();
 
           // We have predicted parameters, so calibrate the uncalibrated input
           // measurement
@@ -371,89 +424,11 @@ class Gx2Fitter {
                                 sourcelink_it->second, trackStateProxy);
 
           if (trackStateProxy.calibratedSize() == 1) {
-            const size_t measdimPlaceholder = 1;
-            auto measurement =
-                trackStateProxy.template calibrated<measdimPlaceholder>();
-            auto covarianceMeasurement =
-                trackStateProxy
-                    .template calibratedCovariance<measdimPlaceholder>();
-            // calculate residuals and return with covariances and jacobians
-            auto projJacobian = (trackStateProxy.effectiveProjector() *
-                                 result.jacobianFromStart)
-                                    .eval();
-            auto projPredicted =
-                (trackStateProxy.effectiveProjector() * predicted).eval();
-
-            ACTS_VERBOSE(
-                "Processing and collecting measurements in Actor:\n"
-                << "\tMeasurement:\t" << measurement.transpose()
-                << "\n\tPredicted:\t" << predicted.transpose()
-                << "\n\tProjector:\t" << trackStateProxy.effectiveProjector()
-                << "\n\tProjected Jacobian:\t" << projJacobian
-                << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
-
-            for (long i = 0; i < measurement.size(); i++) {
-              if (covarianceMeasurement(i, i) < 1e-10) {
-                ACTS_VERBOSE("Invalid covariance of measurement: cov("
-                             << i << "," << i << ") ~ 0")
-                continue;
-              }
-
-              result.collectorResiduals.push_back(measurement[i] -
-                                                  projPredicted[i]);
-              result.collectorCovariances.push_back(
-                  covarianceMeasurement(i, i));
-              result.collectorProjectedJacobians.push_back(projJacobian.row(i));
-
-              ACTS_VERBOSE(
-                  "\tSplitting the measurement:\n"
-                  << "\t\tResidual:\t" << measurement[i] - projPredicted[i]
-                  << "\n\t\tCovariance:\t" << covarianceMeasurement(i, i)
-                  << "\n\t\tProjected Jacobian:\t" << projJacobian.row(i));
-            }
+            collector<1>(trackStateProxy, result, *actorLogger);
           } else if (trackStateProxy.calibratedSize() == 2) {
-            const size_t measdimPlaceholder = 2;
-            auto measurement =
-                trackStateProxy.template calibrated<measdimPlaceholder>();
-            auto covarianceMeasurement =
-                trackStateProxy
-                    .template calibratedCovariance<measdimPlaceholder>();
-            // calculate residuals and return with covariances and jacobians
-            auto projJacobian = (trackStateProxy.effectiveProjector() *
-                                 result.jacobianFromStart)
-                                    .eval();
-            auto projPredicted =
-                (trackStateProxy.effectiveProjector() * predicted).eval();
-
-            ACTS_VERBOSE(
-                "Processing and collecting measurements in Actor:\n"
-                << "\tMeasurement:\t" << measurement.transpose()
-                << "\n\tPredicted:\t" << predicted.transpose()
-                << "\n\tProjector:\t" << trackStateProxy.effectiveProjector()
-                << "\n\tProjected Jacobian:\t" << projJacobian
-                << "\n\tCovariance Measurements:\t" << covarianceMeasurement);
-
-            for (long i = 0; i < measurement.size(); i++) {
-              if (covarianceMeasurement(i, i) < 1e-10) {
-                ACTS_VERBOSE("Invalid covariance of measurement: cov("
-                             << i << "," << i << ") ~ 0")
-                continue;
-              }
-
-              result.collectorResiduals.push_back(measurement[i] -
-                                                  projPredicted[i]);
-              result.collectorCovariances.push_back(
-                  covarianceMeasurement(i, i));
-              result.collectorProjectedJacobians.push_back(projJacobian.row(i));
-
-              ACTS_VERBOSE(
-                  "\tSplitting the measurement:\n"
-                  << "\t\tResidual:\t" << measurement[i] - projPredicted[i]
-                  << "\n\t\tCovariance:\t" << covarianceMeasurement(i, i)
-                  << "\n\t\tProjected Jacobian:\t" << projJacobian.row(i));
-            }
+            collector<2>(trackStateProxy, result, *actorLogger);
           } else {
-            ACTS_INFO(
+            ACTS_WARNING(
                 "Only measurements of 1 and 2 dimensions are implemented yet.");
           }
 
