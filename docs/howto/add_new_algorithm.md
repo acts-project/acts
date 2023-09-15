@@ -31,7 +31,7 @@ The algorithm class has to inherit from {class}`ActsExamples::IAlgorithm`
 and thus implement this single method:
 
 ```cpp
-    ProcessCode execute(const AlgorithmContext& ctx) const final override;
+    ProcessCode execute(const AlgorithmContext& ctx) const final;
 ```
 
 :::{hint}
