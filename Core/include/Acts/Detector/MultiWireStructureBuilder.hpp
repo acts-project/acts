@@ -18,7 +18,6 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iostream>
-#include <optional>
 #include <string>
 #include <vector>
 
