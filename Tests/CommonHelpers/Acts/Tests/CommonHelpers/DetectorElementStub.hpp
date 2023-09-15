@@ -39,7 +39,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// Constructor for single sided detector element
   /// - bound to a Line Surface
   ///
-  /// @param transform is the transform that element the layer in 3D frame
+  /// @param transform places the element in global frame
   /// @param cBounds is the cylindrical bounds
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
@@ -57,7 +57,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
   ///
-  /// @param transform is the transform that element the layer in 3D frame
+  /// @param transform places the element in global frame
   /// @param pBounds is the planar bounds for the planar detector element
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
@@ -75,7 +75,7 @@ class DetectorElementStub : public DetectorElementBase {
   /// Constructor for single sided detector element
   /// - bound to a Line Surface
   ///
-  /// @param transform is the transform that element the layer in 3D frame
+  /// @param transform places the element in global frame
   /// @param dBounds is the line bounds for the line like detector element
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it

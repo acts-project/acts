@@ -28,7 +28,7 @@ class DetectorVolume;
 /// It is a simple counter based generator that assigns ids to the geometry
 /// and increments the counter for each object type.
 ///
-/// Sub counter, i.e. for the sensitive surfaces, are reset after the volume
+/// Sub counters, i.e. for the sensitive surfaces, are reset after the volume
 /// call, such that a new volume or layer volume would start from counter 0
 /// again.
 ///
@@ -75,9 +75,9 @@ class GeometryIdGenerator final : public IGeometryIdGenerator {
                           "GeometryIdGenerator", Logging::INFO))
       : m_cfg(cfg), m_logger(std::move(mlogger)) {}
 
-  ~GeometryIdGenerator() final = default;
+  ~GeometryIdGenerator() = default;
 
-  /// @brief  Interface method to generata a geometry id cache
+  /// @brief Interface method to generata a geometry id cache
   /// @return a geometry id cache decorated in a std::any object
   IGeometryIdGenerator::GeoIdCache generateCache() const final;
 
