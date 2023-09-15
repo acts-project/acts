@@ -43,6 +43,9 @@ class ApproachDescriptor {
   /// @param position is the position from start of the search
   /// @param direction is the direction at the start of the search
   /// @param bcheck is the boundary check directive
+  /// @param pLimit The path limit
+  /// @param oLimit The overstep limit
+  /// @param tolerance The surface tolerance
   ///
   /// @return is a surface intersection
   virtual SurfaceIntersection approachSurface(const GeometryContext& gctx,

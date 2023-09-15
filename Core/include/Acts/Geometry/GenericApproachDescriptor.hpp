@@ -57,6 +57,9 @@ class GenericApproachDescriptor : public ApproachDescriptor {
   /// @param position The global position to start the approach from
   /// @param direction The momentum vector
   /// @param bcheck The boundary check prescription
+  /// @param pLimit The path limit
+  /// @param oLimit The overstep limit
+  /// @param tolerance The surface tolerance
   ///
   /// @return : a @c SurfaceIntersection
   SurfaceIntersection approachSurface(const GeometryContext& gctx,

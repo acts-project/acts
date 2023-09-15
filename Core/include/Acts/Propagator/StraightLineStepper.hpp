@@ -219,7 +219,7 @@ class StraightLineStepper {
 
   /// Overstep limit
   double overstepLimit(const State& /*state*/) const {
-    return -s_onSurfaceTolerance;
+    return -m_overstepLimit;
   }
 
   /// Update surface status
