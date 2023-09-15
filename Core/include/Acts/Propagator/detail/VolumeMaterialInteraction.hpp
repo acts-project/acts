@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,10 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+
+#include <memory>
 
 namespace Acts {
 namespace detail {
@@ -21,7 +24,7 @@ namespace detail {
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
   /// Data from the propagation state
-  const TrackingVolume* volume = nullptr;
+  InteractionVolume volume = {};
   /// The particle current position
   const Vector3 pos = Vector3::Zero();
   /// The particle current time
@@ -48,19 +51,43 @@ struct VolumeMaterialInteraction {
   /// The path correction factor due to non-zero incidence on the surface.
   double pathCorrection = 0;
 
-  /// @brief Constructor
+  /// @brief Constructor from tracking volume
   ///
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   ///
-  /// @param [in] vVolume The current volume
+  /// @param [in] tVolume The current tracking volume
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  VolumeMaterialInteraction(const TrackingVolume* vVolume,
+  VolumeMaterialInteraction(const TrackingVolume* tVolume,
                             const propagator_state_t& state,
                             const stepper_t& stepper)
-      : volume(vVolume),
+      : volume(InteractionVolume(tVolume)),
+        pos(stepper.position(state.stepping)),
+        time(stepper.time(state.stepping)),
+        dir(stepper.direction(state.stepping)),
+        qOverP(stepper.qOverP(state.stepping)),
+        absQ(state.stepping.absCharge),
+        momentum(stepper.absoluteMomentum(state.stepping)),
+        mass(state.options.mass),
+        absPdg(state.options.absPdgCode),
+        performCovarianceTransport(state.stepping.covTransport),
+        navDir(state.options.direction) {}
+
+  /// @brief Constructor from tracking volume
+  ///
+  /// @tparam propagator_state_t Type of the propagator state
+  /// @tparam stepper_t Type of the stepper
+  ///
+  /// @param [in] dVolume The current detector volume
+  /// @param [in] state State of the propagation
+  /// @param [in] stepper Stepper in use
+  template <typename propagator_state_t, typename stepper_t>
+  VolumeMaterialInteraction(const Experimental::DetectorVolume* dVolume,
+                            const propagator_state_t& state,
+                            const stepper_t& stepper)
+      : volume(InteractionVolume(dVolume)),
         pos(stepper.position(state.stepping)),
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),

@@ -56,8 +56,8 @@ struct MaterialInteractor {
                   const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
     // In case of Volume material update the result of the previous step
-    if (recordInteractions && !result.materialInteractions.empty() &&
-        result.materialInteractions.back().volume != nullptr &&
+    if (recordInteractions and not result.materialInteractions.empty() and
+        not result.materialInteractions.back().volume.empty() and
         result.materialInteractions.back().updatedVolumeStep == false) {
       updateResult(state, stepper, result);
     }
@@ -72,7 +72,7 @@ struct MaterialInteractor {
     }
     // We only have material interactions if there is potential material
     const Surface* surface = navigator.currentSurface(state.navigation);
-    const TrackingVolume* volume = navigator.currentVolume(state.navigation);
+    const auto* volume = navigator.currentVolume(state.navigation);
 
     if (not(surface and surface->surfaceMaterial()) and
         not(volume and volume->volumeMaterial())) {
@@ -146,7 +146,7 @@ struct MaterialInteractor {
       mi.sigmaTheta2 = d.varianceTheta;
       mi.sigmaQoP2 = d.varianceQoverP;
       mi.surface = d.surface;
-      mi.volume = nullptr;
+      mi.volume = InteractionVolume();
       mi.pathCorrection = d.pathCorrection;
       mi.materialSlab = d.slab;
       result.materialInteractions.push_back(std::move(mi));

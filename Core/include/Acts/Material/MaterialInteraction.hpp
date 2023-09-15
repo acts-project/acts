@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,16 +9,45 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 namespace Acts {
 
 class Surface;
-class TrackingVolume;
+
+/// @brief Helper union struct that allows to switch between detector
+/// and tracking volume objects, as long as these geometries coexist
+struct InteractionVolume {
+  const TrackingVolume* tVolume = nullptr;
+  const Experimental::DetectorVolume* dVolume = nullptr;
+
+  // @brief Default constructor
+  InteractionVolume() = default;
+
+  /// @brief Constructor from tracking volume
+  /// @param tVolume the current tracking volume
+  InteractionVolume(const TrackingVolume* tVolume) : tVolume(tVolume) {}
+
+  /// @brief Constructor from detector volume
+  /// @param dVolume the current detector volume
+  InteractionVolume(const Experimental::DetectorVolume* dVolume)
+      : dVolume(dVolume) {}
+
+  /// @brief Broadcast whether the struct is empty
+  bool empty() const { return tVolume == nullptr and dVolume == nullptr; }
+
+  /// @brief Broadcast the geometry identifier
+  GeometryIdentifier geometryId() const {
+    return tVolume == nullptr ? tVolume->geometryId() : dVolume->geometryId();
+  }
+};
 
 /// @brief The Material interaction struct
-/// It records the surface  and the passed material
+///
+/// It records the surface and the passed material
 /// This is only necessary recorded when configured
 struct MaterialInteraction {
   /// The particle position at the interaction.
@@ -42,7 +71,7 @@ struct MaterialInteraction {
   /// The surface where the interaction occurred.
   const Surface* surface = nullptr;
   /// The volume where the interaction occurred.
-  const TrackingVolume* volume = nullptr;
+  InteractionVolume volume{};
   /// Update the volume step to implement the proper step size
   bool updatedVolumeStep = false;
   /// The path correction factor due to non-zero incidence on the surface.
