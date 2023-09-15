@@ -519,8 +519,8 @@ class Gx2Fitter {
 
       r.fittedStates = &trackContainer.trackStateContainer();
       // propagate with params and return jacobians and residuals
-      auto result = m_propagator.template propagate(params, propagatorOptions,
-                                                    std::move(inputResult));
+      auto result = m_propagator.template propagate(
+          params, propagatorOptions, true, std::move(inputResult));
 
       // TODO Improve Propagator + Actor [allocate before loop], rewrite
       // makeMeasurements
