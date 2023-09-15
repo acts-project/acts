@@ -25,13 +25,17 @@ class Surface;
 
 namespace detail {
 
-/// @brief the step information for
+/// @brief The step information for recording
+///
+/// The surface object could be a temporarily created object
+/// and as the Step vector is collected and written out at a
+/// later stage, the surface is referenced counted here.
 struct Step {
   ConstrainedStep stepSize;
   Direction navDir;
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
-  const Surface* surface = nullptr;
+  std::shared_ptr<const Surface> surface = nullptr;
   GeometryIdentifier geoID = 0;
 };
 
@@ -77,7 +81,7 @@ struct SteppingLogger {
 
     // Record the information about the surface
     if (navigator.currentSurface(state.navigation) != nullptr) {
-      step.surface = navigator.currentSurface(state.navigation);
+      step.surface = navigator.currentSurface(state.navigation)->getSharedPtr();
       step.geoID = step.surface->geometryId();
     } else if (navigator.currentVolume(state.navigation) != nullptr) {
       // If there's no surface but a volume, this sets the geoID
