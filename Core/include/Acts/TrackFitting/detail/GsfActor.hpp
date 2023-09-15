@@ -70,14 +70,11 @@ struct GsfActor {
   GsfActor() = default;
 
   /// Stores parameters of a gaussian component
-  struct ParameterCache {
+  struct ComponentCache {
     ActsScalar weight = 0;
     BoundVector boundPars = BoundVector::Zero();
     BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
   };
-
-  /// Broadcast Cache Type
-  using ComponentCache = std::tuple<ParameterCache>;
 
   /// Broadcast the result_type
   using result_type = GsfResult<traj_t, ComponentCache>;
@@ -419,8 +416,7 @@ struct GsfActor {
              "new cov not finite");
 
       // Set the remaining things and push to vector
-      componentCaches.push_back(
-          {ParameterCache{new_weight, new_pars, new_cov}});
+      componentCaches.push_back({new_weight, new_pars, new_cov});
     }
   }
 
@@ -431,7 +427,7 @@ struct GsfActor {
     const auto final_cmp_number = std::min(
         static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
 
-    auto proj = [](auto& a) -> decltype(auto) { return std::get<0>(a); };
+    auto proj = [](auto& a) -> decltype(auto) { return a; };
 
     // We must differ between surface types, since there can be different
     // local coordinates
@@ -445,7 +441,7 @@ struct GsfActor {
   /// TODO This function does not expect normalized components, but this
   /// could be redundant work...
   void removeLowWeightComponents(std::vector<ComponentCache>& cmps) const {
-    auto proj = [](auto& cmp) -> double& { return std::get<0>(cmp).weight; };
+    auto proj = [](auto& cmp) -> double& { return cmp.weight; };
 
     detail::normalizeWeights(cmps, proj);
 
@@ -458,7 +454,7 @@ struct GsfActor {
       cmps = {*std::max_element(
           cmps.begin(), cmps.end(),
           [&](auto& a, auto& b) { return proj(a) < proj(b); })};
-      std::get<0>(cmps.front()).weight = 1.0;
+      cmps.front().weight = 1.0;
     } else {
       cmps.erase(new_end, cmps.end());
       detail::normalizeWeights(cmps, proj);
@@ -507,9 +503,7 @@ struct GsfActor {
     stepper.clearComponents(state.stepping);
 
     // Finally loop over components
-    for (const auto& [pcache] : componentCache) {
-      const auto& [weight, pars, cov] = pcache;
-
+    for (const auto& [weight, pars, cov] : componentCache) {
       // Add the component to the stepper
       BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
 
