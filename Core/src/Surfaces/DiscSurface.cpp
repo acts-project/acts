@@ -58,10 +58,10 @@ Acts::DiscSurface::DiscSurface(const Transform3& transform,
                                std::shared_ptr<const DiscBounds> dbounds)
     : GeometryObject(), Surface(transform), m_bounds(std::move(dbounds)) {}
 
-Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
+Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
                                const DetectorElementBase& detelement)
-    : GeometryObject(), Surface(detelement), m_bounds(dbounds) {
-  throw_assert(dbounds, "nullptr as DiscBounds");
+    : GeometryObject(), Surface(detelement), m_bounds(std::move(dbounds)) {
+  throw_assert(m_bounds, "nullptr as DiscBounds");
 }
 
 Acts::DiscSurface& Acts::DiscSurface::operator=(const DiscSurface& other) {
