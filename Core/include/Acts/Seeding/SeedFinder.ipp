@@ -203,8 +203,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-    const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
-    const float& uIP2, const float& cosPhiM, const float& sinPhiM) const {
+    const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
+    const float uIP2, const float cosPhiM, const float sinPhiM) const {
   float impactMax = m_config.impactMax;
   if constexpr (candidateType == Acts::SpacePointCandidateType::eBottom) {
     impactMax = -impactMax;
@@ -222,12 +222,12 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   linCircleVec.reserve(nsp);
   outVec.reserve(nsp);
 
-  const float& rM = mediumSP.radius();
-  const float& xM = mediumSP.x();
-  const float& yM = mediumSP.y();
-  const float& zM = mediumSP.z();
-  const float& varianceRM = mediumSP.varianceR();
-  const float& varianceZM = mediumSP.varianceZ();
+  const float rM = mediumSP.radius();
+  const float xM = mediumSP.x();
+  const float yM = mediumSP.y();
+  const float zM = mediumSP.z();
+  const float varianceRM = mediumSP.varianceR();
+  const float varianceZM = mediumSP.varianceZ();
 
   float vIPAbs = 0;
   if (m_config.interactionPointCut) {
@@ -464,13 +464,13 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   if constexpr (detailedMeasurement ==
                 Acts::DetectorMeasurementInfo::eDefault) {
     std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
-              [&state](const std::size_t& a, const std::size_t& b) -> bool {
+              [&state](const std::size_t a, const std::size_t b) -> bool {
                 return state.linCircleBottom[a].cotTheta <
                        state.linCircleBottom[b].cotTheta;
               });
 
     std::sort(sorted_tops.begin(), sorted_tops.end(),
-              [&state](const std::size_t& a, const std::size_t& b) -> bool {
+              [&state](const std::size_t a, const std::size_t b) -> bool {
                 return state.linCircleTop[a].cotTheta <
                        state.linCircleTop[b].cotTheta;
               });
@@ -486,7 +486,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   // clear previous results and then loop on bottoms and tops
   state.candidates_collector.clear();
 
-  for (const std::size_t& b : sorted_bottoms) {
+  for (const std::size_t b : sorted_bottoms) {
     // break if we reached the last top SP
     if (t0 == numTopSP) {
       break;
@@ -543,7 +543,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     }
 
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
-      const std::size_t& t = sorted_tops[index_t];
+      const std::size_t t = sorted_tops[index_t];
 
       auto lt = state.linCircleTop[t];
 

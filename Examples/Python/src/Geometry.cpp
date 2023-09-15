@@ -12,13 +12,17 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
+#include "Acts/Detector/KdtSurfacesProvider.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
 #include "Acts/Detector/interface/IDetectorBuilder.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -28,6 +32,8 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
+#include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 
 #include <array>
 #include <memory>
@@ -149,6 +155,24 @@ void addGeometry(Context& ctx) {
           return hook;
         }));
   }
+
+  {
+    py::class_<Acts::Extent>(m, "Extent")
+        .def(py::init(
+            [](const std::vector<std::tuple<Acts::BinningValue,
+                                            std::array<Acts::ActsScalar, 2u>>>&
+                   franges) {
+              Acts::Extent extent;
+              for (const auto& [bval, frange] : franges) {
+                extent.set(bval, frange[0], frange[1]);
+              }
+              return extent;
+            }))
+        .def("range", [](const Acts::Extent& self, Acts::BinningValue bval) {
+          return std::array<Acts::ActsScalar, 2u>{self.min(bval),
+                                                  self.max(bval)};
+        });
+  }
 }
 
 void addExperimentalGeometry(Context& ctx) {
@@ -243,6 +267,39 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
+    using Range2D = Acts::RangeXD<2u, Acts::ActsScalar>;
+    using KdtSurfaces2D = Acts::Experimental::KdtSurfaces<2u, 100u>;
+    using KdtSurfacesProvider2D =
+        Acts::Experimental::KdtSurfacesProvider<2u, 100u>;
+
+    py::class_<Range2D>(m, "Range2D")
+        .def(py::init([](const std::array<Acts::ActsScalar, 2u>& range0,
+                         const std::array<Acts::ActsScalar, 2u>& range1) {
+          Range2D range;
+          range[0].shrink(range0[0], range0[1]);
+          range[1].shrink(range1[0], range1[1]);
+          return range;
+        }));
+
+    py::class_<KdtSurfaces2D, std::shared_ptr<KdtSurfaces2D>>(m,
+                                                              "KdtSurfaces2D")
+        .def(py::init<const GeometryContext&,
+                      const std::vector<std::shared_ptr<Acts::Surface>>&,
+                      const std::array<Acts::BinningValue, 2u>&>())
+        .def("surfaces", [](KdtSurfaces2D& self, const Range2D& range) {
+          return self.surfaces(range);
+        });
+
+    py::class_<KdtSurfacesProvider2D, Acts::Experimental::ISurfacesProvider,
+               std::shared_ptr<KdtSurfacesProvider2D>>(m,
+                                                       "KdtSurfacesProvider2D")
+        .def(py::init(
+            [](std::shared_ptr<KdtSurfaces2D> kdt, const Extent& extent) {
+              return std::make_shared<KdtSurfacesProvider2D>(kdt, extent);
+            }));
+  }
+
+  {
     // The external volume structure builder
     py::class_<Acts::Experimental::IExternalStructureBuilder,
                std::shared_ptr<Acts::Experimental::IExternalStructureBuilder>>(
@@ -304,6 +361,21 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
+    // The external volume structure builder
+    py::class_<Acts::Experimental::IRootVolumeFinderBuilder,
+               std::shared_ptr<Acts::Experimental::IRootVolumeFinderBuilder>>(
+        m, "IRootVolumeFinderBuilder");
+
+    auto irvBuilder =
+        py::class_<Acts::Experimental::IndexedRootVolumeFinderBuilder,
+                   Acts::Experimental::IRootVolumeFinderBuilder,
+                   std::shared_ptr<
+                       Acts::Experimental::IndexedRootVolumeFinderBuilder>>(
+            m, "IndexedRootVolumeFinderBuilder")
+            .def(py::init<std::vector<Acts::BinningValue>>());
+  }
+
+  {
     // Cylindrical container builder
     auto ccBuilder =
         py::class_<CylindricalContainerBuilder,
@@ -325,6 +397,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CylindricalContainerBuilder::Config);
     ACTS_PYTHON_MEMBER(builders);
     ACTS_PYTHON_MEMBER(binning);
+    ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -351,6 +424,10 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VolumeAssociationTest, mex,
+                                "VolumeAssociationTest", name, ntests,
+                                randomNumbers, randomRange, detector);
 }
 
 }  // namespace Acts::Python
