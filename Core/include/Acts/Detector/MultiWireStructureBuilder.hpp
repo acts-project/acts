@@ -19,9 +19,9 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
-#include <optional>
 
 namespace Acts {
 namespace Experimental {
@@ -45,7 +45,6 @@ class MultiWireStructureBuilder {
 
     // The binning of the multi wire structure
     std::vector<ProtoBinning> mlBinning = {};
-
 
     /// A tolerance config
     float toleranceOverlap = 10.;
