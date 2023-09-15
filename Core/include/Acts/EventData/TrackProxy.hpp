@@ -389,16 +389,16 @@ class TrackProxy {
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Const version
   /// @return Track state range to iterate over
-  auto trackStates() const {
-    return m_container->trackStateRange(m_index);
+  auto trackStatesReversed() const {
+    return m_container->reverseTrackStateRange(m_index);
   }
 
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Mutable version
   /// @return Track state range to iterate over
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto trackStates() {
-    return m_container->trackStateRange(m_index);
+  auto trackStatesReversed() {
+    return m_container->reverseTrackStateRange(m_index);
   }
 
   /// Append a track state to this track. This will modify the tip index to
@@ -426,7 +426,7 @@ class TrackProxy {
       // no tip index -> no track states
       return 0;
     }
-    auto tsRange = trackStates();
+    auto tsRange = trackStatesReversed();
     return std::distance(tsRange.begin(), tsRange.end());
   }
 
@@ -540,7 +540,7 @@ class TrackProxy {
 
     if (copyTrackStates) {
       // append track states (cheap), but they're in the wrong order
-      for (const auto& srcTrackState : other.trackStates()) {
+      for (const auto& srcTrackState : other.trackStatesReversed()) {
         auto destTrackState = appendTrackState(srcTrackState.getMask());
         if (srcTrackState.hasCalibrated()) {
           destTrackState.allocateCalibrated(srcTrackState.calibratedSize());
