@@ -13,6 +13,7 @@
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -20,6 +21,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <optional>
 
 namespace Acts {
 namespace Experimental {
@@ -35,11 +37,15 @@ class MultiWireStructureBuilder {
     /// The surfaces of the Multi Wire
     std::vector<std::shared_ptr<Acts::Surface>> mlSurfaces = {};
 
+    /// The transform of the Multi Wire
+    Transform3 transform = Transform3::Identity();
+
     /// The bounds of the multi-wire volume
     std::vector<ActsScalar> mlBounds = {};
 
     // The binning of the multi wire structure
     std::vector<ProtoBinning> mlBinning = {};
+
 
     /// A tolerance config
     float toleranceOverlap = 10.;
