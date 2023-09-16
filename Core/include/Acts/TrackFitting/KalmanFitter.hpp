@@ -1097,8 +1097,8 @@ class KalmanFitter {
     r.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    auto result = m_propagator.template propagate(sParameters, kalmanOptions,
-                                                  std::move(inputResult));
+    auto result = m_propagator.template propagate(
+        sParameters, kalmanOptions, false, std::move(inputResult));
 
     if (!result.ok()) {
       ACTS_ERROR("Propapation failed: " << result.error());
@@ -1236,8 +1236,8 @@ class KalmanFitter {
     r.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
-    auto result = m_propagator.template propagate(sParameters, kalmanOptions,
-                                                  std::move(inputResult));
+    auto result = m_propagator.template propagate(
+        sParameters, kalmanOptions, false, std::move(inputResult));
 
     if (!result.ok()) {
       ACTS_ERROR("Propapation failed: " << result.error());

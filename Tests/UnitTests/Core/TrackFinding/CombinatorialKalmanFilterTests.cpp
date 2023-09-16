@@ -339,7 +339,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    for (const auto trackState : track.trackStates()) {
+    for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
           trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
@@ -395,7 +395,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    for (const auto trackState : track.trackStates()) {
+    for (const auto trackState : track.trackStatesReversed()) {
       numHits += 1u;
       auto sl =
           trackState.getUncalibratedSourceLink().template get<TestSourceLink>();

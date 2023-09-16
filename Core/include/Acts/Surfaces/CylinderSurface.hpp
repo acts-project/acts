@@ -46,13 +46,6 @@ class CylinderSurface : public Surface {
 #endif
 
  protected:
-  /// Constructor from DetectorElementBase: Element proxy
-  ///
-  /// @param cbounds are the provided cylinder bounds (shared)
-  /// @param detelement is the linked detector element to this surface
-  CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                  const DetectorElementBase& detelement);
-
   /// Constructor from Transform3 and CylinderBounds
   ///
   /// @param transform The transform to position the surface
@@ -72,7 +65,14 @@ class CylinderSurface : public Surface {
   /// @param cbounds is a shared pointer to a cylindeer bounds object,
   /// it must exist (assert test)
   CylinderSurface(const Transform3& transform,
-                  const std::shared_ptr<const CylinderBounds>& cbounds);
+                  std::shared_ptr<const CylinderBounds> cbounds);
+
+  /// Constructor from DetectorElementBase: Element proxy
+  ///
+  /// @param cbounds are the provided cylinder bounds (shared)
+  /// @param detelement is the linked detector element to this surface
+  CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
+                  const DetectorElementBase& detelement);
 
   /// Copy constructor
   ///

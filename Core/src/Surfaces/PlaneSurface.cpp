@@ -56,12 +56,11 @@ Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
   m_transform.pretranslate(center);
 }
 
-Acts::PlaneSurface::PlaneSurface(
-    const std::shared_ptr<const PlanarBounds>& pbounds,
-    const Acts::DetectorElementBase& detelement)
-    : Surface(detelement), m_bounds(pbounds) {
+Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
+                                 const Acts::DetectorElementBase& detelement)
+    : Surface(detelement), m_bounds(std::move(pbounds)) {
   /// surfaces representing a detector element must have bounds
-  throw_assert(pbounds, "PlaneBounds must not be nullptr");
+  throw_assert(m_bounds, "PlaneBounds must not be nullptr");
 }
 
 Acts::PlaneSurface::PlaneSurface(const Transform3& transform,
