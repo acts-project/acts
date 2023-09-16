@@ -257,7 +257,7 @@ struct FitterTester {
     // count the number of `smoothed` states
     if (expected_reversed && expected_smoothed) {
       size_t nSmoothed = 0;
-      for (const auto ts : track.trackStates()) {
+      for (const auto ts : track.trackStatesReversed()) {
         nSmoothed += ts.hasSmoothed();
       }
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
@@ -312,7 +312,7 @@ struct FitterTester {
     // count the number of `smoothed` states
     if (expected_reversed && expected_smoothed) {
       size_t nSmoothed = 0;
-      for (const auto ts : track.trackStates()) {
+      for (const auto ts : track.trackStatesReversed()) {
         nSmoothed += ts.hasSmoothed();
       }
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
@@ -512,7 +512,7 @@ struct FitterTester {
       BOOST_CHECK_NE(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
       // count the number of outliers
       size_t nOutliers = 0;
-      for (const auto state : track.trackStates()) {
+      for (const auto state : track.trackStatesReversed()) {
         nOutliers += state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
       }
       BOOST_CHECK_EQUAL(nOutliers, 1u);

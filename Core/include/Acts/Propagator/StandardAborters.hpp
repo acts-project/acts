@@ -198,11 +198,9 @@ struct EndOfWorldReached {
   bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
-    if (navigator.currentVolume(state.navigation) != nullptr) {
-      return false;
-    }
-    navigator.targetReached(state.navigation, true);
-    return true;
+    bool endOfWorld = navigator.endOfWorldReached(state.navigation);
+    navigator.targetReached(state.navigation, endOfWorld);
+    return endOfWorld;
   }
 };
 

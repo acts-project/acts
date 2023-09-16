@@ -341,6 +341,7 @@ class Propagator final {
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
+  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
@@ -350,8 +351,8 @@ class Propagator final {
   Result<
       action_list_t_result_t<CurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>
-  propagate(const parameters_t& start,
-            const propagator_options_t& options) const;
+  propagate(const parameters_t& start, const propagator_options_t& options,
+            bool makeCurvilinear = true) const;
 
   /// @brief Propagate track parameters
   ///
@@ -366,6 +367,7 @@ class Propagator final {
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
+  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
   /// @param [in] inputResult an existing result object to start from
   ///
   /// @return Propagation result containing the propagation status, final
@@ -378,6 +380,7 @@ class Propagator final {
                              typename propagator_options_t::action_list_type>>
   propagate(
       const parameters_t& start, const propagator_options_t& options,
+      bool makeCurvilinear,
       action_list_t_result_t<CurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>&&
           inputResult) const;

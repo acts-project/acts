@@ -43,7 +43,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::pop(
 
 template <typename external_space_point_t>
 inline bool CandidatesForMiddleSp<external_space_point_t>::exists(
-    const std::size_t& n, const std::size_t& max_size) const {
+    const std::size_t n, const std::size_t max_size) const {
   // If the element exists, its index is lower than the current number
   // of stored elements
   return n < max_size;
@@ -84,7 +84,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
 
 template <typename external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::push(
-    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t& n_max,
+    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t n_max,
     external_space_point_t& SpB, external_space_point_t& SpM,
     external_space_point_t& SpT, float weight, float zOrigin, bool isQuality) {
   // If we do not want to store candidates, returns
@@ -115,7 +115,7 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
-    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t& n_max,
+    std::vector<std::size_t>& indices, std::size_t& n, const std::size_t n_max,
     value_type&& element) {
   // adds elements to the end of the collection
   if (indices.size() == n_max) {

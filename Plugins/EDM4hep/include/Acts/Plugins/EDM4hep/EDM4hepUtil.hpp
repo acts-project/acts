@@ -96,7 +96,7 @@ void writeTrack(
 
   ACTS_VERBOSE("Converting " << track.nTrackStates() << " track states");
 
-  for (const auto& state : track.trackStates()) {
+  for (const auto& state : track.trackStatesReversed()) {
     auto typeFlags = state.typeFlags();
     if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       continue;
