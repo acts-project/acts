@@ -286,14 +286,14 @@ class TrackContainer {
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto trackStateRange(IndexType itrack) {
+  auto reverseTrackStateRange(IndexType itrack) {
     auto tip = component<IndexType, hashString("tipIndex")>(itrack);
-    return m_traj->trackStateRange(tip);
+    return m_traj->reverseTrackStateRange(tip);
   }
 
-  auto trackStateRange(IndexType itrack) const {
+  auto reverseTrackStateRange(IndexType itrack) const {
     auto tip = component<IndexType, hashString("tipIndex")>(itrack);
-    return m_traj->trackStateRange(tip);
+    return m_traj->reverseTrackStateRange(tip);
   }
 
  private:

@@ -311,7 +311,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   t.tipIndex() = ts5.index();
 
   std::vector<IndexType> act;
-  for (const auto& ts : t.trackStates()) {
+  for (const auto& ts : t.trackStatesReversed()) {
     act.push_back(ts.index());
   }
 
@@ -322,7 +322,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   const auto& ct = t;
 
-  for (const auto& ts : ct.trackStates()) {
+  for (const auto& ts : ct.trackStatesReversed()) {
     (void)ts;
   }
 
@@ -331,11 +331,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   auto tNone = tc.getTrack(tc.addTrack());
   BOOST_CHECK_EQUAL(tNone.nTrackStates(), 0);
 
-  auto tsRange = tNone.trackStates();
+  auto tsRange = tNone.trackStatesReversed();
   BOOST_CHECK(tsRange.begin() == tsRange.end());
 
   size_t i = 0;
-  for (const auto& state : tNone.trackStates()) {
+  for (const auto& state : tNone.trackStatesReversed()) {
     (void)state;
     i++;
   }
@@ -552,7 +552,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
   exp.resize(t.nTrackStates());
   std::iota(exp.rbegin(), exp.rend(), 0);
   std::vector<IndexType> act;
-  std::transform(t.trackStates().begin(), t.trackStates().end(),
+  std::transform(t.trackStatesReversed().begin(), t.trackStatesReversed().end(),
                  std::back_inserter(act),
                  [](const auto& ts) { return ts.index(); });
 
@@ -563,7 +563,7 @@ BOOST_AUTO_TEST_CASE(ReverseTrackStates) {
 
   std::iota(exp.begin(), exp.end(), 0);
   act.clear();
-  std::transform(t.trackStates().begin(), t.trackStates().end(),
+  std::transform(t.trackStatesReversed().begin(), t.trackStatesReversed().end(),
                  std::back_inserter(act),
                  [](const auto& ts) { return ts.index(); });
   BOOST_CHECK_EQUAL_COLLECTIONS(exp.begin(), exp.end(), act.begin(), act.end());
