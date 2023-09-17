@@ -1132,7 +1132,7 @@ class MultiTrajectory {
   /// @param iendpoint Trajectory entry point to start from
   /// @return Iterator pair to iterate over
   /// @note Const version
-  auto trackStateRange(IndexType iendpoint) const {
+  auto reverseTrackStateRange(IndexType iendpoint) const {
     using range_t =
         decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
     if (iendpoint == kInvalid) {
@@ -1147,7 +1147,7 @@ class MultiTrajectory {
   /// @return Iterator pair to iterate over
   /// @note Mutable version
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto trackStateRange(IndexType iendpoint) {
+  auto reverseTrackStateRange(IndexType iendpoint) {
     using range_t =
         decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
     if (iendpoint == kInvalid) {
