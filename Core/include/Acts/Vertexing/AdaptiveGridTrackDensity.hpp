@@ -37,7 +37,7 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
-  using Bins = int;//std::pair<int, int>;
+  using Bins = int;  // std::pair<int, int>;
   using DensityMap = std::unordered_map<Bins, float>;
 
   /// The configuration struct
@@ -49,7 +49,7 @@ class AdaptiveGridTrackDensity {
     float spatialBinSize;  // mm
 
     // Time extent of a bin
-    //float timeBinSize;
+    // float timeBinSize;
 
     // Do NOT use just the z-bin with the highest
     // track density, but instead check the (up to)

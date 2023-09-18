@@ -11,12 +11,14 @@
 #include <algorithm>
 
 template <int trkGridSize>
-float Acts::AdaptiveGridTrackDensity<trkGridSize>::getBinCenter(int bin, float binSize) const {
+float Acts::AdaptiveGridTrackDensity<trkGridSize>::getBinCenter(
+    int bin, float binSize) const {
   return bin * binSize;
 }
 
 template <int trkGridSize>
-int Acts::AdaptiveGridTrackDensity<trkGridSize>::getBin(float value, float binSize) const {
+int Acts::AdaptiveGridTrackDensity<trkGridSize>::getBin(float value,
+                                                        float binSize) const {
   return static_cast<int>(std::floor(value / binSize - 0.5) + 1);
 }
 
@@ -79,8 +81,8 @@ typename Acts::AdaptiveGridTrackDensity<trkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, DensityMap& mainDensityMap) const {
   SquareMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
-  float d0 = trk.parameters()[0];
-  float z0 = trk.parameters()[1];
+  float d0 = trk.parameters()[eBoundLoc0];
+  float z0 = trk.parameters()[eBoundLoc1];
 
   // Calculate bin in d direction
   int centralDBin = getBin(d0, m_cfg.spatialBinSize);
