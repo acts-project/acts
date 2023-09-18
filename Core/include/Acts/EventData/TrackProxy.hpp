@@ -372,7 +372,7 @@ class TrackProxy {
   }
 
   /// Set a new particle hypothesis for this track
-  /// @param particleHypothesis The particel hypothesis to set
+  /// @param particleHypothesis The particle hypothesis to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setParticleHypothesis(const ParticleHypothesis& particleHypothesis) {
     m_container->container().setParticleHypothesis_impl(m_index,
