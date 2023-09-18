@@ -126,11 +126,13 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::createTrackGrid(
 
   int halfTrkGridSize = (trkGridSize - 1) / 2;
   int firstZBin = centralZBin - halfTrkGridSize;
-  // Loop over columns
+  // Loop over bins
   for (int j = 0; j < trkGridSize; j++) {
     int zBin = firstZBin + j;
     float z = getBinCenter(zBin, m_cfg.spatialBinSize);
-    trackDensityMap[zBin] = normal2D(-d0, z - z0, cov);
+    // Transverse and logitudinal coordinate of the bin wrt the track center
+    Acts::Vector2 binCoords(-d0, z - z0);
+    trackDensityMap[zBin] = multivariateGaussian<2>(binCoords, cov);
   }
   return trackDensityMap;
 }
@@ -203,13 +205,12 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::estimateSeedWidth(
 }
 
 template <int trkGridSize>
-float Acts::AdaptiveGridTrackDensity<trkGridSize>::normal2D(
-    float d, float z, const Acts::SquareMatrix2& cov) const {
-  float det = cov.determinant();
-  float coef = 1 / std::sqrt(det);
-  float expo =
-      -1 / (2 * det) *
-      (cov(1, 1) * d * d - (cov(0, 1) + cov(1, 0)) * d * z + cov(0, 0) * z * z);
+template <unsigned int nDim>
+float Acts::AdaptiveGridTrackDensity<trkGridSize>::multivariateGaussian(
+    const Acts::ActsVector<nDim>& args,
+    const Acts::ActsSquareMatrix<nDim>& cov) const {
+  float coef = 1 / std::sqrt(cov.determinant());
+  float expo = -0.5 * args.transpose().dot(cov.inverse() * args);
   return coef * safeExp(expo);
 }
 

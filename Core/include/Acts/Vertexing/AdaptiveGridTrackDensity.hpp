@@ -143,9 +143,16 @@ class AdaptiveGridTrackDensity {
   Result<float> estimateSeedWidth(const DensityMap& densityMap,
                                   float maxZ) const;
 
-  /// @brief Helper to retrieve values according to a 2-dim normal distribution
-  /// @note This function is defined in coordinate system centered around d0 and z0
-  float normal2D(float d, float z, const SquareMatrix2& cov) const;
+  /// @brief Helper to retrieve values according of a nDim-dimensional normal distribution
+  /// @note The constant prefactor (2 * pi)^(- nDim / 2) is discarded
+  ///
+  /// @param args Coordinates of a bin with respect to the track center
+  /// @param cov Track covariance
+  ///
+  /// @return A value
+  template <unsigned int nDim>
+  float multivariateGaussian(const Acts::ActsVector<nDim>& args,
+                             const Acts::ActsSquareMatrix<nDim>& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
   /// a maximum relative deviation of 'relativeDensityDev' from the main
