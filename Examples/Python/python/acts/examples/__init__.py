@@ -374,8 +374,11 @@ class Sequencer(ActsPythonBindings._examples._Sequencer):
                 raise ValueError(f"Sequencer.Config does not have field {k}")
             if isinstance(v, Path):
                 v = str(v)
-
-            setattr(cfg, k, v)
+            try:
+                setattr(cfg, k, v)
+            except Exception as e:
+                raise ValueError(f"Could not set {k}={v}") from e
+                
 
         super().__init__(cfg)
 
