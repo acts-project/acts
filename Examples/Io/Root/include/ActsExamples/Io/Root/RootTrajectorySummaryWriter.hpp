@@ -67,6 +67,7 @@ class RootTrajectorySummaryWriter final
     std::string treeName = "tracksummary";
     /// File access mode.
     std::string fileMode = "RECREATE";
+    /// Switch for adding full covariance matrix to output file.
     bool writeCovMat = false;
   };
 

@@ -139,7 +139,7 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
     if (m_cfg.writeCovMat == true) {
       // create one branch for every entry of covariance matrix
-      // one block for every row of the matrix
+      // one block for every row of the matrix, every entry gets own branch
       m_outputTree->Branch("cov_eLOC0_eLOC0", &m_cov_eLOC0_eLOC0);
       m_outputTree->Branch("cov_eLOC0_eLOC1", &m_cov_eLOC0_eLOC1);
       m_outputTree->Branch("cov_eLOC0_ePHI", &m_cov_eLOC0_ePHI);
@@ -380,7 +380,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
       std::array<float, Acts::eBoundSize> error = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
-
+      // Initialize container for covariance matrix
+      // in case no matrix is available unit matrix is written to output
       TMatrixD CovMatrixTrack(Acts::eBoundSize, Acts::eBoundSize);
       CovMatrixTrack.UnitMatrix();
 
@@ -399,6 +400,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           const auto& covariance = *boundParam.covariance();
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
             error[i] = std::sqrt(covariance(i, i));
+            // fill container for covariance matrix.
             for (unsigned int j = 0; j < Acts::eBoundSize; j++) {
               CovMatrixTrack[i][j] = covariance(i, j);
             }
@@ -458,6 +460,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
       m_hasFittedParams.push_back(hasFittedParams);
       if (m_cfg.writeCovMat == true) {
+        // write all entries of covariance matrix to output file
+        // one branch for every entry of the matrix.
         m_cov_eLOC0_eLOC0.push_back(CovMatrixTrack[0][0]);
         m_cov_eLOC0_eLOC1.push_back(CovMatrixTrack[0][1]);
         m_cov_eLOC0_ePHI.push_back(CovMatrixTrack[0][2]);
