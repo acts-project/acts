@@ -363,14 +363,6 @@ class TrackProxy {
     return component<ParticleHypothesis, hashString("particleHypothesis")>();
   }
 
-  /// Get the particle hypothesis
-  /// Mutable version
-  /// @return the particle hypothesis
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  ParticleHypothesis& particleHypothesis() {
-    return component<ParticleHypothesis, hashString("particleHypothesis")>();
-  }
-
   /// Set a new particle hypothesis for this track
   /// @param particleHypothesis The particle hypothesis to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
