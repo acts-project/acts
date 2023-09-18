@@ -24,8 +24,6 @@
 
 #include <TMatrixD.h>
 
-#include "vectorMatrix_dict.cxx"
-
 class TFile;
 class TTree;
 namespace ActsFatras {
@@ -69,6 +67,7 @@ class RootTrajectorySummaryWriter final
     std::string treeName = "tracksummary";
     /// File access mode.
     std::string fileMode = "RECREATE";
+    bool writeCovMat = false;
   };
 
   /// Constructor
@@ -188,7 +187,49 @@ class RootTrajectorySummaryWriter final
   std::vector<float> m_pull_eQOP_fit;  ///< Fitted parameters eQOP pull of track
   std::vector<float> m_pull_eT_fit;    ///< Fitted parameters eT pull of track
 
-  std::vector<TMatrixD> m_CovMat;  // full covariance matrix of track
+  // entries of the full covariance matrix. One block for every row of the
+  // matrix
+  std::vector<float> m_cov_eLOC0_eLOC0;
+  std::vector<float> m_cov_eLOC0_eLOC1;
+  std::vector<float> m_cov_eLOC0_ePHI;
+  std::vector<float> m_cov_eLOC0_eTHETA;
+  std::vector<float> m_cov_eLOC0_eQOP;
+  std::vector<float> m_cov_eLOC0_eT;
+
+  std::vector<float> m_cov_eLOC1_eLOC0;
+  std::vector<float> m_cov_eLOC1_eLOC1;
+  std::vector<float> m_cov_eLOC1_ePHI;
+  std::vector<float> m_cov_eLOC1_eTHETA;
+  std::vector<float> m_cov_eLOC1_eQOP;
+  std::vector<float> m_cov_eLOC1_eT;
+
+  std::vector<float> m_cov_ePHI_eLOC0;
+  std::vector<float> m_cov_ePHI_eLOC1;
+  std::vector<float> m_cov_ePHI_ePHI;
+  std::vector<float> m_cov_ePHI_eTHETA;
+  std::vector<float> m_cov_ePHI_eQOP;
+  std::vector<float> m_cov_ePHI_eT;
+
+  std::vector<float> m_cov_eTHETA_eLOC0;
+  std::vector<float> m_cov_eTHETA_eLOC1;
+  std::vector<float> m_cov_eTHETA_ePHI;
+  std::vector<float> m_cov_eTHETA_eTHETA;
+  std::vector<float> m_cov_eTHETA_eQOP;
+  std::vector<float> m_cov_eTHETA_eT;
+
+  std::vector<float> m_cov_eQOP_eLOC0;
+  std::vector<float> m_cov_eQOP_eLOC1;
+  std::vector<float> m_cov_eQOP_ePHI;
+  std::vector<float> m_cov_eQOP_eTHETA;
+  std::vector<float> m_cov_eQOP_eQOP;
+  std::vector<float> m_cov_eQOP_eT;
+
+  std::vector<float> m_cov_eT_eLOC0;
+  std::vector<float> m_cov_eT_eLOC1;
+  std::vector<float> m_cov_eT_ePHI;
+  std::vector<float> m_cov_eT_eTHETA;
+  std::vector<float> m_cov_eT_eQOP;
+  std::vector<float> m_cov_eT_eT;
 };
 
 }  // namespace ActsExamples

@@ -137,7 +137,51 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
     m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
     m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
-    m_outputTree->Branch("CovMat", &m_CovMat);
+    if (m_cfg.writeCovMat == true) {
+      // create one branch for every entry of covariance matrix
+      // one block for every row of the matrix
+      m_outputTree->Branch("cov_eLOC0_eLOC0", &m_cov_eLOC0_eLOC0);
+      m_outputTree->Branch("cov_eLOC0_eLOC1", &m_cov_eLOC0_eLOC1);
+      m_outputTree->Branch("cov_eLOC0_ePHI", &m_cov_eLOC0_ePHI);
+      m_outputTree->Branch("cov_eLOC0_eTHETA", &m_cov_eLOC0_eTHETA);
+      m_outputTree->Branch("cov_eLOC0_eQOP", &m_cov_eLOC0_eQOP);
+      m_outputTree->Branch("cov_eLOC0_eT", &m_cov_eLOC0_eT);
+
+      m_outputTree->Branch("cov_eLOC1_eLOC0", &m_cov_eLOC1_eLOC0);
+      m_outputTree->Branch("cov_eLOC1_eLOC1", &m_cov_eLOC1_eLOC1);
+      m_outputTree->Branch("cov_eLOC1_ePHI", &m_cov_eLOC1_ePHI);
+      m_outputTree->Branch("cov_eLOC1_eTHETA", &m_cov_eLOC1_eTHETA);
+      m_outputTree->Branch("cov_eLOC1_eQOP", &m_cov_eLOC1_eQOP);
+      m_outputTree->Branch("cov_eLOC1_eT", &m_cov_eLOC1_eT);
+
+      m_outputTree->Branch("cov_ePHI_eLOC0", &m_cov_ePHI_eLOC0);
+      m_outputTree->Branch("cov_ePHI_eLOC1", &m_cov_ePHI_eLOC1);
+      m_outputTree->Branch("cov_ePHI_ePHI", &m_cov_ePHI_ePHI);
+      m_outputTree->Branch("cov_ePHI_eTHETA", &m_cov_ePHI_eTHETA);
+      m_outputTree->Branch("cov_ePHI_eQOP", &m_cov_ePHI_eQOP);
+      m_outputTree->Branch("cov_ePHI_eT", &m_cov_ePHI_eT);
+
+      m_outputTree->Branch("cov_eTHETA_eLOC0", &m_cov_eTHETA_eLOC0);
+      m_outputTree->Branch("cov_eTHETA_eLOC1", &m_cov_eTHETA_eLOC1);
+      m_outputTree->Branch("cov_eTHETA_ePHI", &m_cov_eTHETA_ePHI);
+      m_outputTree->Branch("cov_eTHETA_eTHETA", &m_cov_eTHETA_eTHETA);
+      m_outputTree->Branch("cov_eTHETA_eQOP", &m_cov_eTHETA_eQOP);
+      m_outputTree->Branch("cov_eTHETA_eT", &m_cov_eTHETA_eT);
+
+      m_outputTree->Branch("cov_eQOP_eLOC0", &m_cov_eQOP_eLOC0);
+      m_outputTree->Branch("cov_eQOP_eLOC1", &m_cov_eQOP_eLOC1);
+      m_outputTree->Branch("cov_eQOP_ePHI", &m_cov_eQOP_ePHI);
+      m_outputTree->Branch("cov_eQOP_eTHETA", &m_cov_eQOP_eTHETA);
+      m_outputTree->Branch("cov_eQOP_eQOP", &m_cov_eQOP_eQOP);
+      m_outputTree->Branch("cov_eQOP_eT", &m_cov_eQOP_eT);
+
+      m_outputTree->Branch("cov_eT_eLOC0", &m_cov_eT_eLOC0);
+      m_outputTree->Branch("cov_eT_eLOC1", &m_cov_eT_eLOC1);
+      m_outputTree->Branch("cov_eT_ePHI", &m_cov_eT_ePHI);
+      m_outputTree->Branch("cov_eT_eTHETA", &m_cov_eT_eTHETA);
+      m_outputTree->Branch("cov_eT_eQOP", &m_cov_eT_eQOP);
+      m_outputTree->Branch("cov_eT_eT", &m_cov_eT_eT);
+    }
   }
 }
 
@@ -151,6 +195,7 @@ ActsExamples::RootTrajectorySummaryWriter::finalize() {
   m_outputTree->Write();
   m_outputFile->Close();
 
+  ACTS_INFO("Wrote full covariance matrix to tree");
   ACTS_INFO("Wrote parameters of trajectories to tree '"
             << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
 
@@ -412,7 +457,49 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       m_pull_eT_fit.push_back(pull[Acts::eBoundTime]);
 
       m_hasFittedParams.push_back(hasFittedParams);
-      m_CovMat.push_back(CovMatrixTrack);
+      if (m_cfg.writeCovMat == true) {
+        m_cov_eLOC0_eLOC0.push_back(CovMatrixTrack[0][0]);
+        m_cov_eLOC0_eLOC1.push_back(CovMatrixTrack[0][1]);
+        m_cov_eLOC0_ePHI.push_back(CovMatrixTrack[0][2]);
+        m_cov_eLOC0_eTHETA.push_back(CovMatrixTrack[0][3]);
+        m_cov_eLOC0_eQOP.push_back(CovMatrixTrack[0][4]);
+        m_cov_eLOC0_eT.push_back(CovMatrixTrack[0][5]);
+
+        m_cov_eLOC1_eLOC0.push_back(CovMatrixTrack[1][0]);
+        m_cov_eLOC1_eLOC1.push_back(CovMatrixTrack[1][1]);
+        m_cov_eLOC1_ePHI.push_back(CovMatrixTrack[1][2]);
+        m_cov_eLOC1_eTHETA.push_back(CovMatrixTrack[1][3]);
+        m_cov_eLOC1_eQOP.push_back(CovMatrixTrack[1][4]);
+        m_cov_eLOC1_eT.push_back(CovMatrixTrack[1][5]);
+
+        m_cov_ePHI_eLOC0.push_back(CovMatrixTrack[2][0]);
+        m_cov_ePHI_eLOC1.push_back(CovMatrixTrack[2][1]);
+        m_cov_ePHI_ePHI.push_back(CovMatrixTrack[2][2]);
+        m_cov_ePHI_eTHETA.push_back(CovMatrixTrack[2][3]);
+        m_cov_ePHI_eQOP.push_back(CovMatrixTrack[2][4]);
+        m_cov_ePHI_eT.push_back(CovMatrixTrack[2][5]);
+
+        m_cov_eTHETA_eLOC0.push_back(CovMatrixTrack[3][0]);
+        m_cov_eTHETA_eLOC1.push_back(CovMatrixTrack[3][1]);
+        m_cov_eTHETA_ePHI.push_back(CovMatrixTrack[3][2]);
+        m_cov_eTHETA_eTHETA.push_back(CovMatrixTrack[3][3]);
+        m_cov_eTHETA_eQOP.push_back(CovMatrixTrack[3][4]);
+        m_cov_eTHETA_eT.push_back(CovMatrixTrack[3][5]);
+
+        m_cov_eQOP_eLOC0.push_back(CovMatrixTrack[4][0]);
+        m_cov_eQOP_eLOC1.push_back(CovMatrixTrack[4][1]);
+        m_cov_eQOP_ePHI.push_back(CovMatrixTrack[4][2]);
+        m_cov_eQOP_eTHETA.push_back(CovMatrixTrack[4][3]);
+        m_cov_eQOP_eQOP.push_back(CovMatrixTrack[4][4]);
+        m_cov_eQOP_eT.push_back(CovMatrixTrack[4][5]);
+
+        m_cov_eT_eLOC0.push_back(CovMatrixTrack[5][0]);
+        m_cov_eT_eLOC1.push_back(CovMatrixTrack[5][1]);
+        m_cov_eT_ePHI.push_back(CovMatrixTrack[5][2]);
+        m_cov_eT_eTHETA.push_back(CovMatrixTrack[5][3]);
+        m_cov_eT_eQOP.push_back(CovMatrixTrack[5][4]);
+        m_cov_eT_eT.push_back(CovMatrixTrack[5][5]);
+      }
 
     }  // all subtrajectories
   }    // all trajectories
@@ -480,7 +567,49 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_pull_eQOP_fit.clear();
   m_pull_eT_fit.clear();
 
-  m_CovMat.clear();
+  if (m_cfg.writeCovMat == true) {
+    m_cov_eLOC0_eLOC0.clear();
+    m_cov_eLOC0_eLOC1.clear();
+    m_cov_eLOC0_ePHI.clear();
+    m_cov_eLOC0_eTHETA.clear();
+    m_cov_eLOC0_eQOP.clear();
+    m_cov_eLOC0_eT.clear();
+
+    m_cov_eLOC1_eLOC0.clear();
+    m_cov_eLOC1_eLOC1.clear();
+    m_cov_eLOC1_ePHI.clear();
+    m_cov_eLOC1_eTHETA.clear();
+    m_cov_eLOC1_eQOP.clear();
+    m_cov_eLOC1_eT.clear();
+
+    m_cov_ePHI_eLOC0.clear();
+    m_cov_ePHI_eLOC1.clear();
+    m_cov_ePHI_ePHI.clear();
+    m_cov_ePHI_eTHETA.clear();
+    m_cov_ePHI_eQOP.clear();
+    m_cov_ePHI_eT.clear();
+
+    m_cov_eTHETA_eLOC0.clear();
+    m_cov_eTHETA_eLOC1.clear();
+    m_cov_eTHETA_ePHI.clear();
+    m_cov_eTHETA_eTHETA.clear();
+    m_cov_eTHETA_eQOP.clear();
+    m_cov_eTHETA_eT.clear();
+
+    m_cov_eQOP_eLOC0.clear();
+    m_cov_eQOP_eLOC1.clear();
+    m_cov_eQOP_ePHI.clear();
+    m_cov_eQOP_eTHETA.clear();
+    m_cov_eQOP_eQOP.clear();
+    m_cov_eQOP_eT.clear();
+
+    m_cov_eT_eLOC0.clear();
+    m_cov_eT_eLOC1.clear();
+    m_cov_eT_ePHI.clear();
+    m_cov_eT_eTHETA.clear();
+    m_cov_eT_eQOP.clear();
+    m_cov_eT_eT.clear();
+  }
 
   return ProcessCode::SUCCESS;
 }
