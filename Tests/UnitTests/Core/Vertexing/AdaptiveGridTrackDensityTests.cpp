@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   using Vector2 = Eigen::Matrix<float, 2, 1>;
   using Matrix2 = Eigen::Matrix<float, 2, 2>;
   // Using a large track grid so we can choose a small bin size
-  const int trkGridSize = 4001;
+  const int spatialTrkGridSize = 4001;
   // Arbitrary (but small) bin size
   const float binSize = 3.1e-4;
   // Arbitrary impact parameters
@@ -61,11 +61,11 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
 
   BoundTrackParameters params1(perigeeSurface, paramVec, covMat);
 
-  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
-  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
 
   // Add track
   auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
@@ -120,13 +120,13 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
 
 BOOST_AUTO_TEST_CASE(check_seed_width_estimation) {
   // Dummy track grid size (not needed for this unit test)
-  const int trkGridSize = 1;
+  const int spatialTrkGridSize = 1;
   float binSize = 2.;
-  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
-  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
 
   // z-position of the maximum density
   float correctMaxZ = -2.;
@@ -155,12 +155,12 @@ BOOST_AUTO_TEST_CASE(check_seed_width_estimation) {
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
-  const int trkGridSize = 15;
+  const int spatialTrkGridSize = 15;
 
   double binSize = 0.1;  // mm
 
-  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
-  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Create some test tracks in such a way that some tracks
   //  e.g. overlap and that certain tracks need to be inserted
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   BoundTrackParameters params3(perigeeSurface, paramVec3, covMat);
 
   // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
 
   // Track is too far away from z axis and was not added
   auto trackDensityMap = grid.addTrack(params0, mainDensityMap);
@@ -194,28 +194,28 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
 
   // Track should have been entirely added to both grids
   trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  BOOST_CHECK_EQUAL(mainDensityMap.size(), spatialTrkGridSize);
 
   // Track should have been entirely added to both grids
   trackDensityMap = grid.addTrack(params2, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 2 * trkGridSize);
+  BOOST_CHECK_EQUAL(mainDensityMap.size(), 2 * spatialTrkGridSize);
 
   // Track 3 has overlap of 2 bins with track 1
   trackDensityMap = grid.addTrack(params3, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * trkGridSize - 2);
+  BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * spatialTrkGridSize - 2);
 
   // Add first track again, should *not* introduce new z entries
   trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * trkGridSize - 2);
+  BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * spatialTrkGridSize - 2);
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
-  const int trkGridSize = 29;
+  const int spatialTrkGridSize = 29;
 
   double binSize = 0.05;  // mm
 
-  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
-  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Create some test tracks
   Covariance covMat(Covariance::Identity() * 0.005);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
 
   auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
   auto res1 = grid.getMaxZPosition(mainDensityMap);
@@ -257,14 +257,14 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
-  const int trkGridSize = 29;
+  const int spatialTrkGridSize = 29;
 
   double binSize = 0.05;  // mm
 
-  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
   cfg.useHighestSumZPosition = true;
 
-  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+  AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Create some test tracks
   Covariance covMat(Covariance::Identity() * 0.005);
@@ -284,7 +284,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
 
   // Fill grid with track densities
   auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
@@ -316,12 +316,12 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
-  const int trkGridSize = 29;
+  const int spatialTrkGridSize = 29;
 
   double binSize = 0.05;  // mm
 
-  AdaptiveGridTrackDensity<trkGridSize>::Config cfg(binSize);
-  AdaptiveGridTrackDensity<trkGridSize> grid(cfg);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Create some test tracks
   Covariance covMat(Covariance::Identity());
@@ -343,13 +343,13 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
 
   // Empty map
-  AdaptiveGridTrackDensity<trkGridSize>::DensityMap mainDensityMap;
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
 
   // Add track 0
   auto trackDensityMap0 = grid.addTrack(params0, mainDensityMap);
   BOOST_CHECK(not mainDensityMap.empty());
-  // Grid size should match trkGridSize
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  // Grid size should match spatialTrkGridSize
+  BOOST_CHECK_EQUAL(mainDensityMap.size(), spatialTrkGridSize);
 
   // Calculate total density
   float densitySum0 = 0;
@@ -360,8 +360,8 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   // Add track 0 again
   trackDensityMap0 = grid.addTrack(params0, mainDensityMap);
   BOOST_CHECK(not mainDensityMap.empty());
-  // Grid size should still match trkGridSize
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  // Grid size should still match spatialTrkGridSize
+  BOOST_CHECK_EQUAL(mainDensityMap.size(), spatialTrkGridSize);
 
   // Calculate new total density
   float densitySum1 = 0;
@@ -382,14 +382,16 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
 
   // Density should be old one again
   BOOST_CHECK(densitySum0 == densitySum2);
-  // Grid size should still match trkGridSize (removal does not touch grid size)
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  // Grid size should still match spatialTrkGridSize (removal does not touch
+  // grid size)
+  BOOST_CHECK_EQUAL(mainDensityMap.size(), spatialTrkGridSize);
 
   // Add track 1, overlapping track 0
   auto trackDensityMap1 = grid.addTrack(params1, mainDensityMap);
 
   int nNonOverlappingBins = int(std::abs(z0Trk1 - z0Trk2) / binSize + 1);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize + nNonOverlappingBins);
+  BOOST_CHECK_EQUAL(mainDensityMap.size(),
+                    spatialTrkGridSize + nNonOverlappingBins);
 
   float densitySum3 = 0;
   for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
@@ -411,7 +413,8 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
   grid.subtractTrack(trackDensityMap1, mainDensityMap);
 
   // Size should not have changed
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize + nNonOverlappingBins);
+  BOOST_CHECK_EQUAL(mainDensityMap.size(),
+                    spatialTrkGridSize + nNonOverlappingBins);
 
   float densitySum5 = 0;
   for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {

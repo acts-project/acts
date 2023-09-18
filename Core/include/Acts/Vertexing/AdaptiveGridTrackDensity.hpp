@@ -31,10 +31,12 @@ namespace Acts {
 /// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
 /// a single track is modelled as a (trkGridSize x trkGridSize) grid
 /// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-template <int trkGridSize = 15>
+/// TODO once we switch to c++ 20 we should use a single template
+/// parameter of type std::pair<int, int>
+template <int spatialTrkGridSize = 15, int temporalTrkGridSize = 1>
 class AdaptiveGridTrackDensity {
-  // Assert odd trkGridSize
-  static_assert(trkGridSize % 2);
+  // Assert odd spatialTrkGridSize
+  static_assert(spatialTrkGridSize % 2);
 
  public:
   using Bins = int;  // std::pair<int, int>;
