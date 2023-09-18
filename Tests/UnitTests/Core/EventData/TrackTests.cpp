@@ -635,7 +635,7 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
   t.innermostTrackState()->predicted().setRandom();
 
   std::vector<IndexType> indices;
-  for (auto ts : t.trackStatesReversed()) {
+  for (const auto& ts : t.trackStatesReversed()) {
     indices.push_back(ts.index());
   }
 
@@ -655,7 +655,7 @@ BOOST_AUTO_TEST_CASE(ForwardIteration) {
   t.innermostTrackState()->predicted().setRandom();
 
   act.clear();
-  for (auto ts : t.trackStates()) {
+  for (const auto& ts : t.trackStates()) {
     act.push_back(ts.index());
   }
 
