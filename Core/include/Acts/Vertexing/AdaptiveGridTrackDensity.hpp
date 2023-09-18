@@ -16,6 +16,7 @@
 namespace Acts {
 
 /// @class AdaptiveGridTrackDensity
+/// TODO update comment
 /// @brief Implements a 1-dim density grid to be filled with
 /// track Gaussian distributions. Each single track is modelled
 /// as a 2-dim Gaussian distribution grid in the d0-z0 plane,
@@ -36,15 +37,19 @@ class AdaptiveGridTrackDensity {
   static_assert(trkGridSize % 2);
 
  public:
-  using DensityMap = std::unordered_map<int, float>;
+  using Bins = int;//std::pair<int, int>;
+  using DensityMap = std::unordered_map<Bins, float>;
 
   /// The configuration struct
   struct Config {
-    /// @param binSize_ The binSize in mm
-    Config(float binSize_ = 0.1) : binSize(binSize_) {}
+    /// @param spatialBinSize_ The spatial extent of a bin in mm
+    Config(float spatialBinSize_ = 0.1) : spatialBinSize(spatialBinSize_) {}
 
-    // Z size of one single bin in grid
-    float binSize;  // mm
+    // Spatial extent of a bin in d0 and z0 direction
+    float spatialBinSize;  // mm
+
+    // Time extent of a bin
+    //float timeBinSize;
 
     // Do NOT use just the z-bin with the highest
     // track density, but instead check the (up to)
@@ -64,13 +69,15 @@ class AdaptiveGridTrackDensity {
 
   /// @brief Calculates the bin center from the bin number
   /// @param bin Bin number
+  /// @param binSize Bin extent
   /// @return Bin center
-  float getBinCenter(int bin) const;
+  float getBinCenter(int bin, float binSize) const;
 
-  /// @brief Calculates the bin number corresponding to a d or z value
-  /// @param value d or z value
+  /// @brief Calculates the bin number corresponding to a d, z, or time value
+  /// @param value d, z, or time value
+  /// @param binSize Bin extent
   /// @return Bin number
-  int getBin(float value) const;
+  int getBin(float value, float binSize) const;
 
   /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between z bins and corresponding density value

@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
     int zBin = it.first;
     float density = it.second;
     // Argument for 2D gaussian
-    Vector2 dzVec{0., grid.getBinCenter(zBin)};
+    Vector2 dzVec{0., grid.getBinCenter(zBin, binSize)};
     // Compute correct density...
     float correctDensity = gaussian2D(dzVec, impactParameters, subCovMat);
     // ... and check if our result is equivalent
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(check_seed_width_estimation) {
   // should be exact in this case.
   for (int i = -6; i <= 4; i++) {
     mainDensityMap[i] =
-        1.0 - 0.1 * std::abs(correctMaxZ - grid.getBinCenter(i));
+        1.0 - 0.1 * std::abs(correctMaxZ - grid.getBinCenter(i, binSize));
   }
 
   // Get maximum z position and corresponding seed width
