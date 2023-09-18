@@ -175,7 +175,7 @@ addCKFTracks(
         nMeasurementsMin=7,
     ),
     outputDirRoot=outputDir,
-    writeCovMat = True,
+    writeCovMat=True,
     # outputDirCsv=outputDir,
 )
 
@@ -197,7 +197,7 @@ else:
             maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
         ),
         outputDirRoot=outputDir,
-        writeCovMat = True,
+        writeCovMat=True,
         # outputDirCsv=outputDir,
     )
 
