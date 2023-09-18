@@ -1380,7 +1380,7 @@ class CombinatorialKalmanFilter {
     r.stateBuffer->clear();
 
     auto result = m_propagator.template propagate(
-        initialParameters, propOptions, std::move(inputResult));
+        initialParameters, propOptions, false, std::move(inputResult));
 
     if (!result.ok()) {
       ACTS_ERROR("Propapation failed: " << result.error() << " "

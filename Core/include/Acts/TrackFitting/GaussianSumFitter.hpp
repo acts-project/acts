@@ -289,10 +289,10 @@ struct GaussianSumFitter {
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), sParameters.covariance());
 
-        return m_propagator.propagate(params, fwdPropOptions,
+        return m_propagator.propagate(params, fwdPropOptions, false,
                                       std::move(inputResult));
       } else {
-        return m_propagator.propagate(sParameters, fwdPropOptions,
+        return m_propagator.propagate(sParameters, fwdPropOptions, false,
                                       std::move(inputResult));
       }
     }();
@@ -421,8 +421,8 @@ struct GaussianSumFitter {
     const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
     std::size_t measurementStatesFinal = 0;
 
-    for (auto state :
-         fwdGsfResult.fittedStates->trackStateRange(fwdGsfResult.currentTip)) {
+    for (auto state : fwdGsfResult.fittedStates->reverseTrackStateRange(
+             fwdGsfResult.currentTip)) {
       const bool found = std::find(foundBwd.begin(), foundBwd.end(),
                                    &state.referenceSurface()) != foundBwd.end();
       if (not found && state.typeFlags().test(MeasurementFlag)) {
