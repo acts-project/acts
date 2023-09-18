@@ -14,8 +14,6 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/detail/PortalHelper.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -1179,75 +1177,4 @@ Acts::Experimental::detail::CylindricalDetectorHelper::wrapInZR(
 
   // Done.
   return dShell;
-}
-
-std::array<std::vector<Acts::ActsScalar>, 3u>
-Acts::Experimental::detail::CylindricalDetectorHelper::rzphiBoundaries(
-    const GeometryContext& gctx,
-    const std::vector<const Acts::Experimental::DetectorVolume*>& volumes,
-    Acts::Logging::Level logLevel) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
-
-  ACTS_DEBUG("Estimate R/z/phi boundaries of  " << volumes.size()
-                                                << " volumes.");
-
-  // The return boundaries
-  std::array<std::vector<Acts::ActsScalar>, 3u> boundaries;
-
-  // The map for collecting
-  std::array<std::map<ActsScalar, size_t>, 3u> valueMaps;
-  auto& rMap = valueMaps[0u];
-  auto& zMap = valueMaps[1u];
-  auto& phiMap = valueMaps[2u];
-
-  auto fillMap = [&](std::map<ActsScalar, size_t>& map,
-                     const std::array<ActsScalar, 2u>& values) {
-    for (auto v : values) {
-      if (map.find(v) != map.end()) {
-        ++map[v];
-      } else {
-        map[v] = 1u;
-      }
-    }
-  };
-
-  // Loop over the volumes and collect boundaries
-  for (const auto& v : volumes) {
-    if (v->volumeBounds().type() == Acts::VolumeBounds::BoundsType::eCylinder) {
-      auto bValues = v->volumeBounds().values();
-      // The min/max values
-      ActsScalar rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
-      ActsScalar rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
-      ActsScalar zCenter = v->transform(gctx).translation().z();
-      ActsScalar zHalfLength =
-          bValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ];
-      ActsScalar zMin = zCenter - zHalfLength;
-      ActsScalar zMax = zCenter + zHalfLength;
-      ActsScalar phiCenter =
-          bValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
-      ActsScalar phiSector =
-          bValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
-      ActsScalar phiMin = phiCenter - phiSector;
-      ActsScalar phiMax = phiCenter + phiSector;
-      // Fill the maps
-      fillMap(rMap, {rMin, rMax});
-      fillMap(zMap, {zMin, zMax});
-      fillMap(phiMap, {phiMin, phiMax});
-    }
-  }
-
-  for (auto [im, map] : enumerate(valueMaps)) {
-    for (auto [key, value] : map) {
-      boundaries[im].push_back(key);
-    }
-    std::sort(boundaries[im].begin(), boundaries[im].end());
-  }
-
-  ACTS_VERBOSE("- did yield " << boundaries[0u].size() << " boundaries in R.");
-  ACTS_VERBOSE("- did yield " << boundaries[1u].size() << " boundaries in z.");
-  ACTS_VERBOSE("- did yield " << boundaries[2u].size()
-                              << " boundaries in phi.");
-
-  return boundaries;
 }

@@ -162,7 +162,7 @@ void TrackFindingAlgorithm::computeSharedHits(
       sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
   for (auto track : tracks) {
-    for (auto state : track.trackStates()) {
+    for (auto state : track.trackStatesReversed()) {
       if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }

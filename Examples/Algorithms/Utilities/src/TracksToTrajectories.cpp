@@ -80,6 +80,12 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
     // no grouping by seed, make one trajectory per track
 
     for (const auto& track : tracks) {
+      if (not track.hasReferenceSurface()) {
+        ACTS_WARNING("Unable to convert track with tip "
+                     << track.tipIndex()
+                     << " because no reference surface is set");
+        continue;
+      }
       Trajectories::IndexedParameters parameters;
       parameters.reserve(1);
       std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
