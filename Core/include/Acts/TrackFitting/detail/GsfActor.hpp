@@ -517,8 +517,6 @@ struct GsfActor {
       auto& cmp = *res;
       cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext, pars);
       cmp.pathAccumulated() = state.stepping.pathAccumulated;
-
-      // TODO check if they are not anyways reset to identity or zero
       cmp.jacobian() = Acts::BoundMatrix::Identity();
       cmp.derivative() = Acts::FreeVector::Zero();
       cmp.jacTransport() = Acts::FreeMatrix::Identity();
