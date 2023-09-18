@@ -1385,7 +1385,7 @@ class CombinatorialKalmanFilter {
         initialParameters, propOptions, false, std::move(inputResult));
 
     if (!result.ok()) {
-      ACTS_ERROR("Propapation failed: " << result.error() << " "
+      ACTS_ERROR("Propagation failed: " << result.error() << " "
                                         << result.error().message()
                                         << " with the initial parameters: \n"
                                         << initialParameters.parameters());

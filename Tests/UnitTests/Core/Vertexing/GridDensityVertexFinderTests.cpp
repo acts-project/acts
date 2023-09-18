@@ -148,7 +148,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 
@@ -262,7 +263,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 
@@ -425,7 +427,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 

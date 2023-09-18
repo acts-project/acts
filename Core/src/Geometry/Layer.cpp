@@ -119,9 +119,6 @@ Acts::Layer::compatibleSurfaces(
     return sIntersections;
   }
 
-  // reserve a few bins
-  sIntersections.reserve(20);
-
   // (0) End surface check
   // @todo: - we might be able to skip this by use of options.pathLimit
   // check if you have to stop at the endSurface

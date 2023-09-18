@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -45,8 +46,7 @@ struct GsfResult {
 
   /// The last multi-component measurement state. Used to initialize the
   /// backward pass.
-  std::optional<MultiComponentBoundTrackParameters<SinglyCharged>>
-      lastMeasurementState;
+  std::optional<MultiComponentBoundTrackParameters> lastMeasurementState;
 
   /// Some counting
   std::size_t measurementStates = 0;
@@ -69,31 +69,12 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
-  /// Stores meta information about the components
-  struct MetaCache {
-    /// Where to find the parent component in the MultiTrajectory
-    MultiTrajectoryTraits::IndexType parentIndex = 0;
-
-    /// Other quantities TODO are they really needed here? seems they are
-    /// reinitialized to Identity etc.
-    BoundMatrix jacobian;
-    BoundToFreeMatrix jacToGlobal;
-    FreeMatrix jacTransport;
-    FreeVector derivative;
-
-    /// We need to preserve the path length
-    ActsScalar pathLength = 0;
-  };
-
   /// Stores parameters of a gaussian component
-  struct ParameterCache {
+  struct ComponentCache {
     ActsScalar weight = 0;
-    BoundVector boundPars;
-    BoundSquareMatrix boundCov;
+    BoundVector boundPars = BoundVector::Zero();
+    BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
   };
-
-  /// Broadcast Cache Type
-  using ComponentCache = std::tuple<ParameterCache, MetaCache>;
 
   /// Broadcast the result_type
   using result_type = GsfResult<traj_t, ComponentCache>;
@@ -349,19 +330,12 @@ struct GsfActor {
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
-      MetaCache mcache;
-      mcache.parentIndex = idx;
-      mcache.jacobian = cmp.jacobian();
-      mcache.jacToGlobal = cmp.jacToGlobal();
-      mcache.jacTransport = cmp.jacTransport();
-      mcache.derivative = cmp.derivative();
-      mcache.pathLength = cmp.pathAccumulated();
-
       BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
-                                 proxy.filtered(), proxy.filteredCovariance());
+                                 proxy.filtered(), proxy.filteredCovariance(),
+                                 stepper.particleHypothesis(state.stepping));
 
       applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
-                        mcache, componentCache);
+                        componentCache);
     }
   }
 
@@ -369,7 +343,7 @@ struct GsfActor {
   void applyBetheHeitler(const propagator_state_t& state,
                          const navigator_t& navigator,
                          const BoundTrackParameters& old_bound,
-                         const double old_weight, const MetaCache& metaCache,
+                         const double old_weight,
                          std::vector<ComponentCache>& componentCaches) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
@@ -443,8 +417,7 @@ struct GsfActor {
              "new cov not finite");
 
       // Set the remaining things and push to vector
-      componentCaches.push_back(
-          {ParameterCache{new_weight, new_pars, new_cov}, metaCache});
+      componentCaches.push_back({new_weight, new_pars, new_cov});
     }
   }
 
@@ -455,7 +428,7 @@ struct GsfActor {
     const auto final_cmp_number = std::min(
         static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
 
-    auto proj = [](auto& a) -> decltype(auto) { return std::get<0>(a); };
+    auto proj = [](auto& a) -> decltype(auto) { return a; };
 
     // We must differ between surface types, since there can be different
     // local coordinates
@@ -469,7 +442,7 @@ struct GsfActor {
   /// TODO This function does not expect normalized components, but this
   /// could be redundant work...
   void removeLowWeightComponents(std::vector<ComponentCache>& cmps) const {
-    auto proj = [](auto& cmp) -> double& { return std::get<0>(cmp).weight; };
+    auto proj = [](auto& cmp) -> double& { return cmp.weight; };
 
     detail::normalizeWeights(cmps, proj);
 
@@ -482,7 +455,7 @@ struct GsfActor {
       cmps = {*std::max_element(
           cmps.begin(), cmps.end(),
           [&](auto& a, auto& b) { return proj(a) < proj(b); })};
-      std::get<0>(cmps.front()).weight = 1.0;
+      cmps.front().weight = 1.0;
     } else {
       cmps.erase(new_end, cmps.end());
       detail::normalizeWeights(cmps, proj);
@@ -531,11 +504,10 @@ struct GsfActor {
     stepper.clearComponents(state.stepping);
 
     // Finally loop over components
-    for (const auto& [pcache, meta] : componentCache) {
-      const auto& [weight, pars, cov] = pcache;
-
+    for (const auto& [weight, pars, cov] : componentCache) {
       // Add the component to the stepper
-      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
+      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
+                                 stepper.particleHypothesis(state.stepping));
 
       auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
 
@@ -546,12 +518,10 @@ struct GsfActor {
 
       auto& cmp = *res;
       cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext, pars);
-      cmp.pathAccumulated() = meta.pathLength;
-
-      // TODO check if they are not anyways reset to identity or zero
-      cmp.jacobian() = meta.jacobian;
-      cmp.derivative() = meta.derivative;
-      cmp.jacTransport() = meta.jacTransport;
+      cmp.pathAccumulated() = state.stepping.pathAccumulated;
+      cmp.jacobian() = Acts::BoundMatrix::Identity();
+      cmp.derivative() = Acts::FreeVector::Zero();
+      cmp.jacTransport() = Acts::FreeMatrix::Identity();
     }
   }
 
@@ -631,9 +601,9 @@ struct GsfActor {
 
     normalizeWeights(v, [](auto& c) -> double& { return std::get<double>(c); });
 
-    result.lastMeasurementState =
-        MultiComponentBoundTrackParameters<SinglyCharged>(
-            surface.getSharedPtr(), std::move(v));
+    result.lastMeasurementState = MultiComponentBoundTrackParameters(
+        surface.getSharedPtr(), std::move(v),
+        stepper.particleHypothesis(state.stepping));
 
     // Return success
     return Acts::Result<void>::success();
@@ -849,8 +819,9 @@ struct FinalStateCollector {
       }
     }
 
-    result.pars =
-        typename MultiPars::value_type(surface.getSharedPtr(), states);
+    result.pars = typename MultiPars::value_type(
+        surface.getSharedPtr(), states,
+        stepper.particleHypothesis(state.stepping));
   }
 };
 

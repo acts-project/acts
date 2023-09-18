@@ -1101,7 +1101,7 @@ class KalmanFitter {
         sParameters, kalmanOptions, false, std::move(inputResult));
 
     if (!result.ok()) {
-      ACTS_ERROR("Propapation failed: " << result.error());
+      ACTS_ERROR("Propagation failed: " << result.error());
       return result.error();
     }
 
@@ -1240,7 +1240,7 @@ class KalmanFitter {
         sParameters, kalmanOptions, false, std::move(inputResult));
 
     if (!result.ok()) {
-      ACTS_ERROR("Propapation failed: " << result.error());
+      ACTS_ERROR("Propagation failed: " << result.error());
       return result.error();
     }
 
