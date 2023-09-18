@@ -378,7 +378,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   ipAndSigma.d0 = d0;
   // Variance of the vertex extent in the x-y-plane
-  double vtxVar2DExtent = vtxVarX + vtxVarY;
+  double vtxVar2DExtent = std::max(vtxVarX, vtxVarY);
   // TODO: vtxVar2DExtent, vtxVarZ, and vtxVarT should always be >= 0. We need
   // to throw an error here once
   // https://github.com/acts-project/acts/issues/2231 is resolved.
