@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -45,8 +46,7 @@ struct GsfResult {
 
   /// The last multi-component measurement state. Used to initialize the
   /// backward pass.
-  std::optional<MultiComponentBoundTrackParameters<SinglyCharged>>
-      lastMeasurementState;
+  std::optional<MultiComponentBoundTrackParameters> lastMeasurementState;
 
   /// Some counting
   std::size_t measurementStates = 0;
@@ -331,7 +331,8 @@ struct GsfActor {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
       BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
-                                 proxy.filtered(), proxy.filteredCovariance());
+                                 proxy.filtered(), proxy.filteredCovariance(),
+                                 stepper.particleHypothesis(state.stepping));
 
       applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
                         componentCache);
@@ -505,7 +506,8 @@ struct GsfActor {
     // Finally loop over components
     for (const auto& [weight, pars, cov] : componentCache) {
       // Add the component to the stepper
-      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
+      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
+                                 stepper.particleHypothesis(state.stepping));
 
       auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
 
@@ -599,9 +601,9 @@ struct GsfActor {
 
     normalizeWeights(v, [](auto& c) -> double& { return std::get<double>(c); });
 
-    result.lastMeasurementState =
-        MultiComponentBoundTrackParameters<SinglyCharged>(
-            surface.getSharedPtr(), std::move(v));
+    result.lastMeasurementState = MultiComponentBoundTrackParameters(
+        surface.getSharedPtr(), std::move(v),
+        stepper.particleHypothesis(state.stepping));
 
     // Return success
     return Acts::Result<void>::success();
@@ -817,8 +819,9 @@ struct FinalStateCollector {
       }
     }
 
-    result.pars =
-        typename MultiPars::value_type(surface.getSharedPtr(), states);
+    result.pars = typename MultiPars::value_type(
+        surface.getSharedPtr(), states,
+        stepper.particleHypothesis(state.stepping));
   }
 };
 

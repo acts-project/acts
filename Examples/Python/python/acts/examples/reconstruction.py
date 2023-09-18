@@ -173,6 +173,9 @@ def addSeeding(
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     truthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg = TruthEstimatedSeedingAlgorithmConfigArg(),
+    particleHypothesis: Optional[
+        acts.ParticleHypothesis
+    ] = acts.ParticleHypothesis.pion,
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -218,6 +221,8 @@ def addSeeding(
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
+    particleHypothesis : Optional[acts.ParticleHypothesis]
+        The hypothesis used for track finding. Defaults to pion.
     inputParticles : str, "particles"
         input particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
@@ -254,6 +259,7 @@ def addSeeding(
             selectedParticles,
             particleSmearingSigmas,
             initialVarInflation,
+            particleHypothesis,
             logLevel,
         )
     else:
@@ -318,6 +324,7 @@ def addSeeding(
                 sigmaQOverP=initialSigmas[4] if initialSigmas is not None else None,
                 sigmaT0=initialSigmas[5] if initialSigmas is not None else None,
                 initialVarInflation=initialVarInflation,
+                particleHypothesis=particleHypothesis,
             ),
         )
         s.addAlgorithm(parEstimateAlg)
@@ -387,6 +394,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialVarInflation: List[float],
+    particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
 ):
     """adds algorithm that would mimic detector response uncertainties for truth seeding
@@ -413,6 +421,7 @@ def addTruthSmearedSeeding(
             sigmaTheta=particleSmearingSigmas.theta,
             sigmaPRel=particleSmearingSigmas.pRel,
             initialVarInflation=initialVarInflation,
+            particleHypothesis=particleHypothesis,
         ),
     )
     sequence.addAlgorithm(ptclSmear)
