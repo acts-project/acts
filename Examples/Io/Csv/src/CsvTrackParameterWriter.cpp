@@ -30,9 +30,6 @@ ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
     throw std::invalid_argument(
         "You have to either provide track parameters or trajectories");
   }
-  if (m_cfg.outputStem.empty()) {
-    throw std::invalid_argument("Missing output filename stem");
-  }
 
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
   m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
@@ -70,8 +67,8 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
     }
   }
 
-  std::string path = perEventFilepath(
-      m_cfg.outputDir, m_cfg.outputStem + ".csv", ctx.eventNumber);
+  std::string path =
+      perEventFilepath(m_cfg.outputDir, m_cfg.outputStem, ctx.eventNumber);
 
   dfe::NamedTupleCsvWriter<TrackParameterData> writer(path,
                                                       m_cfg.outputPrecision);
