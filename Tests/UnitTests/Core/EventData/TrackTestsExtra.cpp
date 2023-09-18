@@ -56,7 +56,8 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     BOOST_CHECK(t3.nTrackStates() > 0);
     BOOST_REQUIRE_EQUAL(t.nTrackStates(), t3.nTrackStates());
 
-    for (auto [tsa, tsb] : zip(t.trackStates(), t3.trackStates())) {
+    for (auto [tsa, tsb] :
+         zip(t.trackStatesReversed(), t3.trackStatesReversed())) {
       BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
     }
 
@@ -87,7 +88,8 @@ BOOST_AUTO_TEST_CASE(CopyTracksIncludingDynamicColumns) {
     BOOST_CHECK(t5.nTrackStates() > 0);
     BOOST_REQUIRE_EQUAL(t4.nTrackStates(), t5.nTrackStates());
 
-    for (auto [tsa, tsb] : zip(t4.trackStates(), t5.trackStates())) {
+    for (auto [tsa, tsb] :
+         zip(t4.trackStatesReversed(), t5.trackStatesReversed())) {
       BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
     }
 

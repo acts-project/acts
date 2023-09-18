@@ -339,18 +339,18 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     BOOST_CHECK_EQUAL(orig.referenceSurface().center(gctx),
                       read.referenceSurface().center(gctx));
 
-    auto origTsIt = orig.trackStates().begin();
-    auto readTsIt = read.trackStates().begin();
+    auto origTsIt = orig.trackStatesReversed().begin();
+    auto readTsIt = read.trackStatesReversed().begin();
 
     size_t tsi = 0;
-    while (origTsIt != orig.trackStates().end() &&
-           readTsIt != read.trackStates().end()) {
+    while (origTsIt != orig.trackStatesReversed().end() &&
+           readTsIt != read.trackStatesReversed().end()) {
       BOOST_TEST_INFO_SCOPE("TS: #" << tsi);
-      auto nextMeas =
-          std::find_if(origTsIt, orig.trackStates().end(), [](const auto& ts) {
+      auto nextMeas = std::find_if(
+          origTsIt, orig.trackStatesReversed().end(), [](const auto& ts) {
             return ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
           });
-      BOOST_CHECK(nextMeas != orig.trackStates().end());
+      BOOST_CHECK(nextMeas != orig.trackStatesReversed().end());
       origTsIt = nextMeas;
       auto origTs = *origTsIt;
       auto readTs = *readTsIt;
