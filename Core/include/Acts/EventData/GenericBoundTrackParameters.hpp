@@ -161,6 +161,32 @@ class GenericBoundTrackParameters {
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
+  /// Covariance matrix of the impact parameters (i.e., of d0 and z0 if nDim=2
+  /// and of d0, z0, and t if nDim=3)
+  template <unsigned int nDim = 2>
+  std::optional<ActsSquareMatrix<nDim>> ipCovariance() const {
+    if (nDim != 2 and nDim != 3) {
+      throw std::invalid_argument(
+          "The number of dimensions nDim must be either 2 or 3 but was set "
+          "to " +
+          std::to_string(nDim) + ".");
+    }
+    if (not m_cov.has_value()) {
+      return std::nullopt;
+    }
+
+    ActsSquareMatrix<nDim> subCovMat;
+    subCovMat.template block<2, 2>(0, 0) = m_cov.value().block<2, 2>(0, 0);
+    if (nDim == 3) {
+      subCovMat.template block<2, 1>(0, 2) =
+          m_cov.value().block<2, 1>(0, eBoundTime);
+      subCovMat.template block<1, 2>(2, 0) =
+          m_cov.value().block<1, 2>(eBoundTime, 0);
+      subCovMat(2, 2) = m_cov.value()(eBoundTime, eBoundTime);
+    }
+    return subCovMat;
+  }
+
   /// Access a single parameter value identified by its index.
   ///
   /// @tparam kIndex Track parameter index
