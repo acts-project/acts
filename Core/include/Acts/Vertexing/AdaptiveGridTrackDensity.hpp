@@ -46,13 +46,24 @@ class AdaptiveGridTrackDensity {
   /// The configuration struct
   struct Config {
     /// @param spatialBinSize_ The spatial extent of a bin in mm
-    Config(float spatialBinSize_) : spatialBinSize(spatialBinSize_) {}
+    Config(float spatialBinSize_) : spatialBinSize(spatialBinSize_) {
+      if (temporalTrkGridSize > 1) {
+        throw std::invalid_argument(
+            "temporalBinSize must be provided if temporalTrkGridSize > 1 "
+            "(i.e., if time vertex seeding is enabled).");
+      }
+    }
+
+    /// @param spatialBinSize_ The spatial extent of a bin in mm
+    /// @param temporalBinSize_ The temporal extent of a bin in TODO: unit
+    Config(float spatialBinSize_, float temporalBinSize_)
+        : spatialBinSize(spatialBinSize_), temporalBinSize(temporalBinSize_) {}
 
     // Spatial extent of a bin in d0 and z0 direction
     float spatialBinSize;  // mm
 
-    // Time extent of a bin
-    // std::optional<float> timeBinSize = std::nullopt;
+    // Temporal extent of a bin
+    std::optional<float> temporalBinSize = std::nullopt;  // TODO: unit?
 
     // Do NOT use just the z-bin with the highest
     // track density, but instead check the (up to)
