@@ -9,10 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Concepts.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
@@ -320,12 +321,6 @@ class TrackProxy {
     return m_container->covariance(m_index);
   }
 
-  ActsScalar charge() const {
-    // Currently, neutral tracks are not supported here
-    // @TODO: Evaluate if/how neutral 'tracks' should be accounted for
-    return SinglyCharged{}.extractCharge(parameters()[eBoundQOverP]);
-  }
-
   /// Access the theta parameter of the track at the reference surface
   /// @return The theta parameter
   ActsScalar theta() const {
@@ -362,10 +357,31 @@ class TrackProxy {
     return parameters()[eBoundQOverP];
   }
 
+  /// Get the particle hypothesis
+  /// @return the particle hypothesis
+  ParticleHypothesis particleHypothesis() const {
+    return component<ParticleHypothesis, hashString("particleHypothesis")>();
+  }
+
+  /// Set a new particle hypothesis for this track
+  /// @param particleHypothesis The particle hypothesis to set
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setParticleHypothesis(const ParticleHypothesis& particleHypothesis) {
+    m_container->container().setParticleHypothesis_impl(m_index,
+                                                        particleHypothesis);
+  }
+
+  /// Get the charge of the tack
+  /// @note this depends on the charge hypothesis
+  /// @return The absolute track momentum
+  ActsScalar charge() const {
+    return particleHypothesis().qFromQOP(qOverP());
+  }
+
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
   ActsScalar absoluteMomentum() const {
-    return SinglyCharged{}.extractMomentum(qOverP());
+    return particleHypothesis().extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum of the track
@@ -389,16 +405,16 @@ class TrackProxy {
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Const version
   /// @return Track state range to iterate over
-  auto trackStates() const {
-    return m_container->trackStateRange(m_index);
+  auto trackStatesReversed() const {
+    return m_container->reverseTrackStateRange(m_index);
   }
 
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Mutable version
   /// @return Track state range to iterate over
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto trackStates() {
-    return m_container->trackStateRange(m_index);
+  auto trackStatesReversed() {
+    return m_container->reverseTrackStateRange(m_index);
   }
 
   /// Append a track state to this track. This will modify the tip index to
@@ -426,7 +442,7 @@ class TrackProxy {
       // no tip index -> no track states
       return 0;
     }
-    auto tsRange = trackStates();
+    auto tsRange = trackStatesReversed();
     return std::distance(tsRange.begin(), tsRange.end());
   }
 
@@ -540,7 +556,7 @@ class TrackProxy {
 
     if (copyTrackStates) {
       // append track states (cheap), but they're in the wrong order
-      for (const auto& srcTrackState : other.trackStates()) {
+      for (const auto& srcTrackState : other.trackStatesReversed()) {
         auto destTrackState = appendTrackState(srcTrackState.getMask());
         if (srcTrackState.hasCalibrated()) {
           destTrackState.allocateCalibrated(srcTrackState.calibratedSize());
@@ -555,6 +571,7 @@ class TrackProxy {
 
     parameters() = other.parameters();
     covariance() = other.covariance();
+    setParticleHypothesis(other.particleHypothesis());
     if (other.hasReferenceSurface()) {
       setReferenceSurface(other.referenceSurface().getSharedPtr());
     }
