@@ -46,13 +46,13 @@ class AdaptiveGridTrackDensity {
   /// The configuration struct
   struct Config {
     /// @param spatialBinSize_ The spatial extent of a bin in mm
-    Config(float spatialBinSize_ = 0.1) : spatialBinSize(spatialBinSize_) {}
+    Config(float spatialBinSize_) : spatialBinSize(spatialBinSize_) {}
 
     // Spatial extent of a bin in d0 and z0 direction
     float spatialBinSize;  // mm
 
     // Time extent of a bin
-    // float timeBinSize;
+    // std::optional<float> timeBinSize = std::nullopt;
 
     // Do NOT use just the z-bin with the highest
     // track density, but instead check the (up to)
