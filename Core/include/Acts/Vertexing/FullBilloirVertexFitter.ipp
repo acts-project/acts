@@ -320,8 +320,10 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
         paramVec[eBoundTheta] = trackMomenta[iTrack](1);
         paramVec[eBoundQOverP] = trackMomenta[iTrack](2);
         paramVec[eBoundTime] = linPoint[FreeIndices::eFreeTime];
-        BoundTrackParameters refittedParams(perigee, paramVec,
-                                            covDeltaP[iTrack]);
+        BoundTrackParameters refittedParams(
+            perigee, paramVec, covDeltaP[iTrack],
+            extractParameters(*billoirTrack.originalTrack)
+                .particleHypothesis());
         TrackAtVertex<input_track_t> trackAtVertex(
             billoirTrack.chi2, refittedParams, billoirTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackAtVertex));
