@@ -1,12 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -14,15 +14,12 @@
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/Utilities/GaussianMixtureReduction.hpp"
 
-namespace Acts {
-
-namespace detail {
-
 /// Computes the Kullback-Leibler distance between two components as shown in
 /// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
 template <typename component_t, typename component_projector_t>
 auto computeSymmetricKlDivergence(const component_t &a, const component_t &b,
                                   const component_projector_t &proj) {
+  using namespace Acts;
   const auto parsA = proj(a).boundPars[eBoundQOverP];
   const auto parsB = proj(b).boundPars[eBoundQOverP];
   const auto covA = proj(a).boundCov(eBoundQOverP, eBoundQOverP);
@@ -67,7 +64,7 @@ auto mergeComponents(const component_t &a, const component_t &b,
 
 /// @brief Class representing a symmetric distance matrix
 class SymmetricKLDistanceMatrix {
-  using Array = Eigen::Array<ActsScalar, Eigen::Dynamic, 1>;
+  using Array = Eigen::Array<Acts::ActsScalar, Eigen::Dynamic, 1>;
   using Mask = Eigen::Array<bool, Eigen::Dynamic, 1>;
 
   Array m_distances;
@@ -128,7 +125,7 @@ class SymmetricKLDistanceMatrix {
   }
 
   auto minDistancePair() const {
-    ActsScalar min = std::numeric_limits<ActsScalar>::max();
+    auto min = std::numeric_limits<Acts::ActsScalar>::max();
     std::size_t idx = 0;
 
     for (auto i = 0l; i < m_distances.size(); ++i) {
@@ -172,16 +169,11 @@ class SymmetricKLDistanceMatrix {
   }
 };
 
-template <typename component_t, typename component_projector_t,
-          typename angle_desc_t>
-void reduceWithKLDistance(std::vector<component_t> &cmpCache,
-                          std::size_t maxCmpsAfterMerge,
-                          const component_projector_t &proj,
-                          const angle_desc_t &angle_desc) {
-  if (cmpCache.size() <= maxCmpsAfterMerge) {
-    return;
-  }
-
+template <typename proj_t, typename angle_desc_t>
+void reduceWithKLDistanceImpl(
+    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
+    std::size_t maxCmpsAfterMerge, const proj_t &proj,
+    const angle_desc_t &desc) {
   SymmetricKLDistanceMatrix distances(cmpCache, proj);
 
   auto remainingComponents = cmpCache.size();
@@ -191,7 +183,7 @@ void reduceWithKLDistance(std::vector<component_t> &cmpCache,
 
     // Set one component and compute associated distances
     cmpCache[minI] =
-        mergeComponents(cmpCache[minI], cmpCache[minJ], proj, angle_desc);
+        mergeComponents(cmpCache[minI], cmpCache[minJ], proj, desc);
     distances.recomputeAssociatedDistances(minI, cmpCache, proj);
 
     // Set weight of the other component to -1 so we can remove it later and
@@ -215,6 +207,22 @@ void reduceWithKLDistance(std::vector<component_t> &cmpCache,
   assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
 }
 
-}  // namespace detail
+namespace Acts {
+
+void reduceMixtureWithKLDistance(
+    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
+    std::size_t maxCmpsAfterMerge, const Surface &surface) {
+  if (cmpCache.size() <= maxCmpsAfterMerge) {
+    return;
+  }
+
+  auto proj = [](auto &a) -> decltype(auto) { return a; };
+
+  // We must differ between surface types, since there can be different
+  // local coordinates
+  detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+    reduceWithKLDistanceImpl(cmpCache, maxCmpsAfterMerge, proj, desc);
+  });
+}
 
 }  // namespace Acts
