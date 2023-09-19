@@ -12,15 +12,15 @@
 
 template <int spatialTrkGridSize, int temporalTrkGridSize>
 float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    getBinCenter(int bin, float binSize) const {
-  return bin * binSize;
+    getBinCenter(int bin, float binExtent) const {
+  return bin * binExtent;
 }
 
 template <int spatialTrkGridSize, int temporalTrkGridSize>
 int Acts::AdaptiveGridTrackDensity<
     spatialTrkGridSize, temporalTrkGridSize>::getBin(float value,
-                                                     float binSize) const {
-  return static_cast<int>(std::floor(value / binSize - 0.5) + 1);
+                                                     float binExtent) const {
+  return static_cast<int>(std::floor(value / binExtent - 0.5) + 1);
 }
 
 template <int spatialTrkGridSize, int temporalTrkGridSize>
@@ -54,7 +54,7 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
   }
 
   // Derive corresponding z value
-  return getBinCenter(zBin, m_cfg.spatialBinSize);
+  return getBinCenter(zBin, m_cfg.spatialBinExtent);
 }
 
 template <int spatialTrkGridSize, int temporalTrkGridSize>
@@ -89,14 +89,14 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   float z0 = trk.parameters()[eBoundLoc1];
 
   // Calculate bin in d direction
-  int centralDBin = getBin(d0, m_cfg.spatialBinSize);
+  int centralDBin = getBin(d0, m_cfg.spatialBinExtent);
   // Check if current track affects grid density
   if (std::abs(centralDBin) > (spatialTrkGridSize - 1) / 2.) {
     DensityMap emptyTrackDensityMap;
     return emptyTrackDensityMap;
   }
   // Calculate bin in z direction
-  int centralZBin = getBin(z0, m_cfg.spatialBinSize);
+  int centralZBin = getBin(z0, m_cfg.spatialBinExtent);
 
   DensityMap trackDensityMap = createTrackGrid(d0, z0, centralZBin, cov);
 
@@ -136,7 +136,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   // Loop over bins
   for (int j = 0; j < spatialTrkGridSize; j++) {
     int zBin = firstZBin + j;
-    float z = getBinCenter(zBin, m_cfg.spatialBinSize);
+    float z = getBinCenter(zBin, m_cfg.spatialBinExtent);
     // Transverse and logitudinal coordinate of the bin wrt the track center
     Acts::Vector2 binCoords(-d0, z - z0);
     trackDensityMap[zBin] = multivariateGaussian<2>(binCoords, cov);
@@ -154,7 +154,7 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
   }
 
   // Get z bin of max density and max density value
-  int zMaxBin = getBin(maxZ, m_cfg.spatialBinSize);
+  int zMaxBin = getBin(maxZ, m_cfg.spatialBinExtent);
   const float maxValue = densityMap.at(zMaxBin);
 
   int rhmBin = zMaxBin;
@@ -178,7 +178,7 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
     rightDensity = densityMap.at(rhmBin);
   }
   float leftDensity = densityMap.at(rhmBin - 1);
-  float deltaZ1 = m_cfg.spatialBinSize * (maxValue / 2 - leftDensity) /
+  float deltaZ1 = m_cfg.spatialBinExtent * (maxValue / 2 - leftDensity) /
                   (rightDensity - leftDensity);
 
   int lhmBin = zMaxBin;
@@ -201,10 +201,10 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
   } else {
     leftDensity = 0;
   }
-  float deltaZ2 = m_cfg.spatialBinSize * (rightDensity - maxValue / 2) /
+  float deltaZ2 = m_cfg.spatialBinExtent * (rightDensity - maxValue / 2) /
                   (rightDensity - leftDensity);
 
-  float fwhm = (rhmBin - lhmBin) * m_cfg.spatialBinSize - deltaZ1 - deltaZ2;
+  float fwhm = (rhmBin - lhmBin) * m_cfg.spatialBinExtent - deltaZ1 - deltaZ2;
 
   // FWHM = 2.355 * sigma
   float width = fwhm / 2.355f;

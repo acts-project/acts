@@ -45,25 +45,25 @@ class AdaptiveGridTrackDensity {
 
   /// The configuration struct
   struct Config {
-    /// @param spatialBinSize_ The spatial extent of a bin in mm
-    Config(float spatialBinSize_) : spatialBinSize(spatialBinSize_) {
+    /// @param spatialBinExtent_ The spatial extent of a bin in mm
+    Config(float spatialBinExtent_) : spatialBinExtent(spatialBinExtent_) {
       if (temporalTrkGridSize > 1) {
         throw std::invalid_argument(
-            "temporalBinSize must be provided if temporalTrkGridSize > 1 "
+            "temporalBinExtent must be provided if temporalTrkGridSize > 1 "
             "(i.e., if time vertex seeding is enabled).");
       }
     }
 
-    /// @param spatialBinSize_ The spatial extent of a bin in mm
-    /// @param temporalBinSize_ The temporal extent of a bin in TODO: unit
-    Config(float spatialBinSize_, float temporalBinSize_)
-        : spatialBinSize(spatialBinSize_), temporalBinSize(temporalBinSize_) {}
+    /// @param spatialBinExtent_ The spatial extent of a bin in mm
+    /// @param temporalBinExtent_ The temporal extent of a bin in TODO: unit
+    Config(float spatialBinExtent_, float temporalBinExtent_)
+        : spatialBinExtent(spatialBinExtent_), temporalBinExtent(temporalBinExtent_) {}
 
     // Spatial extent of a bin in d0 and z0 direction
-    float spatialBinSize;  // mm
+    float spatialBinExtent;  // mm
 
     // Temporal extent of a bin
-    std::optional<float> temporalBinSize = std::nullopt;  // TODO: unit?
+    std::optional<float> temporalBinExtent = std::nullopt;  // TODO: unit?
 
     // Do NOT use just the z-bin with the highest
     // track density, but instead check the (up to)
@@ -83,15 +83,15 @@ class AdaptiveGridTrackDensity {
 
   /// @brief Calculates the bin center from the bin number
   /// @param bin Bin number
-  /// @param binSize Bin extent
+  /// @param binExtent Bin extent
   /// @return Bin center
-  float getBinCenter(int bin, float binSize) const;
+  float getBinCenter(int bin, float binExtent) const;
 
   /// @brief Calculates the bin number corresponding to a d, z, or time value
   /// @param value d, z, or time value
-  /// @param binSize Bin extent
+  /// @param binExtent Bin extent
   /// @return Bin number
-  int getBin(float value, float binSize) const;
+  int getBin(float value, float binExtent) const;
 
   /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between z bins and corresponding density value
