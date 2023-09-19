@@ -12,6 +12,7 @@ from acts import (
     GeometryContext,
     KdtSurfaces2D,
     KdtSurfacesProvider2D,
+    IndexedRootVolumeFinderBuilder,
     logging,
     ProtoBinning,
 )
@@ -131,11 +132,12 @@ def necBarrelPec(
         volumes=[nec, barrel, pec],
         layers=None,
         binning=Binning.z,
+        rootbuilder=None,
         loglevel=llevel,
     )
 
 
-def build_odd_light(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERBOSE):
+def get_detector(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERBOSE):
 
     # Build the geometry context & a kdtree for the surfaces
     sensitivesKdt = KdtSurfaces2D(geoContext, ssurfaces, [Binning.z, Binning.r])
@@ -263,12 +265,15 @@ def build_odd_light(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.V
     )
 
     # Container of beam pipe and pixel
+    rootBuilder = IndexedRootVolumeFinderBuilder([Binning.z, Binning.r])
+
     det = detector.CylindricalDetectorContainer(
         name="ODD",
         extent=None,
         volumes=[bp, pix, pst, sstrip, lstrip],
         layers=None,
         binning=Binning.r,
+        rootbuilder=rootBuilder,
         loglevel=llevel,
     )
 
@@ -278,7 +283,7 @@ def build_odd_light(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.V
     detConfig.builder = det.builder()
     detConfig.auxiliary = "Detector[" + detConfig.name + "]"
 
-    detBuilder = DetectorBuilder(detConfig, detConfig.auxiliary, logging.VERBOSE)
+    detBuilder = DetectorBuilder(detConfig, detConfig.auxiliary, llevel)
     return detBuilder.construct(geoContext)
 
 
@@ -313,8 +318,7 @@ def main():
     [elements, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
         args.input, [args.sensitives], [args.passives]
     )
-
-    odd_light = build_odd_light(geoContext, ssurfaces, psurfaces, logging.DEBUG)
+    odd_light = get_detector(geoContext, ssurfaces, psurfaces, logging.DEBUG)
 
 
 if "__main__" == __name__:

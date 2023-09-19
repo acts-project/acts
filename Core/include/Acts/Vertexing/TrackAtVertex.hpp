@@ -22,7 +22,6 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 
 template <typename input_track_t>
-
 struct TrackAtVertex {
   /// Deleted default constructor
   TrackAtVertex() = delete;

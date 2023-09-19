@@ -9,13 +9,14 @@
 #pragma once
 
 #include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 
 namespace Acts {
 
 /// Curvilinear track parameters for a single track.
 ///
-/// @tparam charge_t Helper type to interpret the particle charge/momentum
+/// @tparam particle_hypothesis_t Helper type to interpret the particle charge/momentum
 ///
 /// This is intended as a user-facing data class that adds additional accessors
 /// and charge/momentum interpretation on top of the pure parameters vector. All
@@ -23,91 +24,70 @@ namespace Acts {
 /// curvilinear parametrization.
 ///
 /// @see GenericBoundTrackParameters
-template <typename charge_t>
+template <typename particle_hypothesis_t>
 class GenericCurvilinearTrackParameters
-    : public GenericBoundTrackParameters<charge_t> {
-  using Base = GenericBoundTrackParameters<charge_t>;
+    : public GenericBoundTrackParameters<particle_hypothesis_t> {
+  using Base = GenericBoundTrackParameters<particle_hypothesis_t>;
 
  public:
   using Scalar = ActsScalar;
   using ParametersVector = BoundVector;
   using CovarianceMatrix = BoundSquareMatrix;
+  using ParticleHypothesis = particle_hypothesis_t;
 
-  /// Construct from four-position, direction, absolute momentum, and charge.
+  /// Construct from four-position, direction, and qOverP.
   ///
   /// @param pos4 Track position/time four-vector
   /// @param dir Track direction three-vector; normalization is ignored.
-  /// @param p Absolute momentum
-  /// @param q Particle charge
+  /// @param qOverP Charge over momentum
   /// @param cov Curvilinear bound parameters covariance matrix
-  GenericCurvilinearTrackParameters(
-      const Vector4& pos4, const Vector3& dir, Scalar p, Scalar q,
-      std::optional<CovarianceMatrix> cov = std::nullopt)
-      : Base(Surface::makeShared<PlaneSurface>(pos4.segment<3>(ePos0), dir),
-             detail::transformFreeToCurvilinearParameters(
-                 pos4[eTime], dir, (q != Scalar(0)) ? (q / p) : (1 / p)),
-             q, std::move(cov)) {
-    assert((0 <= p) and "Absolute momentum must be positive");
-  }
-
-  /// Construct from four-position, direction, and charge-over-momentum.
-  ///
-  /// @param pos4 Track position/time four-vector
-  /// @param dir Track direction three-vector; normalization is ignored.
-  /// @param qOverP Charge-over-momentum-like parameter
-  /// @param cov Curvilinear bound parameters covariance matrix
-  ///
-  /// This constructor is only available if there are no potential charge
-  /// ambiguities, i.e. the charge interpretation type is default-constructible.
-  template <typename T = charge_t,
-            std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  GenericCurvilinearTrackParameters(
-      const Vector4& pos4, const Vector3& dir, Scalar qOverP,
-      std::optional<CovarianceMatrix> cov = std::nullopt)
+  /// @param particleHypothesis Particle hypothesis
+  GenericCurvilinearTrackParameters(const Vector4& pos4, const Vector3& dir,
+                                    Scalar qOverP,
+                                    std::optional<CovarianceMatrix> cov,
+                                    ParticleHypothesis particleHypothesis)
       : Base(Surface::makeShared<PlaneSurface>(pos4.segment<3>(ePos0), dir),
              detail::transformFreeToCurvilinearParameters(pos4[eTime], dir,
                                                           qOverP),
-             std::move(cov)) {}
+             std::move(cov), std::move(particleHypothesis)) {}
 
-  /// Construct from four-position, angles, absolute momentum, and charge.
+  /// Construct from four-position, angles, and qOverP.
   ///
   /// @param pos4 Track position/time four-vector
   /// @param phi Transverse track direction angle
   /// @param theta Longitudinal track direction angle
-  /// @param p Absolute momentum
-  /// @param q Particle charge
+  /// @param qOverP Charge over momentum
   /// @param cov Curvilinear bound parameters covariance matrix
-  GenericCurvilinearTrackParameters(
-      const Vector4& pos4, Scalar phi, Scalar theta, Scalar p, Scalar q,
-      std::optional<CovarianceMatrix> cov = std::nullopt)
-      : Base(Surface::makeShared<PlaneSurface>(
-                 pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
-             detail::transformFreeToCurvilinearParameters(
-                 pos4[eTime], phi, theta, (q != Scalar(0)) ? (q / p) : (1 / p)),
-             q, std::move(cov)) {
-    assert((0 <= p) and "Absolute momentum must be positive");
-  }
-
-  /// Construct from four-position, angles, and charge-over-momentum.
-  ///
-  /// @param pos4 Track position/time four-vector
-  /// @param phi Transverse track direction angle
-  /// @param theta Longitudinal track direction angle
-  /// @param qOverP Charge-over-momentum-like parameter
-  /// @param cov Curvilinear bound parameters covariance matrix
-  ///
-  /// This constructor is only available if there are no potential charge
-  /// ambiguities, i.e. the charge interpretation type is default-constructible.
-  template <typename T = charge_t,
-            std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  GenericCurvilinearTrackParameters(
-      const Vector4& pos4, Scalar phi, Scalar theta, Scalar qOverP,
-      std::optional<CovarianceMatrix> cov = std::nullopt)
+  /// @param particleHypothesis Particle hypothesis
+  GenericCurvilinearTrackParameters(const Vector4& pos4, Scalar phi,
+                                    Scalar theta, Scalar qOverP,
+                                    std::optional<CovarianceMatrix> cov,
+                                    ParticleHypothesis particleHypothesis)
       : Base(Surface::makeShared<PlaneSurface>(
                  pos4.segment<3>(ePos0), makeDirectionFromPhiTheta(phi, theta)),
              detail::transformFreeToCurvilinearParameters(pos4[eTime], phi,
                                                           theta, qOverP),
-             std::move(cov)) {}
+             std::move(cov), std::move(particleHypothesis)) {}
+
+  /// Converts a bound track parameter with a different hypothesis.
+  template <typename other_particle_hypothesis_t>
+  GenericCurvilinearTrackParameters(
+      const GenericCurvilinearTrackParameters<other_particle_hypothesis_t>&
+          other)
+      : GenericCurvilinearTrackParameters(other.fourPosition(),
+                                          other.particleHypothesis(),
+                                          other.covariance()) {}
+
+  /// Converts an unknown bound track parameter.
+  template <typename other_track_parameter_t>
+  static GenericCurvilinearTrackParameters create(
+      const other_track_parameter_t& other) {
+    static_assert(
+        Concepts::BoundTrackParametersConcept<other_track_parameter_t>);
+
+    return GenericCurvilinearTrackParameters(
+        other.fourPosition(), other.particleHypothesis(), other.covariance());
+  }
 
   /// Parameters are not default constructible due to the charge type.
   GenericCurvilinearTrackParameters() = delete;
@@ -121,16 +101,16 @@ class GenericCurvilinearTrackParameters
   GenericCurvilinearTrackParameters& operator=(
       GenericCurvilinearTrackParameters&&) = default;
 
-  using GenericBoundTrackParameters<charge_t>::fourPosition;
-  using GenericBoundTrackParameters<charge_t>::position;
+  using GenericBoundTrackParameters<ParticleHypothesis>::fourPosition;
+  using GenericBoundTrackParameters<ParticleHypothesis>::position;
 
   /// Space-time position four-vector.
   Vector4 fourPosition() const {
-    return GenericBoundTrackParameters<charge_t>::fourPosition({});
+    return GenericBoundTrackParameters<ParticleHypothesis>::fourPosition({});
   }
   /// Spatial position three-vector.
   Vector3 position() const {
-    return GenericBoundTrackParameters<charge_t>::position({});
+    return GenericBoundTrackParameters<ParticleHypothesis>::position({});
   }
 };
 

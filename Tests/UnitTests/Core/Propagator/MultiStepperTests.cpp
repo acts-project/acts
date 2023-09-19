@@ -69,11 +69,12 @@ const auto defaultBField =
     std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
 const auto defaultNullBField = std::make_shared<NullBField>();
 
+const auto particleHypothesis = ParticleHypothesis::pion();
+
 struct Options {
   double tolerance = 1e-4;
   double stepSizeCutOff = 0.0;
   std::size_t maxRungeKuttaStepTrials = 10;
-  double mass = 1.0;
   Direction direction = defaultNDir;
   const Acts::Logger &logger = Acts::getDummyLogger();
 };
@@ -106,7 +107,6 @@ using components_t = typename T::components;
 // Makes random bound parameters and covariance and a plane surface at {0,0,0}
 // with normal {1,0,0}. Optionally some external fixed bound parameters can be
 // supplied
-template <typename charge_t = SinglyCharged>
 auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
                           std::optional<BoundVector> ext_pars = std::nullopt) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
@@ -127,23 +127,19 @@ auto makeDefaultBoundPars(bool cov = true, std::size_t n = 4,
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3{1., 0., 0.});
 
-  return MultiComponentBoundTrackParameters<charge_t>(surface, cmps);
+  return MultiComponentBoundTrackParameters(surface, cmps, particleHypothesis);
 }
 
 //////////////////////////////////////////////////////
 /// Test the construction of the MultiStepper::State
 //////////////////////////////////////////////////////
-template <typename multi_stepper_t, typename charge_t, bool Cov>
+template <typename multi_stepper_t, bool Cov>
 void test_multi_stepper_state() {
-  static_assert(std::is_same_v<charge_t, SinglyCharged> ||
-                std::is_same_v<charge_t, Neutral>);
-
   using MultiState = typename multi_stepper_t::State;
   using MultiStepper = multi_stepper_t;
 
   constexpr std::size_t N = 4;
-  const auto multi_pars =
-      makeDefaultBoundPars<charge_t>(Cov, N, BoundVector::Ones());
+  const auto multi_pars = makeDefaultBoundPars(Cov, N, BoundVector::Ones());
 
   MultiState state(geoCtx, magCtx, defaultBField, multi_pars, defaultStepSize);
 
@@ -178,16 +174,8 @@ void test_multi_stepper_state() {
   }
 }
 
-BOOST_AUTO_TEST_CASE(multi_stepper_state_charged_no_cov) {
-  test_multi_stepper_state<MultiStepperLoop, SinglyCharged, false>();
-}
-
-BOOST_AUTO_TEST_CASE(multi_stepper_state_neutral_no_cov) {
-  test_multi_stepper_state<MultiStepperLoop, Neutral, false>();
-}
-
-BOOST_AUTO_TEST_CASE(multi_stepper_state_charged_cov) {
-  test_multi_stepper_state<MultiStepperLoop, SinglyCharged, true>();
+BOOST_AUTO_TEST_CASE(multi_stepper_state_no_cov) {
+  test_multi_stepper_state<MultiStepperLoop, false>();
 }
 
 template <typename multi_stepper_t>
@@ -223,8 +211,9 @@ void test_multi_stepper_vs_eigen_stepper() {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3::Ones().normalized());
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
-  GenericBoundTrackParameters<SinglyCharged> single_pars(surface, pars, cov);
+  MultiComponentBoundTrackParameters multi_pars(surface, cmps,
+                                                particleHypothesis);
+  BoundTrackParameters single_pars(surface, pars, cov, particleHypothesis);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
@@ -382,8 +371,8 @@ void test_multi_stepper_surface_status_update() {
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(start_surface,
-                                                               cmps);
+  MultiComponentBoundTrackParameters multi_pars(start_surface, cmps,
+                                                particleHypothesis);
 
   BOOST_REQUIRE(std::get<1>(multi_pars[0])
                     .direction()
@@ -482,8 +471,8 @@ void test_component_bound_state() {
   std::get<BoundVector>(cmps[0])[eBoundQOverP] = 1.0;
   std::get<BoundVector>(cmps[1])[eBoundQOverP] = 1.0;
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(start_surface,
-                                                               cmps);
+  MultiComponentBoundTrackParameters multi_pars(start_surface, cmps,
+                                                particleHypothesis);
 
   BOOST_REQUIRE(std::get<1>(multi_pars[0])
                     .direction()
@@ -559,7 +548,8 @@ void test_combined_bound_state_function() {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(4, {0.25, pars, cov});
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  MultiComponentBoundTrackParameters multi_pars(surface, cmps,
+                                                particleHypothesis);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
   MultiStepper multi_stepper(defaultBField);
@@ -602,9 +592,10 @@ void test_combined_curvilinear_state_function() {
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(4, {0.25, pars, cov});
-  GenericBoundTrackParameters<SinglyCharged> check_pars(surface, pars, cov);
+  BoundTrackParameters check_pars(surface, pars, cov, particleHypothesis);
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  MultiComponentBoundTrackParameters multi_pars(surface, cmps,
+                                                particleHypothesis);
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
   MultiStepper multi_stepper(defaultBField);
@@ -643,7 +634,8 @@ void test_single_component_interface_function() {
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3::Ones().normalized());
 
-  MultiComponentBoundTrackParameters<SinglyCharged> multi_pars(surface, cmps);
+  MultiComponentBoundTrackParameters multi_pars(surface, cmps,
+                                                particleHypothesis);
 
   MultiState multi_state(geoCtx, magCtx, defaultBField, multi_pars,
                          defaultStepSize);
@@ -697,7 +689,8 @@ void remove_add_components_function() {
 
   {
     BoundTrackParameters pars(multi_pars.referenceSurface().getSharedPtr(),
-                              BoundVector::Ones());
+                              BoundVector::Ones(), std::nullopt,
+                              particleHypothesis);
     multi_stepper.addComponent(multi_state, pars, 0.0);
   }
 
@@ -731,7 +724,7 @@ void propagator_instatiation_test_function() {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
       cmps(4, {0.25, BoundVector::Ones().eval(),
                BoundSquareMatrix::Identity().eval()});
-  MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
+  MultiComponentBoundTrackParameters pars(surface, cmps, particleHypothesis);
 
   // This only checks that this compiles, not that it runs without errors
   // @TODO: Add test that checks the target aborter works correctly

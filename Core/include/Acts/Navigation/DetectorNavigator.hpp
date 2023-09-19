@@ -114,6 +114,10 @@ class DetectorNavigator {
 
   bool targetReached(const State& state) const { return state.targetReached; }
 
+  bool endOfWorldReached(State& state) const {
+    return state.currentVolume == nullptr;
+  }
+
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
   }
