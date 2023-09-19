@@ -32,7 +32,6 @@ using namespace Acts;
 using namespace Acts::Experimental;
 using namespace Acts::detail;
 
-
 GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Experimental)
