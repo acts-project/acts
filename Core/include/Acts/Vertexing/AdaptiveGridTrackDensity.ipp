@@ -85,20 +85,19 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     addTrack(const Acts::BoundTrackParameters& trk,
              DensityMap& mainDensityMap) const {
   SquareMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
-  ActsScalar d0 = trk.parameters()[eBoundLoc0];
-  ActsScalar z0 = trk.parameters()[eBoundLoc1];
+  ActsVector<2> impactParams = trk.parameters().head<2>();
 
   // Calculate bin in d direction
-  int centralDBin = getBin(d0, m_cfg.spatialBinExtent);
+  int centralDBin = getBin(impactParams(0), m_cfg.spatialBinExtent);
   // Check if current track affects grid density
   if (std::abs(centralDBin) > (spatialTrkGridSize - 1) / 2.) {
     DensityMap emptyTrackDensityMap;
     return emptyTrackDensityMap;
   }
   // Calculate bin in z direction
-  int centralZBin = getBin(z0, m_cfg.spatialBinExtent);
+  int centralZBin = getBin(impactParams(1), m_cfg.spatialBinExtent);
 
-  DensityMap trackDensityMap = createTrackGrid(d0, z0, centralZBin, cov);
+  DensityMap trackDensityMap = createTrackGrid(impactParams, centralZBin, cov);
 
   for (const auto& densityEntry : trackDensityMap) {
     int zBin = densityEntry.first;
@@ -127,7 +126,7 @@ template <int spatialTrkGridSize, int temporalTrkGridSize>
 typename Acts::AdaptiveGridTrackDensity<spatialTrkGridSize,
                                         temporalTrkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    createTrackGrid(ActsScalar d0, ActsScalar z0, int centralZBin,
+    createTrackGrid(const Acts::ActsVector<2>& impactParams, int centralZBin,
                     const Acts::SquareMatrix2& cov) const {
   DensityMap trackDensityMap;
 
@@ -137,8 +136,10 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   for (int j = 0; j < spatialTrkGridSize; j++) {
     int zBin = firstZBin + j;
     float z = getBinCenter(zBin, m_cfg.spatialBinExtent);
-    // Transverse and logitudinal coordinate of the bin wrt the track center
-    Acts::Vector2 binCoords(-d0, z - z0);
+    // Transverse and logitudinal coordinate of the bin
+    Acts::Vector2 binCoords(0., z);
+    // Transformation to coordinate system with origin at the track center
+    binCoords -= impactParams;
     trackDensityMap[zBin] = multivariateGaussian<2>(binCoords, cov);
   }
   return trackDensityMap;
@@ -219,7 +220,8 @@ float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
                          const Acts::ActsSquareMatrix<nDim>& cov) const {
   ActsScalar coef = 1 / std::sqrt(cov.determinant());
   ActsScalar expo = -0.5 * args.transpose().dot(cov.inverse() * args);
-  // We perform the calculation in the ActsScalar precision but we return a float
+  // We perform the calculation in the ActsScalar precision but we return a
+  // float
   return coef * safeExp(expo);
 }
 

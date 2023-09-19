@@ -140,11 +140,11 @@ class AdaptiveGridTrackDensity {
   /// @brief Function that creates a track density map, i.e., a map of z bins
   /// to corresponding density values coming from a single track.
   ///
-  /// @param d0 Transverse impact parameter
-  /// @param z0 Longitudinal impact parameter
+  /// @param impactParams vector containing d0 and z0
   /// @param centralZBin Central z bin of the track (where its density is the highest)
   /// @param cov 2x2 impact parameter covariance matrix
-  DensityMap createTrackGrid(ActsScalar d0, ActsScalar z0, int centralZBin,
+  DensityMap createTrackGrid(const Acts::ActsVector<2>& impactParams,
+                             int centralZBin,
                              const Acts::SquareMatrix2& cov) const;
 
   /// @brief Function that estimates the seed width based on the full width
