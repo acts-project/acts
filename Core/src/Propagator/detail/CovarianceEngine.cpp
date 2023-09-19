@@ -268,8 +268,8 @@ Result<BoundState> boundState(
     const GeometryContext& geoContext, BoundSquareMatrix& covarianceMatrix,
     BoundMatrix& jacobian, FreeMatrix& transportJacobian,
     FreeVector& derivatives, BoundToFreeMatrix& jacToGlobal,
-    FreeVector& parameters, bool covTransport, double accumulatedPath,
-    const Surface& surface,
+    FreeVector& parameters, const ParticleHypothesis& particleHypothesis,
+    bool covTransport, double accumulatedPath, const Surface& surface,
     const FreeToBoundCorrection& freeToBoundCorrection) {
   // Covariance transport
   std::optional<BoundSquareMatrix> cov = std::nullopt;
@@ -295,7 +295,8 @@ Result<BoundState> boundState(
   }
   // Create the bound state
   return std::make_tuple(
-      BoundTrackParameters(surface.getSharedPtr(), *bv, std::move(cov)),
+      BoundTrackParameters(surface.getSharedPtr(), *bv, std::move(cov),
+                           particleHypothesis),
       jacobian, accumulatedPath);
 }
 
@@ -305,6 +306,7 @@ CurvilinearState curvilinearState(BoundSquareMatrix& covarianceMatrix,
                                   FreeVector& derivatives,
                                   BoundToFreeMatrix& jacToGlobal,
                                   const FreeVector& parameters,
+                                  const ParticleHypothesis& particleHypothesis,
                                   bool covTransport, double accumulatedPath) {
   const Vector3& direction = parameters.segment<3>(eFreeDir0);
 
@@ -331,7 +333,8 @@ CurvilinearState curvilinearState(BoundSquareMatrix& covarianceMatrix,
   pos4[ePos2] = parameters[eFreePos2];
   pos4[eTime] = parameters[eFreeTime];
   CurvilinearTrackParameters curvilinearParams(
-      pos4, direction, parameters[eFreeQOverP], std::move(cov));
+      pos4, direction, parameters[eFreeQOverP], std::move(cov),
+      particleHypothesis);
   // Create the curvilinear state
   return std::make_tuple(std::move(curvilinearParams), jacobian,
                          accumulatedPath);

@@ -62,7 +62,8 @@ Acts::CurvilinearTrackParameters makeParameters(
   Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(x, y, z, w);
-  return Acts::CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);
+  return Acts::CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
+                                          Acts::ParticleHypothesis::pion());
 }
 
 // Construct a straight-line propagator.

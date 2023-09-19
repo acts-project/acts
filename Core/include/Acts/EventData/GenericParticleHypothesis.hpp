@@ -14,6 +14,7 @@
 #include "Acts/EventData/ChargeConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 
+#include <iosfwd>
 #include <utility>
 
 namespace Acts {
@@ -105,6 +106,22 @@ class GenericParticleHypothesis {
   /// Get the hypothesized charge type.
   constexpr const ChargeType& chargeType() const noexcept {
     return m_chargeType;
+  }
+
+  std::ostream& toStream(std::ostream& os) const {
+    os << "ParticleHypothesis{absPdg=";
+    if (auto shortString = pdgToShortAbsString(absolutePdg())) {
+      os << *shortString;
+    } else {
+      os << absolutePdg();
+    }
+    os << ", mass=" << mass() << ", absCharge=" << absoluteCharge() << "}";
+    return os;
+  }
+
+  friend std::ostream& operator<<(
+      std::ostream& os, const GenericParticleHypothesis& particleHypothesis) {
+    return particleHypothesis.toStream(os);
   }
 
  private:

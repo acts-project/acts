@@ -117,8 +117,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
-                                   cov);
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
+                                   cov, ParticleHypothesis::pion());
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = 10_cm;
@@ -160,8 +160,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
-                                   cov);
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
+                                   cov, ParticleHypothesis::pion());
 
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
@@ -226,8 +226,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
-                                   cov);
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
+                                   cov, ParticleHypothesis::pion());
 
   PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
                                                             mfContext);
@@ -274,8 +274,8 @@ BOOST_DATA_TEST_CASE(
   cov << 10_mm, 0, 0.123, 0, 0.5, 0, 0, 10_mm, 0, 0.162, 0, 0, 0.123, 0, 0.1, 0,
       0, 0, 0, 0.162, 0, 0.1, 0, 0, 0.5, 0, 0, 0, 1. / (10_GeV), 0, 0, 0, 0, 0,
       0, 0;
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
-                                   cov);
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
+                                   cov, ParticleHypothesis::pion());
 
   // Action list and abort list
   PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
