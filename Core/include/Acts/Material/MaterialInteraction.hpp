@@ -28,13 +28,12 @@ struct InteractionVolume {
   InteractionVolume() = default;
 
   /// @brief Constructor from tracking volume
-  /// @param tVolume the current tracking volume
-  InteractionVolume(const TrackingVolume* tVolume) : tVolume(tVolume) {}
+  /// @param tVol the current tracking volume
+  InteractionVolume(const TrackingVolume* tVol) : tVolume(tVol) {}
 
   /// @brief Constructor from detector volume
-  /// @param dVolume the current detector volume
-  InteractionVolume(const Experimental::DetectorVolume* dVolume)
-      : dVolume(dVolume) {}
+  /// @param dVol the current detector volume
+  InteractionVolume(const Experimental::DetectorVolume* dVol) : dVolume(dVol) {}
 
   /// @brief Broadcast whether the struct is empty
   bool empty() const { return tVolume == nullptr and dVolume == nullptr; }
