@@ -46,7 +46,8 @@ class AdaptiveGridTrackDensity {
   /// The configuration struct
   struct Config {
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    Config(float spatialBinExtent_) : spatialBinExtent(spatialBinExtent_) {
+    Config(float spatialBinExtent_)
+        : spatialBinExtent(spatialBinExtent_ = 0.1) {
       if (temporalTrkGridSize > 1) {
         throw std::invalid_argument(
             "temporalBinExtent must be provided if temporalTrkGridSize > 1 "
@@ -57,7 +58,8 @@ class AdaptiveGridTrackDensity {
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
     /// @param temporalBinExtent_ The temporal extent of a bin in TODO: unit
     Config(float spatialBinExtent_, float temporalBinExtent_)
-        : spatialBinExtent(spatialBinExtent_), temporalBinExtent(temporalBinExtent_) {}
+        : spatialBinExtent(spatialBinExtent_),
+          temporalBinExtent(temporalBinExtent_) {}
 
     // Spatial extent of a bin in d0 and z0 direction
     float spatialBinExtent;  // mm
