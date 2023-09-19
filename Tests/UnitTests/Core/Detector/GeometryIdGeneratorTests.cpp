@@ -34,7 +34,7 @@ GeometryContext tContext;
 namespace {
 
 std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
-    std::vector<Test::DetectorElementStub>& detectorStore) {
+    std::vector<std::shared_ptr<Test::DetectorElementStub>>& detectorStore) {
   auto portalGenerator = defaultPortalGenerator();
 
   auto gap0VoumeBounds = std::make_unique<CylinderVolumeBounds>(0, 80, 200);
@@ -50,10 +50,11 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
   for (const auto [ir, r] : enumerate(layer0Radii)) {
     // First 4 surfaces are active
     if (ir < 4u) {
-      detectorStore.push_back(Test::DetectorElementStub(
+      auto detElement = std::make_shared<Test::DetectorElementStub>(
           Transform3::Identity(), std::make_shared<CylinderBounds>(r, 190),
-          0.1));
-      layer0Surfaces.push_back(detectorStore.back().surface().getSharedPtr());
+          0.1);
+      detectorStore.push_back(detElement);
+      layer0Surfaces.push_back(detElement->surface().getSharedPtr());
     } else {
       // Last 2 surfaces are passive
       layer0Surfaces.push_back(Surface::makeShared<CylinderSurface>(
@@ -79,7 +80,7 @@ std::vector<std::shared_ptr<DetectorVolume>> createVolumes(
 BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorReset) {
-  std::vector<Test::DetectorElementStub> detectorStore;
+  std::vector<std::shared_ptr<Test::DetectorElementStub>> detectorStore;
 
   auto volumes = createVolumes(detectorStore);
 
@@ -97,7 +98,7 @@ BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorReset) {
   for (auto [ip, p] : enumerate(volumes[0]->portals())) {
     BOOST_CHECK(p->surface().geometryId().boundary() == ip + 1);
   }
-/*
+
   BOOST_CHECK(volumes[1]->geometryId().volume() == 2);
   for (auto [ip, p] : enumerate(volumes[1]->portals())) {
     BOOST_CHECK(p->surface().geometryId().boundary() == ip + 1);
@@ -114,11 +115,10 @@ BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorReset) {
   for (auto [ip, p] : enumerate(volumes[2]->portals())) {
     BOOST_CHECK(p->surface().geometryId().boundary() == ip + 1);
   }
-  */
 }
 
 BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorNoReset) {
-  std::vector<Test::DetectorElementStub> detectorStore;
+  std::vector<std::shared_ptr<Test::DetectorElementStub>> detectorStore;
 
   auto volumes = createVolumes(detectorStore);
 
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(SequentialGeoIdGeneratorNoReset) {
 }
 
 BOOST_AUTO_TEST_CASE(ContainerGeoIdGenerator) {
-  std::vector<Test::DetectorElementStub> detectorStore;
+  std::vector<std::shared_ptr<Test::DetectorElementStub>> detectorStore;
 
   auto volumes = createVolumes(detectorStore);
 
