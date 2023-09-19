@@ -10,12 +10,37 @@
 
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
+template <typename component_t, typename component_projector_t,
+          typename angle_desc_t>
+auto mergeComponents(const component_t &a, const component_t &b,
+                     const component_projector_t &proj,
+                     const angle_desc_t &angle_desc) {
+  assert(proj(a).weight >= 0.0 && proj(b).weight >= 0.0 &&
+         "non-positive weight");
+
+  std::array range = {std::ref(proj(a)), std::ref(proj(b))};
+  const auto refProj = [](auto &c) {
+    return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
+  };
+
+  auto [mergedPars, mergedCov] =
+      gaussianMixtureMeanCov(range, refProj, angle_desc);
+
+  component_t ret = a;
+  proj(ret).boundPars = mergedPars;
+  proj(ret).boundCov = mergedCov;
+  proj(ret).weight = proj(a).weight + proj(b).weight;
+
+  return ret;
+}
+
 template <typename proj_t, typename angle_desc_t>
 void reduceWithKLDistanceImpl(
     std::vector<Acts::Experimental::GsfComponent> &cmpCache,
     std::size_t maxCmpsAfterMerge, const proj_t &proj,
     const angle_desc_t &desc) {
-  Acts::detail::SymmetricKLDistanceMatrix distances(cmpCache, proj);
+  Acts::detail::SymmetricKLDistanceMatrix<Acts::detail::SymmetricKLDistanceQoP>
+      distances(cmpCache, proj);
 
   auto remainingComponents = cmpCache.size();
 
@@ -53,7 +78,8 @@ void reduceWithKLDistanceAggressiveImpl(
     std::vector<Acts::Experimental::GsfComponent> &cmpCache,
     std::size_t maxCmpsAfterMerge, const proj_t &proj,
     const angle_desc_t &desc) {
-  Acts::detail::SymmetricKLDistanceMatrix distances(cmpCache, proj);
+  Acts::detail::SymmetricKLDistanceMatrix<Acts::detail::SymmetricKLDistanceQoP>
+      distances(cmpCache, proj);
 
   auto remainingComponents = cmpCache.size();
 

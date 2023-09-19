@@ -18,53 +18,61 @@ namespace Acts::detail {
 
 /// Computes the Kullback-Leibler distance between two components as shown in
 /// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
-template <typename component_t, typename component_projector_t>
-auto computeSymmetricKlDivergence(const component_t &a, const component_t &b,
-                                  const component_projector_t &proj) {
-  using namespace Acts;
-  const auto parsA = proj(a).boundPars[eBoundQOverP];
-  const auto parsB = proj(b).boundPars[eBoundQOverP];
-  const auto covA = proj(a).boundCov(eBoundQOverP, eBoundQOverP);
-  const auto covB = proj(b).boundCov(eBoundQOverP, eBoundQOverP);
 
-  assert(covA != 0.0);
-  assert(std::isfinite(covA));
-  assert(covB != 0.0);
-  assert(std::isfinite(covB));
+struct SymmetricKLDistanceQoP {
+  template <typename component_t, typename proj_t>
+  ActsScalar operator()(const component_t &a, const component_t &b,
+                        const proj_t &proj) {
+    using namespace Acts;
+    const auto parsA = proj(a).boundPars[eBoundQOverP];
+    const auto parsB = proj(b).boundPars[eBoundQOverP];
+    const auto covA = proj(a).boundCov(eBoundQOverP, eBoundQOverP);
+    const auto covB = proj(b).boundCov(eBoundQOverP, eBoundQOverP);
 
-  const auto kl = covA * (1 / covB) + covB * (1 / covA) +
-                  (parsA - parsB) * (1 / covA + 1 / covB) * (parsA - parsB);
+    assert(covA != 0.0);
+    assert(std::isfinite(covA));
+    assert(covB != 0.0);
+    assert(std::isfinite(covB));
 
-  assert(kl >= 0.0 && "kl-divergence must be non-negative");
+    const auto kl = covA * (1 / covB) + covB * (1 / covA) +
+                    (parsA - parsB) * (1 / covA + 1 / covB) * (parsA - parsB);
 
-  return kl;
-}
+    assert(kl >= 0.0 && "kl-divergence must be non-negative");
 
-template <typename component_t, typename component_projector_t,
-          typename angle_desc_t>
-auto mergeComponents(const component_t &a, const component_t &b,
-                     const component_projector_t &proj,
-                     const angle_desc_t &angle_desc) {
-  assert(proj(a).weight >= 0.0 && proj(b).weight >= 0.0 &&
-         "non-positive weight");
+    return kl;
+  }
+};
 
-  std::array range = {std::ref(proj(a)), std::ref(proj(b))};
-  const auto refProj = [](auto &c) {
-    return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
-  };
+struct SymmetricKLDistanceFull {
+  template <typename component_t, typename proj_t>
+  ActsScalar operator()(const component_t &a, const component_t &b,
+                        const proj_t &proj) {
+    using namespace Acts;
+    const auto &parsA = proj(a);
+    const auto &parsB = proj(b);
+    const auto &covA = proj(a);
+    const auto &covB = proj(b);
 
-  auto [mergedPars, mergedCov] =
-      gaussianMixtureMeanCov(range, refProj, angle_desc);
+    auto divergence = [](const BoundVector &p0, const BoundSquareMatrix &c0,
+                         const BoundVector &p1,
+                         const BoundSquareMatrix &c1) -> ActsScalar {
+      const auto c0inv = c0.inverse().eval();
+      return 0.5 *
+             ((c0inv * c1).trace() + (p0 - p1).transpose() * c0inv * (p0 - p1) -
+              6 + std::log(c1.determinant() / c0.determinant()));
+    };
 
-  component_t ret = a;
-  proj(ret).boundPars = mergedPars;
-  proj(ret).boundCov = mergedCov;
-  proj(ret).weight = proj(a).weight + proj(b).weight;
+    ActsScalar kl = divergence(parsA, covA, parsB, covB) +
+                    divergence(parsB, covB, parsA, covA);
 
-  return ret;
-}
+    assert(kl >= 0.0 && "kl-divergence must be non-negative");
+
+    return kl;
+  }
+};
 
 /// @brief Class representing a symmetric distance matrix
+template <typename distance_t>
 class SymmetricKLDistanceMatrix {
   using Array = Eigen::Array<Acts::ActsScalar, Eigen::Dynamic, 1>;
   using Mask = Eigen::Array<bool, Eigen::Dynamic, 1>;
@@ -101,8 +109,7 @@ class SymmetricKLDistanceMatrix {
       const auto indexConst = (i - 1) * i / 2;
       for (auto j = 0ul; j < i; ++j) {
         m_mapToPair.at(indexConst + j) = {i, j};
-        m_distances[indexConst + j] =
-            computeSymmetricKlDivergence(cmps[i], cmps[j], proj);
+        m_distances[indexConst + j] = distance_t{}(cmps[i], cmps[j], proj);
       }
     }
   }
@@ -110,10 +117,8 @@ class SymmetricKLDistanceMatrix {
   auto at(std::size_t i, std::size_t j) const {
     return m_distances[i * (i - 1) / 2 + j];
   }
-  
-  std::size_t size() const {
-    return m_distances.size();
-  }
+
+  std::size_t size() const { return m_distances.size(); }
 
   template <typename component_t, typename projector_t>
   void recomputeAssociatedDistances(std::size_t n,
@@ -122,7 +127,7 @@ class SymmetricKLDistanceMatrix {
     assert(cmps.size() == m_numberComponents && "size mismatch");
 
     setAssociated(n, m_distances, [&](std::size_t i, std::size_t j) {
-      return computeSymmetricKlDivergence(cmps[i], cmps[j], proj);
+      return distance_t{}(cmps[i], cmps[j], proj);
     });
   }
 
@@ -144,18 +149,23 @@ class SymmetricKLDistanceMatrix {
 
     return m_mapToPair.at(idx);
   }
-  
-  void minDistancePairs(std::vector<std::tuple<double, std::size_t, std::size_t>> &distsAndPairs) const {
+
+  void minDistancePairs(
+      std::vector<std::tuple<double, std::size_t, std::size_t>> &distsAndPairs)
+      const {
     assert(distsAndPairs.empty());
-    
+
     for (auto i = 0l; i < m_distances.size(); ++i) {
       if (m_mask[i]) {
         const auto [u, v] = m_mapToPair.at(i);
         distsAndPairs.push_back({m_distances[i], u, v});
       }
     }
-    
-    std::sort(distsAndPairs.begin(), distsAndPairs.end(), [](const auto &a, const auto &b){ return std::get<double>(a) < std::get<double>(b); });
+
+    std::sort(distsAndPairs.begin(), distsAndPairs.end(),
+              [](const auto &a, const auto &b) {
+                return std::get<double>(a) < std::get<double>(b);
+              });
   }
 
   friend std::ostream &operator<<(std::ostream &os,
