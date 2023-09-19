@@ -46,6 +46,7 @@ class AdaptiveGridTrackDensity {
   /// The configuration struct
   struct Config {
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
+    // TODO remove default value?
     Config(float spatialBinExtent_ = 0.1)
         : spatialBinExtent(spatialBinExtent_) {
       if (temporalTrkGridSize > 1) {
@@ -143,7 +144,7 @@ class AdaptiveGridTrackDensity {
   /// @param z0 Longitudinal impact parameter
   /// @param centralZBin Central z bin of the track (where its density is the highest)
   /// @param cov 2x2 impact parameter covariance matrix
-  DensityMap createTrackGrid(float d0, float z0, int centralZBin,
+  DensityMap createTrackGrid(ActsScalar d0, ActsScalar z0, int centralZBin,
                              const Acts::SquareMatrix2& cov) const;
 
   /// @brief Function that estimates the seed width based on the full width

@@ -85,8 +85,8 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     addTrack(const Acts::BoundTrackParameters& trk,
              DensityMap& mainDensityMap) const {
   SquareMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
-  float d0 = trk.parameters()[eBoundLoc0];
-  float z0 = trk.parameters()[eBoundLoc1];
+  ActsScalar d0 = trk.parameters()[eBoundLoc0];
+  ActsScalar z0 = trk.parameters()[eBoundLoc1];
 
   // Calculate bin in d direction
   int centralDBin = getBin(d0, m_cfg.spatialBinExtent);
@@ -127,7 +127,7 @@ template <int spatialTrkGridSize, int temporalTrkGridSize>
 typename Acts::AdaptiveGridTrackDensity<spatialTrkGridSize,
                                         temporalTrkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    createTrackGrid(float d0, float z0, int centralZBin,
+    createTrackGrid(ActsScalar d0, ActsScalar z0, int centralZBin,
                     const Acts::SquareMatrix2& cov) const {
   DensityMap trackDensityMap;
 
@@ -217,8 +217,9 @@ template <unsigned int nDim>
 float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     multivariateGaussian(const Acts::ActsVector<nDim>& args,
                          const Acts::ActsSquareMatrix<nDim>& cov) const {
-  float coef = 1 / std::sqrt(cov.determinant());
-  float expo = -0.5 * args.transpose().dot(cov.inverse() * args);
+  ActsScalar coef = 1 / std::sqrt(cov.determinant());
+  ActsScalar expo = -0.5 * args.transpose().dot(cov.inverse() * args);
+  // We perform the calculation in the ActsScalar precision but we return a float
   return coef * safeExp(expo);
 }
 
