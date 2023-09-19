@@ -110,6 +110,10 @@ class SymmetricKLDistanceMatrix {
   auto at(std::size_t i, std::size_t j) const {
     return m_distances[i * (i - 1) / 2 + j];
   }
+  
+  std::size_t size() const {
+    return m_distances.size();
+  }
 
   template <typename component_t, typename projector_t>
   void recomputeAssociatedDistances(std::size_t n,
@@ -139,6 +143,19 @@ class SymmetricKLDistanceMatrix {
     }
 
     return m_mapToPair.at(idx);
+  }
+  
+  void minDistancePairs(std::vector<std::tuple<double, std::size_t, std::size_t>> &distsAndPairs) const {
+    assert(distsAndPairs.empty());
+    
+    for (auto i = 0l; i < m_distances.size(); ++i) {
+      if (m_mask[i]) {
+        const auto [u, v] = m_mapToPair.at(i);
+        distsAndPairs.push_back({m_distances[i], u, v});
+      }
+    }
+    
+    std::sort(distsAndPairs.begin(), distsAndPairs.end(), [](const auto &a, const auto &b){ return std::get<double>(a) < std::get<double>(b); });
   }
 
   friend std::ostream &operator<<(std::ostream &os,
