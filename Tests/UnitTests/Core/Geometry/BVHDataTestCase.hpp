@@ -93,7 +93,8 @@ BOOST_DATA_TEST_CASE(
   Acts::Vector4 pos4 = Acts::Vector4::Zero();
   pos4.segment<3>(Acts::ePos0) = ray.origin();
   // momentum value should be irrelevant.
-  Acts::CurvilinearTrackParameters startPar(pos4, ray.dir(), 50_GeV, 1_e);
+  Acts::CurvilinearTrackParameters startPar(
+      pos4, ray.dir(), 1_e / 50_GeV, std::nullopt, ParticleHypothesis::pion());
 
   const auto result = propagator.propagate(startPar, options).value();
 
