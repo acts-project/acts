@@ -11,8 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/TrackFinding/detail/SymmetricKLDistanceMatrix.hpp"
 #include "Acts/TrackFitting/GsfMixtureReduction.hpp"
+#include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
 #include <algorithm>
 #include <array>
