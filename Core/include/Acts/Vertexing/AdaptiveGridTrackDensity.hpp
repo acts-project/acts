@@ -40,12 +40,6 @@ class AdaptiveGridTrackDensity {
   static_assert(temporalTrkGridSize % 2);
 
  public:
-  template <unsigned int kSize>
-  using FloatVector = Eigen::Matrix<float, kSize, 1>;
-
-  template <unsigned int kSize>
-  using FloatSquareMatrix = Eigen::Matrix<float, kSize, kSize>;
-
   using Bins = int;  // std::pair<int, int>;
   using DensityMap = std::unordered_map<Bins, float>;
 
@@ -63,8 +57,7 @@ class AdaptiveGridTrackDensity {
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
     /// @param temporalBinExtent_ The temporal extent of a bin in TODO: unit
     Config(float spatialBinExtent_, float temporalBinExtent_)
-        : spatialBinExtent(spatialBinExtent_),
-          temporalBinExtent(temporalBinExtent_) {}
+        : spatialBinExtent(spatialBinExtent_), temporalBinExtent(temporalBinExtent_) {}
 
     // Spatial extent of a bin in d0 and z0 direction
     float spatialBinExtent;  // mm
@@ -149,7 +142,7 @@ class AdaptiveGridTrackDensity {
   /// @param centralZBin Central z bin of the track (where its density is the highest)
   /// @param cov 2x2 impact parameter covariance matrix
   DensityMap createTrackGrid(float d0, float z0, int centralZBin,
-                             const FloatSquareMatrix<2>& cov) const;
+                             const Acts::SquareMatrix2& cov) const;
 
   /// @brief Function that estimates the seed width based on the full width
   /// at half maximum (FWHM) of the maximum density peak
@@ -172,8 +165,8 @@ class AdaptiveGridTrackDensity {
   ///
   /// @return A value
   template <unsigned int nDim>
-  float multivariateGaussian(const FloatVector<nDim>& args,
-                             const FloatSquareMatrix<nDim>& cov) const;
+  float multivariateGaussian(const Acts::ActsVector<nDim>& args,
+                             const Acts::ActsSquareMatrix<nDim>& cov) const;
 
   /// @brief Checks the (up to) first three density maxima (only those that have
   /// a maximum relative deviation of 'relativeDensityDev' from the main
