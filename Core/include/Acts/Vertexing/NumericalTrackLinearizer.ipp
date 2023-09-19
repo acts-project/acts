@@ -118,8 +118,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
         paramVecCopy.template head<eLinPosSize>(), wiggledDir,
-        paramVecCopy(eLinQOverP), std::nullopt,
-        ParticleHypothesis::pion());
+        paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
     intersection = perigeeSurface
