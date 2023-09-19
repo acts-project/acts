@@ -14,6 +14,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Alignment.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
@@ -36,6 +37,7 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <stdexcept>
 #include <string>
@@ -288,12 +290,14 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
 
   auto surface = std::make_shared<LineSurfaceStub>(Transform3::Identity());
 
-  BoundTrackParameters initialParams{surface, boundVector, 1};
+  BoundTrackParameters initialParams{surface, boundVector, std::nullopt,
+                                     ParticleHypothesis::pion()};
 
   Propagator<StraightLineStepper> propagator({});
 
-  CurvilinearTrackParameters displacedParameters{Vector4::Zero(),
-                                                 Vector3::Zero(), 1};
+  CurvilinearTrackParameters displacedParameters{
+      Vector4::Zero(), Vector3::Zero(), 1, std::nullopt,
+      ParticleHypothesis::pion()};
   {
     PropagatorOptions<> options(tgContext, {});
     options.direction = Acts::Direction::Backward;
@@ -311,7 +315,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
                          displacedParameters.direction());
   CHECK_CLOSE_ABS(intersection.intersection.pathLength, pathLimit, eps);
 
-  BoundTrackParameters endParameters{surface, BoundVector::Zero(), 1};
+  BoundTrackParameters endParameters{surface, BoundVector::Zero(), std::nullopt,
+                                     ParticleHypothesis::pion()};
   {
     PropagatorOptions<> options(tgContext, {});
     options.direction = Acts::Direction::Forward;

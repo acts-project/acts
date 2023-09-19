@@ -12,6 +12,7 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
 #include "Acts/Detector/KdtSurfacesProvider.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
@@ -19,6 +20,7 @@
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -31,6 +33,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/RangeXD.hpp"
+#include "ActsExamples/Geometry/VolumeAssociationTest.hpp"
 
 #include <array>
 #include <memory>
@@ -358,6 +361,21 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
+    // The external volume structure builder
+    py::class_<Acts::Experimental::IRootVolumeFinderBuilder,
+               std::shared_ptr<Acts::Experimental::IRootVolumeFinderBuilder>>(
+        m, "IRootVolumeFinderBuilder");
+
+    auto irvBuilder =
+        py::class_<Acts::Experimental::IndexedRootVolumeFinderBuilder,
+                   Acts::Experimental::IRootVolumeFinderBuilder,
+                   std::shared_ptr<
+                       Acts::Experimental::IndexedRootVolumeFinderBuilder>>(
+            m, "IndexedRootVolumeFinderBuilder")
+            .def(py::init<std::vector<Acts::BinningValue>>());
+  }
+
+  {
     // Cylindrical container builder
     auto ccBuilder =
         py::class_<CylindricalContainerBuilder,
@@ -379,6 +397,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(ccConfig, CylindricalContainerBuilder::Config);
     ACTS_PYTHON_MEMBER(builders);
     ACTS_PYTHON_MEMBER(binning);
+    ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -405,6 +424,10 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VolumeAssociationTest, mex,
+                                "VolumeAssociationTest", name, ntests,
+                                randomNumbers, randomRange, detector);
 }
 
 }  // namespace Acts::Python

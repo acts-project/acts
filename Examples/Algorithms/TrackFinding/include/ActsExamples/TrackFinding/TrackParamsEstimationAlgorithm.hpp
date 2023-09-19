@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
@@ -82,6 +83,9 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     double sigmaT0 = 10 * Acts::UnitConstants::ns;
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    /// Particle hypothesis.
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::pion();
   };
 
   /// Construct the track parameters making algorithm.

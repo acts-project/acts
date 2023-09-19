@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/PdgParticle.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/ProcessType.hpp"
 
@@ -152,9 +153,9 @@ class Particle {
   constexpr ProcessType process() const { return m_process; }
   /// PDG particle number that identifies the type.
   constexpr Acts::PdgParticle pdg() const { return m_pdg; }
-  /// Absolute PDG particle number.
+  /// Absolute PDG particle number that identifies the type.
   constexpr Acts::PdgParticle absolutePdg() const {
-    return Acts::makeAbsolutePdgParticle(m_pdg);
+    return Acts::makeAbsolutePdgParticle(pdg());
   }
   /// Particle charge.
   constexpr Scalar charge() const { return m_charge; }
@@ -163,10 +164,13 @@ class Particle {
   /// Particle mass.
   constexpr Scalar mass() const { return m_mass; }
 
+  /// Particle hypothesis.
+  constexpr Acts::ParticleHypothesis hypothesis() const {
+    return Acts::ParticleHypothesis(absolutePdg(), mass(), absoluteCharge());
+  }
   /// Particl qOverP.
   constexpr Scalar qOverP() const {
-    return charge() == 0 ? 1 / absoluteMomentum()
-                         : charge() / absoluteMomentum();
+    return hypothesis().qOverP(absoluteMomentum(), charge());
   }
 
   /// Space-time position four-vector.
