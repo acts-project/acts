@@ -35,8 +35,9 @@ namespace Acts {
 /// parameter of type std::pair<int, int>
 template <int spatialTrkGridSize = 15, int temporalTrkGridSize = 1>
 class AdaptiveGridTrackDensity {
-  // Assert odd spatialTrkGridSize
+  // Assert odd spatial and temporal track grid size
   static_assert(spatialTrkGridSize % 2);
+  static_assert(temporalTrkGridSize % 2);
 
  public:
   using Bins = int;  // std::pair<int, int>;

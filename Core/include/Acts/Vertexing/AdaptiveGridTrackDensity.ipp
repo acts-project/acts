@@ -48,12 +48,12 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
   if (!m_cfg.useHighestSumZPosition) {
     zBin = highestDensityEntry(densityMap)->first;
   } else {
-    // Get z-position with highest density sum
+    // Get z position with highest density sum
     // of surrounding bins
     zBin = highestDensitySumBin(densityMap);
   }
 
-  // Derive corresponding z-value
+  // Derive corresponding z value
   return getBinCenter(zBin, m_cfg.spatialBinSize);
 }
 
@@ -61,7 +61,7 @@ template <int spatialTrkGridSize, int temporalTrkGridSize>
 Acts::Result<std::pair<float, float>>
 Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     getMaxZPositionAndWidth(DensityMap& densityMap) const {
-  // Get z-value where the density is the highest
+  // Get z value where the density is the highest
   auto maxZRes = getMaxZPosition(densityMap);
   if (not maxZRes.ok()) {
     return maxZRes.error();
@@ -259,7 +259,7 @@ int Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   densityMap.at(zBinFirstMax) = valueFirstMax;
   densityMap.at(zBinSecondMax) = valueSecondMax;
 
-  // Return the z-bin position of the highest density sum
+  // Return the z bin position of the highest density sum
   if (secondSum > firstSum && secondSum > thirdSum) {
     return zBinSecondMax;
   }
