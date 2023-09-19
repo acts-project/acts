@@ -84,7 +84,8 @@ typename Acts::AdaptiveGridTrackDensity<spatialTrkGridSize,
 Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     addTrack(const Acts::BoundTrackParameters& trk,
              DensityMap& mainDensityMap) const {
-  SquareMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
+  FloatSquareMatrix<2> cov =
+      trk.covariance().value().block<2, 2>(0, 0).cast<float>();
   float d0 = trk.parameters()[eBoundLoc0];
   float z0 = trk.parameters()[eBoundLoc1];
 
@@ -128,7 +129,7 @@ typename Acts::AdaptiveGridTrackDensity<spatialTrkGridSize,
                                         temporalTrkGridSize>::DensityMap
 Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     createTrackGrid(float d0, float z0, int centralZBin,
-                    const Acts::SquareMatrix2& cov) const {
+                    const FloatSquareMatrix<2>& cov) const {
   DensityMap trackDensityMap;
 
   int halfTrkGridSize = (spatialTrkGridSize - 1) / 2;
@@ -138,7 +139,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     int zBin = firstZBin + j;
     float z = getBinCenter(zBin, m_cfg.spatialBinExtent);
     // Transverse and logitudinal coordinate of the bin wrt the track center
-    Acts::Vector2 binCoords(-d0, z - z0);
+    FloatVector<2> binCoords(-d0, z - z0);
     trackDensityMap[zBin] = multivariateGaussian<2>(binCoords, cov);
   }
   return trackDensityMap;
@@ -215,8 +216,8 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
 template <int spatialTrkGridSize, int temporalTrkGridSize>
 template <unsigned int nDim>
 float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    multivariateGaussian(const Acts::ActsVector<nDim>& args,
-                         const Acts::ActsSquareMatrix<nDim>& cov) const {
+    multivariateGaussian(const FloatVector<nDim>& args,
+                         const FloatSquareMatrix<nDim>& cov) const {
   float coef = 1 / std::sqrt(cov.determinant());
   float expo = -0.5 * args.transpose().dot(cov.inverse() * args);
   return coef * safeExp(expo);
