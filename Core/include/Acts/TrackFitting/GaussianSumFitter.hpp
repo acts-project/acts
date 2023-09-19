@@ -309,6 +309,8 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("- processed states: " << fwdGsfResult.processedStates);
     ACTS_VERBOSE("- measuerement states: " << fwdGsfResult.measurementStates);
 
+    std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler;
+
     //////////////////
     // Backward pass
     //////////////////
@@ -390,6 +392,16 @@ struct GaussianSumFitter {
     if (bwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(
           GsfError::NoMeasurementStatesCreatedBackward);
+    }
+
+    nInvalidBetheHeitler += bwdGsfResult.nInvalidBetheHeitler;
+
+    if (nInvalidBetheHeitler > 0) {
+      ACTS_WARNING("Encountered "
+                   << nInvalidBetheHeitler
+                   << " cases where the material thickness exceeds the range "
+                      "of the Bethe-Heitler-Approximation. Enable DEBUG output "
+                      "for more information.");
     }
 
     ////////////////////////////////////
