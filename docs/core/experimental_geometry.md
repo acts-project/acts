@@ -89,7 +89,7 @@ Illustration of a planar module andcap detector with a grid holding the indices 
 :::
 
 :::{note}
-When building in `Debug` mode the containment of objects inside a `DetectorVolume` is checked with an `assert(...)` statement.
+When building in `Debug` mode the containment of objects inside a `Acts::DetectorVolume` is checked with an `assert(...)` statement.
 :::
 
 ### The Detector object
@@ -101,7 +101,7 @@ The detector object is the holder class of all geometry objects, it has to conta
 - a volume finder delegate (as `Acts::Experimental::DetecorVolumeFinder`) that allows to uniquely associate a point in space with a contained volume of the detector.
 
 :::{note}
-When the detector is constructed, name duplicates are checked for an when failing an `std::exception` is thrown.
+When the detector is constructed, name duplicates are checked for and if found a `std::exception` is thrown. Similarly, when sensitive surfaces are provided and duplicate `Acts::GeometryIdentifier` objects are found during detector construction a `std::exception` is thrown. The latter can be avoided by using an appropriate (set of) `Acts::GeometyIdGenerator` tool(s) which will guarantee some level of uniqueness.
 :::
 
 :::{figure} /figures/geometry/ODD_Detector.png

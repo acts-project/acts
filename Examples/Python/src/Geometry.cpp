@@ -12,6 +12,7 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/IndexedRootVolumeFinderBuilder.hpp"
 #include "Acts/Detector/KdtSurfacesProvider.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
@@ -19,6 +20,7 @@
 #include "Acts/Detector/interface/IDetectorBuilder.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -330,6 +332,38 @@ void addExperimentalGeometry(Context& ctx) {
   }
 
   {
+    py::class_<Acts::Experimental::IGeometryIdGenerator,
+               std::shared_ptr<Acts::Experimental::IGeometryIdGenerator>>(
+        m, "IGeometryIdGenerator");
+
+    auto geoIdGen =
+        py::class_<Acts::Experimental::GeometryIdGenerator,
+                   Acts::Experimental::IGeometryIdGenerator,
+                   std::shared_ptr<Acts::Experimental::GeometryIdGenerator>>(
+            m, "GeometryIdGenerator")
+            .def(py::init([](Acts::Experimental::GeometryIdGenerator::Config&
+                                 config,
+                             const std::string& name,
+                             Acts::Logging::Level level) {
+              return std::make_shared<Acts::Experimental::GeometryIdGenerator>(
+                  config, getDefaultLogger(name, level));
+            }));
+
+    auto geoIdGenConfig =
+        py::class_<Acts::Experimental::GeometryIdGenerator::Config>(geoIdGen,
+                                                                    "Config")
+            .def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(geoIdGenConfig,
+                             Acts::Experimental::GeometryIdGenerator::Config);
+    ACTS_PYTHON_MEMBER(containerMode);
+    ACTS_PYTHON_MEMBER(containerId);
+    ACTS_PYTHON_MEMBER(resetSubCounters);
+    ACTS_PYTHON_MEMBER(overrideExistingIds);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
     // Put them together to a detector volume
     py::class_<Acts::Experimental::IDetectorComponentBuilder,
                std::shared_ptr<Acts::Experimental::IDetectorComponentBuilder>>(
@@ -356,6 +390,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(internalsBuilder);
     ACTS_PYTHON_MEMBER(externalsBuilder);
+    ACTS_PYTHON_MEMBER(geoIdGenerator);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -398,6 +433,8 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_MEMBER(builders);
     ACTS_PYTHON_MEMBER(binning);
     ACTS_PYTHON_MEMBER(rootVolumeFinderBuilder);
+    ACTS_PYTHON_MEMBER(geoIdGenerator);
+    ACTS_PYTHON_MEMBER(geoIdReverseGen);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -421,6 +458,7 @@ void addExperimentalGeometry(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(dConfig, DetectorBuilder::Config);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(builder);
+    ACTS_PYTHON_MEMBER(geoIdGenerator);
     ACTS_PYTHON_MEMBER(auxiliary);
     ACTS_PYTHON_STRUCT_END();
   }

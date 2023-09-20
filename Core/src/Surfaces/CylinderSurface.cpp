@@ -49,7 +49,7 @@ Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
-    const Acts::DetectorElementBase& detelement)
+    const DetectorElementBase& detelement)
     : RegularSurface(detelement), m_bounds(std::move(cbounds)) {
   /// surfaces representing a detector element must have bounds
   throw_assert(m_bounds, "CylinderBounds must not be nullptr");

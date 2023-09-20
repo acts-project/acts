@@ -28,17 +28,10 @@ namespace detail {
 /// to inspect its charge representation if not TODO this probably gives an ugly
 /// error message if detectCharge does not compile
 template <typename T>
-struct IsMultiComponentBoundParameters : public std::false_type {
-  template <template <class> class U, class V>
-  static auto detectCharge(const U<V>& /*unused*/) {
-    return V{};
-  }
+struct IsMultiComponentBoundParameters : public std::false_type {};
 
-  using Charge = decltype(detectCharge(std::declval<T>()));
-};
-
-template <typename T>
-struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters<T>>
+template <>
+struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters>
     : public std::true_type {};
 
 }  // namespace detail
@@ -283,11 +276,10 @@ struct GaussianSumFitter {
       // This allows the initialization with single- and multicomponent start
       // parameters
       if constexpr (not IsMultiParameters::value) {
-        using Charge = typename IsMultiParameters::Charge;
-
-        MultiComponentBoundTrackParameters<Charge> params(
+        MultiComponentBoundTrackParameters params(
             sParameters.referenceSurface().getSharedPtr(),
-            sParameters.parameters(), sParameters.covariance());
+            sParameters.parameters(), sParameters.covariance(),
+            sParameters.particleHypothesis());
 
         return m_propagator.propagate(params, fwdPropOptions, false,
                                       std::move(inputResult));
@@ -316,6 +308,8 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("- visited surfaces: " << fwdGsfResult.visitedSurfaces.size());
     ACTS_VERBOSE("- processed states: " << fwdGsfResult.processedStates);
     ACTS_VERBOSE("- measuerement states: " << fwdGsfResult.measurementStates);
+
+    std::size_t nInvalidBetheHeitler = fwdGsfResult.nInvalidBetheHeitler;
 
     //////////////////
     // Backward pass
@@ -350,9 +344,9 @@ struct GaussianSumFitter {
       // return an error code
       using ResultType =
           decltype(m_propagator.template propagate<
-                   MultiComponentBoundTrackParameters<SinglyCharged>,
-                   decltype(bwdPropOptions), MultiStepperSurfaceReached>(
-              std::declval<MultiComponentBoundTrackParameters<SinglyCharged>>(),
+                   MultiComponentBoundTrackParameters, decltype(bwdPropOptions),
+                   MultiStepperSurfaceReached>(
+              std::declval<MultiComponentBoundTrackParameters>(),
               std::declval<Acts::Surface&>(),
               std::declval<decltype(bwdPropOptions)>(),
               std::declval<decltype(inputResult)>()));
@@ -398,6 +392,16 @@ struct GaussianSumFitter {
     if (bwdGsfResult.measurementStates == 0) {
       return return_error_or_abort(
           GsfError::NoMeasurementStatesCreatedBackward);
+    }
+
+    nInvalidBetheHeitler += bwdGsfResult.nInvalidBetheHeitler;
+
+    if (nInvalidBetheHeitler > 0) {
+      ACTS_WARNING("Encountered "
+                   << nInvalidBetheHeitler
+                   << " cases where the material thickness exceeds the range "
+                      "of the Bethe-Heitler-Approximation. Enable DEBUG output "
+                      "for more information.");
     }
 
     ////////////////////////////////////
