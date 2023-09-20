@@ -87,6 +87,8 @@ struct GaussianSumFitter {
            const std::vector<const Surface*>& sSequence,
            TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
       const {
+    assert(sParameters.particleHypothesis().absolutePdg() == 11);
+      
     // Check if we have the correct navigator
     static_assert(
         std::is_same_v<DirectNavigator, typename propagator_t::Navigator>);
