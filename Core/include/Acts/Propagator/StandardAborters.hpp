@@ -88,7 +88,7 @@ struct PathLimitReached {
 /// This is the condition that the Surface has been reached
 /// it then triggers an propagation abort of the propagation
 struct SurfaceReached {
-  double overstepLimit = 200 * UnitConstants::um;
+  double overstepLimit = 1 * UnitConstants::mm;
 
   SurfaceReached() = default;
 
