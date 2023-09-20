@@ -330,6 +330,12 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @return the geometry identifier
   const GeometryIdentifier& geometryId() const;
 
+  /// Set the geometry identifier
+  /// @note no checking is done, it will overwrite any existing id
+  ///
+  /// @param geoID is the geometry Id that is set to the object
+  void assignGeometryId(const GeometryIdentifier& geoID);
+
   /// Assign Detector to this volume (for back navigation issues)
   /// @param detector the parenting detector class
   void assignDetector(const Detector& detector);
