@@ -175,7 +175,7 @@ struct SurfaceReached {
         state.stepping.stepSize.value(ConstrainedStep::aborter);
     // not using the stepper overstep limit here because it does not always work
     // for perigee surfaces
-    const double oLimit = overstepLimit;
+    const double oLimit = -overstepLimit;
 
     for (const auto& intersection : sIntersection.split()) {
       if (intersection &&
