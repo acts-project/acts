@@ -459,7 +459,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       m_pull_eT_fit.push_back(pull[Acts::eBoundTime]);
 
       m_hasFittedParams.push_back(hasFittedParams);
-      if (m_cfg.writeCovMat == true) {
+      if (m_cfg.writeCovMat) {
         // write all entries of covariance matrix to output file
         // one branch for every entry of the matrix.
         m_cov_eLOC0_eLOC0.push_back(CovMatrixTrack[0][0]);
