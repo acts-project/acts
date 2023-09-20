@@ -60,7 +60,20 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
   // The Surface material mapping state
   State mState(gctx, mctx);
   resolveMaterialSurfaces(mState, *world);
-  collectMaterialVolumes(mState, *world);
+
+  ACTS_DEBUG(mState.accumulatedMaterial.size()
+             << " Surfaces with PROXIES collected ... ");
+  for (auto& smg : mState.accumulatedMaterial) {
+    ACTS_VERBOSE(" -> Surface in with id " << smg.first);
+  }
+  return mState;
+}
+
+Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
+    const GeometryContext& gctx, const MagneticFieldContext& mctx,
+    const Experimental::Detector& detecctor) const {
+  // The Surface material mapping state
+  State mState(gctx, mctx);
 
   ACTS_DEBUG(mState.accumulatedMaterial.size()
              << " Surfaces with PROXIES collected ... ");
@@ -167,32 +180,6 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
   }
 }
 
-void Acts::SurfaceMaterialMapper::collectMaterialVolumes(
-    State& mState, const TrackingVolume& tVolume) const {
-  ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
-                                   << "' for material surfaces.")
-  ACTS_VERBOSE("- Insert Volume ...");
-  if (tVolume.volumeMaterial() != nullptr) {
-    mState.volumeMaterial[tVolume.geometryId()] =
-        tVolume.volumeMaterialSharedPtr();
-  }
-
-  // Step down into the sub volume
-  if (tVolume.confinedVolumes()) {
-    ACTS_VERBOSE("- Check children volume ...");
-    for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
-      // Recursive call
-      collectMaterialVolumes(mState, *sVolume);
-    }
-  }
-  if (!tVolume.denseVolumes().empty()) {
-    for (auto& sVolume : tVolume.denseVolumes()) {
-      // Recursive call
-      collectMaterialVolumes(mState, *sVolume);
-    }
-  }
-}
-
 void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
   // iterate over the map to call the total average
   for (auto& accMaterial : mState.accumulatedMaterial) {
@@ -239,9 +226,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
 
   // Prepare Action list and abort list
   using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
-  using MaterialVolumeCollector = VolumeCollector<MaterialVolume>;
-  using ActionList =
-      ActionList<MaterialSurfaceCollector, MaterialVolumeCollector>;
+  using ActionList = ActionList<MaterialSurfaceCollector>;
   using AbortList = AbortList<EndOfWorldReached>;
 
   PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
@@ -250,10 +235,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // Now collect the material layers by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();
   auto mcResult = result.get<MaterialSurfaceCollector::result_type>();
-  auto mvcResult = result.get<MaterialVolumeCollector::result_type>();
-
   auto mappingSurfaces = mcResult.collected;
-  auto mappingVolumes = mvcResult.collected;
 
   // These should be mapped onto the mapping surfaces found
   ACTS_VERBOSE("Found     " << mappingSurfaces.size()
@@ -270,11 +252,10 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   // Run the mapping process, i.e. take the recorded material and map it
   // onto the mapping surfaces:
   // - material steps and surfaces are assumed to be ordered along the
-  // mapping ray
-  //- do not record the material inside a volume with material
+  //   mapping ray (this should be guaranteed by the recoring process and the
+  //   geometry)
   auto rmIter = rMaterial.begin();
   auto sfIter = mappingSurfaces.begin();
-  auto volIter = mappingVolumes.begin();
 
   // Use those to minimize the lookup
   GeometryIdentifier lastID = GeometryIdentifier();
@@ -300,28 +281,12 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
 
   // Assign the recorded ones, break if you hit an end
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
-    // Material not inside current volume
-    if (volIter != mappingVolumes.end() &&
-        !volIter->volume->inside(rmIter->position)) {
-      double distVol = (volIter->position - mTrack.first.first).norm();
-      double distMat = (rmIter->position - mTrack.first.first).norm();
-      // Material past the entry point to the current volume
-      if (distMat - distVol > s_epsilon) {
-        // Switch to next material volume
-        ++volIter;
-        continue;
-      }
-    }
-    /// check if we are inside a material volume
-    if (volIter != mappingVolumes.end() &&
-        volIter->volume->inside(rmIter->position)) {
-      ++rmIter;
-      continue;
-    }
+    // double distMat = (rmIter->position - mTrack.first.first).norm();
+
     // Do we need to switch to next assignment surface ?
     if (sfIter != mappingSurfaces.end() - 1) {
-      int mappingType = sfIter->surface->surfaceMaterial()->mappingType();
-      int nextMappingType =
+      auto mappingType = sfIter->surface->surfaceMaterial()->mappingType();
+      auto nextMappingType =
           (sfIter + 1)->surface->surfaceMaterial()->mappingType();
 
       if (mappingType == Acts::MappingType::PreMapping ||
@@ -332,8 +297,8 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
           if (nextMappingType == Acts::MappingType::PostMapping) {
             ACTS_WARNING(
                 "PreMapping or Sensor surface followed by PostMapping. Some "
-                "material "
-                "from before the PostMapping surface will be mapped onto it");
+                "material from before the PostMapping surface will be mapped "
+                "onto it");
           }
           ++sfIter;
           continue;

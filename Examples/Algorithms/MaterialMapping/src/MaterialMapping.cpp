@@ -54,44 +54,24 @@ ActsExamples::MaterialMapping::MaterialMapping(
 ActsExamples::MaterialMapping::~MaterialMapping() {
   Acts::DetectorMaterialMaps detectorMaterial;
 
-  if (m_cfg.materialSurfaceMapper && m_cfg.materialVolumeMapper) {
+  if (m_cfg.materialSurfaceMapper) {
     // Finalize all the maps using the cached state
     m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
-    m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
     // Loop over the state, and collect the maps for surfaces
     for (auto& [key, value] : m_mappingState.surfaceMaterial) {
       detectorMaterial.first.insert({key, std::move(value)});
     }
+  }
+
+  if (m_cfg.materialVolumeMapper) {
+    // Finalize all the maps using the cached state
+    m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
     // Loop over the state, and collect the maps for volumes
     for (auto& [key, value] : m_mappingStateVol.volumeMaterial) {
       detectorMaterial.second.insert({key, std::move(value)});
     }
-  } else {
-    if (m_cfg.materialSurfaceMapper) {
-      // Finalize all the maps using the cached state
-      m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
-      // Loop over the state, and collect the maps for surfaces
-      for (auto& [key, value] : m_mappingState.surfaceMaterial) {
-        detectorMaterial.first.insert({key, std::move(value)});
-      }
-      // Loop over the state, and collect the maps for volumes
-      for (auto& [key, value] : m_mappingState.volumeMaterial) {
-        detectorMaterial.second.insert({key, std::move(value)});
-      }
-    }
-    if (m_cfg.materialVolumeMapper) {
-      // Finalize all the maps using the cached state
-      m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
-      // Loop over the state, and collect the maps for surfaces
-      for (auto& [key, value] : m_mappingStateVol.surfaceMaterial) {
-        detectorMaterial.first.insert({key, std::move(value)});
-      }
-      // Loop over the state, and collect the maps for volumes
-      for (auto& [key, value] : m_mappingStateVol.volumeMaterial) {
-        detectorMaterial.second.insert({key, std::move(value)});
-      }
-    }
   }
+
   // Loop over the available writers and write the maps
   for (auto& imw : m_cfg.materialWriters) {
     imw->writeMaterial(detectorMaterial);

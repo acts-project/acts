@@ -11,6 +11,7 @@
 // Workaround for building on clang+libstdc++
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -40,6 +41,10 @@ class ISurfaceMaterial;
 class TrackingGeometry;
 struct MaterialInteraction;
 
+namespace Experimental {
+class DetectorVolume;
+}
+
 /// @brief selector for finding surface
 struct MaterialSurface {
   bool operator()(const Surface& sf) const {
@@ -57,12 +62,14 @@ struct MaterialVolume {
 /// @brief SurfaceMaterialMapper
 ///
 /// This is the main feature tool to map material information
-/// from a 3D geometry onto the TrackingGeometry with its surface
-/// material description.
+/// from a 3D geometry onto a surfaces based description.
+///
+/// It works for both, the `TrackingVolume` based detector description,
+/// as well as the `DetectorVolume` one.
 ///
 /// The process runs as such:
 ///
-///  1) TrackingGeometry is parsed and for each Surface with
+///  1) The geometry is parsed and for each Surface with
 ///     ProtoSurfaceMaterial a local store is initialized
 ///     the identification is done hereby through the
 ///     Surface::GeometryIdentifier
@@ -74,7 +81,7 @@ struct MaterialVolume {
 ///       origin, direction, material steps < position, step length, x0, l0, a,
 ///       z, rho >
 ///
-///       for each track:
+///       For each track:
 ///          surfaces along the origin/direction path are collected
 ///          the closest material steps are assigned
 ///
@@ -115,13 +122,9 @@ class SurfaceMaterialMapper {
     std::map<GeometryIdentifier, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
 
-    /// The surface material of the input tracking geometry
+    /// The surface material of the input geometry
     std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
         inputSurfaceMaterial;
-
-    /// The volume material of the input tracking geometry
-    std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>
-        volumeMaterial;
 
     /// Reference to the geometry context for the mapping
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -144,6 +147,7 @@ class SurfaceMaterialMapper {
                                              Logging::INFO));
 
   /// @brief helper method that creates the cache for the mapping
+  /// from a TrackingGeometry
   ///
   /// @param [in] gctx The geometry context to use
   /// @param [in] mctx The magnetic field context to use
@@ -155,6 +159,20 @@ class SurfaceMaterialMapper {
   State createState(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx,
                     const TrackingGeometry& tGeometry) const;
+
+  /// @brief helper method that creates the cache for the mapping
+  /// from a Detector object
+  ///
+  /// @param [in] gctx The geometry context to use
+  /// @param [in] mctx The magnetic field context to use
+  /// @param[in] detector The geometry which should be mapped
+  ///
+  /// This method takes a TrackingGeometry,
+  /// finds all surfaces with material proxis
+  /// and returns you a Cache object tO be used
+  State createState(const GeometryContext& gctx,
+                    const MagneticFieldContext& mctx,
+                    const Experimental::Detector& detector) const;
 
   /// @brief Method to finalize the maps
   ///
@@ -200,18 +218,11 @@ class SurfaceMaterialMapper {
   void resolveMaterialSurfaces(State& mState,
                                const TrackingVolume& tVolume) const;
 
-  /// @brief check and insert
+  /// @brief Check and insert
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
   void checkAndInsert(State& mState, const Surface& surface) const;
-
-  /// @brief check and insert
-  ///
-  /// @param mState is the map to be filled
-  /// @param tVolume is the volume collect from
-  void collectMaterialVolumes(State& mState,
-                              const TrackingVolume& tVolume) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }
