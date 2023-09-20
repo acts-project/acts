@@ -890,7 +890,7 @@ class KalmanFitter {
                 st.typeFlags().test(TrackStateFlag::MeasurementFlag);
             bool isHole = st.typeFlags().test(TrackStateFlag::HoleFlag);
             // We are excluding non measurement states and holes here. Those can
-            // decrease resolution beause only the smoothing corrected the very
+            // decrease resolution because only the smoothing corrected the very
             // first prediction as filtering is not possible.
             if (isMeasurement && !isHole) {
               firstStateIndex = st.index();
