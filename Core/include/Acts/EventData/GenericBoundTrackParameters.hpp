@@ -168,7 +168,7 @@ class GenericBoundTrackParameters {
     }
 
     ActsVector<nDim> subParamVec;
-    subParamVec.head<2>() = m_params.head<2>();
+    subParamVec.template head<2>() = m_params.template head<2>();
     if (nDim == 3) {
       subParamVec(2) = m_params(eBoundTime);
     }
