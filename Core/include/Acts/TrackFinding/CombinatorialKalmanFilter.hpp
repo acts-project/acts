@@ -1149,8 +1149,7 @@ class CombinatorialKalmanFilter {
       result.fittedStates->applyBackwards(lastMeasurementIndex, [&](auto st) {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-        bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
-        if (isMeasurement || isMaterial) {
+        if (isMeasurement) {
           firstStateIndex = st.index();
         }
         nStates++;
