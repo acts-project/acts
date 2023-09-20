@@ -218,11 +218,11 @@ template <unsigned int nDim>
 float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     multivariateGaussian(const Acts::ActsVector<nDim>& args,
                          const Acts::ActsSquareMatrix<nDim>& cov) const {
-  ActsScalar coef = 1 / std::sqrt(cov.determinant());
   ActsScalar expo = -0.5 * args.transpose().dot(cov.inverse() * args);
   // We perform the calculation in the ActsScalar precision but we return a
   // float
-  return coef * safeExp(expo);
+  ActsScalar gaussianDensity = safeExp(expo) / std::sqrt(cov.determinant());
+  return static_cast<float>(gaussianDensity);
 }
 
 template <int spatialTrkGridSize, int temporalTrkGridSize>
