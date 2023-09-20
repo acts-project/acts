@@ -145,8 +145,8 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Inner Volume - Build volume configuration
   CuboidVolumeBuilder::VolumeConfig volumeConfig;
-  volumeConfig.position = {2.5_m, 0., 0.};
-  volumeConfig.length = {5_m, 1_m, 1_m};
+  volumeConfig.position = {nSurfaces / 2. * 1_m, 0., 0.};
+  volumeConfig.length = {nSurfaces * 1_m, 1_m, 1_m};
   volumeConfig.layerCfg = layerConfig;
   volumeConfig.name = "Test volume";
   volumeConfig.volumeMaterial =
@@ -159,8 +159,8 @@ std::shared_ptr<const TrackingGeometry> makeToyDetector(
 
   // Outer volume - Build TrackingGeometry configuration
   CuboidVolumeBuilder::Config config;
-  config.position = {2.5_m, 0., 0.};
-  config.length = {5_m, 1_m, 1_m};
+  config.position = {nSurfaces / 2. * 1_m, 0., 0.};
+  config.length = {nSurfaces * 1_m, 1_m, 1_m};
   config.volumeCfg = {volumeConfig};
 
   cvb.setConfig(config);
@@ -356,6 +356,116 @@ BOOST_AUTO_TEST_CASE(Fit5Iterations) {
   BOOST_CHECK_CLOSE(track.covariance().determinant(), 1e-27, 4e0);
 
   ACTS_INFO("*** Test: Fit5Iterations -- Finish");
+}
+
+BOOST_AUTO_TEST_CASE(MixedDetector) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("Gx2fTests", logLevel));
+  ACTS_INFO("*** Test: MixedDetector -- Start");
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
+  Detector detector;
+  const size_t nSurfaces = 7;
+  detector.geometry = makeToyDetector(tgContext, nSurfaces);
+
+  ACTS_DEBUG("Go to propagator");
+
+  auto parametersMeasurements = makeParameters();
+  auto startParametersFit = makeParameters(10_mm, 10_mm, 10_mm, 42_ns,
+                                           10_degree, 80_degree, 1_GeV, 1_e);
+  //  auto startParametersFit = parametersMeasurements;
+  // Context objects
+  Acts::GeometryContext geoCtx;
+  Acts::MagneticFieldContext magCtx;
+  // Acts::CalibrationContext calCtx;
+  std::default_random_engine rng(42);
+
+  MeasurementResolution resPixel = {MeasurementType::eLoc01, {25_um, 50_um}};
+  MeasurementResolution resStrip0 = {MeasurementType::eLoc0, {25_um}};
+  MeasurementResolution resStrip1 = {MeasurementType::eLoc1, {50_um}};
+  MeasurementResolutionMap resolutions = {
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(2), resPixel},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(4), resStrip0},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(6), resStrip1},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(8), resPixel},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(10), resStrip0},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(12), resStrip1},
+      {Acts::GeometryIdentifier().setVolume(2).setLayer(14), resPixel},
+  };
+
+  // simulation propagator
+  using SimPropagator =
+      Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
+  SimPropagator simPropagator = makeStraightPropagator(detector.geometry);
+  auto measurements = createMeasurements(
+      simPropagator, geoCtx, magCtx, parametersMeasurements, resolutions, rng);
+  auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+  ACTS_VERBOSE("sourceLinks.size() = " << sourceLinks.size());
+
+  BOOST_REQUIRE_EQUAL(sourceLinks.size(), nSurfaces);
+
+  ACTS_DEBUG("Start fitting");
+  ACTS_VERBOSE("startParameter unsmeared:\n" << parametersMeasurements);
+  ACTS_VERBOSE("startParameter fit:\n" << startParametersFit);
+
+  const Surface* rSurface = &parametersMeasurements.referenceSurface();
+
+  Navigator::Config cfg{detector.geometry};
+  cfg.resolvePassive = false;
+  cfg.resolveMaterial = true;
+  cfg.resolveSensitive = true;
+  Navigator rNavigator(cfg);
+  // Configure propagation with deactivated B-field
+  auto bField = std::make_shared<ConstantBField>(Vector3(0., 0., 0.));
+  using RecoStepper = EigenStepper<>;
+  RecoStepper rStepper(bField);
+  using RecoPropagator = Propagator<RecoStepper, Navigator>;
+  RecoPropagator rPropagator(rStepper, rNavigator);
+
+  using Gx2Fitter =
+      Experimental::Gx2Fitter<RecoPropagator, VectorMultiTrajectory>;
+  Gx2Fitter Fitter(rPropagator, gx2fLogger->clone());
+
+  Experimental::Gx2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*detector.geometry};
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
+  MagneticFieldContext mfContext;
+  CalibrationContext calContext;
+
+  const Experimental::Gx2FitterOptions gx2fOptions(
+      tgContext, mfContext, calContext, extensions, PropagatorPlainOptions(),
+      rSurface, false, false, FreeToBoundCorrection(false), 5);
+
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  // Fit the track
+  auto res = Fitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                        startParametersFit, gx2fOptions, tracks);
+
+  BOOST_REQUIRE(res.ok());
+
+  auto& track = *res;
+  BOOST_CHECK_EQUAL(track.tipIndex(), Acts::MultiTrajectoryTraits::kInvalid);
+  BOOST_CHECK(!track.hasReferenceSurface());
+  BOOST_CHECK_EQUAL(track.nMeasurements(), 0u);
+  BOOST_CHECK_EQUAL(track.nHoles(), 0u);
+  // We need quite coarse checks here, since on different builds
+  // the created measurements differ in the randomness
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc0], -10., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundLoc1], -10., 6e0);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundPhi], 1e-5, 1e3);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTheta], M_PI / 2, 1e-3);
+  BOOST_CHECK_EQUAL(track.parameters()[eBoundQOverP], 1);
+  BOOST_CHECK_CLOSE(track.parameters()[eBoundTime], 12591.2832360000, 1e-6);
+  BOOST_CHECK_CLOSE(track.covariance().determinant(), 2e-28, 1e0);
+
+  ACTS_INFO("*** Test: MixedDetector -- Finish");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
