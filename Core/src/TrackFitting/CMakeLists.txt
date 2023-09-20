@@ -8,4 +8,5 @@ target_sources(
     GsfError.cpp
     GsfUtils.cpp
     BetheHeitlerApprox.cpp
+    GsfMixtureReduction.cpp
 )
