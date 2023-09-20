@@ -10,8 +10,8 @@
 
 #include <ostream>
 
-Acts::ProtoSurfaceMaterial::ProtoSurfaceMaterial(const BinUtility& binUtility,
-                                                 Acts::MappingType mappingType)
+Acts::ProtoSurfaceMaterial::ProtoSurfaceMaterial(
+    const BinUtility& binUtility, Acts::MaterialMappingType mappingType)
     : ISurfaceMaterial(1., mappingType), m_binUtility(binUtility) {}
 
 Acts::ProtoSurfaceMaterial& Acts::ProtoSurfaceMaterial::operator*=(

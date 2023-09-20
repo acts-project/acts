@@ -95,6 +95,7 @@ void addMaterial(Context& ctx) {
         .def("setBinningMap", &MappingMaterialDecorator::setBinningMap);
   }
 
+  /*
   {
     using Alg = ActsExamples::MaterialMapping;
 
@@ -111,7 +112,7 @@ void addMaterial(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
     ACTS_PYTHON_MEMBER(collection);
-    ACTS_PYTHON_MEMBER(mappingMaterialCollection);
+    ACTS_PYTHON_MEMBER(mappedMaterialCollection);
     ACTS_PYTHON_MEMBER(materialSurfaceMapper);
     ACTS_PYTHON_MEMBER(materialVolumeMapper);
     ACTS_PYTHON_MEMBER(materialWriters);
@@ -164,5 +165,6 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(mappingStep);
     ACTS_PYTHON_STRUCT_END();
   }
+  */
 }
 }  // namespace Acts::Python

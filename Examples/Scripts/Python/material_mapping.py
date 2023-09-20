@@ -119,7 +119,7 @@ def runMaterialMapping(
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
-            collection=mmAlgCfg.mappingMaterialCollection,
+            collection=mmAlgCfg.mappedMaterialCollection,
             filePath=os.path.join(
                 outputDir,
                 mapName + "_tracks.root",

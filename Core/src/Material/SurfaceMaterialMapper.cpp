@@ -11,6 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/ApproachDescriptor.hpp"
@@ -23,20 +26,15 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/Navigator.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
-#include "Acts/Propagator/VolumeCollector.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinAdjustment.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cstddef>
 #include <ostream>
 #include <string>
-#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -51,13 +49,13 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
       m_propagator(std::move(propagator)),
       m_logger(std::move(slogger)) {}
 
-Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
+Acts::MaterialMappingState Acts::SurfaceMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const TrackingGeometry& tGeometry) const {
   // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
 
-  // The Surface material mapping state
+  // The Surface material mapping state with collected surfaces
   State mState(gctx, mctx);
   resolveMaterialSurfaces(mState, *world);
 
@@ -69,12 +67,14 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
   return mState;
 }
 
-Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
+Acts::MaterialMappingState Acts::SurfaceMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
-    const Experimental::Detector& detecctor) const {
+    const Experimental::Detector& detector) const {
   // The Surface material mapping state
   State mState(gctx, mctx);
-
+  for (const auto* volume : detector.volumes()) {
+    resolveMaterialSurfaces(mState, *volume);
+  }
   ACTS_DEBUG(mState.accumulatedMaterial.size()
              << " Surfaces with PROXIES collected ... ");
   for (auto& smg : mState.accumulatedMaterial) {
@@ -85,6 +85,8 @@ Acts::SurfaceMaterialMapper::State Acts::SurfaceMaterialMapper::createState(
 
 void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
     State& mState, const TrackingVolume& tVolume) const {
+  // Resolve the cast
+
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.")
 
@@ -129,6 +131,21 @@ void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
       // Recursive call
       resolveMaterialSurfaces(mState, *sVolume);
     }
+  }
+}
+
+void Acts::SurfaceMaterialMapper::resolveMaterialSurfaces(
+    State& mState, const Experimental::DetectorVolume& dVolume) const {
+  ACTS_VERBOSE("Checking detector volume '" << dVolume.name()
+                                            << "' for material surfaces.")
+
+  ACTS_VERBOSE("- surfaces ...");
+  for (const auto* surface : dVolume.surfaces()) {
+    checkAndInsert(mState, *surface);
+  }
+  ACTS_VERBOSE("- portals ...");
+  for (const auto* portal : dVolume.portals()) {
+    checkAndInsert(mState, portal->surface());
   }
 }
 
@@ -180,17 +197,25 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
   }
 }
 
-void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
-  // iterate over the map to call the total average
-  for (auto& accMaterial : mState.accumulatedMaterial) {
+Acts::MaterialMappingResult Acts::SurfaceMaterialMapper::finalizeMaps(
+    MaterialMappingState& mState) const {
+  auto& mStateRef = static_cast<State&>(mState);
+  // Fill the material maps
+  Acts::MaterialMappingResult maps{};
+  // Iterate over the map to call the total average
+  for (auto& accMaterial : mStateRef.accumulatedMaterial) {
     ACTS_DEBUG("Finalizing map for Surface " << accMaterial.first);
-    mState.surfaceMaterial[accMaterial.first] =
+    maps.surfaceMaterialMap[accMaterial.first] =
         accMaterial.second.totalAverage();
   }
+  return maps;
 }
 
-void Acts::SurfaceMaterialMapper::mapMaterialTrack(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+std::array<Acts::RecordedMaterialTrack, 2u>
+Acts::SurfaceMaterialMapper::mapMaterialTrack(
+    MaterialMappingState& mState, const RecordedMaterialTrack& mTrack) const {
+  auto& mStateRef = static_cast<State&>(mState);
+
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
@@ -202,20 +227,20 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     ACTS_VERBOSE(
         "Material surfaces are associated with the material interaction. The "
         "association interaction/surfaces won't be performed again.");
-    mapSurfaceInteraction(mState, rMaterial);
-    return;
-  } else {
-    ACTS_VERBOSE(
-        "Material interactions need to be associated with surfaces. Collecting "
-        "all surfaces on the trajectory.");
-    mapInteraction(mState, mTrack);
-    return;
+    mapSurfaceInteraction(mStateRef, rMaterial);
+    return {mTrack, RecordedMaterialTrack{}};
   }
+  ACTS_VERBOSE(
+      "Material interactions need to be associated with surfaces. Collecting "
+      "all surfaces on the trajectory.");
+  return mapInteraction(mStateRef, mTrack);
 }
-void Acts::SurfaceMaterialMapper::mapInteraction(
-    State& mState, RecordedMaterialTrack& mTrack) const {
+
+std::array<Acts::RecordedMaterialTrack, 2u>
+Acts::SurfaceMaterialMapper::mapInteraction(
+    State& mState, const RecordedMaterialTrack& mTrack) const {
   // Retrieve the recorded material from the recorded material track
-  auto& rMaterial = mTrack.second.materialInteractions;
+  auto rMaterial = mTrack.second.materialInteractions;
   std::map<GeometryIdentifier, unsigned int> assignedMaterial;
   using VectorHelpers::makeVector4;
   // Neutral curvilinear parameters
@@ -273,28 +298,34 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
       touchedMaterialBin;
   if (sfIter != mappingSurfaces.end() &&
       sfIter->surface->surfaceMaterial()->mappingType() ==
-          Acts::MappingType::PostMapping) {
+          MaterialMappingType::PostMapping) {
     ACTS_WARNING(
         "The first mapping surface is a PostMapping one. Some material from "
         "before the PostMapping surface will be mapped onto it ");
   }
 
+  /// Prepare the return values
+  RecordedMaterialTrack mappedMaterialTrack{mTrack.first, RecordedMaterial{}};
+  RecordedMaterialTrack unmappedMaterialTrack{mTrack.first, RecordedMaterial{}};
+
   // Assign the recorded ones, break if you hit an end
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
-    // double distMat = (rmIter->position - mTrack.first.first).norm();
+    // Assume mapped and unmapped record
+    auto mappedRecord = (*rmIter);
+    auto unmappedRecord = (*rmIter);
 
-    // Do we need to switch to next assignment surface ?
+    // Check if we need to switch to the next surface
     if (sfIter != mappingSurfaces.end() - 1) {
       auto mappingType = sfIter->surface->surfaceMaterial()->mappingType();
-      auto nextMappingType =
+      auto nextMaterialMappingType =
           (sfIter + 1)->surface->surfaceMaterial()->mappingType();
 
-      if (mappingType == Acts::MappingType::PreMapping ||
-          mappingType == Acts::MappingType::Sensor) {
+      if (mappingType == MaterialMappingType::PreMapping ||
+          mappingType == MaterialMappingType::Sensor) {
         // Change surface if the material after the current surface.
         if ((rmIter->position - mTrack.first.first).norm() >
             (sfIter->position - mTrack.first.first).norm()) {
-          if (nextMappingType == Acts::MappingType::PostMapping) {
+          if (nextMaterialMappingType == MaterialMappingType::PostMapping) {
             ACTS_WARNING(
                 "PreMapping or Sensor surface followed by PostMapping. Some "
                 "material from before the PostMapping surface will be mapped "
@@ -303,11 +334,11 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
           ++sfIter;
           continue;
         }
-      } else if (mappingType == Acts::MappingType::Default ||
-                 mappingType == Acts::MappingType::PostMapping) {
-        switch (nextMappingType) {
-          case Acts::MappingType::PreMapping:
-          case Acts::MappingType::Default: {
+      } else if (mappingType == MaterialMappingType::Default ||
+                 mappingType == MaterialMappingType::PostMapping) {
+        switch (nextMaterialMappingType) {
+          case MaterialMappingType::PreMapping:
+          case MaterialMappingType::Default: {
             // Change surface if the material closest to the next surface.
             if ((rmIter->position - sfIter->position).norm() >
                 (rmIter->position - (sfIter + 1)->position).norm()) {
@@ -316,7 +347,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
             }
             break;
           }
-          case Acts::MappingType::PostMapping: {
+          case MaterialMappingType::PostMapping: {
             // Change surface if the material after the next surface.
             if ((rmIter->position - sfIter->position).norm() >
                 ((sfIter + 1)->position - sfIter->position).norm()) {
@@ -325,7 +356,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
             }
             break;
           }
-          case Acts::MappingType::Sensor: {
+          case MaterialMappingType::Sensor: {
             // Change surface if the next material after the next surface.
             if ((rmIter == rMaterial.end() - 1) ||
                 ((rmIter + 1)->position - sfIter->position).norm() >
@@ -371,10 +402,16 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     ++assignedMaterial[currentID];
     // Update the material interaction with the associated surface and
     // intersection
-    rmIter->surface = sfIter->surface;
-    rmIter->intersection = sfIter->position;
-    rmIter->intersectionID = currentID;
-    rmIter->pathCorrection = currentPathCorrection;
+    mappedRecord.surface = sfIter->surface;
+    mappedRecord.intersection = sfIter->position;
+    mappedRecord.intersectionID = currentID;
+    mappedRecord.pathCorrection = currentPathCorrection;
+    // push it to the mapped recournd
+    mappedMaterialTrack.second.materialInX0 +=
+        mappedRecord.materialSlab.thicknessInX0();
+    mappedMaterialTrack.second.materialInL0 +=
+        mappedRecord.materialSlab.thicknessInL0();
+    mappedMaterialTrack.second.materialInteractions.push_back(mappedRecord);
     // Switch to next material
     ++rmIter;
   }
@@ -424,10 +461,13 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
       }
     }
   }
+  // Mapped and unmapped material
+  return {mappedMaterialTrack, unmappedMaterialTrack};
 }
 
 void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
-    State& mState, std::vector<MaterialInteraction>& rMaterial) const {
+    State& mState, const std::vector<MaterialInteraction>& rMaterial) const {
+  // Mapping statistics
   using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>;
   std::map<AccumulatedSurfaceMaterial*, std::array<size_t, 3>> touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,9 +10,10 @@
 
 #include "Acts/Material/AccumulatedMaterialSlab.hpp"
 #include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -23,111 +24,101 @@ struct AlgorithmContext;
 ActsExamples::MaterialMapping::MaterialMapping(
     const ActsExamples::MaterialMapping::Config& cfg,
     Acts::Logging::Level level)
-    : ActsExamples::IAlgorithm("MaterialMapping", level),
-      m_cfg(cfg),
-      m_mappingState(cfg.geoContext, cfg.magFieldContext),
-      m_mappingStateVol(cfg.geoContext, cfg.magFieldContext) {
-  if (!m_cfg.materialSurfaceMapper && !m_cfg.materialVolumeMapper) {
-    throw std::invalid_argument("Missing material mapper");
-  } else if (!m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
+    : ActsExamples::IAlgorithm("MaterialMapping", level), m_cfg(cfg) {
+  if (m_cfg.materialMappers.empty()) {
+    throw std::invalid_argument(
+        "At least one material mapper must to be defined.");
+  } else if (m_cfg.trackingGeometry == nullptr and m_cfg.detector == nullptr) {
+    throw std::invalid_argument(
+        "Either TrackingGeometry or Detector must to be defined.");
   }
 
-  m_inputMaterialTracks.initialize(m_cfg.collection);
-  m_outputMaterialTracks.initialize(m_cfg.mappingMaterialCollection);
+  if (m_cfg.trackingGeometry != nullptr) {
+    ACTS_DEBUG("Material mapping for TrackingGeometry is enabled.");
+    for (const auto& mapper : m_cfg.materialMappers) {
+      m_mappingStates.push_back(mapper->createState(
+          m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.trackingGeometry));
+    }
 
-  ACTS_INFO("This algorithm requires inter-event information, "
-            << "run in single-threaded mode!");
-
-  if (m_cfg.materialSurfaceMapper) {
-    // Generate and retrieve the central cache object
-    m_mappingState = m_cfg.materialSurfaceMapper->createState(
-        m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.trackingGeometry);
-  }
-  if (m_cfg.materialVolumeMapper) {
-    // Generate and retrieve the central cache object
-    m_mappingStateVol = m_cfg.materialVolumeMapper->createState(
-        m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.trackingGeometry);
+  } else if (m_cfg.detector != nullptr) {
+    ACTS_DEBUG("Material mapping for Detector is enabled.");
+    for (const auto& mapper : m_cfg.materialMappers) {
+      m_mappingStates.push_back(mapper->createState(
+          m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.detector));
+    }
   }
 }
 
 ActsExamples::MaterialMapping::~MaterialMapping() {
+  // Prepare to write out the maps
   Acts::DetectorMaterialMaps detectorMaterial;
-
-  if (m_cfg.materialSurfaceMapper) {
-    // Finalize all the maps using the cached state
-    m_cfg.materialSurfaceMapper->finalizeMaps(m_mappingState);
-    // Loop over the state, and collect the maps for surfaces
-    for (auto& [key, value] : m_mappingState.surfaceMaterial) {
-      detectorMaterial.first.insert({key, std::move(value)});
+  // Finalize all the mappers and collect the maps
+  for (const auto [im, mapper] : Acts::enumerate(m_cfg.materialMappers)) {
+    Acts::MaterialMappingState& mState = m_mappingStates[im];
+    auto mappingResult = mapper->finalizeMaps(mState);
+    // The surface maps - check for duplicates
+    for (auto& [id, surfaceMaterial] : mappingResult.surfaceMaterialMap) {
+      if (detectorMaterial.first.find(id) != detectorMaterial.first.end()) {
+        throw std::invalid_argument(
+            "Surface material map already exists for this identifier.");
+      }
+      detectorMaterial.first.insert({id, std::move(surfaceMaterial)});
+    }
+    // The volume maps - check for duplicates
+    for (auto& [id, volumeMaterial] : mappingResult.volumeMaterialMap) {
+      if (detectorMaterial.second.find(id) != detectorMaterial.second.end()) {
+        throw std::invalid_argument(
+            "Volume material map already exists for this identifier.");
+      }
+      detectorMaterial.second.insert({id, std::move(volumeMaterial)});
     }
   }
-
-  if (m_cfg.materialVolumeMapper) {
-    // Finalize all the maps using the cached state
-    m_cfg.materialVolumeMapper->finalizeMaps(m_mappingStateVol);
-    // Loop over the state, and collect the maps for volumes
-    for (auto& [key, value] : m_mappingStateVol.volumeMaterial) {
-      detectorMaterial.second.insert({key, std::move(value)});
-    }
-  }
-
   // Loop over the available writers and write the maps
-  for (auto& imw : m_cfg.materialWriters) {
-    imw->writeMaterial(detectorMaterial);
+  for (auto& writer : m_cfg.materialWriters) {
+    writer->writeMaterial(detectorMaterial);
   }
 }
 
 ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     const ActsExamples::AlgorithmContext& context) const {
-  // Take the collection from the EventStore
-  std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection =
+  // Take the input collection from the EventStore
+  std::unordered_map<size_t, Acts::RecordedMaterialTrack> inputMaterialTracks =
       m_inputMaterialTracks(context);
 
-  if (m_cfg.materialSurfaceMapper) {
-    // To make it work with the framework needs a lock guard
-    auto mappingState =
-        const_cast<Acts::SurfaceMaterialMapper::State*>(&m_mappingState);
-    for (auto& [idTrack, mTrack] : mtrackCollection) {
-      // Map this one onto the geometry
-      m_cfg.materialSurfaceMapper->mapMaterialTrack(*mappingState, mTrack);
-    }
-  }
-  if (m_cfg.materialVolumeMapper) {
-    // To make it work with the framework needs a lock guard
-    auto mappingState =
-        const_cast<Acts::VolumeMaterialMapper::State*>(&m_mappingStateVol);
+  // Write the output collection to the EventStore
+  std::unordered_map<size_t, Acts::RecordedMaterialTrack> mappedMaterialTracks;
+  std::unordered_map<size_t, Acts::RecordedMaterialTrack>
+      unmappedMaterialTracks;
 
-    for (auto& [idTrack, mTrack] : mtrackCollection) {
-      // Map this one onto the geometry
-      m_cfg.materialVolumeMapper->mapMaterialTrack(*mappingState, mTrack);
+  for (auto [idTrack, mTrack] : inputMaterialTracks) {
+    // The processed part of the track
+    Acts::RecordedMaterialTrack mappedTrack{mTrack.first,
+                                            Acts::RecordedMaterial{}};
+    Acts::RecordedMaterialTrack unmappedTrack{mTrack.first,
+                                              Acts::RecordedMaterial{}};
+    // Map this one onto the geometry
+    for (const auto [im, mapper] : Acts::enumerate(m_cfg.materialMappers)) {
+      Acts::MaterialMappingState& mState =
+          const_cast<Acts::MaterialMappingState&>(m_mappingStates[im]);
+      auto [mapped, unmapped] = mapper->mapMaterialTrack(mState, mTrack);
+      // Run further with the unmapped part
+      mTrack = unmapped;
+      // Keep track of the mapped part
+      mappedTrack.second.materialInX0 = mapped.second.materialInX0;
+      mappedTrack.second.materialInL0 = mapped.second.materialInL0;
+      mappedTrack.second.materialInteractions.insert(
+          mappedTrack.second.materialInteractions.end(),
+          mapped.second.materialInteractions.begin(),
+          mapped.second.materialInteractions.end());
+      // The unmapped is handed through to the end
+      unmappedTrack = unmapped;
     }
+    mappedMaterialTracks.insert({idTrack, mappedTrack});
+    unmappedMaterialTracks.insert({idTrack, unmappedTrack});
   }
-  // Write take the collection to the EventStore
-  m_outputMaterialTracks(context, std::move(mtrackCollection));
+  // Write the result to the event store
+  m_mappedMaterialTracks(context, std::move(mappedMaterialTracks));
+  m_unmappedMaterialTracks(context, std::move(unmappedMaterialTracks));
+  // Return success
   return ActsExamples::ProcessCode::SUCCESS;
-}
-
-std::vector<std::pair<double, int>>
-ActsExamples::MaterialMapping::scoringParameters(uint64_t surfaceID) {
-  std::vector<std::pair<double, int>> scoringParameters;
-
-  if (m_cfg.materialSurfaceMapper) {
-    auto surfaceAccumulatedMaterial = m_mappingState.accumulatedMaterial.find(
-        Acts::GeometryIdentifier(surfaceID));
-
-    if (surfaceAccumulatedMaterial !=
-        m_mappingState.accumulatedMaterial.end()) {
-      auto matrixMaterial =
-          surfaceAccumulatedMaterial->second.accumulatedMaterial();
-      for (const auto& vectorMaterial : matrixMaterial) {
-        for (const auto& AccumulatedMaterial : vectorMaterial) {
-          auto totalVariance = AccumulatedMaterial.totalVariance();
-          scoringParameters.push_back(
-              {totalVariance.first, totalVariance.second});
-        }
-      }
-    }
-  }
-  return scoringParameters;
 }

@@ -132,7 +132,7 @@ class AccumulatedSurfaceMaterial {
   void trackAverage(const Vector3& gp, bool emptyHit = false);
 
   /// Total average creates SurfaceMaterial
-  std::unique_ptr<const ISurfaceMaterial> totalAverage();
+  std::unique_ptr<ISurfaceMaterial> totalAverage();
 
   /// Access to the accumulated material
   const AccumulatedMatrix& accumulatedMaterial() const;
