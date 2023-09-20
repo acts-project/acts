@@ -59,14 +59,6 @@ struct PropagatorPlainOptions {
   /// Propagation direction
   Direction direction = Direction::Forward;
 
-  /// The |pdg| code for (eventual) material integration -
-  /// pion default
-  PdgParticle absPdgCode = PdgParticle::ePionPlus;
-
-  /// The mass of the particle for (eventual) material integration -
-  /// pion default
-  double mass = 139.57018 * UnitConstants::MeV;
-
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
@@ -132,8 +124,6 @@ struct PropagatorOptions : public PropagatorPlainOptions {
         geoContext, magFieldContext);
     // Copy the options over
     eoptions.direction = direction;
-    eoptions.absPdgCode = absPdgCode;
-    eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
     eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
     eoptions.maxStepSize = maxStepSize;
@@ -158,8 +148,6 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   void setPlainOptions(const PropagatorPlainOptions& pOptions) {
     // Copy the options over
     direction = pOptions.direction;
-    absPdgCode = pOptions.absPdgCode;
-    mass = pOptions.mass;
     maxSteps = pOptions.maxSteps;
     maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
     maxStepSize = pOptions.maxStepSize;

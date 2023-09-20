@@ -66,6 +66,8 @@ using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 using namespace Acts::Experimental;
 
+static const auto electron = ParticleHypothesis::electron();
+
 Acts::GainMatrixUpdater kfUpdater;
 
 FitterTester tester;
@@ -103,19 +105,15 @@ auto makeDefaultGsfOptions() {
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
 // the function so that it can also be used as GenericBoundTrackParameters for
 // the MeasurementsCreator
-template <typename charge_t>
-struct MultiCmpsParsInterface : public GenericBoundTrackParameters<charge_t> {
-  MultiComponentBoundTrackParameters<charge_t> multi_pars;
+struct MultiCmpsParsInterface : public BoundTrackParameters {
+  MultiComponentBoundTrackParameters multi_pars;
 
-  MultiCmpsParsInterface(const MultiComponentBoundTrackParameters<charge_t> &p)
-      : GenericBoundTrackParameters<charge_t>(
-            p.referenceSurface().getSharedPtr(), p.parameters(),
-            p.covariance()),
+  MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
+      : BoundTrackParameters(p.referenceSurface().getSharedPtr(),
+                             p.parameters(), p.covariance(), electron),
         multi_pars(p) {}
 
-  operator MultiComponentBoundTrackParameters<charge_t>() const {
-    return multi_pars;
-  }
+  operator MultiComponentBoundTrackParameters() const { return multi_pars; }
 };
 
 auto makeParameters() {
@@ -131,8 +129,8 @@ auto makeParameters() {
 
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  Acts::CurvilinearTrackParameters cp(mPos4, 0_degree, 90_degree, 1_GeV, 1_e,
-                                      cov);
+  Acts::CurvilinearTrackParameters cp(mPos4, 0_degree, 90_degree, 1_e / 1_GeV,
+                                      cov, electron);
 
   // Construct bound multi component parameters from curvilinear ones
   Acts::BoundVector deltaLOC0 = Acts::BoundVector::Zero();
@@ -151,9 +149,8 @@ auto makeParameters() {
       {0.2, cp.parameters() - deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() - deltaLOC0 - deltaLOC1 - deltaQOP, cov}};
 
-  return MultiCmpsParsInterface<SinglyCharged>(
-      Acts::MultiComponentBoundTrackParameters<SinglyCharged>(
-          cp.referenceSurface().getSharedPtr(), cmps));
+  return MultiCmpsParsInterface(MultiComponentBoundTrackParameters(
+      cp.referenceSurface().getSharedPtr(), cmps, electron));
 }
 
 }  // namespace

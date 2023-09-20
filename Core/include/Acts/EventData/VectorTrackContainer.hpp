@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
@@ -75,6 +76,8 @@ class VectorTrackContainerBase {
         return &instance.m_tipIndex[itrack];
       case "stemIndex"_hash:
         return &instance.m_stemIndex[itrack];
+      case "particleHypothesis"_hash:
+        return &instance.m_particleHypothesis[itrack];
       case "params"_hash:
         return &instance.m_params[itrack];
       case "cov"_hash:
@@ -113,6 +116,8 @@ class VectorTrackContainerBase {
     result = result && m_tipIndex.size() == size;
     assert(result);
     result = result && m_stemIndex.size() == size;
+    assert(result);
+    result = result && m_particleHypothesis.size() == size;
     assert(result);
     result = result && m_params.size() == size;
     assert(result);
@@ -161,6 +166,7 @@ class VectorTrackContainerBase {
 
   std::vector<IndexType> m_tipIndex;
   std::vector<IndexType> m_stemIndex;
+  std::vector<ParticleHypothesis> m_particleHypothesis;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
@@ -244,6 +250,11 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   void setReferenceSurface_impl(IndexType itrack,
                                 std::shared_ptr<const Surface> surface) {
     m_referenceSurfaces[itrack] = std::move(surface);
+  }
+
+  void setParticleHypothesis_impl(
+      IndexType itrack, const ParticleHypothesis& particleHypothesis) {
+    m_particleHypothesis[itrack] = particleHypothesis;
   }
 
   // END INTERFACE

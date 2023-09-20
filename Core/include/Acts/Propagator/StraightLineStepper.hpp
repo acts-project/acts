@@ -36,8 +36,6 @@
 #include <tuple>
 
 namespace Acts {
-template <class charge_t>
-class GenericBoundTrackParameters;
 
 /// @brief straight line stepper based on Surface intersection
 ///
@@ -60,8 +58,6 @@ class StraightLineStepper {
 
     /// Constructor from the initial bound track parameters
     ///
-    /// @tparam charge_t Type of the bound parameter charge
-    ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
@@ -69,13 +65,12 @@ class StraightLineStepper {
     /// @param [in] stolerance is the stepping tolerance
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
     explicit State(const GeometryContext& gctx,
                    const MagneticFieldContext& mctx,
-                   const GenericBoundTrackParameters<charge_t>& par,
+                   const BoundTrackParameters& par,
                    double ssize = std::numeric_limits<double>::max(),
                    double stolerance = s_onSurfaceTolerance)
-        : absCharge(std::abs(par.charge())),
+        : particleHypothesis(par.particleHypothesis()),
           stepSize(ssize),
           tolerance(stolerance),
           geoContext(gctx) {
@@ -109,8 +104,8 @@ class StraightLineStepper {
     /// Internal free vector parameters
     FreeVector pars = FreeVector::Zero();
 
-    /// The absolute charge as the free vector can be 1/p or q/p
-    double absCharge = UnitConstants::e;
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
 
     /// Boolean to indicate if you need covariance transport
     bool covTransport = false;
@@ -138,10 +133,9 @@ class StraightLineStepper {
 
   StraightLineStepper() = default;
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const GenericBoundTrackParameters<charge_t>& par,
+                  const BoundTrackParameters& par,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
     return State{gctx, mctx, par, ssize, stolerance};
@@ -194,8 +188,7 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double absoluteMomentum(const State& state) const {
-    auto q = charge(state);
-    return std::abs((q == 0 ? 1 : q) / qOverP(state));
+    return particleHypothesis(state).extractMomentum(qOverP(state));
   }
 
   /// Momentum accessor
@@ -209,7 +202,14 @@ class StraightLineStepper {
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return std::copysign(state.absCharge, qOverP(state));
+    return particleHypothesis(state).extractCharge(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  const ParticleHypothesis& particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
   }
 
   /// Time access
@@ -387,9 +387,10 @@ class StraightLineStepper {
                       const navigator_t& /*navigator*/) const {
     // use the adjusted step size
     const auto h = state.stepping.stepSize.value() * state.options.direction;
-    const double p = absoluteMomentum(state.stepping);
+    const auto m = state.stepping.particleHypothesis.mass();
+    const auto p = absoluteMomentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
-    const auto dtds = std::hypot(1., state.options.mass / p);
+    const auto dtds = std::hypot(1., m / p);
     // Update the track parameters according to the equations of motion
     Vector3 dir = direction(state.stepping);
     state.stepping.pars.template segment<3>(eFreePos0) += h * dir;
@@ -401,8 +402,7 @@ class StraightLineStepper {
       D.block<3, 3>(0, 4) = ActsSquareMatrix<3>::Identity() * h;
       // Extend the calculation by the time propagation
       // Evaluate dt/dlambda
-      D(3, 7) = h * state.options.mass * state.options.mass *
-                state.stepping.pars[eFreeQOverP] / dtds;
+      D(3, 7) = h * m * m * state.stepping.pars[eFreeQOverP] / dtds;
       // Set the derivative factor the time
       state.stepping.derivative(3) = dtds;
       // Update jacobian and derivative

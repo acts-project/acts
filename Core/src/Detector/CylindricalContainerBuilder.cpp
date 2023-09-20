@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/DetectorComponents.hpp"
 #include "Acts/Detector/detail/CylindricalDetectorHelper.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Detector/interface/IRootVolumeFinderBuilder.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 
@@ -164,6 +165,21 @@ Acts::Experimental::CylindricalContainerBuilder::construct(
         RootDetectorVolumes{
             rootVolumes,
             m_cfg.rootVolumeFinderBuilder->construct(gctx, rootVolumes)}};
+  }
+
+  // Geometry Id generation
+  if (m_cfg.geoIdGenerator != nullptr) {
+    ACTS_DEBUG("Assigning geometry ids to the detector");
+    auto cache = m_cfg.geoIdGenerator->generateCache();
+    if (m_cfg.geoIdReverseGen) {
+      std::for_each(rootVolumes.rbegin(), rootVolumes.rend(), [&](auto& v) {
+        m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+      });
+    } else {
+      std::for_each(rootVolumes.begin(), rootVolumes.end(), [&](auto& v) {
+        m_cfg.geoIdGenerator->assignGeometryId(cache, *v);
+      });
+    }
   }
 
   // Return the container
