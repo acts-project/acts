@@ -571,7 +571,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_pull_eQOP_fit.clear();
   m_pull_eT_fit.clear();
 
-  if (m_cfg.writeCovMat == true) {
+  if (m_cfg.writeCovMat) {
     m_cov_eLOC0_eLOC0.clear();
     m_cov_eLOC0_eLOC1.clear();
     m_cov_eLOC0_ePHI.clear();
