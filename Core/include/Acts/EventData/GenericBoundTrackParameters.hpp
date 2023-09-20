@@ -156,15 +156,33 @@ class GenericBoundTrackParameters {
   ParametersVector& parameters() { return m_params; }
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
+  /// Vector of impact parameters (i.e., d0 and z0 if nDim=2
+  /// or d0, z0, and t if nDim=3)
+  template <unsigned int nDim = 2>
+  const ActsVector<nDim>& impactParameters() const {
+    if (nDim != 2 and nDim != 3) {
+      throw std::invalid_argument(
+          "The number of dimensions nDim must be either 2 or 3 but was set "
+          "to " +
+          std::to_string(nDim) + ".");
+    }
+
+    ActsVector<nDim> subParamVec;
+    subParamVec.head<2>() = m_params.head<2>();
+    if (nDim == 3) {
+      subParamVec(2) = m_params(eBoundTime);
+    }
+    return subParamVec;
+  }
   /// Optional covariance matrix.
   std::optional<CovarianceMatrix>& covariance() { return m_cov; }
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
   /// Covariance matrix of the impact parameters (i.e., of d0 and z0 if nDim=2
-  /// and of d0, z0, and t if nDim=3)
+  /// or of d0, z0, and t if nDim=3)
   template <unsigned int nDim = 2>
-  std::optional<ActsSquareMatrix<nDim>> ipCovariance() const {
+  std::optional<ActsSquareMatrix<nDim>> impactParameterCovariance() const {
     if (nDim != 2 and nDim != 3) {
       throw std::invalid_argument(
           "The number of dimensions nDim must be either 2 or 3 but was set "
