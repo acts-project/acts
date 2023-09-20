@@ -210,7 +210,7 @@ class ObjectIntersection {
 template <typename object_t, typename representation_t = object_t>
 class ObjectMultiIntersection {
  public:
-  using Split = boost::container::static_vector<
+  using SplitIntersections = boost::container::static_vector<
       ObjectIntersection<object_t, representation_t>,
       s_maximumNumberOfIntersections>;
 
@@ -251,9 +251,8 @@ class ObjectMultiIntersection {
     return m_representation;
   }
 
-  constexpr Split split() const {
-    Split result;
-    result.reserve(size());
+  constexpr SplitIntersections split() const {
+    SplitIntersections result;
     for (std::size_t i = 0; i < size(); ++i) {
       result.push_back(operator[](i));
     }
