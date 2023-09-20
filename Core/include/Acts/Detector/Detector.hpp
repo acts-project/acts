@@ -12,6 +12,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -23,6 +25,9 @@
 #include <vector>
 
 namespace Acts {
+
+class Surface;
+
 namespace Experimental {
 struct NavigationState;
 
@@ -90,6 +95,11 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
 
+  /// Const access to the hierarchy map of all sensitive surfaces
+  ///
+  /// @return the map which can be queried with GeometryID for ranges
+  const GeometryHierarchyMap<const Surface*>& sensitiveHierarchyMap() const;
+
   /// Update the current volume of a given navigation state
   ///
   /// @param gctx is the Geometry context of the call
@@ -142,6 +152,9 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
   /// Name/index map to find volumes by name and detect duplicates
   std::unordered_map<std::string, size_t> m_volumeNameIndex;
+
+  /// Geometry Id hierarchy map of all sensitive surfaces
+  GeometryHierarchyMap<const Surface*> m_sensitiveHierarchyMap;
 };
 
 }  // namespace Experimental
