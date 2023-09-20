@@ -41,9 +41,9 @@ struct InteractionVolume {
 
   /// Forward the geometry identifier
   GeometryIdentifier geometryId() const {
-    if (trackingVolume) {
+    if (trackingVolume != nullptr) {
       return trackingVolume->geometryId();
-    } else if (detectorVolume) {
+    } else if (detectorVolume != nullptr) {
       return detectorVolume->geometryId();
     } else {
       return GeometryIdentifier();
