@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -87,6 +88,8 @@ struct PathLimitReached {
 /// This is the condition that the Surface has been reached
 /// it then triggers an propagation abort of the propagation
 struct SurfaceReached {
+  double overstepLimit = 200 * UnitConstants::um;
+
   SurfaceReached() = default;
 
   /// boolean operator for abort condition without using the result
@@ -170,7 +173,9 @@ struct SurfaceReached {
 
     const double pLimit =
         state.stepping.stepSize.value(ConstrainedStep::aborter);
-    const double oLimit = stepper.overstepLimit(state.stepping);
+    // not using the stepper overstep limit here because it does not always work
+    // for perigee surfaces
+    const double oLimit = overstepLimit;
 
     for (const auto& intersection : sIntersection.split()) {
       if (intersection &&
