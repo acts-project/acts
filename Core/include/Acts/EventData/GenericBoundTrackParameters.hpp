@@ -176,12 +176,13 @@ class GenericBoundTrackParameters {
     }
 
     ActsSquareMatrix<nDim> subCovMat;
-    subCovMat.template block<2, 2>(0, 0) = m_cov.value().block<2, 2>(0, 0);
+    subCovMat.template topLeftCorner<2, 2>() =
+        m_cov.value().template topLeftCorner<2, 2>();
     if (nDim == 3) {
       subCovMat.template block<2, 1>(0, 2) =
-          m_cov.value().block<2, 1>(0, eBoundTime);
+          m_cov.value().template block<2, 1>(0, eBoundTime);
       subCovMat.template block<1, 2>(2, 0) =
-          m_cov.value().block<1, 2>(eBoundTime, 0);
+          m_cov.value().template block<1, 2>(eBoundTime, 0);
       subCovMat(2, 2) = m_cov.value()(eBoundTime, eBoundTime);
     }
     return subCovMat;
