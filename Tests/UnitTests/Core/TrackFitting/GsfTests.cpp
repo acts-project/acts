@@ -38,6 +38,7 @@
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -82,6 +83,7 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
   extensions.surfaceAccessor
       .connect<&TestSourceLink::SurfaceAccessor::operator()>(
           &tester.surfaceAccessor);
+  extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
   return extensions;
 }
 
