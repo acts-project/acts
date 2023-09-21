@@ -42,6 +42,7 @@
 #include <functional>
 #include <map>
 #include <memory>
+#include <limits>
 
 namespace Acts {
 
@@ -323,7 +324,7 @@ class KalmanFitter {
     KalmanFitterExtensions<traj_t> extensions;
 
     /// The Surface being
-    SurfaceReached targetReached;
+    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
 
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};

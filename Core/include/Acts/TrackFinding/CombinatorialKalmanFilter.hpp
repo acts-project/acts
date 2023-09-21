@@ -40,6 +40,7 @@
 #include "Acts/Utilities/Zip.hpp"
 
 #include <functional>
+#include <limits>
 #include <memory>
 #include <type_traits>
 #include <unordered_map>
@@ -1270,7 +1271,7 @@ class CombinatorialKalmanFilter {
     source_link_accessor_t m_sourcelinkAccessor;
 
     /// The Surface being targeted
-    SurfaceReached targetReached;
+    SurfaceReached targetReached{std::numeric_limits<double>::lowest()};
 
     /// Actor logger instance
     const Logger* actorLogger{nullptr};

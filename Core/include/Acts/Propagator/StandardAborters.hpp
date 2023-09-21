@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -88,9 +89,10 @@ struct PathLimitReached {
 /// This is the condition that the Surface has been reached
 /// it then triggers an propagation abort of the propagation
 struct SurfaceReached {
-  double overstepLimit = 10 * UnitConstants::mm;
+  std::optional<double> overstepLimit;
 
   SurfaceReached() = default;
+  SurfaceReached(double oLimit) : overstepLimit(oLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -175,7 +177,8 @@ struct SurfaceReached {
         state.stepping.stepSize.value(ConstrainedStep::aborter);
     // not using the stepper overstep limit here because it does not always work
     // for perigee surfaces
-    const double oLimit = -overstepLimit;
+    const double oLimit =
+        overstepLimit.value_or(stepper.overstepLimit(state.stepping));
 
     for (const auto& intersection : sIntersection.split()) {
       if (intersection &&
