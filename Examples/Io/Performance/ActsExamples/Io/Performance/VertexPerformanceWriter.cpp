@@ -606,8 +606,7 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           Acts::PropagatorOptions pOptions(ctx.geoContext, ctx.magFieldContext);
           // Lambda for propagating the tracks to the PCA
           auto propagateToVtx = [&](const auto& params)
-              -> std::optional<
-                  Acts::GenericBoundTrackParameters<Acts::SinglyCharged>> {
+              -> std::optional<Acts::BoundTrackParameters> {
             auto intersection = perigeeSurface->intersect(
                 ctx.geoContext, params.position(ctx.geoContext),
                 params.direction(), false);

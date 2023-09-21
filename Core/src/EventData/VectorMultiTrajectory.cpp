@@ -31,6 +31,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   IndexData& p = m_index.back();
   IndexType index = m_index.size() - 1;
   m_previous.emplace_back(iprevious);
+  m_next.emplace_back(kInvalid);
 
   p.allocMask = mask;
 
@@ -169,6 +170,7 @@ void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
 void VectorMultiTrajectory::clear_impl() {
   m_index.clear();
   m_previous.clear();
+  m_next.clear();
   m_params.clear();
   m_cov.clear();
   m_meas.clear();
@@ -225,6 +227,7 @@ void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
 void VectorMultiTrajectory::reserve(std::size_t n) {
   m_index.reserve(n);
   m_previous.reserve(n);
+  m_next.reserve(n);
   m_params.reserve(n * 2);
   m_cov.reserve(n * 2);
   m_meas.reserve(n * 2);

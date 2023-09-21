@@ -199,8 +199,11 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
       0, 0, 0, 0, 0, 1;
 
   EventDataView3D::drawBoundTrackParameters(
-      helper, BoundTrackParameters(plane, pars, std::move(cov)), gctx,
-      momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
+      helper,
+      BoundTrackParameters(plane, pars, std::move(cov),
+                           ParticleHypothesis::pion()),
+      gctx, momentumScale, localErrorScale, directionErrorScale, pcolor,
+      scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");
   helper.write(ss);
@@ -326,8 +329,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       0., 0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
   Vector3 rPos(-350._mm, 100_um * gauss(generator), 100_um * gauss(generator));
   Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
-  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
-                                    cov);
+  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_e / 1_GeV,
+                                    cov, ParticleHypothesis::pion());
 
   const Surface* rSurface = &rStart.referenceSurface();
 
