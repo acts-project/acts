@@ -12,6 +12,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -20,8 +21,8 @@ namespace detail {
 
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
-  /// Data from the propagation state
-  const TrackingVolume* volume = nullptr;
+  /// The material interaction volume
+  InteractionVolume volume{};
   /// The particle current position
   const Vector3 pos = Vector3::Zero();
   /// The particle current time
