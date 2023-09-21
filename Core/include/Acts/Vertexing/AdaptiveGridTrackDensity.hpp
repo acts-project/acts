@@ -189,7 +189,7 @@ class AdaptiveGridTrackDensity {
   /// @note The constant prefactor (2 * pi)^(- nDim / 2) is discarded
   ///
   /// @param args Coordinates where the Gaussian should be evaluated
-  /// @note args must be in a coordinate system with origin at the mean
+  /// @note must be in a coordinate system with origin at the mean
   /// values of the Gaussian
   /// @param cov Covariance matrix
   ///
