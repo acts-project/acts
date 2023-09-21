@@ -295,6 +295,23 @@ class TrackContainer {
     return m_traj->reverseTrackStateRange(tip);
   }
 
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto forwardTrackStateRange(IndexType itrack) {
+    auto stem = component<IndexType, hashString("stemIndex")>(itrack);
+    if (stem == kInvalid) {
+      throw std::invalid_argument{"Track has no stem index"};
+    }
+    return m_traj->forwardTrackStateRange(stem);
+  }
+
+  auto forwardTrackStateRange(IndexType itrack) const {
+    auto stem = component<IndexType, hashString("stemIndex")>(itrack);
+    if (stem == kInvalid) {
+      throw std::invalid_argument{"Track has no stem index"};
+    }
+    return m_traj->forwardTrackStateRange(stem);
+  }
+
  private:
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void copyDynamicFrom(IndexType dstIdx, const T& src, IndexType srcIdx) {
