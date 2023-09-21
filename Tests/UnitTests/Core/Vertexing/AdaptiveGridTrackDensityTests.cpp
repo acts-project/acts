@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
 
   for (auto const& it : mainDensityMap) {
     // Extract variables for better readability
-    int zBin = it.first;
+    int zBin = it.first.first;
     float density = it.second;
     // Argument for 2D gaussian
     Vector2 dzVec{0., grid.getBinCenter(zBin, binSize)};
@@ -104,11 +104,11 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
                                      subCovMat.determinant() / subCovMat(0, 0));
 
   // Estimate maximum z position and seed width
-  auto res = grid.getMaxZPositionAndWidth(mainDensityMap);
+  auto res = grid.getMaxZTPositionAndWidth(mainDensityMap);
   BOOST_CHECK(res.ok());
 
   // Extract variables for better readability...
-  float maxZ = res.value().first;
+  float maxZ = res.value().first.first;
   float fwhm = res.value().second * 2.355f;
 
   // ... and check if they are correct (note: the optimization is not as exact
@@ -136,16 +136,16 @@ BOOST_AUTO_TEST_CASE(check_seed_width_estimation) {
   // of 20 mm. The linear approximation we use during the seed width estimation
   // should be exact in this case.
   for (int i = -6; i <= 4; i++) {
-    mainDensityMap[i] =
+    mainDensityMap[std::make_pair(i, 0)] =
         1.0 - 0.1 * std::abs(correctMaxZ - grid.getBinCenter(i, binSize));
   }
 
   // Get maximum z position and corresponding seed width
-  auto res = grid.getMaxZPositionAndWidth(mainDensityMap);
+  auto res = grid.getMaxZTPositionAndWidth(mainDensityMap);
   BOOST_CHECK(res.ok());
 
   // Check if we found the correct maximum
-  float maxZ = res.value().first;
+  float maxZ = res.value().first.first;
   BOOST_CHECK_EQUAL(maxZ, correctMaxZ);
 
   // Calculate full width at half maximum from seed width and check if it's
@@ -238,21 +238,21 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
 
   auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  auto res1 = grid.getMaxZPosition(mainDensityMap);
+  auto res1 = grid.getMaxZTPosition(mainDensityMap);
   BOOST_CHECK(res1.ok());
   // Maximum should be at z0Trk1 position
-  BOOST_CHECK_EQUAL(*res1, z0Trk1);
+  BOOST_CHECK_EQUAL((*res1).first, z0Trk1);
 
   trackDensityMap = grid.addTrack(params2, mainDensityMap);
-  auto res2 = grid.getMaxZPosition(mainDensityMap);
+  auto res2 = grid.getMaxZTPosition(mainDensityMap);
   BOOST_CHECK(res2.ok());
   // Trk 2 is closer to z-axis and should yield higher density values
   // New maximum is therefore at z0Trk2
-  BOOST_CHECK_EQUAL(*res2, z0Trk2);
+  BOOST_CHECK_EQUAL((*res2).first, z0Trk2);
 
-  auto resWidth1 = grid.getMaxZPositionAndWidth(mainDensityMap);
+  auto resWidth1 = grid.getMaxZTPositionAndWidth(mainDensityMap);
   BOOST_CHECK(resWidth1.ok());
-  BOOST_CHECK_EQUAL((*resWidth1).first, z0Trk2);
+  BOOST_CHECK_EQUAL((*resWidth1).first.first, z0Trk2);
   BOOST_CHECK((*resWidth1).second > 0);
 }
 
@@ -289,30 +289,30 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   // Fill grid with track densities
   auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
 
-  auto res1 = grid.getMaxZPosition(mainDensityMap);
+  auto res1 = grid.getMaxZTPosition(mainDensityMap);
   BOOST_CHECK(res1.ok());
   // Maximum should be at z0Trk1 position
-  BOOST_CHECK_EQUAL(*res1, z0Trk1);
+  BOOST_CHECK_EQUAL((*res1).first, z0Trk1);
 
   // Add second track
   trackDensityMap = grid.addTrack(params2, mainDensityMap);
-  auto res2 = grid.getMaxZPosition(mainDensityMap);
+  auto res2 = grid.getMaxZTPosition(mainDensityMap);
   BOOST_CHECK(res2.ok());
   // Trk 2 is closer to z-axis and should yield higher density values
   // New maximum is therefore at z0Trk2
-  BOOST_CHECK_EQUAL(*res2, z0Trk2);
+  BOOST_CHECK_EQUAL((*res2).first, z0Trk2);
 
   // Add small density values around the maximum of track 1
   const float densityToAdd = 0.5;
-  mainDensityMap.at(4) += densityToAdd;
-  mainDensityMap.at(6) += densityToAdd;
+  mainDensityMap.at(std::make_pair(4, 0)) += densityToAdd;
+  mainDensityMap.at(std::make_pair(6, 0)) += densityToAdd;
 
-  auto res3 = grid.getMaxZPosition(mainDensityMap);
+  auto res3 = grid.getMaxZTPosition(mainDensityMap);
   BOOST_CHECK(res3.ok());
   // Trk 2 still has the highest peak density value, however, the small
   // added densities for track 1 around its maximum should now lead to
   // a prediction at z0Trk1 again
-  BOOST_CHECK_EQUAL(*res3, z0Trk1);
+  BOOST_CHECK_EQUAL((*res3).first, z0Trk1);
 }
 
 BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {

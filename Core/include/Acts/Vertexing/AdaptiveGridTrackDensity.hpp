@@ -13,6 +13,8 @@
 
 #include <unordered_map>
 
+#include <boost/functional/hash.hpp>
+
 namespace Acts {
 
 /// @class AdaptiveGridTrackDensity
@@ -40,8 +42,15 @@ class AdaptiveGridTrackDensity {
   static_assert(temporalTrkGridSize % 2);
 
  public:
-  using Bins = int;  // std::pair<int, int>;
-  using DensityMap = std::unordered_map<Bins, float>;
+  // The first (second) integer indicates the bin's z (t) position
+  using Bin = std::pair<int, int>;
+  // Mapping between bins and track densities
+  using DensityMap = std::unordered_map<Bin, float, boost::hash<Bin>>;
+  // Coordinates in the z-t plane; the t value will be set to std::nullopt if
+  // time vertex seeding is disabled
+  using ztPosition = std::pair<float, std::optional<float>>;
+  // z-t position of a maximum and its width
+  using ztPositionAndWidth = std::pair<ztPosition, float>;
 
   /// The configuration struct
   struct Config {
@@ -60,7 +69,13 @@ class AdaptiveGridTrackDensity {
     /// @param temporalBinExtent_ The temporal extent of a bin in TODO: unit
     Config(float spatialBinExtent_, float temporalBinExtent_)
         : spatialBinExtent(spatialBinExtent_),
-          temporalBinExtent(temporalBinExtent_) {}
+          temporalBinExtent(temporalBinExtent_) {
+      if (temporalTrkGridSize == 1) {
+        throw std::invalid_argument(
+            "temporalBinExtent must not be provided if temporalTrkGridSize == "
+            "1 (i.e., if time vertex seeding is disabled).");
+      }
+    }
 
     // Spatial extent of a bin in d0 and z0 direction
     float spatialBinExtent;  // mm
@@ -97,98 +112,110 @@ class AdaptiveGridTrackDensity {
   int getBin(float value, float binExtent) const;
 
   /// @brief Finds the maximum density of a DensityMap
-  /// @param densityMap Map between z bins and corresponding density value
-  /// @return Iterator of the map entry with the highest density value
+  /// @param densityMap Map between z bins and corresponding density
+  /// value
+  /// @return Iterator of the map entry with the highest density
   DensityMap::const_iterator highestDensityEntry(
       const DensityMap& densityMap) const;
 
-  /// @brief Returns the z position of maximum (surrounding) track density
+  /// @brief Returns the z and t coordinate of maximum (surrounding)
+  /// track density
+  /// @note if time vertex seeding is not enabled, the t coordinate
+  /// will be set to std::nullopt
   ///
-  /// @param densityMap Map from z bins to corresponding track density
+  /// @param densityMap Map between bins and corresponding density
+  /// values
   ///
-  /// @return The z position of maximum track density
-  Result<float> getMaxZPosition(DensityMap& densityMap) const;
+  /// @return The z and t coordinates of maximum track density
+  Result<ztPosition> getMaxZTPosition(DensityMap& densityMap) const;
 
-  /// @brief Returns the z position of maximum track density and
-  /// the estimated width
+  /// @brief Returns the z-t position of maximum track density
+  /// and the estimated width in z direction of the maximum
   ///
-  /// @param densityMap Map from z bins to corresponding track density
+  /// @param densityMap Map between bins and corresponding density
+  /// values
   ///
-  /// @return The z position of maximum track density and width
-  Result<std::pair<float, float>> getMaxZPositionAndWidth(
+  /// @return The z-t position of the maximum track density and
+  /// its width
+  Result<ztPositionAndWidth> getMaxZTPositionAndWidth(
       DensityMap& densityMap) const;
 
   /// @brief Adds a single track to the overall grid density
   ///
-  /// @param trk The track to be added.
-  /// @param mainDensityMap Map from z bins to corresponding track density.
+  /// @param trk The track to be added
+  /// @param mainDensityMap Map between bins and corresponding density
   ///
   /// @return The density map of the track that was added
   DensityMap addTrack(const BoundTrackParameters& trk,
                       DensityMap& mainDensityMap) const;
 
-  /// @brief Removes a track from the overall grid density
+  /// @brief Removes a track from the overall grid density.
   ///
-  /// @param trackDensityMap Map from z bins to corresponding track density.
-  /// @note The track density comes from a single track.
-  /// @param mainDensityMap Map from z bins to corresponding track density.
-  /// @note The track density comes an arbitrary number of tracks.
+  /// @param trackDensityMap Map between bins and corresponding density
+  /// @note The track density comes from a single track
+  /// @param mainDensityMap Map between bins and corresponding density
+  /// @note The track density comes an arbitrary number of tracks
   void subtractTrack(const DensityMap& trackDensityMap,
                      DensityMap& mainDensityMap) const;
 
  private:
-  /// @brief Function that creates a track density map, i.e., a map of z bins
-  /// to corresponding density values coming from a single track.
+  /// @brief Function that creates a track density map, i.e., a map of a pair
+  /// of z and t bins to corresponding density values coming from a single
+  /// track.
   ///
-  /// @param impactParams vector containing d0 and z0
-  /// @param centralZBin Central z bin of the track (where its density is the highest)
-  /// @param cov 2x2 impact parameter covariance matrix
-  DensityMap createTrackGrid(const Acts::ActsVector<2>& impactParams,
-                             int centralZBin,
-                             const Acts::SquareMatrix2& cov) const;
+  /// @param impactParams vector containing d0, z0, and t of the track
+  /// @param centralBin Central z and t bin of the track (where its
+  /// density is the highest)
+  /// @param cov 3x3 impact parameter covariance matrix
+  DensityMap createTrackGrid(const Acts::Vector3& impactParams,
+                             const Bin& centralBin,
+                             const Acts::SquareMatrix3& cov) const;
 
-  /// @brief Function that estimates the seed width based on the full width
-  /// at half maximum (FWHM) of the maximum density peak
+  /// @brief Function that estimates the seed width in z direction based
+  /// on the full width at half maximum (FWHM) of the maximum density peak
   /// @note This only works if the maximum is sufficiently isolated since
   /// overlapping neighboring peaks might lead to an overestimation of the
   /// seed width.
   ///
   /// @param densityMap Map from z bins to corresponding track density
-  /// @param maxZ z-position of the maximum density value
+  /// @param maxZT z-t position of the maximum density value
   ///
   /// @return The width
   Result<float> estimateSeedWidth(const DensityMap& densityMap,
-                                  float maxZ) const;
+                                  const ztPosition& maxZT) const;
 
-  /// @brief Helper to retrieve values according of a nDim-dimensional normal distribution
+  /// @brief Helper to retrieve values according of a nDim-dimensional
+  /// normal distribution
   /// @note The constant prefactor (2 * pi)^(- nDim / 2) is discarded
   ///
-  /// @param args Coordinates of a bin with respect to the track center
-  /// @param cov Track covariance
+  /// @param args Coordinates where the Gaussian should be evaluated
+  /// @note args must be in a coordinate system with origin at the mean
+  /// values of the Gaussian
+  /// @param cov Covariance matrix
   ///
-  /// @return A value
+  /// @return Multivariate Gaussian evaluated at @param args
   template <unsigned int nDim>
   float multivariateGaussian(const Acts::ActsVector<nDim>& args,
                              const Acts::ActsSquareMatrix<nDim>& cov) const;
 
-  /// @brief Checks the (up to) first three density maxima (only those that have
-  /// a maximum relative deviation of 'relativeDensityDev' from the main
-  /// maximum) and take the z-bin of the maximum with the highest surrounding
-  /// density
+  /// @brief Checks the (up to) first three density maxima that have
+  /// a maximum relative deviation of 'relativeDensityDev' from the
+  /// global maximum. Returns the z bin of the maximum that has the
+  /// highest surrounding density.
   ///
-  /// @param densityMap Map between z bins and corresponding density value
+  /// @param densityMap Map between bins and corresponding density values
   ///
-  /// @return The z-bin position
-  int highestDensitySumBin(DensityMap& densityMap) const;
+  /// @return The bin corresponding to the highest surrounding density
+  Bin highestDensitySumBin(DensityMap& densityMap) const;
 
-  /// @brief Calculates the density sum of a z-bin and its two neighboring bins
-  /// as needed for 'highestDensitySumBin'
+  /// @brief Calculates the density sum of a bin and its two neighboring bins
+  /// in z direction
   ///
-  /// @param densityMap Map between z bins and corresponding density value
-  /// @param zBin The center z-bin whose neighbors we want to sum up
+  /// @param densityMap Map between bins and corresponding density values
+  /// @param bin Bin whose neighbors in z we want to sum up
   ///
-  /// @return The sum
-  float getDensitySum(const DensityMap& densityMap, int zBin) const;
+  /// @return The density sum
+  float getDensitySum(const DensityMap& densityMap, const Bin& bin) const;
 
   Config m_cfg;
 };
