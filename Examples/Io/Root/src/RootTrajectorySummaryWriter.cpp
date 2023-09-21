@@ -195,7 +195,9 @@ ActsExamples::RootTrajectorySummaryWriter::finalize() {
   m_outputTree->Write();
   m_outputFile->Close();
 
+  if (m_cfg.writeCovMat) {
   ACTS_INFO("Wrote full covariance matrix to tree");
+  }
   ACTS_INFO("Wrote parameters of trajectories to tree '"
             << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
 
