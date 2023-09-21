@@ -931,6 +931,7 @@ def addCKFTracks(
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
+    writeCovMat=False,
 ) -> None:
     """This function steers the seeding
 
@@ -1013,6 +1014,7 @@ def addCKFTracks(
         writeFinderPerformance=False,
         writeFitterPerformance=False,
         logLevel=logLevel,
+        writeCovMat=writeCovMat,
     )
 
     return s
@@ -1030,6 +1032,7 @@ def addTrajectoryWriters(
     writeFinderPerformance: bool = True,
     writeFitterPerformance: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
+    writeCovMat=False,
 ):
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1069,6 +1072,7 @@ def addTrajectoryWriters(
                 inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
+                writeCovMat=writeCovMat,
             )
             s.addWriter(trackSummaryWriter)
 
@@ -1295,6 +1299,7 @@ def addAmbiguityResolution(
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
+    writeCovMat=False,
 ) -> None:
     from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
@@ -1332,6 +1337,7 @@ def addAmbiguityResolution(
         writeFinderPerformance=False,
         writeFitterPerformance=False,
         logLevel=logLevel,
+        writeCovMat=writeCovMat,
     )
 
     return s
