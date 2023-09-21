@@ -189,11 +189,11 @@ class AdaptiveGridTrackDensity {
   /// @note The constant prefactor (2 * pi)^(- nDim / 2) is discarded
   ///
   /// @param args Coordinates where the Gaussian should be evaluated
-  /// @note must be in a coordinate system with origin at the mean
+  /// @note args must be in a coordinate system with origin at the mean
   /// values of the Gaussian
   /// @param cov Covariance matrix
   ///
-  /// @return Multivariate Gaussian evaluated at @param args
+  /// @return Multivariate Gaussian evaluated at args
   template <unsigned int nDim>
   float multivariateGaussian(const Acts::ActsVector<nDim>& args,
                              const Acts::ActsSquareMatrix<nDim>& cov) const;
