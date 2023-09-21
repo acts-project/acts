@@ -196,7 +196,7 @@ ActsExamples::RootTrajectorySummaryWriter::finalize() {
   m_outputFile->Close();
 
   if (m_cfg.writeCovMat) {
-  ACTS_INFO("Wrote full covariance matrix to tree");
+    ACTS_INFO("Wrote full covariance matrix to tree");
   }
   ACTS_INFO("Wrote parameters of trajectories to tree '"
             << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
@@ -382,10 +382,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
       std::array<float, Acts::eBoundSize> error = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
-      // Initialize container for covariance matrix
-      // in case no matrix is available unit matrix is written to output
-      TMatrixD CovMatrixTrack(Acts::eBoundSize, Acts::eBoundSize);
-      CovMatrixTrack.UnitMatrix();
+
+      // get entries of covariance matrix. If no entry, return NaN
+      auto getCov = [&](auto i, auto j) {
+        return traj.trackParameters(trackTip).covariance().has_value()
+                   ? traj.trackParameters(trackTip).covariance().value()(i, j)
+                   : NaNfloat;
+      };
 
       bool hasFittedParams = false;
       bool hasFittedCov = false;
@@ -402,10 +405,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           const auto& covariance = *boundParam.covariance();
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
             error[i] = std::sqrt(covariance(i, i));
-            // fill container for covariance matrix.
-            for (unsigned int j = 0; j < Acts::eBoundSize; j++) {
-              CovMatrixTrack[i][j] = covariance(i, j);
-            }
           }
         }
       }
@@ -464,47 +463,47 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       if (m_cfg.writeCovMat) {
         // write all entries of covariance matrix to output file
         // one branch for every entry of the matrix.
-        m_cov_eLOC0_eLOC0.push_back(CovMatrixTrack[0][0]);
-        m_cov_eLOC0_eLOC1.push_back(CovMatrixTrack[0][1]);
-        m_cov_eLOC0_ePHI.push_back(CovMatrixTrack[0][2]);
-        m_cov_eLOC0_eTHETA.push_back(CovMatrixTrack[0][3]);
-        m_cov_eLOC0_eQOP.push_back(CovMatrixTrack[0][4]);
-        m_cov_eLOC0_eT.push_back(CovMatrixTrack[0][5]);
+        m_cov_eLOC0_eLOC0.push_back(getCov(0, 0));
+        m_cov_eLOC0_eLOC1.push_back(getCov(0, 1));
+        m_cov_eLOC0_ePHI.push_back(getCov(0, 2));
+        m_cov_eLOC0_eTHETA.push_back(getCov(0, 3));
+        m_cov_eLOC0_eQOP.push_back(getCov(0, 4));
+        m_cov_eLOC0_eT.push_back(getCov(0, 5));
 
-        m_cov_eLOC1_eLOC0.push_back(CovMatrixTrack[1][0]);
-        m_cov_eLOC1_eLOC1.push_back(CovMatrixTrack[1][1]);
-        m_cov_eLOC1_ePHI.push_back(CovMatrixTrack[1][2]);
-        m_cov_eLOC1_eTHETA.push_back(CovMatrixTrack[1][3]);
-        m_cov_eLOC1_eQOP.push_back(CovMatrixTrack[1][4]);
-        m_cov_eLOC1_eT.push_back(CovMatrixTrack[1][5]);
+        m_cov_eLOC1_eLOC0.push_back(getCov(1, 0));
+        m_cov_eLOC1_eLOC1.push_back(getCov(1, 1));
+        m_cov_eLOC1_ePHI.push_back(getCov(1, 2));
+        m_cov_eLOC1_eTHETA.push_back(getCov(1, 3));
+        m_cov_eLOC1_eQOP.push_back(getCov(1, 4));
+        m_cov_eLOC1_eT.push_back(getCov(1, 5));
 
-        m_cov_ePHI_eLOC0.push_back(CovMatrixTrack[2][0]);
-        m_cov_ePHI_eLOC1.push_back(CovMatrixTrack[2][1]);
-        m_cov_ePHI_ePHI.push_back(CovMatrixTrack[2][2]);
-        m_cov_ePHI_eTHETA.push_back(CovMatrixTrack[2][3]);
-        m_cov_ePHI_eQOP.push_back(CovMatrixTrack[2][4]);
-        m_cov_ePHI_eT.push_back(CovMatrixTrack[2][5]);
+        m_cov_ePHI_eLOC0.push_back(getCov(2, 0));
+        m_cov_ePHI_eLOC1.push_back(getCov(2, 1));
+        m_cov_ePHI_ePHI.push_back(getCov(2, 2));
+        m_cov_ePHI_eTHETA.push_back(getCov(2, 3));
+        m_cov_ePHI_eQOP.push_back(getCov(2, 4));
+        m_cov_ePHI_eT.push_back(getCov(2, 5));
 
-        m_cov_eTHETA_eLOC0.push_back(CovMatrixTrack[3][0]);
-        m_cov_eTHETA_eLOC1.push_back(CovMatrixTrack[3][1]);
-        m_cov_eTHETA_ePHI.push_back(CovMatrixTrack[3][2]);
-        m_cov_eTHETA_eTHETA.push_back(CovMatrixTrack[3][3]);
-        m_cov_eTHETA_eQOP.push_back(CovMatrixTrack[3][4]);
-        m_cov_eTHETA_eT.push_back(CovMatrixTrack[3][5]);
+        m_cov_eTHETA_eLOC0.push_back(getCov(3, 0));
+        m_cov_eTHETA_eLOC1.push_back(getCov(3, 1));
+        m_cov_eTHETA_ePHI.push_back(getCov(3, 2));
+        m_cov_eTHETA_eTHETA.push_back(getCov(3, 3));
+        m_cov_eTHETA_eQOP.push_back(getCov(3, 4));
+        m_cov_eTHETA_eT.push_back(getCov(3, 5));
 
-        m_cov_eQOP_eLOC0.push_back(CovMatrixTrack[4][0]);
-        m_cov_eQOP_eLOC1.push_back(CovMatrixTrack[4][1]);
-        m_cov_eQOP_ePHI.push_back(CovMatrixTrack[4][2]);
-        m_cov_eQOP_eTHETA.push_back(CovMatrixTrack[4][3]);
-        m_cov_eQOP_eQOP.push_back(CovMatrixTrack[4][4]);
-        m_cov_eQOP_eT.push_back(CovMatrixTrack[4][5]);
+        m_cov_eQOP_eLOC0.push_back(getCov(4, 0));
+        m_cov_eQOP_eLOC1.push_back(getCov(4, 1));
+        m_cov_eQOP_ePHI.push_back(getCov(4, 2));
+        m_cov_eQOP_eTHETA.push_back(getCov(4, 3));
+        m_cov_eQOP_eQOP.push_back(getCov(4, 4));
+        m_cov_eQOP_eT.push_back(getCov(4, 5));
 
-        m_cov_eT_eLOC0.push_back(CovMatrixTrack[5][0]);
-        m_cov_eT_eLOC1.push_back(CovMatrixTrack[5][1]);
-        m_cov_eT_ePHI.push_back(CovMatrixTrack[5][2]);
-        m_cov_eT_eTHETA.push_back(CovMatrixTrack[5][3]);
-        m_cov_eT_eQOP.push_back(CovMatrixTrack[5][4]);
-        m_cov_eT_eT.push_back(CovMatrixTrack[5][5]);
+        m_cov_eT_eLOC0.push_back(getCov(5, 0));
+        m_cov_eT_eLOC1.push_back(getCov(5, 1));
+        m_cov_eT_ePHI.push_back(getCov(5, 2));
+        m_cov_eT_eTHETA.push_back(getCov(5, 3));
+        m_cov_eT_eQOP.push_back(getCov(5, 4));
+        m_cov_eT_eT.push_back(getCov(5, 5));
       }
 
     }  // all subtrajectories
