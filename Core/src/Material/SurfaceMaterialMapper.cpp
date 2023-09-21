@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49,35 +49,37 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
       m_propagator(std::move(propagator)),
       m_logger(std::move(slogger)) {}
 
-Acts::MaterialMappingState Acts::SurfaceMaterialMapper::createState(
+std::unique_ptr<Acts::MaterialMappingState>
+Acts::SurfaceMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const TrackingGeometry& tGeometry) const {
   // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
 
   // The Surface material mapping state with collected surfaces
-  State mState(gctx, mctx);
-  resolveMaterialSurfaces(mState, *world);
+  auto mState = std::make_unique<State>(gctx, mctx);
+  resolveMaterialSurfaces(*mState, *world);
 
-  ACTS_DEBUG(mState.accumulatedMaterial.size()
+  ACTS_DEBUG(mState->accumulatedMaterial.size()
              << " Surfaces with PROXIES collected ... ");
-  for (auto& smg : mState.accumulatedMaterial) {
+  for (auto& smg : mState->accumulatedMaterial) {
     ACTS_VERBOSE(" -> Surface in with id " << smg.first);
   }
   return mState;
 }
 
-Acts::MaterialMappingState Acts::SurfaceMaterialMapper::createState(
+std::unique_ptr<Acts::MaterialMappingState>
+Acts::SurfaceMaterialMapper::createState(
     const GeometryContext& gctx, const MagneticFieldContext& mctx,
     const Experimental::Detector& detector) const {
   // The Surface material mapping state
-  State mState(gctx, mctx);
+  auto mState = std::make_unique<State>(gctx, mctx);
   for (const auto* volume : detector.volumes()) {
-    resolveMaterialSurfaces(mState, *volume);
+    resolveMaterialSurfaces(*mState, *volume);
   }
-  ACTS_DEBUG(mState.accumulatedMaterial.size()
+  ACTS_DEBUG(mState->accumulatedMaterial.size()
              << " Surfaces with PROXIES collected ... ");
-  for (auto& smg : mState.accumulatedMaterial) {
+  for (auto& smg : mState->accumulatedMaterial) {
     ACTS_VERBOSE(" -> Surface in with id " << smg.first);
   }
   return mState;
@@ -205,8 +207,7 @@ Acts::MaterialMappingResult Acts::SurfaceMaterialMapper::finalizeMaps(
   // Iterate over the map to call the total average
   for (auto& accMaterial : mStateRef.accumulatedMaterial) {
     ACTS_DEBUG("Finalizing map for Surface " << accMaterial.first);
-    maps.surfaceMaterialMap[accMaterial.first] =
-        accMaterial.second.totalAverage();
+    maps.surfaceMaterial[accMaterial.first] = accMaterial.second.totalAverage();
   }
   return maps;
 }
@@ -227,8 +228,7 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
     ACTS_VERBOSE(
         "Material surfaces are associated with the material interaction. The "
         "association interaction/surfaces won't be performed again.");
-    mapSurfaceInteraction(mStateRef, rMaterial);
-    return {mTrack, RecordedMaterialTrack{}};
+    return mapSurfaceInteraction(mStateRef, mTrack);
   }
   ACTS_VERBOSE(
       "Material interactions need to be associated with surfaces. Collecting "
@@ -305,14 +305,22 @@ Acts::SurfaceMaterialMapper::mapInteraction(
   }
 
   /// Prepare the return values
-  RecordedMaterialTrack mappedMaterialTrack{mTrack.first, RecordedMaterial{}};
-  RecordedMaterialTrack unmappedMaterialTrack{mTrack.first, RecordedMaterial{}};
+  RecordedMaterialTrack mapped{mTrack.first, RecordedMaterial{}};
+  RecordedMaterialTrack unmapped{mTrack.first, RecordedMaterial{}};
 
   // Assign the recorded ones, break if you hit an end
   while (rmIter != rMaterial.end() && sfIter != mappingSurfaces.end()) {
-    // Assume mapped and unmapped record
+    // Check if the the recorded material interaction is vetoed
+    if (m_cfg.veto(*rmIter)) {
+      unmapped.second.materialInX0 += rmIter->materialSlab.thicknessInX0();
+      unmapped.second.materialInL0 += rmIter->materialSlab.thicknessInL0();
+      unmapped.second.materialInteractions.push_back(*rmIter);
+      ++rmIter;
+      continue;
+    }
+
+    // Assume it's mapped then
     auto mappedRecord = (*rmIter);
-    auto unmappedRecord = (*rmIter);
 
     // Check if we need to switch to the next surface
     if (sfIter != mappingSurfaces.end() - 1) {
@@ -407,11 +415,9 @@ Acts::SurfaceMaterialMapper::mapInteraction(
     mappedRecord.intersectionID = currentID;
     mappedRecord.pathCorrection = currentPathCorrection;
     // push it to the mapped recournd
-    mappedMaterialTrack.second.materialInX0 +=
-        mappedRecord.materialSlab.thicknessInX0();
-    mappedMaterialTrack.second.materialInL0 +=
-        mappedRecord.materialSlab.thicknessInL0();
-    mappedMaterialTrack.second.materialInteractions.push_back(mappedRecord);
+    mapped.second.materialInX0 += mappedRecord.materialSlab.thicknessInX0();
+    mapped.second.materialInL0 += mappedRecord.materialSlab.thicknessInL0();
+    mapped.second.materialInteractions.push_back(mappedRecord);
     // Switch to next material
     ++rmIter;
   }
@@ -462,11 +468,19 @@ Acts::SurfaceMaterialMapper::mapInteraction(
     }
   }
   // Mapped and unmapped material
-  return {mappedMaterialTrack, unmappedMaterialTrack};
+  return {mapped, unmapped};
 }
 
-void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
-    State& mState, const std::vector<MaterialInteraction>& rMaterial) const {
+std::array<Acts::RecordedMaterialTrack, 2u>
+Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
+    State& mState, const RecordedMaterialTrack& mTrack) const {
+  // Prepare the return values
+  RecordedMaterialTrack mapped{mTrack.first, RecordedMaterial{}};
+  RecordedMaterialTrack unmapped{mTrack.first, RecordedMaterial{}};
+
+  const std::vector<MaterialInteraction>& rMaterial =
+      mTrack.second.materialInteractions;
+
   // Mapping statistics
   using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>;
   std::map<AccumulatedSurfaceMaterial*, std::array<size_t, 3>> touchedMapBins;
@@ -476,6 +490,19 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
   // Looping over all the material interactions
   auto rmIter = rMaterial.begin();
   while (rmIter != rMaterial.end()) {
+    // Check if the the recorded material interaction is vetoed
+    if (m_cfg.veto(*rmIter)) {
+      unmapped.second.materialInX0 += rmIter->materialSlab.thicknessInX0();
+      unmapped.second.materialInL0 += rmIter->materialSlab.thicknessInL0();
+      unmapped.second.materialInteractions.push_back(*rmIter);
+      ++rmIter;
+      continue;
+    }
+
+    mapped.second.materialInX0 += rmIter->materialSlab.thicknessInX0();
+    mapped.second.materialInL0 += rmIter->materialSlab.thicknessInL0();
+    mapped.second.materialInteractions.push_back(*rmIter);
+
     // get the current interaction information
     GeometryIdentifier currentID = rmIter->intersectionID;
     Vector3 currentPos = rmIter->intersection;
@@ -509,4 +536,6 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
     // added to the material interaction in the initial mapping
     tmapBin.first->trackAverage(trackBins, true);
   }
+  // Mapped and unmapped material
+  return {mapped, unmapped};
 }

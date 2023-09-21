@@ -83,14 +83,14 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   ///
   /// Nested Configuration struct for the material mapper
   struct Config {
-    /// Mapping range
-    std::array<double, 2> etaRange = {{-6., 6.}};
     /// Correct for empty bins (recommended)
     bool emptyBinCorrection = true;
     /// Mapping output to debug stream
     bool mapperDebugOutput = false;
     /// Compute the variance of each material slab (only if using an input map)
     bool computeVariance = false;
+    /// A potential veto
+    MaterialInteractionVeto veto = NoVeto{};
   };
 
   /// @struct State/cache object of the Surface material mapper
@@ -139,8 +139,8 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   ///
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
-  /// and returns you a Cache object tO be used
-  MaterialMappingState createState(
+  /// and returns you a Cache object to be used in the mapping process
+  std::unique_ptr<MaterialMappingState> createState(
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       const TrackingGeometry& tGeometry) const final;
 
@@ -151,10 +151,10 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   /// @param [in] mctx The magnetic field context to use
   /// @param[in] detector The geometry which should be mapped
   ///
-  /// This method takes a TrackingGeometry,
+  /// This method takes a Detector object,
   /// finds all surfaces with material proxis
-  /// and returns you a Cache object tO be used
-  MaterialMappingState createState(
+  /// and returns you a Cache object to be used in the mapping process
+  std::unique_ptr<MaterialMappingState> createState(
       const GeometryContext& gctx, const MagneticFieldContext& mctx,
       const Experimental::Detector& detector) const final;
 
@@ -195,14 +195,15 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   /// associated surface
   ///
   /// @note this option can be run to re-map material without the need of
-  /// re-running the intersection, so it is primarily for optimisation reasons
+  /// re-running the intersection, so it is primarily for optimisation in oder
+  /// to fine tune surface binning and description
   ///
   /// @param mState The current state map
-  /// @param rMaterial Vector of all the material interactions that will be mapped
+  /// @param mTrack The material track to be mapped
   ///
   /// @note The material interactions are assumed to have an associated surface ID
-  void mapSurfaceInteraction(
-      State& mState, const std::vector<MaterialInteraction>& rMaterial) const;
+  std::array<RecordedMaterialTrack, 2u> mapSurfaceInteraction(
+      State& mState, const RecordedMaterialTrack& mTrack) const;
 
   /// @brief finds all surfaces with ProtoSurfaceMaterial of a tracking volume
   ///

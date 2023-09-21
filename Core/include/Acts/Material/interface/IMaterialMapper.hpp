@@ -13,6 +13,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 
+#include <functional>
 #include <map>
 #include <memory>
 
@@ -32,9 +33,14 @@ struct MaterialMappingState {
 
 struct MaterialMappingResult {
   std::map<GeometryIdentifier, std::unique_ptr<ISurfaceMaterial>>
-      surfaceMaterialMap;
-  std::map<GeometryIdentifier, std::unique_ptr<IVolumeMaterial>>
-      volumeMaterialMap;
+      surfaceMaterial;
+  std::map<GeometryIdentifier, std::unique_ptr<IVolumeMaterial>> volumeMaterial;
+};
+
+using MaterialInteractionVeto = std::function<bool(const MaterialInteraction&)>;
+
+struct NoVeto {
+  bool operator()(const MaterialInteraction&) const { return false; }
 };
 
 /// @brief Interface definition of Material mappers, it defines how to
@@ -58,26 +64,26 @@ class IMaterialMapper {
   /// Virtual destructor
   virtual ~IMaterialMapper() = default;
 
-  /// @brief Create the state object
+  /// @brief Create the state object from a TrackingGeometry
   ///
   /// @param geoContext is the geometry context
   /// @param magFieldContext is the magnetic field context
   /// @param trackingGeometry is the tracking geometry
   ///
   /// @return the state object
-  virtual MaterialMappingState createState(
+  virtual std::unique_ptr<MaterialMappingState> createState(
       const GeometryContext& geoContext,
       const MagneticFieldContext& magFieldContext,
       const TrackingGeometry& trackingGeometry) const = 0;
 
-  /// @brief Create the state object
+  /// @brief Create the state object from a Detector object
   ///
   /// @param geoContext is the geometry context
   /// @param magFieldContext is the magnetic field context
   /// @param detector is the tracking geometry
   ///
   /// @return the state object
-  virtual MaterialMappingState createState(
+  virtual std::unique_ptr<MaterialMappingState> createState(
       const GeometryContext& geoContext,
       const MagneticFieldContext& magFieldContext,
       const Experimental::Detector& detector) const = 0;

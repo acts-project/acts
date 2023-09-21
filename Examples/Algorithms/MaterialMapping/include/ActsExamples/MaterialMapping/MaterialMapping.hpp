@@ -43,6 +43,11 @@ using VolumeMaterialMap =
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>;
 
 using DetectorMaterialMaps = std::pair<SurfaceMaterialMap, VolumeMaterialMap>;
+
+namespace Experimental {
+class Detector;
+}
+
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -70,10 +75,10 @@ class MaterialMapping : public IAlgorithm {
     std::string collection = "material_tracks";
 
     /// The material collection to be stored - mapped
-    std::string mappedMaterialCollection = "mapped_material_tracks";
+    std::string mappedCollection = "mapped_material_tracks";
 
     /// The material collection to be stored - unmapped
-    std::string unmappedMaterialCollection = "unmapped_material_tracks";
+    std::string unmappedCollection = "unmapped_material_tracks";
 
     /// The material mappers - they are executed in a sequential order,
     /// i.e. the subsequent mapper runs only on the remaining hits of the
@@ -99,7 +104,7 @@ class MaterialMapping : public IAlgorithm {
 
   /// Destructor
   /// - it also writes out the file
-  ~MaterialMapping() override;
+  ~MaterialMapping() final;
 
   /// Framework execute method
   ///
@@ -113,7 +118,7 @@ class MaterialMapping : public IAlgorithm {
  private:
   Config m_cfg;  //!< internal config object
 
-  std::vector<Acts::MaterialMappingState>
+  std::vector<std::unique_ptr<Acts::MaterialMappingState>>
       m_mappingStates;  //!< Material mapping states, one for each mapper
 
   ReadDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>

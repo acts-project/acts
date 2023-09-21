@@ -47,6 +47,10 @@ ActsExamples::MaterialMapping::MaterialMapping(
           m_cfg.geoContext, m_cfg.magFieldContext, *m_cfg.detector));
     }
   }
+
+  m_inputMaterialTracks.initialize(m_cfg.collection);
+  m_mappedMaterialTracks.initialize(m_cfg.mappedCollection);
+  m_unmappedMaterialTracks.initialize(m_cfg.unmappedCollection);
 }
 
 ActsExamples::MaterialMapping::~MaterialMapping() {
@@ -54,21 +58,19 @@ ActsExamples::MaterialMapping::~MaterialMapping() {
   Acts::DetectorMaterialMaps detectorMaterial;
   // Finalize all the mappers and collect the maps
   for (const auto [im, mapper] : Acts::enumerate(m_cfg.materialMappers)) {
-    Acts::MaterialMappingState& mState = m_mappingStates[im];
+    Acts::MaterialMappingState& mState = *m_mappingStates[im].get();
     auto mappingResult = mapper->finalizeMaps(mState);
     // The surface maps - check for duplicates
-    for (auto& [id, surfaceMaterial] : mappingResult.surfaceMaterialMap) {
+    for (auto& [id, surfaceMaterial] : mappingResult.surfaceMaterial) {
       if (detectorMaterial.first.find(id) != detectorMaterial.first.end()) {
-        throw std::invalid_argument(
-            "Surface material map already exists for this identifier.");
+        ACTS_ERROR("Surface material map already exists for this identifier.");
       }
       detectorMaterial.first.insert({id, std::move(surfaceMaterial)});
     }
     // The volume maps - check for duplicates
-    for (auto& [id, volumeMaterial] : mappingResult.volumeMaterialMap) {
+    for (auto& [id, volumeMaterial] : mappingResult.volumeMaterial) {
       if (detectorMaterial.second.find(id) != detectorMaterial.second.end()) {
-        throw std::invalid_argument(
-            "Volume material map already exists for this identifier.");
+        ACTS_ERROR("Volume material map already exists for this identifier.");
       }
       detectorMaterial.second.insert({id, std::move(volumeMaterial)});
     }
@@ -99,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     // Map this one onto the geometry
     for (const auto [im, mapper] : Acts::enumerate(m_cfg.materialMappers)) {
       Acts::MaterialMappingState& mState =
-          const_cast<Acts::MaterialMappingState&>(m_mappingStates[im]);
+          const_cast<Acts::MaterialMappingState&>(*(m_mappingStates[im].get()));
       auto [mapped, unmapped] = mapper->mapMaterialTrack(mState, mTrack);
       // Run further with the unmapped part
       mTrack = unmapped;

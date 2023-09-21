@@ -168,8 +168,7 @@ int runMaterialMapping(int argc, char* argv[],
       // Write the propagation steps as ROOT TTree
       ActsExamples::RootMaterialTrackWriter::Config matTrackWriterRootConfig;
       matTrackWriterRootConfig.filePath = materialFileName + "_tracks.root";
-      matTrackWriterRootConfig.collection =
-          mmAlgConfig.mappedMaterialCollection;
+      matTrackWriterRootConfig.collection = mmAlgConfig.mappedCollection;
       matTrackWriterRootConfig.storeSurface = true;
       matTrackWriterRootConfig.storeVolume = true;
       auto matTrackWriterRoot =

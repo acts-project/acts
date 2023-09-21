@@ -16,5 +16,5 @@ target_sources(
     ProtoSurfaceMaterial.cpp
     ProtoVolumeMaterial.cpp
     SurfaceMaterialMapper.cpp
-    #VolumeMaterialMapper.cpp
+    VolumeMaterialMapper.cpp
 )

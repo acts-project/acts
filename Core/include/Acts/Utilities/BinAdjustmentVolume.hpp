@@ -186,37 +186,47 @@ BinUtility adjustBinUtility(const BinUtility& bu,
   return uBinUtil;
 }
 
-/// @brief adjust the BinUtility bu to a volume
+/// @brief adjust the BinUtilty ro volume bounds and transform
 ///
-/// @param bu BinUtility at source
-/// @param volume Volume to which the adjustment is being done
+/// @param voluemBounds the bounds of the volume for the bin adjustment
+/// @param transform the transform of the volume
 ///
-/// @return new updated BinUtiltiy
-BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
-  auto cyBounds =
-      dynamic_cast<const CylinderVolumeBounds*>(&(volume.volumeBounds()));
+/// @return a new fitting BinUtility
+BinUtility adjustBinUtility(const BinUtility& bu,
+                            const VolumeBounds& volumeBounds,
+                            const Transform3& transform) {
+  auto cyBounds = dynamic_cast<const CylinderVolumeBounds*>(&(volumeBounds));
   auto cutcylBounds =
-      dynamic_cast<const CutoutCylinderVolumeBounds*>(&(volume.volumeBounds()));
-  auto cuBounds =
-      dynamic_cast<const CuboidVolumeBounds*>(&(volume.volumeBounds()));
+      dynamic_cast<const CutoutCylinderVolumeBounds*>(&(volumeBounds));
+  auto cuBounds = dynamic_cast<const CuboidVolumeBounds*>(&(volumeBounds));
 
   if (cyBounds != nullptr) {
     // Cylinder bounds
-    return adjustBinUtility(bu, *cyBounds, volume.transform());
+    return adjustBinUtility(bu, *cyBounds, transform);
 
   } else if (cutcylBounds != nullptr) {
     // Cutout Cylinder bounds
-    return adjustBinUtility(bu, *cutcylBounds, volume.transform());
+    return adjustBinUtility(bu, *cutcylBounds, transform);
 
   } else if (cuBounds != nullptr) {
     // Cuboid bounds
-    return adjustBinUtility(bu, *cuBounds, volume.transform());
+    return adjustBinUtility(bu, *cuBounds, transform);
   }
 
   throw std::invalid_argument(
       "Bin adjustment not implemented for this volume yet!");
 
   return BinUtility();
+}
+
+/// @brief adjust the BinUtility to a volume
+///
+/// @param bu BinUtility at source
+/// @param volume Volume to which the adjustment is being done
+///
+/// @return new updated BinUtiltiy
+BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {
+  return adjustBinUtility(bu, volume.volumeBounds(), volume.transform());
 }
 
 }  // namespace Acts
