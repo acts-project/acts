@@ -332,9 +332,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
           if (pSurface != nullptr) {
             auto intersection =
-                pSurface->intersect(ctx.geoContext, particle.position(),
-                                    particle.direction(), false);
-            auto position = intersection.intersection.position;
+                pSurface
+                    ->intersect(ctx.geoContext, particle.position(),
+                                particle.direction(), false)
+                    .closest();
+            auto position = intersection.position();
 
             // get the truth perigee parameter
             auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,

@@ -343,16 +343,20 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   // Test the step size modification in the context of a surface
   sls.updateStepSize(
       slsState,
-      targetSurface->intersect(slsState.geoContext, sls.position(slsState),
-                               navDir * sls.direction(slsState), false),
-      false);
+      targetSurface
+          ->intersect(slsState.geoContext, sls.position(slsState),
+                      navDir * sls.direction(slsState), false)
+          .closest(),
+      navDir, false);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
   slsState.stepSize.setValue(navDir * stepSize);
   sls.updateStepSize(
       slsState,
-      targetSurface->intersect(slsState.geoContext, sls.position(slsState),
-                               navDir * sls.direction(slsState), false),
-      true);
+      targetSurface
+          ->intersect(slsState.geoContext, sls.position(slsState),
+                      navDir * sls.direction(slsState), false)
+          .closest(),
+      navDir, true);
   CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
 
   // Test the bound state construction

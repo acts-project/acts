@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -17,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -87,7 +89,10 @@ struct PathLimitReached {
 /// This is the condition that the Surface has been reached
 /// it then triggers an propagation abort of the propagation
 struct SurfaceReached {
+  std::optional<double> overstepLimit;
+
   SurfaceReached() = default;
+  SurfaceReached(double oLimit) : overstepLimit(oLimit) {}
 
   /// boolean operator for abort condition without using the result
   ///
@@ -126,6 +131,7 @@ struct SurfaceReached {
     if (navigator.targetReached(state.navigation)) {
       return true;
     }
+
     // Check if the cache filled the currentSurface - or if we are on the
     // surface
     if ((navigator.currentSurface(state.navigation) &&
@@ -136,23 +142,25 @@ struct SurfaceReached {
       navigator.targetReached(state.navigation, true);
       return true;
     }
+
+    // TODO the following code is mostly duplicated in updateSingleSurfaceStatus
+
     // Calculate the distance to the surface
     const double tolerance = state.options.targetTolerance;
+
     const auto sIntersection = targetSurface.intersect(
         state.geoContext, stepper.position(state.stepping),
         state.options.direction * stepper.direction(state.stepping), true,
         tolerance);
-
-    // The target is reached
-    bool targetReached = (sIntersection.intersection.status ==
-                          Intersection3D::Status::onSurface);
-    double distance = sIntersection.intersection.pathLength;
+    const auto closest = sIntersection.closest();
 
     // Return true if you fall below tolerance
-    if (targetReached) {
+    if (closest.status() == Intersection3D::Status::onSurface) {
+      const double distance = closest.pathLength();
       ACTS_VERBOSE("Target: x | "
                    << "Target surface reached at distance (tolerance) "
                    << distance << " (" << tolerance << ")");
+
       // assigning the currentSurface
       navigator.currentSurface(state.navigation, &targetSurface);
       ACTS_VERBOSE("Target: x | "
@@ -161,23 +169,32 @@ struct SurfaceReached {
 
       // reaching the target calls a navigation break
       navigator.targetReached(state.navigation, true);
-    } else {
-      // Target is not reached, update the step size
-      const double overstepLimit = stepper.overstepLimit(state.stepping);
-      // Check the alternative solution
-      if (distance < overstepLimit and sIntersection.alternative) {
-        // Update the distance to the alternative solution
-        distance = sIntersection.alternative.pathLength;
-      }
-      stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
-                          false);
 
-      ACTS_VERBOSE("Target: 0 | "
-                   << "Target stepSize (surface) updated to "
-                   << stepper.outputStepSize(state.stepping));
+      return true;
     }
-    // path limit check
-    return targetReached;
+
+    const double pLimit =
+        state.stepping.stepSize.value(ConstrainedStep::aborter);
+    // not using the stepper overstep limit here because it does not always work
+    // for perigee surfaces
+    const double oLimit =
+        overstepLimit.value_or(stepper.overstepLimit(state.stepping));
+
+    for (const auto& intersection : sIntersection.split()) {
+      if (intersection &&
+          detail::checkIntersection(intersection.intersection(), pLimit, oLimit,
+                                    tolerance, logger)) {
+        stepper.setStepSize(state.stepping, intersection.pathLength(),
+                            ConstrainedStep::aborter, false);
+        break;
+      }
+    }
+
+    ACTS_VERBOSE("Target: 0 | "
+                 << "Target stepSize (surface) updated to "
+                 << stepper.outputStepSize(state.stepping));
+
+    return false;
   }
 };
 

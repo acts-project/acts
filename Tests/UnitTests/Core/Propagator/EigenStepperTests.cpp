@@ -463,18 +463,20 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                   eps);
 
   // Test the step size modification in the context of a surface
-  es.updateStepSize(
-      esState,
-      targetSurface->intersect(esState.geoContext, es.position(esState),
-                               navDir * es.direction(esState), false),
-      false);
+  es.updateStepSize(esState,
+                    targetSurface
+                        ->intersect(esState.geoContext, es.position(esState),
+                                    navDir * es.direction(esState), false)
+                        .closest(),
+                    navDir, false);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
   esState.stepSize.setValue(navDir * stepSize);
-  es.updateStepSize(
-      esState,
-      targetSurface->intersect(esState.geoContext, es.position(esState),
-                               navDir * es.direction(esState), false),
-      true);
+  es.updateStepSize(esState,
+                    targetSurface
+                        ->intersect(esState.geoContext, es.position(esState),
+                                    navDir * es.direction(esState), false)
+                        .closest(),
+                    navDir, true);
   CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction

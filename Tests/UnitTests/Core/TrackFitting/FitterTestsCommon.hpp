@@ -551,8 +551,9 @@ struct FitterTester {
     const auto& outlierSourceLinks = measurements.outlierSourceLinks;
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
     BOOST_REQUIRE_EQUAL(outlierSourceLinks.size(), nMeasurements);
-    // create a boundless target surface near the tracker exit
-    Acts::Vector3 center(3._m, 0., 0.);
+
+    // create a boundless target surface near the tracker entry
+    Acts::Vector3 center(-3._m, 0., 0.);
     Acts::Vector3 normal(1., 0., 0.);
     auto targetSurface =
         Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
