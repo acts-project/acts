@@ -35,7 +35,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
   auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.unitDirection(), false);
+                                                params.direction(), false);
 
   // Setting the propagation direction using the intersection length from
   // above.
@@ -46,14 +46,17 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
 
   // Propagate to the PCA of linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
+  if (not result.ok()) {
+    return result.error();
+  }
 
   // Extracting the Perigee representation of the track wrt linPointPos
   auto endParams = *result->endParameters;
   BoundVector perigeeParams = endParams.parameters();
 
   // Covariance and weight matrix at the PCA to "linPoint"
-  BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
-  BoundSymMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+  BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
+  BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
   // Vector containing the track parameters at the PCA
   // Note that we parametrize the track using the following parameters:
@@ -108,11 +111,12 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // Create curvilinear track object from our parameters. This is needed for
     // the propagation. Note that we work without covariance since we don't need
     // it to compute the derivative.
-    Vector3 wiggledDir = makeDirectionUnitFromPhiTheta(paramVecCopy(eLinPhi),
-                                                       paramVecCopy(eLinTheta));
+    Vector3 wiggledDir = makeDirectionFromPhiTheta(paramVecCopy(eLinPhi),
+                                                   paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
-        paramVecCopy.head(eLinPosSize), wiggledDir, paramVecCopy(eLinQOverP));
+        paramVecCopy.head(eLinPosSize), wiggledDir, paramVecCopy(eLinQOverP),
+        std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
     intersection = perigeeSurface->intersect(
@@ -123,6 +127,9 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
                                                  *perigeeSurface, pOptions);
+    if (not newResult.ok()) {
+      return newResult.error();
+    }
     newPerigeeParams = (*newResult->endParameters).parameters();
 
     // Computing the numerical derivatives and filling the Jacobian

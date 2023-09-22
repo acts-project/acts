@@ -27,17 +27,18 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
  public:
   struct Config {
     std::string modelPath;
-    int spacepointFeatures = 3;
+    int numFeatures = 3;
     int embeddingDim = 8;
     float rVal = 1.6;
     int knnVal = 500;
+    bool shuffleDirections = false;
   };
 
   TorchMetricLearning(const Config &cfg, std::unique_ptr<const Logger> logger);
   ~TorchMetricLearning();
 
-  std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues) override;
+  std::tuple<std::any, std::any> operator()(std::vector<float> &inputValues,
+                                            std::size_t numNodes) override;
 
   Config config() const { return m_cfg; }
 

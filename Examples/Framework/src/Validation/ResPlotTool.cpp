@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -226,7 +226,7 @@ void ActsExamples::ResPlotTool::refinement(
   for (unsigned int parID = 0; parID < Acts::eBoundSize; parID++) {
     std::string parName = m_cfg.paramNames.at(parID);
     // refine the plots vs eta
-    for (int j = 1; j <= bEta.nBins; j++) {
+    for (int j = 1; j <= static_cast<int>(bEta.nBins()); j++) {
       TH1D* temp_res = resPlotCache.res_vs_eta.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Residual_vs_eta_Histo", j), j, j);
       PlotHelpers::anaHisto(temp_res, j,
@@ -241,7 +241,7 @@ void ActsExamples::ResPlotTool::refinement(
     }
 
     // refine the plots vs pT
-    for (int j = 1; j <= bPt.nBins; j++) {
+    for (int j = 1; j <= static_cast<int>(bPt.nBins()); j++) {
       TH1D* temp_res = resPlotCache.res_vs_pT.at(parName)->ProjectionY(
           Form("%s_projy_bin%d", "Residual_vs_pT_Histo", j), j, j);
       PlotHelpers::anaHisto(temp_res, j, resPlotCache.resMean_vs_pT.at(parName),

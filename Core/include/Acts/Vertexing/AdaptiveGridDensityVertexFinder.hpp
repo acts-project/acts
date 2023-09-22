@@ -16,7 +16,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-#include <map>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -42,7 +42,7 @@ class AdaptiveGridDensityVertexFinder {
   using GridDensity = AdaptiveGridTrackDensity<trkGridSize>;
 
  public:
-  using TrackGridVector = typename GridDensity::TrackGridVector;
+  using DensityMap = typename GridDensity::DensityMap;
 
   /// @brief The Config struct
   struct Config {
@@ -77,21 +77,17 @@ class AdaptiveGridDensityVertexFinder {
   ///
   /// Only needed if cacheGridStateForTrackRemoval == true
   struct State {
-    // The main density vector
-    std::vector<float> mainGridDensity;
-    // Vector holding corresponding z bin values
-    std::vector<int> mainGridZValues;
+    // Map from z from the z bin values to the corresponding track density
+    DensityMap mainDensityMap;
 
-    // Map to store z-bin and track grid (i.e. the density contribution of
-    // a single track to the main grid) for every single track
-    std::map<const InputTrack_t*, std::pair<int, TrackGridVector>>
-        binAndTrackGridMap;
+    // Map from input track to corresponding track density map
+    std::unordered_map<const InputTrack_t*, DensityMap> trackDensities;
 
     // Map to store bool if track has passed track selection or not
-    std::map<const InputTrack_t*, bool> trackSelectionMap;
+    std::unordered_map<const InputTrack_t*, bool> trackSelectionMap;
 
     // Store tracks that have been removed from track collection. These
-    // track will be removed from the main grid
+    // tracks will be removed from the main grid
     std::vector<const InputTrack_t*> tracksToRemove;
 
     bool isInitialized = false;

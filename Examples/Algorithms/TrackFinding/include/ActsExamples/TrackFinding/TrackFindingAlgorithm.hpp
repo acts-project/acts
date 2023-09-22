@@ -86,6 +86,7 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output find trajectories collection.
     std::string outputTracks;
+
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
@@ -94,6 +95,8 @@ class TrackFindingAlgorithm final : public IAlgorithm {
     bool computeSharedHits = false;
     /// Track selector config
     std::optional<Acts::TrackSelector::Config> trackSelectorCfg = std::nullopt;
+    /// Run backward finding
+    bool backward = false;
   };
 
   /// Constructor of the track finding algorithm
@@ -159,7 +162,7 @@ void TrackFindingAlgorithm::computeSharedHits(
       sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
   for (auto track : tracks) {
-    for (auto state : track.trackStates()) {
+    for (auto state : track.trackStatesReversed()) {
       if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
         continue;
       }

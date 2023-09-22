@@ -94,7 +94,7 @@ void ActsExamples::TrackSummaryPlotTool::fill(
     size_t nSharedHits) const {
   using Acts::VectorHelpers::eta;
   using Acts::VectorHelpers::perp;
-  const auto& momentum = fittedParameters.momentum();
+  const auto momentum = fittedParameters.momentum();
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);
 

@@ -102,12 +102,12 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
-  // we get the event number
+  // Get the event number
   m_eventNr = context.eventNumber;
 
-  // loop over the step vector of each test propagation in this
+  // Loop over the step vector of each test propagation in this
   for (auto& steps : stepCollection) {
-    // clear the vectors for each collection
+    // Clear the vectors for each collection
     m_volumeID.clear();
     m_boundaryID.clear();
     m_layerID.clear();
@@ -127,37 +127,21 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_step_usr.clear();
     m_nStepTrials.clear();
 
-    // loop over single steps
+    // Loop over single steps
     for (auto& step : steps) {
-      // the identification of the step
-      Acts::GeometryIdentifier::Value volumeID = 0;
-      Acts::GeometryIdentifier::Value boundaryID = 0;
-      Acts::GeometryIdentifier::Value layerID = 0;
-      Acts::GeometryIdentifier::Value approachID = 0;
-      Acts::GeometryIdentifier::Value sensitiveID = 0;
+      const auto& geoID = step.geoID;
+      m_sensitiveID.push_back(geoID.sensitive());
+      m_approachID.push_back(geoID.approach());
+      m_layerID.push_back(geoID.layer());
+      m_boundaryID.push_back(geoID.boundary());
+      m_volumeID.push_back(geoID.volume());
+
       int material = 0;
-      // get the identification from the surface first
       if (step.surface) {
-        auto geoID = step.surface->geometryId();
-        volumeID = geoID.volume();
-        boundaryID = geoID.boundary();
-        layerID = geoID.layer();
-        approachID = geoID.approach();
-        sensitiveID = geoID.sensitive();
         if (step.surface->surfaceMaterial() != nullptr) {
           material = 1;
         }
       }
-      // a current volume overwrites the surface tagged one
-      if (step.volume != nullptr) {
-        volumeID = step.volume->geometryId().volume();
-      }
-      // now fill
-      m_sensitiveID.push_back(sensitiveID);
-      m_approachID.push_back(approachID);
-      m_layerID.push_back(layerID);
-      m_boundaryID.push_back(boundaryID);
-      m_volumeID.push_back(volumeID);
       m_material.push_back(material);
 
       // kinematic information
@@ -189,13 +173,13 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
         m_step_type.push_back(3);
       }
 
-      // step size information
+      // Step size information
       m_step_acc.push_back(Acts::clampValue<float>(accuracy));
       m_step_act.push_back(Acts::clampValue<float>(actor));
       m_step_abt.push_back(Acts::clampValue<float>(aborter));
       m_step_usr.push_back(Acts::clampValue<float>(user));
 
-      // stepper efficiency
+      // Stepper efficiency
       m_nStepTrials.push_back(step.stepSize.nStepTrials);
     }
     m_outputTree->Fill();

@@ -150,6 +150,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   // Setup random number generator
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
+  // Some statistics
+  std::size_t skippedHits = 0;
+
   ACTS_DEBUG("Starting loop over modules ...");
   for (const auto& simHitsGroup : groupByModule(simHits)) {
     // Manual pair unpacking instead of using
@@ -192,6 +195,11 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
             DigitizedParameters dParameters;
 
+            if (simHit.depositedEnergy() < m_cfg.minEnergyDeposit) {
+              ACTS_VERBOSE("Skip hit because energy deposit to small")
+              continue;
+            }
+
             // Geometric part - 0, 1, 2 local parameters are possible
             if (not digitizer.geometric.indices.empty()) {
               ACTS_VERBOSE("Configured to geometric digitize "
@@ -217,8 +225,9 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
               auto res =
                   digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
               if (not res.ok()) {
-                ACTS_WARNING("Problem in hit smearing, skip hit ("
-                             << res.error().message() << ")");
+                ++skippedHits;
+                ACTS_DEBUG("Problem in hit smearing, skip hit ("
+                           << res.error().message() << ")");
                 continue;
               }
               const auto& [par, cov] = res.value();
@@ -269,6 +278,12 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
         *digitizerItr);
   }
 
+  if (skippedHits > 0) {
+    ACTS_WARNING(
+        skippedHits
+        << " skipped in Digitization. Enable DEBUG mode to see more details.");
+  }
+
   m_sourceLinkWriteHandle(ctx, std::move(sourceLinks));
   m_measurementWriteHandle(ctx, std::move(measurements));
   m_clusterWriteHandle(ctx, std::move(clusters));
@@ -286,7 +301,7 @@ ActsExamples::DigitizationAlgorithm::channelizing(
 
   auto driftedSegment =
       m_surfaceDrift.toReadout(gctx, surface, geoCfg.thickness, hit.position(),
-                               hit.unitDirection(), driftDir);
+                               hit.direction(), driftDir);
   auto maskedSegmentRes = m_surfaceMask.apply(surface, driftedSegment);
   if (maskedSegmentRes.ok()) {
     auto maskedSegment = maskedSegmentRes.value();

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
@@ -52,8 +53,16 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   struct Config {
     /// Input seeds collection.
     std::string inputSeeds;
+    /// Input prototracks (optional)
+    std::string inputProtoTracks;
     /// Output estimated track parameters collection.
     std::string outputTrackParameters;
+    /// Output seed collection - only seeds with successful parameter estimation
+    /// are propagated (optional)
+    std::string outputSeeds;
+    /// Output prototrack collection - only tracks with successful parameter
+    /// estimation are propagated (optional)
+    std::string outputProtoTracks;
     /// Tracking geometry for surface lookup.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Magnetic field variant.
@@ -74,6 +83,9 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     double sigmaT0 = 10 * Acts::UnitConstants::ns;
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    /// Particle hypothesis.
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::pion();
   };
 
   /// Construct the track parameters making algorithm.
@@ -96,12 +108,15 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
 
   /// The track parameters covariance (assumed to be the same for all estimated
   /// track parameters for the moment)
-  Acts::BoundSymMatrix m_covariance = Acts::BoundSymMatrix::Zero();
+  Acts::BoundSquareMatrix m_covariance = Acts::BoundSquareMatrix::Zero();
 
   ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  ReadDataHandle<ProtoTrackContainer> m_inputTracks{this, "InputTracks"};
 
   WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
       this, "OutputTrackParameters"};
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<ProtoTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

@@ -298,7 +298,9 @@ def buildITkGeometry(
     )
 
 
-def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
+def itkSeedingAlgConfig(
+    inputSpacePointsType: InputSpacePointsType, highOccupancyConfig=False
+):
     assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
     # variables that do not change for pixel and strip SPs:
@@ -309,7 +311,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     collisionRegionMin = -200 * u.mm
     collisionRegionMax = 200 * u.mm
     maxSeedsPerSpM = 4
-    cotThetaMax = 27.2899
+    cotThetaMax = 27.2899  # (4.0 eta) --> 27.2899 = 1/tan(2*arctan(exp(-4)))
     sigmaScattering = 2
     radLengthPerSeed = 0.0975
     minPt = 900 * u.MeV
@@ -372,6 +374,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     phiMax = 2 * math.pi
     phiBinDeflectionCoverage = 3
     numPhiNeighbors = 1
+    maxPhiBins = 200
     # only used in orthogonal seeding
     deltaPhiMax = 0.025
 
@@ -387,7 +390,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         deltaRMaxBottomSP = 150 * u.mm
         deltaZMax = float("inf") * u.mm
         interactionPointCut = True
-        arithmeticAverageCotTheta = False
         impactMax = 2 * u.mm
         zBinsCustomLooping = [
             1,
@@ -439,6 +441,14 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
+
+        if highOccupancyConfig == True:
+            rMaxGridConfig = 250 * u.mm
+            deltaRMax = 200 * u.mm
+            zBinsCustomLooping = [1, 11, 2, 10, 3, 9, 6, 4, 8, 5, 7]
+            # variables that are only used for highOccupancyConfig configuration:
+            skipZMiddleBinSearch = 2
+
     elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
         outputSeeds = "StripSeeds"
         allowSeparateRMax = True
@@ -450,7 +460,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         deltaRMaxBottomSP = deltaRMaxTopSP
         deltaZMax = 900 * u.mm
         interactionPointCut = False
-        arithmeticAverageCotTheta = True
         impactMax = 20 * u.mm
         zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
         zBinNeighborsTop = [
@@ -491,6 +500,27 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
 
+    if highOccupancyConfig == True:
+        minPt = 1000 * u.MeV
+        collisionRegionMin = -150 * u.mm
+        collisionRegionMax = 150 * u.mm
+        rRangeMiddleSP = [
+            [40.0, 80.0],
+            [40.0, 200.0],
+            [70.0, 200.0],
+            [70.0, 200.0],
+            [70.0, 250.0],
+            [70.0, 250.0],
+            [70.0, 250.0],
+            [70.0, 200.0],
+            [70.0, 200.0],
+            [40.0, 200.0],
+            [40.0, 80.0],
+        ]
+        useVariableMiddleSPRange = False
+    else:
+        skipZMiddleBinSearch = 0
+
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
         maxSeedsPerSpM=maxSeedsPerSpM,
@@ -501,11 +531,11 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         impactMax=impactMax,
         deltaPhiMax=deltaPhiMax,
         interactionPointCut=interactionPointCut,
-        arithmeticAverageCotTheta=arithmeticAverageCotTheta,
         deltaZMax=deltaZMax,
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
         zBinsCustomLooping=zBinsCustomLooping,
+        skipZMiddleBinSearch=skipZMiddleBinSearch,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,
@@ -538,10 +568,12 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     )
     spacePointGridConfigArg = SpacePointGridConfigArg(
         rMax=rMaxGridConfig,
+        deltaRMax=deltaRMax,
         zBinEdges=zBinEdges,
         phiBinDeflectionCoverage=phiBinDeflectionCoverage,
         phi=(phiMin, phiMax),
         impactMax=impactMax,
+        maxPhiBins=maxPhiBins,
     )
     seedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(
         allowSeparateRMax=allowSeparateRMax,

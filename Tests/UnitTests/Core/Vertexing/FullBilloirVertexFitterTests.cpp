@@ -14,7 +14,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -50,7 +50,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Linearizer = HelicalTrackLinearizer<Propagator<EigenStepper<>>>;
 
 // Create a test context
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
   Vertex<BoundTrackParameters> constraint;
   Vertex<InputTrack> customConstraint;
   // Some arbitrary values
-  SymMatrix4 covMatVtx = SymMatrix4::Zero();
+  SquareMatrix4 covMatVtx = SquareMatrix4::Zero();
   double ns2 = Acts::UnitConstants::ns * Acts::UnitConstants::ns;
   covMatVtx(0, 0) = 30_mm2;
   covMatVtx(1, 1) = 30_mm2;
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
         billoirFitter.fit(emptyVector, linearizer, vfOptions, state).value();
 
     Vector3 origin(0., 0., 0.);
-    SymMatrix4 zeroMat = SymMatrix4::Zero();
+    SquareMatrix4 zeroMat = SquareMatrix4::Zero();
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
     BOOST_CHECK_EQUAL(fittedVertex.fullCovariance(), zeroMat);
 
@@ -238,10 +238,11 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
-      tracks.emplace_back(
-          BoundTrackParameters(perigeeSurface, paramVec, covMat));
+      tracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec, covMat,
+                                               ParticleHypothesis::pion()));
       customTracks.emplace_back(
-          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+                               ParticleHypothesis::pion()));
     }
 
     std::vector<const BoundTrackParameters*> tracksPtr;

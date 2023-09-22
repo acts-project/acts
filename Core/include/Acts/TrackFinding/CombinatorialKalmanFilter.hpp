@@ -33,7 +33,7 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 #include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/VoidKalmanComponents.hpp"
+#include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
@@ -94,9 +94,9 @@ struct CombinatorialKalmanFilterExtensions {
 
   /// Default constructor which connects the default void components
   CombinatorialKalmanFilterExtensions() {
-    calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
-    updater.template connect<&voidKalmanUpdater<traj_t>>();
-    smoother.template connect<&voidKalmanSmoother<traj_t>>();
+    calibrator.template connect<&detail::voidFitterCalibrator<traj_t>>();
+    updater.template connect<&detail::voidFitterUpdater<traj_t>>();
+    smoother.template connect<&detail::voidFitterSmoother<traj_t>>();
     branchStopper.connect<voidBranchStopper>();
     measurementSelector.template connect<voidMeasurementSelector>();
   }
@@ -169,7 +169,7 @@ struct CombinatorialKalmanFilterOptions {
         sourcelinkAccessor(std::move(accessor_)),
         extensions(extensions_),
         propagatorPlainOptions(pOptions),
-        referenceSurface(rSurface),
+        smoothingTargetSurface(rSurface),
         multipleScattering(mScattering),
         energyLoss(eLoss),
         smoothing(rSmoothing) {}
@@ -193,8 +193,11 @@ struct CombinatorialKalmanFilterOptions {
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
 
-  /// The reference Surface
-  const Surface* referenceSurface = nullptr;
+  /// The filter target surface
+  const Surface* filterTargetSurface = nullptr;
+
+  /// The smoothing target surface
+  const Surface* smoothingTargetSurface = nullptr;
 
   /// Whether to consider multiple scattering.
   bool multipleScattering = true;
@@ -252,7 +255,7 @@ struct CombinatorialKalmanFilterResult {
   Result<void> result{Result<void>::success()};
 
   // TODO place into options and make them accessible?
-  AbortList<PathLimitReached, EndOfWorldReached, ParticleStopped> abortList;
+  AbortList<PathLimitReached, EndOfWorldReached> abortList;
 };
 
 /// Combinatorial Kalman filter to find tracks.
@@ -323,8 +326,11 @@ class CombinatorialKalmanFilter {
     /// Broadcast the result_type
     using result_type = CombinatorialKalmanFilterResult<traj_t>;
 
-    /// The target surface
-    const Surface* targetSurface = nullptr;
+    /// The filter target surface
+    const Surface* filterTargetSurface = nullptr;
+
+    /// The smoothing target surface
+    const Surface* smoothingTargetSurface = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -334,6 +340,9 @@ class CombinatorialKalmanFilter {
 
     /// Whether to run smoothing to get fitted parameter
     bool smoothing = true;
+
+    /// Calibration context for the finding run
+    const CalibrationContext* calibrationContext{nullptr};
 
     /// @brief CombinatorialKalmanFilter actor operation
     ///
@@ -357,6 +366,13 @@ class CombinatorialKalmanFilter {
       }
 
       ACTS_VERBOSE("CombinatorialKalmanFilter step");
+
+      if (not result.filtered and filterTargetSurface != nullptr and
+          targetReached(state, stepper, navigator, *filterTargetSurface,
+                        logger())) {
+        navigator.navigationBreak(state.navigation, true);
+        stepper.releaseStepSize(state.stepping);
+      }
 
       // Update:
       // - Waiting for a current surface
@@ -496,30 +512,22 @@ class CombinatorialKalmanFilter {
                 result.result = res.error();
               }
               result.smoothed = true;
-
-              // TODO another ugly control flow hack
-              navigator.preStep(state, stepper);
-            }
-
-            if (result.smoothed) {
-              // Update state and stepper with material effects
-              materialInteractor(navigator.currentSurface(state.navigation),
-                                 state, stepper, navigator,
-                                 MaterialUpdateStage::FullUpdate);
             }
 
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
-            if (result.smoothed and (targetSurface == nullptr or
-                                     targetReached(state, stepper, navigator,
-                                                   *targetSurface, logger()))) {
+            if (result.smoothed and
+                (smoothingTargetSurface == nullptr or
+                 targetReached(state, stepper, navigator,
+                               *smoothingTargetSurface, logger()))) {
               ACTS_VERBOSE(
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
 
-              if (targetSurface != nullptr) {
+              if (smoothingTargetSurface != nullptr) {
                 // Transport & bind the parameter to the final surface
-                auto res = stepper.boundState(state.stepping, *targetSurface);
+                auto res =
+                    stepper.boundState(state.stepping, *smoothingTargetSurface);
                 if (!res.ok()) {
                   ACTS_ERROR("Error in finalize: " << res.error());
                   result.result = res.error();
@@ -542,7 +550,7 @@ class CombinatorialKalmanFilter {
                 result.iSmoothed++;
                 // Reverse navigation direction to start targeting for the rest
                 // tracks
-                state.stepping.navDir = state.stepping.navDir.invert();
+                state.options.direction = state.options.direction.invert();
 
                 // TODO this is kinda silly but I dont see a better solution
                 // with the current CKF control flow
@@ -578,7 +586,7 @@ class CombinatorialKalmanFilter {
       // Reset the stepping state
       stepper.resetState(state.stepping, currentState.filtered(),
                          currentState.filteredCovariance(),
-                         currentState.referenceSurface(), state.stepping.navDir,
+                         currentState.referenceSurface(),
                          state.options.maxStepSize);
 
       // Reset the navigation state
@@ -586,7 +594,7 @@ class CombinatorialKalmanFilter {
       // after smoothing
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
-          stepper.direction(state.stepping), state.stepping.navDir,
+          state.options.direction * stepper.direction(state.stepping),
           &currentState.referenceSurface(), nullptr);
 
       // No Kalman filtering for the starting surface, but still need
@@ -778,9 +786,11 @@ class CombinatorialKalmanFilter {
             nBranchesOnSurface = 0;
           }
         }
-        // Update state and stepper with material effects
-        materialInteractor(surface, state, stepper, navigator,
-                           MaterialUpdateStage::FullUpdate);
+        if (surface->surfaceMaterial() != nullptr) {
+          // Update state and stepper with material effects
+          materialInteractor(surface, state, stepper, navigator,
+                             MaterialUpdateStage::FullUpdate);
+        }
       } else {
         // Neither measurement nor material on surface, this branch is still
         // valid. Count the branch on current surface
@@ -876,10 +886,8 @@ class CombinatorialKalmanFilter {
 
         ts.setReferenceSurface(boundParams.referenceSurface().getSharedPtr());
 
-        ts.setUncalibratedSourceLink(sourceLink);
-
         // now calibrate the track state
-        m_extensions.calibrator(gctx, ts);
+        m_extensions.calibrator(gctx, calibrationContext, sourceLink, ts);
 
         result.trackStateCandidates.push_back(ts);
       }
@@ -1170,7 +1178,7 @@ class CombinatorialKalmanFilter {
       }
 
       // Return in case no target surface
-      if (targetSurface == nullptr) {
+      if (smoothingTargetSurface == nullptr) {
         return Result<void>::success();
       }
 
@@ -1183,9 +1191,9 @@ class CombinatorialKalmanFilter {
 
       // Lambda to get the intersection of the free params on the target surface
       auto target = [&](const FreeVector& freeVector) -> SurfaceIntersection {
-        return targetSurface->intersect(
+        return smoothingTargetSurface->intersect(
             state.geoContext, freeVector.segment<3>(eFreePos0),
-            state.stepping.navDir * freeVector.segment<3>(eFreeDir0), true,
+            state.options.direction * freeVector.segment<3>(eFreeDir0), true,
             state.options.targetTolerance);
       };
 
@@ -1239,21 +1247,16 @@ class CombinatorialKalmanFilter {
           "parameters at surface "
           << surface.geometryId() << ". Prepared to reach the target surface.");
 
-      // Reset the navigation state
-      // Set targetSurface to nullptr as it is handled manually in the actor
-      navigator.resetState(state.navigation, state.geoContext,
-                           stepper.position(state.stepping),
-                           stepper.direction(state.stepping),
-                           state.stepping.navDir, &surface, nullptr);
+      // Reset the navigation state to enable propagation towards the target
+      // surface
+      navigator.resetState(
+          state.navigation, state.geoContext, stepper.position(state.stepping),
+          state.options.direction * stepper.direction(state.stepping), &surface,
+          nullptr);
 
       // Need to consider the material effects of the starting surface
       materialInteractor(&surface, state, stepper, navigator,
                          MaterialUpdateStage::FullUpdate);
-
-      // Reset the navigation state to enable propagation towards the target
-      // surface
-      navigator.targetReached(state.navigation, false);
-      navigator.currentSurface(state.navigation, nullptr);
 
       return Result<void>::success();
     }
@@ -1349,13 +1352,15 @@ class CombinatorialKalmanFilter {
     // Catch the actor
     auto& combKalmanActor =
         propOptions.actionList.template get<CombinatorialKalmanFilterActor>();
-    combKalmanActor.targetSurface = tfOptions.referenceSurface;
+    combKalmanActor.filterTargetSurface = tfOptions.filterTargetSurface;
+    combKalmanActor.smoothingTargetSurface = tfOptions.smoothingTargetSurface;
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.smoothing = tfOptions.smoothing;
     combKalmanActor.actorLogger = m_actorLogger.get();
     combKalmanActor.updaterLogger = m_updaterLogger.get();
     combKalmanActor.smootherLogger = m_smootherLogger.get();
+    combKalmanActor.calibrationContext = &tfOptions.calibrationContext.get();
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;
@@ -1376,10 +1381,10 @@ class CombinatorialKalmanFilter {
     r.stateBuffer->clear();
 
     auto result = m_propagator.template propagate(
-        initialParameters, propOptions, std::move(inputResult));
+        initialParameters, propOptions, false, std::move(inputResult));
 
     if (!result.ok()) {
-      ACTS_ERROR("Propapation failed: " << result.error() << " "
+      ACTS_ERROR("Propagation failed: " << result.error() << " "
                                         << result.error().message()
                                         << " with the initial parameters: \n"
                                         << initialParameters.parameters());

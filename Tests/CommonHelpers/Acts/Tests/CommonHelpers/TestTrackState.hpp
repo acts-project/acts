@@ -12,6 +12,7 @@
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
 #include <random>
 
@@ -36,9 +37,12 @@ struct TestTrackState {
       : surface(Surface::makeShared<PlaneSurface>(Vector3::Zero(),
                                                   Vector3::UnitZ())),
         // set bogus parameters first since they are not default-constructible
-        predicted(surface, BoundVector::Zero()),
-        filtered(surface, BoundVector::Zero()),
-        smoothed(surface, BoundVector::Zero()),
+        predicted(surface, BoundVector::Zero(), std::nullopt,
+                  ParticleHypothesis::pion()),
+        filtered(surface, BoundVector::Zero(), std::nullopt,
+                 ParticleHypothesis::pion()),
+        smoothed(surface, BoundVector::Zero(), std::nullopt,
+                 ParticleHypothesis::pion()),
         jacobian(BoundMatrix::Identity()),
         chi2(std::chi_squared_distribution<double>(measdim)(rng)),
         pathLength(std::uniform_real_distribution<ActsScalar>(
@@ -65,13 +69,16 @@ struct TestTrackState {
     // trkPar[eBoundTheta] = 90_degree;
     // trkPar[eBoundQOverP] = 5.;
     // predicted
-    predicted = BoundTrackParameters(surface, trkPar, trkCov);
+    predicted = BoundTrackParameters(surface, trkPar, trkCov,
+                                     ParticleHypothesis::pion());
     // filtered, modified q/p, reduced covariance
     // trkPar[eBoundQOverP] = 10.;
-    filtered = BoundTrackParameters(surface, trkPar, 0.75 * trkCov);
+    filtered = BoundTrackParameters(surface, trkPar, 0.75 * trkCov,
+                                    ParticleHypothesis::pion());
     // smoothed, modified q/p, further reduced covariance
     // trkPar[eBoundQOverP] = 15.;
-    smoothed = BoundTrackParameters(surface, trkPar, 0.5 * trkCov);
+    smoothed = BoundTrackParameters(surface, trkPar, 0.5 * trkCov,
+                                    ParticleHypothesis::pion());
 
     // propagation jacobian is identity + corrections
     for (Eigen::Index c = 0; c < jacobian.cols(); ++c) {
@@ -116,10 +123,12 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   ts.chi2() = pc.chi2;
   ts.pathLength() = pc.pathLength;
   // source link defines the uncalibrated measurement
-  ts.setUncalibratedSourceLink(Acts::SourceLink{pc.sourceLink});
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-    testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{}, ts);
+    testSourceLinkCalibrator<trajectory_t>(Acts::GeometryContext{},
+                                           Acts::CalibrationContext{},
+                                           SourceLink{pc.sourceLink}, ts);
+    assert(ts.hasUncalibratedSourceLink());
   }
 }
 

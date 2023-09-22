@@ -224,7 +224,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       recBound[Acts::eBoundTheta] = fullVect[Acts::eBoundTheta];
       recBound[Acts::eBoundTime] = fullVect[Acts::eBoundTime];
 
-      Acts::BoundSymMatrix fullVar =
+      Acts::BoundSquareMatrix fullVar =
           m.expander() * m.covariance() * m.expander().transpose();
       varBound[Acts::eBoundLoc0] = fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0);
       varBound[Acts::eBoundLoc1] = fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1);

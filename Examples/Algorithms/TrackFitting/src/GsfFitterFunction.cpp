@@ -21,6 +21,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GaussianMixtureReduction.hpp"
@@ -28,6 +29,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
@@ -83,8 +85,13 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   Acts::MixtureReductionMethod reductionMethod =
       Acts::MixtureReductionMethod::eMaxWeight;
 
-  GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
-      : fitter(std::move(f)), directFitter(std::move(df)) {}
+  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
+
+  GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
+                        const Acts::TrackingGeometry& trkGeo)
+      : fitter(std::move(f)),
+        directFitter(std::move(df)),
+        m_slSurfaceAccessor{trkGeo} {}
 
   template <typename calibrator_t>
   auto makeGsfOptions(const GeneralFitterOptions& options,
@@ -108,6 +115,11 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
 
     gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
         &calibrator);
+    gsfOptions.extensions.surfaceAccessor
+        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+            &m_slSurfaceAccessor);
+    gsfOptions.extensions.mixtureReducer
+        .connect<&Acts::reduceMixtureWithKLDistance>();
 
     return gsfOptions;
   }
@@ -164,6 +176,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
   // Standard fitter
   MultiStepper stepper(magneticField, finalReductionMethod,
                        logger.cloneWithSuffix("Step"));
+  const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
@@ -189,7 +202,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction = std::make_shared<GsfFitterFunctionImpl>(
-      std::move(trackFitter), std::move(directTrackFitter));
+      std::move(trackFitter), std::move(directTrackFitter), geo);
   fitterFunction->maxComponents = maxComponents;
   fitterFunction->weightCutoff = weightCutoff;
   fitterFunction->abortOnError = abortOnError;

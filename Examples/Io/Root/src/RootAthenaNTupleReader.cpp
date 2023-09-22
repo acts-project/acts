@@ -9,7 +9,7 @@
 #include "ActsExamples/Io/Root/RootAthenaNTupleReader.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -169,10 +169,8 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     params[Acts::BoundIndices::eBoundQOverP] = m_branches.track_qOverP[i];
     params[Acts::BoundIndices::eBoundTime] = m_branches.track_t[i];
 
-    const double q = 1;
-
     // Construct and fill covariance matrix
-    Acts::BoundSymMatrix cov;
+    Acts::BoundSquareMatrix cov;
 
     // Variances
     cov(Acts::BoundIndices::eBoundLoc0, Acts::BoundIndices::eBoundLoc0) =
@@ -228,7 +226,9 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
     cov(Acts::BoundIndices::eBoundQOverP, Acts::BoundIndices::eBoundTheta) =
         m_branches.track_cov_tehtaqOverP[i];
 
-    Acts::BoundTrackParameters tc(surface, params, q, cov);
+    // TODO we do not have a hypothesis at hand here. defaulting to pion
+    Acts::BoundTrackParameters tc(surface, params, cov,
+                                  Acts::ParticleHypothesis::pion());
     trackContainer.push_back(tc);
   }
 
@@ -247,7 +247,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
 
   Acts::Vertex<Acts::BoundTrackParameters> beamspotConstraint;
   Acts::Vector3 beamspotPos;
-  Acts::SymMatrix3 beamspotCov;
+  Acts::SquareMatrix3 beamspotCov;
 
   beamspotPos << m_branches.beamspot_x, m_branches.beamspot_y,
       m_branches.beamspot_z;

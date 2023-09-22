@@ -11,7 +11,8 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include <Acts/EventData/Charge.hpp>
@@ -27,22 +28,29 @@
 
 using namespace Acts;
 
-BOOST_AUTO_TEST_CASE(test_constructors) {
-  std::vector<std::tuple<double, BoundVector, BoundSymMatrix>> a;
-  a.push_back({1.0, BoundVector::Ones(), BoundSymMatrix::Identity()});
+static const auto particleHypothesis = ParticleHypothesis::pion();
 
-  std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>> b;
-  b.push_back({1.0, BoundVector::Ones(), BoundSymMatrix::Identity()});
+BOOST_AUTO_TEST_CASE(test_constructors) {
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> a;
+  a.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
+
+  std::vector<std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
+      b;
+  b.push_back({1.0, BoundVector::Ones(), BoundSquareMatrix::Identity()});
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Ones(), Vector3::Ones().normalized());
 
-  const auto ap = MultiComponentBoundTrackParameters<SinglyCharged>(surface, a);
-  const auto bp = MultiComponentBoundTrackParameters<SinglyCharged>(surface, b);
-  const auto aps = MultiComponentBoundTrackParameters<SinglyCharged>(
-      surface, std::get<1>(a.front()), std::get<2>(a.front()));
-  const auto bps = MultiComponentBoundTrackParameters<SinglyCharged>(
-      surface, std::get<1>(b.front()), std::get<2>(b.front()));
+  const auto ap =
+      MultiComponentBoundTrackParameters(surface, a, particleHypothesis);
+  const auto bp =
+      MultiComponentBoundTrackParameters(surface, b, particleHypothesis);
+  const auto aps = MultiComponentBoundTrackParameters(
+      surface, std::get<1>(a.front()), std::get<2>(a.front()),
+      particleHypothesis);
+  const auto bps = MultiComponentBoundTrackParameters(
+      surface, std::get<1>(b.front()), std::get<2>(b.front()),
+      particleHypothesis);
 
   BOOST_CHECK(b == ap.components());
   BOOST_CHECK(ap.components() == bp.components());
@@ -51,23 +59,23 @@ BOOST_AUTO_TEST_CASE(test_constructors) {
 }
 
 BOOST_AUTO_TEST_CASE(test_accessors) {
-  using cov_t = std::optional<BoundSymMatrix>;
-  for (const auto &cov : {cov_t{}, cov_t{BoundSymMatrix::Identity()},
-                          cov_t{BoundSymMatrix::Identity()}}) {
+  using cov_t = std::optional<BoundSquareMatrix>;
+  for (const auto &cov : {cov_t{}, cov_t{BoundSquareMatrix::Identity()},
+                          cov_t{BoundSquareMatrix::Identity()}}) {
     auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
         Vector3::Ones(), Vector3::Ones().normalized());
 
-    const SingleBoundTrackParameters<SinglyCharged> single_pars(
-        surface, BoundVector::Ones(), cov);
+    const BoundTrackParameters single_pars(surface, BoundVector::Ones(), cov,
+                                           particleHypothesis);
 
     const auto multi_pars = [&]() {
       std::vector<
-          std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+          std::tuple<double, BoundVector, std::optional<BoundSquareMatrix>>>
           a;
       for (int i = 0; i < 4; ++i) {
         a.push_back({0.25, single_pars.parameters(), single_pars.covariance()});
       }
-      return MultiComponentBoundTrackParameters<SinglyCharged>(surface, a);
+      return MultiComponentBoundTrackParameters(surface, a, particleHypothesis);
     }();
 
     BOOST_CHECK_EQUAL(multi_pars.absoluteMomentum(),
@@ -81,10 +89,10 @@ BOOST_AUTO_TEST_CASE(test_accessors) {
                       single_pars.position(GeometryContext{}));
     BOOST_CHECK_EQUAL(multi_pars.transverseMomentum(),
                       single_pars.transverseMomentum());
-    BOOST_CHECK_EQUAL(multi_pars.unitDirection(), single_pars.unitDirection());
+    BOOST_CHECK_EQUAL(multi_pars.direction(), single_pars.direction());
 
     // Check the behaviour for std::nullopt or zero covariance
-    if (cov && *cov != BoundSymMatrix::Zero()) {
+    if (cov && *cov != BoundSquareMatrix::Zero()) {
       BOOST_CHECK_EQUAL(*multi_pars.covariance(), *single_pars.covariance());
     } else {
       BOOST_CHECK(not multi_pars.covariance());
