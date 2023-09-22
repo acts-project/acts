@@ -40,9 +40,9 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <functional>
+#include <limits>
 #include <map>
 #include <memory>
-#include <limits>
 
 namespace Acts {
 
