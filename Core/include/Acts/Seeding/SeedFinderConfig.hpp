@@ -101,6 +101,10 @@ struct SeedFinderConfig {
   // xyz
   float toleranceParam = 1.1 * Acts::UnitConstants::mm;
 
+  // Parameter which can loosen the tolerance of the track seed to form to a
+  // helix, useful for (e.g.) misaligned seeding
+  float helixCut = 1.;
+
   // Geometry Settings
   // Detector ROI
   // limiting location of collision region in z
