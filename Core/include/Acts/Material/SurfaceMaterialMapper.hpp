@@ -93,9 +93,12 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
     MaterialInteractionVeto veto = NoVeto{};
   };
 
-  /// @struct State which is a cache object of the Surface material mapper
-  ///
   /// Nested State struct which is used for the mapping prococess
+  /// for caching the result
+  ///
+  /// In an appropriate way, the base class returned by the
+  /// `createState(...)` interface method can be  transformed via
+  /// `static_cast` tot he derived class needed by the mapper
   struct State final : public MaterialMappingState {
     /// @param [in] gctx The geometry context to use
     /// @param [in] mctx The magnetic field context to use
