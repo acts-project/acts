@@ -216,7 +216,7 @@ Acts::detail::RealQuadraticEquation Acts::CylinderSurface::intersectionSolver(
   return detail::RealQuadraticEquation(a, b, c);
 }
 
-Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::CylinderSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
@@ -227,7 +227,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return SurfaceIntersection();
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
   }
 
   // Check the validity of the first solution
@@ -266,9 +266,8 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   status1 = boundaryCheck(solution1, status1);
   // Set the intersection
   Intersection3D first(solution1, qe.first, status1);
-  SurfaceIntersection cIntersection(first, this);
   if (qe.solutions == 1) {
-    return cIntersection;
+    return {{first, first}, this};
   }
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
@@ -278,21 +277,11 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   // Check first solution for boundary compatibility
   status2 = boundaryCheck(solution2, status2);
   Intersection3D second(solution2, qe.second, status2);
-  // Check one if its valid or neither is valid
-  bool check1 = status1 != Intersection3D::Status::missed or
-                (status1 == Intersection3D::Status::missed and
-                 status2 == Intersection3D::Status::missed);
-  // Check and (eventually) go with the first solution
-  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
-      status2 == Intersection3D::Status::missed) {
-    // And add the alternative
-    cIntersection.alternative = second;
-  } else {
-    // And add the alternative
-    cIntersection.alternative = first;
-    cIntersection.intersection = second;
+  // Order based on path length
+  if (first.pathLength() <= second.pathLength()) {
+    return {{first, second}, this};
   }
-  return cIntersection;
+  return {{second, first}, this};
 }
 
 Acts::AlignmentToPathMatrix Acts::CylinderSurface::alignmentToPathDerivative(
