@@ -118,7 +118,110 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   CHECK_CLOSE_REL(fwhm, correctFWHM, relTolOptimization);
 }
 
-BOOST_AUTO_TEST_CASE(check_seed_width_estimation) {
+BOOST_AUTO_TEST_CASE(
+    compare_to_analytical_solution_for_single_track_with_time) {
+  // Using a large track grid so we can choose a small bin size
+  const int spatialTrkGridSize = 401;
+  const int temporalTrkGridSize = 401;
+  // Arbitrary (but small) bin size
+  const float spatialBinExtent = 3.1e-3;
+  const float temporalBinExtent = 3.1e-3;
+  // Arbitrary impact parameters
+  const float d0 = -0.1;
+  const float z0 = -0.2;
+  const float t0 = 0.1;
+  Vector3 impactParameters{d0, z0, t0};
+
+  Covariance randMat((Covariance::Random() + 1.5 * Covariance::Identity()) *
+                     0.05);
+
+  // symmetric covariance matrix
+  Covariance covMat = 0.5 * (randMat + randMat.transpose());
+
+  ActsSquareMatrix<3> ipCov;
+  ipCov.topLeftCorner<2, 2>() = covMat.topLeftCorner<2, 2>();
+  ipCov.block<2, 1>(0, 2) = covMat.block<2, 1>(0, eBoundTime);
+  ipCov.block<1, 2>(2, 0) = covMat.block<1, 2>(eBoundTime, 0);
+  ipCov(2, 2) = covMat(eBoundTime, eBoundTime);
+  BoundVector paramVec;
+  paramVec << d0, z0, 0, 0, 0, t0;
+  // Create perigee surface
+  std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
+
+  BoundTrackParameters params(perigeeSurface, paramVec, covMat);
+  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::Config cfg(
+      spatialBinExtent, temporalBinExtent);
+  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize> grid(cfg);
+
+  // Empty map
+  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::DensityMap
+      mainDensityMap;
+
+  // Add track
+  auto trackDensityMap = grid.addTrack(params, mainDensityMap);
+
+  float relTol = 1e-5;
+  float small = 1e-5;
+
+  auto gaussian3D = [&](const Vector3& args, const Vector3& mus,
+                        const SquareMatrix3& sigmas) {
+    Vector3 diffs = args - mus;
+    float coef = 1 / std::sqrt(sigmas.determinant());
+    float expo = -0.5 * diffs.transpose().dot(sigmas.inverse() * diffs);
+    return coef * std::exp(expo);
+  };
+
+  for (auto const& it : mainDensityMap) {
+    // Extract variables for better readability
+    float z = grid.getBinCenter(it.first.first, spatialBinExtent);
+    float t = grid.getBinCenter(it.first.second, temporalBinExtent);
+    float density = it.second;
+    // Argument for 2D gaussian
+    Vector3 dztVec{0., z, t};
+
+    // Compute correct density...
+    float correctDensity = gaussian3D(dztVec, impactParameters, ipCov);
+
+    // ... and check if our result is equivalent
+    CHECK_CLOSE_OR_SMALL(density, correctDensity, relTol, small);
+  }
+
+  // TODO add reference
+  // Analytical maximum of the Gaussian
+  ActsSquareMatrix<3> ipWeights = ipCov.inverse();
+  ActsScalar denom =
+      ipWeights(1, 1) * ipWeights(2, 2) - ipWeights(1, 2) * ipWeights(1, 2);
+
+  ActsScalar zNom =
+      ipWeights(0, 1) * ipWeights(2, 2) - ipWeights(0, 2) * ipWeights(1, 2);
+  ActsScalar correctMaxZ = zNom / denom * d0 + z0;
+
+  ActsScalar tNom =
+      ipWeights(0, 2) * ipWeights(1, 1) - ipWeights(0, 1) * ipWeights(1, 2);
+  ActsScalar correctMaxT = tNom / denom * d0 + t0;
+
+  // Analytical FWHM of the Gaussian
+  ActsScalar correctFWHM = 2. * std::sqrt(2 * std::log(2.) / ipWeights(1, 1));
+
+  // Estimate maximum z position and seed width
+  auto res = grid.getMaxZTPositionAndWidth(mainDensityMap);
+  BOOST_CHECK(res.ok());
+
+  // Extract variables for better readability...
+  float maxZ = res.value().first.first;
+  float maxT = res.value().first.second.value();
+  float fwhm = res.value().second * 2.355f;
+
+  // ... and check if they are correct (note: the optimization is not as exact
+  // as the density values).
+  float relTolOptimization = 1e-2;
+  CHECK_CLOSE_REL(maxZ, correctMaxZ, relTolOptimization);
+  CHECK_CLOSE_REL(maxT, correctMaxT, relTolOptimization);
+  CHECK_CLOSE_REL(fwhm, correctFWHM, relTolOptimization);
+}
+
+BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // Dummy track grid size (not needed for this unit test)
   const int spatialTrkGridSize = 1;
   float binSize = 2.;
@@ -154,7 +257,7 @@ BOOST_AUTO_TEST_CASE(check_seed_width_estimation) {
   BOOST_CHECK_EQUAL(fwhm, 10.);
 }
 
-BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
+BOOST_AUTO_TEST_CASE(track_adding) {
   const int spatialTrkGridSize = 15;
 
   double binSize = 0.1;  // mm
@@ -209,7 +312,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_adding_test) {
   BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * spatialTrkGridSize - 2);
 }
 
-BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
+BOOST_AUTO_TEST_CASE(max_z_and_width) {
   const int spatialTrkGridSize = 29;
 
   double binSize = 0.05;  // mm
@@ -256,7 +359,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_max_z_and_width_test) {
   BOOST_CHECK((*resWidth1).second > 0);
 }
 
-BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
+BOOST_AUTO_TEST_CASE(highest_density_sum) {
   const int spatialTrkGridSize = 29;
 
   double binSize = 0.05;  // mm
@@ -315,7 +418,7 @@ BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_highest_density_sum_test) {
   BOOST_CHECK_EQUAL((*res3).first, z0Trk1);
 }
 
-BOOST_AUTO_TEST_CASE(adaptive_gaussian_grid_density_track_removing_test) {
+BOOST_AUTO_TEST_CASE(track_removing) {
   const int spatialTrkGridSize = 29;
 
   double binSize = 0.05;  // mm
