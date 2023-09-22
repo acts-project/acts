@@ -18,14 +18,6 @@ x86_64-slc6-gcc49-opt
 build*
 .asetup.save
 
-# do not ignore changes in the requirements file
-# as they are actually important
-!cmt/requirements
-
-# doxygen documentation
-# =====================
-!doc/doxygen.config
-
 #json output
 *.json
 #root output
@@ -36,7 +28,7 @@ build*
 
 # dont ignore hidden configs
 !.clang-format
-!.github/
+!.github/**
 !.gitignore
 !.gitlab-ci.yml
 !.clang-tidy
