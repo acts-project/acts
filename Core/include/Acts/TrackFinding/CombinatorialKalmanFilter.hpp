@@ -353,7 +353,7 @@ class CombinatorialKalmanFilter {
     /// @param stepper is the stepper in use
     /// @param navigator is the navigator in use
     /// @param result is the mutable result state object
-    /// @param logger the logger object to be used
+    /// @param _logger the logger object to be used
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
