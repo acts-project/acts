@@ -1149,11 +1149,11 @@ class CombinatorialKalmanFilter {
       result.fittedStates->applyBackwards(lastMeasurementIndex, [&](auto st) {
         bool isMeasurement =
             st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-        bool isHole = st.typeFlags().test(TrackStateFlag::HoleFlag);
-        // We are excluding non measurement states and holes here. Those can
+        bool isOutlier = st.typeFlags().test(TrackStateFlag::OutlierFlag);
+        // We are excluding non measurement states and outlier here. Those can
         // decrease resolution because only the smoothing corrected the very
         // first prediction as filtering is not possible.
-        if (isMeasurement && !isHole) {
+        if (isMeasurement && !isOutlier) {
           firstStateIndex = st.index();
         }
         nStates++;
