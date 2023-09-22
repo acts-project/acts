@@ -60,7 +60,7 @@ namespace ActsExamples {
 /// reader and uses the material mapper to project the material onto
 /// either surfaces or volumes of the input geometry
 ///
-class MaterialMapping : public IAlgorithm {
+class MaterialMapping final : public IAlgorithm {
  public:
   /// @class nested Config class
   /// of the MaterialMapping algorithm
@@ -103,7 +103,8 @@ class MaterialMapping : public IAlgorithm {
                   Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Destructor
-  /// - it also writes out the file
+  ///
+  /// @note the desctructor also invokes the material writer(s)
   ~MaterialMapping() final;
 
   /// Framework execute method
