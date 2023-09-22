@@ -49,7 +49,9 @@ Acts::RecordedMaterialTrack createRecordedMaterialTrack(
     mint.position = Acts::Vector3(p, 0, 0);
     mint.direction = Acts::Vector3(1, 0, 0);
     mint.materialSlab =
-        Acts::MaterialSlab(Acts::Material({0.1, 0.1, 0.1, 0.1, 0.1}), 0.1_mm);
+        Acts::MaterialSlab(Acts::Material(Acts::Material::ParametersVector{
+                               0.1, 0.1, 0.1, 0.1, 0.1}),
+                           0.1_mm);
     rmt.second.materialInteractions.push_back(mint);
   }
 

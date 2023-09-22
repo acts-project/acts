@@ -106,8 +106,8 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
       // Run further with the unmapped part
       mTrack = unmapped;
       // Keep track of the mapped part
-      mappedTrack.second.materialInX0 = mapped.second.materialInX0;
-      mappedTrack.second.materialInL0 = mapped.second.materialInL0;
+      mappedTrack.second.materialInX0 += mapped.second.materialInX0;
+      mappedTrack.second.materialInL0 += mapped.second.materialInL0;
       mappedTrack.second.materialInteractions.insert(
           mappedTrack.second.materialInteractions.end(),
           mapped.second.materialInteractions.begin(),

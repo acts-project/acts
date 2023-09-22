@@ -213,7 +213,7 @@ class VolumeMaterialMapper final : public IMaterialMapper {
   /// @param volumeBounds the bounds of the volume
   /// @param transform the transform of the volume
   /// @param geoID is the volume geometry identifier which is used to store
-  void checkAndInsert(State& mState, const IVolumeMaterial& volume,
+  void checkAndInsert(State& mState, const IVolumeMaterial& volumeMaterial,
                       const VolumeBounds& volumeBounds,
                       const Transform3& transform,
                       const GeometryIdentifier& geoID) const;

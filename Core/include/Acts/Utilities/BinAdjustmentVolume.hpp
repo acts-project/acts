@@ -188,7 +188,8 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 
 /// @brief adjust the BinUtilty ro volume bounds and transform
 ///
-/// @param voluemBounds the bounds of the volume for the bin adjustment
+/// @param bu BinUtility at source
+/// @param volumeBounds the bounds of the volume for the bin adjustment
 /// @param transform the transform of the volume
 ///
 /// @return a new fitting BinUtility

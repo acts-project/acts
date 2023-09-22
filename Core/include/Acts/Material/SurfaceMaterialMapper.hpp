@@ -93,7 +93,7 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
     MaterialInteractionVeto veto = NoVeto{};
   };
 
-  /// @struct State/cache object of the Surface material mapper
+  /// @struct State which is a cache object of the Surface material mapper
   ///
   /// Nested State struct which is used for the mapping prococess
   struct State final : public MaterialMappingState {
@@ -195,7 +195,7 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   /// associated surface
   ///
   /// @note this option can be run to re-map material without the need of
-  /// re-running the intersection, so it is primarily for optimisation in oder
+  /// re-running the intersection, so it is primarily for optimisation in order
   /// to fine tune surface binning and description
   ///
   /// @param mState The current state map
@@ -217,7 +217,7 @@ class SurfaceMaterialMapper final : public IMaterialMapper {
   /// @param mState The state to be filled
   /// @param dVolume is current DetectorVolume
   void resolveMaterialSurfaces(
-      State& mState, const Experimental::DetectorVolume& tVolume) const;
+      State& mState, const Experimental::DetectorVolume& dVolume) const;
 
   /// @brief Check and insert
   ///

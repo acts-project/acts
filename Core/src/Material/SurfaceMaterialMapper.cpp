@@ -396,7 +396,7 @@ Acts::SurfaceMaterialMapper::mapInteraction(
           mState.geoContext, currentPos, sfIter->direction);
       currentAccMaterial = mState.accumulatedMaterial.find(currentID);
     }
-    // Now assign the material for the accumulation process
+
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, currentPathCorrection);
     if (touchedMapBins.find(&(currentAccMaterial->second)) ==
@@ -408,6 +408,7 @@ Acts::SurfaceMaterialMapper::mapInteraction(
           mState.inputSurfaceMaterial[currentID];
     }
     ++assignedMaterial[currentID];
+
     // Update the material interaction with the associated surface and
     // intersection
     mappedRecord.surface = sfIter->surface;
