@@ -116,6 +116,8 @@ class RootTrajectorySummaryWriter final
   std::vector<unsigned int>
       m_NDF;  ///< The number of ndf of the measurements+outliers
   std::vector<std::vector<double>>
+      m_measurementIndex;  ///< The index of the measurements
+  std::vector<std::vector<double>>
       m_measurementChi2;  ///< The chi2 on all measurement states
   std::vector<std::vector<double>>
       m_outlierChi2;  ///< The chi2 on all outlier states

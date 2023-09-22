@@ -17,6 +17,7 @@
 #include "Acts/Utilities/MultiIndex.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -87,6 +88,7 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("nSharedHits", &m_nSharedHits);
     m_outputTree->Branch("chi2Sum", &m_chi2Sum);
     m_outputTree->Branch("NDF", &m_NDF);
+    m_outputTree->Branch("measurementIndex", &m_measurementIndex);
     m_outputTree->Branch("measurementChi2", &m_measurementChi2);
     m_outputTree->Branch("outlierChi2", &m_outlierChi2);
     m_outputTree->Branch("measurementVolume", &m_measurementVolume);
@@ -266,6 +268,19 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                                    trajState.outlierVolume.end());
       m_outlierLayer.emplace_back(trajState.outlierLayer.begin(),
                                   trajState.outlierLayer.end());
+
+      {
+        auto& indices = m_measurementIndex.emplace_back();
+        indices.reserve(trajState.nMeasurements);
+        mj.visitBackwards(trackTip, [&](const auto& ts) {
+          if (ts.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+            int index = ts.getUncalibratedSourceLink()
+                            .template get<IndexSourceLink>()
+                            .index();
+            indices.push_back(index);
+          }
+        });
+      }
 
       // Initialize the truth particle info
       ActsFatras::Barcode majorityParticleId(
@@ -521,6 +536,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_nSharedHits.clear();
   m_chi2Sum.clear();
   m_NDF.clear();
+  m_measurementIndex.clear();
   m_measurementChi2.clear();
   m_outlierChi2.clear();
   m_measurementVolume.clear();
