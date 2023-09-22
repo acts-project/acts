@@ -512,6 +512,16 @@ class CombinatorialKalmanFilter {
                 result.result = res.error();
               }
               result.smoothed = true;
+
+              // TODO another ugly control flow hack
+              navigator.preStep(state, stepper);
+            }
+
+            if (result.smoothed) {
+              // Update state and stepper with material effects
+              materialInteractor(navigator.currentSurface(state.navigation),
+                                 state, stepper, navigator,
+                                 MaterialUpdateStage::FullUpdate);
             }
 
             // -> then progress to target/reference surface and built the final
@@ -786,11 +796,10 @@ class CombinatorialKalmanFilter {
             nBranchesOnSurface = 0;
           }
         }
-        if (surface->surfaceMaterial() != nullptr) {
-          // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper, navigator,
-                             MaterialUpdateStage::FullUpdate);
-        }
+
+        // Update state and stepper with material effects
+        materialInteractor(surface, state, stepper, navigator,
+                           MaterialUpdateStage::FullUpdate);
       } else {
         // Neither measurement nor material on surface, this branch is still
         // valid. Count the branch on current surface
@@ -1223,13 +1232,13 @@ class CombinatorialKalmanFilter {
         stepper.resetState(state.stepping, firstCreatedState.smoothed(),
                            firstCreatedState.smoothedCovariance(),
                            firstCreatedState.referenceSurface(),
-                           state.stepping.navDir, state.options.maxStepSize);
+                           state.options.maxStepSize);
         reverseDirection = firstIntersection.intersection.pathLength < 0;
       } else {
         stepper.resetState(state.stepping, lastCreatedMeasurement.smoothed(),
                            lastCreatedMeasurement.smoothedCovariance(),
                            lastCreatedMeasurement.referenceSurface(),
-                           state.stepping.navDir, state.options.maxStepSize);
+                           state.options.maxStepSize);
         reverseDirection = lastIntersection.intersection.pathLength < 0;
       }
       // Reverse the navigation direction if necessary
@@ -1237,7 +1246,7 @@ class CombinatorialKalmanFilter {
         ACTS_VERBOSE(
             "Reverse navigation direction after smoothing for reaching the "
             "target surface");
-        state.stepping.navDir = state.stepping.navDir.invert();
+        state.options.direction = state.options.direction.invert();
       }
       const auto& surface = closerToFirstCreatedState
                                 ? firstCreatedState.referenceSurface()
@@ -1249,14 +1258,11 @@ class CombinatorialKalmanFilter {
 
       // Reset the navigation state to enable propagation towards the target
       // surface
+      // Set targetSurface to nullptr as it is handled manually in the actor
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping), &surface,
           nullptr);
-
-      // Need to consider the material effects of the starting surface
-      materialInteractor(&surface, state, stepper, navigator,
-                         MaterialUpdateStage::FullUpdate);
 
       return Result<void>::success();
     }
