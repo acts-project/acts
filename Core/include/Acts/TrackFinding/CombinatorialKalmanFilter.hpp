@@ -1257,8 +1257,10 @@ class CombinatorialKalmanFilter {
 
       // Reset the navigation state to enable propagation towards the target
       // surface
-      navigator.targetReached(state.navigation, false);
-      navigator.currentSurface(state.navigation, nullptr);
+      navigator.resetState(
+          state.navigation, state.geoContext, stepper.position(state.stepping),
+          state.options.direction * stepper.direction(state.stepping), &surface,
+          nullptr);
 
       return Result<void>::success();
     }

@@ -21,7 +21,6 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
-#include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -32,7 +31,7 @@
 namespace Acts {
 namespace detail {
 
-template <typename traj_t, typename component_cache_t>
+template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
   traj_t* fittedStates{nullptr};
@@ -62,7 +61,7 @@ struct GsfResult {
   Result<void> result{Result<void>::success()};
 
   // Internal: component cache to avoid reallocation
-  std::vector<component_cache_t> componentCache;
+  std::vector<Acts::Experimental::GsfComponent> componentCache;
 };
 
 /// The actor carrying out the GSF algorithm
@@ -71,15 +70,10 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
-  /// Stores parameters of a gaussian component
-  struct ComponentCache {
-    ActsScalar weight = 0;
-    BoundVector boundPars = BoundVector::Zero();
-    BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
-  };
+  using ComponentCache = Acts::Experimental::GsfComponent;
 
   /// Broadcast the result_type
-  using result_type = GsfResult<traj_t, ComponentCache>;
+  using result_type = GsfResult<traj_t>;
 
   // Actor configuration
   struct Config {
@@ -303,7 +297,10 @@ struct GsfActor {
         return;
       }
 
-      reduceComponents(stepper, surface, componentCache);
+      // reduce component number
+      const auto finalCmpNumber = std::min(
+          static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
+      m_cfg.extensions.mixtureReducer(componentCache, finalCmpNumber, surface);
 
       removeLowWeightComponents(componentCache);
 
@@ -425,22 +422,6 @@ struct GsfActor {
       // Set the remaining things and push to vector
       componentCaches.push_back({new_weight, new_pars, new_cov});
     }
-  }
-
-  template <typename stepper_t>
-  void reduceComponents(const stepper_t& stepper, const Surface& surface,
-                        std::vector<ComponentCache>& cmps) const {
-    // Final component number
-    const auto final_cmp_number = std::min(
-        static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
-
-    auto proj = [](auto& a) -> decltype(auto) { return a; };
-
-    // We must differ between surface types, since there can be different
-    // local coordinates
-    detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-      detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
-    });
   }
 
   /// Remove components with low weights and renormalize from the component

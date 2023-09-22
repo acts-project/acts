@@ -22,6 +22,12 @@ namespace Acts {
 
 namespace Experimental {
 
+struct GsfComponent {
+  ActsScalar weight = 0;
+  BoundVector boundPars = BoundVector::Zero();
+  BoundSquareMatrix boundCov = BoundSquareMatrix::Identity();
+};
+
 namespace GsfConstants {
 constexpr std::string_view kFinalMultiComponentStateColumn =
     "gsf-final-multi-component-state";
@@ -36,13 +42,16 @@ struct GsfExtensions {
   using ConstTrackStateProxy = typename traj_t::ConstTrackStateProxy;
 
   using Calibrator =
-      Delegate<void(const GeometryContext&, const CalibrationContext&,
-                    const SourceLink&, TrackStateProxy)>;
+      Delegate<void(const GeometryContext &, const CalibrationContext &,
+                    const SourceLink &, TrackStateProxy)>;
 
-  using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        Direction, const Logger&)>;
+  using Updater = Delegate<Result<void>(
+      const GeometryContext &, TrackStateProxy, Direction, const Logger &)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
+
+  using ComponentReducer =
+      Delegate<void(std::vector<GsfComponent> &, std::size_t, const Surface &)>;
 
   /// The Calibrator is a dedicated calibration algorithm that allows
   /// to calibrate measurements using track information, this could be
@@ -58,6 +67,9 @@ struct GsfExtensions {
 
   /// Retrieves the associated surface from a source link
   SourceLinkSurfaceAccessor surfaceAccessor;
+
+  /// Takes a vector of components and reduces its number
+  ComponentReducer mixtureReducer;
 
   /// Default constructor which connects the default void components
   GsfExtensions() {
@@ -77,7 +89,7 @@ struct GsfOptions {
 
   PropagatorPlainOptions propagatorPlainOptions;
 
-  const Surface* referenceSurface = nullptr;
+  const Surface *referenceSurface = nullptr;
 
   std::size_t maxComponents = 4;
 
