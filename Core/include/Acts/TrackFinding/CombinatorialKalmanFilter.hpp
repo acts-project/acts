@@ -1228,8 +1228,8 @@ class CombinatorialKalmanFilter {
       // smoothed measurement state. Also, whether the intersection is on
       // surface is not checked here.
       bool closerToFirstCreatedState =
-           std::abs(firstIntersection.pathLength()) <=
-           std::abs(lastIntersection.pathLength());
+          std::abs(firstIntersection.pathLength()) <=
+          std::abs(lastIntersection.pathLength());
       bool reverseDirection = false;
       if (closerToFirstCreatedState) {
         stepper.resetState(state.stepping, firstCreatedState.smoothed(),
