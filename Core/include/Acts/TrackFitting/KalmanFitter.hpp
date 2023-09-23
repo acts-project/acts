@@ -893,8 +893,11 @@ class KalmanFitter {
           result.lastMeasurementIndex, [&](auto st) {
             bool isMeasurement =
                 st.typeFlags().test(TrackStateFlag::MeasurementFlag);
-            bool isMaterial = st.typeFlags().test(TrackStateFlag::MaterialFlag);
-            if (isMeasurement || isMaterial) {
+            bool isOutlier = st.typeFlags().test(TrackStateFlag::OutlierFlag);
+            // We are excluding non measurement states and outlier here. Those
+            // can decrease resolution because only the smoothing corrected the
+            // very first prediction as filtering is not possible.
+            if (isMeasurement && !isOutlier) {
               firstStateIndex = st.index();
             }
             nStates++;
