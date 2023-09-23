@@ -200,8 +200,9 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   Vector3 position = mean.head<3>();
   Vector3 direction = mean.segment<3>(eFreeDir0);
   auto intersection =
-      surface.intersect(GeometryContext{}, position, direction, false);
-  mean.head<3>() = intersection.intersection.position;
+      surface.intersect(GeometryContext{}, position, direction, false)
+          .closest();
+  mean.head<3>() = intersection.position();
 
   return *detail::transformFreeToBoundParameters(mean, surface,
                                                  GeometryContext{});

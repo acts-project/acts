@@ -70,9 +70,15 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(thePlane);
 
+  auto intersection = planeSurface
+                          ->intersect(gctx, trkParams.position(gctx),
+                                      trkParams.direction(), false)
+                          .closest();
+
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-  pOptions.direction = Direction::Backward;
+  pOptions.direction =
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
