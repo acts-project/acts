@@ -314,23 +314,34 @@ BOOST_AUTO_TEST_CASE(track_adding) {
   BOOST_CHECK_EQUAL(mainDensityMap.size(), 3 * spatialTrkGridSize - 2);
 }
 
-BOOST_AUTO_TEST_CASE(max_z_and_width) {
+BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   const int spatialTrkGridSize = 29;
+  const int temporalTrkGridSize = 29;
 
-  double binExtent = 0.05;  // mm
+  // spatial and temporal bin extent
+  double binExtent = 0.05;
 
+  // spatial grid
   AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
+
+  // spatial and temporal grid
+  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::Config
+      cfg2D(binExtent, binExtent);
+  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize> grid2D(
+      cfg2D);
 
   // Create some test tracks
   Covariance covMat(Covariance::Identity() * 0.005);
 
   float z0Trk1 = 0.25;
+  float t0Trk1 = 0.05;
   float z0Trk2 = -10.95;
+  float t0Trk2 = 0.1;
   BoundVector paramVec1;
-  paramVec1 << 0.02, z0Trk1, 0, 0, 0, 0;
+  paramVec1 << 0.02, z0Trk1, 0, 0, 0, t0Trk1;
   BoundVector paramVec2;
-  paramVec2 << 0.01, z0Trk2, 0, 0, 0, 0;
+  paramVec2 << 0.01, z0Trk2, 0, 0, 0, t0Trk2;
 
   // Create perigee surface
   std::shared_ptr<PerigeeSurface> perigeeSurface =
@@ -339,26 +350,54 @@ BOOST_AUTO_TEST_CASE(max_z_and_width) {
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
-  // Empty map
+  // Empty maps
   AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
+  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::DensityMap
+      mainDensityMap2D;
 
+  // Add first track to spatial grid
   auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  auto res1 = grid.getMaxZTPosition(mainDensityMap);
-  BOOST_CHECK(res1.ok());
-  // Maximum should be at z0Trk1 position
-  BOOST_CHECK_EQUAL((*res1).first, z0Trk1);
+  auto firstRes = grid.getMaxZTPosition(mainDensityMap);
+  BOOST_CHECK(firstRes.ok());
+  // Maximum should be at z0Trk1 position ...
+  BOOST_CHECK_EQUAL((*firstRes).first, z0Trk1);
+  // ... and the corresponding time should not be set
+  BOOST_CHECK(not(*firstRes).second.has_value());
 
+  // Add first track to 2D grid
+  auto trackDensityMap2D = grid2D.addTrack(params1, mainDensityMap2D);
+  auto firstRes2D = grid2D.getMaxZTPosition(mainDensityMap2D);
+  BOOST_CHECK(firstRes2D.ok());
+  // Maximum should be at z0Trk1 position ...
+  BOOST_CHECK_EQUAL((*firstRes2D).first, z0Trk1);
+  // ... and the corresponding time should be at t0Trk1
+  BOOST_CHECK_EQUAL((*firstRes2D).second.value(), t0Trk1);
+
+  // Add second track to spatial grid
   trackDensityMap = grid.addTrack(params2, mainDensityMap);
-  auto res2 = grid.getMaxZTPosition(mainDensityMap);
-  BOOST_CHECK(res2.ok());
-  // Trk 2 is closer to z-axis and should yield higher density values
-  // New maximum is therefore at z0Trk2
-  BOOST_CHECK_EQUAL((*res2).first, z0Trk2);
+  // Calculate maximum and the corresponding width
+  auto secondRes = grid.getMaxZTPositionAndWidth(mainDensityMap);
+  BOOST_CHECK(secondRes.ok());
+  // Trk 2 is closer to z-axis and should thus yield higher density values.
+  // Therefore, the new maximum is at z0Trk2...
+  BOOST_CHECK_EQUAL((*secondRes).first.first, z0Trk2);
+  // ... the corresponding time should still not be set ...
+  BOOST_CHECK(not(*secondRes).first.second.has_value());
+  // ... and it should have a positive width
+  BOOST_CHECK((*secondRes).second > 0);
 
-  auto resWidth1 = grid.getMaxZTPositionAndWidth(mainDensityMap);
-  BOOST_CHECK(resWidth1.ok());
-  BOOST_CHECK_EQUAL((*resWidth1).first.first, z0Trk2);
-  BOOST_CHECK((*resWidth1).second > 0);
+  // Add second track to 2D grid
+  trackDensityMap = grid2D.addTrack(params2, mainDensityMap2D);
+  // Calculate maximum and the corresponding width
+  auto secondRes2D = grid2D.getMaxZTPositionAndWidth(mainDensityMap2D);
+  BOOST_CHECK(secondRes2D.ok());
+  // Trk 2 is closer to z-axis and should thus yield higher density values.
+  // Therefore, the new maximum is at z0Trk2...
+  BOOST_CHECK_EQUAL((*secondRes2D).first.first, z0Trk2);
+  // ... the corresponding time should be at t0Trk2
+  BOOST_CHECK_EQUAL((*secondRes2D).first.second.value(), t0Trk2);
+  // ... and it should have approximately the same width in z direction
+  CHECK_CLOSE_OR_SMALL((*secondRes2D).second, (*secondRes).second, 1e-5, 1e-5);
 }
 
 BOOST_AUTO_TEST_CASE(highest_density_sum) {
