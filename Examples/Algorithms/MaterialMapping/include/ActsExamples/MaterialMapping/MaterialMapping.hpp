@@ -104,7 +104,7 @@ class MaterialMapping final : public IAlgorithm {
 
   /// Destructor
   ///
-  /// @note the desctructor also invokes the material writer(s)
+  /// @note the destructor also invokes the material writer(s)
   ~MaterialMapping() final;
 
   /// Framework execute method
