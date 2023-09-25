@@ -156,7 +156,8 @@ BOOST_AUTO_TEST_CASE(
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params(perigeeSurface, paramVec, covMat);
+  BoundTrackParameters params(perigeeSurface, paramVec, covMat,
+                              ParticleHypothesis::pion());
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::Config cfg(
       spatialBinExtent, temporalBinExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize> grid(cfg);
