@@ -15,12 +15,10 @@ Acts::EigenStepper<E, A>::EigenStepper(
     : m_bField(std::move(bField)), m_overstepLimit(overstepLimit) {}
 
 template <typename E, typename A>
-template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const GenericBoundTrackParameters<charge_t>& par, double ssize) const
-    -> State {
+    const BoundTrackParameters& par, double ssize) const -> State {
   return State{gctx, m_bField->makeCache(mctx), par, ssize};
 }
 
@@ -53,7 +51,7 @@ auto Acts::EigenStepper<E, A>::boundState(
     -> Result<BoundState> {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars,
+      state.derivative, state.jacToGlobal, state.pars, state.particleHypothesis,
       state.covTransport && transportCov, state.pathAccumulated, surface,
       freeToBoundCorrection);
 }
@@ -64,8 +62,8 @@ auto Acts::EigenStepper<E, A>::curvilinearState(State& state,
     -> CurvilinearState {
   return detail::curvilinearState(
       state.cov, state.jacobian, state.jacTransport, state.derivative,
-      state.jacToGlobal, state.pars, state.covTransport && transportCov,
-      state.pathAccumulated);
+      state.jacToGlobal, state.pars, state.particleHypothesis,
+      state.covTransport && transportCov, state.pathAccumulated);
 }
 
 template <typename E, typename A>

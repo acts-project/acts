@@ -101,15 +101,15 @@ class GainMatrixSmoother {
       // covariances.
       assert(ts.hasFiltered());
       assert(ts.hasPredicted());
-      assert(ts.hasJacobian());
 
       // previous trackstate should have smoothed and predicted
       assert(prev_ts.hasSmoothed());
       assert(prev_ts.hasPredicted());
+      assert(prev_ts.hasJacobian());
 
       ACTS_VERBOSE("Calculate smoothing matrix:");
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
-      ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
+      ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
 
       if (auto res = calculate(&ts, &prev_ts, filtered, filteredCovariance,
                                smoothed, predicted, predictedCovariance,

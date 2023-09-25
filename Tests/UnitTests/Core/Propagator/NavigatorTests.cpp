@@ -91,6 +91,9 @@ struct PropagatorState {
       /// Charge
       double q = 0;
 
+      /// Particle hypothesis
+      ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
+
       // accummulated path length cache
       double pathAccumulated = 0.;
 
@@ -155,7 +158,7 @@ struct PropagatorState {
     template <typename object_intersection_t>
     void updateStepSize(State& state,
                         const object_intersection_t& oIntersection,
-                        bool release = true) const {
+                        Direction /*direction*/, bool release = true) const {
       detail::updateSingleStepSize<Stepper>(state, oIntersection, release);
     }
 
@@ -182,9 +185,9 @@ struct PropagatorState {
         State& state, const Surface& surface, bool /*transportCov*/,
         const FreeToBoundCorrection& /*freeToBoundCorrection*/
     ) const {
-      auto bound =
-          BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
-                                       state.pos4, state.dir, state.p, state.q);
+      auto bound = BoundTrackParameters::create(
+          surface.getSharedPtr(), tgContext, state.pos4, state.dir,
+          state.q / state.p, std::nullopt, state.particleHypothesis);
       if (!bound.ok()) {
         return bound.error();
       }
@@ -195,8 +198,9 @@ struct PropagatorState {
 
     CurvilinearState curvilinearState(State& state, bool /*transportCov*/
     ) const {
-      CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
-                                            state.q);
+      CurvilinearTrackParameters parameters(state.pos4, state.dir,
+                                            state.q / state.p, std::nullopt,
+                                            state.particleHypothesis);
       // Create the bound state
       CurvilinearState curvState{std::move(parameters), Jacobian::Identity(),
                                  state.pathAccumulated};
@@ -508,7 +512,7 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // The index should points to the begin
   BOOST_CHECK(state.navigation.navLayerIndex == 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayer().intersection.position);
+  double beamPipeR = perp(state.navigation.navLayer().position());
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
