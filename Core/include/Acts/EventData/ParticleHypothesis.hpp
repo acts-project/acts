@@ -43,7 +43,7 @@ class SinglyChargedParticleHypothesis
     return SinglyChargedParticleHypothesis(PdgParticle::ePionPlus);
   }
   static SinglyChargedParticleHypothesis electron() {
-    return SinglyChargedParticleHypothesis(PdgParticle::ePionPlus);
+    return SinglyChargedParticleHypothesis(PdgParticle::eElectron);
   }
 
   static SinglyChargedParticleHypothesis chargedGeantino() {
