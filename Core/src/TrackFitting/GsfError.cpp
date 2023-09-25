@@ -40,8 +40,7 @@ class GsfErrorCategory : public std::error_category {
 
 }  // namespace
 
-std::error_code Acts::make_error_code(
-    Acts::GsfError e) {
+std::error_code Acts::make_error_code(Acts::GsfError e) {
   static GsfErrorCategory c;
   return {static_cast<int>(e), c};
 }

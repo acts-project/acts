@@ -61,7 +61,7 @@ struct GsfResult {
   Result<void> result{Result<void>::success()};
 
   // Internal: component cache to avoid reallocation
-  std::vector<Acts::Experimental::GsfComponent> componentCache;
+  std::vector<GsfComponent> componentCache;
 };
 
 /// The actor carrying out the GSF algorithm
@@ -70,7 +70,7 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
-  using ComponentCache = Acts::Experimental::GsfComponent;
+  using ComponentCache = Acts::GsfComponent;
 
   /// Broadcast the result_type
   using result_type = GsfResult<traj_t>;

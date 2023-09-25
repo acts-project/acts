@@ -13,8 +13,8 @@
 
 namespace Acts {
 
-void reduceMixtureWithKLDistance(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const Surface &surface);
+void reduceMixtureWithKLDistance(std::vector<GsfComponent> &cmpCache,
+                                 std::size_t maxCmpsAfterMerge,
+                                 const Surface &surface);
 
 }

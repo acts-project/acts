@@ -62,12 +62,11 @@ using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
-using Fitter =
-    Acts::GaussianSumFitter<Propagator, BetheHeitlerApprox,
-                                          Acts::VectorMultiTrajectory>;
+using Fitter = Acts::GaussianSumFitter<Propagator, BetheHeitlerApprox,
+                                       Acts::VectorMultiTrajectory>;
 using DirectFitter =
     Acts::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
-                                          Acts::VectorMultiTrajectory>;
+                            Acts::VectorMultiTrajectory>;
 using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
