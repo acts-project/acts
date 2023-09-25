@@ -90,8 +90,9 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
 template <typename S, typename N>
 template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
-auto Acts::Propagator<S, N>::propagate(
-    const parameters_t& start, const propagator_options_t& options) const
+auto Acts::Propagator<S, N>::propagate(const parameters_t& start,
+                                       const propagator_options_t& options,
+                                       bool makeCurvilinear) const
     -> Result<action_list_t_result_t<
         CurvilinearTrackParameters,
         typename propagator_options_t::action_list_type>> {
@@ -107,7 +108,7 @@ auto Acts::Propagator<S, N>::propagate(
                              typename propagator_options_t::action_list_type>;
 
   return propagate<parameters_t, propagator_options_t, path_aborter_t>(
-      start, options, ResultType{});
+      start, options, makeCurvilinear, ResultType{});
 }
 
 template <typename S, typename N>
@@ -115,6 +116,7 @@ template <typename parameters_t, typename propagator_options_t,
           typename path_aborter_t>
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const propagator_options_t& options,
+    bool makeCurvilinear,
     action_list_t_result_t<CurvilinearTrackParameters,
                            typename propagator_options_t::action_list_type>&&
         inputResult) const
@@ -162,13 +164,16 @@ auto Acts::Propagator<S, N>::propagate(
   // Perform the actual propagation & check its outcome
   auto result = propagate_impl<ResultType>(state, inputResult);
   if (result.ok()) {
-    /// Convert into return type and fill the result object
-    auto curvState = m_stepper.curvilinearState(state.stepping);
-    // Fill the end parameters
-    inputResult.endParameters = std::get<CurvilinearTrackParameters>(curvState);
-    // Only fill the transport jacobian when covariance transport was done
-    if (state.stepping.covTransport) {
-      inputResult.transportJacobian = std::get<Jacobian>(curvState);
+    if (makeCurvilinear) {
+      /// Convert into return type and fill the result object
+      auto curvState = m_stepper.curvilinearState(state.stepping);
+      // Fill the end parameters
+      inputResult.endParameters =
+          std::get<CurvilinearTrackParameters>(curvState);
+      // Only fill the transport jacobian when covariance transport was done
+      if (state.stepping.covTransport) {
+        inputResult.transportJacobian = std::get<Jacobian>(curvState);
+      }
     }
     return Result<ResultType>::success(std::forward<ResultType>(inputResult));
   } else {

@@ -26,15 +26,17 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface.intersect(gctx, params.position(gctx),
-                                               params.direction(), false);
+  auto intersection =
+      perigeeSurface
+          .intersect(gctx, params.position(gctx), params.direction(), false)
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above
   // We handle zero path length as forward propagation, but we could actually
   // skip the whole propagation in this case
   pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of the reference point
   auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
@@ -73,12 +75,9 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // q over p
   ActsScalar qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
 
-  // Get mass hypothesis from propagator options
-  ActsScalar m0 = pOptions.mass;
-  // Assume unit charge
-  // TODO: Get charge hypothesis from propagator options once they are included
-  // there.
-  ActsScalar p = std::abs(1. / qOvP);
+  ActsScalar m0 = params.particleHypothesis().mass();
+  ActsScalar p = std::abs(params.particleHypothesis().absoluteCharge() / qOvP);
+
   // Speed in units of c
   ActsScalar beta = p / std::hypot(p, m0);
   // Transverse speed (i.e., speed in the x-y plane)
