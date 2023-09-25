@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
   // Using a large track grid so we can choose a small bin size
   const int spatialTrkGridSize = 4001;
   // Arbitrary (but small) bin size
-  const float binSize = 3.1e-4;
+  const float binExtent = 3.1e-4;
   // Arbitrary impact parameters
   const float d0 = 0.4;
   const float z0 = -0.2;
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
 
   BoundTrackParameters params1(perigeeSurface, paramVec, covMat);
 
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Empty map
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
     int zBin = it.first.first;
     float density = it.second;
     // Argument for 2D gaussian
-    Vector2 dzVec{0., grid.getBinCenter(zBin, binSize)};
+    Vector2 dzVec{0., grid.getBinCenter(zBin, binExtent)};
     // Compute correct density...
     float correctDensity = gaussian2D(dzVec, impactParameters, subCovMat);
     // ... and check if our result is equivalent
@@ -120,10 +120,10 @@ BOOST_AUTO_TEST_CASE(compare_to_analytical_solution_for_single_track) {
 
 BOOST_AUTO_TEST_CASE(
     compare_to_analytical_solution_for_single_track_with_time) {
-  // Using a large track grid so we can choose a small bin size
+  // Number of bins in z- and t-direction
   const int spatialTrkGridSize = 401;
   const int temporalTrkGridSize = 401;
-  // Arbitrary (but small) bin size
+  // Bin extents
   const float spatialBinExtent = 3.1e-3;
   const float temporalBinExtent = 3.1e-3;
   // Arbitrary impact parameters
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(
     float z = grid.getBinCenter(it.first.first, spatialBinExtent);
     float t = grid.getBinCenter(it.first.second, temporalBinExtent);
     float density = it.second;
-    // Argument for 2D gaussian
+    // Argument for 3D gaussian
     Vector3 dztVec{0., z, t};
 
     // Compute correct density...
@@ -187,7 +187,9 @@ BOOST_AUTO_TEST_CASE(
     CHECK_CLOSE_OR_SMALL(density, correctDensity, relTol, small);
   }
 
-  // TODO add reference
+  // The analytical calculations of the following can be found here:
+  // https://github.com/acts-project/acts/pull/2460.
+  // TODO: upload reference at a better place.
   // Analytical maximum of the Gaussian
   ActsSquareMatrix<3> ipWeights = ipCov.inverse();
   ActsScalar denom =
@@ -224,8 +226,8 @@ BOOST_AUTO_TEST_CASE(
 BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // Dummy track grid size (not needed for this unit test)
   const int spatialTrkGridSize = 1;
-  float binSize = 2.;
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  float binExtent = 2.;
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Empty map
@@ -240,7 +242,7 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
   // should be exact in this case.
   for (int i = -6; i <= 4; i++) {
     mainDensityMap[std::make_pair(i, 0)] =
-        1.0 - 0.1 * std::abs(correctMaxZ - grid.getBinCenter(i, binSize));
+        1.0 - 0.1 * std::abs(correctMaxZ - grid.getBinCenter(i, binExtent));
   }
 
   // Get maximum z position and corresponding seed width
@@ -260,9 +262,9 @@ BOOST_AUTO_TEST_CASE(seed_width_estimation) {
 BOOST_AUTO_TEST_CASE(track_adding) {
   const int spatialTrkGridSize = 15;
 
-  double binSize = 0.1;  // mm
+  double binExtent = 0.1;  // mm
 
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Create some test tracks in such a way that some tracks
@@ -315,9 +317,9 @@ BOOST_AUTO_TEST_CASE(track_adding) {
 BOOST_AUTO_TEST_CASE(max_z_and_width) {
   const int spatialTrkGridSize = 29;
 
-  double binSize = 0.05;  // mm
+  double binExtent = 0.05;  // mm
 
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Create some test tracks
@@ -362,9 +364,9 @@ BOOST_AUTO_TEST_CASE(max_z_and_width) {
 BOOST_AUTO_TEST_CASE(highest_density_sum) {
   const int spatialTrkGridSize = 29;
 
-  double binSize = 0.05;  // mm
+  double binExtent = 0.05;  // mm
 
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
   cfg.useHighestSumZPosition = true;
 
   AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
@@ -421,9 +423,9 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
 BOOST_AUTO_TEST_CASE(track_removing) {
   const int spatialTrkGridSize = 29;
 
-  double binSize = 0.05;  // mm
+  double binExtent = 0.05;  // mm
 
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binSize);
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
 
   // Create some test tracks
@@ -492,7 +494,7 @@ BOOST_AUTO_TEST_CASE(track_removing) {
   // Add track 1, overlapping track 0
   auto trackDensityMap1 = grid.addTrack(params1, mainDensityMap);
 
-  int nNonOverlappingBins = int(std::abs(z0Trk1 - z0Trk2) / binSize + 1);
+  int nNonOverlappingBins = int(std::abs(z0Trk1 - z0Trk2) / binExtent + 1);
   BOOST_CHECK_EQUAL(mainDensityMap.size(),
                     spatialTrkGridSize + nNonOverlappingBins);
 
