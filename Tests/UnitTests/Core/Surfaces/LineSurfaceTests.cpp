@@ -120,16 +120,18 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
   //
   // intersection
-  const Vector3 direction{0., 1., 2.};
-  BoundaryCheck bcheck(false);
-  auto sfIntersection =
-      line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck)
-          .closest();
-  BOOST_CHECK(sfIntersection);
-  Vector3 expectedIntersection(0, 1., 2.);
-  CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
-                  1e-6);  // need more tests..
-  BOOST_CHECK_EQUAL(sfIntersection.object(), &line);
+  {
+    const Vector3 direction{0., 1., 2.};
+    BoundaryCheck bcheck(false);
+    auto sfIntersection =
+        line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck)
+            .closest();
+    BOOST_CHECK(sfIntersection);
+    Vector3 expectedIntersection(0, 1., 2.);
+    CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
+                    1e-6);  // need more tests..
+    BOOST_CHECK_EQUAL(sfIntersection.object(), &line);
+  }
   //
   // isOnSurface
   const Vector3 insidePosition{0., 2.5, 0.};
