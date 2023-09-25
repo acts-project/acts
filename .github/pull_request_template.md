@@ -35,3 +35,7 @@ REQUEST.
 
 - An automated workflow will assign labels based on changed files, and whether
   or not reference files were changed. These do not have to be set manually.
+
+- If you push updates, and you know they will be superceded later on, consider adding
+  `[skip ci]` in the commit message. This will instruct the CI system not to run any
+  jobs on this commit.

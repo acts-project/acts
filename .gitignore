@@ -22,6 +22,8 @@ build*
 *.json
 #root output
 *.root
+#csv output
+*.csv
 *.pyc
 /cmake_cmd
 /cleanup.sh
