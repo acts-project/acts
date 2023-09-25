@@ -176,7 +176,7 @@ class GenericBoundTrackParameters {
       return std::nullopt;
     }
 
-    return m_cov.value().topLeftCorner<2, 2>();
+    return m_cov.value().template topLeftCorner<2, 2>();
   }
 
   /// Covariance matrix of the spatial and temporal impact parameters (i.e., of
