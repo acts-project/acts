@@ -25,9 +25,11 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/ImpactPointEstimator.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
@@ -89,7 +91,9 @@ Estimator makeEstimator(double bZ) {
   auto field = std::make_shared<MagneticField>(Vector3(0, 0, bZ));
   Stepper stepper(field);
   Estimator::Config cfg(field,
-                        std::make_shared<Propagator>(std::move(stepper)));
+                        std::make_shared<Propagator>(
+                            std::move(stepper), detail::VoidNavigator(),
+                            getDefaultLogger("Prop", Logging::Level::VERBOSE)));
   return Estimator(cfg);
 }
 

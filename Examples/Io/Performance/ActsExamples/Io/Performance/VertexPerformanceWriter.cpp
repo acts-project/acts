@@ -607,11 +607,13 @@ ActsExamples::ProcessCode ActsExamples::VertexPerformanceWriter::writeT(
           // Lambda for propagating the tracks to the PCA
           auto propagateToVtx = [&](const auto& params)
               -> std::optional<Acts::BoundTrackParameters> {
-            auto intersection = perigeeSurface->intersect(
-                ctx.geoContext, params.position(ctx.geoContext),
-                params.direction(), false);
+            auto intersection =
+                perigeeSurface
+                    ->intersect(ctx.geoContext, params.position(ctx.geoContext),
+                                params.direction(), false)
+                    .closest();
             pOptions.direction = Acts::Direction::fromScalarZeroAsPositive(
-                intersection.intersection.pathLength);
+                intersection.pathLength());
 
             auto result =
                 propagator->propagate(params, *perigeeSurface, pOptions);
