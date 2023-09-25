@@ -441,6 +441,14 @@ class KalmanFitter {
       // - Progress to target/reference surface and built the final track
       // parameters
       if (result.smoothed or result.reversed) {
+        if (result.smoothed) {
+          // Update state and stepper with material effects
+          // Only for smoothed as reverse filtering will handle this separately
+          materialInteractor(navigator.currentSurface(state.navigation), state,
+                             stepper, navigator,
+                             MaterialUpdateStage::FullUpdate);
+        }
+
         if (targetSurface == nullptr) {
           // If no target surface provided:
           // -> Return an error when using reversed filtering mode
@@ -963,11 +971,11 @@ class KalmanFitter {
       // assumes the target surface is not within the first and the last
       // smoothed measurement state. Also, whether the intersection is on
       // surface is not checked here.
-      bool reverseDirection = false;
-      bool closerTofirstCreatedState =
+      bool closerToFirstCreatedState =
           std::abs(firstIntersection.pathLength()) <=
           std::abs(lastIntersection.pathLength());
-      if (closerTofirstCreatedState) {
+      bool reverseDirection = false;
+      if (closerToFirstCreatedState) {
         stepper.resetState(state.stepping, firstCreatedState.smoothed(),
                            firstCreatedState.smoothedCovariance(),
                            firstCreatedState.referenceSurface(),
@@ -980,14 +988,6 @@ class KalmanFitter {
                            state.options.maxStepSize);
         reverseDirection = lastIntersection.pathLength() < 0;
       }
-      const auto& surface = closerTofirstCreatedState
-                                ? firstCreatedState.referenceSurface()
-                                : lastCreatedMeasurement.referenceSurface();
-      ACTS_VERBOSE(
-          "Smoothing successful, updating stepping state to smoothed "
-          "parameters at surface "
-          << surface.geometryId() << ". Prepared to reach the target surface.");
-
       // Reverse the navigation direction if necessary
       if (reverseDirection) {
         ACTS_VERBOSE(
@@ -995,9 +995,17 @@ class KalmanFitter {
             "target surface");
         state.options.direction = state.options.direction.invert();
       }
+      const auto& surface = closerToFirstCreatedState
+                                ? firstCreatedState.referenceSurface()
+                                : lastCreatedMeasurement.referenceSurface();
+      ACTS_VERBOSE(
+          "Smoothing successful, updating stepping state to smoothed "
+          "parameters at surface "
+          << surface.geometryId() << ". Prepared to reach the target surface.");
 
       // Reset the navigation state to enable propagation towards the target
       // surface
+      // Set targetSurface to nullptr as it is handled manually in the actor
       navigator.resetState(
           state.navigation, state.geoContext, stepper.position(state.stepping),
           state.options.direction * stepper.direction(state.stepping), &surface,
