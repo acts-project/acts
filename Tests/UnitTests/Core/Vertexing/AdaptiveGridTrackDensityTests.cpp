@@ -466,116 +466,6 @@ BOOST_AUTO_TEST_CASE(highest_density_sum) {
 
 BOOST_AUTO_TEST_CASE(track_removing) {
   const int spatialTrkGridSize = 29;
-
-  double binExtent = 0.05;  // mm
-
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
-  AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
-
-  // Create some test tracks
-  Covariance covMat = makeRandomCovariance();
-
-  // Define z0 values for test tracks
-  float z0Trk1 = -0.45;
-  float z0Trk2 = -0.25;
-
-  BoundVector paramVec0;
-  paramVec0 << 0.1, z0Trk1, 0, 0, 0, 0;
-  BoundVector paramVec1;
-  paramVec1 << 0.1, z0Trk2, 0, 0, 0, 0;
-
-  // Create perigee surface
-  std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
-
-  BoundTrackParameters params0(perigeeSurface, paramVec0, covMat);
-  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
-
-  // Empty map
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
-
-  // Add track 0
-  auto trackDensityMap0 = grid.addTrack(params0, mainDensityMap);
-  BOOST_CHECK(not mainDensityMap.empty());
-  // Grid size should match spatialTrkGridSize
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), spatialTrkGridSize);
-
-  // Calculate total density
-  float densitySum0 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum0 += it->second;
-  }
-
-  // Add track 0 again
-  trackDensityMap0 = grid.addTrack(params0, mainDensityMap);
-  BOOST_CHECK(not mainDensityMap.empty());
-  // Grid size should still match spatialTrkGridSize
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), spatialTrkGridSize);
-
-  // Calculate new total density
-  float densitySum1 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum1 += it->second;
-  }
-
-  BOOST_CHECK(2 * densitySum0 == densitySum1);
-
-  // Remove track 0
-  grid.subtractTrack(trackDensityMap0, mainDensityMap);
-
-  // Calculate new total density
-  float densitySum2 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum2 += it->second;
-  }
-
-  // Density should be old one again
-  BOOST_CHECK(densitySum0 == densitySum2);
-  // Grid size should still match spatialTrkGridSize (removal does not touch
-  // grid size)
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), spatialTrkGridSize);
-
-  // Add track 1, overlapping track 0
-  auto trackDensityMap1 = grid.addTrack(params1, mainDensityMap);
-
-  int nNonOverlappingBins = int(std::abs(z0Trk1 - z0Trk2) / binExtent + 1);
-  BOOST_CHECK_EQUAL(mainDensityMap.size(),
-                    spatialTrkGridSize + nNonOverlappingBins);
-
-  float densitySum3 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum3 += it->second;
-  }
-
-  // Remove second track 0
-  grid.subtractTrack(trackDensityMap0, mainDensityMap);
-
-  float densitySum4 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum4 += it->second;
-  }
-
-  // Density should match differences of removed tracks
-  CHECK_CLOSE_REL(densitySum4, densitySum3 - densitySum0, 1e-5);
-
-  // Remove track 1
-  grid.subtractTrack(trackDensityMap1, mainDensityMap);
-
-  // Size should not have changed
-  BOOST_CHECK_EQUAL(mainDensityMap.size(),
-                    spatialTrkGridSize + nNonOverlappingBins);
-
-  float densitySum5 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum5 += it->second;
-  }
-
-  // Grid is now empty after all tracks were removed
-  CHECK_CLOSE_ABS(densitySum5, 0., 1e-4);
-}
-
-BOOST_AUTO_TEST_CASE(track_removing_with_time) {
-  const int spatialTrkGridSize = 29;
   const int temporalTrkGridSize = 29;
 
   int trkGridSize = spatialTrkGridSize * temporalTrkGridSize;
@@ -583,14 +473,20 @@ BOOST_AUTO_TEST_CASE(track_removing_with_time) {
   // bin extent in z and t direction
   double binExtent = 0.05;
 
-  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::Config cfg(
-      binExtent, binExtent);
-  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize> grid(cfg);
+  // 1D grid
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg1D(binExtent);
+  AdaptiveGridTrackDensity<spatialTrkGridSize> grid1D(cfg1D);
+
+  // 2D grid
+  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::Config
+      cfg2D(binExtent, binExtent);
+  AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize> grid2D(
+      cfg2D);
 
   // Create some test tracks
   Covariance covMat = makeRandomCovariance();
 
-  // Define z0 and t0 values for test tracks
+  // Define z0 values for test tracks
   float z0Trk1 = -0.45;
   float t0Trk1 = -0.15;
   float z0Trk2 = -0.25;
@@ -608,85 +504,119 @@ BOOST_AUTO_TEST_CASE(track_removing_with_time) {
   BoundTrackParameters params0(perigeeSurface, paramVec0, covMat);
   BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
 
-  // Empty map
+  // Empty maps
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap1D;
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::DensityMap
-      mainDensityMap;
+      mainDensityMap2D;
 
-  // Add track 0
-  auto trackDensityMap0 = grid.addTrack(params0, mainDensityMap);
-  BOOST_CHECK(not mainDensityMap.empty());
-  // Grid size should match trkGridSize
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
-  // Calculate total density
-  float densitySum0 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum0 += it->second;
-  }
+  // Lambda for calculating total density
+  auto densitySum = [](const auto& densityMap) {
+    float sum = 0.;
+    for (auto it = densityMap.begin(); it != densityMap.end(); it++) {
+      sum += it->second;
+    }
+    return sum;
+  };
 
-  // Add track 0 again
-  trackDensityMap0 = grid.addTrack(params0, mainDensityMap);
-  BOOST_CHECK(not mainDensityMap.empty());
+  // Add track 0 to 1D grid
+  auto firstTrackDensityMap1D = grid1D.addTrack(params0, mainDensityMap1D);
+  BOOST_CHECK(not mainDensityMap1D.empty());
+  // Grid size should match spatialTrkGridSize
+  BOOST_CHECK_EQUAL(mainDensityMap1D.size(), spatialTrkGridSize);
+  float firstDensitySum1D = densitySum(mainDensityMap1D);
+
+  // Add track 0 to 2D grid
+  auto firstTrackDensityMap2D = grid2D.addTrack(params0, mainDensityMap2D);
+  BOOST_CHECK(not mainDensityMap2D.empty());
+  // Grid size should match spatialTrkGridSize
+  BOOST_CHECK_EQUAL(mainDensityMap2D.size(), trkGridSize);
+  float firstDensitySum2D = densitySum(mainDensityMap2D);
+
+  // Add track 0 again to 1D grid
+  firstTrackDensityMap1D = grid1D.addTrack(params0, mainDensityMap1D);
+  BOOST_CHECK(not mainDensityMap1D.empty());
+  // Grid size should still match spatialTrkGridSize
+  BOOST_CHECK_EQUAL(mainDensityMap1D.size(), spatialTrkGridSize);
+  // Calculate new total density ...
+  float secondDensitySum1D = densitySum(mainDensityMap1D);
+  // ... and check that it's twice as large as before
+  BOOST_CHECK(2 * firstDensitySum1D == secondDensitySum1D);
+
+  // Add track 0 again to 2D grid
+  firstTrackDensityMap2D = grid2D.addTrack(params0, mainDensityMap2D);
+  BOOST_CHECK(not mainDensityMap2D.empty());
   // Grid size should still match trkGridSize
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  BOOST_CHECK_EQUAL(mainDensityMap2D.size(), trkGridSize);
+  // Calculate new total density ...
+  float secondDensitySum2D = densitySum(mainDensityMap2D);
+  // ... and check that it's twice as large as before
+  BOOST_CHECK(2 * firstDensitySum2D == secondDensitySum2D);
 
+  // Remove track 0 from 1D grid
+  grid1D.subtractTrack(firstTrackDensityMap1D, mainDensityMap1D);
   // Calculate new total density
-  float densitySum1 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum1 += it->second;
-  }
-
-  BOOST_CHECK(2 * densitySum0 == densitySum1);
-
-  // Remove track 0
-  grid.subtractTrack(trackDensityMap0, mainDensityMap);
-
-  // Calculate new total density
-  float densitySum2 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum2 += it->second;
-  }
-
+  float thirdDensitySum1D = densitySum(mainDensityMap1D);
   // Density should be old one again
-  BOOST_CHECK(densitySum0 == densitySum2);
-  // Grid size should still match trkGridSize (removal does not touch grid size)
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize);
+  BOOST_CHECK(firstDensitySum1D == thirdDensitySum1D);
+  // Grid size should still match spatialTrkGridSize (removal does not change
+  // grid size)
+  BOOST_CHECK_EQUAL(mainDensityMap1D.size(), spatialTrkGridSize);
 
-  // Add track 1, overlapping track 0
-  auto trackDensityMap1 = grid.addTrack(params1, mainDensityMap);
+  // Remove track 0 from 2D grid
+  grid2D.subtractTrack(firstTrackDensityMap2D, mainDensityMap2D);
+  // Calculate new total density
+  float thirdDensitySum2D = densitySum(mainDensityMap2D);
+  // Density should be old one again
+  BOOST_CHECK(firstDensitySum2D == thirdDensitySum2D);
+  // Grid size should still match trkGridSize (removal does not change grid
+  // size)
+  BOOST_CHECK_EQUAL(mainDensityMap2D.size(), trkGridSize);
 
-  int nNonOverlappingBins =
-      int(std::abs(z0Trk1 - z0Trk2) / binExtent + 1) * temporalTrkGridSize;
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize + nNonOverlappingBins);
+  // Add track 1 to 1D grid (overlaps with track 0!)
+  auto secondTrackDensityMap1D = grid1D.addTrack(params1, mainDensityMap1D);
+  int nNonOverlappingBins1D = int(std::abs(z0Trk1 - z0Trk2) / binExtent + 1);
+  BOOST_CHECK_EQUAL(mainDensityMap1D.size(),
+                    spatialTrkGridSize + nNonOverlappingBins1D);
+  float fourthDensitySum1D = densitySum(mainDensityMap1D);
 
-  float densitySum3 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum3 += it->second;
-  }
+  // Add track 1 to 2D grid (overlaps with track 0!)
+  auto secondTrackDensityMap2D = grid2D.addTrack(params1, mainDensityMap2D);
+  int nNonOverlappingBins2D = nNonOverlappingBins1D * temporalTrkGridSize;
+  BOOST_CHECK_EQUAL(mainDensityMap2D.size(),
+                    trkGridSize + nNonOverlappingBins2D);
+  float fourthDensitySum2D = densitySum(mainDensityMap2D);
 
-  // Remove second track 0
-  grid.subtractTrack(trackDensityMap0, mainDensityMap);
-
-  float densitySum4 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum4 += it->second;
-  }
-
+  // Remove second track 0 from 1D grid
+  grid1D.subtractTrack(firstTrackDensityMap1D, mainDensityMap1D);
+  float fifthDensitySum1D = densitySum(mainDensityMap1D);
   // Density should match differences of removed tracks
-  CHECK_CLOSE_REL(densitySum4, densitySum3 - densitySum0, 1e-5);
+  CHECK_CLOSE_REL(fifthDensitySum1D, fourthDensitySum1D - firstDensitySum1D,
+                  1e-5);
 
-  // Remove track 1
-  grid.subtractTrack(trackDensityMap1, mainDensityMap);
+  // Remove second track 0 from 2D grid
+  grid2D.subtractTrack(firstTrackDensityMap2D, mainDensityMap2D);
+  float fifthDensitySum2D = densitySum(mainDensityMap2D);
+  // Density should match differences of removed tracks
+  CHECK_CLOSE_REL(fifthDensitySum2D, fourthDensitySum2D - firstDensitySum2D,
+                  1e-5);
 
+  // Remove track 1 from 1D grid
+  grid1D.subtractTrack(secondTrackDensityMap1D, mainDensityMap1D);
   // Size should not have changed
-  BOOST_CHECK_EQUAL(mainDensityMap.size(), trkGridSize + nNonOverlappingBins);
+  BOOST_CHECK_EQUAL(mainDensityMap1D.size(),
+                    spatialTrkGridSize + nNonOverlappingBins1D);
+  float sixthDensitySum1D = densitySum(mainDensityMap1D);
+  // 1D grid is now empty after all tracks were removed
+  CHECK_CLOSE_ABS(sixthDensitySum1D, 0., 1e-4);
 
-  float densitySum5 = 0;
-  for (auto it = mainDensityMap.begin(); it != mainDensityMap.end(); it++) {
-    densitySum5 += it->second;
-  }
-
-  // Grid is now empty after all tracks were removed
-  CHECK_CLOSE_ABS(densitySum5, 0., 1e-4);
+  // Remove track 1 from 2D grid
+  grid2D.subtractTrack(secondTrackDensityMap2D, mainDensityMap2D);
+  // Size should not have changed
+  BOOST_CHECK_EQUAL(mainDensityMap2D.size(),
+                    trkGridSize + nNonOverlappingBins2D);
+  float sixthDensitySum2D = densitySum(mainDensityMap2D);
+  // 2D grid is now empty after all tracks were removed
+  CHECK_CLOSE_ABS(sixthDensitySum2D, 0., 1e-4);
 }
 
 }  // namespace Test
