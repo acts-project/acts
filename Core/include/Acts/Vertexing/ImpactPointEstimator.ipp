@@ -344,10 +344,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-  auto intersection = perigeeSurface->intersect(gctx, track.position(gctx),
-                                                track.direction(), false);
+  auto intersection =
+      perigeeSurface->intersect(gctx, track.position(gctx), track.direction())
+          .closest();
   pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to linPoint
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
