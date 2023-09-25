@@ -113,7 +113,14 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitReader::read(
       [&](const auto& a) { return std::get<0>(a) == context.eventNumber; });
 
   if (it == m_eventMap.end()) {
-    ACTS_DEBUG("Reading empty event: " << context.eventNumber);
+    // explicitly warn if it happens for the first or last event as that might
+    // indicate a human error
+    if ((context.eventNumber == availableEvents().first) &&
+        (context.eventNumber == availableEvents().second - 1)) {
+      ACTS_WARNING("Reading empty event: " << context.eventNumber);
+    } else {
+      ACTS_DEBUG("Reading empty event: " << context.eventNumber);
+    }
 
     m_outputSimHits(context, {});
 
