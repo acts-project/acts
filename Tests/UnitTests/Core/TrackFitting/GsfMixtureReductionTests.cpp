@@ -24,7 +24,6 @@
 #include <vector>
 
 using namespace Acts;
-using namespace Acts::Experimental;
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   std::vector<GsfComponent> cmps = {
