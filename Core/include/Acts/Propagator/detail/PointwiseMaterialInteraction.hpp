@@ -82,10 +82,10 @@ struct PointwiseMaterialInteraction {
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
         qOverP(stepper.qOverP(state.stepping)),
-        absQ(state.stepping.absCharge),
+        absQ(stepper.particleHypothesis(state.stepping).absoluteCharge()),
         momentum(stepper.absoluteMomentum(state.stepping)),
-        mass(state.options.mass),
-        absPdg(state.options.absPdgCode),
+        mass(stepper.particleHypothesis(state.stepping).mass()),
+        absPdg(stepper.particleHypothesis(state.stepping).absolutePdg()),
         performCovarianceTransport(state.stepping.covTransport),
         navDir(state.options.direction) {}
 

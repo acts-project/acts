@@ -8,12 +8,12 @@ from acts.examples import geant4 as acts_g4
 from acts import (
     Binning,
     DetectorBuilder,
+    GeometryIdGenerator,
     Extent,
     GeometryContext,
     KdtSurfaces2D,
     KdtSurfacesProvider2D,
     IndexedRootVolumeFinderBuilder,
-    logging,
     ProtoBinning,
 )
 
@@ -29,7 +29,8 @@ def necBarrelPec(
     barrelPositionsR,
     barrelHalfThickness,
     barrelBinnings,
-    llevel=logging.INFO,
+    containerIds=[],
+    llevel=acts.logging.INFO,
 ):
 
     # Negative Endcap
@@ -51,12 +52,22 @@ def necBarrelPec(
             )
         ]
 
+    necGig = None
+    if len(containerIds) > 0:
+        necGigConf = GeometryIdGenerator.Config()
+        necGigConf.containerMode = True
+        necGigConf.containerId = containerIds[0]
+        necGig = GeometryIdGenerator(necGigConf, name + "_nec_gig", llevel)
+
     nec = detector.CylindricalDetectorContainer(
         name=name + "_nec",
         extent=necEndcapExtent,
         volumes=None,
         layers=necLayers,
         binning=Binning.z,
+        rootbuilder=None,
+        geoidgenerator=necGig,
+        reversegeoids=True,
         loglevel=llevel,
     )
 
@@ -84,13 +95,23 @@ def necBarrelPec(
             )
         ]
 
+    barrelGig = None
+    if len(containerIds) > 1:
+        barrelGiConfg = GeometryIdGenerator.Config()
+        barrelGiConfg.containerMode = True
+        barrelGiConfg.containerId = containerIds[1]
+        barrelGig = GeometryIdGenerator(barrelGiConfg, name + "_barrel_gig", llevel)
+
     barrel = detector.CylindricalDetectorContainer(
         name=name + "_barrel",
         extent=barrelExtent,
         volumes=None,
         layers=barrelLayers,
         binning=Binning.r,
-        loglevel=logging.VERBOSE,
+        rootbuilder=None,
+        geoidgenerator=barrelGig,
+        reversegeoids=False,
+        loglevel=llevel,
     )
 
     # Positive Endcap
@@ -116,12 +137,22 @@ def necBarrelPec(
             )
         ]
 
+    pecGig = None
+    if len(containerIds) > 2:
+        pecGigConf = GeometryIdGenerator.Config()
+        pecGigConf.containerMode = True
+        pecGigConf.containerId = containerIds[2]
+        pecGig = GeometryIdGenerator(pecGigConf, name + "_pec_gig", llevel)
+
     pec = detector.CylindricalDetectorContainer(
         name=name + "_pec",
         extent=pecEndcapExtent,
         volumes=None,
         layers=pecLayers,
         binning=Binning.z,
+        rootbuilder=None,
+        geoidgenerator=pecGig,
+        reversegeoids=False,
         loglevel=llevel,
     )
 
@@ -133,11 +164,12 @@ def necBarrelPec(
         layers=None,
         binning=Binning.z,
         rootbuilder=None,
+        geoidgenerator=None,
         loglevel=llevel,
     )
 
 
-def get_detector(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERBOSE):
+def get_detector(geoContext, ssurfaces, psurfaces, llevel=acts.logging.DEBUG):
 
     # Build the geometry context & a kdtree for the surfaces
     sensitivesKdt = KdtSurfaces2D(geoContext, ssurfaces, [Binning.z, Binning.r])
@@ -185,6 +217,7 @@ def get_detector(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERB
         pixBarrelPositionsR,
         pixBarrelHalfThickness,
         pixBarrelBinning,
+        [16, 17, 18],
         llevel,
     )
 
@@ -227,6 +260,7 @@ def get_detector(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERB
         sstripBarrelPositionsR,
         sstripBarrelHalfThickness,
         sstripBarrelBinning,
+        [23, 24, 25],
         llevel,
     )
 
@@ -261,10 +295,11 @@ def get_detector(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERB
         lstripBarrelPositionsR,
         lstripBarrelHalfThickness,
         lstripBarrelBinning,
+        [28, 29, 30],
         llevel,
     )
 
-    # Container of beam pipe and pixel
+    # Root builder from the detector container
     rootBuilder = IndexedRootVolumeFinderBuilder([Binning.z, Binning.r])
 
     det = detector.CylindricalDetectorContainer(
@@ -274,13 +309,21 @@ def get_detector(geoContext, ssurfaces, psurfaces, pMatches, llevel=logging.VERB
         layers=None,
         binning=Binning.r,
         rootbuilder=rootBuilder,
+        geoidgenerator=None,
         loglevel=llevel,
     )
 
-    # Pixel Endcap
+    # All objects that do not have a geometry id will be assigned one
+    gigConfig = GeometryIdGenerator.Config()
+    gigConfig.overrideExistingIds = False
+    gigConfig.resetSubCounters = True
+    gig = GeometryIdGenerator(gigConfig, "GeometryIdGenerator", llevel)
+
+    # Full detector configuration
     detConfig = DetectorBuilder.Config()
     detConfig.name = "ODD"
     detConfig.builder = det.builder()
+    detConfig.geoIdGenerator = gig
     detConfig.auxiliary = "Detector[" + detConfig.name + "]"
 
     detBuilder = DetectorBuilder(detConfig, detConfig.auxiliary, llevel)
@@ -318,7 +361,7 @@ def main():
     [elements, ssurfaces, psurfaces] = acts_g4.convertSurfaces(
         args.input, [args.sensitives], [args.passives]
     )
-    odd_light = get_detector(geoContext, ssurfaces, psurfaces, logging.DEBUG)
+    odd_light = get_detector(geoContext, ssurfaces, psurfaces, acts.logging.DEBUG)
 
 
 if "__main__" == __name__:

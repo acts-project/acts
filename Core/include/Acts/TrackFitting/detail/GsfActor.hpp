@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
@@ -20,7 +21,6 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
-#include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
@@ -31,7 +31,7 @@
 namespace Acts {
 namespace detail {
 
-template <typename traj_t, typename component_cache_t>
+template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
   traj_t* fittedStates{nullptr};
@@ -45,8 +45,7 @@ struct GsfResult {
 
   /// The last multi-component measurement state. Used to initialize the
   /// backward pass.
-  std::optional<MultiComponentBoundTrackParameters<SinglyCharged>>
-      lastMeasurementState;
+  std::optional<MultiComponentBoundTrackParameters> lastMeasurementState;
 
   /// Some counting
   std::size_t measurementStates = 0;
@@ -56,11 +55,13 @@ struct GsfResult {
   std::vector<const Acts::Surface*> visitedSurfaces;
   std::vector<const Acts::Surface*> surfacesVisitedBwdAgain;
 
+  std::size_t nInvalidBetheHeitler = 0;
+
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
 
   // Internal: component cache to avoid reallocation
-  std::vector<component_cache_t> componentCache;
+  std::vector<Acts::Experimental::GsfComponent> componentCache;
 };
 
 /// The actor carrying out the GSF algorithm
@@ -69,34 +70,10 @@ struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
-  /// Stores meta information about the components
-  struct MetaCache {
-    /// Where to find the parent component in the MultiTrajectory
-    MultiTrajectoryTraits::IndexType parentIndex = 0;
-
-    /// Other quantities TODO are they really needed here? seems they are
-    /// reinitialized to Identity etc.
-    BoundMatrix jacobian;
-    BoundToFreeMatrix jacToGlobal;
-    FreeMatrix jacTransport;
-    FreeVector derivative;
-
-    /// We need to preserve the path length
-    ActsScalar pathLength = 0;
-  };
-
-  /// Stores parameters of a gaussian component
-  struct ParameterCache {
-    ActsScalar weight = 0;
-    BoundVector boundPars;
-    BoundSquareMatrix boundCov;
-  };
-
-  /// Broadcast Cache Type
-  using ComponentCache = std::tuple<ParameterCache, MetaCache>;
+  using ComponentCache = Acts::Experimental::GsfComponent;
 
   /// Broadcast the result_type
-  using result_type = GsfResult<traj_t, ComponentCache>;
+  using result_type = GsfResult<traj_t>;
 
   // Actor configuration
   struct Config {
@@ -308,7 +285,8 @@ struct GsfActor {
       std::vector<ComponentCache>& componentCache = result.componentCache;
       componentCache.clear();
 
-      convoluteComponents(state, stepper, navigator, tmpStates, componentCache);
+      convoluteComponents(state, stepper, navigator, tmpStates, componentCache,
+                          result.nInvalidBetheHeitler);
 
       if (componentCache.empty()) {
         ACTS_WARNING(
@@ -319,7 +297,10 @@ struct GsfActor {
         return;
       }
 
-      reduceComponents(stepper, surface, componentCache);
+      // reduce component number
+      const auto finalCmpNumber = std::min(
+          static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
+      m_cfg.extensions.mixtureReducer(componentCache, finalCmpNumber, surface);
 
       removeLowWeightComponents(componentCache);
 
@@ -344,24 +325,18 @@ struct GsfActor {
   void convoluteComponents(propagator_state_t& state, const stepper_t& stepper,
                            const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
-                           std::vector<ComponentCache>& componentCache) const {
+                           std::vector<ComponentCache>& componentCache,
+                           std::size_t& nInvalidBetheHeitler) const {
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto [idx, cmp] : zip(tmpStates.tips, cmps)) {
       auto proxy = tmpStates.traj.getTrackState(idx);
 
-      MetaCache mcache;
-      mcache.parentIndex = idx;
-      mcache.jacobian = cmp.jacobian();
-      mcache.jacToGlobal = cmp.jacToGlobal();
-      mcache.jacTransport = cmp.jacTransport();
-      mcache.derivative = cmp.derivative();
-      mcache.pathLength = cmp.pathAccumulated();
-
       BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
-                                 proxy.filtered(), proxy.filteredCovariance());
+                                 proxy.filtered(), proxy.filteredCovariance(),
+                                 stepper.particleHypothesis(state.stepping));
 
       applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
-                        mcache, componentCache);
+                        componentCache, nInvalidBetheHeitler);
     }
   }
 
@@ -369,8 +344,9 @@ struct GsfActor {
   void applyBetheHeitler(const propagator_state_t& state,
                          const navigator_t& navigator,
                          const BoundTrackParameters& old_bound,
-                         const double old_weight, const MetaCache& metaCache,
-                         std::vector<ComponentCache>& componentCaches) const {
+                         const double old_weight,
+                         std::vector<ComponentCache>& componentCaches,
+                         std::size_t& nInvalidBetheHeitler) const {
     const auto& surface = *navigator.currentSurface(state.navigation);
     const auto p_prev = old_bound.absoluteMomentum();
 
@@ -386,7 +362,8 @@ struct GsfActor {
 
     // Emit a warning if the approximation is not valid for this x/x0
     if (not m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
-      ACTS_WARNING(
+      ++nInvalidBetheHeitler;
+      ACTS_DEBUG(
           "Bethe-Heitler approximation encountered invalid value for x/x0="
           << slab.thicknessInX0() << " at surface " << surface.geometryId());
     }
@@ -443,25 +420,8 @@ struct GsfActor {
              "new cov not finite");
 
       // Set the remaining things and push to vector
-      componentCaches.push_back(
-          {ParameterCache{new_weight, new_pars, new_cov}, metaCache});
+      componentCaches.push_back({new_weight, new_pars, new_cov});
     }
-  }
-
-  template <typename stepper_t>
-  void reduceComponents(const stepper_t& stepper, const Surface& surface,
-                        std::vector<ComponentCache>& cmps) const {
-    // Final component number
-    const auto final_cmp_number = std::min(
-        static_cast<std::size_t>(stepper.maxComponents), m_cfg.maxComponents);
-
-    auto proj = [](auto& a) -> decltype(auto) { return std::get<0>(a); };
-
-    // We must differ between surface types, since there can be different
-    // local coordinates
-    detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-      detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
-    });
   }
 
   /// Remove components with low weights and renormalize from the component
@@ -469,7 +429,7 @@ struct GsfActor {
   /// TODO This function does not expect normalized components, but this
   /// could be redundant work...
   void removeLowWeightComponents(std::vector<ComponentCache>& cmps) const {
-    auto proj = [](auto& cmp) -> double& { return std::get<0>(cmp).weight; };
+    auto proj = [](auto& cmp) -> double& { return cmp.weight; };
 
     detail::normalizeWeights(cmps, proj);
 
@@ -482,7 +442,7 @@ struct GsfActor {
       cmps = {*std::max_element(
           cmps.begin(), cmps.end(),
           [&](auto& a, auto& b) { return proj(a) < proj(b); })};
-      std::get<0>(cmps.front()).weight = 1.0;
+      cmps.front().weight = 1.0;
     } else {
       cmps.erase(new_end, cmps.end());
       detail::normalizeWeights(cmps, proj);
@@ -531,11 +491,10 @@ struct GsfActor {
     stepper.clearComponents(state.stepping);
 
     // Finally loop over components
-    for (const auto& [pcache, meta] : componentCache) {
-      const auto& [weight, pars, cov] = pcache;
-
+    for (const auto& [weight, pars, cov] : componentCache) {
       // Add the component to the stepper
-      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
+      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov,
+                                 stepper.particleHypothesis(state.stepping));
 
       auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
 
@@ -546,12 +505,10 @@ struct GsfActor {
 
       auto& cmp = *res;
       cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext, pars);
-      cmp.pathAccumulated() = meta.pathLength;
-
-      // TODO check if they are not anyways reset to identity or zero
-      cmp.jacobian() = meta.jacobian;
-      cmp.derivative() = meta.derivative;
-      cmp.jacTransport() = meta.jacTransport;
+      cmp.pathAccumulated() = state.stepping.pathAccumulated;
+      cmp.jacobian() = Acts::BoundMatrix::Identity();
+      cmp.derivative() = Acts::FreeVector::Zero();
+      cmp.jacTransport() = Acts::FreeMatrix::Identity();
     }
   }
 
@@ -631,9 +588,9 @@ struct GsfActor {
 
     normalizeWeights(v, [](auto& c) -> double& { return std::get<double>(c); });
 
-    result.lastMeasurementState =
-        MultiComponentBoundTrackParameters<SinglyCharged>(
-            surface.getSharedPtr(), std::move(v));
+    result.lastMeasurementState = MultiComponentBoundTrackParameters(
+        surface.getSharedPtr(), std::move(v),
+        stepper.particleHypothesis(state.stepping));
 
     // Return success
     return Acts::Result<void>::success();
@@ -849,8 +806,9 @@ struct FinalStateCollector {
       }
     }
 
-    result.pars =
-        typename MultiPars::value_type(surface.getSharedPtr(), states);
+    result.pars = typename MultiPars::value_type(
+        surface.getSharedPtr(), states,
+        stepper.particleHypothesis(state.stepping));
   }
 };
 

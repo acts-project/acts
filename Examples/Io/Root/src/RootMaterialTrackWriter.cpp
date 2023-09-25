@@ -288,13 +288,15 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
           m_sur_y.push_back(mint.intersection.y());
           m_sur_z.push_back(mint.intersection.z());
         } else if (surface != nullptr) {
-          auto sfIntersection = surface->intersect(
-              ctx.geoContext, mint.position, mint.direction, true);
+          auto sfIntersection = surface
+                                    ->intersect(ctx.geoContext, mint.position,
+                                                mint.direction, true)
+                                    .closest();
           m_sur_id.push_back(surface->geometryId().value());
           m_sur_pathCorrection.push_back(1.0);
-          m_sur_x.push_back(sfIntersection.intersection.position.x());
-          m_sur_y.push_back(sfIntersection.intersection.position.y());
-          m_sur_z.push_back(sfIntersection.intersection.position.z());
+          m_sur_x.push_back(sfIntersection.position().x());
+          m_sur_y.push_back(sfIntersection.position().y());
+          m_sur_z.push_back(sfIntersection.position().z());
         } else {
           m_sur_id.push_back(Acts::GeometryIdentifier().value());
           m_sur_x.push_back(0);
@@ -330,10 +332,9 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
 
       // store volume information
       if (m_cfg.storeVolume) {
-        const Acts::Volume* volume = mint.volume;
         Acts::GeometryIdentifier vlayerID;
-        if (volume != nullptr) {
-          vlayerID = volume->geometryId();
+        if (not mint.volume.empty()) {
+          vlayerID = mint.volume.geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {
           vlayerID.setVolume(0);
