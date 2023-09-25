@@ -62,10 +62,10 @@ using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
 using Fitter =
-    Acts::Experimental::GaussianSumFitter<Propagator, BetheHeitlerApprox,
+    Acts::GaussianSumFitter<Propagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
 using DirectFitter =
-    Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
+    Acts::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
 using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
@@ -95,12 +95,12 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   template <typename calibrator_t>
   auto makeGsfOptions(const GeneralFitterOptions& options,
                       const calibrator_t& calibrator) const {
-    Acts::Experimental::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
+    Acts::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &updater);
 
-    Acts::Experimental::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
+    Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
         options.geoContext,
         options.magFieldContext,
         options.calibrationContext,
@@ -128,7 +128,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
                                TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
-    using namespace Acts::Experimental::GsfConstants;
+    using namespace Acts::GsfConstants;
     if (not tracks.hasColumn(
             Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);
@@ -148,7 +148,7 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
 
-    using namespace Acts::Experimental::GsfConstants;
+    using namespace Acts::GsfConstants;
     if (not tracks.hasColumn(
             Acts::hashString(kFinalMultiComponentStateColumn))) {
       std::string key(kFinalMultiComponentStateColumn);

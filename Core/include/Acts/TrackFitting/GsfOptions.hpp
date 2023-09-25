@@ -20,8 +20,6 @@
 
 namespace Acts {
 
-namespace Experimental {
-
 namespace GsfConstants {
 constexpr std::string_view kFinalMultiComponentStateColumn =
     "gsf-final-multi-component-state";
@@ -97,5 +95,4 @@ struct GsfOptions {
 #endif
 };
 
-}  // namespace Experimental
 }  // namespace Acts

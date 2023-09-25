@@ -112,7 +112,7 @@ struct GsfActor {
     std::optional<std::size_t> numberMeasurements;
 
     /// The extensions
-    Experimental::GsfExtensions<traj_t> extensions;
+    GsfExtensions<traj_t> extensions;
 
     /// Whether we are in the reverse pass or not. This is more reliable than
     /// checking the navigation direction, because in principle the fitter can
@@ -779,7 +779,7 @@ struct GsfActor {
 
   /// Set the relevant options that can be set from the Options struct all in
   /// one place
-  void setOptions(const Acts::Experimental::GsfOptions<traj_t>& options) {
+  void setOptions(const Acts::GsfOptions<traj_t>& options) {
     m_cfg.maxComponents = options.maxComponents;
     m_cfg.extensions = options.extensions;
     m_cfg.abortOnError = options.abortOnError;
@@ -793,7 +793,7 @@ struct GsfActor {
 /// An actor that collects the final multi component state once the propagation
 /// finished
 struct FinalStateCollector {
-  using MultiPars = Acts::Experimental::GsfConstants::FinalMultiComponentState;
+  using MultiPars = Acts::GsfConstants::FinalMultiComponentState;
 
   struct result_type {
     MultiPars pars;
