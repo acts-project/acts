@@ -43,6 +43,11 @@ ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
     throw std::invalid_argument("Missing random numbers tool");
   }
 
+  if (m_cfg.particleHypothesis) {
+    ACTS_INFO("Override truth particle hypothesis with "
+              << *m_cfg.particleHypothesis);
+  }
+
   m_inputParticles.initialize(m_cfg.inputParticles);
   m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
