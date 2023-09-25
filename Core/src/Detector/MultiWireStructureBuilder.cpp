@@ -124,13 +124,8 @@ Acts::Experimental::MultiWireStructureBuilder::construct(
   // Configure the external structure builder for the internal structure
   Acts::Experimental::VolumeStructureBuilder::Config vsConfig;
   vsConfig.boundsType = Acts::VolumeBounds::eCuboid;
-
-  Acts::Extent cuboidExtent;
-  cuboidExtent.set(Acts::binX, -mCfg.mlBounds[0], mCfg.mlBounds[0]);
-  cuboidExtent.set(Acts::binY, -mCfg.mlBounds[1], mCfg.mlBounds[1]);
-  cuboidExtent.set(Acts::binZ, -mCfg.mlBounds[2], mCfg.mlBounds[2]);
-
-  vsConfig.extent = cuboidExtent;
+  vsConfig.transform = mCfg.transform;
+  vsConfig.boundValues = mCfg.mlBounds;
   vsConfig.auxiliary = "Construct External Structure";
 
   // Configure the internal structure builder for the internal structure

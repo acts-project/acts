@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <vector>
@@ -42,11 +43,17 @@ class ApproachDescriptor {
   /// @param position is the position from start of the search
   /// @param direction is the direction at the start of the search
   /// @param bcheck is the boundary check directive
+  /// @param pLimit The path limit
+  /// @param oLimit The overstep limit
+  /// @param tolerance The surface tolerance
   ///
   /// @return is a surface intersection
-  virtual ObjectIntersection<Surface> approachSurface(
-      const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const BoundaryCheck& bcheck) const = 0;
+  virtual SurfaceIntersection approachSurface(const GeometryContext& gctx,
+                                              const Vector3& position,
+                                              const Vector3& direction,
+                                              const BoundaryCheck& bcheck,
+                                              double pLimit, double oLimit,
+                                              double tolerance) const = 0;
 
   /// Get all the contained surfaces
   /// @return all contained surfaces of this approach descriptor

@@ -81,12 +81,15 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(coordinateSystem);
 
+  auto intersection = planeSurface
+                          ->intersect(gctx, trkParams.position(gctx),
+                                      trkParams.direction(), false)
+                          .closest();
+
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-  auto intersection = planeSurface->intersect(gctx, trkParams.position(gctx),
-                                              trkParams.direction(), false);
   pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the surface; intersection corresponds to an estimate of the 3D
   // PCA. If deltaR and momDir were orthogonal the calculation would be exact.

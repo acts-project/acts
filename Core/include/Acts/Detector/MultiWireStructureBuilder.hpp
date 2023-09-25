@@ -35,6 +35,9 @@ class MultiWireStructureBuilder {
     /// The surfaces of the Multi Wire
     std::vector<std::shared_ptr<Acts::Surface>> mlSurfaces = {};
 
+    /// The transform of the Multi Wire
+    Transform3 transform = Transform3::Identity();
+
     /// The bounds of the multi-wire volume
     std::vector<ActsScalar> mlBounds = {};
 

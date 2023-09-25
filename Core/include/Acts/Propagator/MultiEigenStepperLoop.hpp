@@ -23,12 +23,14 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/GaussianMixtureReduction.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <functional>
 #include <limits>
 #include <numeric>
@@ -81,9 +83,9 @@ struct WeightedComponentReducerLoop {
   static ActsScalar absoluteMomentum(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * std::abs(cmp.state.absCharge /
-                                             cmp.state.pars[eFreeQOverP]);
+        [&s](const auto& sum, const auto& cmp) -> ActsScalar {
+          return sum + cmp.weight * s.particleHypothesis.extractMomentum(
+                                        cmp.state.pars[eFreeQOverP]);
         });
   }
 
@@ -91,10 +93,10 @@ struct WeightedComponentReducerLoop {
   static Vector3 momentum(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), Vector3::Zero().eval(),
-        [](const auto& sum, const auto& cmp) -> Vector3 {
+        [&s](const auto& sum, const auto& cmp) -> Vector3 {
           return sum + cmp.weight *
-                           std::abs(cmp.state.absCharge /
-                                    cmp.state.pars[eFreeQOverP]) *
+                           s.particleHypothesis.extractMomentum(
+                               cmp.state.pars[eFreeQOverP]) *
                            cmp.state.pars.template segment<3>(eFreeDir0);
         });
   }
@@ -103,9 +105,9 @@ struct WeightedComponentReducerLoop {
   static ActsScalar charge(const stepper_state_t& s) {
     return std::accumulate(
         s.components.begin(), s.components.end(), ActsScalar{0.},
-        [](const auto& sum, const auto& cmp) -> ActsScalar {
-          return sum + cmp.weight * std::copysign(cmp.state.absCharge,
-                                                  cmp.state.pars[eFreeQOverP]);
+        [&s](const auto& sum, const auto& cmp) -> ActsScalar {
+          return sum + cmp.weight * s.particleHypothesis.extractCharge(
+                                        cmp.state.pars[eFreeQOverP]);
         });
   }
 
@@ -270,6 +272,9 @@ class MultiEigenStepperLoop
       Intersection3D::Status status;
     };
 
+    /// Particle hypothesis
+    ParticleHypothesis particleHypothesis = ParticleHypothesis::pion();
+
     /// The components of which the state consists
     SmallVector<Component> components;
 
@@ -292,8 +297,6 @@ class MultiEigenStepperLoop
 
     /// Constructor from the initial bound track parameters
     ///
-    /// @tparam charge_t Type of the bound parameter charge
-    ///
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] bfield the shared magnetic filed provider
@@ -301,13 +304,14 @@ class MultiEigenStepperLoop
     /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
-    template <typename charge_t>
-    explicit State(
-        const GeometryContext& gctx, const MagneticFieldContext& mctx,
-        const std::shared_ptr<const MagneticFieldProvider>& bfield,
-        const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        double ssize = std::numeric_limits<double>::max())
-        : geoContext(gctx), magContext(mctx) {
+    explicit State(const GeometryContext& gctx,
+                   const MagneticFieldContext& mctx,
+                   const std::shared_ptr<const MagneticFieldProvider>& bfield,
+                   const MultiComponentBoundTrackParameters& multipars,
+                   double ssize = std::numeric_limits<double>::max())
+        : particleHypothesis(multipars.particleHypothesis()),
+          geoContext(gctx),
+          magContext(mctx) {
       if (multipars.components().empty()) {
         throw std::invalid_argument(
             "Cannot construct MultiEigenStepperLoop::State with empty "
@@ -317,10 +321,10 @@ class MultiEigenStepperLoop
       const auto surface = multipars.referenceSurface().getSharedPtr();
 
       for (auto i = 0ul; i < multipars.components().size(); ++i) {
-        const auto [weight, singlePars] = multipars[i];
-        components.push_back({SingleState(gctx, bfield->makeCache(mctx),
-                                          std::move(singlePars), ssize),
-                              weight, Intersection3D::Status::onSurface});
+        const auto& [weight, singlePars] = multipars[i];
+        components.push_back(
+            {SingleState(gctx, bfield->makeCache(mctx), singlePars, ssize),
+             weight, Intersection3D::Status::onSurface});
       }
 
       if (std::get<2>(multipars.components().front())) {
@@ -330,10 +334,9 @@ class MultiEigenStepperLoop
   };
 
   /// Construct and initialize a state
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const MultiComponentBoundTrackParameters<charge_t>& par,
+                  const MultiComponentBoundTrackParameters& par,
                   double ssize = std::numeric_limits<double>::max()) const {
     return State(gctx, mctx, SingleStepper::m_bField, par, ssize);
   }
@@ -471,8 +474,9 @@ class MultiEigenStepperLoop
         const FreeToBoundCorrection& freeToBoundCorrection) {
       return detail::boundState(
           all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
-          jacToGlobal(), pars(), all_state.covTransport && transportCov,
-          cmp.state.pathAccumulated, surface, freeToBoundCorrection);
+          jacToGlobal(), pars(), all_state.particleHypothesis,
+          all_state.covTransport && transportCov, cmp.state.pathAccumulated,
+          surface, freeToBoundCorrection);
     }
 
     void update(const FreeVector& freeParams, const BoundVector& boundParams,
@@ -606,10 +610,9 @@ class MultiEigenStepperLoop
   /// valid in the end.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
-  template <typename charge_t>
-  Result<ComponentProxy> addComponent(
-      State& state, const GenericBoundTrackParameters<charge_t>& pars,
-      double weight) const {
+  Result<ComponentProxy> addComponent(State& state,
+                                      const BoundTrackParameters& pars,
+                                      double weight) const {
     state.components.push_back(
         {SingleState(state.geoContext,
                      SingleStepper::m_bField->makeCache(state.magContext),
@@ -668,6 +671,13 @@ class MultiEigenStepperLoop
   ///
   /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const { return Reducer::charge(state); }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  ParticleHypothesis particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
+  }
 
   /// Time access
   ///
@@ -762,30 +772,21 @@ class MultiEigenStepperLoop
   ///
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param oIntersection [in] The ObjectIntersection to layer, boundary, etc
+  /// @param direction [in] The propagation direction
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
-    const Surface& surface = *oIntersection.representation;
+                      Direction direction, bool release = true) const {
+    const Surface& surface = *oIntersection.representation();
 
     for (auto& component : state.components) {
       auto intersection = surface.intersect(
           component.state.geoContext, SingleStepper::position(component.state),
-          SingleStepper::direction(component.state), true);
+          direction * SingleStepper::direction(component.state),
+          true)[oIntersection.index()];
 
-      // We don't know whatever was done to manipulate the intersection before
-      // (e.g. in Layer.ipp:240), so we trust and just adjust the sign
-      if (std::signbit(oIntersection.intersection.pathLength) !=
-          std::signbit(intersection.intersection.pathLength)) {
-        intersection.intersection.pathLength *= -1;
-      }
-
-      if (std::signbit(oIntersection.alternative.pathLength) !=
-          std::signbit(intersection.alternative.pathLength)) {
-        intersection.alternative.pathLength *= -1;
-      }
-
-      SingleStepper::updateStepSize(component.state, intersection, release);
+      SingleStepper::updateStepSize(component.state, intersection, direction,
+                                    release);
     }
   }
 
