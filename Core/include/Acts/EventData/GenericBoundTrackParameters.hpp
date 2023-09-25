@@ -156,54 +156,45 @@ class GenericBoundTrackParameters {
   ParametersVector& parameters() { return m_params; }
   /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
-  /// Vector of impact parameters (i.e., d0 and z0 if nDim=2
-  /// or d0, z0, and t if nDim=3)
-  template <unsigned int nDim = 2>
-  const ActsVector<nDim>& impactParameters() const {
-    if (nDim != 2 and nDim != 3) {
-      throw std::invalid_argument(
-          "The number of dimensions nDim must be either 2 or 3 but was set "
-          "to " +
-          std::to_string(nDim) + ".");
-    }
-
-    ActsVector<nDim> subParamVec;
-    subParamVec.template head<2>() = m_params.template head<2>();
-    if (nDim == 3) {
-      subParamVec(2) = m_params(eBoundTime);
-    }
-    return subParamVec;
+  /// Vector of spatial impact parameters (i.e., d0 and z0)
+  ActsVector<2> spatialImpactParameters() const { return m_params.head<2>(); }
+  /// Vector of spatial and temporal impact parameters (i.e., d0, z0, and t)
+  ActsVector<3> impactParameters() const {
+    ActsVector<3> ip;
+    ip.template head<2>() = m_params.template head<2>();
+    ip(2) = m_params(eBoundTime);
+    return ip;
   }
+
   /// Optional covariance matrix.
   std::optional<CovarianceMatrix>& covariance() { return m_cov; }
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
-
-  /// Covariance matrix of the impact parameters (i.e., of d0 and z0 if nDim=2
-  /// or of d0, z0, and t if nDim=3)
-  template <unsigned int nDim = 2>
-  std::optional<ActsSquareMatrix<nDim>> impactParameterCovariance() const {
-    if (nDim != 2 and nDim != 3) {
-      throw std::invalid_argument(
-          "The number of dimensions nDim must be either 2 or 3 but was set "
-          "to " +
-          std::to_string(nDim) + ".");
-    }
+  /// Covariance matrix of the spatial impact parameters (i.e., of d0 and z0)
+  std::optional<ActsSquareMatrix<2>> spatialImpactParameterCovariance() const {
     if (not m_cov.has_value()) {
       return std::nullopt;
     }
 
-    ActsSquareMatrix<nDim> subCovMat;
-    subCovMat.template topLeftCorner<2, 2>() =
-        m_cov.value().template topLeftCorner<2, 2>();
-    if (nDim == 3) {
-      subCovMat.template block<2, 1>(0, 2) =
-          m_cov.value().template block<2, 1>(0, eBoundTime);
-      subCovMat.template block<1, 2>(2, 0) =
-          m_cov.value().template block<1, 2>(eBoundTime, 0);
-      subCovMat(2, 2) = m_cov.value()(eBoundTime, eBoundTime);
+    return m_cov.value().topLeftCorner<2, 2>();
+  }
+
+  /// Covariance matrix of the spatial and temporal impact parameters (i.e., of
+  /// d0, z0, and t)
+  std::optional<ActsSquareMatrix<3>> impactParameterCovariance() const {
+    if (not m_cov.has_value()) {
+      return std::nullopt;
     }
-    return subCovMat;
+
+    ActsSquareMatrix<3> ipCov;
+    ipCov.template topLeftCorner<2, 2>() =
+        m_cov.value().template topLeftCorner<2, 2>();
+    ipCov.template block<2, 1>(0, 2) =
+        m_cov.value().template block<2, 1>(0, eBoundTime);
+    ipCov.template block<1, 2>(2, 0) =
+        m_cov.value().template block<1, 2>(eBoundTime, 0);
+    ipCov(2, 2) = m_cov.value()(eBoundTime, eBoundTime);
+    return ipCov;
   }
 
   /// Access a single parameter value identified by its index.
