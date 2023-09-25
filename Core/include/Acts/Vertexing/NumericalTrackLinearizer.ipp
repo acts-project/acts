@@ -116,19 +116,12 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
         paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
-<<<<<<< HEAD
-    intersection = perigeeSurface.intersect(
-        gctx, paramVecCopy.head(eLinPosSize - 1), wiggledDir, false);
-    pOptions.direction = Direction::fromScalarZeroAsPositive(
-        intersection.intersection.pathLength);
-=======
     intersection = perigeeSurface
-                       ->intersect(gctx, paramVecCopy.template head<3>(),
+                       .intersect(gctx, paramVecCopy.template head<3>(),
                                    wiggledDir, false)
                        .closest();
     pOptions.direction =
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
->>>>>>> origin/main
 
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,
