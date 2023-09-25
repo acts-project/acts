@@ -326,7 +326,7 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootTrajectorySummaryWriter, mex,
                              "RootTrajectorySummaryWriter", inputTrajectories,
                              inputParticles, inputMeasurementParticlesMap,
-                             filePath, treeName, fileMode);
+                             filePath, treeName, fileMode, writeCovMat);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::VertexPerformanceWriter, mex, "VertexPerformanceWriter",

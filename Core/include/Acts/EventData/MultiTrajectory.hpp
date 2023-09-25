@@ -971,9 +971,11 @@ class TrackStateProxy {
 };
 
 /// Helper type that wraps two iterators
-template <typename trajectory_t, size_t M, bool ReadOnly>
+template <bool reverse, typename trajectory_t, size_t M, bool ReadOnly>
 class TrackStateRange {
   using ProxyType = TrackStateProxy<trajectory_t, M, ReadOnly>;
+  using IndexType = typename ProxyType::IndexType;
+  static constexpr IndexType kInvalid = ProxyType::kInvalid;
 
  public:
   /// Iterator that wraps a track state proxy. The nullopt case signifies the
@@ -991,12 +993,24 @@ class TrackStateRange {
       if (!proxy) {
         return *this;
       }
-      if (proxy->hasPrevious()) {
-        proxy = proxy->trajectory().getTrackState(proxy->previous());
-        return *this;
+      if constexpr (reverse) {
+        if (proxy->hasPrevious()) {
+          proxy = proxy->trajectory().getTrackState(proxy->previous());
+          return *this;
+        } else {
+          proxy = std::nullopt;
+          return *this;
+        }
       } else {
-        proxy = std::nullopt;
-        return *this;
+        IndexType next =
+            proxy->template component<IndexType, hashString("next")>();
+        if (next != kInvalid) {
+          proxy = proxy->trajectory().getTrackState(next);
+          return *this;
+        } else {
+          proxy = std::nullopt;
+          return *this;
+        }
       }
     }
 
@@ -1134,7 +1148,7 @@ class MultiTrajectory {
   /// @note Const version
   auto reverseTrackStateRange(IndexType iendpoint) const {
     using range_t =
-        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+        detail_lt::TrackStateRange<true, Derived, MeasurementSizeMax, true>;
     if (iendpoint == kInvalid) {
       return range_t{};
     }
@@ -1142,19 +1156,52 @@ class MultiTrajectory {
     return range_t{getTrackState(iendpoint)};
   }
 
-  /// Range for the track states from @p iendpoint to the trajectory start
+  /// Range for the track states from @p iendpoint to the trajectory start,
+  /// i.e from the outside in.
   /// @param iendpoint Trajectory entry point to start from
   /// @return Iterator pair to iterate over
   /// @note Mutable version
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto reverseTrackStateRange(IndexType iendpoint) {
     using range_t =
-        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+        detail_lt::TrackStateRange<true, Derived, MeasurementSizeMax, false>;
     if (iendpoint == kInvalid) {
       return range_t{};
     }
 
     return range_t{getTrackState(iendpoint)};
+  }
+
+  /// Range for the track states from @p istartpoint to the trajectory end,
+  /// i.e from inside out
+  /// @param istartpoint Trajectory state index for the innermost track
+  ///        state to start from
+  /// @return Iterator pair to iterate over
+  /// @note Const version
+  auto forwardTrackStateRange(IndexType istartpoint) const {
+    using range_t =
+        detail_lt::TrackStateRange<false, Derived, MeasurementSizeMax, true>;
+    if (istartpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(istartpoint)};
+  }
+
+  /// Range for the track states from @p istartpoint to the trajectory end,
+  /// i.e from inside out
+  /// @param istartpoint Trajectory state index for the innermost track
+  ///        state to start from
+  /// @return Iterator pair to iterate over
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto forwardTrackStateRange(IndexType istartpoint) {
+    using range_t =
+        detail_lt::TrackStateRange<false, Derived, MeasurementSizeMax, false>;
+    if (istartpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(istartpoint)};
   }
 
   /// Apply a function to all previous states starting at a given endpoint.

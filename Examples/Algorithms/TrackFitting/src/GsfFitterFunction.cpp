@@ -21,6 +21,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/GaussianMixtureReduction.hpp"
@@ -117,6 +118,8 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     gsfOptions.extensions.surfaceAccessor
         .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
             &m_slSurfaceAccessor);
+    gsfOptions.extensions.mixtureReducer
+        .connect<&Acts::reduceMixtureWithKLDistance>();
 
     return gsfOptions;
   }

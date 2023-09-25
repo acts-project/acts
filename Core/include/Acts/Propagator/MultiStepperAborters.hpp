@@ -78,13 +78,15 @@ struct MultiStepperSurfaceReached {
 
     // However, if mean of all is on surface, we are happy as well
     if (averageOnSurface) {
-      const auto sIntersection = targetSurface.intersect(
-          state.geoContext, stepper.position(state.stepping),
-          state.options.direction * stepper.direction(state.stepping), true,
-          averageOnSurfaceTolerance);
+      const auto sIntersection =
+          targetSurface
+              .intersect(
+                  state.geoContext, stepper.position(state.stepping),
+                  state.options.direction * stepper.direction(state.stepping),
+                  true, averageOnSurfaceTolerance)
+              .closest();
 
-      if (sIntersection.intersection.status ==
-          Intersection3D::Status::onSurface) {
+      if (sIntersection.status() == Intersection3D::Status::onSurface) {
         ACTS_VERBOSE("Reached target in average mode");
         navigator.currentSurface(state.navigation, &targetSurface);
         navigator.targetReached(state.navigation, true);

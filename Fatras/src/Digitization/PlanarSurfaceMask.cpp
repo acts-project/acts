@@ -37,8 +37,8 @@ namespace {
 /// @param sLength The segment length, maximal allowed length
 void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
                        const Acts::Intersection2D& candidate, double sLength) {
-  if (candidate and candidate.pathLength > 0 and
-      candidate.pathLength < sLength) {
+  if (candidate and candidate.pathLength() > 0 and
+      candidate.pathLength() < sLength) {
     intersections.push_back(candidate);
   }
 }
@@ -57,17 +57,18 @@ void checkIntersection(std::vector<Acts::Intersection2D>& intersections,
 Acts::Result<ActsFatras::PlanarSurfaceMask::Segment2D> maskAndReturn(
     std::vector<Acts::Intersection2D>& intersections,
     const ActsFatras::PlanarSurfaceMask::Segment2D& segment, bool firstInside) {
-  std::sort(intersections.begin(), intersections.end());
+  std::sort(intersections.begin(), intersections.end(),
+            Acts::Intersection2D::forwardOrder);
   if (intersections.size() >= 2) {
-    return ActsFatras::PlanarSurfaceMask::Segment2D{intersections[0].position,
-                                                    intersections[1].position};
+    return ActsFatras::PlanarSurfaceMask::Segment2D{
+        intersections[0].position(), intersections[1].position()};
   } else if (intersections.size() == 1) {
     return (not firstInside
                 ? ActsFatras::PlanarSurfaceMask::Segment2D{intersections[0]
-                                                               .position,
+                                                               .position(),
                                                            segment[1]}
                 : ActsFatras::PlanarSurfaceMask::Segment2D{
-                      segment[0], intersections[0].position});
+                      segment[0], intersections[0].position()});
   }
   return ActsFatras::DigitizationError::MaskingError;
 }
@@ -277,8 +278,11 @@ ActsFatras::PlanarSurfaceMask::annulusMask(const Acts::AnnulusBounds& aBounds,
         Acts::VectorHelpers::phi(vertices[phii[iarc * 2 + 1]] - moduleOrigin),
         segment[0] - moduleOrigin, sDir);
     if (intersection) {
-      intersection.position += moduleOrigin;
-      checkIntersection(intersections, intersection, sLength);
+      checkIntersection(intersections,
+                        Acts::Intersection2D(
+                            intersection.position() + moduleOrigin,
+                            intersection.pathLength(), intersection.status()),
+                        sLength);
     }
   }
   return maskAndReturn(intersections, segment, firstInside);

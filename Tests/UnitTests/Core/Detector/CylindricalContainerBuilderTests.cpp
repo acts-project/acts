@@ -14,8 +14,10 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
+#include "Acts/Detector/interface/IGeometryIdGenerator.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -27,6 +29,7 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <any>
 #include <cmath>
 #include <iterator>
 #include <memory>
@@ -91,6 +94,34 @@ class CylindricalVolumeBuilder : public IDetectorComponentBuilder {
   std::string m_name;
 };
 
+class VolumeGeoIdGenerator : public IGeometryIdGenerator {
+ public:
+  struct Cache {
+    unsigned int volumeCount = 0;
+  };
+
+  IGeometryIdGenerator::GeoIdCache generateCache() const final {
+    return Cache{0};
+  }
+
+  void assignGeometryId(IGeometryIdGenerator::GeoIdCache& cache,
+                        DetectorVolume& dVolume) const final {
+    auto& ccache = std::any_cast<Cache&>(cache);
+    ccache.volumeCount += 1;
+    Acts::GeometryIdentifier geoID;
+    geoID.setVolume(ccache.volumeCount);
+    dVolume.assignGeometryId(geoID);
+  }
+
+  void assignGeometryId(
+      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Acts::Experimental::Portal& /*portal*/) const final {}
+
+  void assignGeometryId(
+      Acts::Experimental::IGeometryIdGenerator::GeoIdCache& /*cache*/,
+      Acts::Surface& /*surface*/) const final {}
+};
+
 BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuilder_Misconfiguration) {
@@ -144,6 +175,9 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
   tripleZCfg.auxiliary = "*** Test 0 - Build triple in Z ***";
   tripleZCfg.builders = {negDisc, barrel, posDisc};
   tripleZCfg.binning = {binZ};
+  tripleZCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
+  // Let's test the reverse generation
+  tripleZCfg.geoIdReverseGen = true;
 
   auto tripleZ = std::make_shared<CylindricalContainerBuilder>(
       tripleZCfg, getDefaultLogger("TripleBuilderZ", Logging::VERBOSE));
@@ -152,6 +186,9 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingZ) {
 
   BOOST_CHECK(portals.size() == 4u);
   BOOST_CHECK(roots.volumes.size() == 3u);
+  BOOST_CHECK(roots.volumes[0]->geometryId().volume() == 3u);
+  BOOST_CHECK(roots.volumes[1]->geometryId().volume() == 2u);
+  BOOST_CHECK(roots.volumes[2]->geometryId().volume() == 1u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
@@ -178,6 +215,7 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
   barrelRCfg.auxiliary = "*** Test 1 - Build multilayer barrel ***";
   barrelRCfg.builders = {barrel0, barrel1, barrel2};
   barrelRCfg.binning = {binR};
+  barrelRCfg.geoIdGenerator = std::make_shared<VolumeGeoIdGenerator>();
 
   auto barrelR = std::make_shared<CylindricalContainerBuilder>(
       barrelRCfg, getDefaultLogger("BarrelBuilderR", Logging::VERBOSE));
@@ -186,6 +224,9 @@ BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingR) {
 
   BOOST_CHECK(portals.size() == 4u);
   BOOST_CHECK(roots.volumes.size() == 3u);
+  BOOST_CHECK(roots.volumes[0]->geometryId().volume() == 1u);
+  BOOST_CHECK(roots.volumes[1]->geometryId().volume() == 2u);
+  BOOST_CHECK(roots.volumes[2]->geometryId().volume() == 3u);
 }
 
 BOOST_AUTO_TEST_CASE(CylindricaContainerBuildingPhi) {
