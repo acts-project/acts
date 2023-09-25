@@ -271,8 +271,8 @@ class DiscSurface : public Surface {
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return The SurfaceIntersection object
-  SurfaceIntersection intersect(
+  /// @return The @c SurfaceMultiIntersection object
+  SurfaceMultiIntersection intersect(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const BoundaryCheck& bcheck = false,
       ActsScalar tolerance = s_onSurfaceTolerance) const final;

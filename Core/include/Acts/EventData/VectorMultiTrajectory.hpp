@@ -167,6 +167,7 @@ class VectorMultiTrajectoryBase {
   VectorMultiTrajectoryBase(const VectorMultiTrajectoryBase& other)
       : m_index{other.m_index},
         m_previous{other.m_previous},
+        m_next{other.m_next},
         m_params{other.m_params},
         m_cov{other.m_cov},
         m_meas{other.m_meas},
@@ -208,6 +209,7 @@ class VectorMultiTrajectoryBase {
         return instance.m_sourceLinks[instance.m_index[istate].iuncalibrated]
             .has_value();
       case "previous"_hash:
+      case "next"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
       case "chi2"_hash:
@@ -230,6 +232,8 @@ class VectorMultiTrajectoryBase {
     switch (key) {
       case "previous"_hash:
         return &instance.m_previous[istate];
+      case "next"_hash:
+        return &instance.m_next[istate];
       case "predicted"_hash:
         return &instance.m_index[istate].ipredicted;
       case "filtered"_hash:
@@ -271,6 +275,7 @@ class VectorMultiTrajectoryBase {
       case "jacobian"_hash:
       case "projector"_hash:
       case "previous"_hash:
+      case "next"_hash:
       case "uncalibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
@@ -302,6 +307,7 @@ class VectorMultiTrajectoryBase {
   /// index to map track states to the corresponding
   std::vector<IndexData> m_index;
   std::vector<IndexType> m_previous;
+  std::vector<IndexType> m_next;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
 
