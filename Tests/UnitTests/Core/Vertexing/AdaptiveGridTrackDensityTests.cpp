@@ -326,11 +326,11 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   // spatial and temporal bin extent
   double binExtent = 0.05;
 
-  // spatial grid
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg(binExtent);
-  AdaptiveGridTrackDensity<spatialTrkGridSize> grid(cfg);
+  // 1D grid of z values
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::Config cfg1D(binExtent);
+  AdaptiveGridTrackDensity<spatialTrkGridSize> grid1D(cfg1D);
 
-  // spatial and temporal grid
+  // 2D grid of z and t values
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::Config
       cfg2D(binExtent, binExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize> grid2D(
@@ -356,13 +356,13 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
 
   // Empty maps
-  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap;
+  AdaptiveGridTrackDensity<spatialTrkGridSize>::DensityMap mainDensityMap1D;
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::DensityMap
       mainDensityMap2D;
 
   // Add first track to spatial grid
-  auto trackDensityMap = grid.addTrack(params1, mainDensityMap);
-  auto firstRes = grid.getMaxZTPosition(mainDensityMap);
+  auto trackDensityMap = grid1D.addTrack(params1, mainDensityMap1D);
+  auto firstRes = grid1D.getMaxZTPosition(mainDensityMap1D);
   BOOST_CHECK(firstRes.ok());
   // Maximum should be at z0Trk1 position ...
   BOOST_CHECK_EQUAL((*firstRes).first, z0Trk1);
@@ -379,9 +379,9 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   BOOST_CHECK_EQUAL((*firstRes2D).second.value(), t0Trk1);
 
   // Add second track to spatial grid
-  trackDensityMap = grid.addTrack(params2, mainDensityMap);
+  trackDensityMap = grid1D.addTrack(params2, mainDensityMap1D);
   // Calculate maximum and the corresponding width
-  auto secondRes = grid.getMaxZTPositionAndWidth(mainDensityMap);
+  auto secondRes = grid1D.getMaxZTPositionAndWidth(mainDensityMap1D);
   BOOST_CHECK(secondRes.ok());
   // Trk 2 is closer to z-axis and should thus yield higher density values.
   // Therefore, the new maximum is at z0Trk2 ...
