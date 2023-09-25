@@ -116,10 +116,10 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
         paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
-    intersection = perigeeSurface
-                       .intersect(gctx, paramVecCopy.template head<3>(),
-                                   wiggledDir, false)
-                       .closest();
+    intersection =
+        perigeeSurface
+            .intersect(gctx, paramVecCopy.template head<3>(), wiggledDir, false)
+            .closest();
     pOptions.direction =
         Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
