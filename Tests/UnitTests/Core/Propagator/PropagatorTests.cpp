@@ -112,7 +112,8 @@ struct SurfaceObserver {
           surface
               ->intersect(state.geoContext, stepper.position(state.stepping),
                           stepper.direction(state.stepping), true)
-              .intersection.pathLength;
+              .closest()
+              .pathLength();
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance * state.options.direction,
                                      ConstrainedStep::actor);
