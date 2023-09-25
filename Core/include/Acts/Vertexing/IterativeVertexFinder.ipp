@@ -225,7 +225,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
     State& state) const {
   // Linearize track
   auto result = m_cfg.linearizer.linearizeTrack(
-      params, vertex.fullPosition(), perigeeSurface,
+      params, vertex.fullPosition()[3], perigeeSurface,
       vertexingOptions.geoContext, vertexingOptions.magFieldContext,
       state.linearizerState);
   if (!result.ok()) {

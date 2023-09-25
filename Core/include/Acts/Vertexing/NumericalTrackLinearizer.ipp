@@ -13,7 +13,7 @@
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack>
 Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
-    linearizeTrack(const BoundTrackParameters& params, const Vector4& linPoint,
+    linearizeTrack(const BoundTrackParameters& params, double linPointTime,
                    const Surface& perigeeSurface,
                    const Acts::GeometryContext& gctx,
                    const Acts::MagneticFieldContext& mctx,
@@ -39,17 +39,17 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
 
-  // Propagate to the PCA of linPointPos
+  // Propagate to the PCA of the reference point
   auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
   if (not result.ok()) {
     return result.error();
   }
 
-  // Extracting the Perigee representation of the track wrt linPointPos
+  // Extracting the Perigee representation of the track wrt the reference point
   auto endParams = *result->endParameters;
   BoundVector perigeeParams = endParams.parameters();
 
-  // Covariance and weight matrix at the PCA to "linPoint"
+  // Covariance and weight matrix at the PCA to the reference point
   BoundSquareMatrix parCovarianceAtPCA = endParams.covariance().value();
   BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
 
@@ -85,7 +85,7 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   ActsMatrix<eBoundSize, eLinSize> completeJacobian =
       ActsMatrix<eBoundSize, eLinSize>::Zero(eBoundSize, eLinSize);
 
-  // Perigee parameters wrt linPoint after wiggling
+  // Perigee parameters wrt the reference point after wiggling
   BoundVector newPerigeeParams;
 
   // Check if wiggled angle theta are within definition range [0, pi]
@@ -146,6 +146,10 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // Constant term of Taylor expansion (Eq. 5.38 in Ref. (1))
   BoundVector constTerm =
       perigeeParams - positionJacobian * pca - momentumJacobian * momentumAtPCA;
+
+  Vector4 linPoint;
+  linPoint.head<3>() = perigeeSurface.center(gctx);
+  linPoint[3] = linPointTime;
 
   return LinearizedTrack(perigeeParams, parCovarianceAtPCA, weightAtPCA,
                          linPoint, positionJacobian, momentumJacobian, pca,

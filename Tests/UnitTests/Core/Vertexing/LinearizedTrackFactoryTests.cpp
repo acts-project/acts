@@ -216,11 +216,11 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
         Surface::makeShared<PerigeeSurface>(VectorHelpers::position(linPoint));
 
     const LinearizedTrack linTrack1 =
-        lin1.linearizeTrack(track, linPoint, *perigee, geometryContext,
+        lin1.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
                             fieldContext, linState1)
             .value();
     const LinearizedTrack linTrack2 =
-        lin2.linearizeTrack(track, linPoint, *perigee, geometryContext,
+        lin2.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
                             fieldContext, linState2)
             .value();
 

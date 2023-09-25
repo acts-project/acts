@@ -12,13 +12,11 @@
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundTrackParameters& params, const Vector4& linPoint,
+        const BoundTrackParameters& params, double linPointTime,
         const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
         const Acts::MagneticFieldContext& mctx, State& state) const {
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-
-  Vector3 linPointPos = VectorHelpers::position(linPoint);
 
   // Length scale at which we consider to be sufficiently close to the Perigee
   // surface to skip the propagation.
@@ -38,14 +36,14 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
 
-  // Propagate to the PCA of linPointPos
+  // Propagate to the PCA of the reference point
   auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
   if (not result.ok()) {
     return result.error();
   }
 
   // Extracting the track parameters at said PCA - this corresponds to the
-  // Perigee representation of the track wrt linPointPos
+  // Perigee representation of the track wrt the reference point
   const auto& endParams = *result->endParameters;
   BoundVector paramsAtPCA = endParams.parameters();
 
@@ -140,10 +138,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     ActsScalar h = (rho < 0.) ? -1 : 1;
 
     // Quantities from Eq. 5.34 in Ref. (1) (see .hpp)
-    ActsScalar X = pca(0) - linPointPos.x() + rho * sinPhi;
-    ActsScalar Y = pca(1) - linPointPos.y() - rho * cosPhi;
+    ActsScalar X = pca(0) - perigeeSurface.center(gctx).x() + rho * sinPhi;
+    ActsScalar Y = pca(1) - perigeeSurface.center(gctx).y() - rho * cosPhi;
     ActsScalar S2 = (X * X + Y * Y);
-    // S is the 2D distance from the helix center to linPointPos
+    // S is the 2D distance from the helix center to the reference point
     // in the x-y plane
     ActsScalar S = std::sqrt(S2);
 
@@ -200,6 +198,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   // The parameter weight
   BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+
+  Vector4 linPoint;
+  linPoint.head<3>() = perigeeSurface.center(gctx);
+  linPoint[3] = linPointTime;
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,

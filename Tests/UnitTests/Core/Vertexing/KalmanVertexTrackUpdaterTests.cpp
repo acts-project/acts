@@ -158,8 +158,8 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4::Zero(), *perigee, geoContext,
-                            magFieldContext, linState)
+            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
+                            linState)
             .value();
 
     // Create TrackAtVertex

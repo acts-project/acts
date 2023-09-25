@@ -116,7 +116,7 @@ class NumericalTrackLinearizer {
   /// the PCA to a given Perigee surface
   ///
   /// @param params Parameters to linearize
-  /// @param linPoint Point which defines the Perigee.
+  /// @param linPointTime Time associated to the linearization point
   /// @note Transverse plane of the Perigee corresponding to @p linPoint is
   /// parallel to the global x-y plane
   /// @param perigeeSurface Perigee surface belonging to @p linPoint
@@ -125,7 +125,7 @@ class NumericalTrackLinearizer {
   ///
   /// @return Linearized track
   Result<LinearizedTrack> linearizeTrack(const BoundTrackParameters& params,
-                                         const Vector4& linPoint,
+                                         double linPointTime,
                                          const Surface& perigeeSurface,
                                          const Acts::GeometryContext& gctx,
                                          const Acts::MagneticFieldContext& mctx,

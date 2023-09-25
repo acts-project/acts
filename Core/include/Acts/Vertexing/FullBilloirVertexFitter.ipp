@@ -114,7 +114,7 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       const auto& trackParams = extractParameters(*trackContainer);
 
       auto result = linearizer.linearizeTrack(
-          trackParams, linPoint, *perigeeSurface, vertexingOptions.geoContext,
+          trackParams, linPoint[3], *perigeeSurface, vertexingOptions.geoContext,
           vertexingOptions.magFieldContext, state.linearizerState);
       if (!result.ok()) {
         return result.error();
