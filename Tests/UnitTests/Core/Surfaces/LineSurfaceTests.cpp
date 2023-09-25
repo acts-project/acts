@@ -120,18 +120,16 @@ BOOST_AUTO_TEST_CASE(LineSurface_allNamedMethods_test) {
   CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
   //
   // intersection
-  {
-    const Vector3 direction{0., 1., 2.};
-    BoundaryCheck bcheck(false);
-    auto sfIntersection =
-        line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck);
-    BOOST_CHECK(bool(sfIntersection));
-    Vector3 expectedIntersection(0, 1., 2.);
-    CHECK_CLOSE_ABS(sfIntersection.intersection.position, expectedIntersection,
-                    1e-6);  // need more tests..
-    BOOST_CHECK_EQUAL(sfIntersection.object, &line);
-  }
-
+  const Vector3 direction{0., 1., 2.};
+  BoundaryCheck bcheck(false);
+  auto sfIntersection =
+      line.intersect(tgContext, {0., 0., 0.}, direction.normalized(), bcheck)
+          .closest();
+  BOOST_CHECK(sfIntersection);
+  Vector3 expectedIntersection(0, 1., 2.);
+  CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersection,
+                  1e-6);  // need more tests..
+  BOOST_CHECK_EQUAL(sfIntersection.object(), &line);
   //
   // isOnSurface
   const Vector3 insidePosition{0., 2.5, 0.};
@@ -255,8 +253,8 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTrip) {
   LineSurfaceStub surface(Transform3::Identity());
 
   auto roundTrip = [&surface](const Vector3& pos, const Vector3& dir) {
-    auto intersection = surface.intersect(tgContext, pos, dir);
-    Vector3 global = intersection.intersection.position;
+    auto intersection = surface.intersect(tgContext, pos, dir).closest();
+    Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
     Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
     return std::make_tuple(global, local, global2);
@@ -292,9 +290,9 @@ BOOST_AUTO_TEST_CASE(LineSurfaceTransformRoundTripEtaStability) {
     Vector3 dir = makeDirectionFromPhiEta(M_PI_2, eta);
     Vector3 pos = pca + dir;
 
-    auto intersection = surface.intersect(tgContext, pos, dir);
+    auto intersection = surface.intersect(tgContext, pos, dir).closest();
 
-    Vector3 global = intersection.intersection.position;
+    Vector3 global = intersection.position();
     Vector2 local = *surface.globalToLocal(tgContext, global, dir);
     Vector3 global2 = surface.localToGlobal(tgContext, local, dir);
 
@@ -337,9 +335,11 @@ BOOST_AUTO_TEST_CASE(LineSurfaceIntersection) {
   }
 
   auto intersection =
-      surface->intersect(tgContext, displacedParameters.position(tgContext),
-                         displacedParameters.direction());
-  CHECK_CLOSE_ABS(intersection.intersection.pathLength, pathLimit, eps);
+      surface
+          ->intersect(tgContext, displacedParameters.position(tgContext),
+                      displacedParameters.direction())
+          .closest();
+  CHECK_CLOSE_ABS(intersection.pathLength(), pathLimit, eps);
 
   BoundTrackParameters endParameters{surface, BoundVector::Zero(), std::nullopt,
                                      ParticleHypothesis::pion()};

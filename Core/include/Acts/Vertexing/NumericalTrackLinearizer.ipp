@@ -34,15 +34,17 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.direction(), false);
+  auto intersection =
+      perigeeSurface
+          ->intersect(gctx, params.position(gctx), params.direction(), false)
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above.
   // We handle zero path length as forward propagation, but we could actually
   // skip the whole propagation in this case.
   pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
@@ -115,14 +117,16 @@ Acts::NumericalTrackLinearizer<propagator_t, propagator_options_t>::
                                                    paramVecCopy(eLinTheta));
     // Since we work in 4D we have eLinPosSize = 4
     CurvilinearTrackParameters wiggledCurvilinearParams(
-        paramVecCopy.head(eLinPosSize), wiggledDir, paramVecCopy(eLinQOverP),
-        std::nullopt, ParticleHypothesis::pion());
+        paramVecCopy.template head<eLinPosSize>(), wiggledDir,
+        paramVecCopy(eLinQOverP), std::nullopt, ParticleHypothesis::pion());
 
     // Obtain propagation direction
-    intersection = perigeeSurface->intersect(
-        gctx, paramVecCopy.head(eLinPosSize - 1), wiggledDir, false);
-    pOptions.direction = Direction::fromScalarZeroAsPositive(
-        intersection.intersection.pathLength);
+    intersection = perigeeSurface
+                       ->intersect(gctx, paramVecCopy.template head<3>(),
+                                   wiggledDir, false)
+                       .closest();
+    pOptions.direction =
+        Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
     // Propagate to the new PCA and extract Perigee parameters
     auto newResult = m_cfg.propagator->propagate(wiggledCurvilinearParams,

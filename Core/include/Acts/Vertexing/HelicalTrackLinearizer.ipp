@@ -32,15 +32,17 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.direction(), false);
+  auto intersection =
+      perigeeSurface
+          ->intersect(gctx, params.position(gctx), params.direction(), false)
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above
   // We handle zero path length as forward propagation, but we could actually
   // skip the whole propagation in this case
   pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Propagate to the PCA of linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
