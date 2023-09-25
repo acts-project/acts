@@ -218,7 +218,10 @@ class StraightLineStepper {
   double time(const State& state) const { return state.pars[eFreeTime]; }
 
   /// Overstep limit
-  double overstepLimit(const State& /*state*/) const {
+  ///
+  /// @param state The stepping state (thread-local cache)
+  double overstepLimit(const State& state) const {
+    (void)state;
     return -m_overstepLimit;
   }
 
@@ -254,7 +257,7 @@ class StraightLineStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+                      Direction /*direction*/, bool release = true) const {
     detail::updateSingleStepSize<StraightLineStepper>(state, oIntersection,
                                                       release);
   }

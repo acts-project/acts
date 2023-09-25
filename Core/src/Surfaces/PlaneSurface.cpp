@@ -173,7 +173,7 @@ double Acts::PlaneSurface::pathCorrection(const GeometryContext& gctx,
   return 1. / std::abs(Surface::normal(gctx, position).dot(direction));
 }
 
-Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::PlaneSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
@@ -182,18 +182,22 @@ Acts::SurfaceIntersection Acts::PlaneSurface::intersect(
   // Use the intersection helper for planar surfaces
   auto intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection3D::Status::unreachable and bcheck) {
+  if (intersection.status() != Intersection3D::Status::unreachable and bcheck) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
     // Create the reference vector in local
-    const Vector3 vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     if (not insideBounds(tMatrix.block<3, 2>(0, 0).transpose() * vecLocal,
                          bcheck)) {
-      intersection.status = Intersection3D::Status::missed;
+      status = Intersection3D::Status::missed;
     }
   }
-  return {intersection, this};
+  return {{Intersection3D(intersection.position(), intersection.pathLength(),
+                          status),
+           Intersection3D::invalid()},
+          this};
 }
 
 Acts::ActsMatrix<2, 3> Acts::PlaneSurface::localCartesianToBoundLocalDerivative(
