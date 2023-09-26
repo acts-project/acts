@@ -45,7 +45,7 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
   /// @param itr a transform applied to the global position
   MultiLayerSurfacesUpdatorImpl(
       grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
-      const Transform3& itr = Transform3::Identity(), bool isort = true)
+      const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
   MultiLayerSurfacesUpdatorImpl() = delete;
