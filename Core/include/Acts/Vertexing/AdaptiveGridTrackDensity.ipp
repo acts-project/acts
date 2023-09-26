@@ -96,16 +96,8 @@ typename Acts::AdaptiveGridTrackDensity<spatialTrkGridSize,
 Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     addTrack(const Acts::BoundTrackParameters& trk,
              DensityMap& mainDensityMap) const {
-  ActsVector<3> impactParams;
-  impactParams.template head<2>() = trk.parameters().head<2>();
-  impactParams(2) = trk.time();
-
-  ActsSquareMatrix<eBoundSize> cov = trk.covariance().value();
-  ActsSquareMatrix<3> ipCov;
-  ipCov.topLeftCorner<2, 2>() = cov.topLeftCorner<2, 2>();
-  ipCov.block<2, 1>(0, 2) = cov.block<2, 1>(0, eBoundTime);
-  ipCov.block<1, 2>(2, 0) = cov.block<1, 2>(eBoundTime, 0);
-  ipCov(2, 2) = cov(eBoundTime, eBoundTime);
+  ActsVector<3> impactParams = trk.impactParameters();
+  ActsSquareMatrix<3> cov = trk.impactParameterCovariance().value();
 
   // Calculate bin in d direction
   int centralDBin = getBin(impactParams(0), m_cfg.spatialBinExtent);
@@ -126,7 +118,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     centralBin.second = centralTBin;
   }
 
-  DensityMap trackDensityMap = createTrackGrid(impactParams, centralBin, ipCov);
+  DensityMap trackDensityMap = createTrackGrid(impactParams, centralBin, cov);
 
   for (const auto& densityEntry : trackDensityMap) {
     Bin bin = densityEntry.first;

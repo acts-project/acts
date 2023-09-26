@@ -145,11 +145,6 @@ BOOST_AUTO_TEST_CASE(
   // symmetric covariance matrix
   Covariance covMat = makeRandomCovariance();
 
-  ActsSquareMatrix<3> ipCov;
-  ipCov.topLeftCorner<2, 2>() = covMat.topLeftCorner<2, 2>();
-  ipCov.block<2, 1>(0, 2) = covMat.block<2, 1>(0, eBoundTime);
-  ipCov.block<1, 2>(2, 0) = covMat.block<1, 2>(eBoundTime, 0);
-  ipCov(2, 2) = covMat(eBoundTime, eBoundTime);
   BoundVector paramVec;
   paramVec << d0, z0, 0, 0, 0, t0;
   // Create perigee surface
@@ -158,6 +153,9 @@ BOOST_AUTO_TEST_CASE(
 
   BoundTrackParameters params(perigeeSurface, paramVec, covMat,
                               ParticleHypothesis::pion());
+                              
+  ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
+
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::Config cfg(
       spatialBinExtent, temporalBinExtent);
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize> grid(cfg);
