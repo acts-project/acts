@@ -293,7 +293,7 @@ Acts::FreeToBoundMatrix Acts::DiscSurface::freeToBoundJacobian(
   return jacToLocal;
 }
 
-Acts::SurfaceIntersection Acts::DiscSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::DiscSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
@@ -302,25 +302,29 @@ Acts::SurfaceIntersection Acts::DiscSurface::intersect(
   // Use the intersection helper for planar surfaces
   auto intersection =
       PlanarHelper::intersect(gctxTransform, position, direction, tolerance);
+  auto status = intersection.status();
   // Evaluate boundary check if requested (and reachable)
-  if (intersection.status != Intersection3D::Status::unreachable and bcheck and
-      m_bounds != nullptr) {
+  if (intersection.status() != Intersection3D::Status::unreachable and
+      bcheck and m_bounds != nullptr) {
     // Built-in local to global for speed reasons
     const auto& tMatrix = gctxTransform.matrix();
-    const Vector3 vecLocal(intersection.position - tMatrix.block<3, 1>(0, 3));
+    const Vector3 vecLocal(intersection.position() - tMatrix.block<3, 1>(0, 3));
     const Vector2 lcartesian = tMatrix.block<3, 2>(0, 0).transpose() * vecLocal;
     if (bcheck.type() == BoundaryCheck::Type::eAbsolute and
         m_bounds->coversFullAzimuth()) {
       double modifiedTolerance = tolerance + bcheck.tolerance()[eBoundLoc0];
       if (not m_bounds->insideRadialBounds(VectorHelpers::perp(lcartesian),
                                            modifiedTolerance)) {
-        intersection.status = Intersection3D::Status::missed;
+        status = Intersection3D::Status::missed;
       }
     } else if (not insideBounds(localCartesianToPolar(lcartesian), bcheck)) {
-      intersection.status = Intersection3D::Status::missed;
+      status = Intersection3D::Status::missed;
     }
   }
-  return {intersection, this};
+  return {{Intersection3D(intersection.position(), intersection.pathLength(),
+                          status),
+           Intersection3D::invalid()},
+          this};
 }
 
 Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(

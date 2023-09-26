@@ -106,7 +106,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Define start parameters from ranom input
   double p = pT / sin(theta);
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta,
-                                   dcharge / p);
+                                   dcharge / p, std::nullopt,
+                                   ParticleHypothesis::pion());
 
   using EndOfWorld = EndOfWorldReached;
 

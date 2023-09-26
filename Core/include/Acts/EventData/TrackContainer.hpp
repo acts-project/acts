@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -294,6 +293,23 @@ class TrackContainer {
   auto reverseTrackStateRange(IndexType itrack) const {
     auto tip = component<IndexType, hashString("tipIndex")>(itrack);
     return m_traj->reverseTrackStateRange(tip);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto forwardTrackStateRange(IndexType itrack) {
+    auto stem = component<IndexType, hashString("stemIndex")>(itrack);
+    if (stem == kInvalid) {
+      throw std::invalid_argument{"Track has no stem index"};
+    }
+    return m_traj->forwardTrackStateRange(stem);
+  }
+
+  auto forwardTrackStateRange(IndexType itrack) const {
+    auto stem = component<IndexType, hashString("stemIndex")>(itrack);
+    if (stem == kInvalid) {
+      throw std::invalid_argument{"Track has no stem index"};
+    }
+    return m_traj->forwardTrackStateRange(stem);
   }
 
  private:

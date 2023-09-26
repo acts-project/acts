@@ -72,7 +72,7 @@ std::shared_ptr<TrackFitterFunction> makeKalmanFitterFunction(
 
 /// This type is used in the Examples framework for the Bethe-Heitler
 /// approximation
-using BetheHeitlerApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
+using BetheHeitlerApprox = Acts::AtlasBetheHeitlerApprox<6, 5>;
 
 /// Makes a fitter function object for the GSF
 ///
