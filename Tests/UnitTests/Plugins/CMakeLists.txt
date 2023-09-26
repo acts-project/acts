@@ -1,5 +1,6 @@
 add_subdirectory_if(ActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 add_subdirectory_if(Cuda ACTS_BUILD_PLUGIN_CUDA)
+add_subdirectory_if(DD4hep ACTS_BUILD_PLUGIN_DD4HEP)
 add_subdirectory_if(ExaTrkX ACTS_BUILD_PLUGIN_EXATRKX)
 add_subdirectory_if(Geant4 ACTS_BUILD_PLUGIN_GEANT4)
 add_subdirectory_if(Json ACTS_BUILD_PLUGIN_JSON)

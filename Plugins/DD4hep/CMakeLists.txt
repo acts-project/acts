@@ -5,6 +5,7 @@ add_library(
   src/ConvertDD4hepDetector.cpp
   src/ConvertDD4hepMaterial.cpp
   src/DD4hepDetectorElement.cpp
+  src/DD4hepDetectorSurfaceFactory.cpp
   src/DD4hepLayerBuilder.cpp
   src/DD4hepVolumeBuilder.cpp)
 target_include_directories(

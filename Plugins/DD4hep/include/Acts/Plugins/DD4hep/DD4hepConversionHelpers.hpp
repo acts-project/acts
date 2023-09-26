@@ -9,6 +9,8 @@
 #pragma once
 
 #include <DD4hep/DetElement.h>
+#include <DD4hep/DetFactoryHelper.h>
+#include <DD4hep/Objects.h>
 #include <DDRec/DetectorData.h>
 
 namespace Acts {
@@ -88,4 +90,27 @@ inline bool hasParam(const std::string& key, dd4hep::DetElement& elt) {
 inline bool hasParams(dd4hep::DetElement& elt) {
   return elt.extension<dd4hep::rec::VariantParameters>(false) != nullptr;
 }
+
+/// @brief Helper method to get an attribute with fallback
+///
+/// @note the fallback value has to be provided
+///
+/// @tparam value_type the primitive type allowed by variant parameters
+///
+/// @param node the node object from DD4hep
+/// @param attrName the name of the attribute that is checked
+/// @param fallbackValue the fallbackValue
+///
+/// @return either the gathered attribute or the fallback
+template <typename value_type>
+value_type getAttrValueOr(const dd4hep::xml::Component& node,
+                          const std::string& attrName,
+                          const value_type& fallbackValue) {
+  if (node.hasAttr(dd4hep::xml::Strng_t(attrName.c_str()))) {
+    return node.attr<value_type>(attrName.c_str());
+  } else {
+    return fallbackValue;
+  }
+}
+
 }  // namespace Acts
