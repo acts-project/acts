@@ -18,23 +18,22 @@
 namespace Acts {
 
 /// @class AdaptiveGridTrackDensity
-/// TODO update comment
-/// @brief Implements a 1-dim density grid to be filled with
-/// track Gaussian distributions. Each single track is modelled
-/// as a 2-dim Gaussian distribution grid in the d0-z0 plane,
-/// but only the overlap with the z-axis (i.e. a 1-dim density
-/// vector) needs to be calculated.
+/// @brief Implements a 1D (no time seeding) / 2D (time seeding)
+/// grid that is filled with track densities.
+/// Each track is modelled by a 2D / 3D Gaussian distribution in the
+/// d0-z0 / d0-z0-t0 plane, which is evaluated at d0=0. Therefore,
+/// each track effectively lives in 1D / 2D.
 /// The position of the highest track density (of either a single
 /// bin or the sum of a certain region) can be determined.
 /// Single tracks can be cached and removed from the overall density.
-/// Unlike the GaussianGridTrackDensity, the overall density vector
-/// grows adaptively with the tracks densities being added to the grid.
+/// Unlike in the GaussianGridTrackDensity, the overall density map
+/// grows adaptively when tracks densities are added to the grid.
 ///
-/// @tparam trkGridSize The 2-dim grid size of a single track, i.e.
-/// a single track is modelled as a (trkGridSize x trkGridSize) grid
-/// in the d0-z0 plane. Note: trkGridSize has to be an odd value.
-/// TODO once we switch to c++ 20 we should use a single template
-/// parameter of type std::pair<int, int>
+/// @tparam spatialTrkGridSize Number of bins per track in z direction
+/// @tparam temporalTrkGridSize Number of bins per track in t direction
+/// @note In total, a track is represented by a grid of size
+/// spatialTrkGridSize * temporalTrkGridSize
+
 template <int spatialTrkGridSize = 15, int temporalTrkGridSize = 1>
 class AdaptiveGridTrackDensity {
   // Assert odd spatial and temporal track grid size
@@ -66,7 +65,8 @@ class AdaptiveGridTrackDensity {
     }
 
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    /// @param temporalBinExtent_ The temporal extent of a bin in TODO: unit
+    /// @param temporalBinExtent_ The temporal extent of a bin in mm
+    /// @note The speed of light is set to 1, hence the unit.
     Config(float spatialBinExtent_, float temporalBinExtent_)
         : spatialBinExtent(spatialBinExtent_),
           temporalBinExtent(temporalBinExtent_) {
@@ -81,10 +81,10 @@ class AdaptiveGridTrackDensity {
     float spatialBinExtent;  // mm
 
     // Temporal extent of a bin
-    std::optional<float> temporalBinExtent = std::nullopt;  // TODO: unit?
+    std::optional<float> temporalBinExtent = std::nullopt;  // mm
 
     // Do NOT use just the z-bin with the highest
-    // track density, but instead check the (up to)
+    // track density, but instead check (up to)
     // first three density maxima (only those that have
     // a maximum relative deviation of 'relativeDensityDev'
     // from the main maximum) and take the z-bin of the
@@ -159,9 +159,8 @@ class AdaptiveGridTrackDensity {
                      DensityMap& mainDensityMap) const;
 
  private:
-  /// @brief Function that creates a track density map, i.e., a map of a pair
-  /// of z and t bins to corresponding density values coming from a single
-  /// track.
+  /// @brief Function that creates a track density map, i.e., a map from bins
+  /// to the corresponding density values for a single track.
   ///
   /// @param impactParams vector containing d0, z0, and t of the track
   /// @param centralBin Central z and t bin of the track (where its
@@ -184,7 +183,7 @@ class AdaptiveGridTrackDensity {
   Result<float> estimateSeedWidth(const DensityMap& densityMap,
                                   const ztPosition& maxZT) const;
 
-  /// @brief Helper to retrieve values according of a nDim-dimensional
+  /// @brief Helper to retrieve values according to a nDim-dimensional
   /// normal distribution
   /// @note The constant prefactor (2 * pi)^(- nDim / 2) is discarded
   ///
@@ -198,10 +197,10 @@ class AdaptiveGridTrackDensity {
   float multivariateGaussian(const Acts::ActsVector<nDim>& args,
                              const Acts::ActsSquareMatrix<nDim>& cov) const;
 
-  /// @brief Checks the (up to) first three density maxima that have
-  /// a maximum relative deviation of 'relativeDensityDev' from the
+  /// @brief Checks (up to) first three density maxima that have a
+  /// maximum relative deviation of 'relativeDensityDev' from the
   /// global maximum. Returns the z bin of the maximum that has the
-  /// highest surrounding density.
+  /// highest surrounding density in z direction.
   ///
   /// @param densityMap Map between bins and corresponding density values
   ///
