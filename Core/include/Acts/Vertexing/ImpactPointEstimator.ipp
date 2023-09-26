@@ -345,7 +345,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
   auto intersection =
-      perigeeSurface->intersect(gctx, track.position(gctx), track.direction())
+      perigeeSurface
+          ->intersect(gctx, track.position(gctx), track.direction(), false)
           .closest();
   pOptions.direction =
       Direction::fromScalarZeroAsPositive(intersection.pathLength());

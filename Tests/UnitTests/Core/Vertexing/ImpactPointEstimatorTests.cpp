@@ -220,7 +220,8 @@ BOOST_DATA_TEST_CASE(TIMEATPCA, tracksWithoutIPs* vertices, t0, phi, theta, p,
   paramVec[eBoundQOverP] = q / p;
 
   BoundTrackParameters params(vtxPerigeeSurface, paramVec,
-                              makeBoundParametersCovariance());
+                              makeBoundParametersCovariance(),
+                              ParticleHypothesis::pion());
 
   // Correct quantities for checking if IP estimation worked
   // Time of the track with respect to the vertex
@@ -241,10 +242,12 @@ BOOST_DATA_TEST_CASE(TIMEATPCA, tracksWithoutIPs* vertices, t0, phi, theta, p,
 
   // Propagate to the 2D PCA of the reference point
   PropagatorOptions pOptions(geoContext, magFieldContext);
-  auto intersection = refPerigeeSurface->intersect(
-      geoContext, params.position(geoContext), params.direction(), false);
+  auto intersection = refPerigeeSurface
+                          ->intersect(geoContext, params.position(geoContext),
+                                      params.direction(), false)
+                          .closest();
   pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
   auto result = propagator->propagate(params, *refPerigeeSurface, pOptions);
   BOOST_CHECK(result.ok());
 
@@ -338,16 +341,19 @@ BOOST_DATA_TEST_CASE(VertexCompatibility4D, IPs* vertices, d0, l0, vx0, vy0,
 
   // Track whose time is similar to the vertex time
   BoundTrackParameters paramsClose(planeSurface, paramVecClose,
-                                   makeBoundParametersCovariance(30_ns));
+                                   makeBoundParametersCovariance(30_ns),
+                                   ParticleHypothesis::pion());
 
   // Track whose time is similar to the vertex time but with a larger time
   // variance
   BoundTrackParameters paramsCloseLargerCov(
-      planeSurface, paramVecClose, makeBoundParametersCovariance(31_ns));
+      planeSurface, paramVecClose, makeBoundParametersCovariance(31_ns),
+      ParticleHypothesis::pion());
 
   // Track whose time differs slightly more from the vertex time
   BoundTrackParameters paramsFar(planeSurface, paramVecFar,
-                                 makeBoundParametersCovariance(30_ns));
+                                 makeBoundParametersCovariance(30_ns),
+                                 ParticleHypothesis::pion());
 
   // Calculate the 4D vertex compatibilities of the three tracks
   double compatibilityClose =
