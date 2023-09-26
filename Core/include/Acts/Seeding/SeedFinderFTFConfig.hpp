@@ -35,6 +35,7 @@ template <typename SpacePoint> struct SeedFinderFTFConfig {
   float m_phiSliceWidth;
   float m_nMaxPhiSlice;
   bool m_useClusterWidth = false;
+  bool m_LRTmode = true ; //eventually want to set from full chaing 
   std::string fastrack_input_file;
   std::vector<TrigInDetSiLayer> input_vector;
 
