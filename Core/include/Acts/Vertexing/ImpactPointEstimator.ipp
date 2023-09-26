@@ -109,11 +109,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getVertexCompatibility(const GeometryContext& gctx,
                            const BoundTrackParameters* trkParams,
                            const ActsVector<nDim>& vertexPos) const {
-  if (nDim != 3 and nDim != 4) {
-    throw std::invalid_argument(
-        "The number of dimensions N must be either 3 or 4 but was set to " +
-        std::to_string(nDim) + ".");
-  }
+  static_assert(nDim == 3 or nDim == 4,
+                "The number of dimensions nDim must be either 3 or 4.");
 
   if (trkParams == nullptr) {
     return VertexingError::EmptyInput;
@@ -127,7 +124,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   auto covMat = trkParams->covariance();
   ActsSquareMatrix<nDim - 1> subCovMat;
   subCovMat.template block<2, 2>(0, 0) = covMat->block<2, 2>(0, 0);
-  if (nDim == 4) {
+  if constexpr (nDim == 4) {
     subCovMat.template block<2, 1>(0, 2) = covMat->block<2, 1>(0, eBoundTime);
     subCovMat.template block<1, 2>(2, 0) = covMat->block<1, 2>(eBoundTime, 0);
     subCovMat(2, 2) = covMat.value()(eBoundTime, eBoundTime);
@@ -164,7 +161,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       Vector2(trkParams->parameters()[eX], trkParams->parameters()[eY]);
 
   // Fill time coordinates if we check the 4D vertex compatibility
-  if (nDim == 4) {
+  if constexpr (nDim == 4) {
     localVertexCoords(2) = vertexPos(3);
     localTrackCoords(2) = trkParams->parameters()[eBoundTime];
   }
@@ -240,11 +237,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
                            const ActsVector<nDim>& vtxPos, State& state) const {
-  if (nDim != 3 and nDim != 4) {
-    throw std::invalid_argument(
-        "The number of dimensions N must be either 3 or 4 but was set to " +
-        std::to_string(nDim) + ".");
-  }
+  static_assert(nDim == 3 or nDim == 4,
+                "The number of dimensions nDim must be either 3 or 4.");
 
   // Reference point R
   Vector3 refPoint = trkParams.referenceSurface().center(gctx);
@@ -313,7 +307,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   pca.template head<3>() =
       helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
-  if (nDim == 4) {
+  if constexpr (nDim == 4) {
     ActsScalar m0 = trkParams.particleHypothesis().mass();
     ActsScalar p =
         std::abs(trkParams.particleHypothesis().absoluteCharge() / qOvP);
