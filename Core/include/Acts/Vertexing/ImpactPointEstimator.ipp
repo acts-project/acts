@@ -121,13 +121,11 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   if (not trkParams->covariance().has_value()) {
     return VertexingError::NoCovariance;
   }
-  auto covMat = trkParams->covariance();
   ActsSquareMatrix<nDim - 1> subCovMat;
-  subCovMat.template block<2, 2>(0, 0) = covMat->block<2, 2>(0, 0);
-  if constexpr (nDim == 4) {
-    subCovMat.template block<2, 1>(0, 2) = covMat->block<2, 1>(0, eBoundTime);
-    subCovMat.template block<1, 2>(2, 0) = covMat->block<1, 2>(eBoundTime, 0);
-    subCovMat(2, 2) = covMat.value()(eBoundTime, eBoundTime);
+  if constexpr (nDim == 3) {
+    subCovMat = trkParams->spatialImpactParameterCovariance().value();
+  } else {
+    subCovMat = trkParams->impactParameterCovariance().value();
   }
   ActsSquareMatrix<nDim - 1> weight = subCovMat.inverse();
 
