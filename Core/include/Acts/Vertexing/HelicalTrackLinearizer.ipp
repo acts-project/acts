@@ -12,15 +12,9 @@
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
-        const BoundTrackParameters& params, const Vector4& linPoint,
-        const Acts::GeometryContext& gctx,
+        const BoundTrackParameters& params, double linPointTime,
+        const Surface& perigeeSurface, const Acts::GeometryContext& gctx,
         const Acts::MagneticFieldContext& mctx, State& state) const {
-  // Make Perigee surface at linPointPos, transverse plane of Perigee
-  // corresponds the global x-y plane
-  Vector3 linPointPos = VectorHelpers::position(linPoint);
-  const std::shared_ptr<PerigeeSurface> perigeeSurface =
-      Surface::makeShared<PerigeeSurface>(linPointPos);
-
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
 
@@ -32,24 +26,26 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // move on a straight line.
   // This allows us to determine whether we need to propagate the track
   // forward or backward to arrive at the PCA.
-  auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
-                                                params.direction(), false);
+  auto intersection =
+      perigeeSurface
+          .intersect(gctx, params.position(gctx), params.direction(), false)
+          .closest();
 
   // Setting the propagation direction using the intersection length from
   // above
   // We handle zero path length as forward propagation, but we could actually
   // skip the whole propagation in this case
   pOptions.direction =
-      Direction::fromScalarZeroAsPositive(intersection.intersection.pathLength);
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
-  // Propagate to the PCA of linPointPos
-  auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
+  // Propagate to the PCA of the reference point
+  auto result = m_cfg.propagator->propagate(params, perigeeSurface, pOptions);
   if (not result.ok()) {
     return result.error();
   }
 
   // Extracting the track parameters at said PCA - this corresponds to the
-  // Perigee representation of the track wrt linPointPos
+  // Perigee representation of the track wrt the reference point
   const auto& endParams = *result->endParameters;
   BoundVector paramsAtPCA = endParams.parameters();
 
@@ -79,12 +75,9 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // q over p
   ActsScalar qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
 
-  // Get mass hypothesis from propagator options
-  ActsScalar m0 = pOptions.mass;
-  // Assume unit charge
-  // TODO: Get charge hypothesis from propagator options once they are included
-  // there.
-  ActsScalar p = std::abs(1. / qOvP);
+  ActsScalar m0 = params.particleHypothesis().mass();
+  ActsScalar p = std::abs(params.particleHypothesis().absoluteCharge() / qOvP);
+
   // Speed in units of c
   ActsScalar beta = p / std::hypot(p, m0);
   // Transverse speed (i.e., speed in the x-y plane)
@@ -144,10 +137,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     ActsScalar h = (rho < 0.) ? -1 : 1;
 
     // Quantities from Eq. 5.34 in Ref. (1) (see .hpp)
-    ActsScalar X = pca(0) - linPointPos.x() + rho * sinPhi;
-    ActsScalar Y = pca(1) - linPointPos.y() - rho * cosPhi;
+    ActsScalar X = pca(0) - perigeeSurface.center(gctx).x() + rho * sinPhi;
+    ActsScalar Y = pca(1) - perigeeSurface.center(gctx).y() - rho * cosPhi;
     ActsScalar S2 = (X * X + Y * Y);
-    // S is the 2D distance from the helix center to linPointPos
+    // S is the 2D distance from the helix center to the reference point
     // in the x-y plane
     ActsScalar S = std::sqrt(S2);
 
@@ -204,6 +197,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   // The parameter weight
   BoundSquareMatrix weightAtPCA = parCovarianceAtPCA.inverse();
+
+  Vector4 linPoint;
+  linPoint.head<3>() = perigeeSurface.center(gctx);
+  linPoint[3] = linPointTime;
 
   return LinearizedTrack(paramsAtPCA, parCovarianceAtPCA, weightAtPCA, linPoint,
                          positionJacobian, momentumJacobian, pca, momentumAtPCA,

@@ -43,26 +43,21 @@ inline static void updateCandidates(const GeometryContext& gctx,
   for (auto& c : nCandidates) {
     // Get the surface representation: either native surfcae of portal
     const Surface& sRep =
-        (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
+        c.surface != nullptr ? *c.surface : c.portal->surface();
 
     // Get the intersection @todo make a templated intersector
-    auto sIntersection =
-        sRep.intersect(gctx, position, direction, c.boundaryCheck);
-    // Re-order and swap if necessary
-    if (sIntersection.intersection.pathLength + s_onSurfaceTolerance <
-            nState.overstepTolerance and
-        sIntersection.alternative.status >= Intersection3D::Status::reachable) {
-      sIntersection.swapSolutions();
-    }
-    c.objectIntersection = sIntersection;
+    // TODO surface tolerance
+    auto sIntersection = sRep.intersect(gctx, position, direction,
+                                        c.boundaryCheck, s_onSurfaceTolerance);
+    c.objectIntersection = sIntersection[c.objectIntersection.index()];
   }
   // Sort and stuff non-allowed solutions to the end
   std::sort(
       nCandidates.begin(), nCandidates.end(),
       [&](const auto& a, const auto& b) {
         // The two path lengths
-        ActsScalar pathToA = a.objectIntersection.intersection.pathLength;
-        ActsScalar pathToB = b.objectIntersection.intersection.pathLength;
+        ActsScalar pathToA = a.objectIntersection.pathLength();
+        ActsScalar pathToB = b.objectIntersection.pathLength();
         if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
             std::abs(pathToA) < s_onSurfaceTolerance) {
           return false;

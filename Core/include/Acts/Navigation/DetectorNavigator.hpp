@@ -114,6 +114,10 @@ class DetectorNavigator {
 
   bool targetReached(const State& state) const { return state.targetReached; }
 
+  bool endOfWorldReached(State& state) const {
+    return state.currentVolume == nullptr;
+  }
+
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
   }
@@ -177,6 +181,7 @@ class DetectorNavigator {
                  << posInfo(state, stepper) << "Entering navigator::preStep.");
 
     auto& nState = state.navigation;
+    fillNavigationState(state, stepper, nState);
 
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)
