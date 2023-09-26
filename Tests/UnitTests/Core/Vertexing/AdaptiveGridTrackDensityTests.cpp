@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(
 
   BoundTrackParameters params(perigeeSurface, paramVec, covMat,
                               ParticleHypothesis::pion());
-                              
+
   ActsSquareMatrix<3> ipCov = params.impactParameterCovariance().value();
 
   AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::Config cfg(
