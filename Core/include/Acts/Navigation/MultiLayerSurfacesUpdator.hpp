@@ -47,6 +47,7 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
+  /// @param isort a flag for sorting the candidates or not
   MultiLayerSurfacesUpdatorImpl(
       grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
       const Transform3& itr = Transform3::Identity(), bool isort = true)
