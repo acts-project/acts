@@ -359,10 +359,10 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 
   // Extract Perigee parameters and corresponding covariance matrix
-  const auto& params = propRes.endParameters->parameters();
-  const double d0 = params[BoundIndices::eBoundLoc0];
-  const double z0 = params[BoundIndices::eBoundLoc1];
-  const auto& perigeeCov = *(propRes.endParameters->covariance());
+  auto impactParams = propRes.endParameters->impactParameters();
+  const double d0 = impactParams[0];
+  const double z0 = impactParams[1];
+  auto perigeeCov = propRes.endParameters->impactParameterCovariance().value();
 
   // Vertex variances
   // TODO: By looking at sigmaD0 and sigmaZ0 we neglect the offdiagonal terms
@@ -381,34 +381,25 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // to throw an error here once
   // https://github.com/acts-project/acts/issues/2231 is resolved.
   if (vtxVar2DExtent > 0) {
-    ipAndSigma.sigmaD0 =
-        std::sqrt(vtxVar2DExtent + perigeeCov(BoundIndices::eBoundLoc0,
-                                              BoundIndices::eBoundLoc0));
+    ipAndSigma.sigmaD0 = std::sqrt(vtxVar2DExtent + perigeeCov(0, 0));
   } else {
-    ipAndSigma.sigmaD0 = std::sqrt(
-        perigeeCov(BoundIndices::eBoundLoc0, BoundIndices::eBoundLoc0));
+    ipAndSigma.sigmaD0 = std::sqrt(perigeeCov(0, 0));
   }
 
   ipAndSigma.z0 = z0;
   if (vtxVarZ > 0) {
-    ipAndSigma.sigmaZ0 =
-        std::sqrt(vtxVarZ + perigeeCov(BoundIndices::eBoundLoc1,
-                                       BoundIndices::eBoundLoc1));
+    ipAndSigma.sigmaZ0 = std::sqrt(vtxVarZ + perigeeCov(1, 1));
   } else {
-    ipAndSigma.sigmaZ0 = std::sqrt(
-        perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1));
+    ipAndSigma.sigmaZ0 = std::sqrt(perigeeCov(1, 1));
   }
 
   if (calculateTimeIP) {
-    ipAndSigma.deltaT = std::abs(vtx.time() - params[BoundIndices::eBoundTime]);
+    ipAndSigma.deltaT = std::abs(vtx.time() - impactParams[2]);
     double vtxVarT = vtx.fullCovariance()(eTime, eTime);
     if (vtxVarT > 0) {
-      ipAndSigma.sigmaDeltaT =
-          std::sqrt(vtxVarT + perigeeCov(BoundIndices::eBoundTime,
-                                         BoundIndices::eBoundTime));
+      ipAndSigma.sigmaDeltaT = std::sqrt(vtxVarT + perigeeCov(2, 2));
     } else {
-      ipAndSigma.sigmaDeltaT = std::sqrt(
-          perigeeCov(BoundIndices::eBoundTime, BoundIndices::eBoundTime));
+      ipAndSigma.sigmaDeltaT = std::sqrt(perigeeCov(2, 2));
     }
   }
 
