@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -20,7 +22,69 @@
 #include <memory>
 
 namespace Acts {
+
 namespace Experimental {
+
+// Helper method to sort the candidate updates
+
+/// @param nState The navigation state of which the candidates are to be sorted
+inline void sortCandidates(NavigationState& nState) {
+  const Acts::GeometryContext geoContext;
+
+  auto& nCandidates = nState.surfaceCandidates;
+  std::sort(
+      nCandidates.begin(), nCandidates.end(),
+      [&](const auto& a, const auto& b) {
+        // The two path lengths
+        ActsScalar pathToA = a.objectIntersection.intersection.pathLength;
+        ActsScalar pathToB = b.objectIntersection.intersection.pathLength;
+
+        if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
+            std::abs(pathToA) < s_onSurfaceTolerance) {
+          return false;
+        } else if (pathToB + s_onSurfaceTolerance < nState.overstepTolerance or
+                   std::abs(pathToB) < s_onSurfaceTolerance) {
+          return true;
+        }
+
+        return pathToA < pathToB;
+      });
+  // Set the surface candidate
+  nState.surfaceCandidate = nCandidates.begin();
+}
+
+/// Helper method to update the candidates (portals/surfaces),
+/// this can be called for initial surface/portal estimation,
+/// but also during the navigation to update the current list
+/// of candidates.
+///
+/// @param gctx is the Geometry context of this call
+/// @param nState [in,out] is the navigation state to be updated
+///
+/// @todo for surfaces skip the non-reached ones, while keep for portals
+inline void updateCandidates(const GeometryContext& gctx,
+                             NavigationState& nState) {
+  const auto& position = nState.position;
+  const auto& direction = nState.direction;
+  auto& nCandidates = nState.surfaceCandidates;
+
+  for (auto& c : nCandidates) {
+    // Get the surface representation: either native surfcae of portal
+    const Surface& sRep =
+        (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
+
+    // Get the intersection @todo make a templated intersector
+    auto sIntersection =
+        sRep.intersect(gctx, position, direction, c.boundaryCheck);
+    // Re-order and swap if necessary
+    if (sIntersection.intersection.pathLength + s_onSurfaceTolerance <
+            nState.overstepTolerance and
+        sIntersection.alternative.status >= Intersection3D::Status::reachable) {
+      sIntersection.swapSolutions();
+    }
+    c.objectIntersection = sIntersection;
+  }
+}
 
 /// @brief  This sets a single object, e.g. single surface or single volume
 /// @tparam object_type the type of the object to be filled
@@ -98,14 +162,19 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
+  /// A sortCandidates flag to tell the updator if sorting is needed
+  /// (not needed in case of use in chained updator)
+  bool sort = true;
+
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   IndexedUpdatorImpl(grid_type&& igrid,
                      const std::array<BinningValue, grid_type::DIM>& icasts,
-                     const Transform3& itr = Transform3::Identity())
-      : grid(std::move(igrid)), casts(icasts), transform(itr) {}
+                     const Transform3& itr = Transform3::Identity(),
+                     bool isort = true)
+      : grid(std::move(igrid)), casts(icasts), transform(itr), sort(isort) {}
 
   IndexedUpdatorImpl() = delete;
 
@@ -121,6 +190,12 @@ class IndexedUpdatorImpl : public INavigationDelegate {
     const auto& entry = grid.atPosition(castPosition(nState.position));
     auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
+
+    updateCandidates(gctx, nState);
+
+    if (sort) {
+      sortCandidates(nState);
+    }
   }
 
   /// Cast into a lookup position
@@ -176,6 +251,8 @@ class ChainedUpdatorImpl : public INavigationDelegate {
     std::apply(
         [&](auto&&... updator) { ((updator.update(gctx, nState)), ...); },
         updators);
+
+    sortCandidates(nState);
   }
 };
 

@@ -12,6 +12,7 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
@@ -29,28 +30,31 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
   /// The grid where the indices are stored
   grid_type grid;
 
+  /// The path generator
+  path_generator pgenerator;
+
   /// These are the cast parameters - copied from constructor
   std::array<BinningValue, grid_type::DIM> casts{};
 
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
-  /// The path generator
-  path_generator pgenerator;
+  /// A sortCandidates flag to tell the updator if sorting is needed
+  /// (not needed in case of use in chained updator)
+  bool sort = true;
 
   /// @brief  Constructor for a grid based surface attacher
-  ///@param igrid the grid that is moved into this attacher
+  /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   MultiLayerSurfacesUpdatorImpl(
       grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
-      const Transform3& itr = Transform3::Identity())
-      : grid(std::move(igrid)), casts(icasts), transform(itr) {}
+      const Transform3& itr = Transform3::Identity(), bool isort = true)
+      : grid(std::move(igrid)), casts(icasts), transform(itr), sort(isort) {}
 
   MultiLayerSurfacesUpdatorImpl() = delete;
 
   void update(const GeometryContext& gctx, NavigationState& nState) const {
-
     auto step = std::sqrt(std::pow(grid.binWidth()[0], 2) +
                           std::pow(grid.binWidth()[1], 2));
     auto path = pgenerator(nState.position, nState.direction, step,
@@ -68,6 +72,12 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
 
     resolveDuplicates(gctx, surfCandidates);
     SurfacesFiller::fill(nState, surfCandidates);
+
+    updateCandidates(gctx, nState);
+
+    if (sort) {
+      sortCandidates(nState);
+    }
   }
 
   /// Cast into a lookup position
@@ -124,11 +134,10 @@ struct PathGridSurfacesGenerator {
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);
-    
+
     auto tposition = std::move(startPosition);
     auto stepSizeY = stepSize * sin(Acts::VectorHelpers::phi(direction));
     auto stepSizeX = stepSize * cos(Acts::VectorHelpers::phi(direction));
-    
 
     for (std::size_t i = 0; i < numberOfSteps; i++) {
       pathCoordinates.push_back(tposition);

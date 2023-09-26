@@ -208,6 +208,7 @@ class DetectorNavigator {
       initializeTarget(state, stepper);
     }
 
+
     for (; nState.surfaceCandidate != nState.surfaceCandidates.cend();
          ++nState.surfaceCandidate) {
       // Screen output how much is left to try
@@ -230,6 +231,7 @@ class DetectorNavigator {
       auto surfaceStatus = stepper.updateSurfaceStatus(
           state.stepping, surface, state.options.direction, boundaryCheck,
           state.options.targetTolerance, logger());
+
       if (surfaceStatus == Intersection3D::Status::reachable) {
         ACTS_VERBOSE(volInfo(state)
                      << posInfo(state, stepper)

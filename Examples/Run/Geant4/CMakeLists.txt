@@ -20,6 +20,7 @@ target_link_libraries(
   PRIVATE
     ActsCore
     ActsExamplesCommon
+    ActsTestsCommonHelpers
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesGeant4Common

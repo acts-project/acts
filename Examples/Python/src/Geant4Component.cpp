@@ -277,12 +277,15 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   {
     using MockupSectorBuilder = MockupSectorBuilder;
     using Config = MockupSectorBuilder::Config;
+    using MultiLayerConfig = MockupSectorBuilder::MultiLayerConfig;
     using ChamberConfig = MockupSectorBuilder::ChamberConfig;
+
 
     auto ms =
         py::class_<MockupSectorBuilder, std::shared_ptr<MockupSectorBuilder>>(
             mod, "MockupSectorBuilder")
             .def(py::init<const Config&>())
+            .def("buildMultiLayer", &MockupSectorBuilder::buildMultiLayer)
             .def("buildChamber", &MockupSectorBuilder::buildChamber)
             .def("buildSector", &MockupSectorBuilder::buildSector)
             .def("drawSector", &MockupSectorBuilder::drawSector);
@@ -294,11 +297,18 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(toleranceOverlap);
     ACTS_PYTHON_STRUCT_END();
 
-    auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
+    auto cml = py::class_<MultiLayerConfig>(ms, "MultiLayerConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(cml, MultiLayerConfig);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(SensitiveNames);
     ACTS_PYTHON_MEMBER(PassiveNames);
+    ACTS_PYTHON_STRUCT_END();
+
+
+    auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
+    ACTS_PYTHON_MEMBER(name);
+    ACTS_PYTHON_MEMBER(internalVolumes);
     ACTS_PYTHON_STRUCT_END();
   }
 

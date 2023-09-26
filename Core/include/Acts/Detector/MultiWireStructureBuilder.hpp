@@ -13,11 +13,13 @@
 #include "Acts/Detector/interface/IDetectorComponentBuilder.hpp"
 #include "Acts/Detector/interface/IExternalStructureBuilder.hpp"
 #include "Acts/Detector/interface/IInternalStructureBuilder.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
