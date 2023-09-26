@@ -302,7 +302,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   Vector3 momDir =
       Vector3(cosPhi * sinTheta, sinPhi * sinTheta, std::cos(theta));
 
-  // 3D PCA (point P' in the reference)
+  // 3D PCA (point P' in the reference). Note that the prefix "3D" does not
+  // refer to the dimension of the pca variable. Rather, it indicates that we
+  // minimized the 3D distance between the track and the reference point.
   ActsVector<nDim> pca;
   pca.template head<3>() =
       helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);

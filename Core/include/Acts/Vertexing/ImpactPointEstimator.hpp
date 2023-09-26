@@ -125,7 +125,7 @@ class ImpactPointEstimator {
       State& state) const;
 
   /// @brief Estimates the compatibility of a track to a vertex based on their
-  /// 3D or 4D distance and the track covariance.
+  /// 3D (if nDim = 3) or 4D (if nDim = 4) distance and the track covariance.
   /// @note Confusingly, a *smaller* compatibility means that a track is *more*
   /// compatible.
   ///
@@ -142,6 +142,8 @@ class ImpactPointEstimator {
 
   /// @brief Calculate the distance between a track and a vertex by finding the
   /// corresponding 3D PCA. Returns also the momentum direction at the 3D PCA.
+  /// The template parameter nDim determines whether we calculate the 3D
+  /// distance (nDim = 3) or the 4D distance (nDim = 4) to the 3D PCA.
   ///
   /// @param gctx Geometry context
   /// @param trkParams Track parameters
