@@ -34,7 +34,7 @@ namespace Acts {
 
 namespace Experimental {
 
-// class Detector;
+class Detector;
 
 /// A detector volume
 class DetectorVolume {
