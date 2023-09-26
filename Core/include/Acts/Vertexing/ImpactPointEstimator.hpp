@@ -147,15 +147,11 @@ class ImpactPointEstimator {
   /// @param trkParams Track parameters
   /// @param vtxPos Vertex position
   /// @param state The state object
-  /// @param massHypothesis Mass hypothesis
-  /// @param chargeHypothesis Charge hypothesis
   template <unsigned int nDim = 3>
   Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
   getDistanceAndMomentum(const GeometryContext& gctx,
                          const BoundTrackParameters& trkParams,
-                         const ActsVector<nDim>& vtxPos, State& state,
-                         const ActsScalar& massHypothesis = 0.13957018,
-                         const ActsScalar& chargeHypothesis = 1.) const;
+                         const ActsVector<nDim>& vtxPos, State& state) const;
 
   /// @brief Calculates the impact parameters of a track w.r.t. a vertex. The
   /// corresponding errors are approximated by summing the variances of the

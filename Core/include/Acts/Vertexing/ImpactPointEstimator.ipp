@@ -239,9 +239,7 @@ Acts::Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
 Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     getDistanceAndMomentum(const GeometryContext& gctx,
                            const BoundTrackParameters& trkParams,
-                           const ActsVector<nDim>& vtxPos, State& state,
-                           const ActsScalar& massHypothesis,
-                           const ActsScalar& chargeHypothesis) const {
+                           const ActsVector<nDim>& vtxPos, State& state) const {
   if (nDim != 3 and nDim != 4) {
     throw std::invalid_argument(
         "The number of dimensions N must be either 3 or 4 but was set to " +
@@ -316,11 +314,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
   if (nDim == 4) {
-    // TODO: get charge and mass hypothesis from track parameters once this is
-    // possible
-    ActsScalar p = std::abs(chargeHypothesis / qOvP);
+    ActsScalar m0 = trkParams.particleHypothesis().mass();
+    ActsScalar p =
+        std::abs(trkParams.particleHypothesis().absoluteCharge() / qOvP);
+
     // Speed in units of c
-    ActsScalar beta = p / std::hypot(p, massHypothesis);
+    ActsScalar beta = p / std::hypot(p, m0);
 
     pca[3] = tP - rho / (beta * sinTheta) * (phi - phiP);
   }
