@@ -192,10 +192,6 @@ jobs:
           path: ${{ github.workspace }}/ccache
           key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
 
-      - name: Prepare Unit tests
-        shell: bash
-        run : source /usr/local/bin/thisdd4hep_only.sh
-
       - name: Unit tests
         run: ctest --test-dir build -j$(nproc)
 
@@ -204,7 +200,6 @@ jobs:
 
       - name: Install
         run: cmake --build build --target install
-
 
       - name: Package build
         run: tar czf build.tar.gz -C build --exclude "*.o" --exclude "bin/ActsUnitTest*" --exclude "bin/ActsIntegrationTest*" .
