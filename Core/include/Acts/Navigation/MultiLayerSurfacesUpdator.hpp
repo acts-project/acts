@@ -12,7 +12,6 @@
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
