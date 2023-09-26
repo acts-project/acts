@@ -153,11 +153,14 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_TrackUpdater) {
     BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
                                 ParticleHypothesis::pion());
 
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(Vector3::Zero());
+
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4::Zero(), geoContext,
-                            magFieldContext, linState)
+            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
+                            linState)
             .value();
 
     // Create TrackAtVertex

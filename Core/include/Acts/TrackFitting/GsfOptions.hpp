@@ -20,8 +20,6 @@
 
 namespace Acts {
 
-namespace Experimental {
-
 struct GsfComponent {
   ActsScalar weight = 0;
   BoundVector boundPars = BoundVector::Zero();
@@ -109,5 +107,4 @@ struct GsfOptions {
 #endif
 };
 
-}  // namespace Experimental
 }  // namespace Acts
