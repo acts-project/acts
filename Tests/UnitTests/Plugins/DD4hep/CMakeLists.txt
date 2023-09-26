@@ -9,3 +9,9 @@ target_include_directories(
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_link_libraries(
     ActsTestsDD4hepFactories PUBLIC ActsPluginDD4hep DD4hep::DDCore)
+
+# set test library dependencies
+set(unittest_extra_libraries ActsTestsDD4hepFactories ActsPluginDD4hep)
+add_unittest(DD4hepDetectorElement DD4hepDetectorElementTests.cpp)
+
+
