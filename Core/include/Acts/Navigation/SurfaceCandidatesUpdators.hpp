@@ -13,6 +13,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/MultiLayerSurfacesUpdator.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
@@ -42,27 +43,21 @@ inline static void updateCandidates(const GeometryContext& gctx,
   for (auto& c : nCandidates) {
     // Get the surface representation: either native surfcae of portal
     const Surface& sRep =
-        (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
+        c.surface != nullptr ? *c.surface : c.portal->surface();
 
     // Get the intersection @todo make a templated intersector
     // TODO surface tolerance
     auto sIntersection = sRep.intersect(gctx, position, direction,
                                         c.boundaryCheck, s_onSurfaceTolerance);
-    // Re-order and swap if necessary
-    if (sIntersection.intersection.pathLength + s_onSurfaceTolerance <
-            nState.overstepTolerance and
-        sIntersection.alternative.status >= Intersection3D::Status::reachable) {
-      sIntersection.swapSolutions();
-    }
-    c.objectIntersection = sIntersection;
+    c.objectIntersection = sIntersection[c.objectIntersection.index()];
   }
   // Sort and stuff non-allowed solutions to the end
   std::sort(
       nCandidates.begin(), nCandidates.end(),
       [&](const auto& a, const auto& b) {
         // The two path lengths
-        ActsScalar pathToA = a.objectIntersection.intersection.pathLength;
-        ActsScalar pathToB = b.objectIntersection.intersection.pathLength;
+        ActsScalar pathToA = a.objectIntersection.pathLength();
+        ActsScalar pathToB = b.objectIntersection.pathLength();
         if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
             std::abs(pathToA) < s_onSurfaceTolerance) {
           return false;
@@ -191,6 +186,13 @@ struct AdditionalSurfacesImpl : public INavigationDelegate {
 template <typename grid_type>
 using IndexedSurfacesImpl =
     IndexedUpdatorImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
+
+/// @brief  An indexed multi layer surface implementation access
+///
+/// @tparam grid_type is the grid type used for this indexed lookup
+template <typename grid_type>
+using MultiLayerSurfacesImpl =
+    MultiLayerSurfacesUpdatorImpl<grid_type, PathGridSurfacesGenerator>;
 
 /// @brief An indexed surface implementation with portal access
 ///

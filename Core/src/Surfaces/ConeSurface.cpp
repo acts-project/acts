@@ -285,7 +285,7 @@ Acts::detail::RealQuadraticEquation Acts::ConeSurface::intersectionSolver(
   return detail::RealQuadraticEquation(A, B, C);
 }
 
-Acts::SurfaceIntersection Acts::ConeSurface::intersect(
+Acts::SurfaceMultiIntersection Acts::ConeSurface::intersect(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const BoundaryCheck& bcheck,
     ActsScalar tolerance) const {
@@ -294,7 +294,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
 
   // If no valid solution return a non-valid surfaceIntersection
   if (qe.solutions == 0) {
-    return SurfaceIntersection();
+    return {{Intersection3D::invalid(), Intersection3D::invalid()}, this};
   }
 
   // Check the validity of the first solution
@@ -320,26 +320,11 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
   // Set the intersection
   Intersection3D first(tf * solution1, qe.first, status1);
   Intersection3D second(tf * solution2, qe.second, status2);
-  SurfaceIntersection cIntersection(first, this);
-  // Check one if its valid or neither is valid
-  bool check1 = status1 != Intersection3D::Status::missed or
-                (status1 == Intersection3D::Status::missed and
-                 status2 == Intersection3D::Status::missed);
-  // Check and (eventually) go with the first solution
-  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
-      status2 == Intersection3D::Status::missed) {
-    // And add the alternative
-    if (qe.solutions > 1) {
-      cIntersection.alternative = second;
-    }
-  } else {
-    // And add the alternative
-    if (qe.solutions > 1) {
-      cIntersection.alternative = first;
-    }
-    cIntersection.intersection = second;
+  // Order based on path length
+  if (first.pathLength() <= second.pathLength()) {
+    return {{first, second}, this};
   }
-  return cIntersection;
+  return {{second, first}, this};
 }
 
 Acts::AlignmentToPathMatrix Acts::ConeSurface::alignmentToPathDerivative(

@@ -73,12 +73,12 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     const Acts::BoundTrackParameters initialParams(
         track.referenceSurface().getSharedPtr(), track.parameters(),
-        track.covariance());
+        track.covariance(), track.particleHypothesis());
 
     trackSourceLinks.clear();
     surfSequence.clear();
 
-    for (auto state : track.trackStates()) {
+    for (auto state : track.trackStatesReversed()) {
       surfSequence.push_back(&state.referenceSurface());
 
       if (not state.hasCalibrated()) {

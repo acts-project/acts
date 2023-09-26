@@ -66,7 +66,7 @@ class MultiTrajectoryTestsCommon {
                                   exp.end());
 
     act.clear();
-    for (const auto& p : t.trackStateRange(i2a)) {
+    for (const auto& p : t.reverseTrackStateRange(i2a)) {
       act.push_back(p.index());
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(),
@@ -79,7 +79,7 @@ class MultiTrajectoryTestsCommon {
                                   exp.end());
 
     act.clear();
-    for (const auto& p : t.trackStateRange(i2b)) {
+    for (const auto& p : t.reverseTrackStateRange(i2b)) {
       act.push_back(p.index());
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(),
@@ -90,19 +90,19 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(),
                                   exp.end());
 
-    auto r = t.trackStateRange(i2b);
+    auto r = t.reverseTrackStateRange(i2b);
     BOOST_CHECK_EQUAL(std::distance(r.begin(), r.end()), 3);
 
     // check const-correctness
     const auto& ct = t;
     std::vector<BoundVector> predicteds;
     // mutation in this loop works!
-    for (auto p : t.trackStateRange(i2b)) {
+    for (auto p : t.reverseTrackStateRange(i2b)) {
       predicteds.push_back(BoundVector::Random());
       p.predicted() = predicteds.back();
     }
     std::vector<BoundVector> predictedsAct;
-    for (const auto& p : ct.trackStateRange(i2b)) {
+    for (const auto& p : ct.reverseTrackStateRange(i2b)) {
       predictedsAct.push_back(p.predicted());
       // mutation in this loop doesn't work: does not compile
       // p.predicted() = BoundVector::Random();

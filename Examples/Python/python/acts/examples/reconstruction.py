@@ -127,8 +127,8 @@ AmbiguityResolutionConfig = namedtuple(
 
 AmbiguityResolutionMLConfig = namedtuple(
     "AmbiguityResolutionMLConfig",
-    ["nMeasurementsMin"],
-    defaults=[None] * 1,
+    ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
+    defaults=[None] * 3,
 )
 
 AmbiguityResolutionMLDBScanConfig = namedtuple(
@@ -173,6 +173,9 @@ def addSeeding(
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     truthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg = TruthEstimatedSeedingAlgorithmConfigArg(),
+    particleHypothesis: Optional[
+        acts.ParticleHypothesis
+    ] = acts.ParticleHypothesis.pion,
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -218,6 +221,8 @@ def addSeeding(
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
         Currently only deltaR=(min,max) range specified here.
+    particleHypothesis : Optional[acts.ParticleHypothesis]
+        The hypothesis used for track finding. Defaults to pion.
     inputParticles : str, "particles"
         input particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
@@ -254,6 +259,7 @@ def addSeeding(
             selectedParticles,
             particleSmearingSigmas,
             initialVarInflation,
+            particleHypothesis,
             logLevel,
         )
     else:
@@ -318,6 +324,7 @@ def addSeeding(
                 sigmaQOverP=initialSigmas[4] if initialSigmas is not None else None,
                 sigmaT0=initialSigmas[5] if initialSigmas is not None else None,
                 initialVarInflation=initialVarInflation,
+                particleHypothesis=particleHypothesis,
             ),
         )
         s.addAlgorithm(parEstimateAlg)
@@ -387,6 +394,7 @@ def addTruthSmearedSeeding(
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialVarInflation: List[float],
+    particleHypothesis: Optional[acts.ParticleHypothesis],
     logLevel: acts.logging.Level = None,
 ):
     """adds algorithm that would mimic detector response uncertainties for truth seeding
@@ -413,6 +421,7 @@ def addTruthSmearedSeeding(
             sigmaTheta=particleSmearingSigmas.theta,
             sigmaPRel=particleSmearingSigmas.pRel,
             initialVarInflation=initialVarInflation,
+            particleHypothesis=particleHypothesis,
         ),
     )
     sequence.addAlgorithm(ptclSmear)
@@ -922,6 +931,7 @@ def addCKFTracks(
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
+    writeCovMat=False,
 ) -> None:
     """This function steers the seeding
 
@@ -953,24 +963,22 @@ def addCKFTracks(
             [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
         ),
         trackSelectorCfg=acts.TrackSelector.Config(
-            acts.TrackSelector.CutConfig(
-                **acts.examples.defaultKWArgs(
-                    loc0Min=trackSelectorConfig.loc0[0],
-                    loc0Max=trackSelectorConfig.loc0[1],
-                    loc1Min=trackSelectorConfig.loc1[0],
-                    loc1Max=trackSelectorConfig.loc1[1],
-                    timeMin=trackSelectorConfig.time[0],
-                    timeMax=trackSelectorConfig.time[1],
-                    phiMin=trackSelectorConfig.phi[0],
-                    phiMax=trackSelectorConfig.phi[1],
-                    etaMin=trackSelectorConfig.eta[0],
-                    etaMax=trackSelectorConfig.eta[1],
-                    absEtaMin=trackSelectorConfig.absEta[0],
-                    absEtaMax=trackSelectorConfig.absEta[1],
-                    ptMin=trackSelectorConfig.pt[0],
-                    ptMax=trackSelectorConfig.pt[1],
-                    minMeasurements=trackSelectorConfig.nMeasurementsMin,
-                )
+            **acts.examples.defaultKWArgs(
+                loc0Min=trackSelectorConfig.loc0[0],
+                loc0Max=trackSelectorConfig.loc0[1],
+                loc1Min=trackSelectorConfig.loc1[0],
+                loc1Max=trackSelectorConfig.loc1[1],
+                timeMin=trackSelectorConfig.time[0],
+                timeMax=trackSelectorConfig.time[1],
+                phiMin=trackSelectorConfig.phi[0],
+                phiMax=trackSelectorConfig.phi[1],
+                etaMin=trackSelectorConfig.eta[0],
+                etaMax=trackSelectorConfig.eta[1],
+                absEtaMin=trackSelectorConfig.absEta[0],
+                absEtaMax=trackSelectorConfig.absEta[1],
+                ptMin=trackSelectorConfig.pt[0],
+                ptMax=trackSelectorConfig.pt[1],
+                minMeasurements=trackSelectorConfig.nMeasurementsMin,
             )
         )
         if trackSelectorConfig is not None
@@ -1006,6 +1014,7 @@ def addCKFTracks(
         writeFinderPerformance=False,
         writeFitterPerformance=False,
         logLevel=logLevel,
+        writeCovMat=writeCovMat,
     )
 
     return s
@@ -1023,6 +1032,7 @@ def addTrajectoryWriters(
     writeFinderPerformance: bool = True,
     writeFitterPerformance: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
+    writeCovMat=False,
 ):
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1062,6 +1072,7 @@ def addTrajectoryWriters(
                 inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
+                writeCovMat=writeCovMat,
             )
             s.addWriter(trackSummaryWriter)
 
@@ -1132,24 +1143,22 @@ def addTrackSelection(
 
     # single cut config for implicit single bin eta configuration
     selectorConfig = acts.TrackSelector.Config(
-        acts.TrackSelector.CutConfig(
-            **acts.examples.defaultKWArgs(
-                loc0Min=trackSelectorConfig.loc0[0],
-                loc0Max=trackSelectorConfig.loc0[1],
-                loc1Min=trackSelectorConfig.loc1[0],
-                loc1Max=trackSelectorConfig.loc1[1],
-                timeMin=trackSelectorConfig.time[0],
-                timeMax=trackSelectorConfig.time[1],
-                phiMin=trackSelectorConfig.phi[0],
-                phiMax=trackSelectorConfig.phi[1],
-                etaMin=trackSelectorConfig.eta[0],
-                etaMax=trackSelectorConfig.eta[1],
-                absEtaMin=trackSelectorConfig.absEta[0],
-                absEtaMax=trackSelectorConfig.absEta[1],
-                ptMin=trackSelectorConfig.pt[0],
-                ptMax=trackSelectorConfig.pt[1],
-                minMeasurements=trackSelectorConfig.nMeasurementsMin,
-            )
+        **acts.examples.defaultKWArgs(
+            loc0Min=trackSelectorConfig.loc0[0],
+            loc0Max=trackSelectorConfig.loc0[1],
+            loc1Min=trackSelectorConfig.loc1[0],
+            loc1Max=trackSelectorConfig.loc1[1],
+            timeMin=trackSelectorConfig.time[0],
+            timeMax=trackSelectorConfig.time[1],
+            phiMin=trackSelectorConfig.phi[0],
+            phiMax=trackSelectorConfig.phi[1],
+            etaMin=trackSelectorConfig.eta[0],
+            etaMax=trackSelectorConfig.eta[1],
+            absEtaMin=trackSelectorConfig.absEta[0],
+            absEtaMax=trackSelectorConfig.absEta[1],
+            ptMin=trackSelectorConfig.pt[0],
+            ptMax=trackSelectorConfig.pt[1],
+            minMeasurements=trackSelectorConfig.nMeasurementsMin,
         )
     )
 
@@ -1290,6 +1299,7 @@ def addAmbiguityResolution(
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
+    writeCovMat=False,
 ) -> None:
     from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
@@ -1327,6 +1337,7 @@ def addAmbiguityResolution(
         writeFinderPerformance=False,
         writeFitterPerformance=False,
         logLevel=logLevel,
+        writeCovMat=writeCovMat,
     )
 
     return s
@@ -1345,10 +1356,11 @@ def addAmbiguityResolutionML(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     from acts.examples.onnx import AmbiguityResolutionMLAlgorithm
+    from acts.examples import GreedyAmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    alg = AmbiguityResolutionMLAlgorithm(
+    algML = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
@@ -1357,11 +1369,24 @@ def addAmbiguityResolutionML(
             nMeasurementsMin=config.nMeasurementsMin,
         ),
     )
-    s.addAlgorithm(alg)
+
+    algGreedy = GreedyAmbiguityResolutionAlgorithm(
+        level=customLogLevel(),
+        inputTracks=algML.config.outputTracks,
+        outputTracks="filteredTrajectoriesMLGreedy",
+        **acts.examples.defaultKWArgs(
+            maximumSharedHits=config.maximumSharedHits,
+            nMeasurementsMin=config.nMeasurementsMin,
+            maximumIterations=config.maximumIterations,
+        ),
+    )
+
+    s.addAlgorithm(algML)
+    s.addAlgorithm(algGreedy)
 
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
-        inputTracks=alg.config.outputTracks,
+        inputTracks=algGreedy.config.outputTracks,
         outputTrajectories="trajectories-from-solved-tracks",
     )
     s.addAlgorithm(trackConverter)
