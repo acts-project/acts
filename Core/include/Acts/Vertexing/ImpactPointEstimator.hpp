@@ -129,6 +129,9 @@ class ImpactPointEstimator {
   /// @note Confusingly, a *smaller* compatibility means that a track is *more*
   /// compatible.
   ///
+  /// @tparam nDim Number of dimensions used to compute compatibility
+  /// @note If nDim = 3 we only consider spatial dimensions; if nDim = 4, we
+  /// also consider time. Other values are not allowed.
   /// @param gctx The Geometry context
   /// @param trkParams Track parameters at point of closest
   /// approach in 3D as retrieved by estimate3DImpactParameters
@@ -145,6 +148,9 @@ class ImpactPointEstimator {
   /// The template parameter nDim determines whether we calculate the 3D
   /// distance (nDim = 3) or the 4D distance (nDim = 4) to the 3D PCA.
   ///
+  /// @tparam nDim Number of dimensions used to compute compatibility
+  /// @note If nDim = 3 we only consider spatial dimensions; if nDim = 4, we
+  /// also consider time. Other values are not allowed.
   /// @param gctx Geometry context
   /// @param trkParams Track parameters
   /// @param vtxPos Vertex position
