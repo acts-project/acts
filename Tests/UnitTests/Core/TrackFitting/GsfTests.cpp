@@ -65,7 +65,6 @@ namespace {
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Experimental;
 
 static const auto electron = ParticleHypothesis::electron();
 
@@ -224,7 +223,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
 BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
-  using namespace Acts::Experimental::GsfConstants;
+  using namespace Acts::GsfConstants;
   std::string key(kFinalMultiComponentStateColumn);
   tracks.template addColumn<FinalMultiComponentState>(key);
 

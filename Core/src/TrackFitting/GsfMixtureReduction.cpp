@@ -11,10 +11,9 @@
 #include "Acts/TrackFitting/detail/SymmetricKlDistanceMatrix.hpp"
 
 template <typename proj_t, typename angle_desc_t>
-void reduceWithKLDistanceImpl(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const proj_t &proj,
-    const angle_desc_t &desc) {
+void reduceWithKLDistanceImpl(std::vector<Acts::GsfComponent> &cmpCache,
+                              std::size_t maxCmpsAfterMerge, const proj_t &proj,
+                              const angle_desc_t &desc) {
   Acts::detail::SymmetricKLDistanceMatrix distances(cmpCache, proj);
 
   auto remainingComponents = cmpCache.size();
@@ -50,9 +49,9 @@ void reduceWithKLDistanceImpl(
 
 namespace Acts {
 
-void reduceMixtureWithKLDistance(
-    std::vector<Acts::Experimental::GsfComponent> &cmpCache,
-    std::size_t maxCmpsAfterMerge, const Surface &surface) {
+void reduceMixtureWithKLDistance(std::vector<Acts::GsfComponent> &cmpCache,
+                                 std::size_t maxCmpsAfterMerge,
+                                 const Surface &surface) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }
