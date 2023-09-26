@@ -39,10 +39,6 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
-  /// A sortCandidates flag to tell the updator if sorting is needed
-  /// (not needed in case of use in chained updator)
-  bool sort = true;
-
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
@@ -51,7 +47,7 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
   MultiLayerSurfacesUpdatorImpl(
       grid_type&& igrid, const std::array<BinningValue, grid_type::DIM>& icasts,
       const Transform3& itr = Transform3::Identity(), bool isort = true)
-      : grid(std::move(igrid)), casts(icasts), transform(itr), sort(isort) {}
+      : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
   MultiLayerSurfacesUpdatorImpl() = delete;
 
@@ -76,9 +72,6 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
 
     updateCandidates(gctx, nState);
 
-    if (sort) {
-      sortCandidates(nState);
-    }
   }
 
   /// Cast into a lookup position

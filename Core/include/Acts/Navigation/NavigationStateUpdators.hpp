@@ -10,9 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
-#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -24,32 +22,6 @@
 namespace Acts {
 
 namespace Experimental {
-
-// Helper method to sort the candidate updates
-
-/// @param nState The navigation state of which the candidates are to be sorted
-inline void sortCandidates(NavigationState& nState) {
-  const Acts::GeometryContext geoContext;
-
-  auto& nCandidates = nState.surfaceCandidates;
-  std::sort(
-      nCandidates.begin(), nCandidates.end(),
-      [&](const auto& a, const auto& b) {
-        // The two path lengths
-        ActsScalar pathToA = a.objectIntersection.pathLength();
-        ActsScalar pathToB = b.objectIntersection.pathLength();
-        if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
-            std::abs(pathToA) < s_onSurfaceTolerance) {
-          return false;
-        } else if (pathToB + s_onSurfaceTolerance < nState.overstepTolerance or
-                   std::abs(pathToB) < s_onSurfaceTolerance) {
-          return true;
-        }
-        return pathToA < pathToB;
-      });
-  // Set the surface candidate
-  nState.surfaceCandidate = nCandidates.begin();
-}
 
 /// Helper method to update the candidates (portals/surfaces),
 /// this can be called for initial surface/portal estimation,
@@ -155,10 +127,6 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
-  /// A sortCandidates flag to tell the updator if sorting is needed
-  /// (not needed in case of use in chained updator)
-  bool sort = true;
-
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
@@ -166,9 +134,8 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// @param isort a flag for sorting the candidates or not
   IndexedUpdatorImpl(grid_type&& igrid,
                      const std::array<BinningValue, grid_type::DIM>& icasts,
-                     const Transform3& itr = Transform3::Identity(),
-                     bool isort = true)
-      : grid(std::move(igrid)), casts(icasts), transform(itr), sort(isort) {}
+                     const Transform3& itr = Transform3::Identity())
+      : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
   IndexedUpdatorImpl() = delete;
 
@@ -186,10 +153,7 @@ class IndexedUpdatorImpl : public INavigationDelegate {
     filler_type::fill(nState, extracted);
 
     updateCandidates(gctx, nState);
-
-    if (sort) {
-      sortCandidates(nState);
-    }
+   
   }
 
   /// Cast into a lookup position
@@ -245,8 +209,6 @@ class ChainedUpdatorImpl : public INavigationDelegate {
     std::apply(
         [&](auto&&... updator) { ((updator.update(gctx, nState)), ...); },
         updators);
-
-    sortCandidates(nState);
   }
 };
 

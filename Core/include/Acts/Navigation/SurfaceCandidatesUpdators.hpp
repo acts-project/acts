@@ -26,9 +26,6 @@ namespace Acts {
 namespace Experimental {
 
 struct AllPortalsImpl : public INavigationDelegate {
-  /// A sortCandidates flag to tell the updator if sorting is needed
-  /// (not needed in case of use in chained updator)
-  bool sort = true;
 
   /// A ordered portal provider
   ///
@@ -59,16 +56,10 @@ struct AllPortalsImpl : public INavigationDelegate {
     // Sort and update
     updateCandidates(gctx, nState);
 
-    if (sort) {
-      sortCandidates(nState);
-    }
   }
 };
 
 struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
-  /// A sortCandidates flag to tell the updator if sorting is needed
-  /// (not needed in case of use in chained updator)
-  bool sort = true;
 
   /// An ordered list of portals and surfaces provider
   ///
@@ -101,10 +92,6 @@ struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
     }
     // Update internal candidates
     updateCandidates(gctx, nState);
-
-    if (sort) {
-      sortCandidates(nState);
-    }
   }
 };
 
