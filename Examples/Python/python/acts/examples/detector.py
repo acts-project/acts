@@ -112,6 +112,8 @@ class CylindricalDetectorContainer:
         layers=None,
         binning=[],
         rootbuilder=None,
+        geoidgenerator=None,
+        reversegeoids=False,
         loglevel=logging.INFO,
     ):
         """Create a cylindrical container builder from  volumes or layer definitions
@@ -121,6 +123,9 @@ class CylindricalDetectorContainer:
         :param volumes: list of volumes
         :param layers: list of layers [ [extent, provider, binnings, supports], ... ]
         :param binning: binning of surfces in this container
+        :param rootbuilder: root volume finder builder
+        :param geoidgenerator: geoid generator for setting geo ids
+        :param reversegeoids: reverse the geo id order
         :param loglevel: logging level
 
         """
@@ -130,6 +135,8 @@ class CylindricalDetectorContainer:
         self._volumes = volumes
         self._binning = binning
         self._rootbuilder = rootbuilder
+        self._geoidgenerator = geoidgenerator
+        self._reversegeoids = reversegeoids
         self._loglevel = loglevel
 
     def builder(self):
@@ -189,5 +196,7 @@ class CylindricalDetectorContainer:
         containerConfig.builders = builders
         containerConfig.binning = [self._binning]
         containerConfig.rootVolumeFinderBuilder = self._rootbuilder
+        containerConfig.geoIdGenerator = self._geoidgenerator
+        containerConfig.geoIdReverseGen = self._reversegeoids
         containerConfig.auxiliary = "Container[" + self._name + "]"
         return CylindricalContainerBuilder(containerConfig, self._name, self._loglevel)
