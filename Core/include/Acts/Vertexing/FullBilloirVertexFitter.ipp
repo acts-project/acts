@@ -101,6 +101,12 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     double newChi2 = 0;
     BilloirVertex billoirVertex;
 
+    Vector3 linPointPos = VectorHelpers::position(linPoint);
+    // Make Perigee surface at linPointPos, transverse plane of Perigee
+    // corresponds the global x-y plane
+    const std::shared_ptr<PerigeeSurface> perigeeSurface =
+        Surface::makeShared<PerigeeSurface>(linPointPos);
+
     // iterate over all tracks
     for (std::size_t iTrack = 0; iTrack < nTracks; ++iTrack) {
       const input_track_t* trackContainer = paramVector[iTrack];
@@ -108,8 +114,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       const auto& trackParams = extractParameters(*trackContainer);
 
       auto result = linearizer.linearizeTrack(
-          trackParams, linPoint, vertexingOptions.geoContext,
-          vertexingOptions.magFieldContext, state.linearizerState);
+          trackParams, linPoint[3], *perigeeSurface,
+          vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+          state.linearizerState);
       if (!result.ok()) {
         return result.error();
       }

@@ -192,71 +192,75 @@ BOOST_AUTO_TEST_CASE(linearized_track_factory_test) {
 
   // Lambda for comparing outputs of the two linearization methods
   // We compare the linearization result at the PCA to "linPoint"
-  auto checkLinearizers =
-      [](auto& lin1, auto& linState1, auto& lin2, auto& linState2,
-         const BoundTrackParameters& track, const Vector4& linPoint,
-         const auto& geometryContext, const auto& fieldContext) {
-        // In addition to comparing the output of the linearizers, we check that
-        // they return non-zero quantities
-        BoundVector vecBoundZero = BoundVector::Zero();
-        BoundSquareMatrix matBoundZero = BoundSquareMatrix::Zero();
-        ActsMatrix<eBoundSize, 4> matBound2SPZero =
-            ActsMatrix<eBoundSize, 4>::Zero();
-        ActsMatrix<eBoundSize, 3> matBound2MomZero =
-            ActsMatrix<eBoundSize, 3>::Zero();
+  auto checkLinearizers = [](auto& lin1, auto& linState1, auto& lin2,
+                             auto& linState2, const BoundTrackParameters& track,
+                             const Vector4& linPoint,
+                             const auto& geometryContext,
+                             const auto& fieldContext) {
+    // In addition to comparing the output of the linearizers, we check that
+    // they return non-zero quantities
+    BoundVector vecBoundZero = BoundVector::Zero();
+    BoundSquareMatrix matBoundZero = BoundSquareMatrix::Zero();
+    ActsMatrix<eBoundSize, 4> matBound2SPZero =
+        ActsMatrix<eBoundSize, 4>::Zero();
+    ActsMatrix<eBoundSize, 3> matBound2MomZero =
+        ActsMatrix<eBoundSize, 3>::Zero();
 
-        // We check that the entries of the output quantities either
-        // -) have a relative difference of less than "relTol"
-        // or
-        // -) are both smaller than "small"
-        double relTol = 5e-4;
-        double small = 5e-4;
+    // We check that the entries of the output quantities either
+    // -) have a relative difference of less than "relTol"
+    // or
+    // -) are both smaller than "small"
+    double relTol = 5e-4;
+    double small = 5e-4;
 
-        const LinearizedTrack linTrack1 =
-            lin1.linearizeTrack(track, linPoint, geometryContext, fieldContext,
-                                linState1)
-                .value();
-        const LinearizedTrack linTrack2 =
-            lin2.linearizeTrack(track, linPoint, geometryContext, fieldContext,
-                                linState2)
-                .value();
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(VectorHelpers::position(linPoint));
 
-        // There should be no problem here because both linearizers compute
-        // "parametersAtPCA" the same way
-        CHECK_CLOSE_OR_SMALL(linTrack1.parametersAtPCA,
-                             linTrack2.parametersAtPCA, relTol, small);
-        BOOST_CHECK_NE(linTrack1.parametersAtPCA, vecBoundZero);
-        BOOST_CHECK_NE(linTrack2.parametersAtPCA, vecBoundZero);
+    const LinearizedTrack linTrack1 =
+        lin1.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
+                            fieldContext, linState1)
+            .value();
+    const LinearizedTrack linTrack2 =
+        lin2.linearizeTrack(track, linPoint[3], *perigee, geometryContext,
+                            fieldContext, linState2)
+            .value();
 
-        // Compare position Jacobians
-        CHECK_CLOSE_OR_SMALL((linTrack1.positionJacobian),
-                             (linTrack2.positionJacobian), relTol, small);
-        BOOST_CHECK_NE(linTrack1.positionJacobian, matBound2SPZero);
-        BOOST_CHECK_NE(linTrack2.positionJacobian, matBound2SPZero);
+    // There should be no problem here because both linearizers compute
+    // "parametersAtPCA" the same way
+    CHECK_CLOSE_OR_SMALL(linTrack1.parametersAtPCA, linTrack2.parametersAtPCA,
+                         relTol, small);
+    BOOST_CHECK_NE(linTrack1.parametersAtPCA, vecBoundZero);
+    BOOST_CHECK_NE(linTrack2.parametersAtPCA, vecBoundZero);
 
-        // Compare momentum Jacobians
-        CHECK_CLOSE_OR_SMALL((linTrack1.momentumJacobian),
-                             (linTrack2.momentumJacobian), relTol, small);
-        BOOST_CHECK_NE(linTrack1.momentumJacobian, matBound2MomZero);
-        BOOST_CHECK_NE(linTrack2.momentumJacobian, matBound2MomZero);
+    // Compare position Jacobians
+    CHECK_CLOSE_OR_SMALL((linTrack1.positionJacobian),
+                         (linTrack2.positionJacobian), relTol, small);
+    BOOST_CHECK_NE(linTrack1.positionJacobian, matBound2SPZero);
+    BOOST_CHECK_NE(linTrack2.positionJacobian, matBound2SPZero);
 
-        // Again, both methods compute "covarianceAtPCA" the same way => this
-        // check should always work
-        CHECK_CLOSE_OR_SMALL(linTrack1.covarianceAtPCA,
-                             linTrack2.covarianceAtPCA, relTol, small);
-        BOOST_CHECK_NE(linTrack1.covarianceAtPCA, matBoundZero);
-        BOOST_CHECK_NE(linTrack2.covarianceAtPCA, matBoundZero);
+    // Compare momentum Jacobians
+    CHECK_CLOSE_OR_SMALL((linTrack1.momentumJacobian),
+                         (linTrack2.momentumJacobian), relTol, small);
+    BOOST_CHECK_NE(linTrack1.momentumJacobian, matBound2MomZero);
+    BOOST_CHECK_NE(linTrack2.momentumJacobian, matBound2MomZero);
 
-        // Check whether "linPoint" is saved correctly in the LinearizerTrack
-        // objects
-        BOOST_CHECK_EQUAL(linTrack1.linearizationPoint, linPoint);
-        BOOST_CHECK_EQUAL(linTrack2.linearizationPoint, linPoint);
+    // Again, both methods compute "covarianceAtPCA" the same way => this
+    // check should always work
+    CHECK_CLOSE_OR_SMALL(linTrack1.covarianceAtPCA, linTrack2.covarianceAtPCA,
+                         relTol, small);
+    BOOST_CHECK_NE(linTrack1.covarianceAtPCA, matBoundZero);
+    BOOST_CHECK_NE(linTrack2.covarianceAtPCA, matBoundZero);
 
-        CHECK_CLOSE_OR_SMALL(linTrack1.constantTerm, linTrack2.constantTerm,
-                             relTol, small);
-        BOOST_CHECK_NE(linTrack1.constantTerm, vecBoundZero);
-        BOOST_CHECK_NE(linTrack2.constantTerm, vecBoundZero);
-      };
+    // Check whether "linPoint" is saved correctly in the LinearizerTrack
+    // objects
+    BOOST_CHECK_EQUAL(linTrack1.linearizationPoint, linPoint);
+    BOOST_CHECK_EQUAL(linTrack2.linearizationPoint, linPoint);
+
+    CHECK_CLOSE_OR_SMALL(linTrack1.constantTerm, linTrack2.constantTerm, relTol,
+                         small);
+    BOOST_CHECK_NE(linTrack1.constantTerm, vecBoundZero);
+    BOOST_CHECK_NE(linTrack2.constantTerm, vecBoundZero);
+  };
 
   // Compare linearizers for all tracks
   for (const BoundTrackParameters& trk : tracks) {

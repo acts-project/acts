@@ -221,12 +221,14 @@ template <typename vfitter_t, typename sfinder_t>
 Acts::Result<double>
 Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getCompatibility(
     const BoundTrackParameters& params, const Vertex<InputTrack_t>& vertex,
+    const Surface& perigeeSurface,
     const VertexingOptions<InputTrack_t>& vertexingOptions,
     State& state) const {
   // Linearize track
   auto result = m_cfg.linearizer.linearizeTrack(
-      params, vertex.fullPosition(), vertexingOptions.geoContext,
-      vertexingOptions.magFieldContext, state.linearizerState);
+      params, vertex.fullPosition()[3], perigeeSurface,
+      vertexingOptions.geoContext, vertexingOptions.magFieldContext,
+      state.linearizerState);
   if (!result.ok()) {
     return result.error();
   }
@@ -301,10 +303,15 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
   // m_cfg.cutOffTrackWeight threshold and are hence outliers
   ACTS_DEBUG("Number of outliers: " << tracksToFit.size());
 
+  const std::shared_ptr<PerigeeSurface> vertexPerigeeSurface =
+      Surface::makeShared<PerigeeSurface>(
+          VectorHelpers::position(vertex.fullPosition()));
+
   for (const auto& trk : tracksToFit) {
     // calculate chi2 w.r.t. last fitted vertex
-    auto result = getCompatibility(m_extractParameters(*trk), vertex,
-                                   vertexingOptions, state);
+    auto result =
+        getCompatibility(m_extractParameters(*trk), vertex,
+                         *vertexPerigeeSurface, vertexingOptions, state);
 
     if (!result.ok()) {
       return result.error();
@@ -429,6 +436,10 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     State& state) const {
   int numberOfAddedTracks = 0;
 
+  const std::shared_ptr<PerigeeSurface> currentVertexPerigeeSurface =
+      Surface::makeShared<PerigeeSurface>(
+          VectorHelpers::position(currentVertex.fullPosition()));
+
   // iterate over all vertices and check if tracks need to be reassigned
   // to new (current) vertex
   for (auto& vertexIt : vertexCollection) {
@@ -436,6 +447,10 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
     std::vector<TrackAtVertex<InputTrack_t>> tracksAtVertex = vertexIt.tracks();
     auto tracksBegin = tracksAtVertex.begin();
     auto tracksEnd = tracksAtVertex.end();
+
+    const std::shared_ptr<PerigeeSurface> vertexItPerigeeSurface =
+        Surface::makeShared<PerigeeSurface>(
+            VectorHelpers::position(vertexIt.fullPosition()));
 
     for (auto tracksIter = tracksBegin; tracksIter != tracksEnd;) {
       // consider only tracks that are not too tightly assigned to other
@@ -449,15 +464,26 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
           m_extractParameters(*(tracksIter->originalParams));
 
       // compute compatibility
+<<<<<<< HEAD
       auto resultNew =
           getCompatibility(origParams, currentVertex, vertexingOptions, state);
+=======
+      auto resultNew = getCompatibility(trackPerigee, currentVertex,
+                                        *currentVertexPerigeeSurface,
+                                        vertexingOptions, state);
+>>>>>>> a23fe6d429ca84de66b01f93e776db69e9aba27e
       if (!resultNew.ok()) {
         return Result<bool>::failure(resultNew.error());
       }
       double chi2NewVtx = *resultNew;
 
       auto resultOld =
+<<<<<<< HEAD
           getCompatibility(origParams, vertexIt, vertexingOptions, state);
+=======
+          getCompatibility(trackPerigee, vertexIt, *vertexItPerigeeSurface,
+                           vertexingOptions, state);
+>>>>>>> a23fe6d429ca84de66b01f93e776db69e9aba27e
       if (!resultOld.ok()) {
         return Result<bool>::failure(resultOld.error());
       }
