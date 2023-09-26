@@ -165,32 +165,6 @@ class DetectorNavigator {
     }
   }
 
-  // Helper method to sort the candidate updates
-
-/// @param nState The navigation state of which the candidates are to be sorted
- void sortCandidates(NavigationState& nState) {
-  const Acts::GeometryContext geoContext;
-
-  auto& nCandidates = nState.surfaceCandidates;
-  std::sort(
-      nCandidates.begin(), nCandidates.end(),
-      [&](const auto& a, const auto& b) {
-        // The two path lengths
-        ActsScalar pathToA = a.objectIntersection.pathLength();
-        ActsScalar pathToB = b.objectIntersection.pathLength();
-        if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
-            std::abs(pathToA) < s_onSurfaceTolerance) {
-          return false;
-        } else if (pathToB + s_onSurfaceTolerance < nState.overstepTolerance or
-                   std::abs(pathToB) < s_onSurfaceTolerance) {
-          return true;
-        }
-        return pathToA < pathToB;
-      });
-  // Set the surface candidate
-  nState.surfaceCandidate = nCandidates.begin();
-}
-
   /// @brief Navigator pre step call
   ///
   /// This will invalid the current surface and current portal in order
@@ -437,7 +411,26 @@ class DetectorNavigator {
     }
 
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
-    sortCandidates(nState);
+
+    // Sort properly the surface candidates
+    auto& nCandidates = nState.surfaceCandidates;
+    std::sort(nCandidates.begin(), nCandidates.end(),
+              [&](const auto& a, const auto& b) {
+                // The two path lengths
+                ActsScalar pathToA = a.objectIntersection.pathLength();
+                ActsScalar pathToB = b.objectIntersection.pathLength();
+                if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
+                    std::abs(pathToA) < s_onSurfaceTolerance) {
+                  return false;
+                } else if (pathToB + s_onSurfaceTolerance <
+                               nState.overstepTolerance or
+                           std::abs(pathToB) < s_onSurfaceTolerance) {
+                  return true;
+                }
+                return pathToA < pathToB;
+              });
+    // Set the surface candidate
+    nState.surfaceCandidate = nCandidates.begin();
   }
 
   template <typename propagator_state_t, typename stepper_t>

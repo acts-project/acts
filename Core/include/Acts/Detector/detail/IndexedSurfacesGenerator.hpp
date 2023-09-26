@@ -76,7 +76,7 @@ struct IndexedSurfacesGenerator {
     }
 
     indexed_updator<GridType> indexedSurfaces(std::move(grid), bvArray,
-                                              transform, false);
+                                              transform);
     // Fill the bin indices
     IndexedGridFiller filler{binExpansion};
     filler.oLogger = oLogger->cloneWithSuffix("_filler");
@@ -84,7 +84,6 @@ struct IndexedSurfacesGenerator {
 
     // The portal delegate
     AllPortalsImpl allPortals;
-    allPortals.sort = false;
 
     // The chained delegate: indexed surfaces and all portals
     using DelegateType =

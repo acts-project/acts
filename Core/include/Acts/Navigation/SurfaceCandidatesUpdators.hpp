@@ -26,7 +26,6 @@ namespace Acts {
 namespace Experimental {
 
 struct AllPortalsImpl : public INavigationDelegate {
-
   /// A ordered portal provider
   ///
   /// @param gctx is the Geometry context of this call
@@ -55,12 +54,10 @@ struct AllPortalsImpl : public INavigationDelegate {
     }
     // Sort and update
     updateCandidates(gctx, nState);
-
   }
 };
 
 struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
-
   /// An ordered list of portals and surfaces provider
   ///
   /// @param gctx is the Geometry context of this call

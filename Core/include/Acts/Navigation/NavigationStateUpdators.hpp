@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -153,7 +155,6 @@ class IndexedUpdatorImpl : public INavigationDelegate {
     filler_type::fill(nState, extracted);
 
     updateCandidates(gctx, nState);
-   
   }
 
   /// Cast into a lookup position

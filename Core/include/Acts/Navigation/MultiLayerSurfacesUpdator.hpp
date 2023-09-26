@@ -71,7 +71,6 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
     SurfacesFiller::fill(nState, surfCandidates);
 
     updateCandidates(gctx, nState);
-
   }
 
   /// Cast into a lookup position
