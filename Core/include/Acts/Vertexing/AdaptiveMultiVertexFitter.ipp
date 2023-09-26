@@ -257,6 +257,11 @@ Acts::Result<void> Acts::
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   for (auto vtx : state.vertexCollection) {
     VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[vtx];
+
+    const std::shared_ptr<PerigeeSurface> vtxPerigeeSurface =
+        Surface::makeShared<PerigeeSurface>(
+            VectorHelpers::position(state.vtxInfoMap[vtx].oldPosition));
+
     for (const auto& trk : currentVtxInfo.trackLinks) {
       auto& trkAtVtx = state.tracksAtVerticesMap.at(std::make_pair(trk, vtx));
 
@@ -270,9 +275,9 @@ Acts::Result<void> Acts::
         // Check if linearization state exists or need to be relinearized
         if (not trkAtVtx.isLinearized || state.vtxInfoMap[vtx].relinearize) {
           auto result = linearizer.linearizeTrack(
-              m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition,
-              vertexingOptions.geoContext, vertexingOptions.magFieldContext,
-              state.linearizerState);
+              m_extractParameters(*trk), state.vtxInfoMap[vtx].oldPosition[3],
+              *vtxPerigeeSurface, vertexingOptions.geoContext,
+              vertexingOptions.magFieldContext, state.linearizerState);
           if (!result.ok()) {
             return result.error();
           }
