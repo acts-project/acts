@@ -92,7 +92,7 @@ addSeeding(
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
-    initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
+    initialVarInflation=[1e3] * 6,
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )

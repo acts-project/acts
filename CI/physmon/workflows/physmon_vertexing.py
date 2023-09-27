@@ -102,7 +102,7 @@ def run_vertexing(fitter, mu, events):
             ),
             SeedFinderOptionsArg(bFieldInZ=2 * u.T),
             seedingAlgorithm=SeedingAlgorithm.Default,
-            initialVarInflation=[1e2, 1e2, 1e2, 1e2, 1e2, 1e2],
+            initialVarInflation=[1e3] * 6,
             geoSelectionConfigFile=setup.geoSel,
         )
 
