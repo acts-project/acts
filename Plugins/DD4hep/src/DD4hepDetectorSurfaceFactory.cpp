@@ -114,9 +114,12 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveElement(
   auto tgeoShape = tgeoNode.GetVolume()->GetShape();
   const auto tgeoTransform = dd4hepElement.nominal().worldTransformation();
   // Extract the axis definition
-  std::string detAxis =
+  auto detAxis =
       getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ");
+  bool assignToAll = getParamOr<bool>("assign_to_all", dd4hepElement, true);
+
   // Return a passive surface
-  return TGeoSurfaceConverter::toSurface(*tgeoShape, tgeoTransform, detAxis,
-                                         unitLength);
+  return {TGeoSurfaceConverter::toSurface(*tgeoShape, tgeoTransform, detAxis,
+                                          unitLength),
+          assignToAll};
 }

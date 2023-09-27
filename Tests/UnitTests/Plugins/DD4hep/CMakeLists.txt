@@ -20,7 +20,7 @@ install(
   TARGETS ActsTestsDD4hepFactories
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-set(DD4HEP_LIBRARY_PATH "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}:${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(DD4HEP_LIBRARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}:${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
 if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
   # set test library dependencies
@@ -29,9 +29,10 @@ if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
   foreach(_test ${dd4hep_tests})
     add_unittest(${_test} ${_test}Tests.cpp)
     if(APPLE)
-      set_property(TEST DD4hepDetectorElement PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}") 
+      message(STATUS "Setting DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH} for test ${_test}")
+      set_property(TEST ${_test} PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}") 
     else()
-      set_property(TEST DD4hepDetectorElement PROPERTY ENVIRONMENT "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}")
+      set_property(TEST ${_test} PROPERTY ENVIRONMENT "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}")
     endif()
   endforeach()
 else()

@@ -43,12 +43,20 @@ Acts::Experimental::DD4hepLayerStructure::builder(
                                          << " passive surfaces");
 
   // Check if binning was provided or detected
-  if (fCache.binnings.empty() and options.binnings.empty() and
+  if (fCache.binnings.empty() and
       (fCache.sensitiveSurfaces.size() + fCache.passiveSurfaces.size()) > 0u) {
     ACTS_VERBOSE(
         "Surface binning neither provided nor found, navigation will be "
         "'tryAll' (could result in slow navigation).");
   }
+
+  // Surfaces are prepared for creating the builder
+  LayerStructureBuilder::Config lsbConfig;
+  lsbConfig.auxiliary = "*** DD4hep driven builder for: ";
+  lsbConfig.auxiliary += options.name;
+  // Translate binings and supports
+  lsbConfig.binnings = fCache.binnings;
+  lsbConfig.supports = fCache.supports;
 
   std::vector<std::shared_ptr<Surface>> lSurfaces;
   lSurfaces.reserve(fCache.sensitiveSurfaces.size() +
@@ -65,22 +73,22 @@ Acts::Experimental::DD4hepLayerStructure::builder(
   dd4hepStore[options.name] = cElements;
 
   // Passive surfaces to be added
-  lSurfaces.insert(lSurfaces.end(), fCache.passiveSurfaces.begin(),
-                   fCache.passiveSurfaces.end());
+  for (auto [ps, toAll] : fCache.passiveSurfaces) {
+    // Passive surface is not desinged to be added to all navigation bins
+    if (not toAll) {
+      lSurfaces.push_back(ps);
+    } else {
+      // Passive surface is indeed desinged ot be added to all navigaiton bins
+      Experimental::ProtoSupport pSupport;
+      pSupport.surface = ps;
+      pSupport.assignToAll = true;
+      lsbConfig.supports.push_back(pSupport);
+    }
+  }
 
-  // Surfaces are prepared for creating the builder
-  LayerStructureBuilder::Config lsbConfig;
-  lsbConfig.auxiliary = "*** DD4hep driven builder for: ";
-  lsbConfig.auxiliary += options.name;
   lsbConfig.surfacesProvider =
       std::make_shared<Experimental::LayerStructureBuilder::SurfacesHolder>(
           lSurfaces);
-
-  // Translate binings and supports - options overwrite gathered
-  lsbConfig.binnings =
-      not options.binnings.empty() ? options.binnings : fCache.binnings;
-  lsbConfig.supports =
-      not options.supports.empty() ? options.supports : fCache.supports;
 
   ACTS_DEBUG("Configured with " << lsbConfig.binnings.size() << " binnings.");
   ACTS_DEBUG("Configured to build " << lsbConfig.supports.size()

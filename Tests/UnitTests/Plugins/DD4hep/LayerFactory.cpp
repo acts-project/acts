@@ -80,8 +80,9 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
     }
   }
   // Passive layer surface - place it inside the envelope
-  if (x_layer.hasChild(_Unicode(passive_surface))) {
-    xml_comp_t x_passive_xml = x_layer.child(_Unicode(passive_surface));
+  for (xml_coll_t psurface(x_layer, _Unicode(passive_surface)); psurface;
+       ++psurface) {
+    xml_comp_t x_passive_xml = psurface;
     xml_comp_t x_tubs_t = x_passive_xml.child(_Unicode(tubs));
     // Crete the corresponding detector element
     DetElement passiveElement(layerName + "_passiveEl", x_layer.id());
@@ -93,7 +94,6 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
     // The places layer after all
     PlacedVolume placedPassive = layerAssembly.placeVolume(
         passiveVolume, DD4hepTestsHelper::createTransform(x_passive_xml));
-    placedPassive.addPhysVolID("passive", 1);
     // Transport the passive surface knowledge
     auto &params =
         DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(

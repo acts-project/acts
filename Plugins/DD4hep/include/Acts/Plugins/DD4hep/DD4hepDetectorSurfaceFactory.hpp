@@ -28,6 +28,8 @@ class DetElement;
 
 namespace Acts {
 
+using namespace UnitLiterals;
+
 class DD4hepDetectorElement;
 
 /// A factory to convert DD4hep DetectorElements into sensitive
@@ -40,12 +42,16 @@ class DD4hepDetectorSurfaceFactory {
       std::tuple<std::shared_ptr<DD4hepDetectorElement>,
                  std::shared_ptr<Surface>>;
 
-  /// Collect the passive surfaces
-  using DD4hepPassiveSurface = std::shared_ptr<Surface>;
+  /// Collect the passive surfaces, bool whether it should be
+  /// added as an "always try, i.e. assignToAll=ture" surface
+  using DD4hepPassiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
 
   /// Collect passive surface proxies
   struct DD4hepPassiveSurfaceProxy {
+    /// Where the placement should happen
     std::string placement = "";
+    /// What the envelope should be
+    ActsScalar envelope = 1_mm;
   };
 
   /// Nested cache that records the conversion status

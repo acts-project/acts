@@ -34,6 +34,8 @@ struct ProtoSupport {
   std::optional<Transform3> transform = std::nullopt;
   /// Alternatively - the support surface can already be provided
   std::shared_ptr<Surface> surface = nullptr;
+  /// Indicate if the support surface should always be addressed in navigation
+  bool assignToAll = false;
 };
 
 }  // namespace Experimental

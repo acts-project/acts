@@ -60,10 +60,6 @@ class DD4hepLayerStructure {
     std::string name = "";
     /// An out put log level
     Logging::Level logLevel = Logging::INFO;
-    /// Binning prescription for surface ordering in the layer structure
-    std::vector<ProtoBinning> binnings = {};
-    /// Support surface prescription
-    std::vector<ProtoSupport> supports = {};
     /// Approximation for the polyhedron binning nSegments
     unsigned int nSegments = 1u;
   };

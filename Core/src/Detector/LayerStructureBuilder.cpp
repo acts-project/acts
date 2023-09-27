@@ -180,6 +180,17 @@ Acts::Experimental::LayerStructureBuilder::construct(
     ACTS_DEBUG("Adding " << m_cfg.supports.size() << " support structures.")
     // The surface candidate updator
     for (const auto& support : m_cfg.supports) {
+      // Check if the supportsurface has already been built
+      if (support.surface != nullptr) {
+        ACTS_VERBOSE("- Use provided support surface directly.");
+        if (support.assignToAll) {
+          assignToAll.push_back(internalSurfaces.size());
+          ACTS_VERBOSE("  Support surface is assigned to all bins.");
+        }
+        internalSurfaces.push_back(support.surface);
+        continue;
+      }
+
       // Throw an exception is misconfigured
       if (support.type == Surface::SurfaceType::Other) {
         throw std::invalid_argument(
