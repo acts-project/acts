@@ -115,7 +115,6 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             else SeedingAlgorithm.Default
             if label == "seeded"
             else SeedingAlgorithm.Orthogonal,
-            initialSigmas=[0.1, 0.1, 0.002, 0.0001, 0.001, 1000],
             initialVarInflation=[1e3] * 6,
             geoSelectionConfigFile=setup.geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
