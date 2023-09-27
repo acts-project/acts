@@ -82,7 +82,7 @@ if not ttbar:
             mean=acts.Vector4(0, 0, 0, 0),
             stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 1.0 * u.ns),
         ),
-        multiplicity=50,
+        multiplicity=200,
         rnd=rnd,
     )
 else:
@@ -176,13 +176,16 @@ addCKFTracks(
         nMeasurementsMin=7,
     ),
     outputDirRoot=outputDir,
+    writeCovMat=True,
     # outputDirCsv=outputDir,
 )
 
 if ambiguity_MLSolver:
     addAmbiguityResolutionML(
         s,
-        AmbiguityResolutionMLConfig(nMeasurementsMin=7),
+        AmbiguityResolutionMLConfig(
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
+        ),
         outputDirRoot=outputDir,
         # outputDirCsv=outputDir,
         onnxModelFile=os.path.dirname(__file__)
@@ -192,9 +195,10 @@ else:
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(
-            maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
+            maximumSharedHits=3, maximumIterations=1000000, nMeasurementsMin=7
         ),
         outputDirRoot=outputDir,
+        writeCovMat=True,
         # outputDirCsv=outputDir,
     )
 

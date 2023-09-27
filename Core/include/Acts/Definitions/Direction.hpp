@@ -84,8 +84,6 @@ class Direction final {
 
   /// Reverse the direction
   ///
-  /// @param dir is the direction at input
-  ///
   /// @return an opposite direction
   inline constexpr Direction invert() const {
     return (m_value == Value::Positive) ? Value::Negative : Value::Positive;

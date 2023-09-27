@@ -53,7 +53,7 @@ template <int D>
 struct DummyComponent {
   Acts::ActsScalar weight = 0;
   Acts::ActsVector<D> boundPars;
-  Acts::ActsSymMatrix<D> boundCov;
+  Acts::ActsSquareMatrix<D> boundCov;
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -150,8 +150,8 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
 template <int D, typename subtract_t = std::minus<ActsVector<D>>>
 auto boundCov(const std::vector<ActsVector<D>> &samples,
               const ActsVector<D> &mu, const subtract_t &sub = subtract_t{})
-    -> ActsSymMatrix<D> {
-  ActsSymMatrix<D> boundCov = ActsSymMatrix<D>::Zero();
+    -> ActsSquareMatrix<D> {
+  ActsSquareMatrix<D> boundCov = ActsSquareMatrix<D>::Zero();
 
   for (const auto &smpl : samples) {
     boundCov += sub(smpl, mu) * sub(smpl, mu).transpose();
@@ -200,8 +200,9 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
   Vector3 position = mean.head<3>();
   Vector3 direction = mean.segment<3>(eFreeDir0);
   auto intersection =
-      surface.intersect(GeometryContext{}, position, direction, false);
-  mean.head<3>() = intersection.intersection.position;
+      surface.intersect(GeometryContext{}, position, direction, false)
+          .closest();
+  mean.head<3>() = intersection.position();
 
   return *detail::transformFreeToBoundParameters(mean, surface,
                                                  GeometryContext{});
@@ -236,7 +237,7 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
           a.boundPars[eBoundTheta] = theta + dtheta;
 
           // We don't look at covariance in this test
-          a.boundCov = BoundSymMatrix::Zero();
+          a.boundCov = BoundSquareMatrix::Zero();
 
           cmps.push_back(a);
           ++p_it;

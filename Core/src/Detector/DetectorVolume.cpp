@@ -164,6 +164,11 @@ const Acts::GeometryIdentifier& Acts::Experimental::DetectorVolume::geometryId()
   return m_geometryId;
 }
 
+void Acts::Experimental::DetectorVolume::assignGeometryId(
+    const GeometryIdentifier& geoID) {
+  m_geometryId = geoID;
+}
+
 const std::string& Acts::Experimental::DetectorVolume::name() const {
   return m_name;
 }

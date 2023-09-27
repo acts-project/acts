@@ -14,6 +14,7 @@
 #include "Acts/EventData/ChargeConcept.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 
+#include <iosfwd>
 #include <utility>
 
 namespace Acts {
@@ -59,12 +60,12 @@ class GenericParticleHypothesis {
   template <typename other_charge_t>
   constexpr GenericParticleHypothesis(
       const GenericParticleHypothesis<other_charge_t>& other)
-      : m_absPdg{other.absPdg()},
+      : m_absPdg{other.absolutePdg()},
         m_mass{other.mass()},
         m_chargeType{other.chargeType()} {}
 
   /// Get the hypothesized absolute PDG.
-  constexpr PdgParticle absPdg() const noexcept { return m_absPdg; }
+  constexpr PdgParticle absolutePdg() const noexcept { return m_absPdg; }
 
   /// Get the hypothesized mass.
   constexpr float mass() const noexcept { return m_mass; }
@@ -105,6 +106,22 @@ class GenericParticleHypothesis {
   /// Get the hypothesized charge type.
   constexpr const ChargeType& chargeType() const noexcept {
     return m_chargeType;
+  }
+
+  std::ostream& toStream(std::ostream& os) const {
+    os << "ParticleHypothesis{absPdg=";
+    if (auto shortString = pdgToShortAbsString(absolutePdg())) {
+      os << *shortString;
+    } else {
+      os << absolutePdg();
+    }
+    os << ", mass=" << mass() << ", absCharge=" << absoluteCharge() << "}";
+    return os;
+  }
+
+  friend std::ostream& operator<<(
+      std::ostream& os, const GenericParticleHypothesis& particleHypothesis) {
+    return particleHypothesis.toStream(os);
   }
 
  private:

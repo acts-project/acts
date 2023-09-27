@@ -14,7 +14,9 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <random>
@@ -64,7 +66,7 @@ class MultiTrajectoryTestsCommon {
                                   exp.end());
 
     act.clear();
-    for (const auto& p : t.trackStateRange(i2a)) {
+    for (const auto& p : t.reverseTrackStateRange(i2a)) {
       act.push_back(p.index());
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(),
@@ -77,7 +79,7 @@ class MultiTrajectoryTestsCommon {
                                   exp.end());
 
     act.clear();
-    for (const auto& p : t.trackStateRange(i2b)) {
+    for (const auto& p : t.reverseTrackStateRange(i2b)) {
       act.push_back(p.index());
     }
     BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(),
@@ -88,19 +90,19 @@ class MultiTrajectoryTestsCommon {
     BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(),
                                   exp.end());
 
-    auto r = t.trackStateRange(i2b);
+    auto r = t.reverseTrackStateRange(i2b);
     BOOST_CHECK_EQUAL(std::distance(r.begin(), r.end()), 3);
 
     // check const-correctness
     const auto& ct = t;
     std::vector<BoundVector> predicteds;
     // mutation in this loop works!
-    for (auto p : t.trackStateRange(i2b)) {
+    for (auto p : t.reverseTrackStateRange(i2b)) {
       predicteds.push_back(BoundVector::Random());
       p.predicted() = predicteds.back();
     }
     std::vector<BoundVector> predictedsAct;
-    for (const auto& p : ct.trackStateRange(i2b)) {
+    for (const auto& p : ct.reverseTrackStateRange(i2b)) {
       predictedsAct.push_back(p.predicted());
       // mutation in this loop doesn't work: does not compile
       // p.predicted() = BoundVector::Random();
@@ -364,9 +366,16 @@ class MultiTrajectoryTestsCommon {
 
     // use temporary measurement to reset calibrated data
     TestTrackState ttsb(rng, 2u);
-    ts.setUncalibratedSourceLink(SourceLink{ttsb.sourceLink});
     Acts::GeometryContext gctx;
-    auto meas = testSourceLinkCalibratorReturn<trajectory_t>(gctx, ts);
+    Acts::CalibrationContext cctx;
+    BOOST_CHECK_EQUAL(
+        ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
+        pc.sourceLink.sourceId);
+    auto meas = testSourceLinkCalibratorReturn<trajectory_t>(
+        gctx, cctx, SourceLink{ttsb.sourceLink}, ts);
+    BOOST_CHECK_EQUAL(
+        ts.getUncalibratedSourceLink().template get<TestSourceLink>().sourceId,
+        ttsb.sourceLink.sourceId);
     auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
 
     BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
@@ -388,7 +397,7 @@ class MultiTrajectoryTestsCommon {
     // check that the surface is correctly set
     BOOST_CHECK_EQUAL(&ts.referenceSurface(), pc.surface.get());
     BOOST_CHECK_EQUAL(ts.referenceSurface().geometryId(),
-                      pc.sourceLink.geometryId());
+                      pc.sourceLink.m_geometryId);
 
     // check that the track parameters are set
     BOOST_CHECK(ts.hasPredicted());
@@ -447,8 +456,10 @@ class MultiTrajectoryTestsCommon {
     fullProj.setZero();
     {
       Acts::GeometryContext gctx;
+      Acts::CalibrationContext cctx;
       // create a temporary measurement to extract the projector matrix
-      auto meas = testSourceLinkCalibratorReturn<trajectory_t>(gctx, ts);
+      auto meas = testSourceLinkCalibratorReturn<trajectory_t>(
+          gctx, cctx, SourceLink{pc.sourceLink}, ts);
       std::visit(
           [&](const auto& m) {
             fullProj.topLeftCorner(nMeasurements, eBoundSize) = m.projector();

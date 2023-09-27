@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,9 +23,9 @@ namespace ActsExamples {
 namespace PlotHelpers {
 TH1F* bookHisto(const char* histName, const char* histTitle,
                 const Binning& varBinning) {
-  TH1F* hist = new TH1F(histName, histTitle, varBinning.nBins, varBinning.min,
-                        varBinning.max);
-  hist->GetXaxis()->SetTitle(varBinning.title.c_str());
+  TH1F* hist =
+      new TH1F(histName, histTitle, varBinning.nBins(), varBinning.data());
+  hist->GetXaxis()->SetTitle(varBinning.title().c_str());
   hist->GetYaxis()->SetTitle("Entries");
   hist->Sumw2();
   return hist;
@@ -33,11 +33,11 @@ TH1F* bookHisto(const char* histName, const char* histTitle,
 
 TH2F* bookHisto(const char* histName, const char* histTitle,
                 const Binning& varXBinning, const Binning& varYBinning) {
-  TH2F* hist = new TH2F(histName, histTitle, varXBinning.nBins, varXBinning.min,
-                        varXBinning.max, varYBinning.nBins, varYBinning.min,
-                        varYBinning.max);
-  hist->GetXaxis()->SetTitle(varXBinning.title.c_str());
-  hist->GetYaxis()->SetTitle(varYBinning.title.c_str());
+  TH2F* hist =
+      new TH2F(histName, histTitle, varXBinning.nBins(), varXBinning.data(),
+               varYBinning.nBins(), varYBinning.data());
+  hist->GetXaxis()->SetTitle(varXBinning.title().c_str());
+  hist->GetYaxis()->SetTitle(varYBinning.title().c_str());
   hist->Sumw2();
   return hist;
 }
@@ -70,16 +70,16 @@ void anaHisto(TH1D* inputHist, int j, TH1F* meanHist, TH1F* widthHist) {
 
 TEfficiency* bookEff(const char* effName, const char* effTitle,
                      const Binning& varBinning) {
-  TEfficiency* efficiency = new TEfficiency(effName, effTitle, varBinning.nBins,
-                                            varBinning.min, varBinning.max);
+  TEfficiency* efficiency =
+      new TEfficiency(effName, effTitle, varBinning.nBins(), varBinning.data());
   return efficiency;
 }
 
 TEfficiency* bookEff(const char* effName, const char* effTitle,
                      const Binning& varXBinning, const Binning& varYBinning) {
   TEfficiency* efficiency = new TEfficiency(
-      effName, effTitle, varXBinning.nBins, varXBinning.min, varXBinning.max,
-      varYBinning.nBins, varYBinning.min, varYBinning.max);
+      effName, effTitle, varXBinning.nBins(), varXBinning.data(),
+      varYBinning.nBins(), varYBinning.data());
   return efficiency;
 }
 
@@ -96,10 +96,10 @@ void fillEff(TEfficiency* efficiency, float xValue, float yValue, bool status) {
 TProfile* bookProf(const char* profName, const char* profTitle,
                    const Binning& varXBinning, const Binning& varYBinning) {
   TProfile* prof =
-      new TProfile(profName, profTitle, varXBinning.nBins, varXBinning.min,
-                   varXBinning.max, varYBinning.min, varYBinning.max);
-  prof->GetXaxis()->SetTitle(varXBinning.title.c_str());
-  prof->GetYaxis()->SetTitle(varYBinning.title.c_str());
+      new TProfile(profName, profTitle, varXBinning.nBins(), varXBinning.data(),
+                   varYBinning.low(), varYBinning.high());
+  prof->GetXaxis()->SetTitle(varXBinning.title().c_str());
+  prof->GetYaxis()->SetTitle(varYBinning.title().c_str());
   return prof;
 }
 

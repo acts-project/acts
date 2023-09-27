@@ -84,7 +84,7 @@ class DetectorNavigator {
 
   void resetState(State& state, const GeometryContext& /*geoContext*/,
                   const Vector3& /*pos*/, const Vector3& /*dir*/,
-                  Direction /*navDir*/, const Surface* /*ssurface*/,
+                  const Surface* /*ssurface*/,
                   const Surface* /*tsurface*/) const {
     // Reset everything first
     state = State();
@@ -113,6 +113,10 @@ class DetectorNavigator {
   }
 
   bool targetReached(const State& state) const { return state.targetReached; }
+
+  bool endOfWorldReached(State& state) const {
+    return state.currentVolume == nullptr;
+  }
 
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
@@ -177,6 +181,7 @@ class DetectorNavigator {
                  << posInfo(state, stepper) << "Entering navigator::preStep.");
 
     auto& nState = state.navigation;
+    fillNavigationState(state, stepper, nState);
 
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)

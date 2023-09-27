@@ -15,6 +15,7 @@
 #include "Acts/Vertexing/LinearizerConcept.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+
 namespace Acts {
 
 /// @class FullBilloirVertexFitter

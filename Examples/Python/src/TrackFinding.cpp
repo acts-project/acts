@@ -134,7 +134,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
-    ACTS_PYTHON_MEMBER(arithmeticAverageCotTheta);
     ACTS_PYTHON_MEMBER(useDetailedDoubleMeasurementInfo);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
@@ -260,9 +259,10 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
-      "TrackParamsEstimationAlgorithm", inputSeeds, outputTrackParameters,
-      trackingGeometry, magneticField, bFieldMin, sigmaLoc0, sigmaLoc1,
-      sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0, initialVarInflation);
+      "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
+      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+      magneticField, bFieldMin, sigmaLoc0, sigmaLoc1, sigmaPhi, sigmaTheta,
+      sigmaQOverP, sigmaT0, initialVarInflation, particleHypothesis);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;

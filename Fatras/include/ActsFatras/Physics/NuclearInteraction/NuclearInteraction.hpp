@@ -521,7 +521,7 @@ std::vector<Particle> NuclearInteraction::convertParametersToParticles(
         globalAngle(phi, theta, uniformDistribution(generator) * 2. * M_PI,
                     std::acos(costheta));
     const auto direction =
-        Acts::makeDirectionUnitFromPhiTheta(phiTheta.first, phiTheta.second);
+        Acts::makeDirectionFromPhiTheta(phiTheta.first, phiTheta.second);
 
     Particle p = Particle(initialParticle.particleId().makeDescendant(i),
                           static_cast<Acts::PdgParticle>(pdgId[i]));

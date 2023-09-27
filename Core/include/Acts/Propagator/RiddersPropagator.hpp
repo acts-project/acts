@@ -33,7 +33,7 @@ namespace Acts {
 template <typename propagator_t>
 class RiddersPropagator {
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
+  using Covariance = BoundSquareMatrix;
 
   ///
   /// @note The result_type_helper struct and the action_list_t_result_t are

@@ -62,7 +62,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
@@ -237,7 +237,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto params =
-            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat));
+            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+                                 ParticleHypothesis::pion());
 
         tracks.push_back(std::make_unique<BoundTrackParameters>(params));
 
@@ -454,7 +455,8 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
             res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0.,
             0., 0., 0., 0., 1.;
         auto paramsUT = InputTrack(
-            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+            BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat),
+                                 ParticleHypothesis::pion()));
 
         tracks.push_back(std::make_unique<InputTrack>(paramsUT));
 
@@ -596,8 +598,6 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
 
   VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                            ipEstimator);
-
-  cfg.useBeamConstraint = true;
   cfg.maxVertices = 200;
   cfg.maximumChi2cutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
@@ -613,10 +613,9 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
     tracksPtr.push_back(&trk);
   }
 
-  VertexingOptions<BoundTrackParameters> vertexingOptions(geoContext,
-                                                          magFieldContext);
-
-  vertexingOptions.vertexConstraint = std::get<BeamSpotData>(csvData);
+  Vertex<BoundTrackParameters> beamSpot = std::get<BeamSpotData>(csvData);
+  VertexingOptions<BoundTrackParameters> vertexingOptions(
+      geoContext, magFieldContext, beamSpot);
 
   // find vertices
   auto findResult = finder.find(tracksPtr, vertexingOptions, state);

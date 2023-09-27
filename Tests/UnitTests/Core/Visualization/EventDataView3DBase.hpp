@@ -50,7 +50,7 @@ using Acts::VectorHelpers::makeVector4;
 namespace Acts {
 namespace EventDataView3DTest {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 std::normal_distribution<double> gauss(0., 1.);
 std::default_random_engine generator(42);
@@ -199,8 +199,11 @@ static inline std::string testBoundTrackParameters(IVisualization3D& helper) {
       0, 0, 0, 0, 0, 1;
 
   EventDataView3D::drawBoundTrackParameters(
-      helper, BoundTrackParameters(plane, pars, std::move(cov)), gctx,
-      momentumScale, localErrorScale, directionErrorScale, pcolor, scolor);
+      helper,
+      BoundTrackParameters(plane, pars, std::move(cov),
+                           ParticleHypothesis::pion()),
+      gctx, momentumScale, localErrorScale, directionErrorScale, pcolor,
+      scolor);
 
   helper.write("EventData_BoundAtPlaneParameters");
   helper.write(ss);
@@ -233,7 +236,7 @@ static inline std::string testMeasurement(IVisualization3D& helper) {
   sourcelinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
-  SymMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
+  SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
     Vector2 loc = lPosCenter;
@@ -294,7 +297,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   sourcelinks.reserve(nSurfaces);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
-  SymMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
+  SquareMatrix2 cov2D = resolution.cwiseProduct(resolution).asDiagonal();
   for (const auto& surface : surfaces) {
     // 2D measurements
     Vector2 loc = lPosCenter;
@@ -326,8 +329,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
       0., 0., 0., 0.01, 0., 0., 0., 0., 0., 0., 1.;
   Vector3 rPos(-350._mm, 100_um * gauss(generator), 100_um * gauss(generator));
   Vector3 rDir(1, 0.025 * gauss(generator), 0.025 * gauss(generator));
-  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_GeV, 1_e,
-                                    cov);
+  CurvilinearTrackParameters rStart(makeVector4(rPos, 42_ns), rDir, 1_e / 1_GeV,
+                                    cov, ParticleHypothesis::pion());
 
   const Surface* rSurface = &rStart.referenceSurface();
 
@@ -349,6 +352,11 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   extensions.smoother
       .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
           &kfSmoother);
+
+  Test::TestSourceLink::SurfaceAccessor surfaceAccessor{*detector};
+  extensions.surfaceAccessor
+      .connect<&Test::TestSourceLink::SurfaceAccessor::operator()>(
+          &surfaceAccessor);
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
                                 PropagatorPlainOptions(), rSurface);

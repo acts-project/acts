@@ -105,7 +105,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   }
 
   // define start parameters
-  BoundSymMatrix cov;
+  BoundSquareMatrix cov;
   // take some major correlations (off-diagonals)
   // clang-format off
     cov <<
@@ -118,7 +118,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // clang-format on
   std::cout << cov.determinant() << std::endl;
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   cov);
+                                   cov, ParticleHypothesis::pion());
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor>;

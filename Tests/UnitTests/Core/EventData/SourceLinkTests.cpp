@@ -12,6 +12,8 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
+#include <any>
+
 using namespace Acts::UnitLiterals;
 
 BOOST_AUTO_TEST_SUITE(EventDataSourceLink)
@@ -22,16 +24,13 @@ struct MySourceLink {
   Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
 };
 
-BOOST_AUTO_TEST_CASE(ConstructGeoId) {
+BOOST_AUTO_TEST_CASE(Construct) {
   MySourceLink msl;
   msl.m_geometryId.setSensitive(42);
   {
     Acts::SourceLink sl{msl};
-    BOOST_CHECK_EQUAL(sl.geometryId(), msl.geometryId());
-  }
-  {
-    Acts::SourceLink sl{msl.geometryId(), msl};
-    BOOST_CHECK_EQUAL(sl.geometryId(), msl.geometryId());
+    BOOST_CHECK_EQUAL(sl.get<MySourceLink>().geometryId(), msl.geometryId());
+    BOOST_CHECK_THROW(sl.get<int>(), std::bad_any_cast);
   }
 }
 
