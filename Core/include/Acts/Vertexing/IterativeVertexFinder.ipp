@@ -65,8 +65,7 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
       } else {
         return fitResult.error();
       }
-    } else if (!vertexingOptions.useConstraintInFit &&
-               tracksToFit.size() > 1) {
+    } else if (!vertexingOptions.useConstraintInFit && tracksToFit.size() > 1) {
       auto fitResult = m_cfg.vertexFitter.fit(
           tracksToFit, m_cfg.linearizer, vertexingOptions, state.fitterState);
       if (fitResult.ok()) {
@@ -464,26 +463,17 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::reassignTracksToNewVertex(
           m_extractParameters(*(tracksIter->originalParams));
 
       // compute compatibility
-<<<<<<< HEAD
-      auto resultNew =
-          getCompatibility(origParams, currentVertex, vertexingOptions, state);
-=======
-      auto resultNew = getCompatibility(trackPerigee, currentVertex,
+      auto resultNew = getCompatibility(origParams, currentVertex,
                                         *currentVertexPerigeeSurface,
                                         vertexingOptions, state);
->>>>>>> a23fe6d429ca84de66b01f93e776db69e9aba27e
       if (!resultNew.ok()) {
         return Result<bool>::failure(resultNew.error());
       }
       double chi2NewVtx = *resultNew;
 
       auto resultOld =
-<<<<<<< HEAD
-          getCompatibility(origParams, vertexIt, vertexingOptions, state);
-=======
-          getCompatibility(trackPerigee, vertexIt, *vertexItPerigeeSurface,
+          getCompatibility(origParams, vertexIt, *vertexItPerigeeSurface,
                            vertexingOptions, state);
->>>>>>> a23fe6d429ca84de66b01f93e776db69e9aba27e
       if (!resultOld.ok()) {
         return Result<bool>::failure(resultOld.error());
       }
