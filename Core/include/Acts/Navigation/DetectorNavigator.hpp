@@ -411,6 +411,18 @@ class DetectorNavigator {
     }
 
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
+
+    // Sort properly the surface candidates
+    auto& nCandidates = nState.surfaceCandidates;
+    std::sort(nCandidates.begin(), nCandidates.end(),
+              [&](const auto& a, const auto& b) {
+                // The two path lengths
+                ActsScalar pathToA = a.objectIntersection.pathLength();
+                ActsScalar pathToB = b.objectIntersection.pathLength();
+                return pathToA < pathToB;
+              });
+    // Set the surface candidate
+    nState.surfaceCandidate = nCandidates.begin();
   }
 
   template <typename propagator_state_t, typename stepper_t>
