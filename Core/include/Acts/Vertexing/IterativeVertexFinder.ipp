@@ -84,76 +84,75 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
         return fitResult.error();
       }
     }
-  }
-  /// End vertex fit
-  ACTS_DEBUG("Vertex position after fit: "
-             << currentVertex.fullPosition().transpose());
+    /// End vertex fit
+    ACTS_DEBUG("Vertex position after fit: "
+               << currentVertex.fullPosition().transpose());
 
-  // Number degrees of freedom
-  double ndf = currentVertex.fitQuality().second;
-  double ndfSplitVertex = currentSplitVertex.fitQuality().second;
+    // Number degrees of freedom
+    double ndf = currentVertex.fitQuality().second;
+    double ndfSplitVertex = currentSplitVertex.fitQuality().second;
 
-  // Number of significant tracks
-  int nTracksAtVertex = countSignificantTracks(currentVertex);
-  int nTracksAtSplitVertex = countSignificantTracks(currentSplitVertex);
+    // Number of significant tracks
+    int nTracksAtVertex = countSignificantTracks(currentVertex);
+    int nTracksAtSplitVertex = countSignificantTracks(currentSplitVertex);
 
-  bool isGoodVertex = ((!vertexingOptions.useConstraintInFit && ndf > 0 &&
-                        nTracksAtVertex >= 2) ||
-                       (vertexingOptions.useConstraintInFit && ndf > 3 &&
-                        nTracksAtVertex >= 2));
+    bool isGoodVertex = ((!vertexingOptions.useConstraintInFit && ndf > 0 &&
+                          nTracksAtVertex >= 2) ||
+                         (vertexingOptions.useConstraintInFit && ndf > 3 &&
+                          nTracksAtVertex >= 2));
 
-  if (!isGoodVertex) {
-    removeTracks(tracksToFit, seedTracks);
-  } else {
-    if (m_cfg.reassignTracksAfterFirstFit && (!m_cfg.createSplitVertices)) {
-      // vertex is good vertex here
-      // but add tracks which may have been missed
-
-      auto result = reassignTracksToNewVertex(
-          vertexCollection, currentVertex, tracksToFit, seedTracks, origTracks,
-          vertexingOptions, state);
-      if (!result.ok()) {
-        return result.error();
-      }
-      isGoodVertex = *result;
-
-    }  // end reassignTracksAfterFirstFit case
-       // still good vertex? might have changed in the meanwhile
-    if (isGoodVertex) {
-      removeUsedCompatibleTracks(currentVertex, tracksToFit, seedTracks,
-                                 vertexingOptions, state);
-
-      ACTS_DEBUG(
-          "Number of seed tracks after removal of compatible tracks "
-          "and outliers: "
-          << seedTracks.size());
-    }
-  }  // end case if good vertex
-
-  // now splitvertex
-  bool isGoodSplitVertex = false;
-  if (m_cfg.createSplitVertices) {
-    isGoodSplitVertex = (ndfSplitVertex > 0 && nTracksAtSplitVertex >= 2);
-
-    if (!isGoodSplitVertex) {
-      removeTracks(tracksToFitSplitVertex, seedTracks);
+    if (!isGoodVertex) {
+      removeTracks(tracksToFit, seedTracks);
     } else {
-      removeUsedCompatibleTracks(currentSplitVertex, tracksToFitSplitVertex,
-                                 seedTracks, vertexingOptions, state);
+      if (m_cfg.reassignTracksAfterFirstFit && (!m_cfg.createSplitVertices)) {
+        // vertex is good vertex here
+        // but add tracks which may have been missed
+
+        auto result = reassignTracksToNewVertex(
+            vertexCollection, currentVertex, tracksToFit, seedTracks,
+            origTracks, vertexingOptions, state);
+        if (!result.ok()) {
+          return result.error();
+        }
+        isGoodVertex = *result;
+
+      }  // end reassignTracksAfterFirstFit case
+         // still good vertex? might have changed in the meanwhile
+      if (isGoodVertex) {
+        removeUsedCompatibleTracks(currentVertex, tracksToFit, seedTracks,
+                                   vertexingOptions, state);
+
+        ACTS_DEBUG(
+            "Number of seed tracks after removal of compatible tracks "
+            "and outliers: "
+            << seedTracks.size());
+      }
+    }  // end case if good vertex
+
+    // now splitvertex
+    bool isGoodSplitVertex = false;
+    if (m_cfg.createSplitVertices) {
+      isGoodSplitVertex = (ndfSplitVertex > 0 && nTracksAtSplitVertex >= 2);
+
+      if (!isGoodSplitVertex) {
+        removeTracks(tracksToFitSplitVertex, seedTracks);
+      } else {
+        removeUsedCompatibleTracks(currentSplitVertex, tracksToFitSplitVertex,
+                                   seedTracks, vertexingOptions, state);
+      }
     }
-  }
-  // Now fill vertex collection with vertex
-  if (isGoodVertex) {
-    vertexCollection.push_back(currentVertex);
-  }
-  if (isGoodSplitVertex && m_cfg.createSplitVertices) {
-    vertexCollection.push_back(currentSplitVertex);
-  }
+    // Now fill vertex collection with vertex
+    if (isGoodVertex) {
+      vertexCollection.push_back(currentVertex);
+    }
+    if (isGoodSplitVertex && m_cfg.createSplitVertices) {
+      vertexCollection.push_back(currentSplitVertex);
+    }
 
-  nInterations++;
-}  // end while loop
+    nInterations++;
+  }  // end while loop
 
-return vertexCollection;
+  return vertexCollection;
 }
 
 template <typename vfitter_t, typename sfinder_t>
