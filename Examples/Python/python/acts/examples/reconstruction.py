@@ -122,7 +122,7 @@ TrackSelectorConfig = namedtuple(
 TrackFindingConfig = namedtuple(
     "TrackFindingConfig",
     ["chi2CutOff", "numMeasurementsCutOff"],
-    defaults=[5.0, 3],
+    defaults=[5.0, 10],
 )
 
 AmbiguityResolutionConfig = namedtuple(
@@ -927,6 +927,7 @@ def addTruthTrackingGsf(
 
 @acts.examples.NamedTypeArgs(
     trackSelectorConfig=TrackSelectorConfig,
+    trackFindingConfig=TrackFindingConfig,
 )
 def addCKFTracks(
     s: acts.examples.Sequencer,
