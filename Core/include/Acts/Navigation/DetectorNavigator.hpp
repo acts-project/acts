@@ -419,14 +419,6 @@ class DetectorNavigator {
                 // The two path lengths
                 ActsScalar pathToA = a.objectIntersection.pathLength();
                 ActsScalar pathToB = b.objectIntersection.pathLength();
-                if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
-                    std::abs(pathToA) < s_onSurfaceTolerance) {
-                  return false;
-                } else if (pathToB + s_onSurfaceTolerance <
-                               nState.overstepTolerance or
-                           std::abs(pathToB) < s_onSurfaceTolerance) {
-                  return true;
-                }
                 return pathToA < pathToB;
               });
     // Set the surface candidate
