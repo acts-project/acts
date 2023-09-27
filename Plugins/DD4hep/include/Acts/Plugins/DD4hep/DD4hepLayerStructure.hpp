@@ -50,23 +50,7 @@ class DD4hepLayerStructure {
 
   DD4hepLayerStructure() = delete;
 
-  /// @brief Callable struct tat will provide the surfaces on request
-  struct Surfaces final : public ISurfacesProvider {
-    /// The sensitive surfaces in this layer structure
-    std::vector<std::shared_ptr<Surface>> dSurfaces = {};
-
-    /// The virtual interface definition for detector surface providers
-    ///
-    /// @param gctx the geometry context at the creation of the internal structure
-    ///
-    /// @return a shared detector object
-    std::vector<std::shared_ptr<Surface>> surfaces(
-        [[maybe_unused]] const GeometryContext& gctx) const final {
-      return dSurfaces;
-    };
-  };
-
-  /// @brief nested options struct
+  /// @brief Nested options struct
   ///
   /// If a binning description or a support cylinder
   /// description is chosen through options, it overwrites the corresponding
@@ -79,7 +63,7 @@ class DD4hepLayerStructure {
     /// Binning prescription for surface ordering in the layer structure
     std::vector<ProtoBinning> binnings = {};
     /// Support surface prescription
-    std::vector<LayerStructureBuilder::Support> supports = {};
+    std::vector<ProtoSupport> supports = {};
     /// Approximation for the polyhedron binning nSegments
     unsigned int nSegments = 1u;
   };

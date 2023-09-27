@@ -63,7 +63,7 @@ class DD4hepDetectorSurfaceFactory {
     /// The collected binnings
     std::vector<Experimental::ProtoBinning> binnings = {};
     /// The collected supports
-    std::vector<Experimental::LayerStructureBuilder::Support> supports = {};
+    std::vector<Experimental::ProtoSupport> supports = {};
   };
 
   /// The DD4hep detector element factory

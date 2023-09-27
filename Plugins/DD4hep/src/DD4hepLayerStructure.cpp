@@ -50,32 +50,31 @@ Acts::Experimental::DD4hepLayerStructure::builder(
         "'tryAll' (could result in slow navigation).");
   }
 
-  // The constructed surfaces and detector elements
-  auto cStructure = std::make_shared<DD4hepLayerStructure::Surfaces>();
-  cStructure->dSurfaces.reserve(fCache.sensitiveSurfaces.size() +
-                                fCache.passiveSurfaces.size());
+  std::vector<std::shared_ptr<Surface>> lSurfaces;
+  lSurfaces.reserve(fCache.sensitiveSurfaces.size() +
+                    fCache.passiveSurfaces.size());
 
   std::vector<std::shared_ptr<DD4hepDetectorElement>> cElements;
   cElements.reserve(fCache.sensitiveSurfaces.size());
 
   // Fill them in to the surface provider struct and detector store
   for (auto [de, ds] : fCache.sensitiveSurfaces) {
-    cStructure->dSurfaces.push_back(ds);
+    lSurfaces.push_back(ds);
     cElements.push_back(de);
   }
   dd4hepStore[options.name] = cElements;
 
-  // Passive surfaces
-  (*cStructure)
-      .dSurfaces.insert((*cStructure).dSurfaces.end(),
-                        fCache.passiveSurfaces.begin(),
-                        fCache.passiveSurfaces.end());
+  // Passive surfaces to be added
+  lSurfaces.insert(lSurfaces.end(), fCache.passiveSurfaces.begin(),
+                   fCache.passiveSurfaces.end());
 
   // Surfaces are prepared for creating the builder
   LayerStructureBuilder::Config lsbConfig;
   lsbConfig.auxiliary = "*** DD4hep driven builder for: ";
   lsbConfig.auxiliary += options.name;
-  lsbConfig.surfacesProvider = cStructure;
+  lsbConfig.surfacesProvider =
+      std::make_shared<Experimental::LayerStructureBuilder::SurfacesHolder>(
+          lSurfaces);
 
   // Translate binings and supports - options overwrite gathered
   lsbConfig.binnings =
