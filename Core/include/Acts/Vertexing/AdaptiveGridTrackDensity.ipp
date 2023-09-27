@@ -60,7 +60,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   ztPosition maxValues = std::make_pair(maxZ, std::nullopt);
 
   // Get t value of the maximum if we do time vertex seeding
-  if (temporalTrkGridSize > 1) {
+  if constexpr (temporalTrkGridSize > 1) {
     float maxT = getBinCenter(bin.second, m_cfg.temporalBinExtent.value());
     maxValues.second = maxT;
   }
@@ -113,7 +113,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
   Bin centralBin = std::make_pair(centralZBin, 0.);
 
   // Calculate bin in t direction if we do time vertex seeding
-  if (temporalTrkGridSize > 1) {
+  if constexpr (temporalTrkGridSize > 1) {
     int centralTBin = getBin(impactParams(2), m_cfg.temporalBinExtent.value());
     centralBin.second = centralTBin;
   }
@@ -164,7 +164,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     // If we don't do vertex time seeding, we set the time to 0 since it will be
     // discarded in the for loop below anyways
     float t = 0;
-    if (temporalTrkGridSize > 1) {
+    if constexpr (temporalTrkGridSize > 1) {
       t = getBinCenter(tBin, m_cfg.temporalBinExtent.value());
     }
     for (int j = 0; j < spatialTrkGridSize; j++) {
@@ -175,7 +175,7 @@ Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
       // Transformation to coordinate system with origin at the track center
       binCoords -= impactParams;
       Bin bin = std::make_pair(zBin, tBin);
-      if (temporalTrkGridSize == 1) {
+      if constexpr (temporalTrkGridSize == 1) {
         trackDensityMap[bin] = multivariateGaussian<2>(
             binCoords.head<2>(), cov.topLeftCorner<2, 2>());
       } else {
@@ -199,7 +199,7 @@ Acts::Result<float> Acts::AdaptiveGridTrackDensity<
   int zMaxBin = getBin(maxZT.first, m_cfg.spatialBinExtent);
   int tMaxBin = 0;
   // Fill the time bin with a non-zero value if we do time vertex seeding
-  if (temporalTrkGridSize > 1) {
+  if constexpr (temporalTrkGridSize > 1) {
     tMaxBin = getBin(maxZT.second.value(), m_cfg.temporalBinExtent.value());
   }
   const float maxValue = densityMap.at(std::make_pair(zMaxBin, tMaxBin));

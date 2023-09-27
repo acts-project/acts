@@ -55,7 +55,7 @@ class AdaptiveGridTrackDensity {
   struct Config {
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
     Config(float spatialBinExtent_) : spatialBinExtent(spatialBinExtent_) {
-      if (temporalTrkGridSize > 1) {
+      if constexpr (temporalTrkGridSize > 1) {
         throw std::invalid_argument(
             "temporalBinExtent must be provided if temporalTrkGridSize > 1 "
             "(i.e., if time vertex seeding is enabled).");
@@ -68,7 +68,7 @@ class AdaptiveGridTrackDensity {
     Config(float spatialBinExtent_, float temporalBinExtent_)
         : spatialBinExtent(spatialBinExtent_),
           temporalBinExtent(temporalBinExtent_) {
-      if (temporalTrkGridSize == 1) {
+      if constexpr (temporalTrkGridSize == 1) {
         throw std::invalid_argument(
             "temporalBinExtent must not be provided if temporalTrkGridSize == "
             "1 (i.e., if time vertex seeding is disabled).");
