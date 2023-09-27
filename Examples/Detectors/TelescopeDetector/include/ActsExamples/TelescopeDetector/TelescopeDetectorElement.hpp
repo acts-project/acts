@@ -117,7 +117,7 @@ inline double TelescopeDetectorElement::thickness() const {
 inline const Acts::Transform3& TelescopeDetectorElement::transform(
     const Acts::GeometryContext& gctx) const {
   // Check if a different transform than the nominal exists
-  if (m_alignedTransforms.size()) {
+  if (!m_alignedTransforms.empty()) {
     // cast into the right context object
     auto alignContext = gctx.get<ContextType>();
     return (*m_alignedTransforms[alignContext.iov].get());

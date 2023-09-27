@@ -40,7 +40,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeConstruction) {
 BOOST_AUTO_TEST_CASE(CuboidVolumeRecreation) {
   CuboidVolumeBounds original(hx, hy, hz);
   auto valvector = original.values();
-  std::array<double, CuboidVolumeBounds::eSize> values;
+  std::array<double, CuboidVolumeBounds::eSize> values{};
   std::copy_n(valvector.begin(), CuboidVolumeBounds::eSize, values.begin());
   CuboidVolumeBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

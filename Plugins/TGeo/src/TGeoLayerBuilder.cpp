@@ -93,7 +93,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                        << " configuration(s)" + addonOutput);
 
   // Helper function to fill the layer
-  auto fillLayer = [&](const LayerSurfaceVector lSurfaces,
+  auto fillLayer = [&](const LayerSurfaceVector& lSurfaces,
                        const LayerConfig& lCfg,
                        unsigned int pl_id = 0) -> void {
     int nb0 = 0, nt0 = 0;
@@ -238,7 +238,7 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                           const Acts::TGeoDetectorElement>>{tgElement}
                     : m_cfg.detectorElementSplitter->split(gctx, tgElement);
 
-        for (auto tge : tgElements) {
+        for (const auto& tge : tgElements) {
           m_elementStore.push_back(tge);
           layerSurfaces.push_back(tge->surface().getSharedPtr());
         }
@@ -294,6 +294,6 @@ Acts::TGeoLayerBuilder::defaultElementFactory(
     const Identifier& identifier, const TGeoNode& tGeoNode,
     const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
     std::shared_ptr<const Acts::ISurfaceMaterial> material) {
-  return std::make_shared<TGeoDetectorElement>(identifier, tGeoNode, tGeoMatrix,
-                                               axes, scalor, material);
+  return std::make_shared<TGeoDetectorElement>(
+      identifier, tGeoNode, tGeoMatrix, axes, scalor, std::move(material));
 }

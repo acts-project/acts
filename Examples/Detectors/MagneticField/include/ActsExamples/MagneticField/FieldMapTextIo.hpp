@@ -43,7 +43,7 @@ namespace ActsExamples {
 /// @note This information is only used as a hint for the required size of
 ///       the internal vectors. A correct value is not needed, but will help
 ///       to speed up the field map initialization process.
-/// @param[in] firstOctant Flag if set to true indicating that only the
+/// @param[in] firstQuadrant Flag if set to true indicating that only the
 /// first
 /// quadrant of the grid points and the BField values has been given and
 /// that
@@ -54,11 +54,11 @@ namespace ActsExamples {
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromText(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)>
+    const std::function<size_t(std::array<size_t, 2> binsRZ,
+                               std::array<size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, Acts::ActsScalar lengthUnit,
-    Acts::ActsScalar BFieldUnit, bool firstOctant = false);
+    const std::string& fieldMapFile, Acts::ActsScalar lengthUnit,
+    Acts::ActsScalar BFieldUnit, bool firstQuadrant = false);
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -102,10 +102,10 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromText(
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromText(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
+    const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                               std::array<size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, Acts::ActsScalar lengthUnit,
+    const std::string& fieldMapFile, Acts::ActsScalar lengthUnit,
     Acts::ActsScalar BFieldUnit, bool firstOctant = false);
 
 }  // namespace ActsExamples

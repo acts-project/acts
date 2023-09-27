@@ -19,4 +19,4 @@ class IBaseDetector;
 /// @param detector The detector descriptor instance
 int runDigitizationExample(
     int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector);
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector);

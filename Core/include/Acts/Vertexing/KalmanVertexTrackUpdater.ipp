@@ -92,7 +92,7 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   SymMatrix4 vtxFullCov(SymMatrix4::Zero());
   vtxFullCov.block<3, 3>(0, 0) = vtxCov;
 
-  const Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
+  Acts::BoundMatrix fullPerTrackCov = detail::createFullTrackCovariance(
       sMat, newFullTrkCov, vtxFullWeight, vtxFullCov, newTrkParams);
 
   // Create new refitted parameters

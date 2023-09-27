@@ -31,12 +31,12 @@ class ScalableBFieldService : public IContextDecorator {
   ScalableBFieldService(const Config& cfg, Acts::Logging::Level lvl);
 
   /// The service name.
-  const std::string& name() const final override;
+  const std::string& name() const override;
 
   /// Update the magnetic field context.
   ///
   /// @param ctx The per-event context
-  ProcessCode decorate(AlgorithmContext& ctx) final override;
+  ProcessCode decorate(AlgorithmContext& ctx) override;
 
  private:
   Config m_cfg;

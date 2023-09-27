@@ -68,14 +68,14 @@ void shiftPositionTo(HepMC3::GenEvent& event, const double time);
 /// @param event event in HepMC data type
 /// @param particle new particle that will be added
 void addParticle(HepMC3::GenEvent& event,
-                 std::shared_ptr<SimParticle> particle);
+                 const std::shared_ptr<SimParticle>& particle);
 
 /// @brief Adds a new vertex
 /// @param event event in HepMC data type
 /// @param vertex new vertex that will be added
 /// @note The statuses are not represented in Acts and therefore set to 0
 void addVertex(HepMC3::GenEvent& event,
-               const std::shared_ptr<SimVertex> vertex);
+               const std::shared_ptr<SimVertex>& vertex);
 ///
 /// Remover
 ///

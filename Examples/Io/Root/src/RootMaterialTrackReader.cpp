@@ -20,9 +20,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     const Config& config, Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
-      m_cfg(config),
-      m_events(0),
-      m_inputChain(nullptr) {
+      m_cfg(config) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   // Set the branches
@@ -61,14 +59,14 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   }
 
   // loop over the input files
-  for (auto inputFile : m_cfg.fileList) {
+  for (const auto& inputFile : m_cfg.fileList) {
     // add file to the input chain
     m_inputChain->Add(inputFile.c_str());
     ACTS_DEBUG("Adding File " << inputFile << " to tree '" << m_cfg.treeName
                               << "'.");
   }
 
-  m_events = m_inputChain->GetMaximum("event_id") + 1;
+  m_events = static_cast<size_t>(m_inputChain->GetMaximum("event_id") + 1);
   size_t nentries = m_inputChain->GetEntries();
   m_batchSize = nentries / m_events;
   ACTS_DEBUG("The full chain has "
@@ -86,6 +84,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
                 m_entryNumbers.data(), false);
   }
+  m_outputMaterialTracks.initialize(m_cfg.collection);
 }
 
 ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
@@ -188,7 +187,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
       mtrackCollection[ib] = (std::move(rmTrack));
     }
     // Write to the collection to the EventStore
-    context.eventStore.add(m_cfg.collection, std::move(mtrackCollection));
+    m_outputMaterialTracks(context, std::move(mtrackCollection));
   }
   // Return success flag
   return ActsExamples::ProcessCode::SUCCESS;

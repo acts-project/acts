@@ -16,12 +16,16 @@ namespace ActsFatras {
 
 /// Do not select any surface, ever.
 struct NoSurface {
-  constexpr bool operator()(const Acts::Surface &) const { return false; }
+  constexpr bool operator()(const Acts::Surface& /*surface*/) const {
+    return false;
+  }
 };
 
 /// Select every surface.
 struct EverySurface {
-  constexpr bool operator()(const Acts::Surface &) const { return true; }
+  constexpr bool operator()(const Acts::Surface& /*surface*/) const {
+    return true;
+  }
 };
 
 }  // namespace ActsFatras

@@ -36,8 +36,9 @@ static std::unique_ptr<const Acts::Logger> m_logger;
 const Acts::Logger& logger() {
   return *m_logger;
 }
-int runMeasurementsToSP(int argc, char* argv[],
-                        std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runMeasurementsToSP(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -78,7 +79,7 @@ int runMeasurementsToSP(int argc, char* argv[],
   ACTS_INFO("after building geometry");
 
   // Add the decorator to the sequencer
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 

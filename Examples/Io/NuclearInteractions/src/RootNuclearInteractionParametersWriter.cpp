@@ -87,8 +87,7 @@ buildNotNormalisedMap(TH1F const* hist) {
   // Fill the cumulative histogram
   double integral = 0.;
   std::vector<double> temp_HistoContents(nBins);
-  int iBin;
-  for (iBin = 0; iBin < nBins; iBin++) {
+  for (int iBin = 0; iBin < nBins; iBin++) {
     float binval = hist->GetBinContent(iBin + 1);
     // Avoid negative bin values
     if (binval < 0) {
@@ -107,7 +106,7 @@ buildNotNormalisedMap(TH1F const* hist) {
   }
 
   // Set the bin borders
-  for (iBin = 1; iBin <= nBins; iBin++) {
+  for (int iBin = 1; iBin <= nBins; iBin++) {
     histoBorders[iBin - 1] = hist->GetXaxis()->GetBinLowEdge(iBin);
   }
   histoBorders[nBins] = hist->GetXaxis()->GetXmax();
@@ -158,8 +157,8 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(
   std::vector<uint32_t> normalisedHistoContents(nBins);
   const double invIntegral = 1. / std::get<2>(map);
   for (int iBin = 0; iBin < nBins; ++iBin) {
-    normalisedHistoContents[iBin] =
-        UINT32_MAX * (histoContents[iBin] * invIntegral);
+    normalisedHistoContents[iBin] = static_cast<unsigned int>(
+        UINT32_MAX * (histoContents[iBin] * invIntegral));
   }
 
   auto histoBorders = std::get<0>(map);
@@ -196,8 +195,8 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist,
   std::vector<uint32_t> normalisedHistoContents(nBins);
   const double invIntegral = 1. / std::max(integral, std::get<2>(map));
   for (int iBin = 0; iBin < nBins; ++iBin) {
-    normalisedHistoContents[iBin] =
-        UINT32_MAX * (histoContents[iBin] * invIntegral);
+    normalisedHistoContents[iBin] = static_cast<unsigned int>(
+        UINT32_MAX * (histoContents[iBin] * invIntegral));
   }
 
   std::vector<float> histoBorders = std::get<0>(map);
@@ -349,7 +348,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::
     ~RootNuclearInteractionParametersWriter() = default;
 
 ActsExamples::ProcessCode
-ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
+ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
   namespace Parametrisation = detail::NuclearInteractionParametrisation;
   if (m_eventFractionCollection.empty()) {
     return ProcessCode::ABORT;

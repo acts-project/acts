@@ -18,7 +18,8 @@
 Acts::DD4hepDetectorElement::DD4hepDetectorElement(
     const dd4hep::DetElement detElement, const std::string& axes, double scalor,
     bool /*isDisc*/, std::shared_ptr<const Acts::ISurfaceMaterial> material,
-    std::shared_ptr<const Acts::DigitizationModule> /*digitizationModule*/)
+    const std::shared_ptr<
+        const Acts::DigitizationModule>& /*digitizationModule*/)
     : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
                                 *(detElement.placement().ptr()),
                                 detElement.nominal().worldTransformation(),

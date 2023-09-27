@@ -11,6 +11,7 @@
 #include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
+#include <array>
 #include <limits>
 
 namespace Acts {

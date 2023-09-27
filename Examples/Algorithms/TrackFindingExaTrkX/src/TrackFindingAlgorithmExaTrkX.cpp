@@ -16,7 +16,7 @@
 
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFindingMLBasedAlgorithm", level),
+    : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing spacepoint input collection");
@@ -27,13 +27,15 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   if (!m_cfg.trackFinderML) {
     throw std::invalid_argument("Missing track finder");
   }
+
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& spacepoints =
-      ctx.eventStore.get<SimSpacePointContainer>(m_cfg.inputSpacePoints);
+  const auto& spacepoints = m_inputSpacePoints(ctx);
 
   // Convert Input data to a list of size [num_measurements x
   // measurement_features]
@@ -57,15 +59,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     // For now just take the first index since does require one single index per
     // spacepoint
-    const auto islink =
-        static_cast<const IndexSourceLink&>(*sp.sourceLinks().front());
+    const auto& islink = sp.sourceLinks()[0].template get<IndexSourceLink>();
     spacepointIDs.push_back(islink.index());
   }
 
   // ProtoTrackContainer protoTracks;
   std::vector<std::vector<int> > trackCandidates;
   m_cfg.trackFinderML->getTracks(inputValues, spacepointIDs, trackCandidates,
-                                 Acts::LoggerWrapper{logger()});
+                                 logger());
 
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
@@ -76,7 +77,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   }
 
   ACTS_INFO("Created " << protoTracks.size() << " proto tracks");
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
+  m_outputProtoTracks(ctx, std::move(protoTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

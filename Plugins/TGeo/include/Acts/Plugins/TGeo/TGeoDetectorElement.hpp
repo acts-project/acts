@@ -84,7 +84,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param tgThickness the thickness of this detector element
   TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
                       const Transform3& tgTransform,
-                      std::shared_ptr<const PlanarBounds> tgBounds,
+                      const std::shared_ptr<const PlanarBounds>& tgBounds,
                       double tgThickness = 0.);
 
   /// Constructor with pre-computed disk surface.
@@ -99,7 +99,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param tgThickness the thickness of this detector element
   TGeoDetectorElement(const Identifier& identifier, const TGeoNode& tGeoNode,
                       const Transform3& tgTransform,
-                      std::shared_ptr<const DiscBounds> tgBounds,
+                      const std::shared_ptr<const DiscBounds>& tgBounds,
                       double tgThickness = 0.);
 
   ~TGeoDetectorElement() override;
@@ -111,7 +111,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param gctx The current geometry context object, e.g. alignment
   const Transform3& transform(const GeometryContext& gctx) const override;
 
-  /// Return surface associated with this identifier, which should come from the
+  /// Return surface associated with this detector element
   const Surface& surface() const override;
 
   /// Retrieve the DigitizationModule

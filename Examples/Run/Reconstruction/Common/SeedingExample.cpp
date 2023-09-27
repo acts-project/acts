@@ -28,6 +28,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 
 #include <memory>
 
@@ -36,8 +37,9 @@
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int runSeedingExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runSeedingExample(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -69,7 +71,7 @@ int runSeedingExample(int argc, char* argv[],
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vm));
 
   // Add the decorator to the sequencer
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 
@@ -119,7 +121,6 @@ int runSeedingExample(int argc, char* argv[],
       spCfg.outputSpacePoints,
   };
   seedingCfg.outputSeeds = "seeds";
-  seedingCfg.outputProtoTracks = "prototracks";
   seedingCfg.gridConfig.rMax = 200._mm;
   seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
 
@@ -157,25 +158,26 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.gridConfig.minPt = 500._MeV;
   seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
-  seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
-  seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
+  seedingCfg.gridOptions.bFieldInZ = 1.99724_T;
 
-  seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
+  seedingCfg.seedFinderOptions.bFieldInZ = seedingCfg.gridOptions.bFieldInZ;
+  seedingCfg.seedFinderOptions.beamPos = {0_mm, 0_mm};
 
   seedingCfg.seedFinderConfig.impactMax = 3._mm;
 
   sequencer.addAlgorithm(
       std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 
+  SeedsToPrototracks::Config seedsToPrototrackCfg;
+  seedsToPrototrackCfg.inputSeeds = seedingCfg.outputSeeds;
+  seedsToPrototrackCfg.outputProtoTracks = "prototracks";
+  sequencer.addAlgorithm(
+      std::make_shared<SeedsToPrototracks>(seedsToPrototrackCfg, logLevel));
+
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
-  paramsEstimationCfg.inputSpacePoints = {
-      spCfg.outputSpacePoints,
-  };
-  paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-  paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
   paramsEstimationCfg.trackingGeometry = tGeometry;
   paramsEstimationCfg.magneticField = magneticField;
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
@@ -183,7 +185,7 @@ int runSeedingExample(int argc, char* argv[],
 
   // Seeding performance Writers
   TrackFinderPerformanceWriter::Config tfPerfCfg;
-  tfPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+  tfPerfCfg.inputProtoTracks = seedsToPrototrackCfg.outputProtoTracks;
   tfPerfCfg.inputParticles = inputParticles;
   tfPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
@@ -192,11 +194,11 @@ int runSeedingExample(int argc, char* argv[],
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
   SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+  seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  seedPerfCfg.filePath = outputDir + "/performance_seeding_hists.root";
+  seedPerfCfg.filePath = outputDir + "/performance_seeding.root";
   sequencer.addWriter(
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 
@@ -204,7 +206,8 @@ int runSeedingExample(int argc, char* argv[],
   RootTrackParameterWriter::Config trackParamsWriterCfg;
   trackParamsWriterCfg.inputTrackParameters =
       paramsEstimationCfg.outputTrackParameters;
-  trackParamsWriterCfg.inputProtoTracks = paramsEstimationCfg.outputProtoTracks;
+  trackParamsWriterCfg.inputProtoTracks =
+      seedsToPrototrackCfg.outputProtoTracks;
   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   trackParamsWriterCfg.inputMeasurementParticlesMap =

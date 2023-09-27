@@ -45,14 +45,17 @@ struct SeedFinderConfig {
   float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
-  // force sorting in R in space point grid bins
-  bool forceRadialSorting = false;
 
   // radial range for middle SP
-  std::vector<std::vector<float>> rRangeMiddleSP;
+  // variable range based on SP radius
   bool useVariableMiddleSPRange = false;
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+  // range defined in vector for each z region
+  std::vector<std::vector<float>> rRangeMiddleSP;
+  // range defined by rMinMiddle and rMaxMiddle
+  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
+  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
@@ -116,12 +119,6 @@ struct SeedFinderConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
-  float bFieldInZ = 2.08 * Acts::UnitConstants::T;
-  // location of beam in x,y plane.
-  // used as offset for Space Points
-  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
-                        0 * Acts::UnitConstants::mm};
-
   std::vector<size_t> zBinsCustomLooping = {};
 
   // average radiation lengths of material on the length of a seed. used for
@@ -144,10 +141,6 @@ struct SeedFinderConfig {
   // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
-  float pTPerHelixRadius = 0;
-  float minHelixDiameter2 = 0;
-  float pT2perRadius = 0;
-  float sigmapT2perRadius = 0;
 
   // only for Cuda plugin
   int maxBlockSize = 1024;
@@ -176,9 +169,16 @@ struct SeedFinderConfig {
   // Returns position of the center of the top strip.
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
+  bool isInInternalUnits = false;
+
   SeedFinderConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for SeedFinderConfig");
+    }
     using namespace Acts::UnitLiterals;
     SeedFinderConfig config = *this;
+    config.isInInternalUnits = true;
     config.minPt /= 1_MeV;
     config.deltaRMin /= 1_mm;
     config.deltaRMax /= 1_mm;
@@ -197,11 +197,7 @@ struct SeedFinderConfig {
     config.zMax /= 1_mm;
     config.rMax /= 1_mm;
     config.rMin /= 1_mm;
-    config.bFieldInZ /= 1000. * 1_T;
     config.deltaZMax /= 1_mm;
-
-    config.beamPos[0] /= 1_mm;
-    config.beamPos[1] /= 1_mm;
 
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
@@ -209,6 +205,69 @@ struct SeedFinderConfig {
     config.toleranceParam /= 1_mm;
 
     return config;
+  }
+  SeedFinderConfig calculateDerivedQuantities() const {
+    SeedFinderConfig config = *this;
+    // calculation of scattering using the highland formula
+    // convert pT to p once theta angle is known
+    config.highland = 13.6 * std::sqrt(radLengthPerSeed) *
+                      (1 + 0.038 * std::log(radLengthPerSeed));
+    const float maxScatteringAngle = config.highland / minPt;
+    config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
+    return config;
+  }
+};
+
+struct SeedFinderOptions {
+  // location of beam in x,y plane.
+  // used as offset for Space Points
+  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
+                        0 * Acts::UnitConstants::mm};
+  // field induction
+  float bFieldInZ = 2.08 * Acts::UnitConstants::T;
+
+  // derived quantities
+  float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
+  float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
+  float pT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
+
+  bool isInInternalUnits = false;
+
+  SeedFinderOptions toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for SeedFinderOptions");
+    }
+    using namespace Acts::UnitLiterals;
+    SeedFinderOptions options = *this;
+    options.isInInternalUnits = true;
+    options.beamPos[0] /= 1_mm;
+    options.beamPos[1] /= 1_mm;
+
+    options.bFieldInZ /= 1000. * 1_T;
+    return options;
+  }
+
+  template <typename Config>
+  SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
+    if (!isInInternalUnits) {
+      throw std::runtime_error(
+          "Derived quantities in SeedFinderOptions can only be calculated from "
+          "Acts internal units");
+    }
+    SeedFinderOptions options = *this;
+    // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
+    // millimeter
+    // TODO: change using ACTS units
+    options.pTPerHelixRadius = 300. * options.bFieldInZ;
+    options.minHelixDiameter2 =
+        std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2);
+    options.pT2perRadius =
+        std::pow(config.highland / options.pTPerHelixRadius, 2);
+    options.sigmapT2perRadius =
+        options.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
+    return options;
   }
 };
 

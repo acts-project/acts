@@ -50,7 +50,7 @@ void Acts::from_json(const nlohmann::json& j, Acts::BinningData& bd) {
                              Acts::binningValueNames().end(), valueName);
   Acts::BinningValue bValue = static_cast<Acts::BinningValue>(
       valueIter - Acts::binningValueNames().begin());
-  if (bins == 1) {
+  if (bins == 1 and not(j["type"] == "arbitrary")) {
     bd = Acts::BinningData(bValue, min, max);
     return;
   }

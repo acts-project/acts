@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
   TrapezoidBounds original(minHalfX, maxHalfX, halfY);
   // const bool symmetric(false);
   auto valvector = original.values();
-  std::array<double, TrapezoidBounds::eSize> values;
+  std::array<double, TrapezoidBounds::eSize> values{};
   std::copy_n(valvector.begin(), TrapezoidBounds::eSize, values.begin());
   TrapezoidBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 
 #include "DigitizationConfigExample.hpp"
 
 int main(int argc, char* argv[]) {
-  return runDigitizationConfigExample(argc, argv,
-                                      std::make_shared<GenericDetector>());
+  return runDigitizationConfigExample(
+      argc, argv, std::make_shared<ActsExamples::GenericDetectorWithOptions>());
 }

@@ -49,7 +49,7 @@ class BinnedArray {
   ///
   /// @return the object according to the estimated bin
   virtual T object(const Vector2& lposition) const {
-    std::array<size_t, 3> bins;
+    std::array<size_t, 3> bins{};
     return object(lposition, bins);
   }
 
@@ -68,7 +68,7 @@ class BinnedArray {
   ///
   /// @return the object according to the estimated bin
   virtual T object(const Vector3& position) const {
-    std::array<size_t, 3> bins;
+    std::array<size_t, 3> bins{};
     return object(position, bins);
   }
 

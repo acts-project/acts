@@ -34,7 +34,7 @@ class GainMatrixSmoother {
   template <typename D>
   Result<void> operator()(const GeometryContext& gctx,
                           MultiTrajectory<D>& trajectory, size_t entryIndex,
-                          LoggerWrapper logger = getDummyLogger()) const {
+                          const Logger& logger = getDummyLogger()) const {
     (void)gctx;
 
     using TrackStateProxy = typename MultiTrajectory<D>::TrackStateProxy;
@@ -136,7 +136,7 @@ class GainMatrixSmoother {
                          const GetCovariance& predictedCovariance,
                          const GetCovariance& smoothedCovariance,
                          const GetCovariance& jacobian,
-                         LoggerWrapper logger) const;
+                         const Logger& logger) const;
 };
 
 }  // namespace Acts

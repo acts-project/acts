@@ -10,6 +10,8 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
@@ -40,7 +42,7 @@ class CsvSpacePointReader final : public IReader {
     /// Output space point collections.
     std::string outputSpacePoints;
     /// Read extended collections
-    bool extendCollection;
+    bool extendCollection = false;
   };
 
   /// Construct the simhit reader.
@@ -49,19 +51,23 @@ class CsvSpacePointReader final : public IReader {
   /// @params lvl is the logging level
   CsvSpacePointReader(const Config& cfg, Acts::Logging::Level lvl);
 
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t> availableEvents() const override;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
+      this, "OutputSpacePoints"};
+
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 

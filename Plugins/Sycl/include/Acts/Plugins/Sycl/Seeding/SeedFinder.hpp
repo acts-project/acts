@@ -11,6 +11,7 @@
 // Acts include(s).
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 
 // SYCL plugin include(s).
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
@@ -26,6 +27,7 @@ template <typename external_spacepoint_t>
 class SeedFinder {
  public:
   SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config,
+             const Acts::SeedFinderOptions& options,
              const Acts::Sycl::DeviceExperimentCuts& cuts,
              Acts::Sycl::QueueWrapper wrappedQueue,
              vecmem::memory_resource& resource,
@@ -47,10 +49,14 @@ class SeedFinder {
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+      Acts::SpacePointData& spacePointData,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const sp_range_t& bottomSPs, const std::size_t middleSPs,
+      const sp_range_t& topSPs) const;
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOptions m_options;
 
   /// Experiment specific cuts
   Acts::Sycl::DeviceExperimentCuts m_deviceCuts;

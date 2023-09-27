@@ -44,6 +44,16 @@ function full_chain() {
     fi
     echo $config
     
+    if [ $suffix != truth_smeared ]; then
+	    run \
+  	      $outdir/performance_seeding_${suffix}.root \
+    	    $refdir/performance_seeding_${suffix}.root \
+      	  --title "Seeding ${suffix}" \
+        	-c $config \
+        	-o $outdir/seeding_${suffix}.html \
+        	-p $outdir/seeding_${suffix}_plots
+    fi
+    
     run \
         $outdir/performance_ckf_${suffix}.root \
         $refdir/performance_ckf_${suffix}.root \
@@ -71,6 +81,15 @@ function full_chain() {
 full_chain truth_smeared
 full_chain truth_estimated
 full_chain seeded
+full_chain orthogonal
+
+run \
+    $outdir/performance_gsf.root \
+    $refdir/performance_gsf.root \
+    --title "Truth tracking (GSF)" \
+    -c CI/physmon/gsf.yml \
+    -o $outdir/gsf.html \
+    -p $outdir/gsf_plots
 
 run \
     $outdir/performance_truth_tracking.root \
@@ -86,13 +105,13 @@ run \
     --title "Ambisolver seeded" \
     -o $outdir/ambi_seeded.html \
     -p $outdir/ambi_seeded_plots
-
+    
 run \
-    $outdir/acts_analysis_residuals_and_pulls.root \
-    $refdir/acts_analysis_residuals_and_pulls.root \
-    --title "analysis_residuals_and_pulls" \
-#    -o $outdir/analysis_residuals_and_pulls.html \
-#    -p $outdir/analysis_residuals_and_pulls
+    $outdir/performance_ambi_orthogonal.root \
+    $refdir/performance_ambi_orthogonal.root \
+    --title "Ambisolver orthogonal" \
+    -o $outdir/ambi_orthogonal.html \
+    -p $outdir/ambi_orthogonal_plots
 
 Examples/Scripts/vertex_mu_scan.py \
     $outdir/performance_vertexing_*mu*.root \

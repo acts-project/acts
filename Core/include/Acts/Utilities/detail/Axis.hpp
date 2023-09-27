@@ -70,8 +70,8 @@ class NeighborHoodIndices {
     bool operator!=(const iterator& it) const { return !(*this == it); }
 
    private:
-    size_t m_current, m_end1, m_begin2;
-    bool m_wrapped;
+    size_t m_current = 0, m_end1 = 0, m_begin2 = 0;
+    bool m_wrapped = false;
   };
 
   iterator begin() const { return iterator(m_begin1, m_end1, m_begin2); }
@@ -287,7 +287,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
   size_t getBin(ActsScalar x) const {
-    return wrapBin(std::floor((x - getMin()) / getBinWidth()) + 1);
+    return wrapBin(
+        static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
 
   /// @brief get bin width

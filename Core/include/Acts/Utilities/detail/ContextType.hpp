@@ -23,7 +23,7 @@ class ContextType {
  public:
   /// Default constructor, does nothing
   ///
-  ContextType() {}
+  ContextType() = default;
 
   /// Move construct a new Context Type object from anything. Must be explicit.
   ///

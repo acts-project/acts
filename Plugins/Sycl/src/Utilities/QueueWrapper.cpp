@@ -25,13 +25,11 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
                            std::unique_ptr<const Logger> incomingLogger)
     : m_queue(nullptr), m_ownsQueue(true), m_logger(std::move(incomingLogger)) {
   // SYCL kernel exceptions are asynchronous
-  auto exception_handler = [&log =
-                                m_logger](cl::sycl::exception_list exceptions) {
+  auto exception_handler = [this](cl::sycl::exception_list exceptions) {
     for (std::exception_ptr const& e : exceptions) {
       try {
         std::rethrow_exception(e);
       } catch (std::exception& e) {
-        LoggerWrapper logger(*log);
         ACTS_FATAL("Caught asynchronous (kernel) SYCL exception:\n" << e.what())
       }
     }
@@ -43,7 +41,6 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
   m_ownsQueue = true;
 
   // See which device we are running on.
-  LoggerWrapper logger(*m_logger);
   ACTS_INFO("Running on: "
             << m_queue->get_device().get_info<cl::sycl::info::device::name>());
 }

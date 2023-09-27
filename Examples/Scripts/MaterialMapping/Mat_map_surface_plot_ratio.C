@@ -32,6 +32,7 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, const
     c1->SetBottomMargin(0.14);
     Map_prop[0]->Divide(Map_geant[0]);
     Map_prop[0]->GetZaxis()->SetTitle("X0 ratio");
+    Map_prop[0]->SetMaximum(2.);
     Map_prop[0]->Draw("COLZ");
     vol->Draw();
     surface->Draw();
@@ -63,6 +64,7 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, const
     c1->SetBottomMargin(0.14);
     Map_prop[0]->Divide(Map_geant[0]);
     Map_prop[0]->GetZaxis()->SetTitle("X0 ratio");
+    Map_prop[0]->SetMaximum(2.);
     Map_prop[0]->Draw("COLZ");
     vol->Draw();
     surface->Draw();

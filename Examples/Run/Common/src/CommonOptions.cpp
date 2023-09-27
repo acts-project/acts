@@ -19,7 +19,7 @@
 using namespace boost::program_options;
 
 boost::program_options::options_description
-ActsExamples::Options::makeDefaultOptions(std::string caption) {
+ActsExamples::Options::makeDefaultOptions(const std::string& caption) {
   std::cout
       << "\n\n======================= DEPRECATION NOTICE "
          "========================\n"

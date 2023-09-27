@@ -13,5 +13,6 @@ namespace ActsExamples {
 class IBaseDetector;
 }
 
-int runMeasurementsToSP(int argc, char* argv[],
-                        std::shared_ptr<ActsExamples::IBaseDetector> detector);
+int runMeasurementsToSP(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector);

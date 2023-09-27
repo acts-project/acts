@@ -1,10 +1,13 @@
+include(ActsTargetLinkLibrariesSystem)
+
 add_library(
   ActsExamplesFramework SHARED
-  src/Framework/BareAlgorithm.cpp
+  src/Framework/IAlgorithm.cpp
+  src/Framework/SequenceElement.cpp
   src/Framework/WhiteBoard.cpp
-  src/Framework/BareService.cpp
   src/Framework/RandomNumbers.cpp
   src/Framework/Sequencer.cpp
+  src/Utilities/EventDataTransforms.cpp
   src/Utilities/Paths.cpp
   src/Utilities/Options.cpp
   src/Utilities/Helpers.cpp
@@ -21,7 +24,10 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
-  PRIVATE dfelibs std::filesystem)
+  PRIVATE std::filesystem)
+acts_target_link_libraries_system(
+  ActsExamplesFramework
+  PRIVATE dfelibs)
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
@@ -58,4 +64,6 @@ install(
   TARGETS ActsExamplesFramework
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(DIRECTORY include/ActsExamples DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+  DIRECTORY include/ActsExamples 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

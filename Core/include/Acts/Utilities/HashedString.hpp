@@ -20,18 +20,18 @@ using HashedString = std::uint32_t;
 namespace detail {
 // FNV-1a 32bit hashing algorithm.
 constexpr HashedString fnv1a_32(char const* s, std::size_t count) {
-  return count ? (fnv1a_32(s, count - 1) ^ s[count - 1]) * 16777619u
-               : 2166136261u;
+  return count != 0u ? (fnv1a_32(s, count - 1) ^ s[count - 1]) * 16777619u
+                     : 2166136261u;
 }
 
 constexpr HashedString fnv1a_32(std::string_view s) {
-  return s.size() ? (fnv1a_32(s.substr(0, s.size() - 1)) ^ s[s.size() - 1]) *
-                        16777619u
-                  : 2166136261u;
+  return !s.empty() ? (fnv1a_32(s.substr(0, s.size() - 1)) ^ s[s.size() - 1]) *
+                          16777619u
+                    : 2166136261u;
 }
 
 constexpr int length(const char* str) {
-  return *str ? 1 + length(str + 1) : 0;
+  return *str != 0 ? 1 + length(str + 1) : 0;
 }
 }  // namespace detail
 

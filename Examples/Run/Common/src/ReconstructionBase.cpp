@@ -82,8 +82,8 @@ ActsExamples::DigitizationConfig setupDigitization(
           vars["digi-config-file"].as<std::string>()));
   // Common options for digitization
   digiCfg.inputSimHits = inputSimHits;
-  digiCfg.randomNumbers = rnd;
-  digiCfg.trackingGeometry = trackingGeometry;
+  digiCfg.randomNumbers = std::move(rnd);
+  digiCfg.trackingGeometry = std::move(trackingGeometry);
   sequencer.addAlgorithm(
       std::make_shared<DigitizationAlgorithm>(digiCfg, logLevel));
 
@@ -111,7 +111,7 @@ ActsExamples::ParticleSmearing::Config setupParticleSmearing(
       Options::readParticleSmearingOptions(vars);
   particleSmearingCfg.inputParticles = inputParticles;
   particleSmearingCfg.outputTrackParameters = "smearedparameters";
-  particleSmearingCfg.randomNumbers = rnd;
+  particleSmearingCfg.randomNumbers = std::move(rnd);
   sequencer.addAlgorithm(
       std::make_shared<ParticleSmearing>(particleSmearingCfg, logLevel));
 

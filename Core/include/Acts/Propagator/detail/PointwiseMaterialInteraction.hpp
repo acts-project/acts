@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -53,7 +54,7 @@ struct PointwiseMaterialInteraction {
   /// The energy change due to the interaction.
   double Eloss = 0.;
   /// The momentum after the interaction
-  double nextP;
+  double nextP = 0.;
 
   /// @brief Contructor
   ///
@@ -82,26 +83,29 @@ struct PointwiseMaterialInteraction {
   /// @brief This function evaluates the material properties to interact with
   ///
   /// @tparam propagator_state_t Type of the propagator state
+  /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in] state State of the propagation
+  /// @param [in] navigator Navigator of the propagation
   /// @param [in] updateStage The stage of the material update
   ///
   /// @return Boolean statement whether the material is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename navigator_t>
   bool evaluateMaterialSlab(
-      const propagator_state_t& state,
+      const propagator_state_t& state, const navigator_t& navigator,
       MaterialUpdateStage updateStage = MaterialUpdateStage::FullUpdate) {
     // We are at the start surface
-    if (surface == state.navigation.startSurface) {
+    if (surface == navigator.startSurface(state.navigation)) {
       updateStage = MaterialUpdateStage::PostUpdate;
       // Or is it the target surface ?
-    } else if (surface == state.navigation.targetSurface) {
+    } else if (surface == navigator.targetSurface(state.navigation)) {
       updateStage = MaterialUpdateStage::PreUpdate;
     }
 
     // Retrieve the material properties
-    slab = state.navigation.currentSurface->surfaceMaterial()->materialSlab(
-        pos, nav, updateStage);
+    slab = navigator.currentSurface(state.navigation)
+               ->surfaceMaterial()
+               ->materialSlab(pos, nav, updateStage);
 
     // Correct the material properties for non-zero incidence
     pathCorrection = surface->pathCorrection(state.geoContext, pos, dir);
@@ -139,6 +143,10 @@ struct PointwiseMaterialInteraction {
             static_cast<std::underlying_type_t<NavigationDirection>>(nav));
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
+    // minimum momentum below which we will not push particles via material
+    // update
+    static constexpr double minP = 10 * Acts::UnitConstants::MeV;
+    nextP = std::max(minP, nextP);
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextP, time);
     state.stepping.cov(eBoundPhi, eBoundPhi) = updateVariance(

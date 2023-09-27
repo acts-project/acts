@@ -5,14 +5,13 @@ target_link_libraries(
   ActsExampleEventRecording
   PRIVATE
     ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
+    ActsExamplesDD4hepDetectorWithOptions
     ActsExamplesEventRecording
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesIoHepMC3
     ActsExamplesHepMC3Options
-    ActsExamplesGeant4Common
-    Boost::program_options)
+    ActsExamplesGeant4Common)
     
 install(
   TARGETS ActsExampleEventRecording

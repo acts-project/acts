@@ -31,14 +31,16 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 
 #include <memory>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int runRecChi2Tracks(int argc, char* argv[],
-                     std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runRecChi2Tracks(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   using boost::program_options::value;
 
   // setup and parse options
@@ -77,7 +79,7 @@ int runRecChi2Tracks(int argc, char* argv[],
   auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
   // Add context decorators
-  for (auto cdr : geometry.second) {
+  for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field
@@ -149,7 +151,7 @@ int runRecChi2Tracks(int argc, char* argv[],
   // }
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
-  fitter.outputTrajectories = "trajectories";
+  fitter.outputTracks = "tracks";
   // fitter.directNavigation = false; // TODO: the --direct-navigation flag is
   // ignored for now.
   fitter.multipleScattering =
@@ -170,9 +172,15 @@ int runRecChi2Tracks(int argc, char* argv[],
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingChi2Algorithm>(fitter, logLevel));
 
+  TracksToTrajectories::Config tracksToTrajCfg{};
+  tracksToTrajCfg.inputTracks = fitter.outputTracks;
+  tracksToTrajCfg.outputTrajectories = "trajectories";
+  sequencer.addAlgorithm(
+      (std::make_shared<TracksToTrajectories>(tracksToTrajCfg, logLevel)));
+
   // write track states from fitting
   RootTrajectoryStatesWriter::Config trackStatesWriter;
-  trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
+  trackStatesWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurementParticlesMap =
@@ -185,7 +193,7 @@ int runRecChi2Tracks(int argc, char* argv[],
 
   // write track summary
   RootTrajectorySummaryWriter::Config trackSummaryWriter;
-  trackSummaryWriter.inputTrajectories = fitter.outputTrajectories;
+  trackSummaryWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   trackSummaryWriter.inputParticles = inputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
@@ -204,7 +212,7 @@ int runRecChi2Tracks(int argc, char* argv[],
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
 
   TrackFitterPerformanceWriter::Config perfFitter;
-  perfFitter.inputTrajectories = fitter.outputTrajectories;
+  perfFitter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   perfFitter.inputParticles = inputParticles;
   perfFitter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 
@@ -41,7 +42,11 @@ class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase {
   /// Constructor of the track finding module
   ///
   /// @param config is the config struct to configure the module
-  ExaTrkXTrackFindingOnnx(const Config& config);
+  /// @param _logger A logger instance
+  ExaTrkXTrackFindingOnnx(const Config& config,
+                          std::unique_ptr<const Logger> _logger =
+                              Acts::getDefaultLogger("ETXTrkFnd",
+                                                     Logging::INFO));
 
   /// Destructor
   ~ExaTrkXTrackFindingOnnx();
@@ -62,7 +67,7 @@ class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase {
   std::optional<ExaTrkXTime> getTracks(
       std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
       std::vector<std::vector<int> >& trackCandidates,
-      LoggerWrapper logger = getDummyLogger(),
+      const Logger& logger = getDummyLogger(),
       bool recordTiming = false) const override;
 
   /// Return the configuration object of the track finding module
@@ -84,6 +89,10 @@ class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase {
   std::unique_ptr<Ort::Session> m_embeddingSession;
   std::unique_ptr<Ort::Session> m_filterSession;
   std::unique_ptr<Ort::Session> m_gnnSession;
+
+  std::unique_ptr<const Logger> m_logger;
+
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

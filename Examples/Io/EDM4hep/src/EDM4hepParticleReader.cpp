@@ -33,6 +33,8 @@ EDM4hepParticleReader::EDM4hepParticleReader(
 
   m_mcParticleCollection =
       &m_store.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
+
+  m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
 std::string EDM4hepParticleReader::name() const {
@@ -51,7 +53,7 @@ ProcessCode EDM4hepParticleReader::read(const AlgorithmContext& ctx) {
 
   for (const auto& mcParticle : *m_mcParticleCollection) {
     auto particle =
-        EDM4hepUtil::readParticle(mcParticle, [](edm4hep::MCParticle p) {
+        EDM4hepUtil::readParticle(mcParticle, [](const edm4hep::MCParticle& p) {
           ActsFatras::Barcode result;
           // TODO dont use podio internal id
           result.setParticle(p.id());
@@ -63,7 +65,7 @@ ProcessCode EDM4hepParticleReader::read(const AlgorithmContext& ctx) {
   // Write ordered particles container to the EventStore
   SimParticleContainer particles;
   particles.insert(unordered.begin(), unordered.end());
-  ctx.eventStore.add(m_cfg.outputParticles, std::move(particles));
+  m_outputParticles(ctx, std::move(particles));
 
   return ProcessCode::SUCCESS;
 }

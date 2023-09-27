@@ -17,7 +17,10 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <G4EmParameters.hh>
 #include <G4FieldManager.hh>
+#include <G4HadronicParameters.hh>
+#include <G4HadronicProcessStore.hh>
 #include <G4MagneticField.hh>
 #include <G4RunManager.hh>
 #include <G4TransportationManager.hh>
@@ -29,6 +32,7 @@
 #include <G4UserTrackingAction.hh>
 #include <G4VUserDetectorConstruction.hh>
 #include <G4VUserPhysicsList.hh>
+#include <G4Version.hh>
 
 namespace {
 /// Helper method to add the user actions
@@ -47,7 +51,7 @@ void setUserActions(manager_t& manager, actions_t& actions) {
 ActsExamples::Geant4Simulation::Geant4Simulation(
     const ActsExamples::Geant4Simulation::Config& config,
     Acts::Logging::Level level)
-    : BareAlgorithm("Geant4Simulation", level), m_cfg(config) {
+    : IAlgorithm("Geant4Simulation", level), m_cfg(config) {
   if (m_cfg.detectorConstruction == nullptr) {
     throw std::invalid_argument("Missing G4 DetectorConstruction object");
   }
@@ -65,13 +69,40 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     if (m_cfg.outputSimHits.empty()) {
       ACTS_WARNING("No output sim hits collection configured");
     }
+    m_outputSimHits.initialize(m_cfg.outputSimHits);
+
     if (m_cfg.outputParticlesInitial.empty()) {
       ACTS_WARNING("No output initial particles collection configured");
     }
+    m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
+
     if (m_cfg.outputParticlesFinal.empty()) {
       ACTS_WARNING("No output final particles collection configured");
     }
+    m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
   }
+
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing input particle collection");
+  }
+
+  // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
+  // 3 would be also possible, but that produces infinite amount of output.
+  const int geantVerboseLevel =
+      logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
+  m_cfg.runManager->SetVerboseLevel(geantVerboseLevel);
+  G4EventManager::GetEventManager()->SetVerboseLevel(geantVerboseLevel);
+  G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(
+      geantVerboseLevel);
+  G4EventManager::GetEventManager()->GetStackManager()->SetVerboseLevel(
+      geantVerboseLevel);
+
+  // Suppress the printing of physics information.
+#if G4VERSION_NUMBER >= 1100
+  G4HadronicParameters::Instance()->SetVerboseLevel(0);
+  G4HadronicProcessStore::Instance()->SetVerbose(0);
+  G4EmParameters::Instance()->SetIsPrintedFlag(true);
+#endif
 
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
@@ -118,6 +149,9 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
 
     ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputMaterialTracks.maybeInitialize(m_cfg.outputMaterialTracks);
 }
 
 ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
@@ -138,6 +172,9 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   // this will allow access from the User*Actions
   eventData.store = &(ctx.eventStore);
 
+  // Register the input particle read handle
+  eventData.inputParticles = &m_inputParticles;
+
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
   m_cfg.runManager->BeamOn(1);
@@ -146,33 +183,28 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   if (not m_cfg.outputParticlesInitial.empty() and
       not m_cfg.outputParticlesFinal.empty()) {
     // Initial state of particles
-    SimParticleContainer outputParticlesInitial;
-    outputParticlesInitial.insert(eventData.particlesInitial.begin(),
-                                  eventData.particlesInitial.end());
     // Register to the event store
-    ctx.eventStore.add(m_cfg.outputParticlesInitial,
-                       std::move(outputParticlesInitial));
+    m_outputParticlesInitial(
+        ctx, SimParticleContainer(eventData.particlesInitial.begin(),
+                                  eventData.particlesInitial.end()));
     // Final state of particles
-    SimParticleContainer outputParticlesFinal;
-    outputParticlesFinal.insert(eventData.particlesFinal.begin(),
-                                eventData.particlesFinal.end());
     // Register to the event store
-    ctx.eventStore.add(m_cfg.outputParticlesFinal,
-                       std::move(outputParticlesFinal));
+    m_outputParticlesFinal(
+        ctx, SimParticleContainer(eventData.particlesFinal.begin(),
+                                  eventData.particlesFinal.end()));
   }
 
   // Output handling: Simulated hits
   if (not m_cfg.outputSimHits.empty()) {
-    SimHitContainer simHits;
-    simHits.insert(eventData.hits.begin(), eventData.hits.end());
     // Register to the event store
-    ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+    m_outputSimHits(
+        ctx, SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
   }
 
   // Output handling: Material tracks
   if (not m_cfg.outputMaterialTracks.empty()) {
-    ctx.eventStore.add(m_cfg.outputMaterialTracks,
-                       std::move(eventData.materialTracks));
+    m_outputMaterialTracks(
+        ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

@@ -59,7 +59,7 @@ int propagationExample(int argc, char* argv[],
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
   // Add the decorator to the sequencer
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 

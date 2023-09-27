@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(CylinderBoundsRecreation) {
   // Test construction with radii and default sector
   auto original = CylinderBounds(radius, halfz);
   auto valvector = original.values();
-  std::array<double, CylinderBounds::eSize> values;
+  std::array<double, CylinderBounds::eSize> values{};
   std::copy_n(valvector.begin(), CylinderBounds::eSize, values.begin());
   CylinderBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

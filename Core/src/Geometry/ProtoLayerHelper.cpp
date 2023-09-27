@@ -81,7 +81,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
 
   std::vector<Acts::ProtoLayer> finalProtoLayers;
 
-  for (auto ssurfaces : sortSurfaces) {
+  for (const auto& ssurfaces : sortSurfaces) {
     finalProtoLayers.push_back(ProtoLayer(gctx, ssurfaces));
   }
 

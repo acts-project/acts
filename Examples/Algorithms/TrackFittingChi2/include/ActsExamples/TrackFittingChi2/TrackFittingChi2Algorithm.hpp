@@ -8,13 +8,17 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/Chi2Fitter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
@@ -27,15 +31,14 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-class TrackFittingChi2Algorithm final : public BareAlgorithm {
+class TrackFittingChi2Algorithm final : public IAlgorithm {
  public:
   /// Track fitter function that takes input measurements, initial trackstate
   /// and fitter options and returns some track-fitter-specific result.
   using TrackFitterChi2Options =
       Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>;
 
-  using TrackFitterChi2Result = Acts::Result<
-      Acts::Experimental::Chi2FitterResult<Acts::VectorMultiTrajectory>>;
+  using TrackFitterChi2Result = Acts::Result<TrackContainer::TrackProxy>;
 
   /// Fit function that takes the above parameters and runs a fit
   /// @note This is separated into a virtual interface to keep compilation units
@@ -44,9 +47,8 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
    public:
     virtual ~TrackFitterChi2Function() = default;
     virtual TrackFitterChi2Result operator()(
-        const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const TrackFitterChi2Options&,
-        std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
+        const std::vector<Acts::SourceLink>&, const TrackParameters&,
+        const TrackFitterChi2Options&, TrackContainer&) const = 0;
   };
 
   struct Config {
@@ -59,9 +61,9 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
     /// Output fitted trajectories collection.
-    std::string outputTrajectories;
+    std::string outputTracks;
     /// number of update steps
-    unsigned int nUpdates;
+    unsigned int nUpdates = 0;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterChi2Function> fit;
     /// Tracking geometry for surface lookup
@@ -100,34 +102,43 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
  private:
   /// Helper function to call correct FitterFunction
   TrackFitterChi2Result fitTrack(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>&
           options,
       const std::vector<const Acts::Surface*>& surfSequence,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const;
+      TrackContainer& trackContainer) const;
 
   Config m_cfg;
+
+  ReadDataHandle<MeasurementContainer> m_measurementReadHandle{this,
+                                                               "Measurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_sourceLinkReadHandle{
+      this, "SourceLinks"};
+  ReadDataHandle<ProtoTrackContainer> m_protoTracksReadHandle{this,
+                                                              "ProtoTracks"};
+  ReadDataHandle<TrackParametersContainer> m_initialParametersReadHandle{
+      this, "TrackParameters"};
+
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 inline ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Result
 ActsExamples::TrackFittingChi2Algorithm::fitTrack(
-    const std::vector<std::reference_wrapper<
-        const ActsExamples::IndexSourceLink>>& sourceLinks,
+    const std::vector<Acts::SourceLink>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
     const Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>&
         options,
     // const Acts::Chi2FitterOptions& options,
     const std::vector<const Acts::Surface*>& surfSequence,
-    std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const {
+    TrackContainer& trackContainer) const {
   (void)surfSequence;  // TODO: silence unused parameter warning
   //   if (m_cfg.directNavigation) {
   //     return (*m_cfg.dFit)(sourceLinks, initialParameters, options,
   //     surfSequence);
   //   }
 
-  return (*m_cfg.fit)(sourceLinks, initialParameters, options, trajectory);
+  return (*m_cfg.fit)(sourceLinks, initialParameters, options, trackContainer);
 }
 
 }  // namespace ActsExamples

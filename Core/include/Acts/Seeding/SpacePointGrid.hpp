@@ -18,25 +18,23 @@
 namespace Acts {
 
 struct SpacePointGridConfig {
-  // magnetic field
-  float bFieldInZ;
   // minimum pT to be found by seedFinder
-  float minPt;
+  float minPt = 0;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMax;
+  float rMax = 0;
   // maximum extension of sensitive detector layer relevant for seeding in
   // positive direction in z
-  float zMax;
+  float zMax = 0;
   // maximum extension of sensitive detector layer relevant for seeding in
   // negative direction in z
-  float zMin;
+  float zMin = 0;
   // maximum distance in r from middle space point to bottom or top spacepoint
-  float deltaRMax;
+  float deltaRMax = 0;
   // maximum forward direction expressed as cot(theta)
-  float cotThetaMax;
+  float cotThetaMax = 0;
   // maximum impact parameter in mm
-  float impactMax;
+  float impactMax = 0;
   // minimum phi value for phiAxis construction
   float phiMin = -M_PI;
   // maximum phi value for phiAxis construction
@@ -50,12 +48,15 @@ struct SpacePointGridConfig {
   int phiBinDeflectionCoverage = 1;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
-
+  bool isInInternalUnits = false;
   SpacePointGridConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for SpacePointGridConfig");
+    }
     using namespace Acts::UnitLiterals;
     SpacePointGridConfig config = *this;
-
-    config.bFieldInZ /= 1000_T;
+    config.isInInternalUnits = true;
     config.minPt /= 1_MeV;
     config.rMax /= 1_mm;
     config.zMax /= 1_mm;
@@ -63,6 +64,24 @@ struct SpacePointGridConfig {
     config.deltaRMax /= 1_mm;
 
     return config;
+  }
+};
+
+struct SpacePointGridOptions {
+  // magnetic field
+  float bFieldInZ = 0;
+  bool isInInternalUnits = false;
+  SpacePointGridOptions toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for SpacePointGridOptions");
+    }
+    using namespace Acts::UnitLiterals;
+    SpacePointGridOptions options = *this;
+    options.isInInternalUnits = true;
+    options.bFieldInZ /= 1000_T;
+
+    return options;
   }
 };
 
@@ -77,7 +96,8 @@ class SpacePointGridCreator {
  public:
   template <typename external_spacepoint_t>
   static std::unique_ptr<SpacePointGrid<external_spacepoint_t>> createGrid(
-      const Acts::SpacePointGridConfig& _config);
+      const Acts::SpacePointGridConfig& _config,
+      const Acts::SpacePointGridOptions& _options);
 };
 }  // namespace Acts
 #include "Acts/Seeding/SpacePointGrid.ipp"

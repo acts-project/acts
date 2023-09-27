@@ -48,7 +48,7 @@ void CsvBFieldWriter::run(const Config<Coord, Grid>& config,
   // We proceed by finding the number of bins, as well as the minimum and
   // maximum coordinates. This process depends quite heavily on the structure
   // of the magnetic field, so we need some compile-time conditionals.
-  std::array<std::size_t, ConfigType::NDims> bins;
+  std::array<std::size_t, ConfigType::NDims> bins{};
   Vector min, max;
 
   if constexpr (Grid) {

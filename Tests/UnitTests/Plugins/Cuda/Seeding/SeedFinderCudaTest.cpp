@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -185,10 +185,13 @@ int main(int argc, char** argv) {
   config.sigmaScattering = 1.00000;
 
   config.minPt = 500._MeV;
-  config.bFieldInZ = 1.99724_T;
-
-  config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
+  config = config.toInternalUnits();
+
+  Acts::SeedFinderOptions options;
+  options.bFieldInZ = 1.99724_T;
+  options.beamPos = {-.5_mm, -.5_mm};
+  options = options.toInternalUnits().calculateDerivedQuantities(config);
 
   int numPhiNeighbors = 1;
 
@@ -219,7 +222,7 @@ int main(int argc, char** argv) {
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
   Acts::SeedFinder<SpacePoint> seedFinder_cpu(config);
-  Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config);
+  Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config, options);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -231,19 +234,21 @@ int main(int argc, char** argv) {
 
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
-  gridConf.bFieldInZ = config.bFieldInZ;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
   gridConf.zMin = config.zMin;
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
+  // setup spacepoint grid options
+  Acts::SpacePointGridOptions gridOpts;
+  gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config);
+      std::move(grid), rRangeSPExtent, config, options);
 
   auto end_pre = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
@@ -257,21 +262,21 @@ int main(int argc, char** argv) {
   auto start_cpu = std::chrono::system_clock::now();
 
   int group_count;
-  auto groupIt = spGroup.begin();
+  auto groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip);
 
   //----------- CPU ----------//
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  groupIt = spGroup.begin();
 
   if (do_cpu) {
     decltype(seedFinder_cpu)::SeedingState state;
-    for (int i_s = 0; i_s < skip; i_s++)
-      ++groupIt;
-    for (; !(groupIt == spGroup.end()); ++groupIt) {
+    state.spacePointData.resize(spVec.size());
+    for (; groupIt != spGroup.end(); ++groupIt) {
+      const auto [bottom, middle, top] = *groupIt;
       seedFinder_cpu.createSeedsForGroup(
-          state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
+          options, state, spGroup.grid(),
+          std::back_inserter(seedVector_cpu.emplace_back()), bottom, middle,
+          top, rMiddleSPRange);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)
@@ -293,19 +298,22 @@ int main(int argc, char** argv) {
 
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cuda;
-  groupIt = spGroup.begin();
+  groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip);
 
-  for (int i_s = 0; i_s < skip; i_s++)
-    ++groupIt;
-  for (; !(groupIt == spGroup.end()); ++groupIt) {
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spVec.size());
+
+  for (; groupIt != spGroup.end(); ++groupIt) {
+    const auto [bottom, middle, top] = *groupIt;
     seedVector_cuda.push_back(seedFinder_cuda.createSeedsForGroup(
-        groupIt.bottom(), groupIt.middle(), groupIt.top()));
+        spacePointData, spGroup.grid(), bottom, middle, top));
     group_count++;
     if (allgroup == false) {
       if (group_count >= nGroupToIterate)
         break;
     }
   }
+
   auto end_cuda = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_cuda = end_cuda - start_cuda;
   double cudaTime = elapsec_cuda.count();

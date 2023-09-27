@@ -132,8 +132,13 @@ class GeometryIdentifier {
 
 std::ostream& operator<<(std::ostream& os, GeometryIdentifier id);
 
-using GeometryIdentifierHook =
-    std::function<GeometryIdentifier(GeometryIdentifier, const Surface&)>;
+/// Base class for hooks that can be used to modify the Geometry Identifier
+/// during construction. Most common use case is setting the extra bit fields.
+struct GeometryIdentifierHook {
+  virtual ~GeometryIdentifierHook() = default;
+  virtual Acts::GeometryIdentifier decorateIdentifier(
+      Acts::GeometryIdentifier identifier, const Acts::Surface& surface) const;
+};
 
 }  // namespace Acts
 

@@ -40,15 +40,15 @@ class DiscLayer : virtual public DiscSurface, public Layer {
   /// @todo move ApproachDescriptor to unqique_ptr
   ///
   /// @return a sharted pointer to the new layer
-  static MutableLayerPtr create(
+  static std::shared_ptr<DiscLayer> create(
       const Transform3& transform,
       const std::shared_ptr<const DiscBounds>& dbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
       double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = Acts::passive) {
-    return MutableLayerPtr(new DiscLayer(transform, dbounds,
-                                         std::move(surfaceArray), thickness,
-                                         std::move(ad), laytyp));
+    return std::shared_ptr<DiscLayer>(
+        new DiscLayer(transform, dbounds, std::move(surfaceArray), thickness,
+                      std::move(ad), laytyp));
   }
 
   DiscLayer() = delete;

@@ -45,9 +45,13 @@ struct SimulationActor {
     // type.
     using action_type = SimulationActor;
 
-    template <typename propagator_state_t, typename stepper_t>
-    constexpr bool operator()(propagator_state_t &, const stepper_t &,
-                              const result_type &result) const {
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    constexpr bool operator()(propagator_state_t & /*state*/,
+                              const stepper_t & /*stepper*/,
+                              const navigator_t & /*navigator*/,
+                              const result_type &result,
+                              const Acts::Logger & /*logger*/) const {
       // must return true if the propagation should abort
       return not result.isAlive;
     }
@@ -75,9 +79,12 @@ struct SimulationActor {
   /// @param state is the mutable propagator state object
   /// @param stepper is the propagation stepper object
   /// @param result is the mutable result/cache object
-  template <typename propagator_state_t, typename stepper_t>
+  /// @param logger a logger instance
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t &state, stepper_t &stepper,
-                  result_type &result) const {
+                  navigator_t &navigator, result_type &result,
+                  const Acts::Logger & /*logger*/) const {
     assert(generator and "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
@@ -133,14 +140,14 @@ struct SimulationActor {
     }
 
     // If we are on target, everything should have been done
-    if (state.navigation.targetReached) {
+    if (navigator.targetReached(state.navigation)) {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do
-    if (not state.navigation.currentSurface) {
+    if (not navigator.currentSurface(state.navigation)) {
       return;
     }
-    const Acts::Surface &surface = *state.navigation.currentSurface;
+    const Acts::Surface &surface = *navigator.currentSurface(state.navigation);
 
     // we need the particle state before and after the interaction for the hit
     // creation. create a copy since the particle will be modified in-place.
@@ -183,14 +190,15 @@ struct SimulationActor {
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
     }
 
+    if (after.absoluteMomentum() == 0.0) {
+      result.isAlive = false;
+      return;
+    }
+
     // continue the propagation with the modified parameters
     stepper.update(state.stepping, after.position(), after.unitDirection(),
                    after.absoluteMomentum(), after.time());
   }
-
-  /// Pure observer interface. Does not apply to the Fatras simulator.
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t &, stepper_t &) const {}
 
   /// Construct the current particle state from the stepper state.
   template <typename stepper_t>

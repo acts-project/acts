@@ -16,6 +16,8 @@
 namespace Acts {
 namespace Test {
 
+class Object {};
+
 /// test of the intersection class
 BOOST_AUTO_TEST_CASE(IntersectionTest) {
   // a few valid intersections
@@ -149,6 +151,25 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   BOOST_CHECK_EQUAL(ztfsnIntersections[1].pathLength, -1.);
   BOOST_CHECK_EQUAL(ztfsnIntersections[2].pathLength, -2.);
   BOOST_CHECK_EQUAL(ztfsnIntersections[3].pathLength, -3.);
+}
+
+/// test swappping of the intersection
+BOOST_AUTO_TEST_CASE(SwapObjectIntersectionTest) {
+  using ObjectIntersection = ObjectIntersection<Object>;
+
+  Intersection3D intersection(Vector3(0., 0., 0.), 0.,
+                              IntersectionStatus::onSurface);
+  Intersection3D alternative(Vector3(10., 0., 0.), 10.,
+                             IntersectionStatus::reachable);
+  ObjectIntersection oIntersection;
+  oIntersection.intersection = intersection;
+  oIntersection.alternative = alternative;
+
+  BOOST_CHECK(oIntersection.intersection.position == Vector3(0., 0., 0.));
+  BOOST_CHECK(oIntersection.alternative.position == Vector3(10., 0., 0.));
+  oIntersection.swapSolutions();
+  BOOST_CHECK(oIntersection.alternative.position == Vector3(0., 0., 0.));
+  BOOST_CHECK(oIntersection.intersection.position == Vector3(10., 0., 0.));
 }
 
 /// test of the object intersection class

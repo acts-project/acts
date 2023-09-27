@@ -30,7 +30,7 @@ struct GsfExtensions {
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        NavigationDirection, LoggerWrapper)>;
+                                        NavigationDirection, const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -62,17 +62,19 @@ struct GsfOptions {
 
   GsfExtensions<traj_t> extensions;
 
-  LoggerWrapper logger;
-
   PropagatorPlainOptions propagatorPlainOptions;
 
   const Surface* referenceSurface = nullptr;
 
   std::size_t maxComponents = 4;
 
+  double weightCutoff = 1.e-4;
+
   bool abortOnError = true;
 
   bool disableAllMaterialHandling = false;
+
+  GsfOptions() = delete;
 };
 
 }  // namespace Experimental

@@ -83,13 +83,12 @@ void addMaterial(Context& ctx) {
   {
     using Alg = ActsExamples::MaterialMapping;
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "MaterialMapping")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def("scoringParameters", &Alg::scoringParameters)
-            .def_property_readonly("config", &Alg::config);
+    auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "MaterialMapping")
+                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def("scoringParameters", &Alg::scoringParameters)
+                   .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Alg::Config>(alg, "Config")
                  .def(py::init<const Acts::GeometryContext&,

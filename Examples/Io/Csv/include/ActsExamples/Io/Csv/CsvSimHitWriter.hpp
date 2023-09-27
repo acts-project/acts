@@ -58,7 +58,7 @@ class CsvSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] simHits are the simhits to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimHitContainer& simHits) final override;
+                     const SimHitContainer& simHits) override;
 
  private:
   Config m_cfg;

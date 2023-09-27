@@ -1,8 +1,8 @@
 {
   "description": "Experiment-independent toolkit for (charged) particle track reconstruction in (high energy) physics experiments implemented in modern C++ ",
   "license": "MPL-2.0",
-  "title": "acts-project/acts: v21.1.0",
-  "version": "v21.1.0",
+  "title": "acts-project/acts: v24.0.0",
+  "version": "v24.0.0",
   "upload_type": "software",
   "creators": [
     {
@@ -88,6 +88,30 @@
     {
       "affiliation": "Stanford University",
       "name": "Rocky Bala Garg"
+    },
+    {
+      "affiliation": "CERN / TU Wien",
+      "name": "Andreas Stefl"
+    },
+    {
+      "affiliation": "CERN / University of Coimbra",
+      "name": "Luis Falda Coelho",
+      "orcid": "0000-0002-2298-3605"
+    },
+    {
+      "affiliation": "CERN / University of Graz",
+      "name": "Alexander J. Pfleger",
+      "orcid": "0000-0001-5524-7738"
+    },
+    {
+      "affiliation": "University of Lisbon",
+      "name": "Guilherme Almeida",
+      "orcid": "0000-0002-4257-4278"
+    },
+    {
+      "affiliation": "CERN / University of Amsterdam",
+      "name": "Stephen Nicholas Swatman",
+      "orcid": "0000-0002-3747-3229"
     }
   ],
   "access_right": "open",

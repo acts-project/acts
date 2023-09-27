@@ -30,9 +30,8 @@ The KF can give us those three interpretations as sets of track parameters:
 This chapter will be extended in the future.
 :::
 
-
 (gsf_core)=
-## Gaussian Sum Filter
+## Gaussian Sum Filter (GSF)
 
 :::{note}
 The GSF is not considered as production ready yet, therefore it is located in the namespace `Acts::Experimental`.
@@ -44,17 +43,41 @@ $$
 p(\vec{x}) = \sum_i w_i \varphi(\vec{x}; \mu_i, \Sigma_i), \quad \sum_i w_i = 1
 $$
 
-A common use case of this is electron fitting. The energy-loss of Bremsstrahlung for electrons in matter are highly non-gaussian, and thus are not modeled accurately by the default material interactions in the Kalman Filter. Instead, the Bremsstrahlung is modeled as a Bethe-Heitler distribution, which is approximated as a gaussian mixture.
+A common use case of this is electron fitting. The energy-loss of Bremsstrahlung for electrons in matter are highly non-Gaussian, and thus cannot be modelled accurately by the default material interactions in the Kalman Filter. Instead, the Bremsstrahlung is modelled as a Bethe-Heitler distribution, where $z$ is the fraction of the energy remaining after the interaction ($E_f/E_i$), and $t$ is the material thickness in terms of the radiation length:
 
-### Implementation
+$$
+f(z) = \frac{(- \ln z)^{c-1}}{\Gamma(c)}, \quad c = t/\ln 2
+$$
 
-To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`. On a surface with material, the Bethe-Heitler energy-loss distribution is approximated with a fixed number of gaussian distributions for each component. Since the number of components would grow exponentially with each material interaction, components that are close in terms of their *Kullback–Leibler divergence* are merged to limit the computational cost. The Kalman update mechanism is based on the code for the {class}`Acts::KalmanFitter`.
+(figBetheHeitler)=
+:::{figure} ../figures/gsf_bethe_heitler_approx.svg
+:width: 450px
+:align: center
+The true Bethe-Heitler distribution compared with a gaussian mixture approximation (in thin lines the individual components are drawn) at t = 0.1 (corresponds to ~ 10mm Silicon).
+:::
 
-At the end of the fit the multi-component state must be reduced to a single set of parameters with a corresponding covariance matrix. This is supported by the {class}`Acts::MultiEigenStepperLoop` in two different ways currently: The *mean* method computes the mean of the state and the covariance matrix of the multi-component state, whereas the *maximum weight* method just returns the component with the maximum weight. This can be configured in the constructor of the {class}`Acts::MultiEigenStepperLoop` with the {enum}`Acts::FinalReductionMethod`. In the future there is planned to add a *mode* finding method as well.
+To be able to handle this with the Kalman filter mechanics, this distribution is approximated by a gaussian mixture as well (see {numref}`figBetheHeitler`). The GSF Algorithm works then as follows (see also {numref}`figGsf`)
+
+* On a surface with material, the Bethe-Heitler energy-loss distribution is approximated with a fixed number of gaussian components for each component. Since this way the number of components would grow exponentially with each material interaction, components that are close in terms of their *Kullback–Leibler divergence* are merged to limit the computational cost.
+* On a measurement surface, for each component a Kalman update is performed. Afterwards, the component weights are corrected according to each components compatibility with the measurement.
+
+(figGsf)=
+:::{figure} ../figures/gsf_overview.svg
+:width: 450px
+:align: center
+Simplified overview of the GSF algorithm.
+:::
+
+### The Multi-Stepper
+To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`, which is based on the {class}`Acts::EigenStepper` and thus shares a lot of code with it. It interfaces to the navigation as one aggregate state to limit the navigation overhead, but internally processes a multi-component state. How this aggregation is performed can be configured via a template parameter, by default weighted average is used ({struct}`WeightedComponentReducerLoop`).
+
+At the end of the fit the multi-component state must be reduced to a single set of parameters with a corresponding covariance matrix. This is supported by the {class}`Acts::MultiEigenStepperLoop` in two different ways currently: The *mean* method computes the mean and the covariance matrix of the multi-component state, whereas the *maximum weight* method just returns the component with the maximum weight. This can be configured in the constructor of the {class}`Acts::MultiEigenStepperLoop` with the {enum}`Acts::FinalReductionMethod`. In the future there is planned to add a *mode* finding method as well.
 
 :::{note}
 In practice it turned out that the *maximum weight* method leads to better results so far.
 :::
+
+Even though the multi-stepper interface exposes only one aggregate state and thus is compatible with most standard tools, there is a special aborter is required to stop the navigation when the surface is reached, the {class}`Acts::MultiStepperSurfaceReached`. It checks if all components have reached the target surface already and updates their state accordingly. Optionally, it also can stop the propagation when the aggregate state reaches the surface.
 
 
 ### Using the GSF
@@ -74,7 +97,7 @@ To simplify integration, the GSF returns a {class}`Acts::KalmanFitterResult` obj
 
 A GSF example can be found in the Acts Examples Framework [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_gsf.py).
 
-### Customizing the Bethe-Heitler approximation
+### Customising the Bethe-Heitler approximation
 
 The GSF needs an approximation of the Bethe-Heitler distribution as a Gaussian mixture on each material interaction (see above). This task is delegated to a separate class, that can be provided by a template parameter to {class}`Acts::Experimental::GaussianSumFitter`, so in principle it can be implemented in different ways.
 

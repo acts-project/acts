@@ -36,6 +36,8 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
 
 ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
     const G4Track& aTrack) const {
+  auto& eventData = EventStoreRegistry::eventData();
+
   // Unit conversions G4->::ACTS
   constexpr double convertTime = Acts::UnitConstants::s / CLHEP::s;
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
@@ -43,16 +45,38 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
 
   // Get all the information from the Track
   const G4ParticleDefinition* particleDef = aTrack.GetParticleDefinition();
-  G4double mass = particleDef->GetPDGMass();
-  G4double charge = particleDef->GetPDGCharge();
   G4int pdg = particleDef->GetPDGEncoding();
+  G4double charge = particleDef->GetPDGCharge();
+  G4double mass = particleDef->GetPDGMass();
   G4int id = aTrack.GetTrackID();
+  G4int parentId = aTrack.GetParentID();
   G4ThreeVector pPosition = convertLength * aTrack.GetPosition();
   G4double pTime = convertTime * aTrack.GetGlobalTime();
   G4ThreeVector pDirection = aTrack.GetMomentumDirection();
   G4double p = convertEnergy * aTrack.GetKineticEnergy();
+
+  if (parentId != 0) {
+    eventData.trackIdRootId[id] = eventData.trackIdRootId[parentId];
+  } else {
+    eventData.trackIdRootId[id] = id;
+  }
+
+  SimBarcode particleId;
+  if (eventData.trackIdMapping.find(id) != eventData.trackIdMapping.end()) {
+    particleId = eventData.trackIdMapping[id];
+  } else {
+    if (eventData.trackIdRootId.find(id) != eventData.trackIdRootId.end()) {
+      auto rootId = eventData.trackIdRootId[id];
+      particleId = eventData.trackIdMapping[rootId];
+      particleId.setGeneration(++eventData.trackIdGenerationCount[rootId]);
+      eventData.trackIdMapping[id] = particleId;
+    } else {
+      ACTS_WARNING("could not find parent " << parentId << " of " << id);
+    }
+  }
+
   // Now create the Particle
-  ActsExamples::SimParticle aParticle(SimBarcode(id), Acts::PdgParticle(pdg),
+  ActsExamples::SimParticle aParticle(particleId, Acts::PdgParticle(pdg),
                                       charge, mass);
   aParticle.setPosition4(pPosition[0], pPosition[1], pPosition[2], pTime);
   aParticle.setDirection(pDirection[0], pDirection[1], pDirection[2]);

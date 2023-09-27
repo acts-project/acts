@@ -9,7 +9,10 @@
 #pragma once
 
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <string>
 
@@ -47,7 +50,7 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   EDM4hepMultiTrajectoryWriter(
       const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
-  ProcessCode endRun() final;
+  ProcessCode finalize() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -66,6 +69,9 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   podio::EventStore m_store;
 
   edm4hep::TrackCollection* m_trackCollection;
+
+  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_inputMeasurementParticlesMap{this, "InputMeasurementParticlesMaps"};
 };
 
 }  // namespace ActsExamples

@@ -12,14 +12,6 @@
 
 namespace Acts {
 
-LoggerWrapper::LoggerWrapper(const Logger& logger) : m_logger(&logger) {}
-
-void LoggerWrapper::log(const Logging::Level& lvl,
-                        const std::string& input) const {
-  assert(m_logger != nullptr);
-  return m_logger->log(lvl, input);
-}
-
 namespace Logging {
 
 #if defined(ACTS_ENABLE_LOG_FAILURE_THRESHOLD) and \
@@ -68,7 +60,7 @@ void setFailureThreshold(Level level) {
 
 #else
 
-void setFailureThreshold(Level) {
+void setFailureThreshold(Level /*lvl*/) {
   throw std::logic_error{
       "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
       "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
@@ -85,6 +77,12 @@ class NeverFilterPolicy final : public OutputFilterPolicy {
   ~NeverFilterPolicy() override = default;
 
   bool doPrint(const Level& /*lvl*/) const override { return false; }
+
+  Level level() const override { return Level::MAX; }
+
+  std::unique_ptr<OutputFilterPolicy> clone(Level /*level*/) const override {
+    return std::make_unique<NeverFilterPolicy>();
+  }
 };
 
 std::unique_ptr<const Logger> makeDummyLogger() {
@@ -110,11 +108,10 @@ std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 
-LoggerWrapper getDummyLogger() {
+const Logger& getDummyLogger() {
   static const std::unique_ptr<const Logger> logger =
       Logging::makeDummyLogger();
-  static const LoggerWrapper loggerWrapper{*logger};
 
-  return loggerWrapper;
+  return *logger;
 }
 }  // namespace Acts

@@ -9,7 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <array>
@@ -24,7 +27,7 @@ namespace ActsExamples {
 /// position. The `d0` and `z0` parameters are always defined within that
 /// perigee frame and not globally. The generated bound parameters are stored in
 /// the same order as the input particles.
-class ParticleSmearing final : public BareAlgorithm {
+class ParticleSmearing final : public IAlgorithm {
  public:
   struct Config {
     /// Input truth particles collection.
@@ -57,13 +60,18 @@ class ParticleSmearing final : public BareAlgorithm {
 
   ParticleSmearing(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 };
 
 }  // namespace ActsExamples

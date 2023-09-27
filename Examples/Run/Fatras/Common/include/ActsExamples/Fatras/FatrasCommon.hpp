@@ -20,4 +20,4 @@ class IBaseDetector;
 /// @param argv command line arguments
 /// @param detector is the detector to be used
 int runFatras(int argc, char* argv[],
-              std::shared_ptr<ActsExamples::IBaseDetector> detector);
+              const std::shared_ptr<ActsExamples::IBaseDetector>& detector);

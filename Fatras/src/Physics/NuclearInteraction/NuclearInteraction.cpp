@@ -8,6 +8,8 @@
 
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
+#include <cstdint>
+
 namespace ActsFatras {
 
 const detail::NuclearInteractionParameters& NuclearInteraction::findParameters(
@@ -48,14 +50,14 @@ unsigned int NuclearInteraction::sampleDiscreteValues(
   }
 
   // Find the bin
-  const uint32_t int_rnd = UINT32_MAX * rnd;
+  const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
   const auto it = std::upper_bound(distribution.second.begin(),
                                    distribution.second.end(), int_rnd);
   size_t iBin = std::min((size_t)std::distance(distribution.second.begin(), it),
                          distribution.second.size() - 1);
 
   // Return the corresponding bin
-  return distribution.first[iBin];
+  return static_cast<unsigned int>(distribution.first[iBin]);
 }
 
 Particle::Scalar NuclearInteraction::sampleContinuousValues(
@@ -69,7 +71,7 @@ Particle::Scalar NuclearInteraction::sampleContinuousValues(
   }
 
   // Find the bin
-  const uint32_t int_rnd = UINT32_MAX * rnd;
+  const uint32_t int_rnd = static_cast<uint32_t>(UINT32_MAX * rnd);
   // Fast exit for non-normalised CDFs like interaction probabiltiy
   if (int_rnd > distribution.second.back()) {
     return std::numeric_limits<Scalar>::infinity();

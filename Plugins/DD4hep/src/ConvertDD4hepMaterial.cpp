@@ -27,7 +27,7 @@ std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning,
-    LoggerWrapper logger) {
+    const Logger& logger) {
   using namespace std::string_literals;
 
   // Create the bin utility
@@ -60,7 +60,7 @@ void Acts::addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning,
-    LoggerWrapper logger) {
+    const Logger& logger) {
   ACTS_VERBOSE("addLayerProtoMaterial");
   // Start with the representing surface
   std::vector<std::string> materialOptions = {"layer_material_representing"};
@@ -97,7 +97,7 @@ void Acts::addLayerProtoMaterial(
 
 void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
                                          Layer& cylinderLayer,
-                                         LoggerWrapper logger) {
+                                         const Logger& logger) {
   ACTS_VERBOSE(
       "Translating DD4hep material into Acts material for CylinderLayer : "
       << detElement.name());
@@ -114,7 +114,7 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
 }
 
 void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
-                                     Layer& discLayer, LoggerWrapper logger) {
+                                     Layer& discLayer, const Logger& logger) {
   ACTS_VERBOSE("Translating DD4hep material into Acts material for DiscLayer : "
                << detElement.name());
 

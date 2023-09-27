@@ -40,8 +40,12 @@ struct Options {
   double stepSizeCutOff = 0.0;
   std::size_t maxRungeKuttaStepTrials = 10;
   double mass = 1.0;
-  LoggerWrapper logger = Acts::getDummyLogger();
+  const Acts::Logger &logger = Acts::getDummyLogger();
 };
+
+struct MockNavigator {};
+
+static constexpr MockNavigator mockNavigator;
 
 struct Navigation {};
 
@@ -213,16 +217,20 @@ void test_multi_stepper_vs_eigen_stepper() {
   MultiStepper multi_stepper(defaultBField);
   SingleStepper single_stepper(defaultBField);
 
+  for (auto cmp : multi_stepper.componentIterable(multi_state)) {
+    cmp.status() = Acts::Intersection3D::Status::reachable;
+  }
+
   // Do some steps and check that the results match
   for (int i = 0; i < 10; ++i) {
     // Single stepper
     auto single_prop_state = DummyPropState(single_state);
-    auto single_result = single_stepper.step(single_prop_state);
+    auto single_result = single_stepper.step(single_prop_state, mockNavigator);
     single_stepper.transportCovarianceToCurvilinear(single_state);
 
     // Multi stepper;
     auto multi_prop_state = DummyPropState(multi_state);
-    auto multi_result = multi_stepper.step(multi_prop_state);
+    auto multi_result = multi_stepper.step(multi_prop_state, mockNavigator);
     multi_stepper.transportCovarianceToCurvilinear(multi_state);
 
     // Check equality
@@ -399,11 +407,11 @@ void test_multi_stepper_surface_status_update() {
   // Step forward now
   {
     auto multi_prop_state = DummyPropState(multi_state);
-    multi_stepper.step(multi_prop_state);
+    multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
     auto single_prop_state = DummyPropState(single_state);
-    single_stepper.step(single_prop_state);
+    single_stepper.step(single_prop_state, mockNavigator);
   }
 
   // Update surface status and check again
@@ -486,12 +494,12 @@ void test_component_bound_state() {
   {
     multi_stepper.updateSurfaceStatus(multi_state, *right_surface, false);
     auto multi_prop_state = DummyPropState(multi_state);
-    multi_stepper.step(multi_prop_state);
+    multi_stepper.step(multi_prop_state, mockNavigator);
 
     // Single stepper
     single_stepper.updateSurfaceStatus(single_state, *right_surface, false);
     auto single_prop_state = DummyPropState(single_state);
-    single_stepper.step(single_prop_state);
+    single_stepper.step(single_prop_state, mockNavigator);
   }
 
   // Check component-wise bound-state
@@ -706,20 +714,24 @@ void propagator_instatiation_test_function() {
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
-  PropagatorOptions options(geoCtx, magCtx, Acts::getDummyLogger());
+  PropagatorOptions options(geoCtx, magCtx);
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, BoundVector::Ones().eval(),
                BoundSymMatrix::Identity().eval()});
   MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
 
+  // This only checks that this compiles, not that it runs without errors
+  // @TODO: Add test that checks the target aborter works corretly
+
   // Instantiate with target
-  propagator.template propagate<decltype(pars), decltype(options),
-                                MultiStepperSurfaceReached>(pars, *surface,
-                                                            options);
+  using type_a =
+      decltype(propagator.template propagate<decltype(pars), decltype(options),
+                                             MultiStepperSurfaceReached>(
+          pars, *surface, options));
 
   // Instantiate without target
-  propagator.propagate(pars, options);
+  using tybe_b = decltype(propagator.propagate(pars, options));
 }
 
 BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {

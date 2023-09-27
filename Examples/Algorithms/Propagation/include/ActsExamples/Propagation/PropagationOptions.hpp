@@ -148,7 +148,7 @@ inline ActsExamples::PropagationAlgorithm::Config readPropagationConfig(
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
     // Only if they are properly defined, assign off-diagonals
-    if (vm.count("prop-corr-offd")) {
+    if (vm.count("prop-corr-offd") != 0u) {
       auto readOffd = vm["prop-corr-offd"].template as<Reals<15>>();
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
                               Acts::BoundIndices::eBoundLoc1) = readOffd[0];

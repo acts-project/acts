@@ -291,7 +291,7 @@ Acts::Result<void> Acts::
         ACTS_VERBOSE("Track weight too low. Skip track.");
       }
     }  // End loop over tracks at vertex
-    ACTS_VERBOSE("New vertex position: " << vtx->fullPosition());
+    ACTS_VERBOSE("New vertex position: " << vtx->fullPosition().transpose());
   }  // End loop over vertex collection
 
   return {};

@@ -30,10 +30,6 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
       m_duplicationPlotTool(m_cfg.duplicationPlotToolConfig, lvl),
       m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl) {
   // trajectories collection name is already checked by base ctor
-  if (m_cfg.inputTrackParametersTips.empty()) {
-    throw std::invalid_argument(
-        "Missing track parameters tips input collection");
-  }
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
@@ -43,6 +39,9 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -69,7 +68,7 @@ ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
   float eff_tracks = float(m_nTotalMatchedTracks) / m_nTotalTracks;
   float fakeRate_tracks = float(m_nTotalFakeTracks) / m_nTotalTracks;
   float duplicationRate_tracks =
@@ -124,19 +123,13 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   // The number of majority particle hits and fitted track parameters
   using RecoTrackInfo = std::pair<size_t, Acts::BoundTrackParameters>;
   using Acts::VectorHelpers::perp;
 
-  const auto& trackTips =
-      ctx.eventStore.get<std::vector<std::pair<size_t, size_t>>>(
-          m_cfg.inputTrackParametersTips);
   // Read truth input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Counter of truth-matched reco tracks
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
@@ -152,87 +145,91 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   std::vector<float> inputFeatures(3);
 
   // Loop over all trajectories
-  for (auto [itraj, trackTip] : trackTips) {
-    const auto& traj = trajectories[itraj];
+  for (std::size_t iTraj = 0; iTraj < trajectories.size(); ++iTraj) {
+    const auto& traj = trajectories[iTraj];
     const auto& mj = traj.multiTrajectory();
-    auto trajState =
-        Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
+    for (auto trackTip : traj.tips()) {
+      // @TODO: Switch to using this directly from the track
+      auto trajState =
+          Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
 
-    // Reco track selection
-    //@TODO: add interface for applying others cuts on reco tracks:
-    // -> pT, d0, z0, detector-specific hits/holes number cut
-    if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
-      continue;
-    }
-    // Check if the reco track has fitted track parameters
-    if (not traj.hasTrackParameters(trackTip)) {
-      ACTS_WARNING(
-          "No fitted track parameters for trajectory with entry index = "
-          << trackTip);
-      continue;
-    }
-    const auto& fittedParameters = traj.trackParameters(trackTip);
-    // Requirement on the pT of the track
-    const auto& momentum = fittedParameters.momentum();
-    const auto pT = perp(momentum);
-    if (pT < m_cfg.ptMin) {
-      continue;
-    }
-    // Fill the trajectory summary info
-    m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
-                                trajState.nStates, trajState.nMeasurements,
-                                trajState.nOutliers, trajState.nHoles,
-                                trajState.nSharedHits);
-
-    // Get the majority truth particle to this track
-    identifyContributingParticles(hitParticlesMap, traj, trackTip,
-                                  particleHitCounts);
-    if (particleHitCounts.empty()) {
-      ACTS_WARNING(
-          "No truth particle associated with this trajectory with entry "
-          "index = "
-          << trackTip);
-      continue;
-    }
-    // Get the majority particleId and majority particle counts
-    // Note that the majority particle might be not in the truth seeds
-    // collection
-    ActsFatras::Barcode majorityParticleId =
-        particleHitCounts.front().particleId;
-    size_t nMajorityHits = particleHitCounts.front().hitCount;
-
-    // Check if the trajectory is matched with truth.
-    // If not, it will be classified as 'fake'
-    bool isFake = false;
-    if (nMajorityHits * 1. / trajState.nMeasurements >=
-        m_cfg.truthMatchProbMin) {
-      matched[majorityParticleId].push_back({nMajorityHits, fittedParameters});
-    } else {
-      isFake = true;
-      unmatched[majorityParticleId]++;
-    }
-    // Fill fake rate plots
-    m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
-
-    // Use neural network classification for duplication rate plots
-    // Currently, the network used for this example can only handle
-    // good/duplicate classification, so need to manually exclude fake tracks
-    if (m_cfg.duplicatedPredictor && !isFake) {
-      inputFeatures[0] = trajState.nMeasurements;
-      inputFeatures[1] = trajState.nOutliers;
-      inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
-      // predict if current trajectory is 'duplicate'
-      bool isDuplicated = m_cfg.duplicatedPredictor(inputFeatures);
-      // Add to number of duplicated particles
-      if (isDuplicated) {
-        m_nTotalDuplicateTracks++;
+      // Reco track selection
+      //@TODO: add interface for applying others cuts on reco tracks:
+      // -> pT, d0, z0, detector-specific hits/holes number cut
+      if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
+        continue;
       }
-      // Fill the duplication rate
-      m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
-                                 isDuplicated);
+      // Check if the reco track has fitted track parameters
+      if (not traj.hasTrackParameters(trackTip)) {
+        ACTS_WARNING(
+            "No fitted track parameters for trajectory with entry index = "
+            << trackTip);
+        continue;
+      }
+      const auto& fittedParameters = traj.trackParameters(trackTip);
+      // Requirement on the pT of the track
+      const auto& momentum = fittedParameters.momentum();
+      const auto pT = perp(momentum);
+      if (pT < m_cfg.ptMin) {
+        continue;
+      }
+      // Fill the trajectory summary info
+      m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
+                                  trajState.nStates, trajState.nMeasurements,
+                                  trajState.nOutliers, trajState.nHoles,
+                                  trajState.nSharedHits);
+
+      // Get the majority truth particle to this track
+      identifyContributingParticles(hitParticlesMap, traj, trackTip,
+                                    particleHitCounts);
+      if (particleHitCounts.empty()) {
+        ACTS_WARNING(
+            "No truth particle associated with this trajectory with entry "
+            "index = "
+            << trackTip);
+        continue;
+      }
+      // Get the majority particleId and majority particle counts
+      // Note that the majority particle might be not in the truth seeds
+      // collection
+      ActsFatras::Barcode majorityParticleId =
+          particleHitCounts.front().particleId;
+      size_t nMajorityHits = particleHitCounts.front().hitCount;
+
+      // Check if the trajectory is matched with truth.
+      // If not, it will be classified as 'fake'
+      bool isFake = false;
+      if (nMajorityHits * 1. / trajState.nMeasurements >=
+          m_cfg.truthMatchProbMin) {
+        matched[majorityParticleId].push_back(
+            {nMajorityHits, fittedParameters});
+      } else {
+        isFake = true;
+        unmatched[majorityParticleId]++;
+      }
+      // Fill fake rate plots
+      m_fakeRatePlotTool.fill(m_fakeRatePlotCache, fittedParameters, isFake);
+
+      // Use neural network classification for duplication rate plots
+      // Currently, the network used for this example can only handle
+      // good/duplicate classification, so need to manually exclude fake tracks
+      if (m_cfg.duplicatedPredictor && !isFake) {
+        inputFeatures[0] = trajState.nMeasurements;
+        inputFeatures[1] = trajState.nOutliers;
+        inputFeatures[2] = trajState.chi2Sum * 1.0 / trajState.NDF;
+        // predict if current trajectory is 'duplicate'
+        bool isDuplicated = m_cfg.duplicatedPredictor(inputFeatures);
+        // Add to number of duplicated particles
+        if (isDuplicated) {
+          m_nTotalDuplicateTracks++;
+        }
+        // Fill the duplication rate
+        m_duplicationPlotTool.fill(m_duplicationPlotCache, fittedParameters,
+                                   isDuplicated);
+      }
+      // Counting number of total trajectories
+      m_nTotalTracks++;
     }
-    // Counting number of total trajectories
-    m_nTotalTracks++;
   }
 
   // Use truth-based classification for duplication rate plots

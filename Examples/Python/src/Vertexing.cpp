@@ -30,22 +30,23 @@ void addVertexing(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::AdaptiveMultiVertexFinderAlgorithm, mex,
       "AdaptiveMultiVertexFinderAlgorithm", inputTrackParameters,
-      outputProtoVertices, outputVertices, outputTime, bField);
+      inputTrajectories, outputProtoVertices, outputVertices, outputTime,
+      bField);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::IterativeVertexFinderAlgorithm,
-                                mex, "IterativeVertexFinderAlgorithm",
-                                inputTrackParameters, outputProtoVertices,
-                                outputVertices, outputTime, bField);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::IterativeVertexFinderAlgorithm, mex,
+      "IterativeVertexFinderAlgorithm", inputTrackParameters, inputTrajectories,
+      outputProtoVertices, outputVertices, outputTime, bField);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TutorialVertexFinderAlgorithm,
                                 mex, "TutorialVertexFinderAlgorithm",
-                                inputTrackParameters, outputProtoVertices,
-                                bField);
+                                inputTrackParameters, inputTrajectories,
+                                outputProtoVertices, bField);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::VertexFitterAlgorithm, mex,
-                                "VertexFitterAlgorithm", inputTrackParameters,
-                                inputProtoVertices, outputVertices, bField,
-                                doConstrainedFit, constraintPos, constraintCov);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::VertexFitterAlgorithm, mex, "VertexFitterAlgorithm",
+      inputTrackParameters, inputTrajectories, inputProtoVertices,
+      outputVertices, bField, doConstrainedFit, constraintPos, constraintCov);
 }
 
 }  // namespace Acts::Python

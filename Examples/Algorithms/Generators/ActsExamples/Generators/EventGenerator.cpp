@@ -26,6 +26,8 @@ ActsExamples::EventGenerator::EventGenerator(const Config& cfg,
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random numbers service");
   }
+
+  m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
 std::string ActsExamples::EventGenerator::name() const {
@@ -88,6 +90,6 @@ ActsExamples::ProcessCode ActsExamples::EventGenerator::read(
                       << " n_particles=" << particles.size());
 
   // move generated event to the store
-  ctx.eventStore.add(m_cfg.outputParticles, std::move(particles));
+  m_outputParticles(ctx, std::move(particles));
   return ProcessCode::SUCCESS;
 }

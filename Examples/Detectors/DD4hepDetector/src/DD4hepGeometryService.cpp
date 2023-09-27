@@ -16,6 +16,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <stdexcept>
 
@@ -23,7 +24,8 @@
 
 ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
     const ActsExamples::DD4hep::DD4hepGeometryService::Config& cfg)
-    : BareService("DD4hepGeometryService", cfg.logLevel), m_cfg(cfg) {
+    : m_cfg(cfg),
+      m_logger{Acts::getDefaultLogger("DD4hepGeometryService", cfg.logLevel)} {
   if (m_cfg.xmlFileNames.empty()) {
     throw std::invalid_argument("Missing DD4hep XML filenames");
   }
@@ -98,11 +100,12 @@ ActsExamples::ProcessCode
 ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
     const Acts::GeometryContext& gctx) {
   // Set the tracking geometry
+  auto logger = Acts::getDefaultLogger("DD4hepConversion", m_cfg.logLevel);
   m_trackingGeometry = Acts::convertDD4hepDetector(
-      dd4hepGeometry(), m_cfg.logLevel, m_cfg.bTypePhi, m_cfg.bTypeR,
-      m_cfg.bTypeZ, m_cfg.envelopeR, m_cfg.envelopeZ,
-      m_cfg.defaultLayerThickness, m_cfg.sortDetectors, gctx,
-      m_cfg.matDecorator, m_cfg.geometryIdentifierHook);
+      dd4hepGeometry(), *logger, m_cfg.bTypePhi, m_cfg.bTypeR, m_cfg.bTypeZ,
+      m_cfg.envelopeR, m_cfg.envelopeZ, m_cfg.defaultLayerThickness,
+      m_cfg.sortDetectors, gctx, m_cfg.matDecorator,
+      m_cfg.geometryIdentifierHook);
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

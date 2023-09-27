@@ -4,6 +4,7 @@ add_library(
   src/DigitizationConfig.cpp
   src/MeasurementCreation.cpp
   src/PlanarSteppingAlgorithm.cpp
+  src/DigitizationConfigurator.cpp
   src/ModuleClusters.cpp)
 target_include_directories(
   ActsExamplesDigitization

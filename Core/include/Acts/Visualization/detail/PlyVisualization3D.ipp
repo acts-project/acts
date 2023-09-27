@@ -25,7 +25,7 @@ void PlyVisualization3D<T>::face(const std::vector<Vector3>& vtxs,
 
 template <typename T>
 void PlyVisualization3D<T>::faces(const std::vector<Vector3>& vtxs,
-                                  const std::vector<FaceType>&,
+                                  const std::vector<FaceType>& /*faces*/,
                                   ColorRGB color) {
   face(vtxs, color);
 }

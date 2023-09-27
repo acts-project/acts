@@ -25,8 +25,8 @@ class Surface;
 class VolumeBounds;
 using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
-using SurfacePtr = std::shared_ptr<const Surface>;
-using OrientedSurface = std::pair<SurfacePtr, NavigationDirection>;
+using OrientedSurface =
+    std::pair<std::shared_ptr<Surface>, NavigationDirection>;
 using OrientedSurfaces = std::vector<OrientedSurface>;
 
 // Planar definitions to help construct the boundary surfaces

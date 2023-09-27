@@ -52,8 +52,10 @@ void setupGeant4Simulation(
     std::vector<G4UserEventAction*> eventActions = {},
     std::vector<G4UserTrackingAction*> trackingActions = {},
     std::vector<G4UserSteppingAction*> steppingActions = {},
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr,
-    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField = nullptr,
+    const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry =
+        nullptr,
+    const std::shared_ptr<const Acts::MagneticFieldProvider>& magneticField =
+        nullptr,
     bool materialRecording = false);
 
 /// Specific setup: Material Recording
@@ -73,6 +75,6 @@ int runMaterialRecording(const ActsExamples::Options::Variables& vars,
 int runGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
     std::unique_ptr<G4VUserDetectorConstruction> detector,
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry);
+    const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry);
 
 }  // namespace ActsExamples

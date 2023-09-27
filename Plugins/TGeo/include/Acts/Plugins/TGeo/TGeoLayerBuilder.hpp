@@ -40,7 +40,7 @@ class Surface;
 /// string.
 ///
 /// The parsing can be restricted to a given parse volume (in r and z),
-/// and given some splitting parameters the surfaces can be automatically be
+/// and given some splitting parameters the surfaces can be automatically
 /// split into layers.
 class TGeoLayerBuilder : public ILayerBuilder {
  public:

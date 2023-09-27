@@ -70,7 +70,8 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
       const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
       double scalor = 1., bool isDisc = false,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr,
-      std::shared_ptr<const DigitizationModule> digitizationModule = nullptr);
+      const std::shared_ptr<const DigitizationModule>& digitizationModule =
+          nullptr);
 
   ~DD4hepDetectorElement() override = default;
 

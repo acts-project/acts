@@ -8,15 +8,18 @@
 
 #pragma once
 
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <climits>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -50,7 +53,7 @@ namespace ActsExamples {
 ///
 /// It therefore saves the mapping state/cache as a private member variable
 /// and is designed to be executed in a single threaded mode.
-class MaterialMapping : public ActsExamples::BareAlgorithm {
+class MaterialMapping : public ActsExamples::IAlgorithm {
  public:
   /// @class nested Config class
   /// of the MaterialMapping algorithm
@@ -90,13 +93,13 @@ class MaterialMapping : public ActsExamples::BareAlgorithm {
 
   /// Destructor
   /// - it also writes out the file
-  ~MaterialMapping();
+  ~MaterialMapping() override;
 
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
 
   /// Return the parameters to optimised the material map for a given surface
   /// Those parameters are the variance and the number of track for each bin
@@ -113,6 +116,12 @@ class MaterialMapping : public ActsExamples::BareAlgorithm {
       m_mappingState;  //!< Material mapping state
   Acts::VolumeMaterialMapper::State
       m_mappingStateVol;  //!< Material mapping state
+                          //
+
+  ReadDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_inputMaterialTracks{this, "InputMaterialTracks"};
+  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 
 }  // namespace ActsExamples

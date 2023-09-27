@@ -17,8 +17,7 @@ target_link_libraries(
     ActsExamplesGeant4    
     ActsExamplesIoCsv 
     ActsExamplesIoRoot
-    ${Geant4_LIBRARIES}
-    Boost::program_options)
+    ${Geant4_LIBRARIES})
 
 install(
   TARGETS ActsExamplesGeant4Common

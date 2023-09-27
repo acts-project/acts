@@ -50,15 +50,12 @@ struct PerpendicularMeasure {
 
   PerpendicularMeasure() = default;
 
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  const navigator_t& /*navigator*/, result_type& result) const {
     result.distance = perp(stepper.position(state.stepping));
   }
-
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/,
-                  const stepper_t& /*unused*/) const {}
 };
 
 /// An observer that measures the perpendicular distance
@@ -79,9 +76,11 @@ struct SurfaceObserver {
 
   SurfaceObserver() = default;
 
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
     if (surface && !result.surfaces_passed) {
       // calculate the distance to the surface
       const double distance =
@@ -100,10 +99,6 @@ struct SurfaceObserver {
       }
     }
   }
-
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/,
-                  const stepper_t& /*unused*/) const {}
 };
 
 // Global definitions
@@ -131,7 +126,7 @@ const int ntests = 5;
 // This tests the Options
 BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
   using null_optionsType = PropagatorOptions<>;
-  null_optionsType null_options(tgContext, mfContext, getDummyLogger());
+  null_optionsType null_options(tgContext, mfContext);
   // todo write null options test
 
   using ActionListType = ActionList<PerpendicularMeasure>;
@@ -139,7 +134,7 @@ BOOST_AUTO_TEST_CASE(PropagatorOptions_) {
 
   using optionsType = PropagatorOptions<ActionListType, AbortConditionsType>;
 
-  optionsType options(tgContext, mfContext, getDummyLogger());
+  optionsType options(tgContext, mfContext);
 }
 
 BOOST_DATA_TEST_CASE(
@@ -169,8 +164,8 @@ BOOST_DATA_TEST_CASE(
   using AbortConditionsType = AbortList<>;
 
   // setup propagation options
-  PropagatorOptions<ActionListType, AbortConditionsType> options(
-      tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<ActionListType, AbortConditionsType> options(tgContext,
+                                                                 mfContext);
 
   options.pathLimit = 20_m;
   options.maxStepSize = 1_cm;
@@ -222,7 +217,7 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // setup propagation options - the tow step options
-  PropagatorOptions<> options_2s(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<> options_2s(tgContext, mfContext);
   options_2s.pathLimit = 50_cm;
   options_2s.maxStepSize = 1_cm;
 
@@ -251,7 +246,7 @@ BOOST_DATA_TEST_CASE(
       epropagator.propagate(*mid_parameters, options_2s).value().endParameters;
 
   // setup propagation options - the one step options
-  PropagatorOptions<> options_1s(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<> options_1s(tgContext, mfContext);
   options_1s.pathLimit = 100_cm;
   options_1s.maxStepSize = 1_cm;
   // propagate to a path length of 100 in one step
@@ -298,7 +293,7 @@ BOOST_DATA_TEST_CASE(
   (void)index;
 
   // setup propagation options - 2 setp options
-  PropagatorOptions<> options_2s(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<> options_2s(tgContext, mfContext);
   options_2s.pathLimit = 10_m;
   options_2s.maxStepSize = 1_cm;
 
@@ -330,7 +325,7 @@ BOOST_DATA_TEST_CASE(
           .endParameters;
 
   // setup propagation options - one step options
-  PropagatorOptions<> options_1s(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<> options_1s(tgContext, mfContext);
   options_1s.pathLimit = 10_m;
   options_1s.maxStepSize = 1_cm;
   // propagate to a final surface in one stop

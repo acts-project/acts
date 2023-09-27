@@ -6,8 +6,7 @@ set(_common_libraries
   ActsExamplesGeneratorsPythia8
   ActsExamplesGeneratorsPythia8Options
   ActsExamplesTruthTracking
-  ActsExamplesVertexing
-  Boost::program_options)
+  ActsExamplesVertexing)
 
 add_executable(
   ActsExampleAdaptiveMultiVertexFinder

@@ -12,6 +12,7 @@
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 
 #include <fstream>
@@ -39,6 +40,7 @@ BOOST_AUTO_TEST_CASE(DigitizationConfigRoundTrip) {
   gdc.threshold = 0.01;
   gdc.thickness = 0.15;
   gdc.indices = {Acts::eBoundLoc0, Acts::eBoundLoc1};
+  gdc.chargeSmearer = ActsExamples::Digitization::Gauss(1.0);
 
   ActsExamples::DigiComponentsConfig dcRef;
   dcRef.geometricDigiConfig = gdc;

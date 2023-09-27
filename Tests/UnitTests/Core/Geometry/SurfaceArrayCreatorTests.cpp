@@ -217,7 +217,7 @@ struct SurfaceArrayCreatorFixture {
   }
 };
 
-void draw_surfaces(SrfVec surfaces, const std::string& fname) {
+void draw_surfaces(const SrfVec& surfaces, const std::string& fname) {
   std::ofstream os;
   os.open(fname);
 

@@ -5,4 +5,5 @@ target_sources(
     BinUtility.cpp
     Logger.cpp
     SpacePointUtility.cpp
+    FpeMonitor.cpp
 )
