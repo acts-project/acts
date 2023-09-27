@@ -37,7 +37,8 @@ namespace Test {
 
 using Covariance = BoundSquareMatrix;
 
-Covariance makeRandomCovariance() {
+Covariance makeRandomCovariance(int seed = 31415) {
+  std::srand(seed);
   Covariance randMat((Covariance::Random() + 1.5 * Covariance::Identity()) *
                      0.05);
 
