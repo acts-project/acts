@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 
 #include <string>
@@ -16,13 +17,14 @@
 
 #include <DD4hep/DD4hepUnits.h>
 #include <DD4hep/DetFactoryHelper.h>
+#include <DD4hep/DetElement.h>
 #include <DD4hep/Objects.h>
 #include <DDRec/DetectorData.h>
 #include <XML/Utilities.h>
 
 namespace Acts {
 
-/// Helper method to decode the  binning from what would appear in the
+/// Helper method to decode the binning from what would appear in the
 /// xml into variant parameters, such that it can be understood in the
 /// downstream processing.
 ///
@@ -100,6 +102,17 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
       variantParams.set<int>(bname + "_" + bv + "_n", ib);
     }
   }
+}
+
+/// @brief This method converts the DD4hep binning into the Acts ProtoBinning
+///
+/// @param dd4hepElemnt the element which has a binning description attached
+///
+/// @return a vecotr of proto binning
+std::vector<Acts::Experimental::ProtoBinning> convertBinning(
+    const dd4hep::DetElement &dd4hepElement) {
+  std::vector<Acts::Experimental::ProtoBinning> protoBinnings;
+  return protoBinnings;
 }
 
 }  // namespace Acts

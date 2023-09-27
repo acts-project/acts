@@ -41,13 +41,18 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   ACTS_VERBOSE("Conversion call at level " << level << " for element "
                                            << dd4hepElement.name());
 
+  // Check if any surface binnning can be detected
+  bool sBinning = getParamOr<bool>("surface_binning", dd4hepElement, false);
+  if (sBinning){
+    
+  }
+
   // Deal with passive surface if detected
   // Passive surfaces can be given through:
-  // - [ direct   ] translate of the DD4hepElement
-  // - [ explicit ] placement through parameters
+  // - [ direct ] translate of the DD4hepElement
+  // - [ proxy ] placement through proxy parameters
   // - [ inner, outer, negative, positive, representing ]
-  //    proxies to be determined at layer
-  // structure building
+  //    proxies to be determined at layer structure building
   bool pSurface = getParamOr<bool>("passive_surface", dd4hepElement, false);
   if (pSurface) {
     ACTS_VERBOSE("Passive surface(s) detected.");

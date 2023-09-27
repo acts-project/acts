@@ -84,6 +84,8 @@ class LayerStructureBuilder : public IInternalStructureBuilder {
     unsigned int splits = 1u;
     /// The (optional) layer transform
     std::optional<Transform3> transform = std::nullopt;
+    /// Alternatively - the support surface can already be provided
+    std::shared_ptr<Surface> surface = nullptr;
   };
 
   /// @brief Configuration struct for the LayerStructureBuilder

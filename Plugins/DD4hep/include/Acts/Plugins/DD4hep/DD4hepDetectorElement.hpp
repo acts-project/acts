@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 
@@ -43,6 +44,10 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
  public:
   /// Broadcast the context type
   using ContextType = GeometryContext;
+
+  /// Define a string based story
+  using Store = std::map<std::string,
+                         std::vector<std::shared_ptr<DD4hepDetectorElement>>>;
 
   /// Constructor
   /// @param detElement The DD4hep DetElement which should be linked to a
