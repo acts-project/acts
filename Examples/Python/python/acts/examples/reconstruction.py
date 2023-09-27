@@ -119,6 +119,12 @@ TrackSelectorConfig = namedtuple(
     defaults=[(None, None)] * 7 + [None],
 )
 
+TrackFindingConfig = namedtuple(
+    "TrackFindingConfig",
+    ["chi2CutOff", "numMeasurementsCutOff"],
+    defaults=[5.0, 3],
+)
+
 AmbiguityResolutionConfig = namedtuple(
     "AmbiguityResolutionConfig",
     ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
@@ -927,6 +933,7 @@ def addCKFTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
+    trackFindingConfig: TrackFindingConfig = TrackFindingConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -960,7 +967,16 @@ def addCKFTracks(
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
+            [
+                (
+                    acts.GeometryIdentifier(),
+                    (
+                        [],
+                        [trackFindingConfig.chi2CutOff],
+                        [trackFindingConfig.numMeasurementsCutOff],
+                    ),
+                )
+            ]
         ),
         trackSelectorCfg=acts.TrackSelector.Config(
             **acts.examples.defaultKWArgs(
