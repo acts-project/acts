@@ -219,7 +219,7 @@ BOOST_AUTO_TEST_CASE(
 
   // Extract variables for better readability...
   float maxZ = res.value().first.first;
-  float maxT = res.value().first.second.value();
+  float maxT = res.value().first.second;
   float fwhm = res.value().second * 2.355f;
 
   // ... and check if they are correct (note: the optimization is not as exact
@@ -374,8 +374,8 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   BOOST_CHECK(firstRes.ok());
   // Maximum should be at z0Trk1 position ...
   BOOST_CHECK_EQUAL((*firstRes).first, z0Trk1);
-  // ... and the corresponding time should not be set
-  BOOST_CHECK(not(*firstRes).second.has_value());
+  // ... and the corresponding time should be set to 0
+  BOOST_CHECK_EQUAL((*firstRes).second, 0.);
 
   // Add first track to 2D grid
   auto trackDensityMap2D = grid2D.addTrack(params1, mainDensityMap2D);
@@ -384,7 +384,7 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   // Maximum should be at z0Trk1 position ...
   BOOST_CHECK_EQUAL((*firstRes2D).first, z0Trk1);
   // ... and the corresponding time should be at t0Trk1
-  BOOST_CHECK_EQUAL((*firstRes2D).second.value(), t0Trk1);
+  BOOST_CHECK_EQUAL((*firstRes2D).second, t0Trk1);
 
   // Add second track to spatial grid
   trackDensityMap = grid1D.addTrack(params2, mainDensityMap1D);
@@ -394,8 +394,8 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   // Trk 2 is closer to z-axis and should thus yield higher density values.
   // Therefore, the new maximum is at z0Trk2 ...
   BOOST_CHECK_EQUAL((*secondRes).first.first, z0Trk2);
-  // ... the corresponding time should still not be set ...
-  BOOST_CHECK(not(*secondRes).first.second.has_value());
+  // ... the corresponding time should be set to 0...
+  BOOST_CHECK_EQUAL((*secondRes).first.second, 0.);
   // ... and it should have a positive width
   BOOST_CHECK((*secondRes).second > 0);
 
@@ -408,7 +408,7 @@ BOOST_AUTO_TEST_CASE(max_z_t_and_width) {
   // Therefore, the new maximum is at z0Trk2 ...
   BOOST_CHECK_EQUAL((*secondRes2D).first.first, z0Trk2);
   // ... the corresponding time should be at t0Trk2 ...
-  BOOST_CHECK_EQUAL((*secondRes2D).first.second.value(), t0Trk2);
+  BOOST_CHECK_EQUAL((*secondRes2D).first.second, t0Trk2);
   // ... and it should have approximately the same width in z direction
   CHECK_CLOSE_OR_SMALL((*secondRes2D).second, (*secondRes).second, 1e-5, 1e-5);
 }

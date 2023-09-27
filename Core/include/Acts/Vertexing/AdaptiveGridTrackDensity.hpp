@@ -44,16 +44,17 @@ class AdaptiveGridTrackDensity {
   using Bin = std::pair<int, int>;
   // Mapping between bins and track densities
   using DensityMap = std::unordered_map<Bin, float, boost::hash<Bin>>;
-  // Coordinates in the z-t plane; the t value will be set to std::nullopt if
-  // time vertex seeding is disabled
-  using ztPosition = std::pair<float, std::optional<float>>;
+  // Coordinates in the z-t plane; the t value will be set to 0 if time
+  // vertex seeding is disabled
+  using ZTPosition = std::pair<float, float>;
   // z-t position of a maximum and its width
-  using ztPositionAndWidth = std::pair<ztPosition, float>;
+  using ZTPositionAndWidth = std::pair<ZTPosition, float>;
 
   /// The configuration struct
   struct Config {
     /// @param spatialBinExtent_ The spatial extent of a bin in mm
-    Config(float spatialBinExtent_) : spatialBinExtent(spatialBinExtent_) {
+    Config(float spatialBinExtent_)
+        : spatialBinExtent(spatialBinExtent_), temporalBinExtent(0.) {
       if constexpr (temporalTrkGridSize > 1) {
         throw std::invalid_argument(
             "temporalBinExtent must be provided if temporalTrkGridSize > 1 "
@@ -78,7 +79,7 @@ class AdaptiveGridTrackDensity {
     float spatialBinExtent{};  // mm
 
     // Temporal extent of a bin
-    std::optional<float> temporalBinExtent = std::nullopt;  // mm
+    float temporalBinExtent{};  // mm
 
     // Do NOT use just the z-bin with the highest
     // track density, but instead check (up to)
@@ -118,13 +119,13 @@ class AdaptiveGridTrackDensity {
   /// @brief Returns the z and t coordinate of maximum (surrounding)
   /// track density
   /// @note if time vertex seeding is not enabled, the t coordinate
-  /// will be set to std::nullopt
+  /// will be set to 0.
   ///
   /// @param densityMap Map between bins and corresponding density
   /// values
   ///
   /// @return The z and t coordinates of maximum track density
-  Result<ztPosition> getMaxZTPosition(DensityMap& densityMap) const;
+  Result<ZTPosition> getMaxZTPosition(DensityMap& densityMap) const;
 
   /// @brief Returns the z-t position of maximum track density
   /// and the estimated z-width of the maximum
@@ -134,7 +135,7 @@ class AdaptiveGridTrackDensity {
   ///
   /// @return The z-t position of the maximum track density and
   /// its width
-  Result<ztPositionAndWidth> getMaxZTPositionAndWidth(
+  Result<ZTPositionAndWidth> getMaxZTPositionAndWidth(
       DensityMap& densityMap) const;
 
   /// @brief Adds a single track to the overall grid density
@@ -178,7 +179,7 @@ class AdaptiveGridTrackDensity {
   ///
   /// @return The width
   Result<float> estimateSeedWidth(const DensityMap& densityMap,
-                                  const ztPosition& maxZT) const;
+                                  const ZTPosition& maxZT) const;
 
   /// @brief Helper to retrieve values of an nDim-dimensional normal
   /// distribution
