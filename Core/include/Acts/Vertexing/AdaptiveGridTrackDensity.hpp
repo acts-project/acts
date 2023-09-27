@@ -110,8 +110,8 @@ class AdaptiveGridTrackDensity {
   int getBin(float value, float binExtent) const;
 
   /// @brief Finds the maximum density of a DensityMap
-  /// @param densityMap Map between z bins and corresponding density
-  /// value
+  /// @param densityMap Map between bins and corresponding density
+  /// values
   /// @return Iterator of the map entry with the highest density
   DensityMap::const_iterator highestDensityEntry(
       const DensityMap& densityMap) const;
@@ -128,7 +128,7 @@ class AdaptiveGridTrackDensity {
   Result<ztPosition> getMaxZTPosition(DensityMap& densityMap) const;
 
   /// @brief Returns the z-t position of maximum track density
-  /// and the estimated width in z direction of the maximum
+  /// and the estimated z-width of the maximum
   ///
   /// @param densityMap Map between bins and corresponding density
   /// values
@@ -152,7 +152,7 @@ class AdaptiveGridTrackDensity {
   /// @param trackDensityMap Map between bins and corresponding density
   /// @note The track density comes from a single track
   /// @param mainDensityMap Map between bins and corresponding density
-  /// @note The track density comes an arbitrary number of tracks
+  /// @note The track density comes from an arbitrary number of tracks
   void subtractTrack(const DensityMap& trackDensityMap,
                      DensityMap& mainDensityMap) const;
 
@@ -160,7 +160,7 @@ class AdaptiveGridTrackDensity {
   /// @brief Function that creates a track density map, i.e., a map from bins
   /// to the corresponding density values for a single track.
   ///
-  /// @param impactParams vector containing d0, z0, and t of the track
+  /// @param impactParams vector containing d0, z0, and t0 of the track
   /// @param centralBin Central z and t bin of the track (where its
   /// density is the highest)
   /// @param cov 3x3 impact parameter covariance matrix
@@ -174,15 +174,15 @@ class AdaptiveGridTrackDensity {
   /// overlapping neighboring peaks might lead to an overestimation of the
   /// seed width.
   ///
-  /// @param densityMap Map from z bins to corresponding track density
+  /// @param densityMap Map from bins to corresponding track density
   /// @param maxZT z-t position of the maximum density value
   ///
   /// @return The width
   Result<float> estimateSeedWidth(const DensityMap& densityMap,
                                   const ztPosition& maxZT) const;
 
-  /// @brief Helper to retrieve values according to a nDim-dimensional
-  /// normal distribution
+  /// @brief Helper to retrieve values of an nDim-dimensional normal
+  /// distribution
   /// @note The constant prefactor (2 * pi)^(- nDim / 2) is discarded
   ///
   /// @param args Coordinates where the Gaussian should be evaluated
@@ -197,7 +197,7 @@ class AdaptiveGridTrackDensity {
 
   /// @brief Checks (up to) first three density maxima that have a
   /// maximum relative deviation of 'relativeDensityDev' from the
-  /// global maximum. Returns the z bin of the maximum that has the
+  /// global maximum. Returns the bin of the maximum that has the
   /// highest surrounding density in z direction.
   ///
   /// @param densityMap Map between bins and corresponding density values
