@@ -11,18 +11,24 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
 #include <string>
+#include <tuple>
 #include <vector>
 
 #include <DD4hep/DD4hepUnits.h>
-#include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/DetElement.h>
+#include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/Objects.h>
 #include <DDRec/DetectorData.h>
 #include <XML/Utilities.h>
 
 namespace Acts {
+
+static std::vector<std::tuple<std::string, BinningValue>> allowedBinnings = {
+    {"x", binX}, {"y", binY}, {"z", binZ}, {"phi", binPhi}, {"r", binR}};
 
 /// Helper method to decode the binning from what would appear in the
 /// xml into variant parameters, such that it can be understood in the
@@ -52,7 +58,7 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
                    const xml_comp_t &xmlBinning, const std::string &bname,
                    const std::vector<std::string> &bvals) {
   // Set the surface binninng parameter to true
-  variantParams.set<bool>(bname, true);
+  variantParams.set<int>(std::string(bname + "_dim"), bvals.size());
   for (const auto &bv : bvals) {
     // Gather the number of bins, 0 indicates variable binning
     int nBins = Acts::getAttrValueOr<int>(xmlBinning, std::string("n" + bv), 0);
@@ -65,7 +71,7 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
       // Set the type identificatio
       variantParams.set<std::string>(bname + "_" + bv + "_type", "equidistant");
       // Set the number of bins
-      variantParams.set<int>(bname + "_" + bv + "_count", nBins);
+      variantParams.set<int>(bname + "_" + bv + "_n", nBins);
       // Set min/max paraeter
       variantParams.set<double>(
           bname + "_" + bv + "_min",
@@ -110,8 +116,49 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
 ///
 /// @return a vecotr of proto binning
 std::vector<Acts::Experimental::ProtoBinning> convertBinning(
-    const dd4hep::DetElement &dd4hepElement) {
-  std::vector<Acts::Experimental::ProtoBinning> protoBinnings;
+    const dd4hep::DetElement &dd4hepElement, const std::string &bname) {
+  std::vector<Experimental::ProtoBinning> protoBinnings;
+  for (const auto &[ab, bVal] : allowedBinnings) {
+    auto type =
+        getParamOr<std::string>(bname + "_" + ab + "_type", dd4hepElement, "");
+    if (not type.empty()) {
+      // Default binning is bound
+      auto bType = Acts::detail::AxisBoundaryType::Bound;
+      // Equidistant or variable binning
+      detail::AxisType aType = type == "equidistant"
+                                   ? detail::AxisType::Equidistant
+                                   : detail::AxisType::Variable;
+      int nBins = getParamOr<int>(bname + "_" + ab + "_n", dd4hepElement, 0);
+      int nExpansion =
+          getParamOr<int>(bname + "_" + ab + "_exp", dd4hepElement, 0);
+      if (aType == detail::AxisType::Equidistant) {
+        // Equidistant binning
+        auto min = getParamOr<ActsScalar>(bname + "_" + ab + "_min",
+                                          dd4hepElement, 0.);
+        auto max = getParamOr<ActsScalar>(bname + "_" + ab + "_max",
+                                          dd4hepElement, 0.);
+        // Check for closed phi binning
+        if (bVal == binPhi and (max - min) > 1.9 * M_PI) {
+          bType = Acts::detail::AxisBoundaryType::Closed;
+        }
+        protoBinnings.push_back(Experimental::ProtoBinning(
+            bVal, bType, min, max, nBins, nExpansion));
+      } else {
+        // Variable binning
+        std::vector<ActsScalar> edges;
+        for (int ib = 0; ib <= nBins; ++ib) {
+          edges.push_back(getParamOr<ActsScalar>(
+              bname + "_" + ab + "_b" + std::to_string(ib), dd4hepElement, 0.));
+        }
+        // Check for closed phi binning
+        if (bVal == binPhi and (edges.back() - edges.front()) > 1.9 * M_PI) {
+          bType = Acts::detail::AxisBoundaryType::Closed;
+        }
+        protoBinnings.push_back(
+            Experimental::ProtoBinning(bVal, bType, edges, nExpansion));
+      }
+    }
+  }
   return protoBinnings;
 }
 

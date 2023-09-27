@@ -61,7 +61,7 @@ class DD4hepLayerStructure {
     ///
     /// @return a shared detector object
     std::vector<std::shared_ptr<Surface>> surfaces(
-        const GeometryContext& gctx) const final {
+        [[maybe_unused]] const GeometryContext& gctx) const final {
       return dSurfaces;
     };
   };

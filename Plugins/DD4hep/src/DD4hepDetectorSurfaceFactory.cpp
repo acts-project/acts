@@ -9,6 +9,7 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
@@ -42,9 +43,9 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
                                            << dd4hepElement.name());
 
   // Check if any surface binnning can be detected
-  bool sBinning = getParamOr<bool>("surface_binning", dd4hepElement, false);
-  if (sBinning){
-    
+  int sBinning = getParamOr<int>("surface_binning_dim", dd4hepElement, 0);
+  if (sBinning > 0) {
+    cache.binnings = convertBinning(dd4hepElement, "surface_binning");
   }
 
   // Deal with passive surface if detected
