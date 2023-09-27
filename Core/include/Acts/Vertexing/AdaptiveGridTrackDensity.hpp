@@ -33,7 +33,6 @@ namespace Acts {
 /// @tparam temporalTrkGridSize Number of bins per track in t direction
 /// @note In total, a track is represented by a grid of size
 /// spatialTrkGridSize * temporalTrkGridSize
-
 template <int spatialTrkGridSize = 15, int temporalTrkGridSize = 1>
 class AdaptiveGridTrackDensity {
   // Assert odd spatial and temporal track grid size
@@ -76,7 +75,7 @@ class AdaptiveGridTrackDensity {
     }
 
     // Spatial extent of a bin in d0 and z0 direction
-    float spatialBinExtent;  // mm
+    float spatialBinExtent{};  // mm
 
     // Temporal extent of a bin
     std::optional<float> temporalBinExtent = std::nullopt;  // mm
