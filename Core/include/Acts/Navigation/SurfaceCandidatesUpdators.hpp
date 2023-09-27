@@ -25,52 +25,6 @@
 namespace Acts {
 namespace Experimental {
 
-/// Helper method to update the candidates (portals/surfaces),
-/// this can be called for initial surface/portal estimation,
-/// but also during the navigation to update the current list
-/// of candidates.
-///
-/// @param gctx is the Geometry context of this call
-/// @param nState [in,out] is the navigation state to be updated
-///
-/// @todo for surfaces skip the non-reached ones, while keep for portals
-inline static void updateCandidates(const GeometryContext& gctx,
-                                    NavigationState& nState) {
-  const auto& position = nState.position;
-  const auto& direction = nState.direction;
-  auto& nCandidates = nState.surfaceCandidates;
-
-  for (auto& c : nCandidates) {
-    // Get the surface representation: either native surfcae of portal
-    const Surface& sRep =
-        c.surface != nullptr ? *c.surface : c.portal->surface();
-
-    // Get the intersection @todo make a templated intersector
-    // TODO surface tolerance
-    auto sIntersection = sRep.intersect(gctx, position, direction,
-                                        c.boundaryCheck, s_onSurfaceTolerance);
-    c.objectIntersection = sIntersection[c.objectIntersection.index()];
-  }
-  // Sort and stuff non-allowed solutions to the end
-  std::sort(
-      nCandidates.begin(), nCandidates.end(),
-      [&](const auto& a, const auto& b) {
-        // The two path lengths
-        ActsScalar pathToA = a.objectIntersection.pathLength();
-        ActsScalar pathToB = b.objectIntersection.pathLength();
-        if (pathToA + s_onSurfaceTolerance < nState.overstepTolerance or
-            std::abs(pathToA) < s_onSurfaceTolerance) {
-          return false;
-        } else if (pathToB + s_onSurfaceTolerance < nState.overstepTolerance or
-                   std::abs(pathToB) < s_onSurfaceTolerance) {
-          return true;
-        }
-        return pathToA < pathToB;
-      });
-  // Set the surface candidate
-  nState.surfaceCandidate = nCandidates.begin();
-}
-
 struct AllPortalsImpl : public INavigationDelegate {
   /// A ordered portal provider
   ///
