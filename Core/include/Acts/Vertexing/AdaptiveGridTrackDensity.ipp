@@ -11,15 +11,16 @@
 #include <algorithm>
 
 template <int spatialTrkGridSize, int temporalTrkGridSize>
-float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
-    getBinCenter(int bin, float binExtent) const {
+float Acts::AdaptiveGridTrackDensity<
+    spatialTrkGridSize, temporalTrkGridSize>::getBinCenter(int bin,
+                                                           float binExtent) {
   return bin * binExtent;
 }
 
 template <int spatialTrkGridSize, int temporalTrkGridSize>
 int Acts::AdaptiveGridTrackDensity<
     spatialTrkGridSize, temporalTrkGridSize>::getBin(float value,
-                                                     float binExtent) const {
+                                                     float binExtent) {
   return static_cast<int>(std::floor(value / binExtent - 0.5) + 1);
 }
 
@@ -263,7 +264,7 @@ template <int spatialTrkGridSize, int temporalTrkGridSize>
 template <unsigned int nDim>
 float Acts::AdaptiveGridTrackDensity<spatialTrkGridSize, temporalTrkGridSize>::
     multivariateGaussian(const Acts::ActsVector<nDim>& args,
-                         const Acts::ActsSquareMatrix<nDim>& cov) const {
+                         const Acts::ActsSquareMatrix<nDim>& cov) {
   float expo = -0.5 * args.transpose().dot(cov.inverse() * args);
   float gaussianDensity = safeExp(expo) / std::sqrt(cov.determinant());
   return gaussianDensity;

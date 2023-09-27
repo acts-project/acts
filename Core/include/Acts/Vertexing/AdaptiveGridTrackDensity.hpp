@@ -100,13 +100,13 @@ class AdaptiveGridTrackDensity {
   /// @param bin Bin number
   /// @param binExtent Bin extent
   /// @return Bin center
-  float getBinCenter(int bin, float binExtent) const;
+  static float getBinCenter(int bin, float binExtent);
 
   /// @brief Calculates the bin number corresponding to a d, z, or time value
   /// @param value d, z, or time value
   /// @param binExtent Bin extent
   /// @return Bin number
-  int getBin(float value, float binExtent) const;
+  static int getBin(float value, float binExtent);
 
   /// @brief Finds the maximum density of a DensityMap
   /// @param densityMap Map between bins and corresponding density
@@ -191,8 +191,8 @@ class AdaptiveGridTrackDensity {
   ///
   /// @return Multivariate Gaussian evaluated at args
   template <unsigned int nDim>
-  float multivariateGaussian(const Acts::ActsVector<nDim>& args,
-                             const Acts::ActsSquareMatrix<nDim>& cov) const;
+  static float multivariateGaussian(const Acts::ActsVector<nDim>& args,
+                                    const Acts::ActsSquareMatrix<nDim>& cov);
 
   /// @brief Checks (up to) first three density maxima that have a
   /// maximum relative deviation of 'relativeDensityDev' from the
