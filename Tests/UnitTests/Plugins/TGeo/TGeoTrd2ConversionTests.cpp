@@ -74,8 +74,8 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_xz_to_PlaneSurface) {
 
   size_t itrd = 0;
   for (const auto &axes : axesTypes) {
-    auto [ plane, thickness ] = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                 *gGeoIdentity, axes, 1);
+    auto [plane, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_CHECK_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
     CHECK_CLOSE_ABS(thickness, 2 * t, s_epsilon);
@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE(TGeoTrd2_yz_to_PlaneSurface) {
 
   size_t itrd = 0;
   for (const auto &axes : axesTypes) {
-    auto [ plane, thickness ] = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                 *gGeoIdentity, axes, 1);
+    auto [plane, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_CHECK_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
     CHECK_CLOSE_ABS(thickness, 2 * t, s_epsilon);

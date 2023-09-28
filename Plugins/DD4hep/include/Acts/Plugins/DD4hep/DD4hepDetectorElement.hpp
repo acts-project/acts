@@ -46,7 +46,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
                          std::vector<std::shared_ptr<DD4hepDetectorElement>>>;
 
   /// Constructor
-  /// @param detElement The DD4hep DetElement which should be associated to 
+  /// @param detElement The DD4hep DetElement which should be associated to
   /// an ACTS surface
   ///
   /// @param axes is the axis orientation with respect to the tracking frame

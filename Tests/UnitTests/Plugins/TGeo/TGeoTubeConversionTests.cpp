@@ -76,8 +76,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
 
   size_t icyl = 0;
   for (const auto &axes : allowedAxes) {
-    auto [ cylinder, thickness ] = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                    *gGeoIdentity, axes, 1);
+    auto [cylinder, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_CHECK_NE(cylinder, nullptr);
     BOOST_CHECK_EQUAL(cylinder->type(), Surface::Cylinder);
     CHECK_CLOSE_ABS(thickness, rmax - rmin, s_epsilon);
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_CylinderSurface) {
     objVis.clear();
 
     if (icyl < 2) {
-      auto [ cylinderSegment, cThickness ] = TGeoSurfaceConverter::toSurface(
+      auto [cylinderSegment, cThickness] = TGeoSurfaceConverter::toSurface(
           *vols->GetShape(), *gGeoIdentity, axes, 1);
       BOOST_CHECK_NE(cylinderSegment, nullptr);
       BOOST_CHECK_EQUAL(cylinderSegment->type(), Surface::Cylinder);
@@ -176,8 +176,8 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
 
   size_t idisc = 0;
   for (const auto &axes : allowedAxes) {
-    auto [ disc, thickness ] = TGeoSurfaceConverter::toSurface(*vol->GetShape(), *gGeoIdentity,
-                                                axes, 1);
+    auto [disc, thickness] = TGeoSurfaceConverter::toSurface(
+        *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_CHECK_NE(disc, nullptr);
     BOOST_CHECK_EQUAL(disc->type(), Surface::Disc);
     CHECK_CLOSE_ABS(thickness, 2 * hz, s_epsilon);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(TGeoTube_to_DiscSurface) {
     objVis.clear();
 
     if (idisc < 2) {
-      auto [ discSegment, dThickness ] = TGeoSurfaceConverter::toSurface(
+      auto [discSegment, dThickness] = TGeoSurfaceConverter::toSurface(
           *vols->GetShape(), *gGeoIdentity, axes, 1);
       BOOST_CHECK_NE(discSegment, nullptr);
       BOOST_CHECK_EQUAL(discSegment->type(), Surface::Disc);

@@ -199,8 +199,8 @@ BOOST_AUTO_TEST_CASE(TGeoBBox_to_PlaneSurface) {
       objVis, center_YXz, center_YXz + 2 * rotation_YXz.col(2), 4., 2.5, blue);
 
   // Scaling test ---------------------------------
-  auto [plane_XYZ10, thickness_XYZ10] = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
-                                                     *gGeoIdentity, "xY*", 10);
+  auto [plane_XYZ10, thickness_XYZ10] = TGeoSurfaceConverter::toSurface(
+      *vol->GetShape(), *gGeoIdentity, "xY*", 10);
   BOOST_CHECK_NE(plane_XYZ10, nullptr);
   CHECK_CLOSE_ABS(thickness_XYZ10, 20 * z, s_epsilon);
 

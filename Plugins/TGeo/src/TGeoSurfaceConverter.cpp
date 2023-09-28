@@ -455,9 +455,11 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::tuple<std::shared_ptr<Acts::Surface>, Acts::ActsScalar> Acts::TGeoSurfaceConverter::toSurface(
-    const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
-    const std::string& axes, double scalor) noexcept(false) {
+std::tuple<std::shared_ptr<Acts::Surface>, Acts::ActsScalar>
+Acts::TGeoSurfaceConverter::toSurface(const TGeoShape& tgShape,
+                                      const TGeoMatrix& tgMatrix,
+                                      const std::string& axes,
+                                      double scalor) noexcept(false) {
   // Get the placement and orientation in respect to its mother
   const Double_t* rotation = tgMatrix.GetRotationMatrix();
   const Double_t* translation = tgMatrix.GetTranslation();
@@ -465,7 +467,8 @@ std::tuple<std::shared_ptr<Acts::Surface>, Acts::ActsScalar> Acts::TGeoSurfaceCo
   auto [cBounds, cTransform, cThickness] =
       cylinderComponents(tgShape, rotation, translation, axes, scalor);
   if (cBounds != nullptr) {
-    return { Surface::makeShared<CylinderSurface>(cTransform, cBounds), cThickness };
+    return {Surface::makeShared<CylinderSurface>(cTransform, cBounds),
+            cThickness};
   }
 
   auto [dBounds, dTransform, dThickness] =
@@ -477,8 +480,8 @@ std::tuple<std::shared_ptr<Acts::Surface>, Acts::ActsScalar> Acts::TGeoSurfaceCo
   auto [pBounds, pTransform, pThickness] =
       planeComponents(tgShape, rotation, translation, axes, scalor);
   if (pBounds != nullptr) {
-    return { Surface::makeShared<PlaneSurface>(pTransform, pBounds), pThickness };
+    return {Surface::makeShared<PlaneSurface>(pTransform, pBounds), pThickness};
   }
 
-  return { nullptr, 0. };
+  return {nullptr, 0.};
 }

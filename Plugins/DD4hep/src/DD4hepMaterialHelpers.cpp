@@ -130,4 +130,3 @@ void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
                           logger);
   }
 }
-

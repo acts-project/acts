@@ -3,6 +3,7 @@ add_library(
   src/TGeoCylinderDiscSplitter.cpp
   src/TGeoDetectorElement.cpp
   src/TGeoLayerBuilder.cpp
+  src/TGeoMaterialConverter.cpp
   src/TGeoParser.cpp
   src/TGeoPrimitivesHelper.cpp
   src/TGeoSurfaceConverter.cpp)

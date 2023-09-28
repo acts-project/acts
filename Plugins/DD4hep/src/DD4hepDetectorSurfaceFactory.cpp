@@ -108,7 +108,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
       getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ");
   bool assignToAll = getParamOr<bool>("assign_to_all", dd4hepElement, true);
 
-  auto [ pSurface, thickness ] =
+  auto [pSurface, thickness] =
       TGeoSurfaceConverter::toSurface(*tgeoShape, tgeoTransform, detAxis);
   // Return a passive surface
   return {pSurface, assignToAll};
