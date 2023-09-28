@@ -26,6 +26,7 @@ pybind11_add_module(ActsPythonBindings
   src/TrackFinding.cpp
   src/Vertexing.cpp
   src/AmbiguityResolution.cpp
+  src/EventData.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
 
@@ -36,6 +37,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsCore 
   ActsPythonUtilities
   ActsExamplesFramework
+  ActsExamplesGeometry
   ActsExamplesDetectorGeneric
   ActsExamplesDetectorContextual
   ActsExamplesDetectorTGeo

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -107,6 +108,9 @@ class PropagationAlgorithm : public IAlgorithm {
     /// pt range
     std::pair<double, double> ptRange = {100 * Acts::UnitConstants::MeV,
                                          100 * Acts::UnitConstants::GeV};
+    /// particle hypothesis
+    Acts::ParticleHypothesis particleHypothesis =
+        Acts::ParticleHypothesis::pion();
     /// looper protection
     double ptLoopers = 500 * Acts::UnitConstants::MeV;
 

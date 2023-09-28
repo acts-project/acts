@@ -65,7 +65,8 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
       parameters.emplace(
           std::pair{track.tipIndex(),
                     TrackParameters{track.referenceSurface().getSharedPtr(),
-                                    track.parameters(), track.covariance()}});
+                                    track.parameters(), track.covariance(),
+                                    track.particleHypothesis()}});
     }
 
     if (tips.empty()) {
@@ -80,6 +81,12 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
     // no grouping by seed, make one trajectory per track
 
     for (const auto& track : tracks) {
+      if (not track.hasReferenceSurface()) {
+        ACTS_WARNING("Unable to convert track with tip "
+                     << track.tipIndex()
+                     << " because no reference surface is set");
+        continue;
+      }
       Trajectories::IndexedParameters parameters;
       parameters.reserve(1);
       std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
@@ -89,7 +96,8 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
       parameters.emplace(
           std::pair{track.tipIndex(),
                     TrackParameters{track.referenceSurface().getSharedPtr(),
-                                    track.parameters(), track.covariance()}});
+                                    track.parameters(), track.covariance(),
+                                    track.particleHypothesis()}});
 
       trajectories.emplace_back(tracks.trackStateContainer(), std::move(tips),
                                 std::move(parameters));

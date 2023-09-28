@@ -97,7 +97,7 @@ void ActsExamples::FakeRatePlotTool::write(
 void ActsExamples::FakeRatePlotTool::fill(
     FakeRatePlotTool::FakeRatePlotCache& fakeRatePlotCache,
     const Acts::BoundTrackParameters& fittedParameters, bool status) const {
-  const auto& momentum = fittedParameters.momentum();
+  const auto momentum = fittedParameters.momentum();
   const double fit_phi = phi(momentum);
   const double fit_eta = eta(momentum);
   const double fit_pT = perp(momentum);

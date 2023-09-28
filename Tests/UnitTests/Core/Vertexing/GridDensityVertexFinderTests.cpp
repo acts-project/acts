@@ -138,8 +138,9 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
-    pos = intersection.intersection.position;
+    auto intersection =
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
+    pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
@@ -147,7 +148,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 
@@ -251,8 +253,9 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
-    pos = intersection.intersection.position;
+    auto intersection =
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
+    pos = intersection.position();
 
     // Produce most of the tracks at near z1 position,
     // some near z2. Highest track density then expected at z1
@@ -260,7 +263,8 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_track_caching_test) {
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 
@@ -415,14 +419,16 @@ BOOST_AUTO_TEST_CASE(grid_density_vertex_finder_seed_width_test) {
 
     // project the position on the surface
     Vector3 direction = makeDirectionFromPhiEta(phi, eta);
-    auto intersection = perigeeSurface->intersect(geoContext, pos, direction);
-    pos = intersection.intersection.position;
+    auto intersection =
+        perigeeSurface->intersect(geoContext, pos, direction).closest();
+    pos = intersection.position();
 
     pos[eZ] = z1dist(gen);
 
     trackVec.push_back(BoundTrackParameters::create(
                            perigeeSurface, geoContext, makeVector4(pos, 0),
-                           direction, pt, charge, covMat)
+                           direction, charge / pt, covMat,
+                           ParticleHypothesis::pion())
                            .value());
   }
 

@@ -84,7 +84,7 @@ Neighbour<external_spacepoint_t>::Neighbour(
   /// radius is > lower bound. We use a binary search in this case
   else {
     itr = std::lower_bound(collection.begin(), collection.end(), lowerBound,
-                           [](const auto& sp, const float& target) -> bool {
+                           [](const auto& sp, const float target) -> bool {
                              return sp->radius() < target;
                            });
   }
