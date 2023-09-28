@@ -29,17 +29,17 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
   /// The grid where the indices are stored
   grid_type grid;
 
+  /// The path generator
+  path_generator pgenerator;
+
   /// These are the cast parameters - copied from constructor
   std::array<BinningValue, grid_type::DIM> casts{};
 
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
-  /// The path generator
-  path_generator pgenerator;
-
   /// @brief  Constructor for a grid based surface attacher
-  ///@param igrid the grid that is moved into this attacher
+  /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
   /// @param itr a transform applied to the global position
   MultiLayerSurfacesUpdatorImpl(
@@ -67,6 +67,8 @@ class MultiLayerSurfacesUpdatorImpl : public INavigationDelegate {
 
     resolveDuplicates(gctx, surfCandidates);
     SurfacesFiller::fill(nState, surfCandidates);
+
+    updateCandidates(gctx, nState);
   }
 
   /// Cast into a lookup position
