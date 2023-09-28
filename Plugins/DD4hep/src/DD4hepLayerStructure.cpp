@@ -8,8 +8,6 @@
 
 #include "Acts/Plugins/DD4hep/DD4hepLayerStructure.hpp"
 
-#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
-
 Acts::Experimental::DD4hepLayerStructure::DD4hepLayerStructure(
     std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
     std::unique_ptr<const Logger> logger)
@@ -34,7 +32,7 @@ Acts::Experimental::DD4hepLayerStructure::builder(
 
   // This object is going to be filled with the created surfaces
   DD4hepDetectorSurfaceFactory::Cache fCache;
-  m_surfaceFactory->construct(fCache, dd4hepElement);
+  m_surfaceFactory->construct(fCache, dd4hepElement, options.conversionOptions);
 
   ACTS_DEBUG("Conversion from DD4Hep : " << fCache.sensitiveSurfaces.size()
                                          << " sensitive surfaces");

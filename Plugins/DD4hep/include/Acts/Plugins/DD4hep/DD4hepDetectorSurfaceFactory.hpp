@@ -63,6 +63,18 @@ class DD4hepDetectorSurfaceFactory {
     std::vector<Experimental::ProtoSupport> supports = {};
   };
 
+  /// Nested options struct to steer the conversion
+  struct Options {
+    /// Convert sensitive surfaces
+    bool convertSensitive = true;
+    /// Convert passive surfaces
+    bool convertPassive = true;
+    /// Convert material directly
+    bool convertMaterial = true;
+    /// Convert proxy material
+    bool convertProxyMaterial = true;
+  };
+
   /// The DD4hep detector element factory
   ///
   /// @param mlogger a screen output logger
@@ -74,9 +86,11 @@ class DD4hepDetectorSurfaceFactory {
   ///
   /// @param cache [in,out] into which the Elements are filled
   /// @param dd4hepElement the detector element representing the super structure
+  /// @param options to steer the conversion
   ///
   /// @note this method will call the recursive construction
-  void construct(Cache& cache, const dd4hep::DetElement& dd4hepElement);
+  void construct(Cache& cache, const dd4hep::DetElement& dd4hepElement,
+                 const Options& options);
 
  private:
   /// @brief  auto-calculate the unit length conversion
@@ -93,27 +107,30 @@ class DD4hepDetectorSurfaceFactory {
   ///
   /// @param cache [in,out] into which the Elements are filled
   /// @param dd4hepElement the detector element representing the super structure
+  /// @param options to steer the conversion
   /// @param level the current level of the tree, used for log message output
   ///
   /// @note this method is called recursively
   void recursiveConstruct(Cache& cache, const dd4hep::DetElement& dd4hepElement,
-                          int level);
+                          const Options& options, int level);
 
   /// Method to convert a single sensitive detector element
   ///
   /// @param dd4hepElement the detector element
+  /// @param options to steer the conversion
   ///
   /// @return a created detector element and surface
   DD4hepSensitiveSurface constructSensitiveElement(
-      const dd4hep::DetElement& dd4hepElement) const;
+      const dd4hep::DetElement& dd4hepElement, const Options& options) const;
 
   /// Method to convert a single sensitive detector element
   ///
   /// @param dd4hepElement the detector element
+  /// @param options to steer the conversion
   ///
   /// @return a created surface
   DD4hepPassiveSurface constructPassiveElement(
-      const dd4hep::DetElement& dd4hepElement) const;
+      const dd4hep::DetElement& dd4hepElement, const Options& options) const;
 };
 
 }  // namespace Acts

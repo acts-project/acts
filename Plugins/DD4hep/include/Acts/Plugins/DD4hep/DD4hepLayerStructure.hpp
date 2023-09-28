@@ -12,6 +12,7 @@
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/ProtoBinning.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -22,8 +23,6 @@ class DetElement;
 }
 
 namespace Acts {
-
-class DD4hepDetectorSurfaceFactory;
 
 namespace Experimental {
 
@@ -62,6 +61,8 @@ class DD4hepLayerStructure {
     Logging::Level logLevel = Logging::INFO;
     /// Approximation for the polyhedron binning nSegments
     unsigned int nSegments = 1u;
+    /// Conversion options
+    DD4hepDetectorSurfaceFactory::Options conversionOptions;
   };
 
   /// @brief This method generates a LayerStructure builder, which extends the

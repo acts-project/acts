@@ -26,17 +26,24 @@ Acts::DD4hepDetectorSurfaceFactory::DD4hepDetectorSurfaceFactory(
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::construct(
-    Cache& cache, const dd4hep::DetElement& dd4hepElement) {
+    Cache& cache, const dd4hep::DetElement& dd4hepElement,
+    const Options& options) {
+  ACTS_DEBUG("Configured to convert "
+             << (options.convertSensitive ? "sensitive components and " : "")
+             << (options.convertPassive
+                     ? "passive surfaces."
+                     : (not options.convertSensitive ? "nothing." : "")));
   ACTS_DEBUG("Constructing DD4hepDetectorElements - tree level call from  "
              << dd4hepElement.name() << ".");
-  recursiveConstruct(cache, dd4hepElement, 1);
+  recursiveConstruct(cache, dd4hepElement, options, 1);
   ACTS_DEBUG("Recursive search did yield: "
              << cache.sensitiveSurfaces.size() << " sensitive surface(s), "
              << cache.passiveSurfaces.size() << " passive surface(s)");
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
-    Cache& cache, const dd4hep::DetElement& dd4hepElement, int level) {
+    Cache& cache, const dd4hep::DetElement& dd4hepElement,
+    const Options& options, int level) {
   ACTS_VERBOSE("Conversion call at level " << level << " for element "
                                            << dd4hepElement.name());
 
@@ -50,7 +57,8 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   bool pSurface = getParamOr<bool>("passive_surface", dd4hepElement, false);
   if (pSurface) {
     ACTS_VERBOSE("Passive surface(s) detected.");
-    cache.passiveSurfaces.push_back(constructPassiveElement(dd4hepElement));
+    cache.passiveSurfaces.push_back(
+        constructPassiveElement(dd4hepElement, options));
   }
 
   const dd4hep::DetElement::Children& children = dd4hepElement.children();
@@ -62,9 +70,9 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
       if (childDetElement.volume().isSensitive()) {
         ACTS_VERBOSE("Sensitive surface detected.");
         cache.sensitiveSurfaces.push_back(
-            constructSensitiveElement(childDetElement));
+            constructSensitiveElement(childDetElement, options));
       }
-      recursiveConstruct(cache, childDetElement, level + 1);
+      recursiveConstruct(cache, childDetElement, options, level + 1);
     }
   } else {
     ACTS_VERBOSE("No children detected.");
@@ -73,7 +81,7 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
 
 Acts::DD4hepDetectorSurfaceFactory::DD4hepSensitiveSurface
 Acts::DD4hepDetectorSurfaceFactory::constructSensitiveElement(
-    const dd4hep::DetElement& dd4hepElement) const {
+    const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Extract the axis definition
   std::string detAxis =
       getParamOr<std::string>("axis_definitions", dd4hepElement, "XYZ");
@@ -86,7 +94,7 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveElement(
 
 Acts::DD4hepDetectorSurfaceFactory::DD4hepPassiveSurface
 Acts::DD4hepDetectorSurfaceFactory::constructPassiveElement(
-    const dd4hep::DetElement& dd4hepElement) const {
+    const dd4hep::DetElement& dd4hepElement, const Options& options) const {
   // Underlying TGeo node, shape & transform
   const auto& tgeoNode = *(dd4hepElement.placement().ptr());
   auto tgeoShape = tgeoNode.GetVolume()->GetShape();
