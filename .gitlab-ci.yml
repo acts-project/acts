@@ -436,26 +436,6 @@ lcg_102b:
       - OS: [centos7]
         COMPILER: [gcc11]
 
-lcg_103:
-  <<: *lcg_base_job
-
-  variables:
-    LCG_VERSION: "103"
-
-  parallel:
-    matrix:
-      - OS: [centos7]
-        COMPILER: 
-          - gcc11
-          - gcc12
-          # - clang12 # crashes due to compiler bug with configuration
-          - clang15
-
-      - OS: [alma9]
-        COMPILER: 
-          - gcc11
-          - gcc12
-
 lcg_104:
   <<: *lcg_base_job
 
