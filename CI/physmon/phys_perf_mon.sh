@@ -296,6 +296,23 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         --config CI/physmon/vertexing_config.yml
     ec=$(($ec | $?))
 
+    Examples/Scripts/generic_plotter.py \
+        $outdir/tracksummary_ckf_ttbar.root \
+        tracksummary \
+        $outdir/tracksummary_ckf_ttbar.root \
+        --silent \
+        --config CI/physmon/tracksummary_ckf_config.yml
+    ec=$(($ec | $?))
+
+    # remove ntuple file because it's large
+    rm $outdir/tracksummary_ckf_ttbar.root
+
+    run_histcmp \
+        $outdir/tracksummary_ckf_ttbar_hist.root \
+        $refdir/tracksummary_ckf_ttbar_hist.root \
+        "Track Summary CKF ttbar" \
+        tracksummary_ckf_ttbar
+
     # remove ntuple file because it's large
     rm $outdir/performance_amvf_ttbar.root
 
