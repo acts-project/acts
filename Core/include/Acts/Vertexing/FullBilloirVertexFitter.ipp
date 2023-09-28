@@ -214,6 +214,9 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
     Vector4 deltaV = covV * deltaVFac;
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
+    // Cross-covariance matrix of the vertex and the momentum
+    std::vector<ActsMatrix<4, 3>> crossCovVP(nTracks);
+    // Covariance matrix of the momentum
     std::vector<ActsSquareMatrix<3>> covP(nTracks);
 
     // Update track momenta and calculate the covariance of the track parameters
@@ -240,10 +243,15 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       // ... and add it to the total chi2 value
       newChi2 += billoirTrack.chi2;
 
+      // Cross-covariance matrix between the vertex position and the refitted
+      // momentum, see Eq. 8.22 in Ref. (2). Be mindful of the different choice
+      // of notation!
+      crossCovVP[iTrack] = -covV * billoirTrack.BCinv;
+
       // Covariance matrix of the refitted momentum, see Eq. 8.23 in Ref. (2).
       // Be mindful of the different choice of notation!
-      covP[iTrack] = billoirTrack.Cinv +
-                     billoirTrack.BCinv.transpose() * covV * billoirTrack.BCinv;
+      covP[iTrack] = billoirTrack.Cinv -
+                     billoirTrack.BCinv.transpose() * crossCovVP[iTrack];
     }
 
     // assign new linearization point (= new vertex position in global frame)
@@ -283,7 +291,8 @@ Acts::FullBilloirVertexFitter<input_track_t, linearizer_t>::fit(
       for (std::size_t iTrack = 0; iTrack < billoirTracks.size(); ++iTrack) {
         const auto& billoirTrack = billoirTracks[iTrack];
         // new refitted track momentum
-        FittedMomentum fittedMomentum(trackMomenta[iTrack], covP[iTrack]);
+        FittedMomentum fittedMomentum(trackMomenta[iTrack], covP[iTrack],
+                                      crossCovVP[iTrack]);
         TrackAtVertex<input_track_t> trackAtVertex(billoirTrack.originalTrack,
                                                    std::move(fittedMomentum),
                                                    billoirTrack.chi2);

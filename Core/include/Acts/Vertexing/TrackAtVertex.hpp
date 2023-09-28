@@ -21,11 +21,18 @@ namespace Acts {
 /// (+corresponding covariances). The updated track momenta and their
 /// covariances are saved in the following struct.
 struct FittedMomentum {
-  FittedMomentum(const Vector3& mom, const ActsSquareMatrix<3>& cov)
-      : momentum(mom), covariance(cov) {}
+  FittedMomentum(const Vector3& mom, const ActsSquareMatrix<3>& cov,
+                 const ActsMatrix<4, 3>& crossCov)
+      : momentum(mom), covariance(cov), crossCovariance(crossCov) {}
 
   Vector3 momentum;
+  // covariance(i, j) = Cov(p_i, p_j), where p_i is the i-th component of the
+  // momentum
   ActsSquareMatrix<3> covariance;
+  // crossCovariance(i, j) = Cov(v_i, p_j), where v_i is the i-th component of
+  // the vertex and p_j is the j-th component of the momentum. If we perform the
+  // vertex fit in 3D, the last row of crossCovariance is set to 0.
+  ActsMatrix<4, 3> crossCovariance;
 };
 
 /// @struct TrackAtVertex
@@ -40,10 +47,10 @@ struct TrackAtVertex {
 
   /// @brief Constructor used before the vertex fit (i.e., when we don't know the fitted momentum yet)
   ///
-  /// @param chi2PerTrack Chi2 of the track
+  /// @param chi2Track Chi2 of the track
   /// @param originalTrack Original perigee parameter
-  TrackAtVertex(const input_track_t* originalTrack, double chi2PerTrack)
-      : originalParams(originalTrack), chi2(chi2PerTrack) {}
+  TrackAtVertex(const input_track_t* originalTrack, double chi2Track)
+      : originalParams(originalTrack), chi2(chi2Track) {}
 
   /// @brief Constructor used before the vertex fit (i.e., when we don't know the fitted momentum yet) with default chi2
   ///
@@ -53,14 +60,14 @@ struct TrackAtVertex {
 
   /// @brief Constructor used when we know the momentum after the fit
   ///
-  /// @param chi2PerTrack Chi2 of the track
+  /// @param chi2Track Chi2 of the track
   /// @param fittedMom updated momentum after the vertex fit
   /// @param originalTrack Original perigee parameter
   TrackAtVertex(const input_track_t* originalTrack,
-                std::optional<FittedMomentum> fittedMom, double chi2PerTrack)
+                std::optional<FittedMomentum> fittedMom, double chi2Track)
       : originalParams(originalTrack),
         fittedMomentum(std::move(fittedMom)),
-        chi2(chi2PerTrack) {}
+        chi2(chi2Track) {}
 
   /// @brief Constructor used when we know the momentum after the fit with default chi2
   ///

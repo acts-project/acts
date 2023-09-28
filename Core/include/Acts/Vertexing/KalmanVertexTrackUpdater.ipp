@@ -53,10 +53,6 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   const SquareMatrix3 vtxCov = vtx.fullCovariance().template block<3, 3>(0, 0);
   const SquareMatrix3 vtxWeight = vtxCov.inverse();
 
-  // New track covariance matrix
-  const SquareMatrix3 newTrkCov =
-      -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
-
   KalmanVertexUpdater::MatrixCache matrixCache;
 
   // Now determine the smoothed chi2 of the track in the following
@@ -78,11 +74,21 @@ void Acts::KalmanVertexTrackUpdater::update(TrackAtVertex<input_track_t>& track,
   double chi2 = posDiff.dot(reducedVtxWeight * posDiff) +
                 smParams.dot(trkParamWeight * smParams);
 
-  // Fitted momentum and its covariance matrix
-  ActsSquareMatrix<3> momCov =
-      sMat +
-      (newTrkCov).transpose() * (vtxWeight.block<3, 3>(0, 0) * newTrkCov);
-  FittedMomentum fittedMom(newTrkMomentum, momCov);
+  // Cross covariance matrix between the vertex position and the refitted track
+  // momentum
+  ActsMatrix<4, 3> crossCovVP = ActsMatrix<4, 3>::Zero();
+  const SquareMatrix3 spatialCrossCovVP =
+      -vtxCov * posJac.transpose() * trkParamWeight * momJac * sMat;
+  crossCovVP.topLeftCorner<3, 3>() = spatialCrossCovVP;
+
+  // Covariance matrix of the refitted track momentum
+  const SquareMatrix3 covP =
+      sMat + (spatialCrossCovVP).transpose() *
+                 (vtxWeight.block<3, 3>(0, 0) * spatialCrossCovVP);
+
+  // Struct comprising the refitted track momentum and the corresponding
+  // (cross-) covariances
+  FittedMomentum fittedMom(newTrkMomentum, covP, crossCovVP);
 
   // Set new properties
   track.fittedMomentum = fittedMom;
