@@ -190,7 +190,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   BOOST_CHECK_GT(compatibility, 0);
 }
 
-BOOST_DATA_TEST_CASE(TIMEATPCA, tracksWithoutIPs* vertices, t0, phi, theta, p,
+BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
                      q, vx0, vy0, vz0, vt0) {
   using Propagator = Acts::Propagator<Stepper>;
   auto field = std::make_shared<MagneticField>(Vector3(0, 0, 2_T));
