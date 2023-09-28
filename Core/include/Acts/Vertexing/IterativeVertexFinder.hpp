@@ -94,15 +94,14 @@ class IterativeVertexFinder {
     /// ImpactPointEstimator
     IPEstimator ipEst;
 
-    /// Vertex finder configuration variables
-
+    /// Vertex finder configuration variables.
     /// Tracks that are within a distance of
     ///
     /// significanceCutSeeding * sqrt(sigma(d0)^2+sigma(z0)^2)
     ///
     /// are considered compatible with the vertex.
     double significanceCutSeeding = 10;
-    double maximumChi2cutForSeeding = 36.;
+    double maximumChi2CutForSeeding = 36.;
     int maxVertices = 50;
 
     /// Assign a certain fraction of compatible tracks to a different (so-called
@@ -112,7 +111,6 @@ class IterativeVertexFinder {
     /// vertex. E.g., if splitVerticesTrkInvFraction = 2, about 50% of
     /// compatible tracks will be assigned to the split vertex.
     int splitVerticesTrkInvFraction = 2;
-
     bool reassignTracksAfterFirstFit = false;
     bool doMaxTracksCut = false;
     int maxTracks = 5000;
@@ -201,11 +199,11 @@ class IterativeVertexFinder {
       const std::vector<const InputTrack_t*>& seedTracks,
       const VertexingOptions<InputTrack_t>& vertexingOptions) const;
 
-  /// @brief Removes all tracks in tracksToFit from seedTracks
+  /// @brief Removes all tracks in tracksToRemove from seedTracks
   ///
-  /// @param tracksToFit Tracks to be removed from seedTracks
+  /// @param tracksToRemove Tracks to be removed from seedTracks
   /// @param seedTracks List to remove tracks from
-  void removeTracks(const std::vector<const InputTrack_t*>& tracksToFit,
+  void removeTracks(const std::vector<const InputTrack_t*>& tracksToRemove,
                     std::vector<const InputTrack_t*>& seedTracks) const;
 
   /// @brief Function for calculating how compatible
@@ -243,7 +241,7 @@ class IterativeVertexFinder {
   /// @param seedTracks List of all available tracks used for seeding
   /// @param seedVertex Seed vertex
   /// @param tracksToFitOut Tracks to fit
-  /// @param tracksToFitSplitVertexOut Tracks to fit split vertex
+  /// @param tracksToFitSplitVertexOut Tracks to fit to split vertex
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<void> fillTracksToFit(

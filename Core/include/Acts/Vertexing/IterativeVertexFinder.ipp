@@ -194,9 +194,9 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::getVertexSeed(
 
 template <typename vfitter_t, typename sfinder_t>
 void Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeTracks(
-    const std::vector<const InputTrack_t*>& tracksToFit,
+    const std::vector<const InputTrack_t*>& tracksToRemove,
     std::vector<const InputTrack_t*>& seedTracks) const {
-  for (const auto& trk : tracksToFit) {
+  for (const auto& trk : tracksToRemove) {
     const BoundTrackParameters& params = m_extractParameters(*trk);
     // Find track in seedTracks
     auto foundIter =
@@ -317,7 +317,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::removeUsedCompatibleTracks(
 
     // check if sufficiently compatible with last fitted vertex
     // (quite loose constraint)
-    if (chi2 < m_cfg.maximumChi2cutForSeeding) {
+    if (chi2 < m_cfg.maximumChi2CutForSeeding) {
       auto foundIter =
           std::find_if(seedTracks.begin(), seedTracks.end(),
                        [&trk](const auto seedTrk) { return trk == seedTrk; });
