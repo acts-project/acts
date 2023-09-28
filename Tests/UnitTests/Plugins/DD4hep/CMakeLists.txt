@@ -16,11 +16,9 @@ set_target_properties(ActsTestsDD4hepFactories PROPERTIES LIBRARY_OUTPUT_DIRECTO
 dd4hep_set_version(ActsTestsDD4hepFactories MAJOR 1 MINOR 0 PATCH 0)
 dd4hep_generate_rootmap(ActsTestsDD4hepFactories)
 
-install(
-  TARGETS ActsTestsDD4hepFactories
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-
-set(DD4HEP_LIBRARY_PATH "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}:${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR}")
+find_library(dd4hep_core_plugins_library DDCorePlugins REQUIRED)
+cmake_path(GET dd4hep_core_plugins_library PARENT_PATH DD4HEP_LIBRARY_PATH)
+message(INFO ${DD4HEP_LIBRARY_PATH})
 
 if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
   # set test library dependencies
@@ -28,10 +26,13 @@ if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
   set(dd4hep_tests DD4hepDetectorElement DD4hepCylinderLayerStructure)
   foreach(_test ${dd4hep_tests})
     add_unittest(${_test} ${_test}Tests.cpp)
+    add_dependencies(ActsUnitTest${_test} Components_ActsTestsDD4hepFactories)
     if(APPLE)
-      set_property(TEST ${_test} PROPERTY ENVIRONMENT "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}") 
+      set_property(TEST ${_test} PROPERTY ENVIRONMENT 
+        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:$<PATH:GET_PARENT_PATH,$<TARGET_FILE:ActsTestsDD4hepFactories>>") 
     else()
-      set_property(TEST ${_test} PROPERTY ENVIRONMENT "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}")
+      set_property(TEST ${_test} PROPERTY ENVIRONMENT 
+        "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:$<PATH:GET_PARENT_PATH,$<TARGET_FILE:ActsTestsDD4hepFactories>>")
     endif()
   endforeach()
 else()
