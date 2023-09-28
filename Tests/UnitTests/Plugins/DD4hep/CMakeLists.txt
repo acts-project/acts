@@ -18,7 +18,6 @@ dd4hep_generate_rootmap(ActsTestsDD4hepFactories)
 
 find_library(dd4hep_core_plugins_library DDCorePlugins REQUIRED)
 cmake_path(GET dd4hep_core_plugins_library PARENT_PATH DD4HEP_LIBRARY_PATH)
-message(INFO ${DD4HEP_LIBRARY_PATH})
 
 if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
   # set test library dependencies
