@@ -62,9 +62,9 @@ class ParticleSmearing final : public IAlgorithm {
     /// Optional. Initial covariance matrix diagonal. Overwrites the default if
     /// set.
     std::optional<std::array<double, 6>> initialSigmas = std::array<double, 6>{
-        25 * Acts::UnitConstants::um,       100 * Acts::UnitConstants::um,
-        0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
-        0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
+        25 * Acts::UnitConstants::um,    100 * Acts::UnitConstants::um,
+        1 * Acts::UnitConstants::degree, 1 * Acts::UnitConstants::degree,
+        0.1 / Acts::UnitConstants::GeV,  1 * Acts::UnitConstants::ns};
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1, 1, 1, 1, 1, 1};
     /// Random numbers service.
