@@ -83,26 +83,29 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
   for (xml_coll_t psurface(x_layer, _Unicode(passive_surface)); psurface;
        ++psurface) {
     xml_comp_t x_passive_xml = psurface;
-    xml_comp_t x_tubs_t = x_passive_xml.child(_Unicode(tubs));
-    // Crete the corresponding detector element
-    DetElement passiveElement(layerName + "_passiveEl", x_layer.id());
-    Tube passiveShape(layerName + "_shape", x_tubs_t.rmin(), x_tubs_t.rmax(),
-                      x_tubs_t.dz());
-    Volume passiveVolume(layerName + "_volume", passiveShape,
-                         dd.material(x_tubs_t.materialStr()));
-    passiveVolume.setVisAttributes(dd, x_layer.visStr());
-    // The places layer after all
-    PlacedVolume placedPassive = layerAssembly.placeVolume(
-        passiveVolume, DD4hepTestsHelper::createTransform(x_passive_xml));
-    // Transport the passive surface knowledge
-    auto &params =
-        DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
-            passiveElement);
-    params.set<bool>("passive_surface", true);
-    // Set the placement and add
-    passiveElement.setPlacement(placedPassive);
-    // Add the module elements
-    layerElement.add(passiveElement);
+    // Direct definition of a child surface
+    if (x_passive_xml.hasChild(_Unicode(tubs))) {
+      xml_comp_t x_tubs_t = x_passive_xml.child(_Unicode(tubs));
+      // Crete the corresponding detector element
+      DetElement passiveElement(layerName + "_passiveEl", x_layer.id());
+      Tube passiveShape(layerName + "_shape", x_tubs_t.rmin(), x_tubs_t.rmax(),
+                        x_tubs_t.dz());
+      Volume passiveVolume(layerName + "_volume", passiveShape,
+                           dd.material(x_tubs_t.materialStr()));
+      passiveVolume.setVisAttributes(dd, x_layer.visStr());
+      // The places layer after all
+      PlacedVolume placedPassive = layerAssembly.placeVolume(
+          passiveVolume, DD4hepTestsHelper::createTransform(x_passive_xml));
+      // Transport the passive surface knowledge
+      auto &params =
+          DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
+              passiveElement);
+      params.set<bool>("passive_surface", true);
+      // Set the placement and add
+      passiveElement.setPlacement(placedPassive);
+      // Add the module elements
+      layerElement.add(passiveElement);
+    }
   }
 
   auto placedLayer = dAssembly.placeVolume(layerAssembly);

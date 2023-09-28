@@ -31,10 +31,8 @@ void Acts::DD4hepDetectorSurfaceFactory::construct(
              << dd4hepElement.name() << ".");
   recursiveConstruct(cache, dd4hepElement, 1);
   ACTS_DEBUG("Recursive search did yield: "
-             << cache.sensitiveSurfaces.size() << " sensitive surfaces, "
-             << cache.passiveSurfaces.size() << " passive surfaces, and "
-             << cache.passiveSurfaceProxies.size()
-             << " passive surface proxies.");
+             << cache.sensitiveSurfaces.size() << " sensitive surface(s), "
+             << cache.passiveSurfaces.size() << " passive surface(s)");
 }
 
 void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
@@ -49,30 +47,10 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
   }
 
   // Deal with passive surface if detected
-  // Passive surfaces can be given through:
-  // - [ direct ] translate of the DD4hepElement
-  // - [ proxy ] placement through proxy parameters
-  // - [ inner, outer, negative, positive, representing ]
-  //    proxies to be determined at layer structure building
   bool pSurface = getParamOr<bool>("passive_surface", dd4hepElement, false);
   if (pSurface) {
     ACTS_VERBOSE("Passive surface(s) detected.");
-    int pSurfaceCount =
-        getParamOr<int>("passive_surface_count", dd4hepElement, 1);
-    for (int ips = 0; ips < pSurfaceCount; ips++) {
-      std::string pSurfaceType = getParamOr<std::string>(
-          "passive_surface_n" + std::to_string(ips) + "_type", dd4hepElement,
-          "direct");
-      // The passive surface is a proxy, the actual dimension will be determined
-      // during layer structure building
-      if (std::find(allowedPassiveProxies.begin(), allowedPassiveProxies.end(),
-                    pSurfaceType) != allowedPassiveProxies.end()) {
-        cache.passiveSurfaceProxies.push_back(
-            DD4hepPassiveSurfaceProxy{pSurfaceType});
-      } else if (pSurfaceType == "direct") {
-        cache.passiveSurfaces.push_back(constructPassiveElement(dd4hepElement));
-      }
-    }
+    cache.passiveSurfaces.push_back(constructPassiveElement(dd4hepElement));
   }
 
   const dd4hep::DetElement::Children& children = dd4hepElement.children();

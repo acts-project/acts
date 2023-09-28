@@ -33,7 +33,8 @@ using namespace UnitLiterals;
 class DD4hepDetectorElement;
 
 /// A factory to convert DD4hep DetectorElements into sensitive
-/// of passive surfaces
+/// of passive surfaces which are filled into a Cache object,
+/// also the create DD4hepDetector elements are provided
 ///
 class DD4hepDetectorSurfaceFactory {
  public:
@@ -46,22 +47,12 @@ class DD4hepDetectorSurfaceFactory {
   /// added as an "always try, i.e. assignToAll=ture" surface
   using DD4hepPassiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
 
-  /// Collect passive surface proxies
-  struct DD4hepPassiveSurfaceProxy {
-    /// Where the placement should happen
-    std::string placement = "";
-    /// What the envelope should be
-    ActsScalar envelope = 1_mm;
-  };
-
   /// Nested cache that records the conversion status
   struct Cache {
     /// The created detector elements - for the detector store
     std::vector<DD4hepSensitiveSurface> sensitiveSurfaces;
     /// The created non-const surfaces - for further processing,
     std::vector<DD4hepPassiveSurface> passiveSurfaces;
-    /// The created Proxies for the support surfaces
-    std::vector<DD4hepPassiveSurfaceProxy> passiveSurfaceProxies;
     /// matching and conversion statistics: surfaces
     std::size_t convertedSurfaces = 0;
     /// matching and conversion statistics: materials
@@ -94,10 +85,6 @@ class DD4hepDetectorSurfaceFactory {
 
   /// Logging instance
   std::unique_ptr<const Logger> m_logger;
-
-  // The allows passive proxy positions
-  std::vector<std::string> allowedPassiveProxies = {
-      "inner", "outer", "negative", "positive", "representing"};
 
   /// Private access to the logger
   const Logger& logger() const { return *m_logger; }
