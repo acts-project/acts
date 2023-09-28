@@ -75,7 +75,7 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
         0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
         0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
     /// Inflate initial covariance.
-    std::array<double, 6> initialVarInflation = {1e3, 1e3, 1e3, 1e3, 1e3, 1e3};
+    std::array<double, 6> initialVarInflation = {1, 1, 1, 1, 1, 1};
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();

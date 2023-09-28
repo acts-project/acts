@@ -66,7 +66,7 @@ class ParticleSmearing final : public IAlgorithm {
         0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
         0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
     /// Inflate the initial covariance matrix
-    std::array<double, 6> initialVarInflation = {1e3, 1e3, 1e3, 1e3, 1e3, 1e3};
+    std::array<double, 6> initialVarInflation = {1, 1, 1, 1, 1, 1};
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
     /// Optional particle hypothesis override.
