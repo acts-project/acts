@@ -74,10 +74,11 @@ BOOST_AUTO_TEST_CASE(TGeoTrd1_to_PlaneSurface) {
 
   size_t itrd = 0;
   for (const auto &axes : allowedAxes) {
-    auto plane = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
+    auto [ plane, thickness ] = TGeoSurfaceConverter::toSurface(*vol->GetShape(),
                                                  *gGeoIdentity, axes, 1);
     BOOST_CHECK_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
+    CHECK_CLOSE_ABS(thickness, 2 * t, s_epsilon);
 
     auto bounds = dynamic_cast<const TrapezoidBounds *>(&(plane->bounds()));
     BOOST_CHECK_NE(bounds, nullptr);

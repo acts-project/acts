@@ -30,16 +30,12 @@ class ISurfaceMaterial;
 ///
 /// DetectorElement plugin for DD4hep detector elements. DD4hep is based on
 /// TGeo shapes, therefore the DD4hepDetectorElement inherits from
-/// TGeoDetectorElement.
+/// TGeoDetectorElement in order to perform the conversion.
+///
 /// The full geometrical information is provided by the TGeoDetectorElement.
 /// The DD4hepDetectorElement extends the TGeoDetectorElement by containing a
 /// segmentation for the readout.
-/// @todo what if shape conversion fails? add implementation of more than one
-/// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
-/// what
-/// if not used with DD4hep?
-/// @todo segmentation
-
+///
 class DD4hepDetectorElement : public TGeoDetectorElement {
  public:
   /// Broadcast the context type
@@ -50,8 +46,9 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
                          std::vector<std::shared_ptr<DD4hepDetectorElement>>>;
 
   /// Constructor
-  /// @param detElement The DD4hep DetElement which should be linked to a
-  /// surface
+  /// @param detElement The DD4hep DetElement which should be associated to 
+  /// an ACTS surface
+  ///
   /// @param axes is the axis orientation with respect to the tracking frame
   ///        it is a string of the three characters x, y and z (standing for
   ///        the three axes) There is a distinction between
@@ -81,9 +78,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   DD4hepDetectorElement(
       const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
       double scalor = 1., bool isDisc = false,
-      std::shared_ptr<const ISurfaceMaterial> material = nullptr,
-      const std::shared_ptr<const DigitizationModule>& digitizationModule =
-          nullptr);
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr);
 
   ~DD4hepDetectorElement() override = default;
 

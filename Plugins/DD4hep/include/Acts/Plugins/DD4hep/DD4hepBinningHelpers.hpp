@@ -112,7 +112,8 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
 
 /// @brief This method converts the DD4hep binning into the Acts ProtoBinning
 ///
-/// @param dd4hepElemnt the element which has a binning description attached
+/// @param dd4hepElement the element which has a binning description attached
+/// @param bname the binning base name, e.g. surface_binning, material_binning
 ///
 /// @return a vector of proto binning descriptions
 std::vector<Acts::Experimental::ProtoBinning> convertBinning(

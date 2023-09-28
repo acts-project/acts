@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepMaterialHelpers.hpp"
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
 #include "Acts/Geometry/Layer.hpp"
@@ -130,3 +130,4 @@ void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
                           logger);
   }
 }
+

@@ -455,35 +455,30 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
   return {bounds, transform, thickness};
 }
 
-std::shared_ptr<Acts::Surface> Acts::TGeoSurfaceConverter::toSurface(
+std::tuple<std::shared_ptr<Acts::Surface>, Acts::ActsScalar> Acts::TGeoSurfaceConverter::toSurface(
     const TGeoShape& tgShape, const TGeoMatrix& tgMatrix,
     const std::string& axes, double scalor) noexcept(false) {
   // Get the placement and orientation in respect to its mother
   const Double_t* rotation = tgMatrix.GetRotationMatrix();
   const Double_t* translation = tgMatrix.GetTranslation();
 
-  auto cylinderComps =
+  auto [cBounds, cTransform, cThickness] =
       cylinderComponents(tgShape, rotation, translation, axes, scalor);
-  auto cylinderBounds = std::get<0>(cylinderComps);
-  if (cylinderBounds != nullptr) {
-    auto cylinderTrf = std::get<1>(cylinderComps);
-    return Surface::makeShared<CylinderSurface>(cylinderTrf, cylinderBounds);
+  if (cBounds != nullptr) {
+    return { Surface::makeShared<CylinderSurface>(cTransform, cBounds), cThickness };
   }
 
-  auto discComps = discComponents(tgShape, rotation, translation, axes, scalor);
-  auto discBounds = std::get<0>(discComps);
-  if (discBounds != nullptr) {
-    auto discTrf = std::get<1>(discComps);
-    return Surface::makeShared<DiscSurface>(discTrf, discBounds);
+  auto [dBounds, dTransform, dThickness] =
+      discComponents(tgShape, rotation, translation, axes, scalor);
+  if (dBounds != nullptr) {
+    return {Surface::makeShared<DiscSurface>(dTransform, dBounds), dThickness};
   }
 
-  auto planeComps =
+  auto [pBounds, pTransform, pThickness] =
       planeComponents(tgShape, rotation, translation, axes, scalor);
-  auto planeBounds = std::get<0>(planeComps);
-  if (planeBounds != nullptr) {
-    auto planeTrf = std::get<1>(planeComps);
-    return Surface::makeShared<PlaneSurface>(planeTrf, planeBounds);
+  if (pBounds != nullptr) {
+    return { Surface::makeShared<PlaneSurface>(pTransform, pBounds), pThickness };
   }
 
-  return nullptr;
+  return { nullptr, 0. };
 }

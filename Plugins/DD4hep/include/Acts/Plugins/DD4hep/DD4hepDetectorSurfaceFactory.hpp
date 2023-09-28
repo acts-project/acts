@@ -120,7 +120,7 @@ class DD4hepDetectorSurfaceFactory {
   /// @param options to steer the conversion
   ///
   /// @return a created detector element and surface
-  DD4hepSensitiveSurface constructSensitiveElement(
+  DD4hepSensitiveSurface constructSensitiveComponents(
       const dd4hep::DetElement& dd4hepElement, const Options& options) const;
 
   /// Method to convert a single sensitive detector element
@@ -129,7 +129,7 @@ class DD4hepDetectorSurfaceFactory {
   /// @param options to steer the conversion
   ///
   /// @return a created surface
-  DD4hepPassiveSurface constructPassiveElement(
+  DD4hepPassiveSurface constructPassiveComponents(
       const dd4hep::DetElement& dd4hepElement, const Options& options) const;
 };
 
