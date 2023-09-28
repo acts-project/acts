@@ -14,6 +14,7 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <optional>
 #include <stdexcept>
 #include <vector>
 
