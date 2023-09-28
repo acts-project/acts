@@ -138,7 +138,7 @@ class ImpactPointEstimator {
   /// @param vertexPos The vertex position
   ///
   /// @return The compatibility value
-  template <unsigned int nDim = 3>
+  template <unsigned int nDim>
   Result<double> getVertexCompatibility(
       const GeometryContext& gctx, const BoundTrackParameters* trkParams,
       const ActsVector<nDim>& vertexPos) const;
@@ -155,7 +155,7 @@ class ImpactPointEstimator {
   /// @param trkParams Track parameters
   /// @param vtxPos Vertex position
   /// @param state The state object
-  template <unsigned int nDim = 3>
+  template <unsigned int nDim>
   Result<std::pair<Acts::ActsVector<nDim>, Acts::Vector3>>
   getDistanceAndMomentum(const GeometryContext& gctx,
                          const BoundTrackParameters& trkParams,

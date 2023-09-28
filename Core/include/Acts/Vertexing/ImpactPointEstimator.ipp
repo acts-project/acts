@@ -360,9 +360,8 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   // Extract Perigee parameters and corresponding covariance matrix
   auto impactParams = propRes.endParameters->impactParameters();
-  const double d0 = impactParams[0];
-  const double z0 = impactParams[1];
-  auto perigeeCov = propRes.endParameters->impactParameterCovariance().value();
+  auto impactParamCovariance =
+      propRes.endParameters->impactParameterCovariance().value();
 
   // Vertex variances
   // TODO: By looking at sigmaD0 and sigmaZ0 we neglect the offdiagonal terms
@@ -374,32 +373,33 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   ImpactParametersAndSigma ipAndSigma;
 
-  ipAndSigma.d0 = d0;
+  ipAndSigma.d0 = impactParams[0];
   // Variance of the vertex extent in the x-y-plane
   double vtxVar2DExtent = std::max(vtxVarX, vtxVarY);
   // TODO: vtxVar2DExtent, vtxVarZ, and vtxVarT should always be >= 0. We need
   // to throw an error here once
   // https://github.com/acts-project/acts/issues/2231 is resolved.
   if (vtxVar2DExtent > 0) {
-    ipAndSigma.sigmaD0 = std::sqrt(vtxVar2DExtent + perigeeCov(0, 0));
+    ipAndSigma.sigmaD0 =
+        std::sqrt(vtxVar2DExtent + impactParamCovariance(0, 0));
   } else {
-    ipAndSigma.sigmaD0 = std::sqrt(perigeeCov(0, 0));
+    ipAndSigma.sigmaD0 = std::sqrt(impactParamCovariance(0, 0));
   }
 
-  ipAndSigma.z0 = z0;
+  ipAndSigma.z0 = impactParams[1];
   if (vtxVarZ > 0) {
-    ipAndSigma.sigmaZ0 = std::sqrt(vtxVarZ + perigeeCov(1, 1));
+    ipAndSigma.sigmaZ0 = std::sqrt(vtxVarZ + impactParamCovariance(1, 1));
   } else {
-    ipAndSigma.sigmaZ0 = std::sqrt(perigeeCov(1, 1));
+    ipAndSigma.sigmaZ0 = std::sqrt(impactParamCovariance(1, 1));
   }
 
   if (calculateTimeIP) {
     ipAndSigma.deltaT = std::abs(vtx.time() - impactParams[2]);
     double vtxVarT = vtx.fullCovariance()(eTime, eTime);
     if (vtxVarT > 0) {
-      ipAndSigma.sigmaDeltaT = std::sqrt(vtxVarT + perigeeCov(2, 2));
+      ipAndSigma.sigmaDeltaT = std::sqrt(vtxVarT + impactParamCovariance(2, 2));
     } else {
-      ipAndSigma.sigmaDeltaT = std::sqrt(perigeeCov(2, 2));
+      ipAndSigma.sigmaDeltaT = std::sqrt(impactParamCovariance(2, 2));
     }
   }
 
