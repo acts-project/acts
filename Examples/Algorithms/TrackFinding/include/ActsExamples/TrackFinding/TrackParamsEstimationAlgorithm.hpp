@@ -69,20 +69,13 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField;
     /// The minimum magnetic field to trigger the track parameters estimation
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
-    /// Constant term of the loc0 resolution.
-    double sigmaLoc0 = 25 * Acts::UnitConstants::um;
-    /// Constant term of the loc1 resolution.
-    double sigmaLoc1 = 100 * Acts::UnitConstants::um;
-    /// Phi angular resolution.
-    double sigmaPhi = 0.02 * Acts::UnitConstants::degree;
-    /// Theta angular resolution.
-    double sigmaTheta = 0.02 * Acts::UnitConstants::degree;
-    /// q/p resolution.
-    double sigmaQOverP = 0.1 / Acts::UnitConstants::GeV;
-    /// Time resolution.
-    double sigmaT0 = 10 * Acts::UnitConstants::ns;
+    /// Initial covariance matrix diagonal.
+    std::array<double, 6> initialSigmas = {
+        25 * Acts::UnitConstants::um,       100 * Acts::UnitConstants::um,
+        0.02 * Acts::UnitConstants::degree, 0.02 * Acts::UnitConstants::degree,
+        0.1 / Acts::UnitConstants::GeV,     10 * Acts::UnitConstants::ns};
     /// Inflate initial covariance.
-    std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
+    std::array<double, 6> initialVarInflation = {1e3, 1e3, 1e3, 1e3, 1e3, 1e3};
     /// Particle hypothesis.
     Acts::ParticleHypothesis particleHypothesis =
         Acts::ParticleHypothesis::pion();
