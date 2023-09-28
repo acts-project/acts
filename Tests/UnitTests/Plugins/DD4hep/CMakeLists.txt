@@ -19,6 +19,12 @@ dd4hep_generate_rootmap(ActsTestsDD4hepFactories)
 find_library(dd4hep_core_plugins_library DDCorePlugins REQUIRED)
 cmake_path(GET dd4hep_core_plugins_library PARENT_PATH DD4HEP_LIBRARY_PATH)
 
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0") 
+  set(factory_path "$<PATH:GET_PARENT_PATH,$<TARGET_FILE:ActsTestsDD4hepFactories>>")
+else()
+  set(factory_path "${CMAKE_CURRENT_BINARY_DIR}")
+endif()
+
 if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
   # set test library dependencies
   set(unittest_extra_libraries ActsTestsDD4hepFactories ActsPluginDD4hep)
@@ -28,10 +34,10 @@ if (EXISTS ${DD4hep_DIR}/${CMAKE_INSTALL_LIBDIR})
     add_dependencies(ActsUnitTest${_test} Components_ActsTestsDD4hepFactories)
     if(APPLE)
       set_property(TEST ${_test} PROPERTY ENVIRONMENT 
-        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:$<PATH:GET_PARENT_PATH,$<TARGET_FILE:ActsTestsDD4hepFactories>>") 
+        "DYLD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}") 
     else()
       set_property(TEST ${_test} PROPERTY ENVIRONMENT 
-        "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:$<PATH:GET_PARENT_PATH,$<TARGET_FILE:ActsTestsDD4hepFactories>>")
+        "LD_LIBRARY_PATH=${DD4HEP_LIBRARY_PATH}:${factory_path}")
     endif()
   endforeach()
 else()
