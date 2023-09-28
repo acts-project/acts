@@ -118,7 +118,7 @@ void runTest(const propagator_t& prop, double pT, double phi, double theta,
   // clang-format on
   std::cout << cov.determinant() << std::endl;
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, q / p,
-                                   cov);
+                                   cov, ParticleHypothesis::pion());
 
   // Action list and abort list
   using ActionListType = ActionList<MaterialInteractor>;

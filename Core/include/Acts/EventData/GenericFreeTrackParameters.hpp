@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/TrackParametersConcept.hpp"
 #include "Acts/EventData/detail/PrintParameters.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
@@ -23,93 +24,50 @@ namespace Acts {
 
 /// Track parameters not bound to a surface for a single track.
 ///
-/// @tparam charge_t Helper type to interpret the particle charge
+/// @tparam particle_hypothesis_t Helper type to interpret the particle charge/momentum
 ///
 /// Parameters and covariance matrix are stored using the free parametrization
 /// defined in `enum FreeIndices`.
-template <class charge_t>
+template <class particle_hypothesis_t>
 class GenericFreeTrackParameters {
  public:
   using Scalar = ActsScalar;
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSquareMatrix;
+  using ParticleHypothesis = particle_hypothesis_t;
 
   /// Construct from a parameters vector and particle charge.
   ///
   /// @param params Free parameters vector
-  /// @param q Particle charge
   /// @param cov Free parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
   ///
   /// In principle, only the charge magnitude is needed her to allow unambiguous
   /// extraction of the absolute momentum. The particle charge is required as
   /// an input here to be consistent with the other constructors below that
   /// that also take the charge as an input. The charge sign is only used in
   /// debug builds to check for consistency with the q/p parameter.
-  GenericFreeTrackParameters(const ParametersVector& params, Scalar q,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
+  GenericFreeTrackParameters(const ParametersVector& params,
+                             std::optional<CovarianceMatrix> cov,
+                             ParticleHypothesis particleHypothesis)
       : m_params(params),
         m_cov(std::move(cov)),
-        m_chargeInterpreter(std::abs(q)) {
-    assert((0 <= (params[eFreeQOverP] * q)) and "Inconsistent q/p and q signs");
-  }
-
-  /// Construct from a parameters vector.
-  ///
-  /// @param params Free parameters vector
-  /// @param cov Free parameters covariance matrix
-  /// @tparam T Internal helper template be able to check charge type
-  ///
-  /// This constructor is only available if there are no potential charge
-  /// ambiguities, i.e. the charge interpretation type is default-constructible.
-  template <typename T = charge_t,
-            std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  GenericFreeTrackParameters(const ParametersVector& params,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_params(params), m_cov(std::move(cov)) {}
+        m_particleHypothesis(std::move(particleHypothesis)) {}
 
   /// Construct from four-position, angles, absolute momentum, and charge.
   ///
   /// @param pos4 Track position/time four-vector
   /// @param phi Transverse track direction angle
   /// @param theta Longitudinal track direction angle
-  /// @param p Absolute momentum
-  /// @param q Particle charge
+  /// @param qOverP Charge over momentum
   /// @param cov Free parameters covariance matrix
+  /// @param particleHypothesis Particle hypothesis
   GenericFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
-                             Scalar p, Scalar q,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
+                             Scalar qOverP, std::optional<CovarianceMatrix> cov,
+                             ParticleHypothesis particleHypothesis)
       : m_params(FreeVector::Zero()),
         m_cov(std::move(cov)),
-        m_chargeInterpreter(std::abs(q)) {
-    assert((0 <= p) and "Absolute momentum must be positive");
-
-    auto dir = makeDirectionFromPhiTheta(phi, theta);
-    m_params[eFreePos0] = pos4[ePos0];
-    m_params[eFreePos1] = pos4[ePos1];
-    m_params[eFreePos2] = pos4[ePos2];
-    m_params[eFreeTime] = pos4[eTime];
-    m_params[eFreeDir0] = dir[eMom0];
-    m_params[eFreeDir1] = dir[eMom1];
-    m_params[eFreeDir2] = dir[eMom2];
-    m_params[eFreeQOverP] = (q != Scalar(0)) ? (q / p) : (1 / p);
-  }
-
-  /// Construct from four-position, angles, and charge-over-momentum.
-  ///
-  /// @param pos4 Track position/time four-vector
-  /// @param phi Transverse track direction angle
-  /// @param theta Longitudinal track direction angle
-  /// @param qOverP Charge-over-momentum-like parameter
-  /// @param cov Free parameters covariance matrix
-  ///
-  /// This constructor is only available if there are no potential charge
-  /// ambiguities, i.e. the charge interpretation type is default-constructible.
-  template <typename T = charge_t,
-            std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
-  GenericFreeTrackParameters(const Vector4& pos4, Scalar phi, Scalar theta,
-                             Scalar qOverP,
-                             std::optional<CovarianceMatrix> cov = std::nullopt)
-      : m_params(FreeVector::Zero()), m_cov(std::move(cov)) {
+        m_particleHypothesis(std::move(particleHypothesis)) {
     auto dir = makeDirectionFromPhiTheta(phi, theta);
     m_params[eFreePos0] = pos4[ePos0];
     m_params[eFreePos1] = pos4[ePos1];
@@ -119,6 +77,25 @@ class GenericFreeTrackParameters {
     m_params[eFreeDir1] = dir[eMom1];
     m_params[eFreeDir2] = dir[eMom2];
     m_params[eFreeQOverP] = qOverP;
+  }
+
+  /// Converts a free track parameter with a different hypothesis.
+  template <typename other_particle_hypothesis_t>
+  GenericFreeTrackParameters(
+      const GenericFreeTrackParameters<other_particle_hypothesis_t>& other)
+      : GenericFreeTrackParameters(other.parameters(),
+                                   other.particleHypothesis(),
+                                   other.covariance()) {}
+
+  /// Converts an unknown bound track parameter.
+  template <typename other_track_parameter_t>
+  static GenericFreeTrackParameters create(
+      const other_track_parameter_t& other) {
+    static_assert(
+        Concepts::FreeTrackParametersConcept<other_track_parameter_t>);
+
+    return GenericFreeTrackParameters(
+        other.parameters(), other.particleHypothesis(), other.covariance());
   }
 
   /// Parameters are not default constructible due to the charge type.
@@ -170,7 +147,7 @@ class GenericFreeTrackParameters {
   }
   /// Absolute momentum.
   Scalar absoluteMomentum() const {
-    return m_chargeInterpreter.extractMomentum(m_params[eFreeQOverP]);
+    return m_particleHypothesis.extractMomentum(m_params[eFreeQOverP]);
   }
   /// Transverse momentum.
   Scalar transverseMomentum() const {
@@ -190,14 +167,19 @@ class GenericFreeTrackParameters {
 
   /// Particle electric charge.
   Scalar charge() const {
-    return m_chargeInterpreter.extractCharge(get<eFreeQOverP>());
+    return m_particleHypothesis.extractCharge(get<eFreeQOverP>());
+  }
+
+  /// Particle hypothesis.
+  const ParticleHypothesis& particleHypothesis() const {
+    return m_particleHypothesis;
   }
 
  private:
   FreeVector m_params;
   std::optional<FreeSquareMatrix> m_cov;
   // TODO use [[no_unique_address]] once we switch to C++20
-  charge_t m_chargeInterpreter;
+  ParticleHypothesis m_particleHypothesis;
 
   /// Print information to the output stream.
   friend std::ostream& operator<<(std::ostream& os,

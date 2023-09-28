@@ -12,6 +12,7 @@
 #include "Acts/Definitions/PdgParticle.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -20,8 +21,8 @@ namespace detail {
 
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
-  /// Data from the propagation state
-  const TrackingVolume* volume = nullptr;
+  /// The material interaction volume
+  InteractionVolume volume{};
   /// The particle current position
   const Vector3 pos = Vector3::Zero();
   /// The particle current time
@@ -65,10 +66,10 @@ struct VolumeMaterialInteraction {
         time(stepper.time(state.stepping)),
         dir(stepper.direction(state.stepping)),
         qOverP(stepper.qOverP(state.stepping)),
-        absQ(state.stepping.absCharge),
+        absQ(stepper.particleHypothesis(state.stepping).absoluteCharge()),
         momentum(stepper.absoluteMomentum(state.stepping)),
-        mass(state.options.mass),
-        absPdg(state.options.absPdgCode),
+        mass(stepper.particleHypothesis(state.stepping).mass()),
+        absPdg(stepper.particleHypothesis(state.stepping).absolutePdg()),
         performCovarianceTransport(state.stepping.covTransport),
         navDir(state.options.direction) {}
 
