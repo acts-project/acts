@@ -9,9 +9,11 @@
 #include "Acts/Plugins/DD4hep/DD4hepDetectorSurfaceFactory.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepBinningHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
+#include "Acts/Plugins/TGeo/TGeoMaterialConverter.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelper.hpp"
 #include "Acts/Plugins/TGeo/TGeoSurfaceConverter.hpp"
 
@@ -92,8 +94,11 @@ Acts::DD4hepDetectorSurfaceFactory::constructSensitiveComponents(
   // Create the corresponding detector element
   auto dd4hepDetElement = std::make_shared<Acts::DD4hepDetectorElement>(
       dd4hepElement, detAxis, unitLength, false, nullptr);
+  auto sSurface = dd4hepDetElement->surface().getSharedPtr();
+  attachSurfaceMaterial(dd4hepElement, *sSurface.get(),
+                        dd4hepDetElement->thickness(), options);
   // return the surface
-  return {dd4hepDetElement, dd4hepDetElement->surface().getSharedPtr()};
+  return {dd4hepDetElement, sSurface};
 }
 
 Acts::DD4hepDetectorSurfaceFactory::DD4hepPassiveSurface
@@ -110,6 +115,27 @@ Acts::DD4hepDetectorSurfaceFactory::constructPassiveComponents(
 
   auto [pSurface, thickness] =
       TGeoSurfaceConverter::toSurface(*tgeoShape, tgeoTransform, detAxis);
+  attachSurfaceMaterial(dd4hepElement, *pSurface.get(), thickness, options);
   // Return a passive surface
   return {pSurface, assignToAll};
+}
+
+void Acts::DD4hepDetectorSurfaceFactory::attachSurfaceMaterial(
+    const dd4hep::DetElement& dd4hepElement, Acts::Surface& surface,
+    ActsScalar thickness, const Options& options) const {
+  if (options.convertMaterial) {
+    // Extract the material
+    const auto& tgeoNode = *(dd4hepElement.placement().ptr());
+    auto tgeoMaterial = tgeoNode.GetMedium()->GetMaterial();
+    // Convert the material
+    TGeoMaterialConverter::Options materialOptions;
+    materialOptions.unitLengthScalor = unitLength;
+    auto materialSlab = TGeoMaterialConverter::materialSlab(
+        *tgeoMaterial, thickness, options.surfaceMaterialThickness,
+        materialOptions);
+    auto surfaceMaterial =
+        std::make_shared<HomogeneousSurfaceMaterial>(materialSlab);
+    // Assign the material to the surface
+    surface.assignSurfaceMaterial(std::move(surfaceMaterial));
+  }
 }

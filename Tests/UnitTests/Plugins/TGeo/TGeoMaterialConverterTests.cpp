@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
 
   Acts::TGeoMaterialConverter::Options options;
   options.unitLengthScalor = 1_cm;
-  options.unitMassScalor = 1_g;
+  options.unitMassScalor = 1.;
 
   // Assume we describe a 10 mm thick box as a 10 mm thick slab
   ActsScalar tInX0 = 10_mm / (mat->GetRadLen() * options.unitLengthScalor);
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   CHECK_CLOSE_ABS(Z, slab_10_10.material().Z(), 1e-5);
   CHECK_CLOSE_ABS(tInX0, slab_10_10.thicknessInX0(), 1e-5);
   CHECK_CLOSE_ABS(tInL0, slab_10_10.thicknessInL0(), 1e-5);
-  // CHECK_CLOSE_ABS(rho, slab_10_10.material().massDensity(), 1e-5);
+  CHECK_CLOSE_ABS(rho, slab_10_10.material().massDensity(), 1e-5);
 
   // Assume we describe a 10 mm thick box as a 1 mm thick slab
   Acts::MaterialSlab slab_10_1 =
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   CHECK_CLOSE_ABS(8.87_mm, slab_10_1.material().X0(), 0.1_mm);
   CHECK_CLOSE_ABS(38.8_mm, slab_10_1.material().L0(), 1_mm);
   // Density is scaled up by 10
-  // CHECK_CLOSE_ABS(10 * rho, slab_10_1.material().massDensity(), 1e-5);
+  CHECK_CLOSE_ABS(10 * rho, slab_10_1.material().massDensity(), 1e-5);
   // A and Z remain unchanged
   CHECK_CLOSE_ABS(A, slab_10_1.material().Ar(), 1e-5);
   CHECK_CLOSE_ABS(Z, slab_10_1.material().Z(), 1e-5);
@@ -71,10 +71,9 @@ BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   CHECK_CLOSE_ABS(tInX0, slab_10_1.thicknessInX0(), 1e-5);
   CHECK_CLOSE_ABS(tInL0, slab_10_1.thicknessInL0(), 1e-5);
   // Thickness * rho is unchanged -> same energy loss
-  // CHECK_CLOSE_ABS(slab_10_10.material().massDensity() *
-  // slab_10_10.thickness(),
-  //                slab_10_1.material().massDensity() * slab_10_1.thickness(),
-  //                1e-5);
+  CHECK_CLOSE_ABS(slab_10_10.material().massDensity() * slab_10_10.thickness(),
+                  slab_10_1.material().massDensity() * slab_10_1.thickness(),
+                  1e-5);
 }
 
 }  // namespace Test

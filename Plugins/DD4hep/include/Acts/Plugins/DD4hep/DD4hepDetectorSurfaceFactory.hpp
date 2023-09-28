@@ -71,8 +71,10 @@ class DD4hepDetectorSurfaceFactory {
     bool convertPassive = true;
     /// Convert material directly
     bool convertMaterial = true;
-    /// Convert proxy material
+    /// Convert proxy material - overrides convertMaterial if present
     bool convertProxyMaterial = true;
+    /// New reference material thickness for surfaces
+    ActsScalar surfaceMaterialThickness = 1_mm;
   };
 
   /// The DD4hep detector element factory
@@ -131,6 +133,18 @@ class DD4hepDetectorSurfaceFactory {
   /// @return a created surface
   DD4hepPassiveSurface constructPassiveComponents(
       const dd4hep::DetElement& dd4hepElement, const Options& options) const;
+
+  /// Attach surface material if present
+  ///
+  /// @param dd4hepElement the detector element
+  /// @param surface the surface to attach the material to
+  /// @param thickness the thickness of the condensed component
+  /// @param options to steer the conversion
+  ///
+  /// @note void function that also checks the options if the attachment should be applied
+  void attachSurfaceMaterial(const dd4hep::DetElement& dd4hepElement,
+                             Acts::Surface& surface, ActsScalar thickness,
+                             const Options& options) const;
 };
 
 }  // namespace Acts
