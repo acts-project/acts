@@ -72,11 +72,11 @@ Acts::Experimental::DD4hepLayerStructure::builder(
 
   // Passive surfaces to be added
   for (auto [ps, toAll] : fCache.passiveSurfaces) {
-    // Passive surface is not desinged to be added to all navigation bins
+    // Passive surface is not declared to be added to all navigation bins
     if (not toAll) {
       lSurfaces.push_back(ps);
     } else {
-      // Passive surface is indeed desinged ot be added to all navigaiton bins
+      // Passive surface is indeed declared to be added to all navigaiton bins
       Experimental::ProtoSupport pSupport;
       pSupport.surface = ps;
       pSupport.assignToAll = true;

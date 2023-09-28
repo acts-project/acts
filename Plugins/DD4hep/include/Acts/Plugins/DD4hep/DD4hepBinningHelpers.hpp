@@ -114,7 +114,7 @@ void decodeBinning(dd4hep::rec::VariantParameters &variantParams,
 ///
 /// @param dd4hepElemnt the element which has a binning description attached
 ///
-/// @return a vecotr of proto binning
+/// @return a vector of proto binning descriptions
 std::vector<Acts::Experimental::ProtoBinning> convertBinning(
     const dd4hep::DetElement &dd4hepElement, const std::string &bname) {
   std::vector<Experimental::ProtoBinning> protoBinnings;

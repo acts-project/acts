@@ -44,7 +44,7 @@ class DD4hepDetectorSurfaceFactory {
                  std::shared_ptr<Surface>>;
 
   /// Collect the passive surfaces, bool whether it should be
-  /// added as an "always try, i.e. assignToAll=ture" surface
+  /// added as an "always try, i.e. assignToAll=true" surface
   using DD4hepPassiveSurface = std::tuple<std::shared_ptr<Surface>, bool>;
 
   /// Nested cache that records the conversion status
