@@ -14,6 +14,7 @@
 #include "Acts/Detector/DetectorBuilder.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/DetectorVolumeBuilder.hpp"
+#include "Acts/Detector/GeometryIdGenerator.hpp"
 #include "Acts/Detector/LayerStructureBuilder.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/VolumeStructureBuilder.hpp"
@@ -303,9 +304,14 @@ BOOST_AUTO_TEST_CASE(BeamPipeEndcapBarrelDetector) {
       std::make_shared<Acts::Experimental::CylindricalContainerBuilder>(
           detCompBuilderCfg);
 
+  auto gigConfig = Acts::Experimental::GeometryIdGenerator::Config();
+  auto gig =
+      std::make_shared<Acts::Experimental::GeometryIdGenerator>(gigConfig);
+
   Acts::Experimental::DetectorBuilder::Config detBuilderCfg;
   detBuilderCfg.name = "Detector";
   detBuilderCfg.builder = detCompBuilder;
+  detBuilderCfg.geoIdGenerator = gig;
 
   auto detBuilder =
       std::make_shared<Acts::Experimental::DetectorBuilder>(detBuilderCfg);

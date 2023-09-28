@@ -35,11 +35,12 @@ METHOD_TRAIT(linTrack_t, linearizeTrack);
 
          constexpr static bool linTrack_exists = has_method<const S, Result<LinearizedTrack>,
          linTrack_t, const BoundTrackParameters&,
-                     const Vector4&,
+                     double,
+                     const Surface&,
                      const Acts::GeometryContext&,
                      const Acts::MagneticFieldContext&,
                      typename S::State&>;
-  
+
         static_assert(linTrack_exists, "linearizeTrack method not found");
 
         constexpr static bool propagator_exists = exists<propagator_t, S>;

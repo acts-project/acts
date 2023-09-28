@@ -39,12 +39,12 @@ class SpacePointData {
   ~SpacePointData() = default;
 
   /// @brief Getters
-  const float& quality(std::size_t idx) const;
-  const float& deltaR(std::size_t idx) const;
+  float quality(std::size_t idx) const;
+  float deltaR(std::size_t idx) const;
 
   /// @brief Setters
-  void setQuality(std::size_t idx, const float& value);
-  void setDeltaR(std::size_t idx, const float& value);
+  void setQuality(std::size_t idx, const float value);
+  void setDeltaR(std::size_t idx, const float value);
 
   /// @brief Resize vectors
   void resize(std::size_t n, bool resizeDynamic = false);
@@ -99,21 +99,21 @@ class SpacePointData {
   std::vector<Acts::Vector3> m_topStripCenterPosition{};
 };
 
-inline const float& SpacePointData::quality(std::size_t idx) const {
+inline float SpacePointData::quality(std::size_t idx) const {
   return m_quality[idx];
 }
 
-inline const float& SpacePointData::deltaR(std::size_t idx) const {
+inline float SpacePointData::deltaR(std::size_t idx) const {
   return m_deltaR[idx];
 }
 
-inline void SpacePointData::setQuality(std::size_t idx, const float& value) {
+inline void SpacePointData::setQuality(std::size_t idx, const float value) {
   if (value > m_quality[idx]) {
     m_quality[idx] = value;
   }
 }
 
-inline void SpacePointData::setDeltaR(std::size_t idx, const float& value) {
+inline void SpacePointData::setDeltaR(std::size_t idx, const float value) {
   m_deltaR[idx] = value;
 }
 

@@ -58,8 +58,6 @@ struct DenseStepperPropagatorOptions
         eoptions(this->geoContext, this->magFieldContext);
     // Copy the options over
     eoptions.direction = this->direction;
-    eoptions.absPdgCode = this->absPdgCode;
-    eoptions.mass = this->mass;
     eoptions.maxSteps = this->maxSteps;
     eoptions.maxStepSize = this->maxStepSize;
     eoptions.targetTolerance = this->targetTolerance;

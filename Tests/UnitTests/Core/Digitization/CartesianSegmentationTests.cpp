@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(cartesian_segmentation) {
 
   // Check the boundary surfaces are thickness away
   auto centerReadoutPL = boundariesPL[0]->center(tgContext);
-  auto centerCoutnerPL = boundariesPL[1]->center(tgContext);
-  double thicknessPL = abs((centerReadoutPL - centerCoutnerPL).z());
+  auto centerCounterPL = boundariesPL[1]->center(tgContext);
+  double thicknessPL = abs((centerReadoutPL - centerCounterPL).z());
 
   CHECK_CLOSE_REL(thicknessPL, 2 * hThickness, 10e-6);
 

@@ -114,6 +114,10 @@ class DetectorNavigator {
 
   bool targetReached(const State& state) const { return state.targetReached; }
 
+  bool endOfWorldReached(State& state) const {
+    return state.currentVolume == nullptr;
+  }
+
   bool navigationBreak(const State& state) const {
     return state.navigationBreak;
   }
@@ -177,6 +181,7 @@ class DetectorNavigator {
                  << posInfo(state, stepper) << "Entering navigator::preStep.");
 
     auto& nState = state.navigation;
+    fillNavigationState(state, stepper, nState);
 
     if (inactive()) {
       ACTS_VERBOSE(volInfo(state)
@@ -406,6 +411,18 @@ class DetectorNavigator {
     }
 
     nState.currentVolume->updateNavigationState(state.geoContext, nState);
+
+    // Sort properly the surface candidates
+    auto& nCandidates = nState.surfaceCandidates;
+    std::sort(nCandidates.begin(), nCandidates.end(),
+              [&](const auto& a, const auto& b) {
+                // The two path lengths
+                ActsScalar pathToA = a.objectIntersection.pathLength();
+                ActsScalar pathToB = b.objectIntersection.pathLength();
+                return pathToA < pathToB;
+              });
+    // Set the surface candidate
+    nState.surfaceCandidate = nCandidates.begin();
   }
 
   template <typename propagator_state_t, typename stepper_t>

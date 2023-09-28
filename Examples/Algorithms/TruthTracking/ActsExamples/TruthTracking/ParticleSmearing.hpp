@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -61,6 +62,8 @@ class ParticleSmearing final : public IAlgorithm {
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.
     std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
+    /// Optional particle hypothesis override.
+    std::optional<Acts::ParticleHypothesis> particleHypothesis = std::nullopt;
   };
 
   ParticleSmearing(const Config& config, Acts::Logging::Level level);
