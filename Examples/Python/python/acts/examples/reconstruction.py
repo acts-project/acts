@@ -119,8 +119,8 @@ TrackSelectorConfig = namedtuple(
     defaults=[(None, None)] * 7 + [None],
 )
 
-TrackFindingConfig = namedtuple(
-    "TrackFindingConfig",
+CkfConfig = namedtuple(
+    "CkfConfig",
     ["chi2CutOff", "numMeasurementsCutOff"],
     defaults=[15.0, 10],
 )
@@ -927,14 +927,14 @@ def addTruthTrackingGsf(
 
 @acts.examples.NamedTypeArgs(
     trackSelectorConfig=TrackSelectorConfig,
-    trackFindingConfig=TrackFindingConfig,
+    ckfConfig=CkfConfig,
 )
 def addCKFTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
-    trackFindingConfig: TrackFindingConfig = TrackFindingConfig(),
+    ckfConfig: CkfConfig = CkfConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -973,8 +973,8 @@ def addCKFTracks(
                     acts.GeometryIdentifier(),
                     (
                         [],
-                        [trackFindingConfig.chi2CutOff],
-                        [trackFindingConfig.numMeasurementsCutOff],
+                        [ckfConfig.chi2CutOff],
+                        [ckfConfig.numMeasurementsCutOff],
                     ),
                 )
             ]
