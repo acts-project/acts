@@ -303,8 +303,8 @@ BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
   {
     double s45 = std::sin(M_PI_4);
     double c45 = std::cos(M_PI_4);
-    RotationMatrix3 ref45 =
-        RotationMatrix3({{c45, 0, s45}, {0, 1, 0}, {-s45, 0, c45}});
+    RotationMatrix3 ref45;
+    ref45 << c45, 0, s45, 0, 1, 0, -s45, 0, c45;
     Vector3 dir = {0, 0, 1};
     auto [a0, a1] = incidentAngles(dir, ref45);
     CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
