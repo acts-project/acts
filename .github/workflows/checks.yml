@@ -63,6 +63,14 @@ jobs:
       - name: Check
         run: >
           CI/check_pragma_once.sh
+  end_of_line:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+      - name: Check
+        run: >
+          CI/check_end_of_file.py . --exclude "thirdparty/*" --reject-multiple-newlines --github
   boost_test_macro:
     runs-on: ubuntu-latest
     steps:

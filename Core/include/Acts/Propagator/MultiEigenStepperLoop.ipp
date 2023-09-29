@@ -35,7 +35,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
             .intersect(state.geoContext,
                        cmpState.pars.template segment<3>(eFreePos0),
                        cmpState.pars.template segment<3>(eFreeDir0), false)
-            .intersection.position;
+            .closest()
+            .position();
 
     auto bs = SingleStepper::boundState(cmpState, surface, transportCov,
                                         freeToBoundCorrection);
@@ -54,8 +55,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     return MultiStepperError::AllComponentsConversionToBoundFailed;
   }
 
-  return BoundState{MultiComponentBoundTrackParameters<SinglyCharged>(
-                        surface.getSharedPtr(), cmps),
+  return BoundState{MultiComponentBoundTrackParameters(
+                        surface.getSharedPtr(), cmps, state.particleHypothesis),
                     Jacobian::Zero(), accumulatedPathLength};
 }
 
@@ -83,7 +84,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
   }
 
   return CurvilinearState{
-      MultiComponentCurvilinearTrackParameters<SinglyCharged>(cmps),
+      MultiComponentCurvilinearTrackParameters(cmps, state.particleHypothesis),
       Jacobian::Zero(), accumulatedPathLength};
 }
 

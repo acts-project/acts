@@ -69,7 +69,7 @@ namespace ActsExamples {
 ///
 /// It therefore saves the mapping state/cache as a private member variable
 /// and is designed to be executed in a single threaded mode.
-class MaterialMapping : public ActsExamples::IAlgorithm {
+class MaterialMapping : public IAlgorithm {
  public:
   /// @class nested Config class
   /// of the MaterialMapping algorithm

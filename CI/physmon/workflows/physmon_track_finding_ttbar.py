@@ -69,7 +69,7 @@ with tempfile.TemporaryDirectory() as temp:
         ),
         acts.examples.Sequencer.FpeMask(
             "Fatras/include/ActsFatras/Kernel/Simulation.hpp",
-            (98, 99),
+            (96, 97),
             acts.FpeType.FLTOVF,
             1,
         ),

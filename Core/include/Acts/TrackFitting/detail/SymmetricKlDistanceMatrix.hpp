@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,15 +14,14 @@
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/Utilities/GaussianMixtureReduction.hpp"
 
-namespace Acts {
-
-namespace detail {
+namespace Acts::detail {
 
 /// Computes the Kullback-Leibler distance between two components as shown in
 /// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
 template <typename component_t, typename component_projector_t>
 auto computeSymmetricKlDivergence(const component_t &a, const component_t &b,
                                   const component_projector_t &proj) {
+  using namespace Acts;
   const auto parsA = proj(a).boundPars[eBoundQOverP];
   const auto parsB = proj(b).boundPars[eBoundQOverP];
   const auto covA = proj(a).boundCov(eBoundQOverP, eBoundQOverP);
@@ -67,7 +66,7 @@ auto mergeComponents(const component_t &a, const component_t &b,
 
 /// @brief Class representing a symmetric distance matrix
 class SymmetricKLDistanceMatrix {
-  using Array = Eigen::Array<ActsScalar, Eigen::Dynamic, 1>;
+  using Array = Eigen::Array<Acts::ActsScalar, Eigen::Dynamic, 1>;
   using Mask = Eigen::Array<bool, Eigen::Dynamic, 1>;
 
   Array m_distances;
@@ -128,7 +127,7 @@ class SymmetricKLDistanceMatrix {
   }
 
   auto minDistancePair() const {
-    ActsScalar min = std::numeric_limits<ActsScalar>::max();
+    auto min = std::numeric_limits<Acts::ActsScalar>::max();
     std::size_t idx = 0;
 
     for (auto i = 0l; i < m_distances.size(); ++i) {
@@ -172,49 +171,4 @@ class SymmetricKLDistanceMatrix {
   }
 };
 
-template <typename component_t, typename component_projector_t,
-          typename angle_desc_t>
-void reduceWithKLDistance(std::vector<component_t> &cmpCache,
-                          std::size_t maxCmpsAfterMerge,
-                          const component_projector_t &proj,
-                          const angle_desc_t &angle_desc) {
-  if (cmpCache.size() <= maxCmpsAfterMerge) {
-    return;
-  }
-
-  SymmetricKLDistanceMatrix distances(cmpCache, proj);
-
-  auto remainingComponents = cmpCache.size();
-
-  while (remainingComponents > maxCmpsAfterMerge) {
-    const auto [minI, minJ] = distances.minDistancePair();
-
-    // Set one component and compute associated distances
-    cmpCache[minI] =
-        mergeComponents(cmpCache[minI], cmpCache[minJ], proj, angle_desc);
-    distances.recomputeAssociatedDistances(minI, cmpCache, proj);
-
-    // Set weight of the other component to -1 so we can remove it later and
-    // mask its distances
-    proj(cmpCache[minJ]).weight = -1.0;
-    distances.maskAssociatedDistances(minJ);
-
-    remainingComponents--;
-  }
-
-  // Remove all components which are labeled with weight -1
-  std::sort(cmpCache.begin(), cmpCache.end(),
-            [&](const auto &a, const auto &b) {
-              return proj(a).weight < proj(b).weight;
-            });
-  cmpCache.erase(
-      std::remove_if(cmpCache.begin(), cmpCache.end(),
-                     [&](const auto &a) { return proj(a).weight == -1.0; }),
-      cmpCache.end());
-
-  assert(cmpCache.size() == maxCmpsAfterMerge && "size mismatch");
-}
-
-}  // namespace detail
-
-}  // namespace Acts
+}  // namespace Acts::detail
