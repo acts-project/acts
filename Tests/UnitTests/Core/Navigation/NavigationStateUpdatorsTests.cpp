@@ -25,22 +25,14 @@
 #include <utility>
 #include <vector>
 
+#include "../Surfaces/SurfaceStub.hpp"
+
 // A test context
 Acts::GeometryContext tContext;
 
 namespace Acts {
 
-class Surface {};
-
 namespace Experimental {
-
-// A portal with a surfac
-class Portal {
- public:
-  std::shared_ptr<Surface> m_surface = nullptr;
-  Portal(std::shared_ptr<Surface> sf) : m_surface(std::move(sf)) {}
-  const Surface& surface() const { return (*m_surface.get()); }
-};
 
 class Detector;
 
@@ -178,14 +170,14 @@ using AllSurfacesProvider = Acts::Experimental::StaticUpdatorImpl<
 using AllPortalsProvider = Acts::Experimental::StaticUpdatorImpl<
     Acts::Experimental::AllPortalsExtractor, Acts::Experimental::PortalsFiller>;
 
-auto surfaceA = std::make_shared<Acts::Surface>();
-auto surfaceB = std::make_shared<Acts::Surface>();
-auto surfaceC = std::make_shared<Acts::Surface>();
+auto surfaceA = Acts::Surface::makeShared<Acts::SurfaceStub>();
+auto surfaceB = Acts::Surface::makeShared<Acts::SurfaceStub>();
+auto surfaceC = Acts::Surface::makeShared<Acts::SurfaceStub>();
 
-auto pSurfaceA = std::make_shared<Acts::Surface>();
-auto pSurfaceB = std::make_shared<Acts::Surface>();
-auto portalA = std::make_shared<Acts::Experimental::Portal>(pSurfaceA);
-auto portalB = std::make_shared<Acts::Experimental::Portal>(pSurfaceB);
+auto pSurfaceA = Acts::Surface::makeShared<Acts::SurfaceStub>();
+auto pSurfaceB = Acts::Surface::makeShared<Acts::SurfaceStub>();
+auto portalA = Acts::Experimental::Portal::makeShared(pSurfaceA);
+auto portalB = Acts::Experimental::Portal::makeShared(pSurfaceB);
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 

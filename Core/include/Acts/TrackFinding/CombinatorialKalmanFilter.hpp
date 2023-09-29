@@ -412,7 +412,7 @@ class CombinatorialKalmanFilter {
           // The last active tip
           const auto& lastActiveTip = result.activeTips.back().first;
           // Get the index of previous state
-          const auto& iprevious =
+          auto iprevious =
               result.fittedStates->getTrackState(lastActiveTip).previous();
           // Find the track states which have the same previous state and remove
           // them from active tips

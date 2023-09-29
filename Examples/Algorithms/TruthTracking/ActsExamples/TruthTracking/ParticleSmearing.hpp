@@ -21,6 +21,7 @@
 #include <array>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 
 namespace ActsExamples {
@@ -58,6 +59,9 @@ class ParticleSmearing final : public IAlgorithm {
     double sigmaTheta = 1 * Acts::UnitConstants::degree;
     /// Relative momentum resolution.
     double sigmaPRel = 0.05;
+    /// Optional. Initial covariance matrix diagonal. Overwrites the default if
+    /// set.
+    std::optional<std::array<double, 6>> initialSigmas = std::nullopt;
     /// Inflate the initial covariance matrix
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Random numbers service.
