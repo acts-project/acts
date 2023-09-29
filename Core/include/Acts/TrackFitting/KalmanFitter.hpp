@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1150,8 +1150,6 @@ class KalmanFitter {
       track.covariance() = params.covariance().value();
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
     }
-    track.nMeasurements() = kalmanResult.measurementStates;
-    track.nHoles() = kalmanResult.measurementHoles;
 
     calculateTrackQuantities(track);
 
@@ -1289,8 +1287,6 @@ class KalmanFitter {
       track.covariance() = params.covariance().value();
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
     }
-    track.nMeasurements() = kalmanResult.measurementStates;
-    track.nHoles() = kalmanResult.measurementHoles;
 
     calculateTrackQuantities(track);
 
