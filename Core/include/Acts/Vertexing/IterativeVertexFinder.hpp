@@ -95,7 +95,6 @@ class IterativeVertexFinder {
     IPEstimator ipEst;
 
     // Vertex finder configuration variables
-    bool useBeamConstraint = false;
     double significanceCutSeeding = 10;
     double maximumChi2cutForSeeding = 36.;
     int maxVertices = 50;
@@ -201,10 +200,12 @@ class IterativeVertexFinder {
   ///
   /// @param params Track parameters
   /// @param vertex The vertex
+  /// @param perigeeSurface The perigee surface at vertex position
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<double> getCompatibility(
       const BoundTrackParameters& params, const Vertex<InputTrack_t>& vertex,
+      const Surface& perigeeSurface,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
 

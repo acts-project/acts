@@ -34,6 +34,8 @@ namespace Acts {
 
 enum class SpacePointCandidateType : short { eBottom, eTop };
 
+enum class DetectorMeasurementInfo : short { eDefault, eDetailed };
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
@@ -154,8 +156,8 @@ class SeedFinder {
           otherSPsNeighbours,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-      const float& deltaRMinSP, const float& deltaRMaxSP, const float& uIP,
-      const float& uIP2, const float& cosPhiM, const float& sinPhiM) const;
+      const float deltaRMinSP, const float deltaRMaxSP, const float uIP,
+      const float uIP2, const float cosPhiM, const float sinPhiM) const;
 
   /// Iterates over the seed candidates tests the compatibility between three
   /// SPs and calls for the seed confirmation
@@ -164,6 +166,7 @@ class SeedFinder {
   /// @param options frequently changing configuration (like beam position)
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
+  template <Acts::DetectorMeasurementInfo detailedMeasurement>
   void filterCandidates(Acts::SpacePointData& spacePointData,
                         const InternalSpacePoint<external_spacepoint_t>& SpM,
                         const Acts::SeedFinderOptions& options,

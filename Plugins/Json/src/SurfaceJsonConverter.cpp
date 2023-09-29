@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Plugins/Json/DetrayJsonHelper.hpp"
 #include "Acts/Plugins/Json/MaterialJsonConverter.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
@@ -25,6 +26,7 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <algorithm>
@@ -37,87 +39,145 @@ void Acts::to_json(nlohmann::json& j,
 
 void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
   Acts::GeometryContext gctx;
-  toJson(j, surface, gctx);
+  j = SurfaceJsonConverter::toJson(gctx, surface);
 }
 
 void Acts::to_json(nlohmann::json& j,
                    const std::shared_ptr<const Acts::Surface>& surface) {
   Acts::GeometryContext gctx;
-  toJson(j, *(surface.get()), gctx);
+  j = SurfaceJsonConverter::toJson(gctx, *(surface.get()));
 }
 
 void Acts::toJson(nlohmann::json& j,
                   const std::shared_ptr<const Acts::Surface>& surface,
                   const Acts::GeometryContext& gctx) {
-  toJson(j, *(surface.get()), gctx);
+  j = SurfaceJsonConverter::toJson(gctx, *(surface.get()));
 }
 
-void Acts::toJson(nlohmann::json& j, const Acts::Surface& surface,
-                  const Acts::GeometryContext& gctx) {
-  const auto& sBounds = surface.bounds();
-  const auto sTransform = surface.transform(gctx);
-  j["bounds"] = nlohmann::json(sBounds);
-  nlohmann::json trfj;
-  to_json(trfj, sTransform);
-  j["transform"] = trfj;
-  j["type"] = surfaceTypes[surface.type()];
-  j["geo_id"] = surface.geometryId().value();
-  if (surface.surfaceMaterial() != nullptr) {
-    j["material"] = nlohmann::json(surface.surfaceMaterial());
-  }
-}
+std::shared_ptr<Acts::Surface> Acts::SurfaceJsonConverter::fromJson(
+    const nlohmann::json& j) {
+  // The types to understand the types
+  auto sType = j["type"].get<Surface::SurfaceType>();
+  auto bType = j["bounds"]["type"].get<SurfaceBounds::BoundsType>();
 
-std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
-  std::string sType = j["type"];
-  std::string bType = j["bounds"]["type"];
-
-  std::shared_ptr<Acts::Surface> mutableSf = nullptr;
+  std::shared_ptr<Surface> mutableSf = nullptr;
 
   /// Unroll the types
-  if (sType == "PlaneSurface") {
-    if (bType == "EllipseBounds") {
-      mutableSf = surfaceFromJsonT<Acts::PlaneSurface, Acts::EllipseBounds>(j);
-    } else if (bType == "RectangleBounds") {
-      mutableSf =
-          surfaceFromJsonT<Acts::PlaneSurface, Acts::RectangleBounds>(j);
-    } else if (bType == "TrapezoidBounds") {
-      mutableSf =
-          surfaceFromJsonT<Acts::PlaneSurface, Acts::TrapezoidBounds>(j);
-    }
-  } else if (sType == "DiscSurface") {
-    if (bType == "AnnulusBounds") {
-      mutableSf = surfaceFromJsonT<Acts::DiscSurface, Acts::AnnulusBounds>(j);
-    } else if (bType == "RadialBounds") {
-      mutableSf = surfaceFromJsonT<Acts::DiscSurface, Acts::RadialBounds>(j);
-    } else if (bType == "DiscTrapezoidBounds") {
-      mutableSf =
-          surfaceFromJsonT<Acts::DiscSurface, Acts::DiscTrapezoidBounds>(j);
-    }
-  } else if (sType == "CylinderSurface") {
-    mutableSf =
-        surfaceFromJsonT<Acts::CylinderSurface, Acts::CylinderBounds>(j);
-  } else if (sType == "ConeSurface") {
-    mutableSf = surfaceFromJsonT<Acts::ConeSurface, Acts::ConeBounds>(j);
-  } else if (sType == "StrawSurface") {
-    mutableSf = surfaceFromJsonT<Acts::StrawSurface, Acts::LineBounds>(j);
-  } else if (sType == "PerigeeSurface") {
-    Transform3 pTransform;
-    nlohmann::json trfj = j["transform"];
-    from_json(trfj, pTransform);
-    mutableSf = Surface::makeShared<PerigeeSurface>(pTransform);
+  switch (sType) {
+    // Surface is a plane surface
+    case Surface::SurfaceType::Plane:
+      switch (bType) {
+        case SurfaceBounds::BoundsType::eEllipse:
+          mutableSf = surfaceFromJsonT<PlaneSurface, EllipseBounds>(j);
+          break;
+        case SurfaceBounds::BoundsType::eRectangle:
+          mutableSf = surfaceFromJsonT<PlaneSurface, RectangleBounds>(j);
+          break;
+        case SurfaceBounds::BoundsType::eTrapezoid:
+          mutableSf = surfaceFromJsonT<PlaneSurface, TrapezoidBounds>(j);
+          break;
+
+        case SurfaceBounds::BoundsType::eBoundless:
+          mutableSf = surfaceFromJsonT<PlaneSurface, void>(j);
+          break;
+        default:
+          throw std::invalid_argument("Invalid bounds type " +
+                                      std::to_string(bType) +
+                                      " for plane surface");
+      }
+      break;
+    // Surface is a disc surface
+    case Surface::SurfaceType::Disc:
+      switch (bType) {
+        case SurfaceBounds::BoundsType::eAnnulus:
+          mutableSf = surfaceFromJsonT<DiscSurface, AnnulusBounds>(j);
+          break;
+        case SurfaceBounds::BoundsType::eDisc:
+          mutableSf = surfaceFromJsonT<DiscSurface, RadialBounds>(j);
+          break;
+        case SurfaceBounds::BoundsType::eDiscTrapezoid:
+          mutableSf = surfaceFromJsonT<DiscSurface, DiscTrapezoidBounds>(j);
+          break;
+        default:
+          throw std::invalid_argument("Invalid bounds type " +
+                                      std::to_string(bType) +
+                                      " for disc surface");
+      }
+      break;
+    // Surface is a cylinder surface
+    case Surface::SurfaceType::Cylinder:
+      mutableSf = surfaceFromJsonT<CylinderSurface, CylinderBounds>(j);
+      break;
+    // Surface is a cone surface
+    case Surface::SurfaceType::Cone:
+      mutableSf = surfaceFromJsonT<ConeSurface, ConeBounds>(j);
+      break;
+    // Surface is a straw surface
+    case Surface::SurfaceType::Straw:
+      mutableSf = surfaceFromJsonT<StrawSurface, LineBounds>(j);
+      break;
+    // Surface is a perigee surface
+    case Surface::SurfaceType::Perigee:
+      mutableSf = Surface::makeShared<PerigeeSurface>(
+          Transform3JsonConverter::fromJson(j["transform"]));
+      break;
+    default:
+      throw std::invalid_argument("Invalid surface type " +
+                                  std::to_string(sType));
   }
 
-  if (mutableSf != nullptr) {
-    GeometryIdentifier geoID(j["geo_id"]);
-    mutableSf->assignGeometryId(geoID);
-    // Add material
-    if (j.find("material") != j.end() and not j["material"].empty()) {
-      const Acts::ISurfaceMaterial* surfaceMaterial = nullptr;
-      from_json(j, surfaceMaterial);
-      std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
-          surfaceMaterial);
-      mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
-    }
+  throw_assert(mutableSf, "Could not create surface from json");
+
+  GeometryIdentifier geoID(j["geo_id"]);
+  mutableSf->assignGeometryId(geoID);
+  // Add material
+  if (j.find("material") != j.end() and not j["material"].empty()) {
+    const ISurfaceMaterial* surfaceMaterial = nullptr;
+    from_json(j, surfaceMaterial);
+    std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
+        surfaceMaterial);
+    mutableSf->assignSurfaceMaterial(sharedSurfaceMaterial);
   }
+
   return mutableSf;
+}
+
+nlohmann::json Acts::SurfaceJsonConverter::toJson(const GeometryContext& gctx,
+                                                  const Surface& surface,
+                                                  const Options& options) {
+  nlohmann::json jSurface;
+  const auto& sBounds = surface.bounds();
+  const auto sTransform = surface.transform(gctx);
+
+  jSurface["transform"] =
+      Transform3JsonConverter::toJson(sTransform, options.transformOptions);
+  jSurface["type"] = surface.type();
+  // Transform is always needed
+  jSurface["bounds"] = SurfaceBoundsJsonConverter::toJson(sBounds);
+  jSurface["geo_id"] = surface.geometryId().value();
+  if (surface.surfaceMaterial() != nullptr and options.writeMaterial) {
+    jSurface["material"] = nlohmann::json(surface.surfaceMaterial());
+  }
+  return jSurface;
+}
+
+nlohmann::json Acts::SurfaceJsonConverter::toJsonDetray(
+    const GeometryContext& gctx, const Surface& surface,
+    const Options& options) {
+  nlohmann::json jSurface;
+  const auto& sBounds = surface.bounds();
+  const auto sTransform = surface.transform(gctx);
+
+  jSurface["transform"] =
+      Transform3JsonConverter::toJson(sTransform, options.transformOptions);
+
+  auto jMask =
+      SurfaceBoundsJsonConverter::toJsonDetray(sBounds, options.portal);
+  jSurface["mask"] = jMask;
+  jSurface["source"] = surface.geometryId().value();
+  jSurface["barcode"] = 0;
+  jSurface["type"] =
+      options.portal ? 0 : (surface.geometryId().sensitive() > 0 ? 1u : 2u);
+
+  return jSurface;
 }

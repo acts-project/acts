@@ -9,8 +9,12 @@
 #pragma once
 
 #include <bitset>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
+#include <ostream>
+
 namespace Acts {
 
 /// @enum TrackStateFlag
@@ -111,6 +115,7 @@ class ConstTrackStateType {
     for (size_t i = 0; i < TrackStateFlag::NumTrackStateFlags; i++) {
       trunc[i] = bs[i];
     }
+    // MeasurementParameterOutlierHoleMaterialSharedhit
     os << "MPOHMS=" << trunc;
     return os;
   }

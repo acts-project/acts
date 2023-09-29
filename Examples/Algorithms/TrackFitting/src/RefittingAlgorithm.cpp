@@ -9,8 +9,8 @@
 #include "ActsExamples/TrackFitting/RefittingAlgorithm.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -73,12 +73,12 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     const Acts::BoundTrackParameters initialParams(
         track.referenceSurface().getSharedPtr(), track.parameters(),
-        track.covariance());
+        track.covariance(), track.particleHypothesis());
 
     trackSourceLinks.clear();
     surfSequence.clear();
 
-    for (auto state : track.trackStates()) {
+    for (auto state : track.trackStatesReversed()) {
       surfSequence.push_back(&state.referenceSurface());
 
       if (not state.hasCalibrated()) {
@@ -96,7 +96,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     ACTS_VERBOSE("Initial parameters: "
                  << initialParams.fourPosition(ctx.geoContext).transpose()
-                 << " -> " << initialParams.unitDirection().transpose());
+                 << " -> " << initialParams.direction().transpose());
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);
     auto result = (*m_cfg.fit)(trackSourceLinks, initialParams, options,

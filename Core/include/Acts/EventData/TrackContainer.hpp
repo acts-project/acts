@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainerBackendConcept.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -236,6 +235,13 @@ class TrackContainer {
     container().ensureDynamicColumns_impl(other.container());
   }
 
+  /// Clear the content of the track container
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void clear() {
+    m_container->clear();
+    m_traj->clear();
+  }
+
  protected:
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
@@ -279,14 +285,31 @@ class TrackContainer {
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  auto trackStateRange(IndexType itrack) {
+  auto reverseTrackStateRange(IndexType itrack) {
     auto tip = component<IndexType, hashString("tipIndex")>(itrack);
-    return m_traj->trackStateRange(tip);
+    return m_traj->reverseTrackStateRange(tip);
   }
 
-  auto trackStateRange(IndexType itrack) const {
+  auto reverseTrackStateRange(IndexType itrack) const {
     auto tip = component<IndexType, hashString("tipIndex")>(itrack);
-    return m_traj->trackStateRange(tip);
+    return m_traj->reverseTrackStateRange(tip);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto forwardTrackStateRange(IndexType itrack) {
+    auto stem = component<IndexType, hashString("stemIndex")>(itrack);
+    if (stem == kInvalid) {
+      throw std::invalid_argument{"Track has no stem index"};
+    }
+    return m_traj->forwardTrackStateRange(stem);
+  }
+
+  auto forwardTrackStateRange(IndexType itrack) const {
+    auto stem = component<IndexType, hashString("stemIndex")>(itrack);
+    if (stem == kInvalid) {
+      throw std::invalid_argument{"Track has no stem index"};
+    }
+    return m_traj->forwardTrackStateRange(stem);
   }
 
  private:

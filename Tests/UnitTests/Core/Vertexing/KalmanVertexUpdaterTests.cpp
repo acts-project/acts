@@ -14,7 +14,7 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
@@ -49,7 +49,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer = HelicalTrackLinearizer<Propagator>;
 
@@ -146,13 +146,17 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
         0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., 0.,
         res_th * res_th, 0., 0., 0., 0., 0., 0., res_qp * res_qp, 0., 0., 0.,
         0., 0., 0., 1.;
-    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat));
+    BoundTrackParameters params(perigeeSurface, paramVec, std::move(covMat),
+                                ParticleHypothesis::pion());
+
+    std::shared_ptr<PerigeeSurface> perigee =
+        Surface::makeShared<PerigeeSurface>(Vector3::Zero());
 
     // Linearized state of the track
     LinearizedTrack linTrack =
         linearizer
-            .linearizeTrack(params, Vector4::Zero(), geoContext,
-                            magFieldContext, state)
+            .linearizeTrack(params, 0, *perigee, geoContext, magFieldContext,
+                            state)
             .value();
 
     // Create TrackAtVertex
@@ -164,7 +168,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // Create a vertex
     Vector3 vtxPos(vXYDist(gen), vXYDist(gen), vZDist(gen));
     Vertex<BoundTrackParameters> vtx(vtxPos);
-    vtx.setFullCovariance(SymMatrix4::Identity() * 0.01);
+    vtx.setFullCovariance(SquareMatrix4::Identity() * 0.01);
 
     // Update trkAtVertex with assumption of originating from vtx
     KalmanVertexUpdater::updateVertexWithTrack<BoundTrackParameters>(vtx,

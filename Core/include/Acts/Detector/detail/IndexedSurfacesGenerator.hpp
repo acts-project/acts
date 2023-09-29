@@ -32,7 +32,7 @@ namespace detail {
 /// - a chosen expansion to fill indices in neighborhood bins
 ///
 /// @tparam objects_container the objects container
-template <typename surface_container>
+template <typename surface_container, template <typename> class indexed_updator>
 struct IndexedSurfacesGenerator {
   /// The surfaces to be indexed
   /// (including surfaces that are assigned to all bins)
@@ -75,10 +75,8 @@ struct IndexedSurfacesGenerator {
       bvArray[ibv] = bv;
     }
 
-    // The indexed surfaces delegate
-    IndexedSurfacesImpl<GridType> indexedSurfaces(std::move(grid), bvArray,
-                                                  transform);
-
+    indexed_updator<GridType> indexedSurfaces(std::move(grid), bvArray,
+                                              transform);
     // Fill the bin indices
     IndexedGridFiller filler{binExpansion};
     filler.oLogger = oLogger->cloneWithSuffix("_filler");
@@ -88,14 +86,15 @@ struct IndexedSurfacesGenerator {
     AllPortalsImpl allPortals;
 
     // The chained delegate: indexed surfaces and all portals
-    using DelegateType = IndexedSurfacesAllPortalsImpl<decltype(grid)>;
-    auto indesSurfacesAllPortals = std::make_unique<const DelegateType>(
-        std::tie(indexedSurfaces, allPortals));
+    using DelegateType =
+        IndexedSurfacesAllPortalsImpl<decltype(grid), indexed_updator>;
+    auto indexedSurfacesAllPortals = std::make_unique<const DelegateType>(
+        std::tie(allPortals, indexedSurfaces));
 
     // Create the delegate and connect it
     SurfaceCandidatesUpdator nStateUpdator;
     nStateUpdator.connect<&DelegateType::update>(
-        std::move(indesSurfacesAllPortals));
+        std::move(indexedSurfacesAllPortals));
     return nStateUpdator;
   }
 

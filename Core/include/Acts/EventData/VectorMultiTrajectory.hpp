@@ -16,6 +16,8 @@
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 #include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 #include <any>
 #include <cassert>
@@ -143,7 +145,6 @@ class VectorMultiTrajectoryBase {
 
  protected:
   struct IndexData {
-    IndexType iprevious = kInvalid;
     IndexType ipredicted = kInvalid;
     IndexType ifiltered = kInvalid;
     IndexType ismoothed = kInvalid;
@@ -156,7 +157,7 @@ class VectorMultiTrajectoryBase {
 
     IndexType iuncalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
-    IndexType measdim = 0;
+    IndexType measdim = kInvalid;
 
     TrackStatePropMask allocMask = TrackStatePropMask::None;
   };
@@ -166,6 +167,7 @@ class VectorMultiTrajectoryBase {
   VectorMultiTrajectoryBase(const VectorMultiTrajectoryBase& other)
       : m_index{other.m_index},
         m_previous{other.m_previous},
+        m_next{other.m_next},
         m_params{other.m_params},
         m_cov{other.m_cov},
         m_meas{other.m_meas},
@@ -207,6 +209,7 @@ class VectorMultiTrajectoryBase {
         return instance.m_sourceLinks[instance.m_index[istate].iuncalibrated]
             .has_value();
       case "previous"_hash:
+      case "next"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
       case "chi2"_hash:
@@ -228,7 +231,9 @@ class VectorMultiTrajectoryBase {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "previous"_hash:
-        return &instance.m_index[istate].iprevious;
+        return &instance.m_previous[istate];
+      case "next"_hash:
+        return &instance.m_next[istate];
       case "predicted"_hash:
         return &instance.m_index[istate].ipredicted;
       case "filtered"_hash:
@@ -270,6 +275,7 @@ class VectorMultiTrajectoryBase {
       case "jacobian"_hash:
       case "projector"_hash:
       case "previous"_hash:
+      case "next"_hash:
       case "uncalibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
@@ -301,6 +307,7 @@ class VectorMultiTrajectoryBase {
   /// index to map track states to the corresponding
   std::vector<IndexData> m_index;
   std::vector<IndexType> m_previous;
+  std::vector<IndexType> m_next;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
 
@@ -448,6 +455,9 @@ class VectorMultiTrajectory final
   }
 
   void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+    throw_assert(measdim > 0 && measdim <= eBoundSize,
+                 "Invalid measurement dimension detected");
+
     if (m_measOffset[istate] != kInvalid &&
         m_measCovOffset[istate] != kInvalid &&
         m_index[istate].measdim == measdim) {

@@ -123,6 +123,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
+    ACTS_PYTHON_MEMBER(skipZMiddleBinSearch);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
@@ -133,7 +134,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
-    ACTS_PYTHON_MEMBER(arithmeticAverageCotTheta);
     ACTS_PYTHON_MEMBER(useDetailedDoubleMeasurementInfo);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
@@ -223,6 +223,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
     ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);
+    ACTS_PYTHON_MEMBER(maxPhiBins);
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_STRUCT_END();
@@ -258,9 +259,10 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
-      "TrackParamsEstimationAlgorithm", inputSeeds, outputTrackParameters,
-      trackingGeometry, magneticField, bFieldMin, sigmaLoc0, sigmaLoc1,
-      sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0, initialVarInflation);
+      "TrackParamsEstimationAlgorithm", inputSeeds, inputProtoTracks,
+      outputTrackParameters, outputSeeds, outputProtoTracks, trackingGeometry,
+      magneticField, bFieldMin, sigmaLoc0, sigmaLoc1, sigmaPhi, sigmaTheta,
+      sigmaQOverP, sigmaT0, initialVarInflation, particleHypothesis);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
@@ -295,6 +297,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputTracks);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
+    ACTS_PYTHON_MEMBER(trackSelectorCfg);
     ACTS_PYTHON_STRUCT_END();
   }
 

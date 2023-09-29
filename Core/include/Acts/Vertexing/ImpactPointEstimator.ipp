@@ -70,9 +70,15 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   std::shared_ptr<PlaneSurface> planeSurface =
       Surface::makeShared<PlaneSurface>(thePlane);
 
+  auto intersection = planeSurface
+                          ->intersect(gctx, trkParams.position(gctx),
+                                      trkParams.direction(), false)
+                          .closest();
+
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-  pOptions.direction = Direction::Backward;
+  pOptions.direction =
+      Direction::fromScalarZeroAsPositive(intersection.pathLength());
 
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(trkParams, *planeSurface, pOptions);
@@ -117,7 +123,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return VertexingError::NoCovariance;
   }
   auto cov = trkParams->covariance();
-  SymMatrix2 myWeightXY = cov->block<2, 2>(0, 0).inverse();
+  SquareMatrix2 myWeightXY = cov->block<2, 2>(0, 0).inverse();
 
   // 2-dim residual
   Vector2 myXYpos =
@@ -287,7 +293,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   const double cosPhi = std::cos(phi);
   const double cosTheta = std::cos(theta);
 
-  SymMatrix2 vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
+  SquareMatrix2 vrtXYCov = vtx.covariance().template block<2, 2>(0, 0);
 
   // Covariance of perigee parameters after propagation to perigee surface
   if (not propRes.endParameters->covariance().has_value()) {
@@ -312,7 +318,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     newIPandSigma.PVsigmad0 = 0;
   }
 
-  SymMatrix2 covPerigeeZ0Theta;
+  SquareMatrix2 covPerigeeZ0Theta;
   covPerigeeZ0Theta(0, 0) =
       perigeeCov(BoundIndices::eBoundLoc1, BoundIndices::eBoundLoc1);
   covPerigeeZ0Theta(0, 1) =

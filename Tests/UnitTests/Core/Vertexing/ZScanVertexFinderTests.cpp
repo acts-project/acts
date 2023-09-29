@@ -53,7 +53,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 using Propagator = Acts::Propagator<EigenStepper<>>;
 using Linearizer_t = HelicalTrackLinearizer<Propagator>;
 
@@ -154,7 +154,8 @@ BOOST_AUTO_TEST_CASE(zscan_finder_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat));
+      tracks.emplace_back(perigeeSurface, paramVec, std::move(covMat),
+                          ParticleHypothesis::pion());
     }
 
     std::vector<const BoundTrackParameters*> tracksPtr;
@@ -276,8 +277,9 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
 
-      tracks.emplace_back(
-          BoundTrackParameters(perigeeSurface, paramVec, std::move(covMat)));
+      tracks.emplace_back(BoundTrackParameters(perigeeSurface, paramVec,
+                                               std::move(covMat),
+                                               ParticleHypothesis::pion()));
     }
 
     std::vector<const InputTrack*> tracksPtr;

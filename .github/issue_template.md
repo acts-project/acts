@@ -3,24 +3,16 @@ FOR YOUR INFORMATION AND MUST BE REMOVED BEFORE SUBMITTING THE ISSUE.
 
 ## Checklist
 
-- [ ] Is the issue marked with exactly one of the following labels
+- [ ] Does the issue indicate clearly what kind it is? Examples are
 
     - Bug
     - Feature
     - Improvement
-    - infrastructure
+    - Infrastructure
 
 - [ ] If the issue reports a bug:
 
-    - [ ] Is it also marked with one of the `Impact - {Minor,Major,Critical}` labels?
+    - [ ] Please suggest whether this bug is critical / a blocker. One of the 
+          maintainers will assign a corresponding labels.
     - [ ] Does the description contain all necessary information to reproduce
-        the error?
-
-- [ ] Is the issue assigned to a milestone? This should be `next` unless you
-    target a specific release.
-
-- [ ] If the issue is a question or the start of a discussion, please add the
-    `Needs discussion` label.
-
-- [ ] If the issue tracks a long development or multiple underlying issues
-    please add the `Long Term` label.
+          the error?

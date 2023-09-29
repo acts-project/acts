@@ -20,7 +20,7 @@ namespace Acts {
 namespace Test {
 
 using namespace Acts::UnitLiterals;
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext geoCtx = GeometryContext();
@@ -32,7 +32,7 @@ struct VertexInfo {
   // The position
   Vector3 position;
   // The covariance
-  SymMatrix3 covariance;
+  SquareMatrix3 covariance;
   // Number of tracks
   int nTracks = 0;
   // Weight of first track
@@ -77,7 +77,7 @@ readTracksAndVertexCSV(const std::string& toolString,
         std::sregex_token_iterator()};
 
     Vector3 beamspotPos;
-    SymMatrix3 beamspotCov;
+    SquareMatrix3 beamspotCov;
     beamspotPos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
         std::stod(row[2]) * (1_mm);
     beamspotCov << std::stod(row[3]), 0, 0, 0, std::stod(row[4]), 0, 0, 0,
@@ -116,7 +116,9 @@ readTracksAndVertexCSV(const std::string& toolString,
         std::stod(row[16]), std::stod(row[20]), std::stod(row[23]),
         std::stod(row[25]) * 1. / (1_MeV), std::stod(row[26]);
 
-    tracks.emplace_back(perigeeSurface, params, std::move(covMat));
+    // TODO we do not have a hypothesis at hand here. defaulting to pion
+    tracks.emplace_back(perigeeSurface, params, std::move(covMat),
+                        ParticleHypothesis::pion());
   }
 
   // Read in reference vertex data
@@ -130,7 +132,7 @@ readTracksAndVertexCSV(const std::string& toolString,
     Vector3 pos;
     pos << std::stod(row[0]) * (1_mm), std::stod(row[1]) * (1_mm),
         std::stod(row[2]) * (1_mm);
-    SymMatrix3 cov;
+    SquareMatrix3 cov;
     cov << std::stod(row[3]), std::stod(row[4]), std::stod(row[5]),
         std::stod(row[6]), std::stod(row[7]), std::stod(row[8]),
         std::stod(row[9]), std::stod(row[10]), std::stod(row[11]);

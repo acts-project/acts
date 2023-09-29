@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -39,7 +38,10 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinear(
   }
 
   Vector4 pos4 = Vector4::Zero();
-  return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge);
+  auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));
+  return CurvilinearTrackParameters(pos4, phi, theta,
+                                    particleHypothesis.qOverP(absMom, charge),
+                                    std::nullopt, particleHypothesis);
 }
 
 /// Construct (initial) curvilinear parameters with covariance.
@@ -62,7 +64,7 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   stddev[eBoundPhi] = 1_degree;
   stddev[eBoundTheta] = 1.5_degree;
   stddev[eBoundQOverP] = 1_e / 10_GeV;
-  BoundSymMatrix corr = BoundSymMatrix::Identity();
+  BoundSquareMatrix corr = BoundSquareMatrix::Identity();
   corr(eBoundLoc0, eBoundLoc1) = corr(eBoundLoc1, eBoundLoc0) = 0.125;
   corr(eBoundLoc0, eBoundPhi) = corr(eBoundPhi, eBoundLoc0) = 0.25;
   corr(eBoundLoc1, eBoundTheta) = corr(eBoundTheta, eBoundLoc1) = -0.25;
@@ -70,14 +72,17 @@ inline Acts::CurvilinearTrackParameters makeParametersCurvilinearWithCovariance(
   corr(eBoundPhi, eBoundTheta) = corr(eBoundTheta, eBoundPhi) = -0.25;
   corr(eBoundPhi, eBoundQOverP) = corr(eBoundPhi, eBoundQOverP) = -0.125;
   corr(eBoundTheta, eBoundQOverP) = corr(eBoundTheta, eBoundQOverP) = 0.5;
-  BoundSymMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
+  BoundSquareMatrix cov = stddev.asDiagonal() * corr * stddev.asDiagonal();
 
   Vector4 pos4 = Vector4::Zero();
-  return CurvilinearTrackParameters(pos4, phi, theta, absMom, charge, cov);
+  auto particleHypothesis = ParticleHypothesis::pionLike(std::abs(charge));
+  return CurvilinearTrackParameters(pos4, phi, theta,
+                                    particleHypothesis.qOverP(absMom, charge),
+                                    cov, particleHypothesis);
 }
 
 /// Construct (initial) neutral curvilinear parameters.
-inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
+inline Acts::CurvilinearTrackParameters makeParametersCurvilinearNeutral(
     double phi, double theta, double absMom) {
   using namespace Acts;
   using namespace Acts::UnitLiterals;
@@ -89,7 +94,8 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
   }
 
   Vector4 pos4 = Vector4::Zero();
-  return NeutralCurvilinearTrackParameters(pos4, phi, theta, 1 / absMom);
+  return CurvilinearTrackParameters(pos4, phi, theta, 1 / absMom, std::nullopt,
+                                    ParticleHypothesis::pion0());
 }
 
 // helpers to compare track parameters
@@ -97,12 +103,11 @@ inline Acts::NeutralCurvilinearTrackParameters makeParametersCurvilinearNeutral(
 /// Check that two parameters object are consistent within the tolerances.
 ///
 /// \warning Does not check that they are defined on the same surface.
-template <typename charge_t>
-inline void checkParametersConsistency(
-    const Acts::SingleBoundTrackParameters<charge_t>& cmp,
-    const Acts::SingleBoundTrackParameters<charge_t>& ref,
-    const Acts::GeometryContext& geoCtx, double epsPos, double epsDir,
-    double epsMom) {
+inline void checkParametersConsistency(const Acts::BoundTrackParameters& cmp,
+                                       const Acts::BoundTrackParameters& ref,
+                                       const Acts::GeometryContext& geoCtx,
+                                       double epsPos, double epsDir,
+                                       double epsMom) {
   using namespace Acts;
 
   // check stored parameters
@@ -123,7 +128,7 @@ inline void checkParametersConsistency(
   // check derived parameters
   CHECK_CLOSE_ABS(cmp.position(geoCtx), ref.position(geoCtx), epsPos);
   CHECK_CLOSE_ABS(cmp.time(), ref.time(), epsPos);
-  CHECK_CLOSE_ABS(cmp.unitDirection(), ref.unitDirection(), epsDir);
+  CHECK_CLOSE_ABS(cmp.direction(), ref.direction(), epsDir);
   CHECK_CLOSE_ABS(cmp.absoluteMomentum(), ref.absoluteMomentum(), epsMom);
   // charge should be identical not just similar
   BOOST_CHECK_EQUAL(cmp.charge(), ref.charge());
@@ -132,11 +137,9 @@ inline void checkParametersConsistency(
 /// Check that two parameters covariances are consistent within the tolerances.
 ///
 /// \warning Does not check that the parameters value itself are consistent.
-template <typename charge_t>
-inline void checkCovarianceConsistency(
-    const Acts::SingleBoundTrackParameters<charge_t>& cmp,
-    const Acts::SingleBoundTrackParameters<charge_t>& ref,
-    double relativeTolerance) {
+inline void checkCovarianceConsistency(const Acts::BoundTrackParameters& cmp,
+                                       const Acts::BoundTrackParameters& ref,
+                                       double relativeTolerance) {
   // either both or none have covariance set
   if (cmp.covariance().has_value()) {
     // comparison parameters have covariance but the reference does not
@@ -155,11 +158,10 @@ inline void checkCovarianceConsistency(
 // helpers to construct target surfaces from track states
 
 /// Construct the transformation from the curvilinear to the global coordinates.
-template <typename charge_t>
 inline Acts::Transform3 makeCurvilinearTransform(
-    const Acts::SingleBoundTrackParameters<charge_t>& params,
+    const Acts::BoundTrackParameters& params,
     const Acts::GeometryContext& geoCtx) {
-  Acts::Vector3 unitW = params.unitDirection();
+  Acts::Vector3 unitW = params.direction();
   auto [unitU, unitV] = Acts::makeCurvilinearUnitVectors(unitW);
 
   Acts::RotationMatrix3 rotation = Acts::RotationMatrix3::Zero();
@@ -174,9 +176,8 @@ inline Acts::Transform3 makeCurvilinearTransform(
 
 /// Construct a z-cylinder centered at zero with the track on its surface.
 struct ZCylinderSurfaceBuilder {
-  template <typename charge_t>
   std::shared_ptr<Acts::CylinderSurface> operator()(
-      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     auto radius = params.position(geoCtx).template head<2>().norm();
     auto halfz = std::numeric_limits<double>::max();
@@ -187,9 +188,8 @@ struct ZCylinderSurfaceBuilder {
 
 /// Construct a disc at track position with plane normal along track tangent.
 struct DiscSurfaceBuilder {
-  template <typename charge_t>
   std::shared_ptr<Acts::DiscSurface> operator()(
-      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     using namespace Acts;
     using namespace Acts::UnitLiterals;
@@ -211,9 +211,8 @@ struct DiscSurfaceBuilder {
 
 /// Construct a plane at track position with plane normal along track tangent.
 struct PlaneSurfaceBuilder {
-  template <typename charge_t>
   std::shared_ptr<Acts::PlaneSurface> operator()(
-      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::PlaneSurface>(
         makeCurvilinearTransform(params, geoCtx));
@@ -222,9 +221,8 @@ struct PlaneSurfaceBuilder {
 
 /// Construct a z-straw at the track position.
 struct ZStrawSurfaceBuilder {
-  template <typename charge_t>
   std::shared_ptr<Acts::StrawSurface> operator()(
-      const Acts::SingleBoundTrackParameters<charge_t>& params,
+      const Acts::BoundTrackParameters& params,
       const Acts::GeometryContext& geoCtx) {
     return Acts::Surface::makeShared<Acts::StrawSurface>(
         Acts::Transform3(Acts::Translation3(params.position(geoCtx))));
@@ -236,14 +234,12 @@ struct ZStrawSurfaceBuilder {
 /// Propagate the initial parameters for the given pathlength in space.
 ///
 /// Use a negative path length to indicate backward propagation.
-template <typename propagator_t, typename charge_t,
-          template <typename, typename>
-          class options_t = Acts::PropagatorOptions>
+template <typename propagator_t, template <typename, typename>
+                                 class options_t = Acts::PropagatorOptions>
 inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
-    double pathLength) {
+    const Acts::CurvilinearTrackParameters& initialParams, double pathLength) {
   using namespace Acts::UnitLiterals;
 
   using Actions = Acts::ActionList<>;
@@ -253,7 +249,8 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
   options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = Acts::Direction::fromScalar(pathLength);
   options.pathLimit = pathLength;
-  options.maxStepSize = 1_cm;
+  options.targetTolerance = 1_nm;
+  options.tolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, options);
   BOOST_CHECK(result.ok());
@@ -263,13 +260,12 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
 }
 
 /// Propagate the initial parameters to the target surface.
-template <typename propagator_t, typename charge_t,
-          template <typename, typename>
-          class options_t = Acts::PropagatorOptions>
+template <typename propagator_t, template <typename, typename>
+                                 class options_t = Acts::PropagatorOptions>
 inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
+    const Acts::CurvilinearTrackParameters& initialParams,
     const Acts::Surface& targetSurface, double pathLimit) {
   using namespace Acts::UnitLiterals;
 
@@ -280,7 +276,8 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = Acts::Direction::Forward;
   options.pathLimit = pathLimit;
-  options.maxStepSize = 1_cm;
+  options.targetTolerance = 1_nm;
+  options.tolerance = 1_nm;
 
   auto result = propagator.propagate(initialParams, targetSurface, options);
   BOOST_CHECK(result.ok());
@@ -294,23 +291,20 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
 /// Propagate the initial parameters the given path length along its
 /// trajectory and then propagate the final parameters back. Verify that the
 /// propagated parameters match the initial ones.
-template <typename propagator_t, typename charge_t,
-          template <typename, typename>
-          class options_t = Acts::PropagatorOptions>
+template <typename propagator_t, template <typename, typename>
+                                 class options_t = Acts::PropagatorOptions>
 inline void runForwardBackwardTest(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
-    double pathLength, double epsPos, double epsDir, double epsMom) {
+    const Acts::CurvilinearTrackParameters& initialParams, double pathLength,
+    double epsPos, double epsDir, double epsMom) {
   // propagate parameters Acts::Direction::Forward
-  auto [fwdParams, fwdPathLength] =
-      transportFreely<propagator_t, charge_t, options_t>(
-          propagator, geoCtx, magCtx, initialParams, pathLength);
+  auto [fwdParams, fwdPathLength] = transportFreely<propagator_t, options_t>(
+      propagator, geoCtx, magCtx, initialParams, pathLength);
   CHECK_CLOSE_ABS(fwdPathLength, pathLength, epsPos);
   // propagate propagated parameters back again
-  auto [bwdParams, bwdPathLength] =
-      transportFreely<propagator_t, charge_t, options_t>(
-          propagator, geoCtx, magCtx, fwdParams, -pathLength);
+  auto [bwdParams, bwdPathLength] = transportFreely<propagator_t, options_t>(
+      propagator, geoCtx, magCtx, fwdParams, -pathLength);
   CHECK_CLOSE_ABS(bwdPathLength, -pathLength, epsPos);
   // check that initial and back-propagated parameters match
   checkParametersConsistency(initialParams, bwdParams, geoCtx, epsPos, epsDir,
@@ -321,19 +315,18 @@ inline void runForwardBackwardTest(
 /// use the propagated parameters to define a target surface. Propagate the
 /// initial parameters again to the target surface. Verify that the surface has
 /// been found and the parameters are consistent.
-template <typename propagator_t, typename charge_t, typename surface_builder_t,
+template <typename propagator_t, typename surface_builder_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
 inline void runToSurfaceTest(
     const propagator_t& propagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
-    double pathLength, surface_builder_t&& buildTargetSurface, double epsPos,
-    double epsDir, double epsMom) {
+    const Acts::CurvilinearTrackParameters& initialParams, double pathLength,
+    surface_builder_t&& buildTargetSurface, double epsPos, double epsDir,
+    double epsMom) {
   // free propagation for the given path length
-  auto [freeParams, freePathLength] =
-      transportFreely<propagator_t, charge_t, options_t>(
-          propagator, geoCtx, magCtx, initialParams, pathLength);
+  auto [freeParams, freePathLength] = transportFreely<propagator_t, options_t>(
+      propagator, geoCtx, magCtx, initialParams, pathLength);
   CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
   // build a target surface at the propagated position
   auto surface = buildTargetSurface(freeParams, geoCtx);
@@ -342,17 +335,16 @@ inline void runToSurfaceTest(
   // bound propagation onto the target surface
   // increase path length limit to ensure the surface can be reached
   auto [surfParams, surfPathLength] =
-      transportToSurface<propagator_t, charge_t, options_t>(
-          propagator, geoCtx, magCtx, initialParams, *surface,
-          1.5 * pathLength);
+      transportToSurface<propagator_t, options_t>(propagator, geoCtx, magCtx,
+                                                  initialParams, *surface,
+                                                  1.5 * pathLength);
   CHECK_CLOSE_ABS(surfPathLength, pathLength, epsPos);
 
   // check that the to-surface propagation matches the defining free parameters
   CHECK_CLOSE_ABS(surfParams.position(geoCtx), freeParams.position(geoCtx),
                   epsPos);
   CHECK_CLOSE_ABS(surfParams.time(), freeParams.time(), epsPos);
-  CHECK_CLOSE_ABS(surfParams.unitDirection(), freeParams.unitDirection(),
-                  epsDir);
+  CHECK_CLOSE_ABS(surfParams.direction(), freeParams.direction(), epsDir);
   CHECK_CLOSE_ABS(surfParams.absoluteMomentum(), freeParams.absoluteMomentum(),
                   epsMom);
   CHECK_CLOSE_ABS(surfPathLength, freePathLength, epsPos);
@@ -362,23 +354,20 @@ inline void runToSurfaceTest(
 
 /// Propagate the initial parameters along their trajectory for the given path
 /// length using two different propagators and verify consistent output.
-template <
-    typename cmp_propagator_t, typename ref_propagator_t, typename charge_t,
-    template <typename, typename> class options_t = Acts::PropagatorOptions>
+template <typename cmp_propagator_t, typename ref_propagator_t,
+          template <typename, typename>
+          class options_t = Acts::PropagatorOptions>
 inline void runForwardComparisonTest(
     const cmp_propagator_t& cmpPropagator,
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
-    double pathLength, double epsPos, double epsDir, double epsMom,
-    double tolCov) {
+    const Acts::CurvilinearTrackParameters& initialParams, double pathLength,
+    double epsPos, double epsDir, double epsMom, double tolCov) {
   // propagate twice using the two different propagators
-  auto [cmpParams, cmpPath] =
-      transportFreely<cmp_propagator_t, charge_t, options_t>(
-          cmpPropagator, geoCtx, magCtx, initialParams, pathLength);
-  auto [refParams, refPath] =
-      transportFreely<ref_propagator_t, charge_t, options_t>(
-          refPropagator, geoCtx, magCtx, initialParams, pathLength);
+  auto [cmpParams, cmpPath] = transportFreely<cmp_propagator_t, options_t>(
+      cmpPropagator, geoCtx, magCtx, initialParams, pathLength);
+  auto [refParams, refPath] = transportFreely<ref_propagator_t, options_t>(
+      refPropagator, geoCtx, magCtx, initialParams, pathLength);
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
                              epsMom);
@@ -393,19 +382,19 @@ inline void runForwardComparisonTest(
 /// to define a target plane. Propagate the initial parameters using two
 /// different propagators and verify consistent output.
 template <typename cmp_propagator_t, typename ref_propagator_t,
-          typename charge_t, typename surface_builder_t,
+          typename surface_builder_t,
           template <typename, typename>
           class options_t = Acts::PropagatorOptions>
 inline void runToSurfaceComparisonTest(
     const cmp_propagator_t& cmpPropagator,
     const ref_propagator_t& refPropagator, const Acts::GeometryContext& geoCtx,
     const Acts::MagneticFieldContext& magCtx,
-    const Acts::SingleCurvilinearTrackParameters<charge_t>& initialParams,
-    double pathLength, surface_builder_t&& buildTargetSurface, double epsPos,
-    double epsDir, double epsMom, double tolCov) {
+    const Acts::CurvilinearTrackParameters& initialParams, double pathLength,
+    surface_builder_t&& buildTargetSurface, double epsPos, double epsDir,
+    double epsMom, double tolCov) {
   // free propagation with the reference propagator for the given path length
   auto [freeParams, freePathLength] =
-      transportFreely<ref_propagator_t, charge_t, options_t>(
+      transportFreely<ref_propagator_t, options_t>(
           refPropagator, geoCtx, magCtx, initialParams, pathLength);
   CHECK_CLOSE_ABS(freePathLength, pathLength, epsPos);
 
@@ -415,14 +404,10 @@ inline void runToSurfaceComparisonTest(
 
   // propagate twice to the surface using the two different propagators
   // increase path length limit to ensure the surface can be reached
-  auto [cmpParams, cmpPath] =
-      transportToSurface<cmp_propagator_t, charge_t, options_t>(
-          cmpPropagator, geoCtx, magCtx, initialParams, *surface,
-          1.5 * pathLength);
-  auto [refParams, refPath] =
-      transportToSurface<ref_propagator_t, charge_t, options_t>(
-          refPropagator, geoCtx, magCtx, initialParams, *surface,
-          1.5 * pathLength);
+  auto [cmpParams, cmpPath] = transportToSurface<cmp_propagator_t, options_t>(
+      cmpPropagator, geoCtx, magCtx, initialParams, *surface, 1.5 * pathLength);
+  auto [refParams, refPath] = transportToSurface<ref_propagator_t, options_t>(
+      refPropagator, geoCtx, magCtx, initialParams, *surface, 1.5 * pathLength);
   // check parameter comparison
   checkParametersConsistency(cmpParams, refParams, geoCtx, epsPos, epsDir,
                              epsMom);

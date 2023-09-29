@@ -13,8 +13,8 @@
 #include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -70,10 +70,11 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
   stddev[eBoundPhi] = 2_degree;
   stddev[eBoundTheta] = 2_degree;
   stddev[eBoundQOverP] = 1 / 100_GeV;
-  BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // Let the particle start from the origin
   Vector4 mPos4(-3_m, 0., 0., 0.);
-  return CurvilinearTrackParameters(mPos4, phi, theta, p, q, cov);
+  return CurvilinearTrackParameters(mPos4, phi, theta, q / p, cov,
+                                    ParticleHypothesis::pionLike(q));
 }
 
 std::pair<Vector3, Vector3> stripEnds(
@@ -84,7 +85,7 @@ std::pair<Vector3, Vector3> stripEnds(
   const auto lpos = testslink.parameters;
 
   Vector3 globalFakeMom(1, 1, 1);
-  const auto geoId = slink.geometryId();
+  const auto geoId = testslink.m_geometryId;
   const Surface* surface = geo->findSurface(geoId);
 
   const double stripLength = 40.;
@@ -175,7 +176,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   std::vector<const Vector3*> backStripEnds;
 
   for (auto& sl : sourceLinks) {
-    const auto geoId = sl.geometryId();
+    const auto geoId = sl.m_geometryId;
     const auto volumeId = geoId.volume();
     if (volumeId == 2) {  // pixel type detector
       singleHitSourceLinks.emplace_back(SourceLink{sl});
@@ -205,12 +206,18 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   auto spBuilderConfig = SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;
 
+  TestSourceLink::SurfaceAccessor surfaceAccessor{*geometry};
+  spBuilderConfig.slSurfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
+
   auto spBuilder =
       SpacePointBuilder<TestSpacePoint>(spBuilderConfig, spConstructor);
 
   // for cosmic  without vertex constraint, usePerpProj = true
   auto spBuilderConfig_perp = SpacePointBuilderConfig();
   spBuilderConfig_perp.trackingGeometry = geometry;
+  spBuilderConfig_perp.slSurfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(&surfaceAccessor);
 
   spBuilderConfig_perp.usePerpProj = true;
 
@@ -227,7 +234,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     param[eBoundLoc0] = testslink.parameters[eBoundLoc0];
     param[eBoundLoc1] = testslink.parameters[eBoundLoc1];
 
-    BoundSymMatrix cov = BoundSymMatrix::Zero();
+    BoundSquareMatrix cov = BoundSquareMatrix::Zero();
     cov.topLeftCorner<2, 2>() = testslink.covariance;
 
     return std::make_pair(param, cov);
@@ -292,6 +299,10 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     auto spBuilderConfig_badStrips = SpacePointBuilderConfig();
 
     spBuilderConfig_badStrips.trackingGeometry = geometry;
+    spBuilderConfig_badStrips.slSurfaceAccessor
+        .connect<&TestSourceLink::SurfaceAccessor::operator()>(
+            &surfaceAccessor);
+
     auto spBuilder_badStrips = SpacePointBuilder<TestSpacePoint>(
         spBuilderConfig_badStrips, spConstructor);
     // sp building with the recovery method

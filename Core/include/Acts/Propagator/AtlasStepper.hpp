@@ -35,7 +35,7 @@ namespace Acts {
 class AtlasStepper {
  public:
   using Jacobian = BoundMatrix;
-  using Covariance = BoundSymMatrix;
+  using Covariance = BoundSquareMatrix;
   using BoundState = std::tuple<BoundTrackParameters, Jacobian, double>;
   using CurvilinearState =
       std::tuple<CurvilinearTrackParameters, Jacobian, double>;
@@ -52,18 +52,16 @@ class AtlasStepper {
     /// @param [in] gctx The geometry context tof this call
     /// @param [in] fieldCacheIn The magnetic field cache for this call
     /// @param [in] pars Input parameters
-    /// @param [in] ndir The navigation direction w.r.t. parameters
     /// @param [in] ssize the steps size limitation
     /// @param [in] stolerance is the stepping tolerance
     template <typename Parameters>
     State(const GeometryContext& gctx,
           MagneticFieldProvider::Cache fieldCacheIn, const Parameters& pars,
-          Direction ndir = Direction::Forward,
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
-        : navDir(ndir),
+        : particleHypothesis(pars.particleHypothesis()),
           field(0., 0., 0.),
-          stepSize(ndir * std::abs(ssize)),
+          stepSize(ssize),
           tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
           geoContext(gctx) {
@@ -74,10 +72,10 @@ class AtlasStepper {
       const auto pos = pars.position(gctx);
       const auto Vp = pars.parameters();
 
-      double Sf = sin(Vp[eBoundPhi]);
-      double Cf = cos(Vp[eBoundPhi]);
-      double Se = sin(Vp[eBoundTheta]);
-      double Ce = cos(Vp[eBoundTheta]);
+      double Sf = std::sin(Vp[eBoundPhi]);
+      double Cf = std::cos(Vp[eBoundPhi]);
+      double Se = std::sin(Vp[eBoundTheta]);
+      double Ce = std::cos(Vp[eBoundTheta]);
 
       pVector[0] = pos[ePos0];
       pVector[1] = pos[ePos1];
@@ -97,11 +95,11 @@ class AtlasStepper {
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance = new BoundSymMatrix(*pars.covariance());
+        covariance = new BoundSquareMatrix(*pars.covariance());
         covTransport = true;
         useJacobian = true;
         const auto transform = pars.referenceSurface().referenceFrame(
-            geoContext, pos, pars.unitDirection());
+            geoContext, pos, pars.direction());
 
         pVector[8] = transform(0, eBoundLoc0);
         pVector[16] = transform(0, eBoundLoc1);
@@ -168,8 +166,8 @@ class AtlasStepper {
         const auto& surface = pars.referenceSurface();
         // the disc needs polar coordinate adaptations
         if (surface.type() == Surface::Disc) {
-          double lCf = cos(Vp[1]);
-          double lSf = sin(Vp[1]);
+          double lCf = std::cos(Vp[1]);
+          double lSf = std::sin(Vp[1]);
           double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
           double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
           double d0 = lCf * Ax[0] + lSf * Ay[0];
@@ -230,10 +228,11 @@ class AtlasStepper {
       state_ready = true;
     }
 
+    ParticleHypothesis particleHypothesis;
+
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
-    Direction navDir = Direction::Forward;
     bool useJacobian = false;
     double step = 0;
     double maxPathLength = 0;
@@ -294,15 +293,12 @@ class AtlasStepper {
   AtlasStepper(std::shared_ptr<const MagneticFieldProvider> bField)
       : m_bField(std::move(bField)){};
 
-  template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
-                  const SingleBoundTrackParameters<charge_t>& par,
-                  Direction navDir = Direction::Forward,
+                  const BoundTrackParameters& par,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
-    return State{gctx,      m_bField->makeCache(mctx), par, navDir, ssize,
-                 stolerance};
+    return State{gctx, m_bField->makeCache(mctx), par, ssize, stolerance};
   }
 
   /// @brief Resets the state
@@ -311,18 +307,16 @@ class AtlasStepper {
   /// @param [in] boundParams Parameters in bound parametrisation
   /// @param [in] cov Covariance matrix
   /// @param [in] surface Reset state will be on this surface
-  /// @param [in] navDir Navigation direction
   /// @param [in] stepSize Step size
   void resetState(
-      State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const Direction navDir = Direction::Forward,
+      State& state, const BoundVector& boundParams,
+      const BoundSquareMatrix& cov, const Surface& surface,
       const double stepSize = std::numeric_limits<double>::max()) const {
     // Update the stepping state
     update(state,
            detail::transformBoundToFreeParameters(surface, state.geoContext,
                                                   boundParams),
            boundParams, cov, surface);
-    state.navDir = navDir;
     state.stepSize = ConstrainedStep(stepSize);
     state.pathAccumulated = 0.;
 
@@ -355,17 +349,38 @@ class AtlasStepper {
 
   double qOverP(const State& state) const { return state.pVector[7]; }
 
+  /// Absolute momentum accessor
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double absoluteMomentum(const State& state) const {
-    return 1. / std::abs(qOverP(state));
+    return particleHypothesis(state).extractMomentum(qOverP(state));
+  }
+
+  Vector3 momentum(const State& state) const {
+    return absoluteMomentum(state) * direction(state);
   }
 
   /// Charge access
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
   double charge(const State& state) const {
-    return qOverP(state) > 0. ? 1. : -1.;
+    return particleHypothesis(state).extractCharge(qOverP(state));
+  }
+
+  /// Particle hypothesis
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  const ParticleHypothesis& particleHypothesis(const State& state) const {
+    return state.particleHypothesis;
   }
 
   /// Overstep limit
-  double overstepLimit(const State& /*state*/) const { return m_overstepLimit; }
+  ///
+  /// @param state The stepping state (thread-local cache)
+  double overstepLimit(const State& state) const {
+    (void)state;
+    return -m_overstepLimit;
+  }
 
   /// Time access
   double time(const State& state) const { return state.pVector[3]; }
@@ -379,13 +394,17 @@ class AtlasStepper {
   ///
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
+  /// @param [in] navDir The navigation direction
   /// @param [in] bcheck The boundary check for this status update
+  /// @param [in] surfaceTolerance Surface tolerance used for intersection
   /// @param [in] logger Logger instance to use
   Intersection3D::Status updateSurfaceStatus(
-      State& state, const Surface& surface, const BoundaryCheck& bcheck,
+      State& state, const Surface& surface, Direction navDir,
+      const BoundaryCheck& bcheck,
+      ActsScalar surfaceTolerance = s_onSurfaceTolerance,
       const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
-        *this, state, surface, bcheck, logger);
+        *this, state, surface, navDir, bcheck, surfaceTolerance, logger);
   }
 
   /// Update step size
@@ -398,7 +417,7 @@ class AtlasStepper {
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
+                      Direction /*direction*/, bool release = true) const {
     detail::updateSingleStepSize<AtlasStepper>(state, oIntersection, release);
   }
 
@@ -477,9 +496,9 @@ class AtlasStepper {
     }
 
     // Fill the end parameters
-    auto parameters =
-        BoundTrackParameters::create(surface.getSharedPtr(), state.geoContext,
-                                     pos4, dir, qOverP, std::move(covOpt));
+    auto parameters = BoundTrackParameters::create(
+        surface.getSharedPtr(), state.geoContext, pos4, dir, qOverP,
+        std::move(covOpt), state.particleHypothesis);
     if (!parameters.ok()) {
       return parameters.error();
     }
@@ -524,7 +543,8 @@ class AtlasStepper {
       covOpt = state.cov;
     }
 
-    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt));
+    CurvilinearTrackParameters parameters(pos4, dir, qOverP, std::move(covOpt),
+                                          state.particleHypothesis);
 
     Jacobian jacobian(state.jacobian);
 
@@ -564,10 +584,10 @@ class AtlasStepper {
     Vector3 pos(state.pVector[0], state.pVector[1], state.pVector[2]);
     Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
 
-    double Sf = sin(boundParams[eBoundPhi]);
-    double Cf = cos(boundParams[eBoundPhi]);
-    double Se = sin(boundParams[eBoundTheta]);
-    double Ce = cos(boundParams[eBoundTheta]);
+    double Sf = std::sin(boundParams[eBoundPhi]);
+    double Cf = std::cos(boundParams[eBoundPhi]);
+    double Se = std::sin(boundParams[eBoundTheta]);
+    double Ce = std::cos(boundParams[eBoundTheta]);
 
     const auto transform = surface.referenceFrame(state.geoContext, pos, mom);
 
@@ -635,8 +655,8 @@ class AtlasStepper {
     // special treatment for surface types
     // the disc needs polar coordinate adaptations
     if (surface.type() == Surface::Disc) {
-      double lCf = cos(boundParams[eBoundLoc1]);
-      double lSf = sin(boundParams[eBoundLoc1]);
+      double lCf = std::cos(boundParams[eBoundLoc1]);
+      double lSf = std::sin(boundParams[eBoundLoc1]);
       double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
       double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
       double d0 = lCf * Ax[0] + lSf * Ay[0];
@@ -694,7 +714,7 @@ class AtlasStepper {
       state.pVector[34] = Bz3 * boundParams[eBoundLoc0];  // dZ/
     }
 
-    state.covariance = new BoundSymMatrix(covariance);
+    state.covariance = new BoundSquareMatrix(covariance);
     state.covTransport = true;
     state.useJacobian = true;
 
@@ -1107,7 +1127,7 @@ class AtlasStepper {
   Result<double> step(propagator_state_t& state,
                       const navigator_t& /*navigator*/) const {
     // we use h for keeping the nominclature with the original atlas code
-    auto h = state.stepping.stepSize.value();
+    auto h = state.stepping.stepSize.value() * state.options.direction;
     bool Jac = state.stepping.useJacobian;
 
     double* R = &(state.stepping.pVector[0]);  // Coordinates
@@ -1216,9 +1236,10 @@ class AtlasStepper {
           2. * h *
           (std::abs((A1 + A6) - (A3 + A4)) + std::abs((B1 + B6) - (B3 + B4)) +
            std::abs((C1 + C6) - (C3 + C4)));
-      if (EST > state.options.tolerance) {
+      if (std::abs(EST) > std::abs(state.options.tolerance)) {
         h = h * .5;
-        state.stepping.stepSize.setValue(h);
+        // neutralize the sign of h again
+        state.stepping.stepSize.setValue(h * state.options.direction);
         //        dltm = 0.;
         nStepTrials++;
         continue;
@@ -1248,17 +1269,17 @@ class AtlasStepper {
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
+      double mass = particleHypothesis(state.stepping).mass();
+
       // Evaluate the time propagation
-      double dtds =
-          std::hypot(1, state.options.mass / absoluteMomentum(state.stepping));
+      double dtds = std::hypot(1, mass / absoluteMomentum(state.stepping));
       state.stepping.pVector[3] += h * dtds;
       state.stepping.pVector[59] = dtds;
       state.stepping.field = f;
       state.stepping.newfield = false;
 
       if (Jac) {
-        double dtdl = h * state.options.mass * state.options.mass *
-                      charge(state.stepping) /
+        double dtdl = h * mass * mass * charge(state.stepping) /
                       (absoluteMomentum(state.stepping) * dtds);
         state.stepping.pVector[43] += dtdl;
 
@@ -1412,7 +1433,7 @@ class AtlasStepper {
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
   /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = -100 * UnitConstants::um;
+  double m_overstepLimit = 100 * UnitConstants::um;
 };
 
 }  // namespace Acts

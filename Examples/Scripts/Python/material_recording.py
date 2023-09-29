@@ -2,6 +2,7 @@
 import os
 import warnings
 from pathlib import Path
+import argparse
 
 import acts
 from acts.examples import (
@@ -17,6 +18,7 @@ import acts.examples.geant4
 import acts.examples.geant4.dd4hep
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
+from acts.examples.geant4 import GdmlDetectorConstructionFactory
 
 u = acts.UnitConstants
 
@@ -24,7 +26,11 @@ _material_recording_executed = False
 
 
 def runMaterialRecording(
-    detectorConstructionFactory, outputDir, tracksPerEvent=10000, s=None
+    detectorConstructionFactory,
+    outputDir,
+    tracksPerEvent=10000,
+    s=None,
+    etaRange=(-4, 4),
 ):
     global _material_recording_executed
     if _material_recording_executed:
@@ -32,8 +38,6 @@ def runMaterialRecording(
     _material_recording_executed = True
 
     rnd = RandomNumbers(seed=228)
-
-    s = s or acts.examples.Sequencer(events=1000, numThreads=1)
 
     evGen = EventGenerator(
         level=acts.logging.INFO,
@@ -50,7 +54,7 @@ def runMaterialRecording(
                     randomizeCharge=False,
                     mass=0,
                     p=(1 * u.GeV, 10 * u.GeV),
-                    eta=(-4, 4),
+                    eta=etaRange,
                     numParticles=tracksPerEvent,
                     etaUniform=True,
                 ),
@@ -85,17 +89,42 @@ def runMaterialRecording(
     return s
 
 
-if "__main__" == __name__:
-    detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory()
+def main():
+
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "-n", "--events", type=int, default=1000, help="Number of events to generate"
+    )
+    p.add_argument(
+        "-t", "--tracks", type=int, default=100, help="Particle tracks per event"
+    )
+    p.add_argument(
+        "-i", "--input", type=str, default="", help="GDML input file (optional)"
     )
 
-    detectorConstructionFactory = (
-        acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
-    )
+    args = p.parse_args()
+
+    detectorConstructionFactory = None
+    if args.input != "":
+        detectorConstructionFactory = (
+            acts.examples.geant4.GdmlDetectorConstructionFactory(args.input)
+        )
+    else:
+        detector, trackingGeometry, decorators = getOpenDataDetector(
+            getOpenDataDetectorDirectory()
+        )
+
+        detectorConstructionFactory = (
+            acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
+        )
 
     runMaterialRecording(
         detectorConstructionFactory=detectorConstructionFactory,
-        tracksPerEvent=100,
+        tracksPerEvent=args.tracks,
         outputDir=os.getcwd(),
+        s=acts.examples.Sequencer(events=args.events, numThreads=1),
     ).run()
+
+
+if "__main__" == __name__:
+    main()

@@ -35,7 +35,7 @@ void test(const Scattering& scattering, uint32_t seed,
   CHECK_CLOSE_REL(after.absoluteMomentum(), before.absoluteMomentum(), eps);
   CHECK_CLOSE_REL(after.energy(), before.energy(), eps);
   // scattering has changed the direction
-  BOOST_CHECK_LT(before.unitDirection().dot(after.unitDirection()), 1);
+  BOOST_CHECK_LT(before.direction().dot(after.direction()), 1);
   // scattering creates no new particles
   BOOST_CHECK(outgoing.empty());
 }

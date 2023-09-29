@@ -12,6 +12,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -23,6 +25,9 @@
 #include <vector>
 
 namespace Acts {
+
+class Surface;
+
 namespace Experimental {
 struct NavigationState;
 
@@ -37,16 +42,16 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @note will throw an exception if volumes vector is empty
   /// @note will throw an exception if duplicate volume names exist
   /// @note will throw an exception if the delegate is not connected
-  Detector(const std::string& name,
+  Detector(std::string name,
            std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-           DetectorVolumeUpdator&& detectorVolumeUpdator) noexcept(false);
+           DetectorVolumeUpdator detectorVolumeUpdator) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of Detector.
   static std::shared_ptr<Detector> makeShared(
-      const std::string& name,
+      std::string name,
       std::vector<std::shared_ptr<DetectorVolume>> rootVolumes,
-      DetectorVolumeUpdator&& detectorVolumeUpdator);
+      DetectorVolumeUpdator detectorVolumeUpdator);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
@@ -90,6 +95,11 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
 
+  /// Const access to the hierarchy map of all sensitive surfaces
+  ///
+  /// @return the map which can be queried with GeometryID for ranges
+  const GeometryHierarchyMap<const Surface*>& sensitiveHierarchyMap() const;
+
   /// Update the current volume of a given navigation state
   ///
   /// @param gctx is the Geometry context of the call
@@ -119,8 +129,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// Update the volume finder
   ///
   /// @param detectorVolumeUpdator the new volume finder
-  void updateDetectorVolumeFinder(
-      DetectorVolumeUpdator&& detectorVolumeUpdator);
+  void updateDetectorVolumeFinder(DetectorVolumeUpdator detectorVolumeUpdator);
 
   /// Const access to the volume finder
   const DetectorVolumeUpdator& detectorVolumeFinder() const;
@@ -130,7 +139,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
  private:
   /// Name of the detector
-  std::string m_name = "Unnamed";
+  std::string m_name;
 
   /// Root volumes
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_rootVolumes;
@@ -143,6 +152,9 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
   /// Name/index map to find volumes by name and detect duplicates
   std::unordered_map<std::string, size_t> m_volumeNameIndex;
+
+  /// Geometry Id hierarchy map of all sensitive surfaces
+  GeometryHierarchyMap<const Surface*> m_sensitiveHierarchyMap;
 };
 
 }  // namespace Experimental

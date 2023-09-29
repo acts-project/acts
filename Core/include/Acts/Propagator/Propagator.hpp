@@ -59,14 +59,6 @@ struct PropagatorPlainOptions {
   /// Propagation direction
   Direction direction = Direction::Forward;
 
-  /// The |pdg| code for (eventual) material integration -
-  /// pion default
-  int absPdgCode = PdgParticle::ePionPlus;
-
-  /// The mass of the particle for (eventual) material integration -
-  /// pion default
-  double mass = 139.57018 * UnitConstants::MeV;
-
   /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
@@ -132,11 +124,9 @@ struct PropagatorOptions : public PropagatorPlainOptions {
         geoContext, magFieldContext);
     // Copy the options over
     eoptions.direction = direction;
-    eoptions.absPdgCode = absPdgCode;
-    eoptions.mass = mass;
     eoptions.maxSteps = maxSteps;
     eoptions.maxRungeKuttaStepTrials = maxRungeKuttaStepTrials;
-    eoptions.maxStepSize = direction * std::abs(maxStepSize);
+    eoptions.maxStepSize = maxStepSize;
     eoptions.targetTolerance = targetTolerance;
     eoptions.pathLimit = direction * std::abs(pathLimit);
     eoptions.loopProtection = loopProtection;
@@ -158,11 +148,9 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   void setPlainOptions(const PropagatorPlainOptions& pOptions) {
     // Copy the options over
     direction = pOptions.direction;
-    absPdgCode = pOptions.absPdgCode;
-    mass = pOptions.mass;
     maxSteps = pOptions.maxSteps;
     maxRungeKuttaStepTrials = pOptions.maxRungeKuttaStepTrials;
-    maxStepSize = direction * std::abs(pOptions.maxStepSize);
+    maxStepSize = pOptions.maxStepSize;
     targetTolerance = pOptions.targetTolerance;
     pathLimit = direction * std::abs(pOptions.pathLimit);
     loopProtection = pOptions.loopProtection;
@@ -353,6 +341,7 @@ class Propagator final {
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
+  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
@@ -362,8 +351,8 @@ class Propagator final {
   Result<
       action_list_t_result_t<CurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>>
-  propagate(const parameters_t& start,
-            const propagator_options_t& options) const;
+  propagate(const parameters_t& start, const propagator_options_t& options,
+            bool makeCurvilinear = true) const;
 
   /// @brief Propagate track parameters
   ///
@@ -378,6 +367,7 @@ class Propagator final {
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
+  /// @param [in] makeCurvilinear Produce curvilinear parameters at the end of the propagation
   /// @param [in] inputResult an existing result object to start from
   ///
   /// @return Propagation result containing the propagation status, final
@@ -390,6 +380,7 @@ class Propagator final {
                              typename propagator_options_t::action_list_type>>
   propagate(
       const parameters_t& start, const propagator_options_t& options,
+      bool makeCurvilinear,
       action_list_t_result_t<CurvilinearTrackParameters,
                              typename propagator_options_t::action_list_type>&&
           inputResult) const;

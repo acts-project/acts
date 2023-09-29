@@ -14,10 +14,10 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
-#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackProxy.hpp"
@@ -38,6 +38,7 @@
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Holders.hpp"
@@ -64,9 +65,12 @@ namespace {
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
-using namespace Acts::Experimental;
+
+static const auto electron = ParticleHypothesis::electron();
 
 Acts::GainMatrixUpdater kfUpdater;
+
+FitterTester tester;
 
 GsfExtensions<VectorMultiTrajectory> getExtensions() {
   GsfExtensions<VectorMultiTrajectory> extensions;
@@ -75,10 +79,12 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
   extensions.updater
       .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
           &kfUpdater);
+  extensions.surfaceAccessor
+      .connect<&TestSourceLink::SurfaceAccessor::operator()>(
+          &tester.surfaceAccessor);
+  extensions.mixtureReducer.connect<&Acts::reduceMixtureWithKLDistance>();
   return extensions;
 }
-
-FitterTester tester;
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
@@ -98,21 +104,17 @@ auto makeDefaultGsfOptions() {
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
-// the function so that it can also be used as SingleBoundTrackParameters for
+// the function so that it can also be used as GenericBoundTrackParameters for
 // the MeasurementsCreator
-template <typename charge_t>
-struct MultiCmpsParsInterface : public SingleBoundTrackParameters<charge_t> {
-  MultiComponentBoundTrackParameters<charge_t> multi_pars;
+struct MultiCmpsParsInterface : public BoundTrackParameters {
+  MultiComponentBoundTrackParameters multi_pars;
 
-  MultiCmpsParsInterface(const MultiComponentBoundTrackParameters<charge_t> &p)
-      : SingleBoundTrackParameters<charge_t>(
-            p.referenceSurface().getSharedPtr(), p.parameters(),
-            p.covariance()),
+  MultiCmpsParsInterface(const MultiComponentBoundTrackParameters &p)
+      : BoundTrackParameters(p.referenceSurface().getSharedPtr(),
+                             p.parameters(), p.covariance(), electron),
         multi_pars(p) {}
 
-  operator MultiComponentBoundTrackParameters<charge_t>() const {
-    return multi_pars;
-  }
+  operator MultiComponentBoundTrackParameters() const { return multi_pars; }
 };
 
 auto makeParameters() {
@@ -124,12 +126,12 @@ auto makeParameters() {
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
 
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  Acts::CurvilinearTrackParameters cp(mPos4, 0_degree, 90_degree, 1_GeV, 1_e,
-                                      cov);
+  Acts::CurvilinearTrackParameters cp(mPos4, 0_degree, 90_degree, 1_e / 1_GeV,
+                                      cov, electron);
 
   // Construct bound multi component parameters from curvilinear ones
   Acts::BoundVector deltaLOC0 = Acts::BoundVector::Zero();
@@ -141,16 +143,15 @@ auto makeParameters() {
   Acts::BoundVector deltaQOP = Acts::BoundVector::Zero();
   deltaQOP[eBoundQOverP] = 0.01_GeV;
 
-  std::vector<std::tuple<double, BoundVector, BoundSymMatrix>> cmps = {
+  std::vector<std::tuple<double, BoundVector, BoundSquareMatrix>> cmps = {
       {0.2, cp.parameters(), cov},
       {0.2, cp.parameters() + deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() + deltaLOC0 - deltaLOC1 - deltaQOP, cov},
       {0.2, cp.parameters() - deltaLOC0 + deltaLOC1 + deltaQOP, cov},
       {0.2, cp.parameters() - deltaLOC0 - deltaLOC1 - deltaQOP, cov}};
 
-  return MultiCmpsParsInterface<SinglyCharged>(
-      Acts::MultiComponentBoundTrackParameters<SinglyCharged>(
-          cp.referenceSurface().getSharedPtr(), cmps));
+  return MultiCmpsParsInterface(MultiComponentBoundTrackParameters(
+      cp.referenceSurface().getSharedPtr(), cmps, electron));
 }
 
 }  // namespace
@@ -222,7 +223,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
 BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
-  using namespace Acts::Experimental::GsfConstants;
+  using namespace Acts::GsfConstants;
   std::string key(kFinalMultiComponentStateColumn);
   tracks.template addColumn<FinalMultiComponentState>(key);
 

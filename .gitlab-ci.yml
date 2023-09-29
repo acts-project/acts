@@ -37,10 +37,8 @@ clang_tidy:
         -DACTS_BUILD_EVERYTHING=on
         -DACTS_RUN_CLANG_TIDY=on
 
-    - mkdir clang-tidy
-
     # Main clang-tidy run during cmake compilation
-    - CI/clang_tidy/run_clang_tidy.sh build | tee clang-tidy/clang-tidy.log
+    - CI/clang_tidy/run_clang_tidy.sh clang-tidy build
 
     # Install dependencies for processing scripts
     - pip install -r CI/clang_tidy/requirements.txt
@@ -74,7 +72,6 @@ build_exatrkx:
       - build/
     exclude:
       - build/**/*.o
-      - build/bin/ActsUnitTest*
       - build/bin/ActsIntegrationTest*
 
   script:
@@ -96,13 +93,24 @@ build_exatrkx:
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
       -DACTS_BUILD_PLUGIN_EXATRKX=ON
       -DACTS_BUILD_EXAMPLES_EXATRKX=ON
+      -DACTS_BUILD_UNITTESTS=ON
       -DACTS_EXATRKX_ENABLE_TORCH=ON
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
     - cmake --build build -- -j3
 
-test_exatrkx:
+test_exatrkx_unittests:
+  stage: test
+  needs:
+    - build_exatrkx
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v41
+  tags:
+    - docker-gpu-nvidia
+  script:
+    - ctest --test-dir build -R ExaTrkX
+
+test_exatrkx_python:
   stage: test
   needs:
     - build_exatrkx
@@ -225,8 +233,7 @@ linux_physmon:
     - cd ..
 
     - git config --global safe.directory "$GITHUB_WORKSPACE"
-    - pip3 install histcmp==0.5.2
-    - pip3 install spyral-cli==1.0.6
+    - pip3 install histcmp==0.6.2 spyral-cli==1.1.0 matplotlib
     - pip3 install -r src/Examples/Scripts/requirements.txt
     - /usr/local/bin/geant4-config --install-datasets
     - "source /usr/local/bin/thisroot.sh || true"
@@ -387,7 +394,7 @@ linux_ubuntu_2204_clang:
       -DACTS_BUILD_PLUGIN_JSON=ON
       -DACTS_BUILD_FATRAS=ON
       -DACTS_BUILD_PLUGIN_LEGACY=ON
-      -DACTS_BUILD_PLUGIN_AUTODIFF=ON
+      -DACTS_BUILD_PLUGIN_AUTODIFF=OFF
       -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
       -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
       -DACTS_BUILD_EXAMPLES_GEANT4=ON
@@ -439,10 +446,9 @@ lcg_103:
       - OS: [alma9]
         COMPILER: 
           - gcc11
-          # currently failing
-          # - gcc12
+          - gcc12
 
   rules:
-    - if: '$COMPILER == "clang12" || $COMPILER == "gcc12" || $COMPILER == "clang15"'
+    - if: '$COMPILER == "clang12" || $COMPILER == "clang15"'
       allow_failure: true
     - when: on_success

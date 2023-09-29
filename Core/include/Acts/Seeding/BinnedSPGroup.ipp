@@ -15,6 +15,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
     Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index)
     : m_group(group), m_max_localBins(m_group->m_grid->numLocalBins()) {
   m_max_localBins[INDEX::PHI] += 1;
+  m_current_localBins[INDEX::Z] = m_group->skipZMiddleBin();
   if (index == m_group->m_grid->size()) {
     m_current_localBins = m_max_localBins;
   } else {
@@ -30,7 +31,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
   // if we were on the edge, go up one phi bin and reset z bin
   if (++m_current_localBins[INDEX::Z] == m_max_localBins[INDEX::Z]) {
     ++m_current_localBins[INDEX::PHI];
-    m_current_localBins[INDEX::Z] = 0;
+    m_current_localBins[INDEX::Z] = m_group->skipZMiddleBin();
   }
 
   // Get the next not-empty bin in the grid
@@ -73,7 +74,16 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() const {
           m_group->m_bins[m_current_localBins[INDEX::Z]],
           m_group->m_grid.get());
 
+  // GCC12+ in Release throws an overread warning here due to the move.
+  // This is from inside boost code, so best we can do is to suppress it.
+#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overread"
+#endif
   return std::make_tuple(std::move(bottoms), global_index, std::move(tops));
+#if defined(__GNUC__) && __GNUC__ >= 12 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 }
 
 template <typename external_spacepoint_t>
@@ -94,7 +104,6 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
       std::size_t zBinIndex = m_group->m_bins[zBin];
       std::size_t index =
           m_group->m_grid->globalBinFromLocalBins({phiBin, zBinIndex});
-
       // Check if there are entries in this bin
       if (m_group->m_grid->at(index).empty()) {
         continue;
@@ -106,7 +115,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
       return;
     }
     // Reset z-index
-    m_current_localBins[INDEX::Z] = 0;
+    m_current_localBins[INDEX::Z] = m_group->skipZMiddleBin();
   }
 
   // Could find nothing ... setting this to end()
@@ -172,6 +181,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     // store x,y,z values in extent
     rRangeSPExtent.extend({spX, spY, spZ});
 
+    // remove SPs outside z and phi region
     if (spZ > zMax || spZ < zMin) {
       continue;
     }
@@ -219,6 +229,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
 
+  m_skipZMiddleBin = config.skipZMiddleBinSearch;
   m_bins = config.zBinsCustomLooping;
   if (m_bins.empty()) {
     std::size_t nZbins = m_grid->numLocalBins()[1];

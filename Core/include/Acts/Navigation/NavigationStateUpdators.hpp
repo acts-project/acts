@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/IAxis.hpp"
@@ -20,7 +22,36 @@
 #include <memory>
 
 namespace Acts {
+
 namespace Experimental {
+
+/// Helper method to update the candidates (portals/surfaces),
+/// this can be called for initial surface/portal estimation,
+/// but also during the navigation to update the current list
+/// of candidates.
+///
+/// @param gctx is the Geometry context of this call
+/// @param nState [in,out] is the navigation state to be updated
+///
+/// @todo for surfaces skip the non-reached ones, while keep for portals
+inline void updateCandidates(const GeometryContext& gctx,
+                             NavigationState& nState) {
+  const auto& position = nState.position;
+  const auto& direction = nState.direction;
+  auto& nCandidates = nState.surfaceCandidates;
+
+  for (auto& c : nCandidates) {
+    // Get the surface representation: either native surfcae of portal
+    const Surface& sRep =
+        c.surface != nullptr ? *c.surface : c.portal->surface();
+
+    // Get the intersection @todo make a templated intersector
+    // TODO surface tolerance
+    auto sIntersection = sRep.intersect(gctx, position, direction,
+                                        c.boundaryCheck, s_onSurfaceTolerance);
+    c.objectIntersection = sIntersection[c.objectIntersection.index()];
+  }
+}
 
 /// @brief  This sets a single object, e.g. single surface or single volume
 /// @tparam object_type the type of the object to be filled
@@ -95,6 +126,9 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// These are the cast parameters - copied from constructor
   std::array<BinningValue, grid_type::DIM> casts{};
 
+  /// A transform to be applied to the position
+  Transform3 transform = Transform3::Identity();
+
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
@@ -118,6 +152,8 @@ class IndexedUpdatorImpl : public INavigationDelegate {
     const auto& entry = grid.atPosition(castPosition(nState.position));
     auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
+
+    updateCandidates(gctx, nState);
   }
 
   /// Cast into a lookup position
@@ -135,9 +171,6 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   }
 
  private:
-  /// A transform to be applied to the position
-  Transform3 transform = Transform3::Identity();
-
   /// Unroll the cast loop
   /// @param position is the position of the update call
   /// @param a is the array to be filled
