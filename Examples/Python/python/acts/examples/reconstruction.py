@@ -119,6 +119,12 @@ TrackSelectorConfig = namedtuple(
     defaults=[(None, None)] * 7 + [None],
 )
 
+CkfConfig = namedtuple(
+    "CkfConfig",
+    ["chi2CutOff", "numMeasurementsCutOff"],
+    defaults=[15.0, 10],
+)
+
 AmbiguityResolutionConfig = namedtuple(
     "AmbiguityResolutionConfig",
     ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
@@ -919,12 +925,14 @@ def addTruthTrackingGsf(
 
 @acts.examples.NamedTypeArgs(
     trackSelectorConfig=TrackSelectorConfig,
+    ckfConfig=CkfConfig,
 )
 def addCKFTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     trackSelectorConfig: Optional[TrackSelectorConfig] = None,
+    ckfConfig: CkfConfig = CkfConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeTrajectories: bool = True,
@@ -958,7 +966,16 @@ def addCKFTracks(
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
         measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
+            [
+                (
+                    acts.GeometryIdentifier(),
+                    (
+                        [],
+                        [ckfConfig.chi2CutOff],
+                        [ckfConfig.numMeasurementsCutOff],
+                    ),
+                )
+            ]
         ),
         trackSelectorCfg=acts.TrackSelector.Config(
             **acts.examples.defaultKWArgs(
