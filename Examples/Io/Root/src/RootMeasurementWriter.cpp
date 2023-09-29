@@ -141,8 +141,8 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
           // Find the contributing simulated hits
           auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
           // Use average truth in the case of multiple contributing sim hits
-          auto [local, pos4, dir] = averageSimHits(
-              ctx.geoContext, surface, simHits, indices, logger());
+          auto [local, pos4, dir] = averageSimHits(ctx.geoContext, surface,
+                                                   simHits, indices, logger());
           Acts::RotationMatrix3 rot =
               surface
                   .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0),
