@@ -52,13 +52,14 @@ void Acts::DD4hepDetectorSurfaceFactory::recursiveConstruct(
                                            << dd4hepElement.name());
 
   // Check if any surface binnning can be detected
-  int sBinning = getParamOr<int>("surface_binning_dim", dd4hepElement, 0);
+  int sBinning = getParamOr<int>("acts_surface_binning_dim", dd4hepElement, 0);
   if (sBinning > 0) {
-    cache.binnings = convertBinning(dd4hepElement, "surface_binning");
+    cache.binnings = convertBinning(dd4hepElement, "acts_surface_binning");
   }
 
   // Deal with passive surface if detected
-  bool pSurface = getParamOr<bool>("passive_surface", dd4hepElement, false);
+  bool pSurface =
+      getParamOr<bool>("acts_passive_surface", dd4hepElement, false);
   if (pSurface and options.convertPassive) {
     ACTS_VERBOSE("Passive surface(s) detected.");
     cache.passiveSurfaces.push_back(

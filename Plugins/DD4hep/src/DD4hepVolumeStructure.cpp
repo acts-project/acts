@@ -35,9 +35,8 @@ bool Acts::Experimental::DD4hepVolumeStructure::recursiveParse(
     VolumeStructureBuilder::Config& vsbConfig,
     const dd4hep::DetElement& dd4hepElement) const {
   // Deal with a proto volume if detected
-  bool protoVolume = getParamOr<bool>("acts_volume", dd4hepElement, false);
-  if (protoVolume) {
-    ACTS_DEBUG("ProtoVolume description detected.");
+  bool actsVolume = getParamOr<bool>("acts_volume", dd4hepElement, false);
+  if (actsVolume) {
     auto bValueInt =
         getParamOr<int>("acts_volume_type", dd4hepElement,
                         static_cast<int>(VolumeBounds::BoundsType::eOther));
@@ -50,6 +49,8 @@ bool Acts::Experimental::DD4hepVolumeStructure::recursiveParse(
       vsbConfig.boundValues = bValues;
     }
     return true;
+  } else {
+    ACTS_VERBOSE("No ProtoVolume description detected.");
   }
 
   // Parse through children

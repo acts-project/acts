@@ -42,13 +42,27 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
   // The layer Assembly
   Assembly layerAssembly(layerName + std::to_string(layerID));
   layerAssembly.setVisAttributes(dd, x_layer.visStr());
+  // Check if a volume definition is present
+  if (x_layer.hasChild(_Unicode(acts_volume))) {
+    xml_comp_t acts_volume = x_layer.child(_Unicode(acts_volume));
+    layerParams.set<bool>("acts_volume", true);
+    if (acts_volume.hasChild(_U(tubs))) {
+      xml_comp_t acts_tubs = acts_volume.child(_Unicode(tubs));
+      layerParams.set<int>("acts_volume_type",
+                           int(Acts::VolumeBounds::BoundsType::eCylinder));
+      layerParams.set<int>("acts_volume_bvalues_n", 3);
+      layerParams.set<double>("acts_volume_bvalues_0", acts_tubs.rmin());
+      layerParams.set<double>("acts_volume_bvalues_1", acts_tubs.rmax());
+      layerParams.set<double>("acts_volume_bvalues_2", 0.5 * acts_tubs.dz());
+    }
+  }
 
   // Active layer surfaces - Count and fill the sensors
   if (x_layer.hasChild(_Unicode(modules))) {
     // Check if the cylinder has a surface binning instruction
-    if (x_layer.hasChild(_Unicode(surface_binning))) {
-      xml_comp_t sfBinning = x_layer.child(_Unicode(surface_binning));
-      Acts::decodeBinning(layerParams, sfBinning, "surface_binning",
+    if (x_layer.hasChild(_Unicode(acts_surface_binning))) {
+      xml_comp_t sfBinning = x_layer.child(_Unicode(acts_surface_binning));
+      Acts::decodeBinning(layerParams, sfBinning, "acts_surface_binning",
                           {"z", "phi"});
     }
     // Go through the sensors
@@ -80,7 +94,7 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
     }
   }
   // Passive layer surface - place it inside the envelope
-  for (xml_coll_t psurface(x_layer, _Unicode(passive_surface)); psurface;
+  for (xml_coll_t psurface(x_layer, _Unicode(acts_passive_surface)); psurface;
        ++psurface) {
     xml_comp_t x_passive_xml = psurface;
     // Direct definition of a child surface
@@ -100,7 +114,7 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
       auto &params =
           DD4hepTestsHelper::ensureExtension<dd4hep::rec::VariantParameters>(
               passiveElement);
-      params.set<bool>("passive_surface", true);
+      params.set<bool>("acts_passive_surface", true);
       // Set the placement and add
       passiveElement.setPlacement(placedPassive);
       // Add the module elements
@@ -186,9 +200,9 @@ static Ref_t create_disc_layer(Detector &dd, xml_h xml,
           discLayerElement);
 
   // Check if the disk has a surface binning instruction
-  if (x_det.hasChild(_Unicode(surface_binning))) {
-    xml_comp_t sfBinning = x_det.child(_Unicode(surface_binning));
-    Acts::decodeBinning(layerParams, sfBinning, "surface_binning",
+  if (x_det.hasChild(_Unicode(acts_surface_binning))) {
+    xml_comp_t sfBinning = x_det.child(_Unicode(acts_surface_binning));
+    Acts::decodeBinning(layerParams, sfBinning, "acts_surface_binning",
                         {"r", "phi"});
   }
 

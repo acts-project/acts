@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     cxml << cylinder_layer_head_xml;
 
     if (nz * nphi > 1u) {
-      cxml << indent_12_xml << "<surface_binning";
+      cxml << indent_12_xml << "<acts_surface_binning";
       cxml << " ztype=\"equidistant\"";
       cxml << " phitype=\"equidistant\"";
       cxml << " nz=\"" << nz << "\" zmin=\"-500*mm\" zmax=\"500*mm\"";
@@ -177,21 +177,21 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
     // test the support structure definition
     unsigned int passiveAddon = 0;
     if (itest == 1u) {
-      cxml << indent_12_xml << "  <passive_surface>" << '\n';
+      cxml << indent_12_xml << "  <acts_passive_surface>" << '\n';
       cxml << indent_12_xml
            << "    <tubs rmin=\"122*mm\" rmax=\"124*mm\" dz=\"500*mm\" "
               "material=\"Air\"/>"
            << '\n';
-      cxml << indent_12_xml << "  </passive_surface>" << '\n';
+      cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
       passiveAddon = 1;
     } else if (itest == 2u) {
-      cxml << indent_12_xml << "  <passive_surface>" << '\n';
+      cxml << indent_12_xml << "  <acts_passive_surface>" << '\n';
       cxml << indent_12_xml
            << "    <tubs rmin=\"122*mm\" rmax=\"124*mm\" dz=\"500*mm\" "
               "material=\"Air\"/>"
            << '\n';
-      cxml << "    <proto_material/>" << '\n';
-      cxml << indent_12_xml << "  </passive_surface>" << '\n';
+      cxml << "    <acts_proto_material/>" << '\n';
+      cxml << indent_12_xml << "  </acts_passive_surface>" << '\n';
       passiveAddon = 1;
     }
     ++itest;
