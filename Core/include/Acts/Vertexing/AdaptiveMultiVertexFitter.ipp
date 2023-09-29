@@ -239,7 +239,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
       currentVtxInfo.ip3dParams.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
-    auto compRes = m_cfg.ipEst.get3dVertexCompatibility(
+    auto compRes = m_cfg.ipEst.template getVertexCompatibility<3>(
         vertexingOptions.geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
         VectorHelpers::position(currentVtxInfo.oldPosition));
     if (!compRes.ok()) {
