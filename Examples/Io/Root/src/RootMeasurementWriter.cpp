@@ -141,9 +141,16 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
           // Find the contributing simulated hits
           auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
           // Use average truth in the case of multiple contributing sim hits
-          auto [local, pos4, dir] = averageSimHits(ctx.geoContext, surface,
-                                                   simHits, indices, logger());
-          dTree->fillTruthParameters(local, pos4, dir);
+          auto [local, pos4, dir, mom4] = averageSimHits(
+              ctx.geoContext, surface, simHits, indices, logger());
+          Acts::RotationMatrix3 rot =
+              surface
+                  .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0),
+                                  mom4.segment<3>(Acts::eMom0))
+                  .inverse();
+          std::pair<double, double> angles =
+              Acts::VectorHelpers::incidentAngles(dir, rot);
+          dTree->fillTruthParameters(local, pos4, dir, angles);
           dTree->fillBoundMeasurement(m);
           if (not clusters.empty()) {
             const auto& c = clusters[hitIdx];

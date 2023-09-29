@@ -33,15 +33,17 @@ using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
 ///
 /// If more than one simulated hit is selected, the average truth information is
 /// returned.
-inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
-    const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
-    const SimHitContainer& simHits, const HitSimHitsRange& hitSimHitsRange,
-    const Acts::Logger& logger) {
+inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3, Acts::Vector4>
+averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
+               const SimHitContainer& simHits,
+               const HitSimHitsRange& hitSimHitsRange,
+               const Acts::Logger& logger) {
   using namespace Acts::UnitLiterals;
 
   Acts::Vector2 avgLocal = Acts::Vector2::Zero();
   Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
   Acts::Vector3 avgDir = Acts::Vector3::Zero();
+  Acts::Vector4 avgMom4 = Acts::Vector4::Zero();
 
   size_t n = 0u;
   for (auto [_, simHitIdx] : hitSimHitsRange) {
@@ -67,6 +69,7 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     // an additional intersection call.
     avgPos4 += simHit.fourPosition();
     avgDir += simHit.direction();
+    avgMom4 += simHit.momentum4Before();
   }
 
   // only need to average if there are at least two inputs
@@ -74,10 +77,11 @@ inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3> averageSimHits(
     double scale = 1.0 / n;
     avgLocal *= scale;
     avgPos4 *= scale;
+    avgMom4 *= scale;
     avgDir.normalize();
   }
 
-  return {avgLocal, avgPos4, avgDir};
+  return {avgLocal, avgPos4, avgDir, avgMom4};
 }
 
 }  // namespace ActsExamples
