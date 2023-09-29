@@ -372,7 +372,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         const auto hitIdx = sl.index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-        auto [truthLocal, truthPos4, truthUnitDir] =
+        auto [truthLocal, truthPos4, truthUnitDir, _] =
             averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
         // momentum averaging makes even less sense than averaging position and
         // direction. use the first momentum or set q/p to zero
