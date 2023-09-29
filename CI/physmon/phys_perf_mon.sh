@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 
 mode=${1:all}
@@ -300,7 +301,6 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
         $outdir/tracksummary_ckf_ttbar.root \
         tracksummary \
         $outdir/tracksummary_ckf_ttbar.root \
-        --silent \
         --config CI/physmon/tracksummary_ckf_config.yml
     ec=$(($ec | $?))
 
