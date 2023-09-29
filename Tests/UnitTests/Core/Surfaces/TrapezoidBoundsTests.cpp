@@ -11,10 +11,18 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <array>
+#include <ostream>
+#include <random>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace bdata = boost::unit_test::data;
 
@@ -46,7 +54,7 @@ BOOST_AUTO_TEST_CASE(TrapezoidBoundsRecreated) {
   TrapezoidBounds original(minHalfX, maxHalfX, halfY);
   // const bool symmetric(false);
   auto valvector = original.values();
-  std::array<double, TrapezoidBounds::eSize> values;
+  std::array<double, TrapezoidBounds::eSize> values{};
   std::copy_n(valvector.begin(), TrapezoidBounds::eSize, values.begin());
   TrapezoidBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

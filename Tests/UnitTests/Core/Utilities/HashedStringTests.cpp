@@ -10,6 +10,9 @@
 
 #include "Acts/Utilities/HashedString.hpp"
 
+#include <string>
+#include <string_view>
+
 using namespace Acts::HashedStringLiteral;
 
 namespace Acts {

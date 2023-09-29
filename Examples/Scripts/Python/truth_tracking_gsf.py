@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 from pathlib import Path
 from typing import Optional, Union
 
@@ -19,7 +20,6 @@ def runTruthTrackingGsf(
     decorators=[],
     s=None,
 ):
-
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
@@ -48,7 +48,7 @@ def runTruthTrackingGsf(
         addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            ParticleConfig(4, acts.PdgParticle.eElectron, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
             rnd=rnd,
@@ -72,6 +72,7 @@ def runTruthTrackingGsf(
         trackingGeometry,
         field,
         rnd=rnd,
+        enableInteractions=True,
     )
 
     addDigitization(
@@ -87,6 +88,7 @@ def runTruthTrackingGsf(
         trackingGeometry,
         field,
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared,
+        particleHypothesis=acts.ParticleHypothesis.electron,
     )
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
@@ -120,6 +122,16 @@ def runTruthTrackingGsf(
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_gsf.root"),
+        )
+    )
+
+    s.addWriter(
+        acts.examples.TrackFitterPerformanceWriter(
+            level=acts.logging.INFO,
+            inputTrajectories="gsf_trajectories",
+            inputParticles="truth_seeds_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            filePath=str(outputDir / "performance_gsf.root"),
         )
     )
 

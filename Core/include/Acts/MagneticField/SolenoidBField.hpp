@@ -11,7 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Utilities/Result.hpp"
 
+#include <cstddef>
 #include <functional>
 
 namespace Acts {
@@ -88,7 +90,7 @@ class SolenoidBField final : public MagneticFieldProvider {
     double bMagCenter;
   };
 
-  /// @brief the constructur with a shared pointer
+  /// @brief the constructor with a shared pointer
   /// @note since it is a shared field, we enforce it to be const
   /// @tparam bField is the shared BField to be stored
   SolenoidBField(Config config);

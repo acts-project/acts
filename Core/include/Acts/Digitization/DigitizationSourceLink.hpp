@@ -16,7 +16,7 @@
 namespace Acts {
 
 /// Source link to connect digitization clusters back to truth information.
-class DigitizationSourceLink final : public SourceLink {
+class DigitizationSourceLink final {
  public:
   /// Constructor from geometry identifier and truth indices.
   ///
@@ -24,11 +24,11 @@ class DigitizationSourceLink final : public SourceLink {
   /// @param indices are the truth indices
   DigitizationSourceLink(GeometryIdentifier gid,
                          std::vector<std::size_t> indices = {})
-      : SourceLink(gid), m_indices(std::move(indices)) {}
+      : m_geometryId(gid), m_indices(std::move(indices)) {}
 
   /// Construct and invalid source link. Must be default constructible to
   /// satisfy SourceLinkConcept.
-  DigitizationSourceLink() : SourceLink{GeometryIdentifier{}} {}
+  DigitizationSourceLink() = default;
   DigitizationSourceLink(const DigitizationSourceLink&) = default;
   DigitizationSourceLink(DigitizationSourceLink&&) = default;
   DigitizationSourceLink& operator=(const DigitizationSourceLink&) = default;
@@ -36,6 +36,8 @@ class DigitizationSourceLink final : public SourceLink {
 
   /// Access all associated truth indices.
   const std::vector<std::size_t>& indices() const { return m_indices; }
+
+  GeometryIdentifier geometryId() const { return m_geometryId; }
 
  private:
   GeometryIdentifier m_geometryId;

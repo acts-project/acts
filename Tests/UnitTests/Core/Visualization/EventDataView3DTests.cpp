@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,18 +9,16 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
-#include <fstream>
+#include <algorithm>
 #include <iostream>
 
 #include "EventDataView3DBase.hpp"
 #include "Visualization3DTester.hpp"
 
 namespace Acts {
-
 namespace Test {
 
 BOOST_AUTO_TEST_SUITE(Visualization)
@@ -30,9 +28,10 @@ BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationObj) {
   auto objTest = EventDataView3DTest::testBoundTrackParameters(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.empty());
-  for (auto objerr : objErrors) {
+  for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
+  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 1458);
 }
 
 BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationPly) {
@@ -40,9 +39,32 @@ BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationPly) {
   auto plyTest = EventDataView3DTest::testBoundTrackParameters(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.empty());
-  for (auto plyerr : plyErrors) {
+  for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
+  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 973);
+}
+
+BOOST_AUTO_TEST_CASE(MeasurementVisualizationObj) {
+  ObjVisualization3D obj;
+  auto objTest = EventDataView3DTest::testMeasurement(obj);
+  auto objErrors = testObjString(objTest);
+  BOOST_CHECK(objErrors.empty());
+  for (const auto& objerr : objErrors) {
+    std::cout << objerr << std::endl;
+  }
+  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 520);
+}
+
+BOOST_AUTO_TEST_CASE(MeasurementVisualizationPly) {
+  PlyVisualization3D ply;
+  auto plyTest = EventDataView3DTest::testMeasurement(ply);
+  auto plyErrors = testPlyString(plyTest);
+  BOOST_CHECK(plyErrors.empty());
+  for (const auto& plyerr : plyErrors) {
+    std::cout << plyerr << std::endl;
+  }
+  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 536);
 }
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
@@ -50,9 +72,10 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
   auto objTest = EventDataView3DTest::testMultiTrajectory(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.empty());
-  for (auto objerr : objErrors) {
+  for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
+  BOOST_CHECK_EQUAL(std::count(objTest.begin(), objTest.end(), '\n'), 31010);
 }
 
 BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
@@ -60,9 +83,10 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
   auto plyTest = EventDataView3DTest::testMultiTrajectory(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.empty());
-  for (auto plyerr : plyErrors) {
+  for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
+  BOOST_CHECK_EQUAL(std::count(plyTest.begin(), plyTest.end(), '\n'), 20521);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

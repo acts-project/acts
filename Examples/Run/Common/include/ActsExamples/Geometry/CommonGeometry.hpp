@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
@@ -19,7 +20,7 @@ class TrackingGeometry;
 }
 
 namespace ActsExamples {
-class IBaseDetector;
+class DetectorWithOptions;
 class IContextDecorator;
 namespace Geometry {
 

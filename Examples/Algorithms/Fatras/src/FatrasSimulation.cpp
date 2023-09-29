@@ -8,25 +8,43 @@
 
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 #include "ActsFatras/Kernel/Simulation.hpp"
 #include "ActsFatras/Physics/Decay/NoDecay.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/PhotonConversion.hpp"
+#include "ActsFatras/Physics/NuclearInteraction/NuclearInteractionParameters.hpp"
 #include "ActsFatras/Physics/StandardInteractions.hpp"
-#include "ActsFatras/Selectors/KinematicCasts.hpp"
 #include "ActsFatras/Selectors/SelectorHelpers.hpp"
 #include "ActsFatras/Selectors/SurfaceSelectors.hpp"
+
+#include <algorithm>
+#include <array>
+#include <map>
+#include <ostream>
+#include <stdexcept>
+#include <system_error>
+#include <utility>
+#include <vector>
+
+#include <boost/version.hpp>
 
 namespace {
 
@@ -161,8 +179,7 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
 
 ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
                                                  Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("FatrasSimulation", lvl),
-      m_cfg(std::move(cfg)) {
+    : ActsExamples::IAlgorithm("FatrasSimulation", lvl), m_cfg(std::move(cfg)) {
   ACTS_DEBUG("hits on sensitive surfaces: " << m_cfg.generateHitsOnSensitive);
   ACTS_DEBUG("hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
   ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
@@ -184,6 +201,11 @@ ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
 
   // construct the simulation for the specific magnetic field
   m_sim = std::make_unique<FatrasSimulationT>(m_cfg, lvl);
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
+  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
 }
 
 // explicit destructor needed for the PIMPL implementation to work
@@ -192,8 +214,7 @@ ActsExamples::FatrasSimulation::~FatrasSimulation() = default;
 ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
     const AlgorithmContext &ctx) const {
   // read input containers
-  const auto &inputParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto &inputParticles = m_inputParticles(ctx);
 
   ACTS_DEBUG(inputParticles.size() << " input particles");
 
@@ -234,18 +255,39 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
   ACTS_DEBUG(simHitsUnordered.size() << " simulated hits");
 
   // order output containers
+#if BOOST_VERSION >= 107800
+  SimParticleContainer particlesInitial(particlesInitialUnordered.begin(),
+                                        particlesInitialUnordered.end());
+  SimParticleContainer particlesFinal(particlesFinalUnordered.begin(),
+                                      particlesFinalUnordered.end());
+  SimHitContainer simHits(simHitsUnordered.begin(), simHitsUnordered.end());
+#else
+  // working around a nasty boost bug
+  // https://github.com/boostorg/container/issues/244
+
   SimParticleContainer particlesInitial;
   SimParticleContainer particlesFinal;
   SimHitContainer simHits;
-  particlesInitial.insert(particlesInitialUnordered.begin(),
-                          particlesInitialUnordered.end());
-  particlesFinal.insert(particlesFinalUnordered.begin(),
-                        particlesFinalUnordered.end());
-  simHits.insert(simHitsUnordered.begin(), simHitsUnordered.end());
+
+  particlesInitial.reserve(particlesInitialUnordered.size());
+  particlesFinal.reserve(particlesFinalUnordered.size());
+  simHits.reserve(simHitsUnordered.size());
+
+  for (const auto &p : particlesInitialUnordered) {
+    particlesInitial.insert(p);
+  }
+  for (const auto &p : particlesFinalUnordered) {
+    particlesFinal.insert(p);
+  }
+  for (const auto &h : simHitsUnordered) {
+    simHits.insert(h);
+  }
+#endif
+
   // store ordered output containers
-  ctx.eventStore.add(m_cfg.outputParticlesInitial, std::move(particlesInitial));
-  ctx.eventStore.add(m_cfg.outputParticlesFinal, std::move(particlesFinal));
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+  m_outputParticlesInitial(ctx, std::move(particlesInitial));
+  m_outputParticlesFinal(ctx, std::move(particlesFinal));
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

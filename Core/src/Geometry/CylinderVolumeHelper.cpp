@@ -32,6 +32,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <iosfwd>
+#include <ostream>
+#include <utility>
+
+namespace Acts {
+class DiscBounds;
+}  // namespace Acts
 
 Acts::CylinderVolumeHelper::CylinderVolumeHelper(
     const Acts::CylinderVolumeHelper::Config& cvhConfig,
@@ -208,7 +216,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
   ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
-  // assing min/max
+  // assign min/max
   double min = cylinder ? rMin : zMin;
   double max = cylinder ? rMax : zMax;
 
@@ -418,18 +426,18 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     const CylinderVolumeBounds*& cylinderVolumeBounds,
     const Transform3& transform, double& rMinClean, double& rMaxClean,
     double& zMinClean, double& zMaxClean, BinningValue& bValue,
-    BinningType /*unused*/) const {
+    BinningType /*bType*/) const {
   // some verbose output
 
   ACTS_VERBOSE("Parsing the " << layers.size()
                               << " layers to gather overall dimensions");
   if (cylinderVolumeBounds != nullptr) {
-    ACTS_DEBUG("Cylinder volume bounds are given: (rmin/rmax/dz) = "
-               << "(" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR)
-               << "/" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR)
-               << "/"
-               << cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
-               << ")");
+    ACTS_VERBOSE(
+        "Cylinder volume bounds are given: (rmin/rmax/dz) = "
+        << "(" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR) << "/"
+        << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR) << "/"
+        << cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
+        << ")");
   }
 
   // prepare for parsing the layers
@@ -496,10 +504,13 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
       "Estimate/check CylinderVolumeBounds from/w.r.t. enclosed "
       "layers + envelope covers");
   // the z from the layers w and w/o envelopes
-  double zEstFromLayerEnv = 0.5 * ((layerZmax) + (layerZmin));
-  double halflengthFromLayer = 0.5 * std::abs((layerZmax) - (layerZmin));
+  double zEstFromLayerEnv = 0.5 * (layerZmax + layerZmin);
+  double halflengthFromLayer = 0.5 * std::abs(layerZmax - layerZmin);
 
-  bool concentric = (zEstFromLayerEnv * zEstFromLayerEnv < 0.001);
+  // using `sqrt(0.001) = 0.031622777` because previously it compared to
+  // `zEstFromLayerEnv * zEstFromLayerEnv < 0.001` which was changed due to
+  // underflow/overflow concerns
+  bool concentric = std::abs(zEstFromLayerEnv) < 0.031622777;
 
   bool idTrf = transform.isApprox(Transform3::Identity());
 
@@ -633,8 +644,16 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
               std::const_pointer_cast<TrackingVolume>(*tVolIter);
           std::shared_ptr<TrackingVolume> tVol2 =
               std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
+
+          // re-evalueate rGlueMin
+          ActsScalar rGlueR =
+              0.5 * (tVol1->volumeBounds()
+                         .values()[CylinderVolumeBounds::BoundValues::eMaxR] +
+                     tVol2->volumeBounds()
+                         .values()[CylinderVolumeBounds::BoundValues::eMinR]);
+
           glueTrackingVolumes(gctx, tVol1, tubeOuterCover, tVol2,
-                              tubeInnerCover, rMin, rGlueMin, rMax, zMin, zMax);
+                              tubeInnerCover, rMin, rGlueR, rMax, zMin, zMax);
         }
       }
     } else {
@@ -864,7 +883,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
     // Collect the material - might be ambiguous, first one wins
     std::shared_ptr<const ISurfaceMaterial> boundaryMaterial = nullptr;
 
-    ACTS_VERBOSE("New Boundary surface setting for countainers");
+    ACTS_VERBOSE("New Boundary surface setting for containers");
     ACTS_VERBOSE(" - at first volume: " << tvolOne->volumeName());
     // Update the volume with the boundary surface accordingly
     // it's safe to access directly, they can not be nullptr

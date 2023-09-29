@@ -8,25 +8,47 @@
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <cmath>
+#include <functional>
 #include <memory>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
 
 #include <boost/histogram.hpp>
 
 ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFindingAlgorithm", level),
-      m_cfg(std::move(config)) {
+    : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
+      m_cfg(std::move(config)),
+      m_trackSelector([this]() -> std::optional<Acts::TrackSelector> {
+        if (m_cfg.trackSelectorCfg.has_value()) {
+          return {m_cfg.trackSelectorCfg.value()};
+        } else {
+          return std::nullopt;
+        }
+      }()) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
   }
@@ -37,53 +59,42 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     throw std::invalid_argument(
         "Missing initial track parameters input collection");
   }
-  if (m_cfg.outputTrajectories.empty()) {
-    throw std::invalid_argument("Missing trajectories output collection");
+  if (m_cfg.outputTracks.empty()) {
+    throw std::invalid_argument("Missing tracks output collection");
   }
 
-  if (m_cfg.outputTrackParameters.empty()) {
-    throw std::invalid_argument(
-        "Missing track parameter tips output collection");
-  }
-
-  if (m_cfg.outputTrackParametersTips.empty()) {
-    throw std::invalid_argument("Missing track parameters output collection");
-  }
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
-      m_cfg.inputInitialTrackParameters);
-
-  // Prepare the output data with MultiTrajectory
-  TrajectoriesContainer trajectories;
-  trajectories.reserve(initialParameters.size());
-
-  // Prepare the output data with TrackParameters
-  TrackParametersContainer trackParametersContainer;
-  std::vector<std::pair<size_t, size_t>> trackParametersTips;
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
   Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = 10000;
+  pOptions.maxSteps = 100000;
+  pOptions.direction =
+      m_cfg.backward ? Acts::Direction::Backward : Acts::Direction::Forward;
 
-  MeasurementCalibrator calibrator{measurements};
+  PassThroughCalibrator pcalibrator;
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
   Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
       extensions;
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
+      &calibrator);
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &kfUpdater);
@@ -103,65 +114,81 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+      extensions, pOptions, pSurface.get());
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
 
-  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto results = (*m_cfg.findTracks)(initialParameters, options, mtj);
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
 
-  // Compute shared hits from all the reconstructed tracks
-  if (m_cfg.computeSharedHits) {
-    computeSharedHits(sourceLinks, results);
-  }
+  auto trackContainerTemp = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainerTemp =
+      std::make_shared<Acts::VectorMultiTrajectory>();
 
-  // Loop over the track finding results for all initial parameters
+  TrackContainer tracks(trackContainer, trackStateContainer);
+  TrackContainer tracksTemp(trackContainerTemp, trackStateContainerTemp);
+
+  tracks.addColumn<unsigned int>("trackGroup");
+  tracksTemp.addColumn<unsigned int>("trackGroup");
+  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+
+  unsigned int nSeed = 0;
+
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
-    m_nTotalSeeds++;
-    // The result for this seed
-    auto& result = results[iseed];
-    if (result.ok()) {
-      // Get the track finding output object
-      auto& trackFindingOutput = result.value();
-      // Create a Trajectories result struct
-      trajectories.emplace_back(trackFindingOutput.fittedStates,
-                                trackFindingOutput.lastMeasurementIndices,
-                                trackFindingOutput.fittedParameters);
+    // Clear trackContainerTemp and trackStateContainerTemp
+    tracksTemp.clear();
 
-      const auto& traj = trajectories.back();
-      for (const auto tip : traj.tips()) {
-        if (traj.hasTrackParameters(tip)) {
-          trackParametersContainer.push_back(traj.trackParameters(tip));
-          trackParametersTips.push_back({trajectories.size() - 1, tip});
-        }
-      }
-    } else {
+    auto result =
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracksTemp);
+    m_nTotalSeeds++;
+    nSeed++;
+
+    if (!result.ok()) {
+      m_nFailedSeeds++;
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
-      m_nFailedSeeds++;
-      // Track finding failed. Add an empty result so the output container has
-      // the same number of entries as the input.
-      trajectories.push_back(Trajectories());
+      continue;
+    }
+
+    auto& tracksForSeed = result.value();
+    for (auto& track : tracksForSeed) {
+      seedNumber(track) = nSeed;
+      if (!m_trackSelector.has_value() ||
+          m_trackSelector->isValidTrack(track)) {
+        auto destProxy = tracks.getTrack(tracks.addTrack());
+        destProxy.copyFrom(track, true);  // make sure we copy track states!
+      }
     }
   }
 
-  ACTS_DEBUG("Finalized track finding with " << trajectories.size()
+  // Compute shared hits from all the reconstructed tracks
+  if (m_cfg.computeSharedHits) {
+    computeSharedHits(sourceLinks, tracks);
+  }
+
+  ACTS_DEBUG("Finalized track finding with " << tracks.size()
                                              << " track candidates.");
 
-  m_memoryStatistics.local().hist += mtj->statistics().hist;
+  m_memoryStatistics.local().hist +=
+      tracks.trackStateContainer().statistics().hist;
 
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
-  ctx.eventStore.add(m_cfg.outputTrackParameters,
-                     std::move(trackParametersContainer));
-  ctx.eventStore.add(m_cfg.outputTrackParametersTips,
-                     std::move(trackParametersTips));
+  auto constTrackStateContainer =
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*trackStateContainer));
+
+  auto constTrackContainer = std::make_shared<Acts::ConstVectorTrackContainer>(
+      std::move(*trackContainer));
+
+  ConstTrackContainer constTracks{constTrackContainer,
+                                  constTrackStateContainer};
+
+  m_outputTracks(ctx, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize()
-    const {
+ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize() {
   ACTS_INFO("TrackFindingAlgorithm statistics:");
   ACTS_INFO("- total seeds: " << m_nTotalSeeds);
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
@@ -176,6 +203,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize()
       });
   std::stringstream ss;
   memoryStatistics.toStream(ss);
-  ACTS_INFO("Track State memory statistics (averaged):\n" << ss.str());
+  ACTS_DEBUG("Track State memory statistics (averaged):\n" << ss.str());
   return ProcessCode::SUCCESS;
 }

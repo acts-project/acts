@@ -13,7 +13,6 @@ to run example workflows (see [](python-bindings)).
 
 :::{toctree}
 :maxdepth: 1
-
 run_fatras
 run_seeding
 run_sycl_seed_finding

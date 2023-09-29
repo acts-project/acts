@@ -8,8 +8,17 @@
 
 #include "ActsExamples/ContextualDetector/ExternalAlignmentDecorator.hpp"
 
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "ActsExamples/ContextualDetector/ExternallyAlignedDetectorElement.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/RandomNumbers.hpp"
+
+#include <cassert>
+#include <ostream>
+#include <thread>
+#include <utility>
 
 ActsExamples::Contextual::ExternalAlignmentDecorator::
     ExternalAlignmentDecorator(const Config& cfg,

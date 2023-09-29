@@ -7,15 +7,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -38,24 +40,24 @@ namespace Acts {
 ///
 class BinningData {
  public:
-  BinningType type;       ///< binning type: equidistant, arbitrary
-  BinningOption option;   ///< binning option: open, closed
-  BinningValue binvalue;  ///< binning value: binX, binY, binZ, binR ...
-  float min;              ///< minimum value
-  float max;              ///< maximum value
-  float step;             ///< binning step
-  bool zdim;              ///< zero dimensional binning : direct access
+  BinningType type{};       ///< binning type: equidistant, arbitrary
+  BinningOption option{};   ///< binning option: open, closed
+  BinningValue binvalue{};  ///< binning value: binX, binY, binZ, binR ...
+  float min{};              ///< minimum value
+  float max{};              ///< maximum value
+  float step{};             ///< binning step
+  bool zdim{};              ///< zero dimensional binning : direct access
 
   /// sub structure: describe some sub binning
   std::unique_ptr<const BinningData> subBinningData;
   /// sub structure: additive or multipicative
-  bool subBinningAdditive;
+  bool subBinningAdditive{};
 
   /// Constructor for 0D binning
   ///
   /// @param bValue is the binning value: binX, binY, etc.
-  /// @param bMin is the minum value
-  /// @param bMax is the maxmimum value
+  /// @param bMin is the minimum value
+  /// @param bMax is the maximum value
   BinningData(BinningValue bValue, float bMin, float bMax)
       : type(equidistant),
         option(open),
@@ -65,7 +67,6 @@ class BinningData {
         step((bMax - bMin)),
         zdim(true),
         subBinningData(nullptr),
-        subBinningAdditive(false),
         m_bins(1),
         m_boundaries({{min, max}}),
         m_totalBins(1),
@@ -74,13 +75,13 @@ class BinningData {
 
   /// Constructor for equidistant binning
   /// and optional sub structure can be
-  /// mulitplicative or additive
+  /// multiplicative or additive
   ///
   /// @param bOption is the binning option : open, closed
   /// @param bValue is the binning value: binX, binY, etc.
   /// @param bBins is number of equidistant bins
-  /// @param bMin is the minum value
-  /// @param bMax is the maxmimum value
+  /// @param bMin is the minimum value
+  /// @param bMax is the maximum value
   /// @param sBinData is (optional) sub structure
   /// @param sBinAdditive is the prescription for the sub structure
   BinningData(BinningOption bOption, BinningValue bValue, size_t bBins,
@@ -99,8 +100,7 @@ class BinningData {
         m_bins(bBins),
         m_boundaries(std::vector<float>()),
         m_totalBins(bBins),
-        m_totalBoundaries(std::vector<float>()),
-        m_functionPtr(nullptr) {
+        m_totalBoundaries(std::vector<float>()) {
     // set to equidistant search
     m_functionPtr = &searchEquidistantWithBoundary;
     // fill the boundary vector for fast access to center & boundaries
@@ -124,17 +124,13 @@ class BinningData {
       : type(arbitrary),
         option(bOption),
         binvalue(bValue),
-        min(0.),
-        max(0.),
-        step(0.),
         zdim(bBoundaries.size() == 2 ? true : false),
         subBinningData(std::move(sBinData)),
         subBinningAdditive(true),
         m_bins(bBoundaries.size() - 1),
         m_boundaries(bBoundaries),
         m_totalBins(bBoundaries.size() - 1),
-        m_totalBoundaries(bBoundaries),
-        m_functionPtr(nullptr) {
+        m_totalBoundaries(bBoundaries) {
     // assert a no-size case
     throw_assert(m_boundaries.size() > 1, "Must have more than one boundary");
     min = m_boundaries[0];
@@ -161,8 +157,7 @@ class BinningData {
         m_bins(bdata.m_bins),
         m_boundaries(bdata.m_boundaries),
         m_totalBins(bdata.m_totalBins),
-        m_totalBoundaries(bdata.m_totalBoundaries),
-        m_functionPtr(nullptr) {
+        m_totalBoundaries(bdata.m_totalBoundaries) {
     // get the binning data
     subBinningData =
         bdata.subBinningData
@@ -244,7 +239,7 @@ class BinningData {
   ///
   /// @return float value according to the binning setup
   float value(const Vector2& lposition) const {
-    // ordered after occurence
+    // ordered after occurrence
     if (binvalue == binR || binvalue == binRPhi || binvalue == binX ||
         binvalue == binH) {
       return lposition[0];
@@ -264,7 +259,7 @@ class BinningData {
     using VectorHelpers::eta;
     using VectorHelpers::perp;
     using VectorHelpers::phi;
-    // ordered after occurence
+    // ordered after occurrence
     if (binvalue == binR || binvalue == binH) {
       return (perp(position));
     }
@@ -310,7 +305,7 @@ class BinningData {
   ///
   /// @param position is the search position in global coordinated
   ///
-  /// @return boolen if this is inside() method is true
+  /// @return boolean if this is inside() method is true
   bool inside(const Vector3& position) const {
     // closed one is always inside
     if (option == closed) {
@@ -326,7 +321,7 @@ class BinningData {
   ///
   /// @param lposition is the search position in global coordinated
   ///
-  /// @return boolen if this is inside() method is true
+  /// @return boolean if this is inside() method is true
   bool inside(const Vector2& lposition) const {
     // closed one is always inside
     if (option == closed) {
@@ -433,12 +428,12 @@ class BinningData {
   }
 
  private:
-  size_t m_bins;                    ///< number of bins
+  size_t m_bins{};                  ///< number of bins
   std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
-  size_t m_totalBins;               ///< including potential substructure
+  size_t m_totalBins{};             ///< including potential substructure
   std::vector<float> m_totalBoundaries;  ///< including potential substructure
 
-  size_t (*m_functionPtr)(float, const BinningData&);  /// function pointer
+  size_t (*m_functionPtr)(float, const BinningData&){};  /// function pointer
 
   /// helper method to set the sub structure
   void checkSubStructure() {
@@ -470,7 +465,7 @@ class BinningData {
           }
         }
       } else {  // (B) multiplicative sub structure
-        // every bin is just repaced by the sub binning structure
+        // every bin is just replaced by the sub binning structure
         m_totalBins = m_bins * subBinningData->bins();
         m_totalBoundaries.reserve(m_totalBins + 1);
         // get the sub bin boundaries if there are any
@@ -496,7 +491,7 @@ class BinningData {
                                               const BinningData& bData) {
     // vanilla
 
-    int bin = ((value - bData.min) / bData.step);
+    int bin = static_cast<int>((value - bData.min) / bData.step);
     // special treatment of the 0 bin for closed
     if (bData.option == closed) {
       if (value < bData.min) {
@@ -529,6 +524,29 @@ class BinningData {
                                bData.m_boundaries.end(), value);
     return static_cast<size_t>(std::distance(bData.m_boundaries.begin(), lb) -
                                1);
+  }
+
+ public:
+  /// String screen output method
+  /// @param indent the current indentation
+  /// @return a string containing the screen information
+  std::string toString(const std::string& indent) const {
+    std::stringstream sl;
+    sl << indent << "BinngingData object:" << '\n';
+    sl << indent << "  - type       : " << size_t(type) << '\n';
+    sl << indent << "  - option     : " << size_t(option) << '\n';
+    sl << indent << "  - value      : " << size_t(binvalue) << '\n';
+    sl << indent << "  - bins       : " << bins() << '\n';
+    sl << indent << "  - min/max    : " << min << " / " << max << '\n';
+    if (type == equidistant) {
+      sl << indent << "  - step       : " << step << '\n';
+    }
+    sl << indent << "  - boundaries : | ";
+    for (const auto& b : boundaries()) {
+      sl << b << " | ";
+    }
+    sl << '\n';
+    return sl.str();
   }
 };
 }  // namespace Acts

@@ -8,13 +8,18 @@
 
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 
-#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <ios>
-#include <optional>
-#include <stdexcept>
+#include <string>
+#include <vector>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -28,7 +33,7 @@ ActsExamples::CsvSpacepointWriter::CsvSpacepointWriter(
 
 ActsExamples::CsvSpacepointWriter::~CsvSpacepointWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
@@ -42,10 +47,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::writeT(
   dfe::NamedTupleCsvWriter<SpacepointData> writerSP(pathSP,
                                                     m_cfg.outputPrecision);
 
-  SpacepointData spData;
+  SpacepointData spData{};
   for (const auto& sp : spacepoints) {
-    const auto slink =
-        static_cast<const IndexSourceLink&>(*(sp.sourceLinks()[0]));
+    const auto slink = sp.sourceLinks()[0].get<IndexSourceLink>();
 
     spData.measurement_id = slink.index();
     spData.geometry_id = slink.geometryId().value();

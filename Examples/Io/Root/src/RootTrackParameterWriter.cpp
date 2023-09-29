@@ -8,22 +8,26 @@
 
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Seeding/Seed.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <cmath>
+#include <cstddef>
 #include <ios>
 #include <iostream>
+#include <memory>
 #include <stdexcept>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -60,6 +64,12 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
+
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
 
   // Setup ROOT I/O
   if (m_outputFile == nullptr) {
@@ -103,37 +113,26 @@ ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write estimated parameters from seed to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
-    m_outputFile->Close();
-  }
+ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::finalize() {
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote estimated parameters from seed to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
     const TrackParametersContainer& trackParams) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-  using HitSimHitsMap = IndexMultimap<Index>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
-
   // Read additional input collections
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto& hitSimHitsMap =
-      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -173,7 +172,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     // Get the sim hits via the measurement to sim hits map
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
     auto [truthLocal, truthPos4, truthUnitDir] =
-        averageSimHits(ctx.geoContext, surface, simHits, indices);
+        averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
     // Get the truth track parameter at the first space point
     m_t_loc0 = truthLocal[Acts::ePos0];
     m_t_loc1 = truthLocal[Acts::ePos1];
@@ -194,11 +193,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
       auto ip = particles.find(particleId);
       if (ip != particles.end()) {
         const auto& particle = *ip;
-        m_t_charge = particle.charge();
+        m_t_charge = static_cast<int>(particle.charge());
         m_t_qop = m_t_charge / p;
       } else {
-        ACTS_WARNING("Truth particle with barcode = " << particleId
-                                                      << " not found!");
+        ACTS_DEBUG("Truth particle with barcode "
+                   << particleId << "=" << particleId.value() << " not found!");
       }
     }
 

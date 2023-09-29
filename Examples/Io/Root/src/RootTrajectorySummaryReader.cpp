@@ -8,31 +8,36 @@
 
 #include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <iostream>
+#include <stdexcept>
 
 #include <TChain.h>
-#include <TFile.h>
-#include <TMath.h>
+#include <TMathBase.h>
 
 ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
     const ActsExamples::RootTrajectorySummaryReader::Config& config,
     Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
-      m_cfg(config),
-      m_events(0),
-      m_inputChain(nullptr) {
+      m_cfg(config) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing input filename");
   }
+
+  m_outputTrackParameters.initialize(m_cfg.outputTracks);
+  m_outputParticles.initialize(m_cfg.outputParticles);
 
   // Set the branches
   m_inputChain->SetBranchAddress("event_nr", &m_eventNr);
@@ -192,15 +197,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
       double resT = (*m_err_eT_fit)[i];
 
       // Fill vector of track objects with simple covariance matrix
-      Acts::BoundSymMatrix covMat;
+      Acts::BoundSquareMatrix covMat;
 
       covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
           0., 0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh,
           0., 0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0.,
           resT * resT;
 
+      // TODO we do not have a hypothesis at hand here. defaulting to pion
       trackParameterCollection.push_back(Acts::BoundTrackParameters(
-          perigeeSurface, paramVec, std::move(covMat)));
+          perigeeSurface, paramVec, std::move(covMat),
+          Acts::ParticleHypothesis::pion()));
     }
 
     unsigned int nTruthParticles = m_t_vx->size();
@@ -216,10 +223,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryReader::read(
                                      truthParticle);
     }
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.outputTracks,
-                           std::move(trackParameterCollection));
-    context.eventStore.add(m_cfg.outputParticles,
-                           std::move(truthParticleCollection));
+    m_outputTrackParameters(context, std::move(trackParameterCollection));
+    m_outputParticles(context, std::move(truthParticleCollection));
   } else {
     ACTS_WARNING("Could not read in event.");
   }

@@ -22,7 +22,7 @@
 
 #include <fstream>
 
-BOOST_AUTO_TEST_SUITE(SurfaceSvgConverter)
+BOOST_AUTO_TEST_SUITE(ActSvg)
 
 namespace {
 
@@ -62,7 +62,7 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
   // As sheet
   auto svgSheet = Acts::Svg::Sheet::xy(svgTemplate, identification + "_sheet");
   Acts::Svg::toFile({svgSheet}, svgSheet._id + ".svg");
-};
+}
 
 }  // namespace
 

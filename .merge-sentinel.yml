@@ -13,7 +13,6 @@ rules:
      - "docs/*" 
 
     required_checks:
-     - codecov/project
      - Docs / docs
      - Analysis / build_debug
 

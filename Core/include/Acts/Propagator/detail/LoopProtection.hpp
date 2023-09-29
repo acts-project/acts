@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 namespace detail {
@@ -18,9 +18,7 @@ namespace detail {
 template <typename path_aborter_t, typename propagator_state_t,
           typename stepper_t>
 void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
-                         path_aborter_t& pathAborter) {
-  const auto& logger = state.options.logger;
-
+                         path_aborter_t& pathAborter, const Logger& logger) {
   if (!state.options.loopProtection) {
     return;
   }
@@ -41,9 +39,9 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
   }
 
   // Transverse component at start is taken for the loop protection
-  const double p = stepper.momentum(state.stepping);
+  const double p = stepper.absoluteMomentum(state.stepping);
   // Calculate the full helix path
-  const double helixPath = state.stepping.navDir * 2 * M_PI * p / B;
+  const double helixPath = state.options.direction * 2 * M_PI * p / B;
   // And set it as the loop limit if it overwrites the internal limit
   double loopLimit = state.options.loopFraction * helixPath;
   double pathLimit = pathAborter.internalLimit;

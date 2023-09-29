@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,6 +15,7 @@
 #include "vecmem/containers/vector.hpp"
 
 // Acts include(s).
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 
@@ -26,25 +27,16 @@ namespace Acts::Sycl {
 template <typename external_spacepoint_t>
 SeedFinder<external_spacepoint_t>::SeedFinder(
     Acts::SeedFinderConfig<external_spacepoint_t> config,
+    const Acts::SeedFinderOptions& options,
     const Acts::Sycl::DeviceExperimentCuts& cuts,
     Acts::Sycl::QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource)
-    : m_config(config.toInternalUnits()),
+    : m_config(config),
+      m_options(options),
       m_deviceCuts(cuts),
       m_wrappedQueue(std::move(wrappedQueue)),
       m_resource(&resource),
       m_device_resource(device_resource) {
-  // init m_config
-  m_config.highland = 13.6f * std::sqrt(m_config.radLengthPerSeed) *
-                      (1 + 0.038f * std::log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = m_config.highland / m_config.minPt;
-  m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-  m_config.pTPerHelixRadius = 300.f * m_config.bFieldInZ;
-  m_config.minHelixDiameter2 =
-      std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
-  m_config.pT2perRadius =
-      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
-
   auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
 
   // init m_deviceConfig
@@ -56,8 +48,8 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
       m_config.collisionRegionMax,
       m_config.maxScatteringAngle2,
       m_config.sigmaScattering,
-      m_config.minHelixDiameter2,
-      m_config.pT2perRadius,
+      m_options.minHelixDiameter2,
+      m_options.pT2perRadius,
       seedFilterConfig.deltaInvHelixDiameter,
       seedFilterConfig.impactWeightFactor,
       seedFilterConfig.deltaRMin,
@@ -71,7 +63,10 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Acts::Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointData& spacePointData,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // As a first step, we create Arrays of Structures (AoS)
@@ -88,8 +83,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
 
-  for (auto SP : bottomSPs) {
-    bottomSPvec.push_back(SP);
+  for (std::size_t SPidx : bottomSPs) {
+    auto& sp_collection = grid.at(SPidx);
+    for (auto& SP : sp_collection) {
+      bottomSPvec.push_back(SP.get());
+    }
   }
   deviceBottomSPs.reserve(bottomSPvec.size());
   for (auto SP : bottomSPvec) {
@@ -97,8 +95,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (auto SP : middleSPs) {
-    middleSPvec.push_back(SP);
+  {
+    auto& sp_collection = grid.at(middleSPs);
+    for (auto& SP : sp_collection) {
+      middleSPvec.push_back(SP.get());
+    }
   }
   deviceMiddleSPs.reserve(middleSPvec.size());
   for (auto SP : middleSPvec) {
@@ -106,8 +107,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (auto SP : topSPs) {
-    topSPvec.push_back(SP);
+  for (auto SPidx : topSPs) {
+    auto& sp_collection = grid.at(SPidx);
+    for (auto& SP : sp_collection) {
+      topSPvec.push_back(SP.get());
+    }
   }
   deviceTopSPs.reserve(topSPvec.size());
   for (auto SP : topSPvec) {
@@ -125,23 +129,27 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
 
   // Iterate through seeds returned by the SYCL algorithm and perform the last
   // step of filtering for fixed middle SP.
-  std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-      seedsPerSPM;
+  std::vector<typename CandidatesForMiddleSp<
+      const InternalSpacePoint<external_spacepoint_t>>::value_type>
+      candidates;
+
   for (size_t mi = 0; mi < seeds.size(); ++mi) {
-    seedsPerSPM.clear();
+    candidates.clear();
     for (size_t j = 0; j < seeds[mi].size(); ++j) {
       auto& bottomSP = *(bottomSPvec[seeds[mi][j].bottom]);
       auto& middleSP = *(middleSPvec[mi]);
       auto& topSP = *(topSPvec[seeds[mi][j].top]);
       float weight = seeds[mi][j].weight;
 
-      seedsPerSPM.emplace_back(std::make_pair(
-          weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                      bottomSP, middleSP, topSP, 0)));
+      candidates.emplace_back(bottomSP, middleSP, topSP, weight, 0, false);
     }
-    int numQualitySeeds = 0;  // not used but needs to be fixed
-    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSPM, numQualitySeeds,
+    std::sort(
+        candidates.begin(), candidates.end(),
+        CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>::
+            descendingByQuality);
+    std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
+    m_config.seedFilter->filterSeeds_1SpFixed(spacePointData, candidates,
+                                              numQualitySeeds,
                                               std::back_inserter(outputVec));
   }
   return outputVec;

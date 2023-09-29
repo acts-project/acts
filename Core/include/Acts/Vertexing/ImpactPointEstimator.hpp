@@ -112,11 +112,10 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return New track params
-  Result<std::unique_ptr<const BoundTrackParameters>>
-  estimate3DImpactParameters(const GeometryContext& gctx,
-                             const Acts::MagneticFieldContext& mctx,
-                             const BoundTrackParameters& trkParams,
-                             const Vector3& vtxPos, State& state) const;
+  Result<BoundTrackParameters> estimate3DImpactParameters(
+      const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+      const BoundTrackParameters& trkParams, const Vector3& vtxPos,
+      State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
@@ -143,6 +142,38 @@ class ImpactPointEstimator {
   Result<ImpactParametersAndSigma> estimateImpactParameters(
       const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
+
+  /// @brief Estimates the sign of the 2D and Z lifetime of a given track
+  /// w.r.t. a vertex and a direction (e.g. a jet direction)
+  /// by propagating the trajectory state towards the vertex position
+  /// and computing the scalar product with the direction vector
+  ///
+  /// @param track Track to estimate the IP from
+  /// @param vtx   Vertex the track belongs to
+  /// @param direction   The direction
+  /// @param gctx  The geometry context
+  /// @param mctx  The magnetic field context
+  ///
+  /// @return A pair holding the sign for the 2D an Z lifetimes
+  Result<std::pair<double, double>> getLifetimesSignOfTrack(
+      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const Acts::Vector3& direction, const GeometryContext& gctx,
+      const MagneticFieldContext& mctx) const;
+
+  /// @brief Estimates the sign of the 3D lifetime of a given track
+  /// w.r.t. a vertex and a direction (e.g. a jet direction)
+  ///
+  /// @param track Track to estimate the IP from
+  /// @param vtx   Vertex the track belongs to
+  /// @param direction   The direction
+  /// @param gctx  The geometry context
+  /// @param mctx  The magnetic field context
+  ///
+  /// @return The value of the 3D lifetime
+  Result<double> get3DLifetimeSignOfTrack(
+      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const Acts::Vector3& direction, const GeometryContext& gctx,
+      const MagneticFieldContext& mctx) const;
 
  private:
   /// Configuration object

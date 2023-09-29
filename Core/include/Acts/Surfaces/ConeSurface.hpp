@@ -9,12 +9,22 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
+
+#include <cmath>
+#include <cstddef>
+#include <memory>
+#include <string>
 
 namespace Acts {
 
@@ -49,7 +59,7 @@ class ConeSurface : public Surface {
   /// @param alpha is the opening angle of the cone
   /// @param zmin is the z range over which the cone spans
   /// @param zmax is the z range over which the cone spans
-  /// @param halfPhi is the openen angle for cone ssectors
+  /// @param halfPhi is the opening angle for cone ssectors
   ConeSurface(const Transform3& transform, double alpha, double zmin,
               double zmax, double halfPhi = M_PI);
 
@@ -69,7 +79,7 @@ class ConeSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param shift is the additional transfrom applied after copying
+  /// @param shift is the additional transform applied after copying
   ConeSurface(const GeometryContext& gctx, const ConeSurface& other,
               const Transform3& shift);
 
@@ -101,12 +111,12 @@ class ConeSurface : public Surface {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
   /// constructed
-  /// @param momentum is the momentum used for the measurement frame
+  /// @param direction is the momentum direction used for the measurement frame
   /// construction
   /// @return matrix that indicates the measurement frame
   RotationMatrix3 referenceFrame(const GeometryContext& gctx,
                                  const Vector3& position,
-                                 const Vector3& momentum) const final;
+                                 const Vector3& direction) const final;
 
   /// Return method for surface normal information
   ///
@@ -141,24 +151,24 @@ class ConeSurface : public Surface {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param lposition is the local position to be transformed
-  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param direction is the global momentum direction (ignored in this operation)
   ///
   /// @return The global position by value
   Vector3 localToGlobal(const GeometryContext& gctx, const Vector2& lposition,
-                        const Vector3& momentum) const final;
+                        const Vector3& direction) const final;
 
   /// Global to local transformation
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position to be transformed
-  /// @param momentum is the global momentum (ignored in this operation)
+  /// @param direction is the global momentum direction (ignored in this operation)
   /// @param tolerance optional tolerance within which a point is considered
   /// valid on surface
   ///
   /// @return a Result<Vector2> which can be !ok() if the operation fails
   Result<Vector2> globalToLocal(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& momentum,
+      const Vector3& direction,
       double tolerance = s_onSurfaceTolerance) const final;
 
   /// Straight line intersection schema from position/direction
@@ -167,14 +177,15 @@ class ConeSurface : public Surface {
   /// @param position The position to start from
   /// @param direction The direction at start
   /// @param bcheck the Boundary Check
+  /// @param tolerance the tolerance used for the intersection
   ///
   /// If possible returns both solutions for the cylinder
   ///
-  /// @return SurfaceIntersection object (contains intersection & surface)
-  SurfaceIntersection intersect(const GeometryContext& gctx,
-                                const Vector3& position,
-                                const Vector3& direction,
-                                const BoundaryCheck& bcheck) const final;
+  /// @return @c SurfaceMultiIntersection object (contains intersection & surface)
+  SurfaceMultiIntersection intersect(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const BoundaryCheck& bcheck = false,
+      double tolerance = s_onSurfaceTolerance) const final;
 
   /// The pathCorrection for derived classes with thickness
   ///
@@ -217,7 +228,7 @@ class ConeSurface : public Surface {
   /// position in local 3D Cartesian coordinates
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param position The position of the paramters in global
+  /// @param position The position of the parameters in global
   ///
   /// @return Derivative of bound local position w.r.t. position in local 3D
   /// cartesian coordinates

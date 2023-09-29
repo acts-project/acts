@@ -12,9 +12,12 @@
 #include "Acts/Utilities/detail/Subspace.hpp"
 
 #include <algorithm>
-#include <iterator>
+#include <array>
+#include <cstddef>
 #include <numeric>
+#include <ostream>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -68,7 +71,7 @@ std::vector<std::size_t> makeMonotonicIndices(std::size_t n) {
 template <std::size_t kSize>
 std::array<std::size_t, kSize> selectFixedIndices(
     const std::vector<std::size_t>& fullIndices) {
-  std::array<std::size_t, kSize> indices;
+  std::array<std::size_t, kSize> indices{};
   for (auto i = 0u; i < kSize; ++i) {
     indices[i] = fullIndices[i];
   }

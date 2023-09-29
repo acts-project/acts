@@ -8,15 +8,30 @@
 
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
-#include <ios>
-#include <iostream>
+#include <algorithm>
+#include <fstream>
+#include <iomanip>
+#include <map>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
+
+namespace ActsExamples {
+class IndexSourceLink;
+}  // namespace ActsExamples
 
 using namespace ActsExamples;
 
@@ -28,6 +43,8 @@ CsvMultiTrajectoryWriter::CsvMultiTrajectoryWriter(
   if (m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument("Missing input trajectories collection");
   }
+
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 }
 
 ProcessCode CsvMultiTrajectoryWriter::writeT(
@@ -35,15 +52,13 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     const TrajectoriesContainer& trajectories) {
   // open per-event file
   std::string path =
-      perEventFilepath(m_cfg.outputDir, "CKFtracks.csv", context.eventNumber);
+      perEventFilepath(m_cfg.outputDir, m_cfg.fileName, context.eventNumber);
   std::ofstream mos(path, std::ofstream::out | std::ofstream::trunc);
   if (!mos) {
     throw std::ios_base::failure("Could not open '" + path + "' to write");
   }
 
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-  const auto& hitParticlesMap = context.eventStore.get<HitParticlesMap>(
-      m_cfg.inputMeasurementParticlesMap);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(context);
 
   std::unordered_map<Acts::MultiTrajectoryTraits::IndexType, trackInfo> infoMap;
 
@@ -85,7 +100,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       std::vector<ParticleHitCount> particleHitCount;
       identifyContributingParticles(hitParticlesMap, traj, trackTip,
                                     particleHitCount);
-      if (particleHitCount.empty()) {
+      if (m_cfg.onlyTruthMatched && particleHitCount.empty()) {
         ACTS_WARNING(
             "No truth particle associated with this trajectory with entry "
             "index = "
@@ -94,18 +109,20 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       }
 
       // Requirement on the pT of the track
-      const auto& momentum = traj.trackParameters(trackTip).momentum();
+      const auto& params = traj.trackParameters(trackTip);
+      const auto momentum = params.momentum();
       const auto pT = Acts::VectorHelpers::perp(momentum);
       if (pT < m_cfg.ptMin) {
         continue;
       }
-
-      // Get the majority particle counts
-      ActsFatras::Barcode majorityParticleId =
-          particleHitCount.front().particleId;
-      // n Majority hits
-      size_t nMajorityHits = particleHitCount.front().hitCount;
-
+      size_t nMajorityHits = 0;
+      ActsFatras::Barcode majorityParticleId;
+      if (!particleHitCount.empty()) {
+        // Get the majority particle counts
+        majorityParticleId = particleHitCount.front().particleId;
+        // n Majority hits
+        nMajorityHits = particleHitCount.front().hitCount;
+      }
       // track info
       trackInfo toAdd;
       toAdd.trackId = trackId;
@@ -121,6 +138,16 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       toAdd.truthMatchProb = toAdd.nMajorityHits * 1. / trajState.nMeasurements;
       toAdd.fittedParameters = &traj.trackParameters(trackTip);
       toAdd.trackType = "unknown";
+
+      mj.visitBackwards(trackTip, [&](const auto& state) {
+        if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag) ==
+            true) {
+          auto sl =
+              state.getUncalibratedSourceLink().template get<IndexSourceLink>();
+          auto hitIndex = sl.index();
+          toAdd.measurementsID.insert(toAdd.measurementsID.begin(), hitIndex);
+        }
+      });
 
       // Check if the trajectory is matched with truth.
       if (toAdd.truthMatchProb >= m_cfg.truthMatchProbMin) {
@@ -141,14 +168,15 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     std::sort(matchedTracks.begin(), matchedTracks.end(),
               [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
                 // sort by nMajorityHits
-                if (lhs.first.nMajorityHits > rhs.first.nMajorityHits) {
-                  return true;
-                }
-                if (lhs.first.nMajorityHits < rhs.first.nMajorityHits) {
-                  return false;
+                if (lhs.first.nMajorityHits != rhs.first.nMajorityHits) {
+                  return (lhs.first.nMajorityHits > rhs.first.nMajorityHits);
                 }
                 // sort by nOutliers
-                return (lhs.first.nOutliers < rhs.first.nOutliers);
+                if (lhs.first.nOutliers != rhs.first.nOutliers) {
+                  return (lhs.first.nOutliers < rhs.first.nOutliers);
+                }
+                // sort by chi2
+                return (lhs.first.chi2Sum < rhs.first.chi2Sum);
               });
 
     listGoodTracks.insert(matchedTracks.front().first.trackId);
@@ -160,7 +188,8 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       << "chi2,ndf,chi2/ndf,"
       << "pT,eta,phi,"
       << "truthMatchProbability,"
-      << "good/duplicate/fake";
+      << "good/duplicate/fake,"
+      << "Hits_ID";
 
   mos << '\n';
   mos << std::setprecision(m_cfg.outputPrecision);
@@ -172,6 +201,9 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     } else if (trajState.trackType != "fake") {
       trajState.trackType = "duplicate";
     }
+
+    const auto& params = *trajState.fittedParameters;
+    const auto momentum = params.momentum();
 
     // write the track info
     mos << trajState.trackId << ",";
@@ -185,14 +217,16 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     mos << trajState.chi2Sum << ",";
     mos << trajState.NDF << ",";
     mos << trajState.chi2Sum * 1.0 / trajState.NDF << ",";
-    mos << Acts::VectorHelpers::perp(trajState.fittedParameters->momentum())
-        << ",";
-    mos << Acts::VectorHelpers::eta(trajState.fittedParameters->momentum())
-        << ",";
-    mos << Acts::VectorHelpers::phi(trajState.fittedParameters->momentum())
-        << ",";
+    mos << Acts::VectorHelpers::perp(momentum) << ",";
+    mos << Acts::VectorHelpers::eta(momentum) << ",";
+    mos << Acts::VectorHelpers::phi(momentum) << ",";
     mos << trajState.truthMatchProb << ",";
-    mos << trajState.trackType;
+    mos << trajState.trackType << ",";
+    mos << "\"[";
+    for (auto& ID : trajState.measurementsID) {
+      mos << ID << ",";
+    }
+    mos << "]\"";
     mos << '\n';
   }
 

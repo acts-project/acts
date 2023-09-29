@@ -11,13 +11,13 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"  // for evaluating performance
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"  // to read digi config
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"  // for evaluating performance
@@ -36,8 +36,9 @@ static std::unique_ptr<const Acts::Logger> m_logger;
 const Acts::Logger& logger() {
   return *m_logger;
 }
-int runMeasurementsToSP(int argc, char* argv[],
-                        std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runMeasurementsToSP(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -78,7 +79,7 @@ int runMeasurementsToSP(int argc, char* argv[],
   ACTS_INFO("after building geometry");
 
   // Add the decorator to the sequencer
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 

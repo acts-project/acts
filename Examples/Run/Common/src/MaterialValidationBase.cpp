@@ -13,8 +13,8 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
@@ -54,7 +54,7 @@ ActsExamples::ProcessCode setupPropagation(
 
   // Get a Navigator
   Acts::Navigator::Config cfg;
-  cfg.trackingGeometry = tGeometry;
+  cfg.trackingGeometry = std::move(tGeometry);
   cfg.resolvePassive = true;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -71,7 +71,7 @@ ActsExamples::ProcessCode setupPropagation(
 
   // Read the propagation config and create the algorithms
   auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);
-  pAlgConfig.randomNumberSvc = randomNumberSvc;
+  pAlgConfig.randomNumberSvc = std::move(randomNumberSvc);
   pAlgConfig.recordMaterialInteractions = true;
 
   pAlgConfig.propagatorImpl =
@@ -103,7 +103,7 @@ ActsExamples::ProcessCode setupStraightLinePropagation(
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Get a Navigator
-  Acts::Navigator navigator({tGeometry});
+  Acts::Navigator navigator({std::move(tGeometry)});
 
   // Straight line stepper
   using SlStepper = Acts::StraightLineStepper;
@@ -115,7 +115,7 @@ ActsExamples::ProcessCode setupStraightLinePropagation(
   // Read the propagation config and create the algorithms
   auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);
 
-  pAlgConfig.randomNumberSvc = randomNumberSvc;
+  pAlgConfig.randomNumberSvc = std::move(randomNumberSvc);
   pAlgConfig.propagatorImpl =
       std::make_shared<ActsExamples::ConcretePropagator<Propagator>>(
           std::move(propagator));
@@ -160,7 +160,7 @@ int materialValidationExample(int argc, char* argv[],
   auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 

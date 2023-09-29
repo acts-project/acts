@@ -11,6 +11,8 @@
 #include "Acts/Utilities/Range1D.hpp"
 
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace {
 std::vector<int> v = {-100, -90, -80, -70, -60, -50, -40, -30, -20, 10, 0,
@@ -528,15 +530,28 @@ BOOST_AUTO_TEST_CASE(intersection5_double) {
   BOOST_CHECK(i.degenerate());
 }
 
-BOOST_AUTO_TEST_CASE(intersects_edge_int) {
-  Acts::Range1D<int> r(-10, 10);
+BOOST_AUTO_TEST_CASE(intersects_edge_int_positive) {
+  Acts::Range1D<int> r(-10, 11);
   Acts::Range1D<int> q(10, 20);
 
   BOOST_CHECK((r && q));
 }
 
-BOOST_AUTO_TEST_CASE(single_value_not_degenerate_int) {
+BOOST_AUTO_TEST_CASE(intersects_edge_int_negative) {
+  Acts::Range1D<int> r(-10, 10);
+  Acts::Range1D<int> q(10, 20);
+
+  BOOST_CHECK(!(r && q));
+}
+
+BOOST_AUTO_TEST_CASE(single_value_not_degenerate_int_positive) {
   Acts::Range1D<int> r(10, 10);
+
+  BOOST_CHECK(r.degenerate());
+}
+
+BOOST_AUTO_TEST_CASE(single_value_not_degenerate_int_negative) {
+  Acts::Range1D<int> r(10, 11);
 
   BOOST_CHECK(!r.degenerate());
 }

@@ -46,7 +46,7 @@ zero.
      "volume": "<integer>",
      "boundary": "<integer>",
      "layer": "<integer>",
-     "approach": "<interger>",
+     "approach": "<integer>",
      "sensitive": "<integer>",
      "value": "..."
    }

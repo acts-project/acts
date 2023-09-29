@@ -198,7 +198,7 @@ class Range1D {
   ///
   /// @return true The range is degenerate and has size zero
   /// @return false The range is not degenerate
-  bool degenerate(void) const { return m_min > m_max; }
+  bool degenerate(void) const { return m_min >= m_max; }
 
   /// @brief Determine if the range contains a given value
   ///
@@ -222,7 +222,7 @@ class Range1D {
   /// @return true The ranges intersect
   /// @return false The ranges do not intersect
   bool operator&&(const Range1D<Type>& o) const {
-    return m_min <= o.max() && o.min() <= m_max;
+    return m_min < o.max() && o.min() < m_max;
   }
 
   /// @brief Determine whether the range is equal to another range

@@ -66,7 +66,7 @@ int runMaterialMapping(int argc, char* argv[],
   auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 
@@ -156,7 +156,7 @@ int runMaterialMapping(int argc, char* argv[],
     // The writer of the indexed material
     ActsExamples::RootMaterialWriter::Config rmwConfig;
     rmwConfig.filePath = materialFileName + ".root";
-    // Fullfill the IMaterialWriter interface
+    // Fulfill the IMaterialWriter interface
 
     auto rmw =
         std::make_shared<ActsExamples::RootMaterialWriter>(rmwConfig, logLevel);

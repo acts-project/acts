@@ -9,7 +9,7 @@ find_library(
   PATHS ${onnxruntime_DIR}
   PATH_SUFFIXES lib lib32 lib64
   DOC "The ONNXRuntime library")
-  
+
 if(NOT OnnxRuntime_LIBRARY)
   message(FATAL_ERROR "onnxruntime library not found")
 else()
@@ -18,15 +18,25 @@ endif()
 
 find_path(
   OnnxRuntime_INCLUDE_DIR
-  NAMES core/session/onnxruntime_cxx_api.h #core/session/providers/cuda_provider_factory.h
-  PATHS ${onxxruntime_DIR}
-  PATH_SUFFIXES include include/onnxruntime
+  NAMES onnxruntime_cxx_api.h
+  PATHS ${onnxruntime_DIR}
+  PATH_SUFFIXES include include/onnxruntime include/onnxruntime/core/session
   DOC "The ONNXRuntime include directory")
-  
+
 if(NOT OnnxRuntime_INCLUDE_DIR)
   message(FATAL_ERROR "onnxruntime includes not found")
 else()
-  message(STATUS "Found OnnxRuntime includes at ${OnnxRuntime_INCLUDE_DIR}")
+  file(READ ${OnnxRuntime_INCLUDE_DIR}/onnxruntime_c_api.h ver)
+  string(REGEX MATCH "ORT_API_VERSION ([0-9]*)" _ ${ver})
+  set(OnnxRuntime_API_VERSION ${CMAKE_MATCH_1})
+  message(STATUS "Found OnnxRuntime includes at ${OnnxRuntime_INCLUDE_DIR} (API version: ${OnnxRuntime_API_VERSION})")
+endif()
+
+
+string(REPLACE "." ";" OnnxRuntime_MIN_VERSION_LIST ${_acts_onnxruntime_version})
+list(GET OnnxRuntime_MIN_VERSION_LIST 1 OnnxRuntime_MIN_API_VERSION)
+if("${OnnxRuntime_API_VERSION}" LESS ${OnnxRuntime_MIN_API_VERSION})
+  message(FATAL_ERROR "OnnxRuntime API version ${OnnxRuntime_MIN_API_VERSION} or greater required")
 endif()
 
 include(FindPackageHandleStandardArgs)

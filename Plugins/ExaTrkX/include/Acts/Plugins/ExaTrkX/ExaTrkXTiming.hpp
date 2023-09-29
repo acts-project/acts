@@ -29,7 +29,7 @@ struct ExaTrkXTime {
   float labeling = 0.0;
   float total = 0.0;
 
-  void summary(LoggerWrapper& logger) const {
+  void summary(const Logger& logger) const {
     ACTS_VERBOSE("1) embedding: " << embedding);
     ACTS_VERBOSE("2) building: " << building);
     ACTS_VERBOSE("3) filtering: " << filtering);

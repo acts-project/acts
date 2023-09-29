@@ -34,11 +34,11 @@ RunAction::~RunAction() {
   s_instance = nullptr;
 }
 
-void RunAction::BeginOfRunAction(const G4Run* /*unused*/) {
+void RunAction::BeginOfRunAction(const G4Run* /*run*/) {
   // initialize event cumulative quantities
   EventAction::instance()->clear();
 }
 
-void RunAction::EndOfRunAction(const G4Run* /*unused*/) {}
+void RunAction::EndOfRunAction(const G4Run* /*run*/) {}
 
 }  // namespace ActsExamples::Geant4::HepMC3

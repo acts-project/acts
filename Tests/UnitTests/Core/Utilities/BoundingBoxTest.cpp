@@ -15,16 +15,22 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <memory>
-#include <random>
 #include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -454,7 +460,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 
 BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("2D") {
-    auto make_svg = [](std::string fname, size_t w, size_t h) {
+    auto make_svg = [](const std::string& fname, size_t w, size_t h) {
       auto os = tmp(fname);
       os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
       os << "<svg width=\"" << w << "\" height=\"" << h
@@ -466,7 +472,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     std::ofstream os;
 
-    BoundingBoxScalar w = 1000;
+    size_t w = 1000;
     size_t n = 10;
 
     // BEGIN VISUAL PARAMETER TEST

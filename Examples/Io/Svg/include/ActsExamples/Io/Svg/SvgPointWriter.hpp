@@ -8,13 +8,14 @@
 
 #pragma once
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/ActSVG/EventDataSvgConverter.hpp"
+#include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "Acts/Utilities/StringHelpers.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include <Acts/Geometry/TrackingGeometry.hpp>
-#include <Acts/Plugins/ActSVG/EventDataSvgConverter.hpp>
-#include <Acts/Plugins/ActSVG/SvgUtils.hpp>
 
 #include <fstream>
 #include <mutex>
@@ -109,7 +110,7 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
  protected:
   ActsExamples::ProcessCode writeT(
       const ActsExamples::AlgorithmContext& context,
-      const GeometryIdMultiset<T>& pointCollection) final override;
+      const GeometryIdMultiset<T>& pointCollection) final;
 
  private:
   Config m_cfg;

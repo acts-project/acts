@@ -9,25 +9,26 @@
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 
 #include "Acts/Geometry/ApproachDescriptor.hpp"
-#include "Acts/Geometry/CylinderLayer.hpp"
-#include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <iterator>
+#include <ostream>
+
 #include <boost/foreach.hpp>
 #include <boost/tokenizer.hpp>
-
-#include "XML/XMLElements.h"
 
 std::shared_ptr<Acts::ProtoSurfaceMaterial> Acts::createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning,
-    LoggerWrapper logger) {
+    const Logger& logger) {
   using namespace std::string_literals;
 
   // Create the bin utility
@@ -60,7 +61,7 @@ void Acts::addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
         binning,
-    LoggerWrapper logger) {
+    const Logger& logger) {
   ACTS_VERBOSE("addLayerProtoMaterial");
   // Start with the representing surface
   std::vector<std::string> materialOptions = {"layer_material_representing"};
@@ -97,7 +98,7 @@ void Acts::addLayerProtoMaterial(
 
 void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
                                          Layer& cylinderLayer,
-                                         LoggerWrapper logger) {
+                                         const Logger& logger) {
   ACTS_VERBOSE(
       "Translating DD4hep material into Acts material for CylinderLayer : "
       << detElement.name());
@@ -114,7 +115,7 @@ void Acts::addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
 }
 
 void Acts::addDiscLayerProtoMaterial(dd4hep::DetElement detElement,
-                                     Layer& discLayer, LoggerWrapper logger) {
+                                     Layer& discLayer, const Logger& logger) {
   ACTS_VERBOSE("Translating DD4hep material into Acts material for DiscLayer : "
                << detElement.name());
 

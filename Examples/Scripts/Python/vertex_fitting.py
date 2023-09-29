@@ -3,12 +3,16 @@ from pathlib import Path
 from typing import Optional
 
 import acts
-from acts.examples import Sequencer, ParticleSelector, ParticleSmearing
+from acts.examples import (
+    Sequencer,
+    ParticleSelector,
+    ParticleSmearing,
+    TrackParameterSelector,
+)
 from acts.examples.simulation import addPythia8
 from acts.examples.reconstruction import (
     addVertexFitting,
     VertexFinder,
-    TrackSelectorRanges,
 )
 
 u = acts.UnitConstants
@@ -58,6 +62,7 @@ def runVertexFitting(
     s.addAlgorithm(ptclSelector)
 
     trackParameters = "fittedTrackParameters"
+
     if inputTrackSummary is None or inputParticlePath is None:
         logger.info("Using smeared particles")
 
@@ -69,8 +74,6 @@ def runVertexFitting(
         )
         s.addAlgorithm(ptclSmearing)
         associatedParticles = selectedParticles
-
-        trackSelectorRanges = None
     else:
         logger.info("Reading track summary from %s", inputTrackSummary.resolve())
         assert inputTrackSummary.exists()
@@ -84,23 +87,27 @@ def runVertexFitting(
         )
         s.addReader(trackSummaryReader)
 
-        trackSelectorRanges = TrackSelectorRanges(
-            removeNeutral=True,
-            absEta=(None, 2.5),
-            loc0=(None, 4.0 * u.mm),  # rho max
-            pt=(500 * u.MeV, None),
+        trackParamSelector = TrackParameterSelector(
+            level=acts.logging.INFO,
+            inputTrackParameters=trackSummaryReader.config.outputTracks,
+            outputTrackParameters="selectedTrackParameters",
+            absEtaMax=2.5,
+            loc0Max=4.0 * u.mm,  # rho max
+            ptMin=500 * u.MeV,
         )
+        s.addAlgorithm(trackParamSelector)
+        trackParameters = trackParamSelector.config.outputTrackParameters
 
     logger.info("Using vertex finder: %s", vertexFinder.name)
 
     addVertexFitting(
         s,
         field,
-        trackSelectorRanges=trackSelectorRanges,
-        outputDirRoot=outputDir if outputRoot else None,
-        associatedParticles=associatedParticles,
         trackParameters=trackParameters,
+        associatedParticles=associatedParticles,
+        trajectories=None,
         vertexFinder=vertexFinder,
+        outputDirRoot=outputDir if outputRoot else None,
     )
 
     return s

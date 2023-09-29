@@ -68,7 +68,7 @@ class AccumulatedMaterialSlab {
   /// Each track contributes equally to the total average regardless of its
   /// measured path within the material. An empty per-track store, i.e.
   /// vanishing per-track material thickness, does not contribute to the total
-  /// unless explicitely requested.
+  /// unless explicitly requested.
   void trackAverage(bool useEmptyTrack = false);
 
   /// Return the average material properties from all accumulated tracks.

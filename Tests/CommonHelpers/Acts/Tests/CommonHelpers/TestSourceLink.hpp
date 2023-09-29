@@ -8,13 +8,17 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -28,20 +32,21 @@ namespace Test {
 ///
 /// Instead of storing a reference to a measurement or raw data, the measurement
 /// data is stored inline directly in the source link. Only 1d or 2d
-/// measurements are supported to limit the overhead. Additionaly, a source
+/// measurements are supported to limit the overhead. Additionally, a source
 /// identifier is stored that can be used to store additional information. How
 /// this is interpreted depends on the specific tests.
-struct TestSourceLink final : public SourceLink {
+struct TestSourceLink final {
+  GeometryIdentifier m_geometryId{};
   size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
   Acts::ActsVector<2> parameters;
-  Acts::ActsSymMatrix<2> covariance;
+  Acts::ActsSquareMatrix<2> covariance;
 
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
                  GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
-      : SourceLink(gid),
+      : m_geometryId(gid),
         sourceId(sid),
         indices{idx, eBoundSize},
         parameters(val, 0),
@@ -49,21 +54,30 @@ struct TestSourceLink final : public SourceLink {
   /// Construct a source link for a 2d measurement.
   TestSourceLink(BoundIndices idx0, BoundIndices idx1,
                  const Acts::ActsVector<2>& params,
-                 const Acts::ActsSymMatrix<2>& cov,
+                 const Acts::ActsSquareMatrix<2>& cov,
                  GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
-      : SourceLink(gid),
+      : m_geometryId(gid),
         sourceId(sid),
         indices{idx0, idx1},
         parameters(params),
         covariance(cov) {}
   /// Default-construct an invalid source link to satisfy SourceLinkConcept.
-  TestSourceLink() : SourceLink{GeometryIdentifier{}} {}
+  TestSourceLink() = default;
   TestSourceLink(const TestSourceLink&) = default;
   TestSourceLink(TestSourceLink&&) = default;
   TestSourceLink& operator=(const TestSourceLink&) = default;
   TestSourceLink& operator=(TestSourceLink&&) = default;
 
   constexpr size_t index() const { return sourceId; }
+
+  struct SurfaceAccessor {
+    const Acts::TrackingGeometry& trackingGeometry;
+
+    const Acts::Surface* operator()(const Acts::SourceLink& sourceLink) const {
+      const auto& testSourceLink = sourceLink.get<TestSourceLink>();
+      return trackingGeometry.findSurface(testSourceLink.m_geometryId);
+    }
+  };
 };
 
 bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);
@@ -77,20 +91,26 @@ std::ostream& operator<<(std::ostream& os, const TestSourceLink& sourceLink);
 /// @return The measurement used
 template <typename trajectory_t>
 Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
-    const GeometryContext& /*gctx*/,
+    const GeometryContext& /*gctx*/, const CalibrationContext& /*cctx*/,
+    const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
-  const auto& sl =
-      static_cast<const Acts::Test::TestSourceLink&>(trackState.uncalibrated());
+  TestSourceLink sl = sourceLink.template get<TestSourceLink>();
+
+  trackState.setUncalibratedSourceLink(sourceLink);
+
   if ((sl.indices[0] != Acts::eBoundSize) and
       (sl.indices[1] != Acts::eBoundSize)) {
-    auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
-                                sl.indices[1]);
+    auto meas =
+        makeMeasurement(trackState.getUncalibratedSourceLink(), sl.parameters,
+                        sl.covariance, sl.indices[0], sl.indices[1]);
+    trackState.allocateCalibrated(2);
     trackState.setCalibrated(meas);
     return meas;
   } else if (sl.indices[0] != Acts::eBoundSize) {
-    auto meas =
-        makeMeasurement(sl, sl.parameters.head<1>(),
-                        sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
+    auto meas = makeMeasurement(
+        trackState.getUncalibratedSourceLink(), sl.parameters.head<1>(),
+        sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
+    trackState.allocateCalibrated(1);
     trackState.setCalibrated(meas);
     return meas;
   } else {
@@ -104,9 +124,11 @@ Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
 /// @param trackState TrackState to calibrated
 template <typename trajectory_t>
 void testSourceLinkCalibrator(
-    const GeometryContext& gctx,
+    const GeometryContext& gctx, const CalibrationContext& cctx,
+    const SourceLink& sourceLink,
     typename trajectory_t::TrackStateProxy trackState) {
-  testSourceLinkCalibratorReturn<trajectory_t>(gctx, trackState);
+  testSourceLinkCalibratorReturn<trajectory_t>(gctx, cctx, sourceLink,
+                                               trackState);
 }
 
 }  // namespace Test

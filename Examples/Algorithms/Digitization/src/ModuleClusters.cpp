@@ -9,6 +9,16 @@
 #include "ActsExamples/Digitization/ModuleClusters.hpp"
 
 #include "Acts/Clusterization/Clusterization.hpp"
+#include "ActsExamples/Digitization/MeasurementCreation.hpp"
+#include "ActsFatras/Digitization/Channelizer.hpp"
+
+#include <array>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <memory>
+#include <stdexcept>
+#include <type_traits>
 
 namespace ActsExamples {
 
@@ -180,7 +190,7 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
           Acts::ActsScalar v_i = thisval.paramVariances.at(k);
           Acts::ActsScalar v_j = values.at(j).paramVariances.at(k);
 
-          Acts::ActsScalar left, right;
+          Acts::ActsScalar left = 0, right = 0;
           if (p_i < p_j) {
             left = p_i + m_nsigma * std::sqrt(v_i);
             right = p_j - m_nsigma * std::sqrt(v_j);
@@ -296,7 +306,7 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
 
     clus.channels.push_back(std::move(ch));
 
-    // Will have the right value at last interation Do it here to
+    // Will have the right value at last iteration Do it here to
     // avoid having bogus values when there are no clusters
     clus.sizeLoc0 = b0max - b0min + 1;
     clus.sizeLoc1 = b1max - b1min + 1;

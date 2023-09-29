@@ -617,7 +617,7 @@ space points of a single track will intersect in one common area. Such an
 intersection can be used to identify which space points originate from the same
 track. However, this task grows in complexity as detector activity increases
 and is susceptible to material effects. See [](seeding_core) for a description
-of the seeding implemenation in the core library.
+of the seeding implementation in the core library.
 
 Another group of approaches is the one of seeding and track following. These
 algorithms differ from the global ones in that they evaluate individual
@@ -914,10 +914,6 @@ circular *real* trajectory.
 
 ## Ambiguity resolution
 
-:::{note}
-There is currently no general-purpose ambiguity resolution implemented in ACTS.
-:::
-
 Due to the combinatorial nature of track finding, and to achieve high
 efficiencies, this set of candidates is often large, and contains a
 non-negligible fraction of *fake* candidates. These fake candidates are either
@@ -940,7 +936,7 @@ that share hits with other candidates are penalized. Another quantity is the
 measured particle $p_\mathrm{Y}$, which enters the score, to give preference to
 tracks with large momenta. For tracks containing measurements with a
 substantial local $\chi^2_+$ at the start or end of the trajectory, the
-ambiguity resolution stap can also attempt to remove these hits, and determine
+ambiguity resolution step can also attempt to remove these hits, and determine
 whether a refit without them yields a more favorable global $\chi^2$.
 
 Finally, the output of the ambiguity resolution step is a set of track candidates

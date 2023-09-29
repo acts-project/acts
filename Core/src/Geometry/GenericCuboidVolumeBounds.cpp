@@ -9,6 +9,7 @@
 #include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Geometry/Volume.hpp"
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -23,6 +24,8 @@
 #include <memory>
 #include <ostream>
 #include <stdexcept>
+#include <type_traits>
+#include <utility>
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     const std::array<Acts::Vector3, 8>& vertices) noexcept(false)
@@ -31,7 +34,7 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
 }
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
-    const std::array<double, GenericCuboidVolumeBounds::eSize>&
+    const std::array<double, GenericCuboidVolumeBounds::BoundValues::eSize>&
         values) noexcept(false)
     : m_vertices() {
   for (size_t iv = 0; iv < 8; ++iv) {
@@ -81,9 +84,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     const Vector3 ab = b - a, ac = c - a;
     Vector3 normal = ab.cross(ac).normalized();
 
-    NavigationDirection nDir = ((cog - d).dot(normal) < 0)
-                                   ? NavigationDirection::Backward
-                                   : NavigationDirection::Forward;
+    Direction dir = Direction::fromScalar((cog - d).dot(normal));
 
     // build transform from z unit to normal
     // z is normal in local coordinates
@@ -110,7 +111,7 @@ Acts::OrientedSurfaces Acts::GenericCuboidVolumeBounds::orientedSurfaces(
     auto srfTrf = transform * vol2srf.inverse();
     auto srf = Surface::makeShared<PlaneSurface>(srfTrf, polyBounds);
 
-    oSurfaces.push_back(OrientedSurface(std::move(srf), nDir));
+    oSurfaces.push_back(OrientedSurface(std::move(srf), dir));
   };
 
   make_surface(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
@@ -183,7 +184,7 @@ void Acts::GenericCuboidVolumeBounds::construct() noexcept(false) {
 
 std::vector<double> Acts::GenericCuboidVolumeBounds::values() const {
   std::vector<double> rvalues;
-  rvalues.reserve(eSize);
+  rvalues.reserve(BoundValues::eSize);
   for (size_t iv = 0; iv < 8; ++iv) {
     for (size_t ic = 0; ic < 3; ++ic) {
       rvalues.push_back(m_vertices[iv][ic]);

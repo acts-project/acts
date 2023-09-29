@@ -16,20 +16,20 @@ Behind the scene
 
 All display actions rely on the `Polyhedron` representation of Surfaces, 
 i.e. each surface can be at least approximated by a list of vertices and a definition of faces connecting these vertices.
-As a special feature, the `Polyhedron` can be displayed as a triangulated mesh of surfaces, i.e. each surface is devided into triangles
+As a special feature, the `Polyhedron` can be displayed as a triangulated mesh of surfaces, i.e. each surface is divided into triangles
 that build up the object to display.
 
 
 Convenience helper functions
 ----------------------------
 
-The visualziation package also contains `static` helper functions for displaying complicated objects; these helper functions are provided by the `GeometryView3D` and `EventDataView3D` structs, that receive:
- * A visualization visotor
+The visualization package also contains `static` helper functions for displaying complicated objects; these helper functions are provided by the `GeometryView3D` and `EventDataView3D` structs, that receive:
+ * A visualization visitor
  * The object to be written
  * A geometry context where needed
  * Some view configuration, which is simply handled by the `ViewConfig` struct.
 
- The `ViewConfig` struct contains a number of parameters, such as the `visiblity` flag, the RGB color definition of the object (or its contained objects),
+ The `ViewConfig` struct contains a number of parameters, such as the `visibility` flag, the RGB color definition of the object (or its contained objects),
  and some other view parameters that can be changed.
 
  The `Tests/UnitsTests/Core/Visualization` package contains a certain number of tests that produce output files to be visualized with any standard 3D viewer.

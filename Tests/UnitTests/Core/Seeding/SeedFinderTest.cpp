@@ -1,36 +1,46 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <sstream>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <tuple>
 #include <utility>
-
-#include <boost/type_erasure/any_cast.hpp>
+#include <vector>
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
 
 using namespace Acts::UnitLiterals;
 
-std::vector<const SpacePoint*> readFile(std::string filename) {
+std::vector<const SpacePoint*> readFile(const std::string& filename) {
   std::string line;
-  int layer;
+  int layer = 0;
   std::vector<const SpacePoint*> readSP;
 
   std::ifstream spFile(filename);
@@ -40,10 +50,10 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
       std::stringstream ss(line);
       std::string linetype;
       ss >> linetype;
-      float x, y, z, r, varianceR, varianceZ;
+      float x = 0, y = 0, z = 0, r = 0, varianceR = 0, varianceZ = 0;
       if (linetype == "lxyz") {
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::sqrt(x * x + y * y);
+        r = std::hypot(x, y);
         float f22 = varianceR;
         float wid = varianceZ;
         float cov = wid * wid * .08333;
@@ -74,7 +84,7 @@ int main(int argc, char** argv) {
   bool help(false);
   bool quiet(false);
 
-  int opt;
+  int opt = -1;
   while ((opt = getopt(argc, argv, "hf:q")) != -1) {
     switch (opt) {
       case 'f':
@@ -134,17 +144,22 @@ int main(int argc, char** argv) {
   config.sigmaScattering = 1.00000;
 
   config.minPt = 500._MeV;
-  config.bFieldInZ = 1.99724_T;
 
-  config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
 
   config.useVariableMiddleSPRange = false;
+
+  Acts::SeedFinderOptions options;
+  options.beamPos = {-.5_mm, -.5_mm};
+  options.bFieldInZ = 1.99724_T;
 
   int numPhiNeighbors = 1;
 
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
+
+  config.useVariableMiddleSPRange = false;
+  const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
@@ -157,7 +172,8 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::SeedFinder<SpacePoint> a(config);
+  Acts::SeedFinder<SpacePoint> a;  // test creation of unconfigured finder
+  a = Acts::SeedFinder<SpacePoint>(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -169,29 +185,29 @@ int main(int argc, char** argv) {
 
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
-  gridConf.bFieldInZ = config.bFieldInZ;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
   gridConf.zMin = config.zMin;
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
+  // setup spacepoint grid options
+  Acts::SpacePointGridOptions gridOpts;
+  gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config);
+      std::move(grid), rRangeSPExtent, config, options);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;
   auto start = std::chrono::system_clock::now();
-  auto groupIt = spGroup.begin();
-  auto endOfGroups = spGroup.end();
-  for (; !(groupIt == endOfGroups); ++groupIt) {
+  for (auto [bottom, middle, top] : spGroup) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
-                          groupIt.middle(), groupIt.top(), rRangeSPExtent);
+    a.createSeedsForGroup(options, state, spGroup.grid(), std::back_inserter(v),
+                          bottom, middle, top, rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 template <typename vfitter_t, typename sfinder_t>
@@ -32,8 +33,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
   int iteration = 0;
   std::vector<const InputTrack_t*> removedSeedTracks;
-  while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
-          ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
+  while (((m_cfg.addSingleTrackVertices && !seedTracks.empty()) ||
+          ((!m_cfg.addSingleTrackVertices) && !seedTracks.empty())) &&
          iteration < m_cfg.maxIterations) {
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
@@ -43,7 +44,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     } else {
       searchTracks = seedTracks;
     }
-    Vertex<InputTrack_t> currentConstraint = vertexingOptions.vertexConstraint;
+    Vertex<InputTrack_t> currentConstraint = vertexingOptions.constraint;
     // Retrieve seed vertex from all remaining seedTracks
     auto seedResult = doSeeding(seedTracks, currentConstraint, vertexingOptions,
                                 seedFinderState, removedSeedTracks);
@@ -56,9 +57,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     allVerticesPtr.push_back(&vtxCandidate);
 
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
-               << vtxCandidate.fullPosition());
+               << vtxCandidate.fullPosition().transpose());
     if (vtxCandidate.position().z() ==
-        vertexingOptions.vertexConstraint.position().z()) {
+        vertexingOptions.constraint.position().z()) {
       ACTS_DEBUG(
           "No seed found anymore. Break and stop primary vertex finding.");
       allVertices.pop_back();
@@ -93,10 +94,11 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       return fitResult.error();
     }
     ACTS_DEBUG("New position of current vertex candidate after fit: "
-               << vtxCandidate.fullPosition());
+               << vtxCandidate.fullPosition().transpose());
     // Check if vertex is good vertex
     auto [nCompatibleTracks, isGoodVertex] =
-        checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, fitterState);
+        checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, fitterState,
+                                       vertexingOptions.useConstraintInFit);
 
     ACTS_DEBUG("Vertex is good vertex: " << isGoodVertex);
     if (nCompatibleTracks > 0) {
@@ -142,7 +144,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
     const std::vector<const InputTrack_t*>& removedSeedTracks) const
     -> Result<Vertex<InputTrack_t>> {
   VertexingOptions<InputTrack_t> seedOptions = vertexingOptions;
-  seedOptions.vertexConstraint = currentConstraint;
+  seedOptions.constraint = currentConstraint;
 
   if constexpr (NeedsRemovedTracks<typename sfinder_t::State>::value) {
     seedFinderState.tracksToRemove = removedSeedTracks;
@@ -158,7 +160,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
 
   Vertex<InputTrack_t> seedVertex = (*seedResult).back();
   // Update constraints according to seed vertex
-  setConstraintAfterSeeding(currentConstraint, seedVertex);
+  setConstraintAfterSeeding(currentConstraint, seedOptions.useConstraintInFit,
+                            seedVertex);
 
   return seedVertex;
 }
@@ -166,12 +169,9 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::doSeeding(
 template <typename vfitter_t, typename sfinder_t>
 auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     setConstraintAfterSeeding(Vertex<InputTrack_t>& currentConstraint,
+                              bool useVertexConstraintInFit,
                               Vertex<InputTrack_t>& seedVertex) const -> void {
-  if (m_cfg.useBeamSpotConstraint) {
-    if (currentConstraint.fullCovariance() == SymMatrix4::Zero()) {
-      ACTS_WARNING(
-          "No constraint provided, but useBeamSpotConstraint set to true.");
-    }
+  if (useVertexConstraintInFit) {
     if (not m_cfg.useSeedConstraint) {
       // Set seed vertex constraint to old constraint before seeding
       seedVertex.setFullCovariance(currentConstraint.fullCovariance());
@@ -182,7 +182,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     }
   } else {
     currentConstraint.setFullPosition(seedVertex.fullPosition());
-    currentConstraint.setFullCovariance(SymMatrix4::Identity() *
+    currentConstraint.setFullCovariance(SquareMatrix4::Identity() *
                                         m_cfg.looseConstrValue);
     currentConstraint.setFitQuality(m_cfg.defaultConstrFitQuality);
   }
@@ -200,7 +200,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::getIPSignificance(
   // it probably should be used.
   Vertex<InputTrack_t> newVtx = vtx;
   if (not m_cfg.useVertexCovForIPEstimation) {
-    newVtx.setFullCovariance(SymMatrix4::Zero());
+    newVtx.setFullCovariance(SquareMatrix4::Zero());
   }
 
   auto estRes = m_cfg.ipEstimator.estimateImpactParameters(
@@ -349,7 +349,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
     checkVertexAndCompatibleTracks(
         Vertex<InputTrack_t>& vtx,
         const std::vector<const InputTrack_t*>& seedTracks,
-        FitterState_t& fitterState) const -> std::pair<int, bool> {
+        FitterState_t& fitterState, bool useVertexConstraintInFit) const
+    -> std::pair<int, bool> {
   bool isGoodVertex = false;
   int nCompatibleTracks = 0;
   for (const auto& trk : fitterState.vtxInfoMap[&vtx].trackLinks) {
@@ -369,7 +370,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::
         nCompatibleTracks++;
         ACTS_DEBUG("Compatible track found.");
 
-        if (m_cfg.addSingleTrackVertices && m_cfg.useBeamSpotConstraint) {
+        if (m_cfg.addSingleTrackVertices && useVertexConstraintInFit) {
           isGoodVertex = true;
           break;
         }
@@ -502,7 +503,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const Vertex<InputTrack_t>& vtx,
     const std::vector<Vertex<InputTrack_t>*>& allVertices) const -> bool {
   const Vector4& candidatePos = vtx.fullPosition();
-  const SymMatrix4& candidateCov = vtx.fullCovariance();
+  const SquareMatrix4& candidateCov = vtx.fullCovariance();
   const double candidateZPos = candidatePos[eZ];
   const double candidateZCov = candidateCov(eZ, eZ);
 
@@ -511,7 +512,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
       continue;
     }
     const Vector4& otherPos = otherVtx->fullPosition();
-    const SymMatrix4& otherCov = otherVtx->fullCovariance();
+    const SquareMatrix4& otherCov = otherVtx->fullCovariance();
     const double otherZPos = otherPos[eZ];
     const double otherZCov = otherCov(eZ, eZ);
 
@@ -519,25 +520,23 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const double deltaZPos = otherZPos - candidateZPos;
     const double sumCovZ = otherZCov + candidateZCov;
 
-    double significance;
+    double significance = 0;
     if (not m_cfg.do3dSplitting) {
-      // Use only z significance
-      if (sumCovZ > 0.) {
-        significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
-      } else {
-        return true;
+      if (sumCovZ <= 0) {
+        // TODO FIXME this should never happen
+        continue;
       }
+      // Use only z significance
+      significance = std::abs(deltaZPos) / std::sqrt(sumCovZ);
     } else {
       // Use full 3d information for significance
-      SymMatrix4 sumCov = candidateCov + otherCov;
-      SymMatrix4 sumCovInverse;
-      bool invertible;
-      sumCov.computeInverseWithCheck(sumCovInverse, invertible);
-      if (invertible) {
-        significance = std::sqrt(deltaPos.dot(sumCovInverse * deltaPos));
-      } else {
-        return true;
+      SquareMatrix4 sumCov = candidateCov + otherCov;
+      auto sumCovInverse = safeInverse(sumCov);
+      if (!sumCovInverse) {
+        // TODO FIXME this should never happen
+        continue;
       }
+      significance = std::sqrt(deltaPos.dot(*sumCovInverse * deltaPos));
     }
     if (significance < m_cfg.maxMergeVertexSignificance) {
       return true;

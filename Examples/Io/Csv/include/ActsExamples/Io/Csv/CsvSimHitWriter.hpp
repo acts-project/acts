@@ -8,14 +8,18 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstddef>
 #include <limits>
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out a simhit collection before detector digitization in comma-
 /// separated-value format.
@@ -58,7 +62,7 @@ class CsvSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] simHits are the simhits to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimHitContainer& simHits) final override;
+                     const SimHitContainer& simHits) override;
 
  private:
   Config m_cfg;

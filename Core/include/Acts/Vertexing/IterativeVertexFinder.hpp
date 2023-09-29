@@ -75,10 +75,10 @@ class IterativeVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(const vfitter_t& fitter, const Linearizer_t& lin, sfinder_t sfinder,
+    Config(const vfitter_t& fitter, Linearizer_t lin, sfinder_t sfinder,
            const IPEstimator& est)
         : vertexFitter(fitter),
-          linearizer(lin),
+          linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
           ipEst(est) {}
 
@@ -94,8 +94,7 @@ class IterativeVertexFinder {
     /// ImpactPointEstimator
     IPEstimator ipEst;
 
-    /// Vertex finder configuration variables
-    bool useBeamConstraint = false;
+    // Vertex finder configuration variables
     double significanceCutSeeding = 10;
     double maximumChi2cutForSeeding = 36.;
     int maxVertices = 50;
@@ -105,6 +104,9 @@ class IterativeVertexFinder {
     bool doMaxTracksCut = false;
     int maxTracks = 5000;
     double cutOffTrackWeight = 0.01;
+    /// If `reassignTracksAfterFirstFit` is set this threshold will be used to
+    /// decide if a track should be checked for reassignment to other vertices
+    double cutOffTrackWeightReassign = 1;
   };
 
   /// State struct
@@ -198,10 +200,12 @@ class IterativeVertexFinder {
   ///
   /// @param params Track parameters
   /// @param vertex The vertex
+  /// @param perigeeSurface The perigee surface at vertex position
   /// @param vertexingOptions Vertexing options
   /// @param state The state object
   Result<double> getCompatibility(
       const BoundTrackParameters& params, const Vertex<InputTrack_t>& vertex,
+      const Surface& perigeeSurface,
       const VertexingOptions<InputTrack_t>& vertexingOptions,
       State& state) const;
 

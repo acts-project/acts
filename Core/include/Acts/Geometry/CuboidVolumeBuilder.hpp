@@ -13,6 +13,8 @@
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <array>
+#include <cstddef>
 #include <functional>
 #include <iosfwd>
 #include <memory>
@@ -71,8 +73,13 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     size_t binsY = 1;
     // Bins in Z direction
     size_t binsZ = 1;
-    // Envelope in X (along layer normal)
-    std::pair<double, double> envelopeX{0, 0};
+    // Envelope in X
+    std::array<ActsScalar, 2u> envelopeX{0, 0};
+    // Envelope in Y
+    std::array<ActsScalar, 2u> envelopeY{0, 0};
+    // Envelope in Z
+    std::array<ActsScalar, 2u> envelopeZ{0, 0};
+    // An optional rotation for this
     std::optional<RotationMatrix3> rotation{std::nullopt};
   };
 
@@ -130,7 +137,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   std::shared_ptr<const Surface> buildSurface(const GeometryContext& gctx,
                                               const SurfaceConfig& cfg) const;
 
-  /// @brief This function creates a layer with a surface encaspulated with a
+  /// @brief This function creates a layer with a surface encapsulated with a
   /// given configuration. The surface gets a detector element attached if the
   /// template parameter is non-void.
   ///
@@ -175,8 +182,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// @return Pointer to the created TrackingGeometry
   std::shared_ptr<TrackingVolume> trackingVolume(
       const GeometryContext& gctx,
-      std::shared_ptr<const TrackingVolume> /*unused*/,
-      std::shared_ptr<const VolumeBounds> /*unused*/) const override;
+      std::shared_ptr<const TrackingVolume> /*oppositeVolume*/,
+      std::shared_ptr<const VolumeBounds> /*outsideBounds*/) const override;
 
  private:
   /// Configuration of the world volume

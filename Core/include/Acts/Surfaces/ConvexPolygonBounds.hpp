@@ -9,11 +9,17 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 
+#include <array>
 #include <cmath>
+#include <cstddef>
 #include <exception>
+#include <iosfwd>
+#include <vector>
 
 #include <boost/container/small_vector.hpp>
 
@@ -109,7 +115,7 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note the number of segements is ignored in this representation
+  /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
   std::vector<Vector2> vertices(unsigned int lseg = 1) const final;
@@ -164,7 +170,7 @@ class ConvexPolygonBounds<PolygonDynamic> : public ConvexPolygonBoundsBase {
   /// @param lseg the number of segments used to approximate
   /// and eventually curved line
   ///
-  /// @note the number of segements is ignored in this representation
+  /// @note the number of segments is ignored in this representation
   ///
   /// @return vector for vertices in 2D
   std::vector<Vector2> vertices(unsigned int lseg = 1) const final;

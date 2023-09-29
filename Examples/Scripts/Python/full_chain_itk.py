@@ -12,12 +12,14 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
+    SeedingAlgorithm,
     TruthSeedRanges,
     addCKFTracks,
-    CKFPerformanceConfig,
+    TrackSelectorConfig,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
-    TrackSelectorRanges,
 )
 
 ttbar_pu200 = False
@@ -57,11 +59,17 @@ addFatras(
     s,
     trackingGeometry,
     field,
-    ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(150 * u.MeV, None), removeNeutral=True)
+    rnd=rnd,
+    preSelectParticles=ParticleSelectorConfig(
+        rho=(0.0 * u.mm, 28.0 * u.mm),
+        absZ=(0.0 * u.mm, 1.0 * u.m),
+        eta=(-4.0, 4.0),
+        pt=(150 * u.MeV, None),
+        removeNeutral=True,
+    )
     if ttbar_pu200
     else ParticleSelectorConfig(),
     outputDirRoot=outputDir,
-    rnd=rnd,
 )
 
 addDigitization(
@@ -80,7 +88,10 @@ addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
     if ttbar_pu200
     else TruthSeedRanges(),
-    *acts.examples.itk.itkSeedingAlgConfig("PixelSpacePoints"),
+    seedingAlgorithm=SeedingAlgorithm.Default,
+    *acts.examples.itk.itkSeedingAlgConfig(
+        acts.examples.itk.InputSpacePointsType.PixelSpacePoints
+    ),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
@@ -89,17 +100,25 @@ addCKFTracks(
     s,
     trackingGeometry,
     field,
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+    TrackSelectorConfig(
+        pt=(1.0 * u.GeV if ttbar_pu200 else 0.0, None),
+        absEta=(None, 4.0),
+        nMeasurementsMin=6,
+    ),
+    outputDirRoot=outputDir,
+)
+
+addAmbiguityResolution(
+    s,
+    AmbiguityResolutionConfig(maximumSharedHits=3),
     outputDirRoot=outputDir,
 )
 
 addVertexFitting(
     s,
     field,
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0), removeNeutral=True),
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
-    trajectories="trajectories",
 )
 
 s.run()

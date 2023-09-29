@@ -8,21 +8,30 @@
 
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
 
-#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/TransformationBoundToFree.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/AverageSimHits.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/Range.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <array>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <ios>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <ostream>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -51,6 +60,9 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
@@ -125,38 +137,78 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     m_outputTree->Branch("pull_eTHETA_fit", &m_pull_eTHETA_fit);
     m_outputTree->Branch("pull_eQOP_fit", &m_pull_eQOP_fit);
     m_outputTree->Branch("pull_eT_fit", &m_pull_eT_fit);
+    if (m_cfg.writeCovMat == true) {
+      // create one branch for every entry of covariance matrix
+      // one block for every row of the matrix, every entry gets own branch
+      m_outputTree->Branch("cov_eLOC0_eLOC0", &m_cov_eLOC0_eLOC0);
+      m_outputTree->Branch("cov_eLOC0_eLOC1", &m_cov_eLOC0_eLOC1);
+      m_outputTree->Branch("cov_eLOC0_ePHI", &m_cov_eLOC0_ePHI);
+      m_outputTree->Branch("cov_eLOC0_eTHETA", &m_cov_eLOC0_eTHETA);
+      m_outputTree->Branch("cov_eLOC0_eQOP", &m_cov_eLOC0_eQOP);
+      m_outputTree->Branch("cov_eLOC0_eT", &m_cov_eLOC0_eT);
+
+      m_outputTree->Branch("cov_eLOC1_eLOC0", &m_cov_eLOC1_eLOC0);
+      m_outputTree->Branch("cov_eLOC1_eLOC1", &m_cov_eLOC1_eLOC1);
+      m_outputTree->Branch("cov_eLOC1_ePHI", &m_cov_eLOC1_ePHI);
+      m_outputTree->Branch("cov_eLOC1_eTHETA", &m_cov_eLOC1_eTHETA);
+      m_outputTree->Branch("cov_eLOC1_eQOP", &m_cov_eLOC1_eQOP);
+      m_outputTree->Branch("cov_eLOC1_eT", &m_cov_eLOC1_eT);
+
+      m_outputTree->Branch("cov_ePHI_eLOC0", &m_cov_ePHI_eLOC0);
+      m_outputTree->Branch("cov_ePHI_eLOC1", &m_cov_ePHI_eLOC1);
+      m_outputTree->Branch("cov_ePHI_ePHI", &m_cov_ePHI_ePHI);
+      m_outputTree->Branch("cov_ePHI_eTHETA", &m_cov_ePHI_eTHETA);
+      m_outputTree->Branch("cov_ePHI_eQOP", &m_cov_ePHI_eQOP);
+      m_outputTree->Branch("cov_ePHI_eT", &m_cov_ePHI_eT);
+
+      m_outputTree->Branch("cov_eTHETA_eLOC0", &m_cov_eTHETA_eLOC0);
+      m_outputTree->Branch("cov_eTHETA_eLOC1", &m_cov_eTHETA_eLOC1);
+      m_outputTree->Branch("cov_eTHETA_ePHI", &m_cov_eTHETA_ePHI);
+      m_outputTree->Branch("cov_eTHETA_eTHETA", &m_cov_eTHETA_eTHETA);
+      m_outputTree->Branch("cov_eTHETA_eQOP", &m_cov_eTHETA_eQOP);
+      m_outputTree->Branch("cov_eTHETA_eT", &m_cov_eTHETA_eT);
+
+      m_outputTree->Branch("cov_eQOP_eLOC0", &m_cov_eQOP_eLOC0);
+      m_outputTree->Branch("cov_eQOP_eLOC1", &m_cov_eQOP_eLOC1);
+      m_outputTree->Branch("cov_eQOP_ePHI", &m_cov_eQOP_ePHI);
+      m_outputTree->Branch("cov_eQOP_eTHETA", &m_cov_eQOP_eTHETA);
+      m_outputTree->Branch("cov_eQOP_eQOP", &m_cov_eQOP_eQOP);
+      m_outputTree->Branch("cov_eQOP_eT", &m_cov_eQOP_eT);
+
+      m_outputTree->Branch("cov_eT_eLOC0", &m_cov_eT_eLOC0);
+      m_outputTree->Branch("cov_eT_eLOC1", &m_cov_eT_eLOC1);
+      m_outputTree->Branch("cov_eT_ePHI", &m_cov_eT_ePHI);
+      m_outputTree->Branch("cov_eT_eTHETA", &m_cov_eT_eTHETA);
+      m_outputTree->Branch("cov_eT_eQOP", &m_cov_eT_eQOP);
+      m_outputTree->Branch("cov_eT_eT", &m_cov_eT_eT);
+    }
   }
 }
 
 ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  m_outputFile->Close();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write parameters of trajectories to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+ActsExamples::ProcessCode
+ActsExamples::RootTrajectorySummaryWriter::finalize() {
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  if (m_cfg.writeCovMat) {
+    ACTS_INFO("Wrote full covariance matrix to tree");
   }
+  ACTS_INFO("Wrote parameters of trajectories to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
-
   // Read additional input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -171,17 +223,19 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
+    // The trajectory entry indices
+    const auto& trackTips = traj.tips();
+
+    // Dont write empty MultiTrajectory
+    if (trackTips.empty()) {
       continue;
     }
 
+    // Get the MultiTrajectory
+    const auto& mj = traj.multiTrajectory();
+
     // The trajectory index
     m_multiTrajNr.push_back(itraj);
-
-    // The trajectory entry indices and the multiTrajectory
-    const auto& mj = traj.multiTrajectory();
-    const auto& trackTips = traj.tips();
 
     // Loop over the entry indices for the subtrajectories
     for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {
@@ -214,9 +268,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                                   trajState.outlierLayer.end());
 
       // Initialize the truth particle info
-      uint64_t majorityParticleId = NaNint;
-      unsigned int nMajorityHits = NaNint;
-      float t_charge = NaNint;
+      ActsFatras::Barcode majorityParticleId(
+          std::numeric_limits<size_t>::max());
+      unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
+      int t_charge = std::numeric_limits<int>::max();
       float t_time = NaNfloat;
       float t_vx = NaNfloat;
       float t_vy = NaNfloat;
@@ -231,6 +286,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       float t_pT = NaNfloat;
       float t_d0 = NaNfloat;
       float t_z0 = NaNfloat;
+      float t_qop = NaNfloat;
 
       // Get the perigee surface
       Acts::Surface* pSurface = nullptr;
@@ -246,7 +302,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Get the truth particle info
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        majorityParticleId = particleHitCounts.front().particleId.value();
+        majorityParticleId = particleHitCounts.front().particleId;
         nMajorityHits = particleHitCounts.front().hitCount;
 
         // Find the truth particle via the barcode
@@ -255,27 +311,36 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           foundMajorityParticle = true;
 
           const auto& particle = *ip;
-          ACTS_DEBUG(
-              "Find the truth particle with barcode = " << majorityParticleId);
+          ACTS_VERBOSE("Find the truth particle with barcode "
+                       << majorityParticleId << "="
+                       << majorityParticleId.value());
           // Get the truth particle info at vertex
           t_p = particle.absoluteMomentum();
-          t_charge = particle.charge();
+          t_charge = static_cast<int>(particle.charge());
           t_time = particle.time();
           t_vx = particle.position().x();
           t_vy = particle.position().y();
           t_vz = particle.position().z();
-          t_px = t_p * particle.unitDirection().x();
-          t_py = t_p * particle.unitDirection().y();
-          t_pz = t_p * particle.unitDirection().z();
-          t_theta = theta(particle.unitDirection());
-          t_phi = phi(particle.unitDirection());
-          t_eta = eta(particle.unitDirection());
-          t_pT = t_p * perp(particle.unitDirection());
+          t_px = t_p * particle.direction().x();
+          t_py = t_p * particle.direction().y();
+          t_pz = t_p * particle.direction().z();
+          t_theta = theta(particle.direction());
+          t_phi = phi(particle.direction());
+          t_eta = eta(particle.direction());
+          t_pT = t_p * perp(particle.direction());
+          t_qop = particle.qOverP();
 
           if (pSurface != nullptr) {
+            auto intersection =
+                pSurface
+                    ->intersect(ctx.geoContext, particle.position(),
+                                particle.direction(), false)
+                    .closest();
+            auto position = intersection.position();
+
             // get the truth perigee parameter
-            auto lpResult = pSurface->globalToLocal(
-                ctx.geoContext, particle.position(), particle.unitDirection());
+            auto lpResult = pSurface->globalToLocal(ctx.geoContext, position,
+                                                    particle.direction());
             if (lpResult.ok()) {
               t_d0 = lpResult.value()[Acts::BoundIndices::eBoundLoc0];
               t_z0 = lpResult.value()[Acts::BoundIndices::eBoundLoc1];
@@ -284,19 +349,19 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
             }
           }
         } else {
-          ACTS_WARNING("Truth particle with barcode = "
-                       << majorityParticleId
-                       << " not found in the input collection!");
+          ACTS_DEBUG("Truth particle with barcode "
+                     << majorityParticleId << "=" << majorityParticleId.value()
+                     << " not found in the input collection!");
         }
       }
       if (not foundMajorityParticle) {
-        ACTS_WARNING("Truth particle for mj " << itraj << " subtraj "
-                                              << isubtraj << " not found!");
+        ACTS_DEBUG("Truth particle for mj " << itraj << " subtraj " << isubtraj
+                                            << " not found!");
       }
 
       // Push the corresponding truth particle info for the track.
       // Always push back even if majority particle not found
-      m_majorityParticleId.push_back(majorityParticleId);
+      m_majorityParticleId.push_back(majorityParticleId.value());
       m_nMajorityHits.push_back(nMajorityHits);
       m_t_charge.push_back(t_charge);
       m_t_time.push_back(t_time);
@@ -317,13 +382,18 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Initialize the fitted track parameters info
       std::array<float, Acts::eBoundSize> param = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
-      std::array<float, Acts::eBoundSize> res = {NaNfloat, NaNfloat, NaNfloat,
-                                                 NaNfloat, NaNfloat, NaNfloat};
       std::array<float, Acts::eBoundSize> error = {
           NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat, NaNfloat};
-      std::array<float, Acts::eBoundSize> pull = {NaNfloat, NaNfloat, NaNfloat,
-                                                  NaNfloat, NaNfloat, NaNfloat};
+
+      // get entries of covariance matrix. If no entry, return NaN
+      auto getCov = [&](auto i, auto j) {
+        return traj.trackParameters(trackTip).covariance().has_value()
+                   ? traj.trackParameters(trackTip).covariance().value()(i, j)
+                   : NaNfloat;
+      };
+
       bool hasFittedParams = false;
+      bool hasFittedCov = false;
       if (traj.hasTrackParameters(trackTip)) {
         hasFittedParams = true;
         const auto& boundParam = traj.trackParameters(trackTip);
@@ -332,18 +402,31 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           param[i] = parameter[i];
         }
 
-        res = {param[Acts::eBoundLoc0] - t_d0,
-               param[Acts::eBoundLoc1] - t_z0,
-               param[Acts::eBoundPhi] - t_phi,
-               param[Acts::eBoundTheta] - t_theta,
-               param[Acts::eBoundQOverP] - t_charge / t_p,
-               param[Acts::eBoundTime] - t_time};
-
         if (boundParam.covariance().has_value()) {
+          hasFittedCov = true;
           const auto& covariance = *boundParam.covariance();
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
             error[i] = std::sqrt(covariance(i, i));
-            pull[i] = res[i] / error[i];
+          }
+        }
+      }
+
+      std::array<float, Acts::eBoundSize> res = {NaNfloat, NaNfloat, NaNfloat,
+                                                 NaNfloat, NaNfloat, NaNfloat};
+      std::array<float, Acts::eBoundSize> pull = {NaNfloat, NaNfloat, NaNfloat,
+                                                  NaNfloat, NaNfloat, NaNfloat};
+      if (foundMajorityParticle && hasFittedParams) {
+        res = {param[Acts::eBoundLoc0] - t_d0,
+               param[Acts::eBoundLoc1] - t_z0,
+               Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
+                                                 static_cast<float>(2 * M_PI)),
+               param[Acts::eBoundTheta] - t_theta,
+               param[Acts::eBoundQOverP] - t_qop,
+               param[Acts::eBoundTime] - t_time};
+
+        if (hasFittedCov) {
+          for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
+            pull[i] = res[i] / error[i];  // MARK: fpeMask(FLTINV, 1, #2284)
           }
         }
       }
@@ -379,6 +462,52 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       m_pull_eT_fit.push_back(pull[Acts::eBoundTime]);
 
       m_hasFittedParams.push_back(hasFittedParams);
+      if (m_cfg.writeCovMat) {
+        // write all entries of covariance matrix to output file
+        // one branch for every entry of the matrix.
+        m_cov_eLOC0_eLOC0.push_back(getCov(0, 0));
+        m_cov_eLOC0_eLOC1.push_back(getCov(0, 1));
+        m_cov_eLOC0_ePHI.push_back(getCov(0, 2));
+        m_cov_eLOC0_eTHETA.push_back(getCov(0, 3));
+        m_cov_eLOC0_eQOP.push_back(getCov(0, 4));
+        m_cov_eLOC0_eT.push_back(getCov(0, 5));
+
+        m_cov_eLOC1_eLOC0.push_back(getCov(1, 0));
+        m_cov_eLOC1_eLOC1.push_back(getCov(1, 1));
+        m_cov_eLOC1_ePHI.push_back(getCov(1, 2));
+        m_cov_eLOC1_eTHETA.push_back(getCov(1, 3));
+        m_cov_eLOC1_eQOP.push_back(getCov(1, 4));
+        m_cov_eLOC1_eT.push_back(getCov(1, 5));
+
+        m_cov_ePHI_eLOC0.push_back(getCov(2, 0));
+        m_cov_ePHI_eLOC1.push_back(getCov(2, 1));
+        m_cov_ePHI_ePHI.push_back(getCov(2, 2));
+        m_cov_ePHI_eTHETA.push_back(getCov(2, 3));
+        m_cov_ePHI_eQOP.push_back(getCov(2, 4));
+        m_cov_ePHI_eT.push_back(getCov(2, 5));
+
+        m_cov_eTHETA_eLOC0.push_back(getCov(3, 0));
+        m_cov_eTHETA_eLOC1.push_back(getCov(3, 1));
+        m_cov_eTHETA_ePHI.push_back(getCov(3, 2));
+        m_cov_eTHETA_eTHETA.push_back(getCov(3, 3));
+        m_cov_eTHETA_eQOP.push_back(getCov(3, 4));
+        m_cov_eTHETA_eT.push_back(getCov(3, 5));
+
+        m_cov_eQOP_eLOC0.push_back(getCov(4, 0));
+        m_cov_eQOP_eLOC1.push_back(getCov(4, 1));
+        m_cov_eQOP_ePHI.push_back(getCov(4, 2));
+        m_cov_eQOP_eTHETA.push_back(getCov(4, 3));
+        m_cov_eQOP_eQOP.push_back(getCov(4, 4));
+        m_cov_eQOP_eT.push_back(getCov(4, 5));
+
+        m_cov_eT_eLOC0.push_back(getCov(5, 0));
+        m_cov_eT_eLOC1.push_back(getCov(5, 1));
+        m_cov_eT_ePHI.push_back(getCov(5, 2));
+        m_cov_eT_eTHETA.push_back(getCov(5, 3));
+        m_cov_eT_eQOP.push_back(getCov(5, 4));
+        m_cov_eT_eT.push_back(getCov(5, 5));
+      }
+
     }  // all subtrajectories
   }    // all trajectories
 
@@ -444,6 +573,50 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   m_pull_eTHETA_fit.clear();
   m_pull_eQOP_fit.clear();
   m_pull_eT_fit.clear();
+
+  if (m_cfg.writeCovMat) {
+    m_cov_eLOC0_eLOC0.clear();
+    m_cov_eLOC0_eLOC1.clear();
+    m_cov_eLOC0_ePHI.clear();
+    m_cov_eLOC0_eTHETA.clear();
+    m_cov_eLOC0_eQOP.clear();
+    m_cov_eLOC0_eT.clear();
+
+    m_cov_eLOC1_eLOC0.clear();
+    m_cov_eLOC1_eLOC1.clear();
+    m_cov_eLOC1_ePHI.clear();
+    m_cov_eLOC1_eTHETA.clear();
+    m_cov_eLOC1_eQOP.clear();
+    m_cov_eLOC1_eT.clear();
+
+    m_cov_ePHI_eLOC0.clear();
+    m_cov_ePHI_eLOC1.clear();
+    m_cov_ePHI_ePHI.clear();
+    m_cov_ePHI_eTHETA.clear();
+    m_cov_ePHI_eQOP.clear();
+    m_cov_ePHI_eT.clear();
+
+    m_cov_eTHETA_eLOC0.clear();
+    m_cov_eTHETA_eLOC1.clear();
+    m_cov_eTHETA_ePHI.clear();
+    m_cov_eTHETA_eTHETA.clear();
+    m_cov_eTHETA_eQOP.clear();
+    m_cov_eTHETA_eT.clear();
+
+    m_cov_eQOP_eLOC0.clear();
+    m_cov_eQOP_eLOC1.clear();
+    m_cov_eQOP_ePHI.clear();
+    m_cov_eQOP_eTHETA.clear();
+    m_cov_eQOP_eQOP.clear();
+    m_cov_eQOP_eT.clear();
+
+    m_cov_eT_eLOC0.clear();
+    m_cov_eT_eLOC1.clear();
+    m_cov_eT_ePHI.clear();
+    m_cov_eT_eTHETA.clear();
+    m_cov_eT_eQOP.clear();
+    m_cov_eT_eT.clear();
+  }
 
   return ProcessCode::SUCCESS;
 }

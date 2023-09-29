@@ -11,7 +11,6 @@
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Ray.hpp"
-#include "Acts/Visualization/PlyVisualization3D.hpp"
 
 using boost::test_tools::output_test_stream;
 

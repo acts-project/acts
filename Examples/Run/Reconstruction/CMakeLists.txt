@@ -60,6 +60,17 @@ target_link_libraries(
     ActsExamplesRecTracksCommon
     ActsExamplesDetectorTelescope)
 
+# Hough Transform
+add_executable(
+  ActsExampleHough
+  HoughExample.cpp)
+target_link_libraries(
+  ActsExampleHough
+  PRIVATE
+    ActsExamplesRecTracksCommon
+    ActsExamplesDetectorGeneric
+)
+
 # Seeding for Generic detector
 add_executable(
   ActsExampleSeedingGeneric
@@ -128,6 +139,7 @@ install(
     ActsExampleCKFTracksTGeo
     ActsExampleCKFTracksTelescope
     ActsExampleSeedingGeneric
+    ActsExampleHough
     ActsExampleSeedingTGeo
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

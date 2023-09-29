@@ -70,7 +70,7 @@ T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
 }
 
 /// Check if a detector element has a key set in its VariantParameters
-/// @param key The key to check existance for
+/// @param key The key to check existence for
 /// @param elt The detector element instance
 /// @return True if the element has VariantParameters and the key exists, false if
 ///         either of these is not true

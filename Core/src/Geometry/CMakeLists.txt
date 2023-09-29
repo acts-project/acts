@@ -12,6 +12,7 @@ target_sources(
     CylinderVolumeBuilder.cpp
     CylinderVolumeHelper.cpp
     Extent.cpp
+    KDTreeTrackingGeometryBuilder.cpp
     DiscLayer.cpp
     GenericApproachDescriptor.cpp
     GenericCuboidVolumeBounds.cpp

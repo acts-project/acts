@@ -78,7 +78,7 @@ records for the value of the magnetic field at the time of the event.
 
 ## Field provider implementations in Core
 
-There are a number of field provider implemenations found in core which serve different purposes.
+There are a number of field provider implementations found in core which serve different purposes.
 
 ### Constant magnetic field
 

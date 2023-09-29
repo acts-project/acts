@@ -9,15 +9,33 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <algorithm>
+#include <functional>
+#include <map>
 #include <memory>
+#include <optional>
 #include <random>
+#include <utility>
 
 #include "FitterTestsCommon.hpp"
 
@@ -38,6 +56,8 @@ using KalmanSmoother = Acts::GainMatrixSmoother;
 using KalmanFitter =
     Acts::KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
 
+static const auto pion = Acts::ParticleHypothesis::pion();
+
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
 
@@ -51,21 +71,21 @@ Acts::CurvilinearTrackParameters makeParameters() {
   stddev[Acts::eBoundPhi] = 2_degree;
   stddev[Acts::eBoundTheta] = 2_degree;
   stddev[Acts::eBoundQOverP] = 1 / 100_GeV;
-  Acts::BoundSymMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
+  Acts::BoundSquareMatrix cov = stddev.cwiseProduct(stddev).asDiagonal();
   // define a track in the transverse plane along x
   Acts::Vector4 mPos4(-3_m, 0., 0., 42_ns);
-  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree, 1_GeV,
-                                          1_e, cov);
+  return Acts::CurvilinearTrackParameters(mPos4, 0_degree, 90_degree,
+                                          1_e / 1_GeV, cov, pion);
 }
 
 // Instantiate the tester
 const FitterTester tester;
 
 // reconstruction propagator and fitter
-const auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
+auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
 const auto kfZeroPropagator =
     makeConstantFieldPropagator<ConstantFieldStepper>(tester.geometry, 0_T);
-const auto kfZero = KalmanFitter(kfZeroPropagator);
+const auto kfZero = KalmanFitter(kfZeroPropagator, std::move(kfLogger));
 
 std::default_random_engine rng(42);
 
@@ -77,10 +97,12 @@ auto makeDefaultKalmanFitterOptions() {
       &kfUpdater);
   extensions.smoother
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
+  extensions.surfaceAccessor
+      .connect<&Acts::Test::TestSourceLink::SurfaceAccessor::operator()>(
+          &tester.surfaceAccessor);
 
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
-                             extensions, LoggerWrapper{*kfLogger},
-                             PropagatorPlainOptions());
+                             extensions, PropagatorPlainOptions());
 }
 
 }  // namespace
@@ -94,7 +116,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldNoSurfaceForward(kfZero, kfOptions, start, rng,
-                                        expected_reversed, expected_smoothed);
+                                        expected_reversed, expected_smoothed,
+                                        true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
@@ -106,7 +129,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
-                                          expected_reversed, expected_smoothed);
+                                          expected_reversed, expected_smoothed,
+                                          true);
 
   // reverse filtering instead of smoothing
   kfOptions.reversedFiltering = true;
@@ -114,7 +138,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
-                                          expected_reversed, expected_smoothed);
+                                          expected_reversed, expected_smoothed,
+                                          true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
@@ -125,16 +150,18 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   kfOptions.reversedFiltering = false;
   bool expected_reversed = false;
   bool expected_smoothed = true;
-  tester.test_ZeroFieldWithSurfaceBackward(
-      kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
+  tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
+                                           expected_reversed, expected_smoothed,
+                                           true);
 
   // reverse filtering instead of smoothing
   kfOptions.reversedFiltering = true;
   kfOptions.reversedFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
-  tester.test_ZeroFieldWithSurfaceBackward(
-      kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
+  tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
+                                           expected_reversed, expected_smoothed,
+                                           true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
@@ -144,7 +171,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceAtExit(kfZero, kfOptions, start, rng,
-                                         expected_reversed, expected_smoothed);
+                                         expected_reversed, expected_smoothed,
+                                         true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
@@ -154,7 +182,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldShuffled(kfZero, kfOptions, start, rng,
-                                expected_reversed, expected_smoothed);
+                                expected_reversed, expected_smoothed, true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
@@ -164,7 +192,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithHole(kfZero, kfOptions, start, rng,
-                                expected_reversed, expected_smoothed);
+                                expected_reversed, expected_smoothed, true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
@@ -181,7 +209,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithOutliers(kfZero, kfOptions, start, rng,
-                                    expected_reversed, expected_smoothed);
+                                    expected_reversed, expected_smoothed, true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
@@ -199,8 +227,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
     kfOptions.reversedFiltering = reverse;
     kfOptions.reversedFilteringCovarianceScaling = 100.0;
 
-    tester.test_ZeroFieldWithReverseFiltering(
-        kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
+    tester.test_ZeroFieldWithReverseFiltering(kfZero, kfOptions, start, rng,
+                                              expected_reversed,
+                                              expected_smoothed, true);
   };
 
   // Track of 1 GeV with a threshold set at 0.1 GeV, reversed filtering should

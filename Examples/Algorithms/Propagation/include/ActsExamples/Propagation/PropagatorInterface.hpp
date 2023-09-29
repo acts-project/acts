@@ -32,20 +32,8 @@ class PropagatorInterface {
   ///@return PropagationOutput
   virtual PropagationOutput execute(
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger,
+      const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const = 0;
-
-  ///@brief  Execute a propagation for neutral particle parameters
-  ///
-  ///@param context The algorithm context
-  ///@param cfg  The propagation algorithm configuration
-  ///@param logger A logger wrapper instance
-  ///@param startParameters The start parameters
-  ///@return PropagationOutput
-  virtual PropagationOutput execute(
-      const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger,
-      const Acts::NeutralBoundTrackParameters& startParameters) const = 0;
 };
 
 ///@brief Concrete instance of a propagator
@@ -67,28 +55,21 @@ class ConcretePropagator : public PropagatorInterface {
 
   PropagationOutput execute(
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger,
+      const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const override {
-    return executeTest(context, cfg, logger, startParameters);
-  }
-
-  PropagationOutput execute(
-      const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger,
-      const Acts::NeutralBoundTrackParameters& startParameters) const override {
     return executeTest(context, cfg, logger, startParameters);
   }
 
  private:
   /// Templated execute test method for
-  /// charged and netural particles
+  /// charged and neutral particles
   /// @param [in] context is the contextual data of this event
   /// @param [in] startParameters the start parameters
   /// @param [in] pathLength the maximal path length to go
   template <typename parameters_t>
   PropagationOutput executeTest(
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger, const parameters_t& startParameters,
+      const Acts::Logger& logger, const parameters_t& startParameters,
       double pathLength = std::numeric_limits<double>::max()) const {
     ACTS_DEBUG("Test propagation/extrapolation starts");
 
@@ -107,13 +88,12 @@ class ConcretePropagator : public PropagatorInterface {
       using PropagatorOptions =
           Acts::DenseStepperPropagatorOptions<ActionList, AbortList>;
 
-      PropagatorOptions options(context.geoContext, context.magFieldContext,
-                                Acts::LoggerWrapper{logger()});
+      PropagatorOptions options(context.geoContext, context.magFieldContext);
       options.pathLimit = pathLength;
 
       // Activate loop protection at some pt value
       options.loopProtection =
-          (startParameters.transverseMomentum() < cfg.ptLoopers);
+          startParameters.transverseMomentum() < cfg.ptLoopers;
 
       // Switch the material interaction on/off & eventually into logging mode
       auto& mInteractor = options.actionList.get<MaterialInteractor>();

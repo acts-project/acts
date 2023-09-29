@@ -14,9 +14,10 @@ import acts.examples.geant4.hepmc3
 u = acts.UnitConstants
 
 from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
-def runEventRecording(g4geo, outputDir, s=None):
+def runEventRecording(detectorConstructionFactory, outputDir, s=None):
     hepmc_dir = os.path.join(outputDir, "hepmc3")
     if not os.path.exists(hepmc_dir):
         os.mkdir(hepmc_dir)
@@ -54,7 +55,7 @@ def runEventRecording(g4geo, outputDir, s=None):
         outputHepMcTracks="geant-event",
         seed1=43,
         seed2=44,
-        detectorConstruction=g4geo,
+        detectorConstructionFactory=detectorConstructionFactory,
     )
 
     erAlg = acts.examples.geant4.hepmc3.EventRecording(
@@ -76,11 +77,15 @@ def runEventRecording(g4geo, outputDir, s=None):
 
 
 if "__main__" == __name__:
-
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
     )
 
-    g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(dd4hepSvc)
+    detectorConstructionFactory = (
+        acts.examples.geant4.dd4hep.DDG4DetectorConstructionFactory(detector)
+    )
 
-    runEventRecording(g4geo=g4geo, outputDir=os.getcwd()).run()
+    runEventRecording(
+        detectorConstructionFactory=detectorConstructionFactory,
+        outputDir=os.getcwd(),
+    ).run()

@@ -58,7 +58,8 @@ Now, for the sake of this example, let's specify a user-defined annealing scheme
 ```cpp
 // Set up deterministic annealing with user-defined temperatures
 std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
-Acts::AnnealingUtility::Config annealingConfig(temperatures);
+Acts::AnnealingUtility::Config annealingConfig;
+annealingConfig.setOfTemperatures = temperatures;
 Acts::AnnealingUtility annealingUtility(annealingConfig);
 ```
 The AMVF strongly interplays with its dedicated vertex fitter, the *Adaptive Multi-Vertex Fitter*. Let's configure and set it up with the annealing utility defined above:
@@ -88,8 +89,6 @@ using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 We configure the vertex finder in such a way that we do *not* use a beam spot constraint here:
 ```cpp
 Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator, linearizer);
-// We do not want to use a beamspot constraint here
-finderConfig.useBeamSpotConstraint = false;
 ```
 Create the AMVF instance and a finder state to be passed to the `find()` method below:
 ```cpp
@@ -106,7 +105,7 @@ VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
  ```
 ### Deploying the vertex finder on the track collection
 
-Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The `find()` methods on ACTS vertex finders return an `Acts::Result` object that we can use to check if any errors occured and to retrieve the vertex collection:
+Now we're ready to actually use the AMVF tool that we have set up above to find vertices on our input track collection. The `find()` methods on ACTS vertex finders return an `Acts::Result` object that we can use to check if any errors occurred and to retrieve the vertex collection:
 ```cpp
 // Find vertices
 auto res = finder.find(inputTrackPointers, finderOpts, state);

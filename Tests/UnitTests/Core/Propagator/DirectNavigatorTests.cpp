@@ -10,20 +10,38 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Material/Material.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <iostream>
 #include <memory>
+#include <random>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class Surface;
+}  // namespace Acts
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -54,7 +72,7 @@ Stepper estepper(bField);
 Stepper dstepper(bField);
 
 ReferencePropagator rpropagator(std::move(estepper), std::move(navigator));
-DirectPropagator dpropagator(std::move(dstepper), dnavigator);
+DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
 
 const int ntests = 1000;
 const int skip = 0;
@@ -88,7 +106,8 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
   // Define start parameters from ranom input
   double p = pT / sin(theta);
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta,
-                                   dcharge / p);
+                                   dcharge / p, std::nullopt,
+                                   ParticleHypothesis::pion());
 
   using EndOfWorld = EndOfWorldReached;
 
@@ -98,7 +117,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
   // Options definition
   using Options = PropagatorOptions<RefereceActionList, ReferenceAbortList>;
-  Options pOptions(tgContext, mfContext, getDummyLogger());
+  Options pOptions(tgContext, mfContext);
   if (oversteppingTest) {
     pOptions.maxStepSize = oversteppingMaxStepSize;
   }
@@ -125,13 +144,13 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
       surfaceSequence.push_back(cs.surface);
     }
 
-    // Action list for direct navigator with its initalizer
+    // Action list for direct navigator with its initializer
     using DirectActionList = ActionList<DirectNavigator::Initializer,
                                         MaterialInteractor, SurfaceCollector<>>;
 
     // Direct options definition
     using DirectOptions = PropagatorOptions<DirectActionList, AbortList<>>;
-    DirectOptions dOptions(tgContext, mfContext, getDummyLogger());
+    DirectOptions dOptions(tgContext, mfContext);
     // Set the surface sequence
     auto& dInitializer =
         dOptions.actionList.get<DirectNavigator::Initializer>();

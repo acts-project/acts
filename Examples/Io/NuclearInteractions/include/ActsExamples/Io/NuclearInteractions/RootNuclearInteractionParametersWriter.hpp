@@ -8,14 +8,18 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Io/NuclearInteractions/detail/NuclearInteractionParametrisation.hpp"
 
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// This class takes fractions of recorded events that represent the
 /// effect of a nuclear interaction and produces histograms and parameters which
@@ -54,10 +58,10 @@ class RootNuclearInteractionParametersWriter final
   /// @param level Message level declaration
   RootNuclearInteractionParametersWriter(const Config& config,
                                          Acts::Logging::Level level);
-  ~RootNuclearInteractionParametersWriter() final override;
+  ~RootNuclearInteractionParametersWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -67,9 +71,8 @@ class RootNuclearInteractionParametersWriter final
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] event Fraction of an event that will be stored in @p
   /// m_eventFractionCollection
-  ProcessCode writeT(
-      const AlgorithmContext& /*ctx*/,
-      const ExtractedSimulationProcessContainer& event) final override;
+  ProcessCode writeT(const AlgorithmContext& /*ctx*/,
+                     const ExtractedSimulationProcessContainer& event) override;
 
  private:
   Config m_cfg;             ///< The config class

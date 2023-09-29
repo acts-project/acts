@@ -11,7 +11,7 @@ u = acts.UnitConstants
 
 
 def runGeant4(
-    geometryService,
+    detector,
     trackingGeometry,
     field,
     outputDir,
@@ -28,7 +28,7 @@ def runGeant4(
     outputDir = Path(outputDir)
     addGeant4(
         s,
-        geometryService,
+        detector,
         trackingGeometry,
         field,
         outputDirCsv=outputDir / "csv",
@@ -45,4 +45,4 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runGeant4(detector.geometryService, trackingGeometry, field, Path.cwd()).run()
+    runGeant4(detector, trackingGeometry, field, Path.cwd()).run()

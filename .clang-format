@@ -1,7 +1,7 @@
 ---
 BasedOnStyle: Google
 Language: Cpp
-AllowShortBlocksOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
 AllowShortIfStatementsOnASingleLine: false
@@ -27,5 +27,5 @@ IncludeCategories:
   # other system includes: '<...>' without further conditions
   - Regex:    '^<.*>'
     Priority: 3
-  # all headers not explicitely listed will be assigned to the last group
+  # all headers not explicitly listed will be assigned to the last group
 ---

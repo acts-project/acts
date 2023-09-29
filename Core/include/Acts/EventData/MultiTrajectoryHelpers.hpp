@@ -8,6 +8,7 @@
 
 #pragma once
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
@@ -44,15 +45,12 @@ using VolumeTrajectoryStateContainer =
 
 /// @brief Getter for global trajectory info
 ///
-/// @tparam source_link_t Type of source link
-///
 /// @param multiTraj The MultiTrajectory object
 /// @param entryIndex The entry index of trajectory to investigate
 ///
 /// @return The trajectory summary info
 template <typename traj_t>
-TrajectoryState trajectoryState(const Acts::MultiTrajectory<traj_t>& multiTraj,
-                                const size_t& entryIndex) {
+TrajectoryState trajectoryState(const traj_t& multiTraj, size_t entryIndex) {
   TrajectoryState trajState;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
     // Get the volume Id of this surface
@@ -60,7 +58,6 @@ TrajectoryState trajectoryState(const Acts::MultiTrajectory<traj_t>& multiTraj,
     const auto& volume = geoID.volume();
     const auto& layer = geoID.layer();
     trajState.nStates++;
-    trajState.NDF += state.calibratedSize();
     auto typeFlags = state.typeFlags();
     if (typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
       if (typeFlags.test(Acts::TrackStateFlag::SharedHitFlag)) {
@@ -71,6 +68,7 @@ TrajectoryState trajectoryState(const Acts::MultiTrajectory<traj_t>& multiTraj,
       trajState.measurementVolume.push_back(volume);
       trajState.measurementLayer.push_back(layer);
       trajState.chi2Sum += state.chi2();
+      trajState.NDF += state.calibratedSize();
     } else if (typeFlags.test(Acts::TrackStateFlag::OutlierFlag)) {
       trajState.nOutliers++;
       trajState.outlierChi2.push_back(state.chi2());
@@ -96,7 +94,7 @@ TrajectoryState trajectoryState(const Acts::MultiTrajectory<traj_t>& multiTraj,
 /// different volumes)
 template <typename traj_t>
 VolumeTrajectoryStateContainer trajectoryState(
-    const Acts::MultiTrajectory<traj_t>& multiTraj, const size_t& entryIndex,
+    const traj_t& multiTraj, size_t entryIndex,
     const std::vector<GeometryIdentifier::Value>& volumeIds) {
   VolumeTrajectoryStateContainer trajStateContainer;
   multiTraj.visitBackwards(entryIndex, [&](const auto& state) {

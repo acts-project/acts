@@ -12,9 +12,14 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <stdexcept>
+#include <vector>
 
 /* Note on nomenclature:
   alpha = cone opening half angle
@@ -64,7 +69,7 @@ BOOST_AUTO_TEST_CASE(ConeBoundsRecreation) {
   // const bool symmetric(false);
   ConeBounds original(alpha, zMin, zMax, halfPhi, averagePhi);
   auto valvector = original.values();
-  std::array<double, ConeBounds::eSize> values;
+  std::array<double, ConeBounds::eSize> values{};
   std::copy_n(valvector.begin(), ConeBounds::eSize, values.begin());
   ConeBounds recreated(values);
   BOOST_CHECK_EQUAL(recreated, original);

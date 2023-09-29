@@ -8,6 +8,22 @@
 
 #include "ActsExamples/Io/Root/RootBFieldWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
+
+#include <cassert>
+#include <ios>
+#include <sstream>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+#include <TFile.h>
+#include <TTree.h>
+
 namespace ActsExamples {
 
 /// Write down an interpolated magnetic field map
@@ -78,19 +94,19 @@ void RootBFieldWriter::run(const Config& config,
     size_t nBinsX = 0, nBinsY = 0, nBinsZ = 0;
 
     // The position values in xyz
-    double x;
+    double x = 0;
     outputTree->Branch("x", &x);
-    double y;
+    double y = 0;
     outputTree->Branch("y", &y);
-    double z;
+    double z = 0;
     outputTree->Branch("z", &z);
 
     // The BField values in xyz
-    double Bx;
+    double Bx = 0;
     outputTree->Branch("Bx", &Bx);
-    double By;
+    double By = 0;
     outputTree->Branch("By", &By);
-    double Bz;
+    double Bz = 0;
     outputTree->Branch("Bz", &Bz);
 
     // check if range is user defined
@@ -180,14 +196,14 @@ void RootBFieldWriter::run(const Config& config,
     ACTS_INFO("Map will be written out in cylinder coordinates (r,z).");
 
     // The position value in rz
-    double r;
+    double r = 0;
     outputTree->Branch("r", &r);
-    double z;
+    double z = 0;
     outputTree->Branch("z", &z);
     // The BField value in rz
-    double Br;
+    double Br = 0;
     outputTree->Branch("Br", &Br);
-    double Bz;
+    double Bz = 0;
     outputTree->Branch("Bz", &Bz);
 
     double minR = 0, maxR = 0;

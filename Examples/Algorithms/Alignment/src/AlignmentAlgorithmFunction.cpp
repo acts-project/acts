@@ -14,7 +14,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
@@ -35,8 +34,8 @@ struct AlignmentFunctionImpl
   AlignmentFunctionImpl(Alignment&& a) : align(std::move(a)) {}
 
   ActsExamples::AlignmentAlgorithm::AlignmentResult operator()(
-      const std::vector<std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>>& sourceLinks,
+      const std::vector<std::vector<ActsExamples::IndexSourceLink>>&
+          sourceLinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsAlignment::AlignmentOptions<
           ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options)
@@ -51,7 +50,7 @@ ActsExamples::AlignmentAlgorithm::makeAlignmentFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   Stepper stepper(std::move(magneticField));
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

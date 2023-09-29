@@ -13,13 +13,14 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <algorithm>
 #include <optional>
 #include <tuple>
 #include <variant>
 
 namespace Acts {
 
-using VariantCovariance = std::variant<BoundSymMatrix, FreeSymMatrix>;
+using VariantCovariance = std::variant<BoundSquareMatrix, FreeSquareMatrix>;
 
 using VariantTransportJacobian =
     std::variant<BoundMatrix, BoundToFreeMatrix, FreeToBoundMatrix, FreeMatrix>;
@@ -57,7 +58,7 @@ struct CovarianceCache {
   ///
   /// @param gctx The current geometry context
   /// @param surface The surface of the bound representation
-  /// @param position The position of the representaiton
+  /// @param position The position of the representation
   /// @param boundParameters The bound parameters at the surface
   /// @param boundCovariance The bound covariance to be propagated
   ///
@@ -65,8 +66,8 @@ struct CovarianceCache {
   /// a bound matrix, remember the surface & establish the
   /// jacobian between bound and free parametrisation.
   CovarianceCache(const GeometryContext& gctx, const Surface& surface,
-                  const Vector3 position, const BoundVector& boundParameters,
-                  const BoundSymMatrix& boundCovariance);
+                  const Vector3& position, const BoundVector& boundParameters,
+                  const BoundSquareMatrix& boundCovariance);
 
   /// Constructor from curvilinear
   ///
@@ -77,8 +78,8 @@ struct CovarianceCache {
   /// This constructor will set the variant covariance type to
   /// a bound matrix, remember the surface & establish the
   /// jacobian between bound and free parametrisation.
-  CovarianceCache(const Vector3 position, const Vector3& direction,
-                  const BoundSymMatrix& boundCovariance);
+  CovarianceCache(const Vector3& position, const Vector3& direction,
+                  const BoundSquareMatrix& boundCovariance);
 
   /// Construction from free
   ///
@@ -86,7 +87,7 @@ struct CovarianceCache {
   /// @param freeCovariance The free covariance to be propagated
   ///
   CovarianceCache(const FreeVector& freeParameters,
-                  const FreeSymMatrix& freeCovariance);
+                  const FreeSquareMatrix& freeCovariance);
 };
 
 /// Transport the covariance to a new (surface) bound definition

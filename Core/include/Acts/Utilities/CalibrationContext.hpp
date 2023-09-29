@@ -18,7 +18,7 @@
 namespace Acts {
 
 /// @brief This is the central definition of the Acts
-/// payload object regarding detector calbiration
+/// payload object regarding detector calibration
 ///
 /// It is propagated through the code to allow for event/thread
 /// dependent calibration

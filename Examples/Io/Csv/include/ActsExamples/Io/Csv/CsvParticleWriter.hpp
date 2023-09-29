@@ -8,14 +8,18 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstddef>
 #include <limits>
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out particles in the TrackML comma-separated-value format.
 ///
@@ -59,7 +63,7 @@ class CsvParticleWriter final : public WriterT<SimParticleContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
   ProcessCode writeT(const ActsExamples::AlgorithmContext& ctx,
-                     const SimParticleContainer& particles) final override;
+                     const SimParticleContainer& particles) override;
 
  private:
   Config m_cfg;  //!< Nested configuration struct
