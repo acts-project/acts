@@ -171,7 +171,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     const auto& hitIdx = ptrack.front();
     // Get the sim hits via the measurement to sim hits map
     auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
-    auto [truthLocal, truthPos4, truthUnitDir, _] =
+    auto [truthLocal, truthPos4, truthUnitDir] =
         averageSimHits(ctx.geoContext, surface, simHits, indices, logger());
     // Get the truth track parameter at the first space point
     m_t_loc0 = truthLocal[Acts::ePos0];

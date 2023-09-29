@@ -43,7 +43,6 @@ averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
   Acts::Vector2 avgLocal = Acts::Vector2::Zero();
   Acts::Vector4 avgPos4 = Acts::Vector4::Zero();
   Acts::Vector3 avgDir = Acts::Vector3::Zero();
-  Acts::Vector4 avgMom4 = Acts::Vector4::Zero();
 
   size_t n = 0u;
   for (auto [_, simHitIdx] : hitSimHitsRange) {
@@ -69,7 +68,6 @@ averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
     // an additional intersection call.
     avgPos4 += simHit.fourPosition();
     avgDir += simHit.direction();
-    avgMom4 += simHit.momentum4Before();
   }
 
   // only need to average if there are at least two inputs
@@ -77,11 +75,10 @@ averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
     double scale = 1.0 / n;
     avgLocal *= scale;
     avgPos4 *= scale;
-    avgMom4 *= scale;
     avgDir.normalize();
   }
 
-  return {avgLocal, avgPos4, avgDir, avgMom4};
+  return {avgLocal, avgPos4, avgDir};
 }
 
 }  // namespace ActsExamples
