@@ -121,10 +121,6 @@ class MeasurementSelector {
       // does not satisfy the chi2 cut.
       assert(trackStateIter != trackStateIterEnd);
       for (;;) {
-        // Take the parameter covariance
-        // const auto predicted = tackState.predicted();
-        // const auto predictedCovariance = trackState.predictedCovariance();
-
         double chi2 = calculateChi2(
             // This abuses an incorrectly sized vector / matrix to access the
             // data pointer! This works (don't use the matrix as is!), but be
@@ -167,8 +163,9 @@ class MeasurementSelector {
           // @if there is a track state which passes the cut-off there is
           // no need to remember the track state with the smallest chi2.
           ++trackStateIter;
-          if (trackStateIter == trackStateIterEnd)
+          if (trackStateIter == trackStateIterEnd) {
             break;
+          }
         }
       }
     }
