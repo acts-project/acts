@@ -73,6 +73,8 @@ void ActsExamples::ParticleTrackingAction::PostUserTrackingAction(
   // collision
   if (eventStore().trackIdMapping.find(aTrack->GetTrackID()) ==
       eventStore().trackIdMapping.end()) {
+    ACTS_WARNING("Particle ID for track ID " << aTrack->GetTrackID()
+                                             << " not registered. Skip");
     return;
   }
 
