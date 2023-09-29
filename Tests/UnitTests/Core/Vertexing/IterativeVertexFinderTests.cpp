@@ -599,7 +599,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                            ipEstimator);
   cfg.maxVertices = 200;
-  cfg.maximumChi2cutForSeeding = 49;
+  cfg.maximumChi2CutForSeeding = 49;
   cfg.significanceCutSeeding = 12;
 
   VertexFinder finder(cfg);
