@@ -134,8 +134,8 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
 
   // Running three tests with
   // - no binning / no support
-  // - 14 x 52 bins and expansion / explicit support
-  // - 28 x 104 bins without expansion
+  // - 14 x 52 bins and expansion / support
+  // - 28 x 104 bins without expansion /  support with proto material
   std::vector<std::array<unsigned int, 4u> > zphiBinning = {
       {1u, 1u, 0u, 0u}, {14u, 52u, 1u, 1u}, {28u, 104u, 0u, 0u}};
 
@@ -184,9 +184,18 @@ BOOST_AUTO_TEST_CASE(DD4hepPluginCylinderLayerStructure) {
            << '\n';
       cxml << indent_12_xml << "  </passive_surface>" << '\n';
       passiveAddon = 1;
+    } else if (itest == 2u) {
+      cxml << indent_12_xml << "  <passive_surface>" << '\n';
+      cxml << indent_12_xml
+           << "    <tubs rmin=\"122*mm\" rmax=\"124*mm\" dz=\"500*mm\" "
+              "material=\"Air\"/>"
+           << '\n';
+      cxml << "    <proto_material/>" << '\n';
+      cxml << indent_12_xml << "  </passive_surface>" << '\n';
+      passiveAddon = 1;
     }
     ++itest;
-    // ----
+
     cxml << tail_xml;
     cxml << end_xml;
     cxml.close();

@@ -65,7 +65,6 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// @param scalor is the scale factor for unit conversion if needed
   /// @param isDisc in case the sensitive detector module should be translated
   ///        as disc (e.g. for endcaps) this flag should be set to true
-  /// @param digitizationModule Optional digitization configuration for the element
   /// @note In the translation from a 3D geometry (TGeo) which only knows
   ///       tubes to a 2D geometry (Tracking geometry) a distinction if the
   ///       module should be described as a cylinder or a disc surface needs to
