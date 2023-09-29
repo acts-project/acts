@@ -351,7 +351,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDy1());
-      thickness = scalor * trapezoid2->GetDz();
+      thickness = 2 * scalor * trapezoid2->GetDz();
     } else if (polygon8 != nullptr) {
       Double_t* tgverts = polygon8->GetVertices();
       std::vector<Vector2> pVertices;
@@ -360,11 +360,11 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
                                     scalor * ys * tgverts[ivtx * 2 + 1]));
       }
       bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
-      thickness = scalor * polygon8->GetDz();
+      thickness = 2 * scalor * polygon8->GetDz();
     } else if (box != nullptr) {
       bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDX(),
                                                        scalor * box->GetDY());
-      thickness = scalor * box->GetDZ();
+      thickness = 2 * scalor * box->GetDZ();
     }
   } else if (boost::istarts_with(axes, "YZ")) {
     cx = xs * ay;
@@ -377,11 +377,11 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDz());
-      thickness = scalor * trapezoid2->GetDx1();
+      thickness = 2 * scalor * trapezoid2->GetDx1();
     } else if (box != nullptr) {
       bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDY(),
                                                        scalor * box->GetDZ());
-      thickness = scalor * box->GetDX();
+      thickness = 2 * scalor * box->GetDX();
     }
   } else if (boost::istarts_with(axes, "ZX")) {
     cx = xs * az;
@@ -389,7 +389,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
     if (box != nullptr) {
       bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDZ(),
                                                        scalor * box->GetDX());
-      thickness = scalor * box->GetDY();
+      thickness = 2 * scalor * box->GetDY();
     }
   } else if (boost::istarts_with(axes, "XZ")) {
     cx = xs * ax;
@@ -399,17 +399,17 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       double dx2 = (ys < 0) ? trapezoid1->GetDx1() : trapezoid1->GetDx2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid1->GetDz());
-      thickness = scalor * trapezoid1->GetDy();
+      thickness = 2 * scalor * trapezoid1->GetDy();
     } else if (trapezoid2 != nullptr) {
       double dx1 = (ys < 0) ? trapezoid2->GetDx2() : trapezoid2->GetDx1();
       double dx2 = (ys < 0) ? trapezoid2->GetDx1() : trapezoid2->GetDx2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDz());
-      thickness = scalor * trapezoid2->GetDy1();
+      thickness = 2 * scalor * trapezoid2->GetDy1();
     } else if (box != nullptr) {
       bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDX(),
                                                        scalor * box->GetDZ());
-      thickness = scalor * box->GetDY();
+      thickness = 2 * scalor * box->GetDY();
     }
   } else if (boost::istarts_with(axes, "YX")) {
     cx = xs * ay;
@@ -419,7 +419,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
       double dx2 = (ys < 0) ? trapezoid2->GetDy1() : trapezoid2->GetDy2();
       bounds = std::make_shared<const TrapezoidBounds>(
           scalor * dx1, scalor * dx2, scalor * trapezoid2->GetDx1());
-      thickness = scalor * trapezoid2->GetDz();
+      thickness = 2 * scalor * trapezoid2->GetDz();
     } else if (polygon8 != nullptr) {
       const Double_t* tgverts = polygon8->GetVertices();
       std::vector<Vector2> pVertices;
@@ -428,11 +428,11 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
                                     scalor * ys * tgverts[ivtx * 2]));
       }
       bounds = std::make_shared<ConvexPolygonBounds<4>>(pVertices);
-      thickness = scalor * polygon8->GetDz();
+      thickness = 2 * scalor * polygon8->GetDz();
     } else if (box != nullptr) {
       bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDY(),
                                                        scalor * box->GetDX());
-      thickness = scalor * box->GetDZ();
+      thickness = 2 * scalor * box->GetDZ();
     }
   } else if (boost::istarts_with(axes, "ZY")) {
     cx = xs * az;
@@ -440,7 +440,7 @@ Acts::TGeoSurfaceConverter::planeComponents(const TGeoShape& tgShape,
     if (box != nullptr) {
       bounds = std::make_shared<const RectangleBounds>(scalor * box->GetDZ(),
                                                        scalor * box->GetDY());
-      thickness = scalor * box->GetDX();
+      thickness = 2 * scalor * box->GetDX();
     }
   } else {
     throw std::invalid_argument(

@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
         *vol->GetShape(), *gGeoIdentity, axes, 1);
     BOOST_CHECK_NE(plane, nullptr);
     BOOST_CHECK_EQUAL(plane->type(), Surface::Plane);
-    BOOST_CHECK_EQUAL(thickness, 50.);
+    BOOST_CHECK_EQUAL(thickness, 2.);
 
     auto bounds =
         dynamic_cast<const ConvexPolygonBounds<4> *>(&(plane->bounds()));
