@@ -382,7 +382,7 @@ Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::fillTracksToFit(
     // with the vertex before adding them to the fit:
     else {
       const BoundTrackParameters& sTrackParams = m_extractParameters(*sTrack);
-      auto distanceRes = m_cfg.ipEst.calculate3dDistance(
+      auto distanceRes = m_cfg.ipEst.calculateDistance(
           vertexingOptions.geoContext, sTrackParams, seedVertex.position(),
           state.ipState);
       if (!distanceRes.ok()) {
