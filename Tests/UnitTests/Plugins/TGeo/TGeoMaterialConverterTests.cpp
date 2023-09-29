@@ -27,11 +27,13 @@ namespace Test {
 
 BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   new TGeoManager("gm", "garbage collector");
+  
   ActsScalar A = 26.98;
   ActsScalar Z = 13.;
   TGeoMaterial *mat = new TGeoMaterial("Al", A, Z, 2.7);
 
-  //  ROOT calculates the radiation/int length in cm
+  // ROOT calculates the radiation/int length in cm
+  // That's actually depending on the ROOT version
   CHECK_CLOSE_ABS(mat->GetRadLen(), 8.85, 0.1_mm);
   CHECK_CLOSE_ABS(mat->GetIntLen(), 38.8, 0.1_mm);
 
