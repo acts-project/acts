@@ -27,7 +27,7 @@ namespace Test {
 
 BOOST_AUTO_TEST_CASE(TGeoMaterialConverter_materialSlab) {
   new TGeoManager("gm", "garbage collector");
-  
+
   ActsScalar A = 26.98;
   ActsScalar Z = 13.;
   TGeoMaterial *mat = new TGeoMaterial("Al", A, Z, 2.7);

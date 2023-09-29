@@ -44,8 +44,8 @@ class DD4hepLayerStructure {
   /// @note this needs to be provided
   DD4hepLayerStructure(
       std::shared_ptr<DD4hepDetectorSurfaceFactory> surfaceFactory,
-      std::unique_ptr<const Logger> logger = getDefaultLogger(
-          "DD4hepDetectorSurfaceFactory", Acts::Logging::INFO));
+      std::unique_ptr<const Logger> logger =
+          getDefaultLogger("DD4hepLayerStructure", Acts::Logging::INFO));
 
   DD4hepLayerStructure() = delete;
 
