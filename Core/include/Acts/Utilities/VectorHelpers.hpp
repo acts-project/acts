@@ -227,9 +227,9 @@ inline std::pair<double, double> incidentAngles(
   Acts::Vector3 trfDir = globalToLocal * direction;
   // The angles are defined with respect to the measurement axis
   // i.e. "head-on" == pi/2, parallel = 0
-  double angle0 = std::atan2(trfDir[2], trfDir[0]);
-  double angle1 = std::atan2(trfDir[2], trfDir[1]);
-  return {angle0, angle1};
+  double phi = std::atan2(trfDir[2], trfDir[0]);
+  double theta = std::atan2(trfDir[2], trfDir[1]);
+  return {phi, theta};
 }
 
 }  // namespace VectorHelpers
