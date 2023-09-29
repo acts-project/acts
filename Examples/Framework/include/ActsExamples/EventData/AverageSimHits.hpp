@@ -33,7 +33,7 @@ using HitSimHitsRange = Range<IndexMultimap<Index>::const_iterator>;
 ///
 /// If more than one simulated hit is selected, the average truth information is
 /// returned.
-inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3, Acts::Vector4>
+inline std::tuple<Acts::Vector2, Acts::Vector4, Acts::Vector3>
 averageSimHits(const Acts::GeometryContext& gCtx, const Acts::Surface& surface,
                const SimHitContainer& simHits,
                const HitSimHitsRange& hitSimHitsRange,
