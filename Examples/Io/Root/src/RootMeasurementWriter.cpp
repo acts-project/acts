@@ -146,7 +146,7 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
           Acts::RotationMatrix3 rot =
               surface
                   .referenceFrame(ctx.geoContext, pos4.segment<3>(Acts::ePos0),
-                                  mom4.segment<3>(Acts::eMom0))
+                                  dir)
                   .inverse();
           std::pair<double, double> angles =
               Acts::VectorHelpers::incidentAngles(dir, rot);
