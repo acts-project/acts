@@ -8,6 +8,7 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 #include <ActsExamples/EventData/NeuralCalibrator.hpp>
 
 #include <TFile.h>
@@ -96,8 +97,8 @@ void ActsExamples::NeuralCalibrator::calibrate(
 
   input[iInput++] = idxSourceLink.geometryId().volume();
   input[iInput++] = idxSourceLink.geometryId().layer();
-  input[iInput++] = trackState.parameters()[Acts::eBoundPhi];
-  input[iInput++] = trackState.parameters()[Acts::eBoundTheta];
+
+  const Acts::Surface& surf = trackState.referenceSurface();
 
   std::visit(
       [&](const auto& measurement) {
@@ -107,6 +108,17 @@ void ActsExamples::NeuralCalibrator::calibrate(
         Acts::ActsSquareMatrix<Acts::eBoundSize> fcov =
             E * measurement.covariance() * E.transpose();
 
+        Acts::Vector3 dir = Acts::makeDirectionFromPhiEta(
+            fpar[Acts::eBoundPhi], fpar[Acts::eBoundTheta]);
+        Acts::Vector3 gpos =
+            surf.localToGlobal(gctx, fpar.segment<2>(Acts::eBoundLoc0), dir);
+        Acts::RotationMatrix3 rot =
+            surf.referenceFrame(gctx, gpos, dir).inverse();
+        std::pair<double, double> angles =
+            Acts::VectorHelpers::incidentAngles(dir, rot);
+
+        input[iInput++] = angles.first;
+        input[iInput++] = angles.second;
         input[iInput++] = fpar[Acts::eBoundLoc0];
         input[iInput++] = fpar[Acts::eBoundLoc1];
         input[iInput++] = fcov(Acts::eBoundLoc0, Acts::eBoundLoc0);
