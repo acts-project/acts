@@ -19,6 +19,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
+#include <cassert>
 #include <cstddef>
 #include <iterator>
 #include <limits>
@@ -106,60 +107,82 @@ class MeasurementSelector {
       return CombinatorialKalmanFilterError::MeasurementSelectionFailed;
     }
 
+    assert(!cuts->chi2CutOff.empty());
+    const auto& chi2CutOff = cuts->chi2CutOff;
+    auto maxChi2Cut = *std::max_element(chi2CutOff.begin(), chi2CutOff.end());
     double minChi2 = std::numeric_limits<double>::max();
     size_t minIndex = 0;
-    size_t index = 0;
-    // Loop over all measurements to select the compatible measurements
-    for (auto& trackState : candidates) {
-      // Take the parameter covariance
-      // const auto predicted = tackState.predicted();
-      // const auto predictedCovariance = trackState.predictedCovariance();
-
-      double chi2 = calculateChi2(
-          // This abuses an incorrectly sized vector / matrix to access the
-          // data pointer! This works (don't use the matrix as is!), but be
-          // careful!
-          trackState
-              .template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
-              .data(),
-          trackState
-              .template calibratedCovariance<
-                  MultiTrajectoryTraits::MeasurementSizeMax>()
-              .data(),
-          trackState.predicted(), trackState.predictedCovariance(),
-          trackState.projector(), trackState.calibratedSize());
-
-      trackState.chi2() = chi2;
-
-      // Search for the measurement with the min chi2
-      if (chi2 < minChi2) {
-        minChi2 = chi2;
-        minIndex = index;
-      }
-
-      index++;
-    }
-
-    const auto& chi2CutOff = cuts->chi2CutOff;
-
+    auto trackStateIterEnd = candidates.end();
     {
-      // If there is no selected measurement, return the measurement with the
-      // best chi2 and tag it as an outlier
-      const auto bestIt = std::next(candidates.begin(), minIndex);
-      const auto chi2 = bestIt->chi2();
-      const auto chi2Cut =
-          VariableCut<traj_t>(*bestIt, cuts, chi2CutOff, logger);
-      ACTS_VERBOSE("Chi2: " << chi2 << ", max: " << chi2Cut);
-      if (chi2 >= chi2Cut) {
-        ACTS_VERBOSE(
-            "No measurement candidate. Return an outlier measurement.");
-        isOutlier = true;
-        // return single item range, no sorting necessary
-        return Result::success(std::pair{bestIt, std::next(bestIt, 1)});
+      auto trackStateIter = candidates.begin();
+      // Loop over all measurements to select the compatible measurements
+      // Sort track states which do not satisfy the chi2 cut to the end.
+      // When done trackStateIterEnd will point to the first element that
+      // does not satisfy the chi2 cut.
+      assert(trackStateIter != trackStateIterEnd);
+      for (;;) {
+        double chi2 = calculateChi2(
+            // This abuses an incorrectly sized vector / matrix to access the
+            // data pointer! This works (don't use the matrix as is!), but be
+            // careful!
+            trackStateIter
+                ->template calibrated<
+                    MultiTrajectoryTraits::MeasurementSizeMax>()
+                .data(),
+            trackStateIter
+                ->template calibratedCovariance<
+                    MultiTrajectoryTraits::MeasurementSizeMax>()
+                .data(),
+            trackStateIter->predicted(), trackStateIter->predictedCovariance(),
+            trackStateIter->projector(), trackStateIter->calibratedSize());
+
+        trackStateIter->chi2() = chi2;
+
+        // only consider track states which pass the chi2 cut
+        if (chi2 >= maxChi2Cut ||
+            chi2 >= VariableCut<traj_t>(*trackStateIter, cuts, chi2CutOff,
+                                        logger)) {
+          --trackStateIterEnd;
+          // still check whether the element has the smallest chi2 in case an
+          // outlier is returned.
+          if (chi2 < minChi2) {
+            minChi2 = chi2;
+            // the current element will be swapped with the last unchecked
+            // element if they are different
+            minIndex = std::distance(candidates.begin(), trackStateIterEnd);
+          }
+
+          if (trackStateIter == trackStateIterEnd) {
+            break;
+          } else {
+            // swap rejected element with last element in list
+            std::swap(*trackStateIter, *trackStateIterEnd);
+          }
+        } else {
+          // Search for the measurement with the min chi2
+          // @if there is a track state which passes the cut-off there is
+          // no need to remember the track state with the smallest chi2.
+          ++trackStateIter;
+          if (trackStateIter == trackStateIterEnd) {
+            break;
+          }
+        }
       }
     }
 
-    std::sort(candidates.begin(), candidates.end(),
+    // If there are no measurements below the chi2 cut off, return the
+    // measurement with the best chi2 and tag it as an outlier
+    if (candidates.begin() == trackStateIterEnd) {
+      const auto bestIt = std::next(candidates.begin(), minIndex);
+      ACTS_VERBOSE(
+          "No measurement candidate. Return an outlier measurement chi2="
+          << bestIt->chi2());
+      isOutlier = true;
+      // return single item range, no sorting necessary
+      return Result::success(std::pair{bestIt, std::next(bestIt, 1)});
+    }
+
+    std::sort(candidates.begin(), trackStateIterEnd,
               [](const auto& tsa, const auto& tsb) {
                 return tsa.chi2() < tsb.chi2();
               });
@@ -168,30 +191,18 @@ class MeasurementSelector {
     const auto numMeasurementsCut = VariableCut<traj_t>(
         *candidates.begin(), cuts, cuts->numMeasurementsCutOff, logger);
 
-    auto endIterator = candidates.begin();
-    auto maxIterator = candidates.end();
-    if (candidates.size() > numMeasurementsCut && numMeasurementsCut > 0) {
-      maxIterator = std::next(candidates.begin(), numMeasurementsCut);
+    if (static_cast<std::size_t>(std::distance(
+            candidates.begin(), trackStateIterEnd)) > numMeasurementsCut &&
+        numMeasurementsCut > 0) {
+      trackStateIterEnd = std::next(candidates.begin(), numMeasurementsCut);
     }
 
-    ++endIterator;  // best measurement already confirmed good
-    for (; endIterator != maxIterator; ++endIterator) {
-      const auto chi2 = endIterator->chi2();
-      const auto chi2Cut =
-          VariableCut<traj_t>(*endIterator, cuts, chi2CutOff, logger);
-      ACTS_VERBOSE("Chi2: " << chi2 << ", max: " << chi2Cut);
-      if (chi2 >= chi2Cut) {
-        break;  // endIterator now points at the first track state with chi2
-                // larger than our cutoff => defines the end of our returned
-                // range
-      }
-    }
     ACTS_VERBOSE("Number of selected measurements: "
-                 << std::distance(candidates.begin(), endIterator)
+                 << std::distance(candidates.begin(), trackStateIterEnd)
                  << ", max: " << numMeasurementsCut);
 
     isOutlier = false;
-    return std::pair{candidates.begin(), endIterator};
+    return std::pair{candidates.begin(), trackStateIterEnd};
   }
 
  private:
