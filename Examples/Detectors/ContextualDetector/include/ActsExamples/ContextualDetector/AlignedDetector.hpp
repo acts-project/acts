@@ -5,7 +5,6 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
@@ -30,17 +29,34 @@ class GenericDetectorElement;
 }  // namespace ActsExamples
 
 namespace ActsExamples::Contextual {
-class InternallyAlignedDetectorElement;
-class InternalAlignmentDecorator;
 
-class AlignedDetector {
+// New struct to represent a misalignment group
+struct MisalignmentGroup {
+  std::vector<std::shared_ptr<Generic::GenericDetectorElement>> surfaces;
+  Acts::Vector3D combinedMisalignmentDelta;
+  Acts::Vector3D centerOfGravity;
+  std::vector<Acts::Transformation3D> relativeTransforms;
+
+  MisalignmentGroup(
+      const std::vector<std::shared_ptr<Generic::GenericDetectorElement>>&
+          _surfaces,
+      const Acts::Vector3D& _combinedMisalignmentDelta,
+      const Acts::Vector3D& _centerOfGravity,
+      const std::vector<Acts::Transformation3D>& _relativeTransforms)
+      : surfaces(_surfaces),
+        combinedMisalignmentDelta(_combinedMisalignmentDelta),
+        centerOfGravity(_centerOfGravity),
+        relativeTransforms(_relativeTransforms) {}
+};
+
+class AlignmentDecorator {
  public:
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config : public GenericDetector::Config {
-    /// Seed for the decorator random numbers.
+        /// Seed for the decorator random numbers.
     size_t seed = 1324354657;
     /// Size of a valid IOV.
     size_t iovSize = 100;
@@ -68,6 +84,14 @@ class AlignedDetector {
   std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
       const Config& cfg,
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+
+  // New function to create MisalignmentGroups
+  MisalignmentGroup createMisalignmentGroup(
+      const std::vector<std::shared_ptr<Generic::GenericDetectorElement>>&
+          surfaces,
+      const Acts::Vector3D& combinedMisalignmentDelta,
+      const Acts::Vector3D& centerOfGravity,
+      const std::vector<Acts::Transformation3D>& relativeTransforms);
 
   std::vector<std::vector<std::shared_ptr<Generic::GenericDetectorElement>>>&
   detectorStore() {
