@@ -492,7 +492,10 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
               auto H = state.effectiveProjector();
               auto V = state.effectiveCalibratedCovariance();
               auto resCov = V + H * covariance * H.transpose();
-              auto res = state.effectiveCalibrated() - H * parameters;
+              Acts::ActsDynamicVector res(state.calibratedSize());
+              res.setZero();
+
+              res = state.effectiveCalibrated() - H * parameters;
 
               m_res_x_hit.push_back(res[Acts::eBoundLoc0]);
               m_err_x_hit.push_back(
