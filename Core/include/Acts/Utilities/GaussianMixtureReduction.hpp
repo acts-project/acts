@@ -234,10 +234,10 @@ auto computeModeOfMixture(const components_t components,
 
   // Compute the value of the pdf of a single multivariate gaussian
   auto single_pdf = [&](const auto &x, const auto &mean, const auto &cov) {
-    const auto a = 1.0 / std::sqrt(std::pow(2 * M_PI, D) * cov->determinant());
+    const auto a = 1.0 / std::sqrt(std::pow(2 * M_PI, D) * cov.determinant());
     ActsVector<D> r = x - mean;
     std::apply([&](auto... d) { (cyclicDiff(d, r, x, mean), ...); }, desc);
-    const auto b = -0.5 * (x - mean).transpose() * cov->inverse() * (x - mean);
+    const auto b = -0.5 * (x - mean).transpose() * cov.inverse() * (x - mean);
     return a * std::exp(b);
   };
 
@@ -264,8 +264,8 @@ auto computeModeOfMixture(const components_t components,
       const auto &[weight, mean, cov] = proj(cmp);
       const auto p_m_x = weight * single_pdf(x, mean, cov) / p_x;
 
-      a += p_m_x * cov->inverse();
-      b += p_m_x * (cov->inverse() * mean);
+      a += p_m_x * cov.inverse();
+      b += p_m_x * (cov.inverse() * mean);
     }
 
     return a.inverse() * b;
@@ -279,10 +279,10 @@ auto computeModeOfMixture(const components_t components,
       const auto &[weight, mean, cov] = proj(cmp);
       const auto a = weight * single_pdf(x, mean, cov);
       ActsVector<D> r = x - mean;
-      std::apply([&](auto... d) { (cyclicDiff(d, r, x, mean), ...); },
+      std::apply([&, &mean = mean](auto... d) { (cyclicDiff(d, r, x, mean), ...); },
                  desc);
-      const auto b = (x - mean) * (x - mean).transpose() - *cov;
-      h += a * (cov->inverse() * b * cov->inverse());
+      const auto b = (x - mean) * (x - mean).transpose() - cov;
+      h += a * (cov.inverse() * b * cov.inverse());
     }
 
     return h;
@@ -338,7 +338,7 @@ auto computeModeOfMixture(const components_t components,
 /// @enum MixtureReductionMethod
 ///
 /// Available reduction methods for the reduction of a Gaussian mixture
-enum class MixtureReductionMethod { eMean, eMaxWeight };
+enum class MixtureReductionMethod { eMean, eMaxWeight, eMode };
 
 /// Reduce Gaussian mixture
 ///
@@ -359,9 +359,9 @@ auto reduceGaussianMixture(const mixture_t &mixture, const Surface &surface,
         return detail::gaussianMixtureMeanCov(mixture, projector, desc);
       });
 
-  if (method == MixtureReductionMethod::eMean) {
+  if(method == MixtureReductionMethod::eMean) {
     return R{mean, cov};
-  } else {
+  } else if(method == MixtureReductionMethod::eMaxWeight) { 
     const auto maxWeightIt = std::max_element(
         mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
           return std::get<0>(projector(a)) < std::get<0>(projector(b));
@@ -369,6 +369,21 @@ auto reduceGaussianMixture(const mixture_t &mixture, const Surface &surface,
     const BoundVector meanMaxWeight = std::get<1>(projector(*maxWeightIt));
 
     return R{meanMaxWeight, cov};
+  } else {
+     auto mode =  detail::angleDescriptionSwitch(surface, [&](const auto &desc) {
+        return detail::computeModeOfMixture(mixture, projector, desc);
+      });
+
+     // In the error case use max weight
+     if( not mode) {
+      const auto maxWeightIt = std::max_element(
+          mixture.begin(), mixture.end(), [&](const auto &a, const auto &b) {
+            return std::get<0>(projector(a)) < std::get<0>(projector(b));
+          });
+      mode = std::get<1>(projector(*maxWeightIt));
+    }
+
+     return R{*mode, cov};
   }
 }
 

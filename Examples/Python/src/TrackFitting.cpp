@@ -99,7 +99,8 @@ void addTrackFitting(Context& ctx) {
 
     py::enum_<Acts::MixtureReductionMethod>(mex, "FinalReductionMethod")
         .value("mean", Acts::MixtureReductionMethod::eMean)
-        .value("maxWeight", Acts::MixtureReductionMethod::eMaxWeight);
+        .value("maxWeight", Acts::MixtureReductionMethod::eMaxWeight)
+        .value("mode", Acts::MixtureReductionMethod::eMode);
 
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles",
