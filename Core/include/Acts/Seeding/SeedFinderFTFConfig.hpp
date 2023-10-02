@@ -3,7 +3,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/GNN_DataStorage.hpp"
+// #include "Acts/Seeding/GNN_DataStorage.hpp"
+#include "Acts/Seeding/TrigBase.hpp" //definition of Trigsispacepoint base and trigtriplets 
+
+
+
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
 #include <memory>
@@ -35,9 +39,26 @@ template <typename SpacePoint> struct SeedFinderFTFConfig {
   float m_phiSliceWidth;
   float m_nMaxPhiSlice;
   bool m_useClusterWidth = false;
-  bool m_LRTmode = true ; //eventually want to set from full chaing 
   std::string fastrack_input_file;
   std::vector<TrigInDetSiLayer> input_vector;
+
+  //for run funciton 
+  //m_settings: 
+  bool m_LRTmode = true ; //eventually want to set from full chaing 
+  bool m_useEtaBinning = true ; 
+  bool m_doubletFilterRZ = true ; 
+  float m_minDeltaRadius = 2.0 ; //eventaully set in config or to equivelant acts 
+  // float m_maxDeltaRadius = 270.0 ; 
+  float m_tripletD0Max = 4.0 ; //m_settings 
+  unsigned int m_maxTripletBufferLength = 3 ; 
+
+  //ROI: 
+  // virtual bool isFullscan() const = 0 ; 
+  bool isFullscan = false  ; 
+  bool containsPhi() {
+    return false; 
+    //need to implement this funciton 
+  }
 
   ////
   // 2 member functions

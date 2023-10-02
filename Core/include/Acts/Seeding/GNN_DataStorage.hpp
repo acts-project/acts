@@ -10,6 +10,30 @@ namespace Acts {
 constexpr size_t MAX_SEG_PER_NODE = 1000;  // was 30
 constexpr size_t N_SEG_CONNS = 6;          // was 6
 
+// new sp struct
+template <typename space_point_t>
+struct FTF_SP {
+  const space_point_t *SP;  // want inside to have pointer
+  int FTF_ID;
+  int combined_ID;
+  FTF_SP(const space_point_t *sp, int id, int combined_id)
+      : SP(sp), FTF_ID(id), combined_ID{combined_id} {
+      if (SP->sourceLinks().size() == 1) {  // pixels have 1 SL
+        m_isPixel = true;
+      } 
+      else {
+        m_isPixel = false;
+      }
+
+  };
+  bool  isPixel() const { return m_isPixel;} 
+  bool isSCT() const {return !m_isPixel;}
+
+  bool m_isPixel ; 
+
+
+};
+
 template <typename space_point_t>
 class TrigFTF_GNN_Node {
  public:
@@ -22,9 +46,9 @@ class TrigFTF_GNN_Node {
     }
   };
   // want constructor to take simspace point
-  TrigFTF_GNN_Node(const space_point_t &p, float minT = -100.0,
+  TrigFTF_GNN_Node(const space_point_t &p, FTF_SP<space_point_t> FTF_sp, float minT = -100.0,
                    float maxT = 100.0)
-      : m_sp(p), m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
+      : m_sp(p), m_minCutOnTau(minT), m_maxCutOnTau(maxT), m_sp_FTF(FTF_sp) {
     m_in.clear();
     m_out.clear();
   }
@@ -57,6 +81,9 @@ class TrigFTF_GNN_Node {
   }
 
   const space_point_t &m_sp;
+  FTF_SP<space_point_t> &m_sp_FTF ; 
+  // const FTF_SP<space_point_t> m_sp_FTF ; 
+
 
   std::vector<unsigned int> m_in;  // indices of the edges in the edge storage
   std::vector<unsigned int> m_out;
@@ -117,15 +144,7 @@ class TrigFTF_GNN_EtaBin {
   std::vector<TrigFTF_GNN_Node<space_point_t> *> m_vn;
   std::vector<std::pair<float, unsigned int>> m_vPhiNodes;
 };
-// new sp struct
-template <typename space_point_t>
-struct FTF_SP {
-  const space_point_t *SP;  // want inside to have pointer
-  int FTF_ID;
-  int combined_ID;
-  FTF_SP(const space_point_t *sp, int id, int combined_id)
-      : SP(sp), FTF_ID(id), combined_ID{combined_id} {};
-};
+
 
 template <typename space_point_t>
 class TrigFTF_GNN_DataStorage {
@@ -172,7 +191,7 @@ class TrigFTF_GNN_DataStorage {
       }
       //*dereferences pointer to then pass as ref
       m_etaBins.at(binIndex).m_vn.push_back(
-          new TrigFTF_GNN_Node<space_point_t>(*sp.SP, min_tau, max_tau));
+          new TrigFTF_GNN_Node<space_point_t>(*sp.SP, sp, min_tau, max_tau)); //adding ftf memeber to nodes 
     } else {
       if (useClusterWidth) {
         //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
@@ -184,7 +203,7 @@ class TrigFTF_GNN_DataStorage {
           return -3;
       }
       m_etaBins.at(binIndex).m_vn.push_back(
-          new TrigFTF_GNN_Node<space_point_t>(*sp.SP));
+          new TrigFTF_GNN_Node<space_point_t>(*sp.SP, sp));
     }
 
     return 0;
@@ -254,20 +273,27 @@ class TrigFTF_GNN_Edge {
     }
   };
 
-  TrigFTF_GNN_Edge()
-      : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0){};
 
-  TrigFTF_GNN_Edge(const TrigFTF_GNN_Edge<space_point_t> &e)
-      : m_n1(e.m_n1), m_n2(e.m_n2){};
-
-  inline void initialize(TrigFTF_GNN_Node<space_point_t> *n1,
-                         TrigFTF_GNN_Node<space_point_t> *n2) {
-    m_n1 = n1;
-    m_n2 = n2;
-    m_level = 1;
-    m_next = 1;
-    m_nNei = 0;
+  TrigFTF_GNN_Edge(TrigFTF_GNN_Node<space_point_t>* n1, TrigFTF_GNN_Node<space_point_t>* n2, float p1, float p2, float p3, float p4) : m_n1(n1), m_n2(n2), m_level(1), m_next(1), m_nNei(0) {
+    m_p[0] = p1;
+    m_p[1] = p2;
+    m_p[2] = p3;
+    m_p[3] = p4;
   }
+  
+  TrigFTF_GNN_Edge()  : m_n1(nullptr), m_n2(nullptr), m_level(-1), m_next(-1), m_nNei(0){};
+
+  // TrigFTF_GNN_Edge(const TrigFTF_GNN_Edge<space_point_t> &e)
+  //     : m_n1(e.m_n1), m_n2(e.m_n2){};
+
+  // inline void initialize(TrigFTF_GNN_Node<space_point_t> *n1,
+  //                        TrigFTF_GNN_Node<space_point_t> *n2) {
+  //   m_n1 = n1;
+  //   m_n2 = n2;
+  //   m_level = 1;
+  //   m_next = 1;
+  //   m_nNei = 0;
+  // }
 
   TrigFTF_GNN_Node<space_point_t> *m_n1{nullptr};
   TrigFTF_GNN_Node<space_point_t> *m_n2{nullptr};
@@ -279,5 +305,7 @@ class TrigFTF_GNN_Edge {
 
   unsigned int m_vNei[N_SEG_CONNS]{};  // global indices of the connected edges
 };
+
+
 
 }  // namespace Acts

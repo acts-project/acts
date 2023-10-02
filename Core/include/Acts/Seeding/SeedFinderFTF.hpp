@@ -8,7 +8,6 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Utilities/KDTree.hpp"
-#include "Acts/Seeding/TrigBase.hpp" //definition of Trigsispacepoint base and trigtriplets 
 
 #include <array>
 #include <iostream>
@@ -25,10 +24,12 @@ namespace Acts {
 template <typename external_spacepoint_t>
 struct GNN_TrigTracklet{
   public: 
-  GNN_TrigTracklet(std::vector<const TrigSiSpacePointBase<external_spacepoint_t>*>& vSP, std::vector<TrigInDetTriplet<external_spacepoint_t>>& tbuf) : m_track(vSP), m_seeds(tbuf) {};
+  GNN_TrigTracklet(std::vector<const FTF_SP<external_spacepoint_t>*>& vSP, std::vector<TrigInDetTriplet<external_spacepoint_t>>& tbuf) : m_track(vSP), m_seeds(tbuf) {};
+  // GNN_TrigTracklet(std::vector<const TrigSiSpacePointBase<external_spacepoint_t>*>& vSP, std::vector<TrigInDetTriplet<external_spacepoint_t>>& tbuf) : m_track(vSP), m_seeds(tbuf) {};
   ~GNN_TrigTracklet() {};
   
-  std::vector<const TrigSiSpacePointBase<external_spacepoint_t>*> m_track;
+  std::vector<const FTF_SP<external_spacepoint_t>*> m_track;
+  // std::vector<const TrigSiSpacePointBase<external_spacepoint_t>*> m_track;
   std::vector<TrigInDetTriplet<external_spacepoint_t>> m_seeds;
 
 };
@@ -80,7 +81,10 @@ class SeedFinderFTF {
   // needs to be memeber of class so can accessed by all memeber functions
   TrigFTF_GNN_DataStorage<external_spacepoint_t> *m_storage;
 
-  std::vector<TrigInDetTriplet<external_spacepoint_t>> m_triplets;
+  //for create seeds: 
+  std::vector<TrigInDetTriplet<external_spacepoint_t>> m_triplets ;
+  
+
 };
 
 }  // namespace Acts

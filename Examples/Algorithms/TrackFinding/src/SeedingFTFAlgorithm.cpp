@@ -107,7 +107,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   finder.loadSpacePoints(FTF_spacePoints);
 
+
   finder.createSeeds(); //currently doesnt return anything 
+
   // still to develop
   SimSeedContainer seeds = finder.createSeeds_old(
       m_cfg.seedFinderOptions, FTF_spacePoints, create_coordinates);

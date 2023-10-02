@@ -17,12 +17,21 @@ public:
 
 class FasTrackConnector {
 public:
+
+  struct LayerGroup {
+  LayerGroup(unsigned int l1Key, const std::vector<const Acts::FasTrackConnection*>& v) : m_dst(l1Key), m_sources(v) {};
+
+    unsigned int m_dst;//the target layer of the group
+    std::vector<const Acts::FasTrackConnection*> m_sources;//the source layers of the group
+  };
+
   FasTrackConnector(std::ifstream &);
 
   ~FasTrackConnector();
 
   float m_etaBin;
 
+  std::map<int, std::vector<struct LayerGroup> > m_layerGroups;
   std::map<int, std::vector<Acts::FasTrackConnection *>> m_connMap;
 };
 
