@@ -31,5 +31,5 @@ Acts::MaterialSlab Acts::TGeoMaterialConverter::materialSlab(
                                             matL0 * uScalor / cFactor, matA,
                                             matZ, matRho * rScalar * cFactor);
 
-  return MaterialSlab(std::move(material), thicknessOut);
+  return MaterialSlab(material, thicknessOut);
 }
