@@ -15,21 +15,19 @@
 Acts::MaterialSlab Acts::TGeoMaterialConverter::materialSlab(
     const TGeoMaterial& tgMaterial, ActsScalar thicknessIn,
     ActsScalar thicknessOut, const Options& options) {
-  ActsScalar matA = tgMaterial.GetA();
-  ActsScalar matZ = tgMaterial.GetZ();
+  // Scalable properties
   ActsScalar matX0 = tgMaterial.GetRadLen();
   ActsScalar matL0 = tgMaterial.GetIntLen();
-  // @todo TGeo to Acts density conversion missing
   ActsScalar matRho = tgMaterial.GetDensity();
 
-  // X0, L0, rho scale with the thicknes
+  // X0, L0, rho scale with the thickness
   ActsScalar cFactor = thicknessIn / thicknessOut;
   ActsScalar uScalor = options.unitLengthScalor;
   ActsScalar rScalar =
       options.unitMassScalor / pow(options.unitLengthScalor, 3);
-  auto material = Material::fromMassDensity(matX0 * uScalor / cFactor,
-                                            matL0 * uScalor / cFactor, matA,
-                                            matZ, matRho * rScalar * cFactor);
+  auto material = Material::fromMassDensity(
+      matX0 * uScalor / cFactor, matL0 * uScalor / cFactor, tgMaterial.GetA(),
+      tgMaterial.GetZ(), matRho * rScalar * cFactor);
 
   return MaterialSlab(material, thicknessOut);
 }
