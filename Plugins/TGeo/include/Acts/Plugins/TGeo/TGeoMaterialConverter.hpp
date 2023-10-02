@@ -22,7 +22,7 @@ class TGeoMaterial;
 namespace Acts {
 struct TGeoMaterialConverter {
   /// @brief Nested options struct
-  /// to steer the converison process
+  /// to steer the conversion process
   struct Options {
     /// @brief  Convert input TGeo unit to ACTS unit
     ActsScalar unitLengthScalor = 10.;

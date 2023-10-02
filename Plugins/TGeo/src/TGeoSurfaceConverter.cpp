@@ -93,11 +93,9 @@ Acts::TGeoSurfaceConverter::cylinderComponents(const TGeoShape& tgShape,
       // Check if it's a segment
       auto tubeSeg = dynamic_cast<const TGeoTubeSeg*>(tube);
       if (tubeSeg != nullptr) {
-        double gradPhi1 = tubeSeg->GetPhi1();
-        double gradPhi2 = tubeSeg->GetPhi2();
-        if (not(gradPhi1 == 0. and gradPhi2 == 360.)) {
-          double phi1 = toRadian(gradPhi1);
-          double phi2 = toRadian(gradPhi2);
+        double phi1 = toRadian(tubeSeg->GetPhi1());
+        double phi2 = toRadian(tubeSeg->GetPhi2());
+        if (std::abs(phi2 - phi1) < M_PI * (1. - s_epsilon)) {
           if (not boost::starts_with(axes, "X")) {
             throw std::invalid_argument(
                 "TGeoShape -> CylinderSurface (sectorial): can only be "
@@ -255,14 +253,17 @@ Acts::TGeoSurfaceConverter::discComponents(const TGeoShape& tgShape,
       if (tubeSeg != nullptr) {
         double phi1 = toRadian(tubeSeg->GetPhi1());
         double phi2 = toRadian(tubeSeg->GetPhi2());
-        if (not boost::starts_with(axes, "X")) {
-          throw std::invalid_argument(
-              "TGeoShape -> CylinderSurface (sectorial): can only be converted "
-              "with "
-              "'(X)(y/Y)(*)' axes.");
+        if (std::abs(phi2 - phi1) < 2 * M_PI * (1. - s_epsilon)) {
+          if (not boost::starts_with(axes, "X")) {
+            throw std::invalid_argument(
+                "TGeoShape -> CylinderSurface (sectorial): can only be "
+                "converted "
+                "with "
+                "'(X)(y/Y)(*)' axes.");
+          }
+          halfPhi = 0.5 * (std::max(phi1, phi2) - std::min(phi1, phi2));
+          avgPhi = 0.5 * (phi1 + phi2);
         }
-        halfPhi = 0.5 * (std::max(phi1, phi2) - std::min(phi1, phi2));
-        avgPhi = 0.5 * (phi1 + phi2);
       }
       bounds = std::make_shared<RadialBounds>(minR, maxR, halfPhi, avgPhi);
       thickness = 2 * halfZ;
