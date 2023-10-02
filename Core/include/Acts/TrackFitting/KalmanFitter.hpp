@@ -717,23 +717,17 @@ class KalmanFitter {
                            MaterialUpdateStage::PreUpdate);
 
         auto trackStateProxyRes = detail::getTrackStateProxy(
-            state,
-            stepper,
-            *surface,
-            *result.fittedStates,
-            Acts::MultiTrajectoryTraits::kInvalid,
-            false,
-            logger(),
-            freeToBoundCorrection,
-            TrackStatePropMask::All);
+            state, stepper, *surface, *result.fittedStates,
+            Acts::MultiTrajectoryTraits::kInvalid, false, logger(),
+            freeToBoundCorrection, TrackStatePropMask::All);
         if (!trackStateProxyRes.ok()) {
           return trackStateProxyRes.error();
         }
         auto& trackStateProxy = *trackStateProxyRes;
         // We have predicted parameters, so calibrate the uncalibrated input
         // measurement
-        extensions.calibrator(state.geoContext, *calibrationContext, sourcelink_it->second,
-                              trackStateProxy);
+        extensions.calibrator(state.geoContext, *calibrationContext,
+                              sourcelink_it->second, trackStateProxy);
 
         // If the update is successful, set covariance and
         auto updateRes = extensions.updater(state.geoContext, trackStateProxy,

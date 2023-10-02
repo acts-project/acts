@@ -42,21 +42,13 @@ auto kalmanHandleMeasurement(
     const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
-
-auto trackStateProxyRes = getTrackStateProxy(
-    state,
-    stepper,
-    surface,
-    fittedStates,
-    lastTrackIndex,
-    doCovTransport,
-    logger,
-    freeToBoundCorrection,
-    TrackStatePropMask::All);
+  auto trackStateProxyRes = getTrackStateProxy(
+      state, stepper, surface, fittedStates, lastTrackIndex, doCovTransport,
+      logger, freeToBoundCorrection, TrackStatePropMask::All);
   if (!trackStateProxyRes.ok()) {
     return trackStateProxyRes.error();
   }
-  auto& trackStateProxy = *trackStateProxyRes;
+  auto &trackStateProxy = *trackStateProxyRes;
   // We have predicted parameters, so calibrate the uncalibrated input
   // measurement
   extensions.calibrator(state.geoContext, calibrationContext, source_link,
@@ -119,19 +111,13 @@ auto kalmanHandleNoMeasurement(
   // TrackState entry multi trajectory. No storage allocation for
   // uncalibrated/calibrated measurement and filtered parameter
   auto trackStateProxyRes = getTrackStateProxy(
-      state,
-      stepper,
-      surface,
-      fittedStates,
-      lastTrackIndex,
-      doCovTransport,
-      logger,
-      freeToBoundCorrection,
+      state, stepper, surface, fittedStates, lastTrackIndex, doCovTransport,
+      logger, freeToBoundCorrection,
       ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered));
   if (!trackStateProxyRes.ok()) {
     return trackStateProxyRes.error();
   }
-  auto& trackStateProxy = *trackStateProxyRes;
+  auto &trackStateProxy = *trackStateProxyRes;
 
   // Set the track state flags
   auto typeFlags = trackStateProxy.typeFlags();
@@ -168,23 +154,17 @@ auto kalmanHandleNoMeasurement(
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t, typename traj_t>
-auto getTrackStateProxy(
-    propagator_state_t &state,
-    const stepper_t &stepper,
-    const Surface &surface,
-    traj_t &fittedStates,
-    const size_t lastTrackIndex,
-    bool doCovTransport,
-    const Logger &logger,
-    const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false),
-    TrackStatePropMask mask = TrackStatePropMask::All)
-    -> Result<typename traj_t::TrackStateProxy>
-  {
+auto getTrackStateProxy(propagator_state_t &state, const stepper_t &stepper,
+                        const Surface &surface, traj_t &fittedStates,
+                        const size_t lastTrackIndex, bool doCovTransport,
+                        const Logger &logger,
+                        const FreeToBoundCorrection &freeToBoundCorrection =
+                            FreeToBoundCorrection(false),
+                        TrackStatePropMask mask = TrackStatePropMask::All)
+    -> Result<typename traj_t::TrackStateProxy> {
   // add a full TrackState entry multi trajectory
   // (this allocates storage for all components, we will set them later)
-  const auto newTrackIndex =
-      fittedStates.addTrackState(mask, lastTrackIndex);
+  const auto newTrackIndex = fittedStates.addTrackState(mask, lastTrackIndex);
 
   // now get track state proxy back
   typename traj_t::TrackStateProxy trackStateProxy =
