@@ -300,7 +300,7 @@ if [[ "$mode" == "all" || "$mode" == "fullchains" ]]; then
     Examples/Scripts/generic_plotter.py \
         $outdir/tracksummary_ckf_ttbar.root \
         tracksummary \
-        $outdir/tracksummary_ckf_ttbar.root \
+        $outdir/tracksummary_ckf_ttbar_hist.root \
         --config CI/physmon/tracksummary_ckf_config.yml
     ec=$(($ec | $?))
 
