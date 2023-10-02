@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,35 +42,23 @@ auto kalmanHandleMeasurement(
     const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename traj_t::TrackStateProxy> {
-  // Bind the transported state to the current surface
-  auto res = stepper.boundState(state.stepping, surface, doCovTransport,
-                                freeToBoundCorrection);
-  if (!res.ok()) {
-    return res.error();
+
+auto trackStateProxyRes = getTrackStateProxy(
+    state,
+    stepper,
+    surface,
+    fittedStates,
+    lastTrackIndex,
+    doCovTransport,
+    logger,
+    freeToBoundCorrection,
+    TrackStatePropMask::All);
+  if (!trackStateProxyRes.ok()) {
+    return trackStateProxyRes.error();
   }
-  auto &[boundParams, jacobian, pathLength] = *res;
-
-  // add a full TrackState entry multi trajectory
-  // (this allocates storage for all components, we will set them later)
-  const auto newTrackIndex =
-      fittedStates.addTrackState(TrackStatePropMask::All, lastTrackIndex);
-
-  // now get track state proxy back
-  auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
-
-  trackStateProxy.setReferenceSurface(surface.getSharedPtr());
-
-  // Fill the track state
-  trackStateProxy.predicted() = std::move(boundParams.parameters());
-  if (boundParams.covariance().has_value()) {
-    trackStateProxy.predictedCovariance() =
-        std::move(*boundParams.covariance());
-  }
-  trackStateProxy.jacobian() = std::move(jacobian);
-  trackStateProxy.pathLength() = std::move(pathLength);
-
+  auto& trackStateProxy = *trackStateProxyRes;
   // We have predicted parameters, so calibrate the uncalibrated input
-  // measuerement
+  // measurement
   extensions.calibrator(state.geoContext, calibrationContext, source_link,
                         trackStateProxy);
 
@@ -109,7 +97,7 @@ auto kalmanHandleMeasurement(
 }
 
 /// This function encapsulates what actions should be performed on a
-/// MultiTrajectory when we have no measuerement
+/// MultiTrajectory when we have no measurement
 /// @tparam propagator_state_t The propagator state type
 /// @tparam stepper_t The stepper type
 /// @param state The propagator state
@@ -130,15 +118,20 @@ auto kalmanHandleNoMeasurement(
   // No source links on surface, add either hole or passive material
   // TrackState entry multi trajectory. No storage allocation for
   // uncalibrated/calibrated measurement and filtered parameter
-  const auto newTrackIndex = fittedStates.addTrackState(
-      ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
-      lastTrackIndex);
-
-  // now get track state proxy back
-  auto trackStateProxy = fittedStates.getTrackState(newTrackIndex);
-
-  // Set the surface
-  trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+  auto trackStateProxyRes = getTrackStateProxy(
+      state,
+      stepper,
+      surface,
+      fittedStates,
+      lastTrackIndex,
+      doCovTransport,
+      logger,
+      freeToBoundCorrection,
+      ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered));
+  if (!trackStateProxyRes.ok()) {
+    return trackStateProxyRes.error();
+  }
+  auto& trackStateProxy = *trackStateProxyRes;
 
   // Set the track state flags
   auto typeFlags = trackStateProxy.typeFlags();
@@ -154,7 +147,52 @@ auto kalmanHandleNoMeasurement(
     ACTS_VERBOSE("Detected in-sensitive surface " << surface.geometryId());
   }
 
-  // Transport & bind the state to the current surface
+  // Set the filtered parameter index to be the same with predicted
+  // parameter
+  trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
+                            TrackStatePropMask::Filtered);
+
+  return trackStateProxy;
+}
+
+/// TODO add description
+/// This function creates and returns a track state proxy for the kalman fitter
+/// @tparam propagator_state_t The propagator state type
+/// @tparam stepper_t The stepper type
+/// @param state The propagator state
+/// @param stepper The stepper
+/// @param surface The current surface
+/// @param fittedStates The Multitrajectory to that we add the state
+/// @param lastTrackIndex The parent index for the new state in the MT
+/// @param doCovTransport Whether to perform a covariance transport when
+/// computing the bound state or not
+/// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
+template <typename propagator_state_t, typename stepper_t, typename traj_t>
+auto getTrackStateProxy(
+    propagator_state_t &state,
+    const stepper_t &stepper,
+    const Surface &surface,
+    traj_t &fittedStates,
+    const size_t lastTrackIndex,
+    bool doCovTransport,
+    const Logger &logger,
+    const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
+        false),
+    TrackStatePropMask mask = TrackStatePropMask::All)
+    -> Result<typename traj_t::TrackStateProxy>
+  {
+  // add a full TrackState entry multi trajectory
+  // (this allocates storage for all components, we will set them later)
+  const auto newTrackIndex =
+      fittedStates.addTrackState(mask, lastTrackIndex);
+
+  // now get track state proxy back
+  typename traj_t::TrackStateProxy trackStateProxy =
+      fittedStates.getTrackState(newTrackIndex);
+
+  trackStateProxy.setReferenceSurface(surface.getSharedPtr());
+
+  // Bind the transported state to the current surface
   auto res = stepper.boundState(state.stepping, surface, doCovTransport,
                                 freeToBoundCorrection);
   if (!res.ok()) {
@@ -172,11 +210,6 @@ auto kalmanHandleNoMeasurement(
   }
   trackStateProxy.jacobian() = std::move(jacobian);
   trackStateProxy.pathLength() = std::move(pathLength);
-
-  // Set the filtered parameter index to be the same with predicted
-  // parameter
-  trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
-                            TrackStatePropMask::Filtered);
 
   return trackStateProxy;
 }

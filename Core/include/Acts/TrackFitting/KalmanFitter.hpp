@@ -716,36 +716,24 @@ class KalmanFitter {
         materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
-        // Bind the transported state to the current surface
-        auto res = stepper.boundState(state.stepping, *surface, false);
-        if (!res.ok()) {
-          return res.error();
+        auto trackStateProxyRes = detail::getTrackStateProxy(
+            state,
+            stepper,
+            *surface,
+            *result.fittedStates,
+            Acts::MultiTrajectoryTraits::kInvalid,
+            false,
+            logger(),
+            freeToBoundCorrection,
+            TrackStatePropMask::All);
+        if (!trackStateProxyRes.ok()) {
+          return trackStateProxyRes.error();
         }
-
-        auto& [boundParams, jacobian, pathLength] = *res;
-
-        // Create a detached track state proxy
-        auto tempTrackTip =
-            result.fittedStates->addTrackState(TrackStatePropMask::All);
-
-        // Get the detached track state proxy back
-        auto trackStateProxy = result.fittedStates->getTrackState(tempTrackTip);
-
-        trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-        // Fill the track state
-        trackStateProxy.predicted() = std::move(boundParams.parameters());
-        if (boundParams.covariance().has_value()) {
-          trackStateProxy.predictedCovariance() =
-              std::move(*boundParams.covariance());
-        }
-        trackStateProxy.jacobian() = std::move(jacobian);
-        trackStateProxy.pathLength() = std::move(pathLength);
-
+        auto& trackStateProxy = *trackStateProxyRes;
         // We have predicted parameters, so calibrate the uncalibrated input
-        // measuerement
-        extensions.calibrator(state.geoContext, *calibrationContext,
-                              sourcelink_it->second, trackStateProxy);
+        // measurement
+        extensions.calibrator(state.geoContext, *calibrationContext, sourcelink_it->second,
+                              trackStateProxy);
 
         // If the update is successful, set covariance and
         auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
