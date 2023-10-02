@@ -141,7 +141,6 @@ auto kalmanHandleNoMeasurement(
   return trackStateProxy;
 }
 
-/// TODO add description
 /// This function creates and returns a track state proxy for the kalman fitter
 /// @tparam propagator_state_t The propagator state type
 /// @tparam stepper_t The stepper type
