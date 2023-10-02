@@ -203,6 +203,136 @@ auto gaussianMixtureMeanCov(const components_t components,
   return RetType{mean, cov};
 }
 
+
+template <typename components_t, typename projector_t>
+auto unevaluated_context_mean(const components_t &cmps, const projector_t &proj)
+{
+  const auto &[w, mean, c] = proj(cmps.front());
+  return mean;
+}
+
+/// This function implements a mode-search using an iterative fixed-point algorithm
+/// TODO potential optimization: cache inverse covariances
+// https://faculty.ucmerced.edu/mcarreira-perpinan/papers/cs-99-03.pdf
+template <typename components_t, typename projector_t = Identity,
+          typename angle_desc_t = AngleDescription<Surface::Plane>::Desc>
+auto computeModeOfMixture(const components_t components,
+                            projector_t &&proj = projector_t{},
+                            const angle_desc_t &desc = angle_desc_t{}) {
+  constexpr int D = [](){
+    using ParsType = decltype(unevaluated_context_mean(std::declval<components_t>(), std::declval<projector_t>()));
+    return ParsType::RowsAtCompileTime;
+  }();
+
+  // Lambda used to correct cyclic coordinates in the computation
+  auto cyclicDiff = [](auto d, auto &diff, const auto &a, const auto &b) {
+    diff[d.idx] =
+        difference_periodic(a[d.idx] / d.constant,
+                            b[d.idx] / d.constant, 2 * M_PI) *
+        d.constant;
+  };
+
+  // Compute the value of the pdf of a single multivariate gaussian
+  auto single_pdf = [&](const auto &x, const auto &mean, const auto &cov) {
+    const auto a = 1.0 / std::sqrt(std::pow(2 * M_PI, D) * cov->determinant());
+    ActsVector<D> r = x - mean;
+    std::apply([&](auto... d) { (cyclicDiff(d, r, x, mean), ...); }, desc);
+    const auto b = -0.5 * (x - mean).transpose() * cov->inverse() * (x - mean);
+    return a * std::exp(b);
+  };
+
+  // Compute the value of the gaussian mixture pdf at x
+  auto mixture_pdf = [&](const auto &x) {
+    double res = 0.0;
+
+    for (const auto &cmp : components) {
+      const auto &[weight, mean, cov] = proj(cmp);
+      res += weight * single_pdf(x, mean, cov);
+    }
+
+    return res;
+  };
+
+  // The fixed-point equation (see ref)
+  auto f = [&](const auto &x) {
+    const auto p_x = mixture_pdf(x);
+
+    ActsSquareMatrix<D> a = ActsSquareMatrix<D>::Zero();
+    ActsVector<D> b = ActsVector<D>::Zero();
+
+    for (const auto &cmp : components) {
+      const auto &[weight, mean, cov] = proj(cmp);
+      const auto p_m_x = weight * single_pdf(x, mean, cov) / p_x;
+
+      a += p_m_x * cov->inverse();
+      b += p_m_x * (cov->inverse() * mean);
+    }
+
+    return a.inverse() * b;
+  };
+
+  // Compute the hessian of a gaussian mixture at x
+  auto hessian = [&](const auto &x) {
+    ActsSquareMatrix<D> h = ActsSquareMatrix<D>::Zero();
+
+    for (const auto &cmp : components) {
+      const auto &[weight, mean, cov] = proj(cmp);
+      const auto a = weight * single_pdf(x, mean, cov);
+      ActsVector<D> r = x - mean;
+      std::apply([&](auto... d) { (cyclicDiff(d, r, x, mean), ...); },
+                 desc);
+      const auto b = (x - mean) * (x - mean).transpose() - *cov;
+      h += a * (cov->inverse() * b * cov->inverse());
+    }
+
+    return h;
+  };
+
+  // We only store the highest mode
+  std::optional<ActsVector<D>> mode;
+  double mode_val = 0;
+
+  // Algorithm parameters
+  constexpr double tol = 1.e-8;
+  constexpr double eigv_max = 0.01;
+  constexpr int iter_max = 50;
+
+  // The algorithm
+  for (const auto &cmp : components) {
+    const auto &[weight, mean, cov] = proj(cmp);
+
+    ActsVector<D> x = mean;
+    ActsVector<D> x_old = ActsVector<D>::Zero();
+
+    for (auto i = 0; i < iter_max; ++i) {
+      x_old = x;
+      x = f(x);
+
+      if ((x - x_old).norm() < tol) {
+        break;
+      }
+    }
+
+    const auto H = hessian(x);
+    const auto evs = H.eigenvalues();
+    const double max_ev = std::max_element(evs.data(), evs.data() + evs.size(),
+                                           [](const auto &a, const auto &b) {
+                                             return a.real() < b.real();
+                                           })
+                              ->real();
+
+    if (max_ev < eigv_max) {
+      const auto this_val = mixture_pdf(x);
+      if (this_val > mode_val) {
+        mode = x;
+        mode_val = this_val;
+      }
+    }
+  }
+
+  return mode;
+}
+
 }  // namespace detail
 
 /// @enum MixtureReductionMethod

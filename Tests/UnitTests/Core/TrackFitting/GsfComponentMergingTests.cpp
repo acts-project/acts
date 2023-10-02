@@ -414,7 +414,7 @@ BOOST_AUTO_TEST_CASE(test_mode_finding) {
     for (auto w : {0.1, 0.2, 0.3, 0.4}) {
       DummyComponent<D> cmp;
       cmp.boundPars << x, x;
-      cmp.boundCov = ActsSymMatrix<D>::Identity();
+      cmp.boundCov = ActsSquareMatrix<D>::Identity();
       cmp.weight = w;
       cmps.push_back(cmp);
       x += d;
