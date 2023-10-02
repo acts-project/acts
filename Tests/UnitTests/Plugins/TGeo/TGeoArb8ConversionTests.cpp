@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(TGeoArb8_to_PlaneSurface) {
   gGeoManager->SetTopVolume(top);
   // The one parameter at construction is dZ, when the
   // TGeoArb8 is spanning from -dZ to +dZ:
-  // - hence, the thickness id 2 * dZ
+  // - hence, the thickness is 2 * dZ
   ActsScalar dZ = 1.;
   TGeoArb8 *arb = new TGeoArb8(dZ);
   arb->SetVertex(0, -30, -25);
