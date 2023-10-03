@@ -263,15 +263,49 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return fieldRes.error();
   }
   double bZ = (*fieldRes)[eZ];
+  double charge = trkParams.particleHypothesis().absoluteCharge();
+
+  // The particle moves on a straight trajectory if its charge is 0 or if there
+  // is no B-field. In that case, the 3D PCA can be calculated analytically, see
+  // Sec 3.2 of the reference.
+  if (charge == 0. or bZ == 0.) {
+    // Momentum direction (constant for straight tracks)
+    Vector3 momDirStraightTrack = Vector3(
+        std::cos(phi) * sinTheta, std::sin(phi) * sinTheta, std::cos(theta));
+
+    // Current position on the track
+    Vector3 positionOnTrack = trkParams.position(gctx);
+
+    // Distance between positionOnTrack and the 3D PCA
+    ActsScalar distanceToPca =
+        (vtxPos.template head<3>() - positionOnTrack).dot(momDirStraightTrack);
+
+    // 3D PCA
+    ActsVector<nDim> pcaStraightTrack;
+    pcaStraightTrack.template head<3>() =
+        positionOnTrack + distanceToPca * momDirStraightTrack;
+    if constexpr (nDim == 4) {
+      ActsScalar m0 = trkParams.particleHypothesis().mass();
+      ActsScalar p = std::abs(charge / qOvP);
+
+      // Speed in units of c
+      ActsScalar beta = p / std::hypot(p, m0);
+
+      pcaStraightTrack[3] = tP + distanceToPca / beta;
+    }
+
+    // Vector pointing from the vertex position to the 3D PCA
+    ActsVector<nDim> deltaRStraightTrack = pcaStraightTrack - vtxPos;
+
+    return std::make_pair(deltaRStraightTrack, momDirStraightTrack);
+  }
+
+  // Charged particles in a constant B-field follow a helical trajectory. In
+  // that case, we calculate the 3D PCA using the Newton method, see Sec 4.2 in
+  // the reference.
 
   // Signed radius of the helix on which the particle moves
-  double rho = 0;
-  // Curvature is infinite w/o b field
-  if (bZ == 0. || std::abs(qOvP) < m_cfg.minQoP) {
-    rho = m_cfg.maxRho;
-  } else {
-    rho = sinTheta * (1. / qOvP) / bZ;
-  }
+  double rho = sinTheta * (1. / qOvP) / bZ;
 
   // Position of the helix center.
   // We can set the z-position to a convenient value since it is not fixed by
@@ -309,8 +343,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   if constexpr (nDim == 4) {
     ActsScalar m0 = trkParams.particleHypothesis().mass();
-    ActsScalar p =
-        std::abs(trkParams.particleHypothesis().absoluteCharge() / qOvP);
+    ActsScalar p = std::abs(charge / qOvP);
 
     // Speed in units of c
     ActsScalar beta = p / std::hypot(p, m0);
