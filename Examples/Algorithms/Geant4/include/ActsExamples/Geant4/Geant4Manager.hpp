@@ -63,6 +63,8 @@ class Geant4Manager {
   /// Set logging consistently across common Geant4 modules
   static void tweekLogging(G4RunManager &runManager, int level);
 
+  std::shared_ptr<Geant4Handle> currentHandle() const;
+
   /// This can only be called once due to Geant4 limitations
   std::shared_ptr<Geant4Handle> createHandle(int logLevel,
                                              const std::string &physicsList);
@@ -80,8 +82,8 @@ class Geant4Manager {
       const std::string &name) const;
 
   /// Get the current list of physics list factories.
-  const std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>>
-      &getPhysicsListFactories() const;
+  const std::unordered_map<std::string, std::shared_ptr<PhysicsListFactory>> &
+  getPhysicsListFactories() const;
 
  private:
   Geant4Manager();

@@ -77,6 +77,10 @@ void Geant4Manager::tweekLogging(G4RunManager& runManager, int level) {
 #endif
 }
 
+std::shared_ptr<Geant4Handle> Geant4Manager::currentHandle() const {
+  return m_handle.lock();
+}
+
 std::shared_ptr<Geant4Handle> Geant4Manager::createHandle(
     int logLevel, const std::string& physicsList) {
   return createHandle(logLevel, createPhysicsList(physicsList), physicsList);
