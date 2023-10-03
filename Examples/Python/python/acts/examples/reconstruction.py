@@ -1323,7 +1323,7 @@ def addAmbiguityResolution(
     alg = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks="tracks",
-        outputTracks="filteredTrajectories",
+        outputTracks="ambiTracks",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
@@ -1335,7 +1335,7 @@ def addAmbiguityResolution(
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
         inputTracks=alg.config.outputTracks,
-        outputTrajectories="trajectories-from-solved-tracks",
+        outputTrajectories="ambiTrajectories",
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
@@ -1379,7 +1379,7 @@ def addAmbiguityResolutionML(
         level=customLogLevel(),
         inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
-        outputTracks="filteredTrajectoriesML",
+        outputTracks="ambiTracksML",
         **acts.examples.defaultKWArgs(
             nMeasurementsMin=config.nMeasurementsMin,
         ),
@@ -1388,7 +1388,7 @@ def addAmbiguityResolutionML(
     algGreedy = GreedyAmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputTracks=algML.config.outputTracks,
-        outputTracks="filteredTrajectoriesMLGreedy",
+        outputTracks="ambiTracksMLGreedy",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
@@ -1402,7 +1402,7 @@ def addAmbiguityResolutionML(
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
         inputTracks=algGreedy.config.outputTracks,
-        outputTrajectories="trajectories-from-solved-tracks",
+        outputTrajectories="ambiTrajectories",
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
@@ -1444,7 +1444,7 @@ def addAmbiguityResolutionMLDBScan(
         level=customLogLevel(),
         inputTracks="tracks",
         inputDuplicateNN=onnxModelFile,
-        outputTracks="filteredTrajectoriesMLDBScan",
+        outputTracks="ambiTracksMLDBScan",
         **acts.examples.defaultKWArgs(
             nMeasurementsMin=config.nMeasurementsMin,
             epsilonDBScan=config.epsilonDBScan,
@@ -1456,7 +1456,7 @@ def addAmbiguityResolutionMLDBScan(
     trackConverter = acts.examples.TracksToTrajectories(
         level=customLogLevel(),
         inputTracks=alg.config.outputTracks,
-        outputTrajectories="trajectories-from-solved-tracks",
+        outputTrajectories="ambiTrajectories",
     )
     s.addAlgorithm(trackConverter)
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
