@@ -299,10 +299,9 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
                                          auto& state) {
     // Find 4D distance and momentum of the track at the vertex starting from
     // the perigee representation at the reference position
-    std::pair<Acts::ActsVector<4>, Acts::Vector3> distAndMom =
-        ipe.template getDistanceAndMomentum<4>(geoContext, rParams, vtxPos,
-                                               state)
-            .value();
+    auto distAndMom = ipe.template getDistanceAndMomentum<4>(
+                             geoContext, rParams, vtxPos, state)
+                          .value();
 
     ActsVector<4> distVec = distAndMom.first;
     Vector3 momDir = distAndMom.second;
