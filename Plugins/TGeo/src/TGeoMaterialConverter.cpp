@@ -15,7 +15,6 @@
 Acts::MaterialSlab Acts::TGeoMaterialConverter::materialSlab(
     const TGeoMaterial& tgMaterial, ActsScalar thicknessIn,
     ActsScalar thicknessOut, const Options& options) {
-
   // Scalable properties
   ActsScalar matX0 = tgMaterial.GetRadLen();
   ActsScalar matL0 = tgMaterial.GetIntLen();
