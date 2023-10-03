@@ -28,7 +28,8 @@ SeedFinderFTF<external_spacepoint_t>::SeedFinderFTF(
     const SeedFinderFTFConfig<external_spacepoint_t> &config,
     const TrigFTF_GNN_Geometry<external_spacepoint_t> &GNNgeo)
     : m_config(config) {
-  m_storage = new TrigFTF_GNN_DataStorage(GNNgeo);
+  m_storage = new TrigFTF_GNN_DataStorage(GNNgeo); //eventually gnngeo from config 
+  //m_storage = new TrigFTF_GNN_DataStorage(m_config.m_GNNgeo);
 }
 
 template <typename external_spacepoint_t>
@@ -93,9 +94,9 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
   //eventually want to make elsewhere as a mmeber of config 
   std::ifstream ifstream(
       m_config.fastrack_input_file.c_str(), std::ifstream::in);
-  const Acts::FasTrackConnector& conn(ifstream);
+  const Acts::FasTrackConnector& conn(ifstream); //conn would be memeber of config 
 
-  // const FasTrackConnector& conn = *(m_settings.m_conn); //what is m_conn- setting equal to other fastrack object 
+  // const FasTrackConnector& conn = *(m_config.m_fastrack); 
 
 
   std::vector<Acts::TrigFTF_GNN_Edge<external_spacepoint_t>> edgeStorage;
@@ -107,7 +108,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
   // Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> GNNgeo(m_config.input_vector, &conn); //long term make gnngeo memeber of config 
   std::unique_ptr<Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>> GNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>>(
-      m_config.input_vector, &conn);
+      m_config.input_vector, &conn); //everywhere GNNgeo -> m_config.m_GNNgeo 
 
   /////
 
@@ -176,11 +177,11 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
               if(n1->m_in.size() >= MAX_SEG_PER_NODE) continue;
 	    
               // float phi1 = n1->m_sp.phi();
-              float phi1 = std::atan(n1->m_sp.x() / n1->m_sp.y()) ; 
-              float r1 = n1->m_sp.r();
-              float x1 = n1->m_sp.x(); 
-              float y1 = n1->m_sp.y(); 
-              float z1 = n1->m_sp.z();
+              float phi1 = n1->m_sp_FTF.phi() ; 
+              float r1 = n1->m_sp_FTF.SP->r();
+              float x1 = n1->m_sp_FTF.SP->x(); 
+              float y1 = n1->m_sp_FTF.SP->y(); 
+              float z1 = n1->m_sp_FTF.SP->z();
               
               //sliding window phi1 +/- deltaPhi
               
@@ -202,7 +203,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
                 if(n2->m_out.size() >= MAX_SEG_PER_NODE) continue;
                 if(n2->isFull()) continue;
                 
-                float r2 = n2->m_sp.r();
+                float r2 = n2->m_sp_FTF.SP->r();
 
                 float dr = r2 - r1;
                     
@@ -210,7 +211,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
                   continue;
                 }
 
-                float z2 = n2->m_sp.z();
+                float z2 = n2->m_sp_FTF.SP->z();
 
 
                 float dz = z2 - z1;
@@ -236,13 +237,13 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
                   if(zouter < cut_zMinU || zouter > cut_zMaxU) continue;                
                 }
 
-                float dx = n2->m_sp.x() - x1;
-                float dy = n2->m_sp.y() - y1;
+                float dx = n2->m_sp_FTF.SP->x() - x1;
+                float dy = n2->m_sp_FTF.SP->y() - y1;
 
                   
                 float L2 = 1/(dx*dx+dy*dy);
                               
-                float D = (n2->m_sp.y()*x1 - y1*n2->m_sp.x())/(r1*r2);
+                float D = (n2->m_sp_FTF.SP->y()*x1 - y1*n2->m_sp_FTF.SP->x())/(r1*r2);
                 // std::cout << "float D worked " << std::endl ; 
 
                 

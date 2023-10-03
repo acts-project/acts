@@ -35,8 +35,8 @@ public:
 
     //n2->n1
 
-    float dx = pS->m_n1->m_sp.x() - pS->m_n2->m_sp.x();
-    float dy = pS->m_n1->m_sp.y() - pS->m_n2->m_sp.y();
+    float dx = pS->m_n1->m_sp_FTF.SP->x() - pS->m_n2->m_sp_FTF.SP->x();
+    float dy = pS->m_n1->m_sp_FTF.SP->y() - pS->m_n2->m_sp_FTF.SP->y();
     float L  = std::sqrt(dx*dx + dy*dy);
 
     m_s = dy/L;
@@ -46,19 +46,19 @@ public:
     // x' =  x*m_c + y*m_s
     // y' = -x*m_s + y*m_c
 
-    m_refY = pS->m_n2->m_sp.r();
-    m_refX = pS->m_n2->m_sp.x()*m_c + pS->m_n2->m_sp.y()*m_s;
+    m_refY = pS->m_n2->m_sp_FTF.SP->r();
+    m_refX = pS->m_n2->m_sp_FTF.SP->x()*m_c + pS->m_n2->m_sp_FTF.SP->y()*m_s;
 
     //X-state: y, dy/dx, d2y/dx2
 
-    m_X[0] = -pS->m_n2->m_sp.x()*m_s + pS->m_n2->m_sp.y()*m_c;
+    m_X[0] = -pS->m_n2->m_sp_FTF.SP->x()*m_s + pS->m_n2->m_sp_FTF.SP->y()*m_c;
     m_X[1] = 0.0;
     m_X[2] = 0.0;
 
     //Y-state: z, dz/dr
 
-    m_Y[0] = pS->m_n2->m_sp.z();
-    m_Y[1] = (pS->m_n1->m_sp.z() - pS->m_n2->m_sp.z())/(pS->m_n1->m_sp.r() - pS->m_n2->m_sp.r());
+    m_Y[0] = pS->m_n2->m_sp_FTF.SP->z();
+    m_Y[1] = (pS->m_n1->m_sp_FTF.SP->z() - pS->m_n2->m_sp_FTF.SP->z())/(pS->m_n1->m_sp_FTF.SP->r() - pS->m_n2->m_sp_FTF.SP->r());
 
     memset(&m_Cx[0][0], 0, sizeof(m_Cx));
     memset(&m_Cy[0][0], 0, sizeof(m_Cy));
@@ -255,10 +255,10 @@ class TrigFTF_GNN_TrackingFilter {
 
     float x, y, z, r;
 
-    x = pS->m_n1->m_sp.x();
-    y = pS->m_n1->m_sp.y();
-    z = pS->m_n1->m_sp.z();
-    r = pS->m_n1->m_sp.r();
+    x = pS->m_n1->m_sp_FTF.SP->x();
+    y = pS->m_n1->m_sp_FTF.SP->y();
+    z = pS->m_n1->m_sp_FTF.SP->z();
+    r = pS->m_n1->m_sp_FTF.SP->r();
 
     refX =  x*ts.m_c + y*ts.m_s;
     mx   = -x*ts.m_s + y*ts.m_c;//measured X[0]

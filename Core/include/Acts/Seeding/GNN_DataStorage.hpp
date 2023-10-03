@@ -24,12 +24,16 @@ struct FTF_SP {
       else {
         m_isPixel = false;
       }
+      m_phi = std::atan(SP->x() / SP->y()) ; 
+       
 
   };
   bool  isPixel() const { return m_isPixel;} 
   bool isSCT() const {return !m_isPixel;}
-
+  float phi() const {return m_phi;}
   bool m_isPixel ; 
+  float m_phi ; 
+
 
 
 };
@@ -41,14 +45,18 @@ class TrigFTF_GNN_Node {
     bool operator()(const TrigFTF_GNN_Node<space_point_t> *n1,
                     const TrigFTF_GNN_Node<space_point_t> *n2) {
       // return n1->m_sp.phi() < n2->m_sp.phi();
-      return (std::atan(n1->m_sp.x() / n1->m_sp.y())) <
-             (std::atan(n2->m_sp.x() / n1->m_sp.y()));
+      // return (std::atan(n1->m_sp.x() / n1->m_sp.y())) <
+      //        (std::atan(n2->m_sp.x() / n1->m_sp.y()));
+      return (n1->m_sp_FTF.phi() <
+             n1->m_sp_FTF.phi());
     }
   };
   // want constructor to take simspace point
-  TrigFTF_GNN_Node(const space_point_t &p, FTF_SP<space_point_t> FTF_sp, float minT = -100.0,
+  // TrigFTF_GNN_Node(const space_point_t &p, FTF_SP<space_point_t> FTF_sp, float minT = -100.0,
+  //                  float maxT = 100.0)
+  TrigFTF_GNN_Node(FTF_SP<space_point_t> FTF_sp, float minT = -100.0,
                    float maxT = 100.0)
-      : m_sp(p), m_minCutOnTau(minT), m_maxCutOnTau(maxT), m_sp_FTF(FTF_sp) {
+      : m_sp_FTF(FTF_sp) , m_minCutOnTau(minT), m_maxCutOnTau(maxT) {
     m_in.clear();
     m_out.clear();
   }
@@ -80,8 +88,8 @@ class TrigFTF_GNN_Node {
       return false;
   }
 
-  const space_point_t &m_sp;
-  FTF_SP<space_point_t> &m_sp_FTF ; 
+  // const space_point_t &m_sp;
+  FTF_SP<space_point_t> &m_sp_FTF ; //const gives weird error in run, but allows to compile 
   // const FTF_SP<space_point_t> m_sp_FTF ; 
 
 
@@ -115,7 +123,8 @@ class TrigFTF_GNN_EtaBin {
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       TrigFTF_GNN_Node<space_point_t> *pN = m_vn.at(nIdx);
       // float phi = pN->m_sp.phi();
-      float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
+      // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
+      float phi = pN->m_sp_FTF.phi();
       if (phi <= M_PI - dphi)
         continue;
 
@@ -126,14 +135,16 @@ class TrigFTF_GNN_EtaBin {
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       TrigFTF_GNN_Node<space_point_t> *pN = m_vn.at(nIdx);
       // float phi = pN->m_sp.phi();
-      float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
+      // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
+      float phi = pN->m_sp_FTF.phi();
       m_vPhiNodes.push_back(std::pair<float, unsigned int>(phi, nIdx));
     }
 
     for (unsigned int nIdx = 0; nIdx < m_vn.size(); nIdx++) {
       TrigFTF_GNN_Node<space_point_t> *pN = m_vn.at(nIdx);
       // float phi = pN->m_sp.phi();
-      float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
+      // float phi = (std::atan(pN->m_sp.x() / pN->m_sp.y()));
+      float phi = pN->m_sp_FTF.phi();
       if (phi >= -M_PI + dphi)
         break;
       m_vPhiNodes.push_back(
@@ -191,7 +202,7 @@ class TrigFTF_GNN_DataStorage {
       }
       //*dereferences pointer to then pass as ref
       m_etaBins.at(binIndex).m_vn.push_back(
-          new TrigFTF_GNN_Node<space_point_t>(*sp.SP, sp, min_tau, max_tau)); //adding ftf memeber to nodes 
+          new TrigFTF_GNN_Node<space_point_t>(sp, min_tau, max_tau)); //adding ftf memeber to nodes 
     } else {
       if (useClusterWidth) {
         //   const Trk::SpacePoint* osp = sp.offlineSpacePoint();
@@ -203,7 +214,7 @@ class TrigFTF_GNN_DataStorage {
           return -3;
       }
       m_etaBins.at(binIndex).m_vn.push_back(
-          new TrigFTF_GNN_Node<space_point_t>(*sp.SP, sp));
+          new TrigFTF_GNN_Node<space_point_t>(sp));
     }
 
     return 0;

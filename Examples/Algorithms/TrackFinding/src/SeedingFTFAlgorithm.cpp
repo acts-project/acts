@@ -46,10 +46,6 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
       m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
           m_cfg.seedFinderConfig);
 
-  m_cfg.ACTS_FTF_Map = Make_ACTS_FTF_Map();
-
-  m_cfg.seedFinderConfig.input_vector = LayerNumbering();
-
   for (const auto &spName : m_cfg.inputSpacePoints) {
     if (spName.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
@@ -70,11 +66,24 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
 
+
+  //map
+  m_cfg.ACTS_FTF_Map = Make_ACTS_FTF_Map();
+  //input vector 
+  m_cfg.seedFinderConfig.input_vector = LayerNumbering();
+
   std::ifstream input_ifstream(
       m_cfg.seedFinderConfig.fastrack_input_file.c_str(), std::ifstream::in);
+  
+  //fastrack 
   Acts::FasTrackConnector input_fastrack(input_ifstream);
+  // m_cfg.seedFinderConfig.m_fastrack = input_fastrack ; 
+  ///geo 
   mGNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(
       m_cfg.seedFinderConfig.input_vector, &input_fastrack);
+  //trying from core config 
+  // m_cfg.seedFinderConfig.m_GNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(
+  //     m_cfg.seedFinderConfig.input_vector, &input_fastrack);
 
 }  // this is not FTF config type because it is a meber of the algs config,
    // which is of type FTF cofig
