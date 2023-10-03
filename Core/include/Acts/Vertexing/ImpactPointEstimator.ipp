@@ -263,12 +263,12 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return fieldRes.error();
   }
   double bZ = (*fieldRes)[eZ];
-  double charge = trkParams.particleHypothesis().absoluteCharge();
+  double absoluteCharge = trkParams.particleHypothesis().absoluteCharge();
 
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B-field. In that case, the 3D PCA can be calculated analytically, see
   // Sec 3.2 of the reference.
-  if (charge == 0. or bZ == 0.) {
+  if (absoluteCharge == 0. or bZ == 0.) {
     // Momentum direction (constant for straight tracks)
     Vector3 momDirStraightTrack = Vector3(
         std::cos(phi) * sinTheta, std::sin(phi) * sinTheta, std::cos(theta));
@@ -286,7 +286,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
         positionOnTrack + distanceToPca * momDirStraightTrack;
     if constexpr (nDim == 4) {
       ActsScalar m0 = trkParams.particleHypothesis().mass();
-      ActsScalar p = std::abs(charge / qOvP);
+      ActsScalar p = std::abs(absoluteCharge / qOvP);
 
       // Speed in units of c
       ActsScalar beta = p / std::hypot(p, m0);
@@ -343,7 +343,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
 
   if constexpr (nDim == 4) {
     ActsScalar m0 = trkParams.particleHypothesis().mass();
-    ActsScalar p = std::abs(charge / qOvP);
+    ActsScalar p = std::abs(absoluteCharge / qOvP);
 
     // Speed in units of c
     ActsScalar beta = p / std::hypot(p, m0);
