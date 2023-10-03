@@ -76,7 +76,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   ActsScalar qOvP = paramsAtPCA(BoundIndices::eBoundQOverP);
 
   ActsScalar m0 = params.particleHypothesis().mass();
-  ActsScalar p = std::abs(params.particleHypothesis().absoluteCharge() / qOvP);
+  ActsScalar absoluteCharge = params.particleHypothesis().absoluteCharge();
+  ActsScalar p = std::abs(absoluteCharge / qOvP);
 
   // Speed in units of c
   ActsScalar beta = p / std::hypot(p, m0);
@@ -98,9 +99,10 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   }
   ActsScalar Bz = (*field)[eZ];
 
-  // If there is no magnetic field the particle has a straight trajectory
-  // If there is a constant magnetic field it has a helical trajectory
-  if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
+  // The particle moves on a straight trajectory if its charge is 0 or if there
+  // is no B field. Conversely, if it has a charge and the B field is constant,
+  // it moves on a helical trajectory.
+  if (Bz == 0. or absoluteCharge == 0.) {
     // Derivatives can be found in Eqs. 5.39 and 5.40 of Ref. (1).
     // Since we propagated to the PCA (point P in Ref. (1)), we evaluate the
     // Jacobians there. One can show that, in this case, RTilde = 0 and QTilde =
