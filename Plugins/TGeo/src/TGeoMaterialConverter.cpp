@@ -25,6 +25,7 @@ Acts::MaterialSlab Acts::TGeoMaterialConverter::materialSlab(
   ActsScalar uScalor = options.unitLengthScalor;
   ActsScalar rScalar =
       options.unitMassScalor / pow(options.unitLengthScalor, 3);
+
   auto material = Material::fromMassDensity(
       matX0 * uScalor / cFactor, matL0 * uScalor / cFactor, tgMaterial.GetA(),
       tgMaterial.GetZ(), matRho * rScalar * cFactor);
