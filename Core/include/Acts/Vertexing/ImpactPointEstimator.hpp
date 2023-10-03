@@ -40,7 +40,7 @@ struct ImpactParametersAndSigma {
 ///
 /// @brief Estimator for impact point calculations
 /// A description of the underlying mathematics can be found here:
-/// TODO: update PR link
+/// https://github.com/acts-project/acts/pull/2506
 /// TODO: Upload reference at a better place
 template <typename input_track_t, typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
