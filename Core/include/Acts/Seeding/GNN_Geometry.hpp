@@ -363,6 +363,7 @@ protected:
 
   std::map<unsigned int, TrigFTF_GNN_Layer<space_point_t> *> m_layMap;
   std::vector<TrigFTF_GNN_Layer<space_point_t> *> m_layArray;
+  //member of fastrack object m_fastrack
 
   int m_nEtaBins;
 };

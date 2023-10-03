@@ -28,6 +28,7 @@ template class Acts::FTF_SP<ActsExamples::SimSpacePoint>;
 template class Acts::TrigFTF_GNN_DataStorage<ActsExamples::SimSpacePoint>;
 template class Acts::TrigFTF_GNN_Edge<ActsExamples::SimSpacePoint>;
 
+
 // constructor:
 ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     ActsExamples::SeedingFTFAlgorithm::Config cfg, Acts::Logging::Level lvl)
@@ -69,21 +70,18 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
 
   //map
   m_cfg.ACTS_FTF_Map = Make_ACTS_FTF_Map();
-  //input vector 
-  m_cfg.seedFinderConfig.input_vector = LayerNumbering();
+  //input trig vector 
+  m_cfg.seedFinderConfig.m_layerGeometry = LayerNumbering();
 
   std::ifstream input_ifstream(
       m_cfg.seedFinderConfig.fastrack_input_file.c_str(), std::ifstream::in);
   
   //fastrack 
   Acts::FasTrackConnector input_fastrack(input_ifstream);
-  // m_cfg.seedFinderConfig.m_fastrack = input_fastrack ; 
+  // m_cfg.seedFinderConfig.m_fastrack = Acts::FasTrackConnector(input_ifstream) ; 
   ///geo 
   mGNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(
-      m_cfg.seedFinderConfig.input_vector, &input_fastrack);
-  //trying from core config 
-  // m_cfg.seedFinderConfig.m_GNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<SimSpacePoint>>(
-  //     m_cfg.seedFinderConfig.input_vector, &input_fastrack);
+      m_cfg.seedFinderConfig.m_layerGeometry, &input_fastrack);
 
 }  // this is not FTF config type because it is a meber of the algs config,
    // which is of type FTF cofig
@@ -116,8 +114,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
 
   finder.loadSpacePoints(FTF_spacePoints);
 
+  Acts::RoiDescriptor internalRoi(0, -4.5, 4.5, 0, -M_PI, M_PI, 0, -150.0, 150.0); 
 
-  finder.createSeeds(); //currently doesnt return anything 
+  //want input of gnn geo 
+  finder.createSeeds(internalRoi); //currently doesnt return anything 
 
   // still to develop
   SimSeedContainer seeds = finder.createSeeds_old(

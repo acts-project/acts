@@ -67,7 +67,7 @@ void SeedFinderFTF<external_spacepoint_t>::loadSpacePoints(
 
 
 template <typename external_spacepoint_t>
-void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_TrigTracklet<external_spacepoint_t>>& vTracks){
+void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_TrigTracklet<external_spacepoint_t>>& vTracks, const Acts::RoiDescriptor& roi){
   //long term move these to ftf finder config, then m_config. to access them 
   const int MaxEdges = 2000000;
 
@@ -78,8 +78,8 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
   const float max_z0            = 2800; //roiDescriptor->zedPlus();
 
   const float maxOuterRadius    = 550.0;
-  const float cut_zMinU = min_z0 ; // + maxOuterRadius*roiDescriptor->dzdrMinus();
-  const float cut_zMaxU = max_z0 ;// + maxOuterRadius*roiDescriptor->dzdrPlus();
+  const float cut_zMinU = min_z0 + maxOuterRadius*roi.dzdrMinus(); //dzdr can only find =0 in athena 
+  const float cut_zMaxU = max_z0 + maxOuterRadius*roi.dzdrPlus();
 
   float m_minR_squ = 1 ; //set earlier 
   float m_maxCurv = 1 ; 
@@ -94,7 +94,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
   //eventually want to make elsewhere as a mmeber of config 
   std::ifstream ifstream(
       m_config.fastrack_input_file.c_str(), std::ifstream::in);
-  const Acts::FasTrackConnector& conn(ifstream); //conn would be memeber of config 
+  const Acts::FasTrackConnector& conn(ifstream); //acces from gnngeo input to function 
 
   // const FasTrackConnector& conn = *(m_config.m_fastrack); 
 
@@ -105,10 +105,10 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
   
   int nEdges = 0;
 
-
+  //gnngeo will be input to funciton 
   // Acts::TrigFTF_GNN_Geometry<external_spacepoint_t> GNNgeo(m_config.input_vector, &conn); //long term make gnngeo memeber of config 
   std::unique_ptr<Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>> GNNgeo = std::make_unique<Acts::TrigFTF_GNN_Geometry<external_spacepoint_t>>(
-      m_config.input_vector, &conn); //everywhere GNNgeo -> m_config.m_GNNgeo 
+      m_config.m_layerGeometry, &conn); //everywhere GNNgeo -> m_config.m_GNNgeo 
 
   /////
 
@@ -480,7 +480,7 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
   // this used to be m_settings.m_layerGeometry = input_vector 
 
-  TrigFTF_GNN_TrackingFilter<external_spacepoint_t> tFilter(m_config.input_vector, edgeStorage);
+  TrigFTF_GNN_TrackingFilter<external_spacepoint_t> tFilter(m_config.m_layerGeometry, edgeStorage);
 
   for(auto pS : vSeeds) {
 
@@ -584,13 +584,13 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
           //3. phi0 cut
           
-  //         if (!roiDescriptor->isFullscan()) {
-  //           const double uc = 2*B*pS_r - A;
-  //           const double phi0 = std::atan2(sinA - uc*cosA, cosA + uc*sinA);
+          if (!roi.isFullscan()) { 
+            const double uc = 2*B*pS_r - A;
+            const double phi0 = std::atan2(sinA - uc*cosA, cosA + uc*sinA);
   //           if ( !RoiUtil::containsPhi( *roiDescriptor, phi0 ) ) {
   //             continue;
   //           }
-  //         }
+          }
 
           //4. add new triplet 
 
@@ -618,13 +618,13 @@ void SeedFinderFTF<external_spacepoint_t>::runGNN_TrackFinder(std::vector<GNN_Tr
 
 
 template <typename external_spacepoint_t>
-void SeedFinderFTF<external_spacepoint_t>::createSeeds(){
+void SeedFinderFTF<external_spacepoint_t>::createSeeds(const Acts::RoiDescriptor& roi){
   
   std::vector<GNN_TrigTracklet<external_spacepoint_t>> vTracks; //make empty vector 
 
   vTracks.reserve(5000);
 
-  runGNN_TrackFinder(vTracks); //returns filled vector 
+  runGNN_TrackFinder(vTracks, roi); //returns filled vector 
 
   if(vTracks.empty()) return;
 

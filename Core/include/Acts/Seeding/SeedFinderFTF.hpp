@@ -8,6 +8,8 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Utilities/KDTree.hpp"
+#include "Acts/TrackFinding/RoiDescriptor.hpp" 
+
 
 #include <array>
 #include <iostream>
@@ -55,7 +57,7 @@ class SeedFinderFTF {
 
   void loadSpacePoints(const std::vector<FTF_SP<external_spacepoint_t>> &);
 
-  void createSeeds(); 
+  void createSeeds(const Acts::RoiDescriptor&); 
 
   // create seeeds function
   template <typename input_container_t, typename output_container_t,
@@ -76,7 +78,7 @@ class SeedFinderFTF {
   // config object
   SeedFinderFTFConfig<external_spacepoint_t> m_config;
 
-  void runGNN_TrackFinder(std::vector<GNN_TrigTracklet<external_spacepoint_t>>&); 
+  void runGNN_TrackFinder(std::vector<GNN_TrigTracklet<external_spacepoint_t>>&, const Acts::RoiDescriptor&); 
 
   // needs to be memeber of class so can accessed by all memeber functions
   TrigFTF_GNN_DataStorage<external_spacepoint_t> *m_storage;

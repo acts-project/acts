@@ -40,7 +40,7 @@ template <typename SpacePoint> struct SeedFinderFTFConfig {
   float m_nMaxPhiSlice;
   bool m_useClusterWidth = false;
   std::string fastrack_input_file;
-  std::vector<TrigInDetSiLayer> input_vector;
+  std::vector<TrigInDetSiLayer> m_layerGeometry; //used to be input vector 
   // Acts::TrigFTF_GNN_Geometry<SpacePoint> m_GNNgeo;
   // std::unique_ptr<Acts::TrigFTF_GNN_Geometry<SpacePoint>> m_GNNgeo;
   // Acts::FasTrackConnector m_fastrack ; 
@@ -56,8 +56,6 @@ template <typename SpacePoint> struct SeedFinderFTFConfig {
   unsigned int m_maxTripletBufferLength = 3 ; 
 
   //ROI: 
-  // virtual bool isFullscan() const = 0 ; 
-  bool isFullscan = false  ; 
   bool containsPhi() {
     return false; 
     //need to implement this funciton 
