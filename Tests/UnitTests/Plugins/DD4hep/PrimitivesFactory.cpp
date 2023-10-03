@@ -38,7 +38,7 @@ static Ref_t create_cylinder(Detector &dd, xml_h xml,
 
   string shapeName = x_det_tubs.nameStr();
   double phiMin = Acts::getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
-  double phiMax = Acts::getAttrValueOr<double>(x_det_tubs, "phimax", 2 * M_PI);
+  double phiMax = Acts::getAttrValueOr<double>(x_det_tubs, "phimax", 360.);
   Tube tubeShape(shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(),
                  x_det_tubs.dz(), phiMin, phiMax);
   Volume tubeVolume(detName, tubeShape, dd.material(x_det_tubs.materialStr()));
@@ -77,7 +77,7 @@ static Ref_t create_disc(Detector &dd, xml_h xml, SensitiveDetector /*sens*/) {
 
   string shapeName = x_det_tubs.nameStr();
   double phiMin = Acts::getAttrValueOr<double>(x_det_tubs, "phimin", 0.);
-  double phiMax = Acts::getAttrValueOr<double>(x_det_tubs, "phimax", 2 * M_PI);
+  double phiMax = Acts::getAttrValueOr<double>(x_det_tubs, "phimax", 360.);
 
   Tube discShape = Tube(shapeName, x_det_tubs.rmin(), x_det_tubs.rmax(),
                         x_det_tubs.dz(), phiMin, phiMax);

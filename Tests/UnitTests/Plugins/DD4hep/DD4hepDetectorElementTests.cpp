@@ -41,7 +41,7 @@ const char* sectoral_cylinder_xml =
     <detectors>
         <detector id="1" name="SectoralCylinder" type="Cylinder">
             <type_flags type="DetType_TRACKER"/>
-            <tubs name="Cylinder" rmin="10*cm" rmax="11*cm" dz="100*cm" phimin="0.1" phimax="0.8" material="Vacuum" sensitive="true"/>
+            <tubs name="Cylinder" rmin="10*cm" rmax="11*cm" dz="100*cm" phimin="0.1*rad" phimax="0.8*rad" material="Vacuum" sensitive="true"/>
         </detector>
     </detectors>
 )"""";
@@ -61,7 +61,7 @@ const char* sectoral_disc_xml =
     <detectors>
         <detector id="1" name="SectoralDisc" type="Disc">
             <type_flags type="DetType_TRACKER"/>
-            <tubs name="Disc" rmin="10*cm" rmax="90*cm" dz="1*cm" phimin="0" phimax="1.5" material="Vacuum" sensitive="true"/>
+            <tubs name="Disc" rmin="10*cm" rmax="90*cm" dz="1*cm" phimin="0.*rad" phimax="1.5*rad" material="Vacuum" sensitive="true"/>
         </detector>
     </detectors>
 )"""";
