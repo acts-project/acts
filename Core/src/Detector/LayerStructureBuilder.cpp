@@ -167,7 +167,8 @@ Acts::Experimental::LayerStructureBuilder::construct(
   }
 
   // Retrieve the layer surfaces
-  SurfaceCandidatesUpdator internalCandidatesUpdator;
+  SurfaceCandidatesUpdator internalCandidatesUpdator =
+      tryAllPortalsAndSurfaces();
   auto internalSurfaces = m_cfg.surfacesProvider->surfaces(gctx);
   ACTS_DEBUG("Building internal layer structure from "
              << internalSurfaces.size() << " provided surfaces.");
@@ -179,6 +180,17 @@ Acts::Experimental::LayerStructureBuilder::construct(
     ACTS_DEBUG("Adding " << m_cfg.supports.size() << " support structures.")
     // The surface candidate updator
     for (const auto& support : m_cfg.supports) {
+      // Check if the supportsurface has already been built
+      if (support.surface != nullptr) {
+        ACTS_VERBOSE("- Use provided support surface directly.");
+        if (support.assignToAll) {
+          assignToAll.push_back(internalSurfaces.size());
+          ACTS_VERBOSE("  Support surface is assigned to all bins.");
+        }
+        internalSurfaces.push_back(support.surface);
+        continue;
+      }
+
       // Throw an exception is misconfigured
       if (support.type == Surface::SurfaceType::Other) {
         throw std::invalid_argument(
@@ -202,9 +214,11 @@ Acts::Experimental::LayerStructureBuilder::construct(
           support.values, support.transform, support.splits);
     }
   }
-
-  // Create the indexed surface grids
-  if (m_cfg.binnings.size() == 1u) {
+  if (m_cfg.binnings.empty()) {
+    ACTS_DEBUG(
+        "No surface binning provided, navigation will be 'tryAll' (potentially "
+        "slow).");
+  } else if (m_cfg.binnings.size() == 1u) {
     ACTS_DEBUG("- 1-dimensional surface binning detected.");
     // Capture the binning
     auto binning = m_cfg.binnings[0u];
