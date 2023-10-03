@@ -76,7 +76,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       .def("currentHandle", &Geant4Manager::currentHandle);
 
   py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod, "Geant4Handle")
-      .def("tweekLogging", &Geant4Handle::tweekLogging);
+      .def("tweakLogging", &Geant4Handle::tweakLogging);
 
   {
     using Algorithm = Geant4SimulationBase;
