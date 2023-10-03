@@ -48,6 +48,8 @@ bool Acts::Experimental::DD4hepVolumeStructure::recursiveParse(
       vsbConfig.boundsType = bValueType;
       vsbConfig.boundValues = bValues;
     }
+    vsbConfig.transform =
+        extractTransform(dd4hepElement, "acts_volume_pos", unitLength);
     return true;
   } else {
     ACTS_VERBOSE("No ProtoVolume description detected.");

@@ -54,6 +54,13 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
       layerParams.set<double>("acts_volume_bvalues_0", acts_tubs.rmin());
       layerParams.set<double>("acts_volume_bvalues_1", acts_tubs.rmax());
       layerParams.set<double>("acts_volume_bvalues_2", 0.5 * acts_tubs.dz());
+      // Decode a position (shift)
+      std::vector<std::string> posKeys = {"x", "y", "z"};
+      for (const auto &pk : posKeys) {
+        layerParams.set<double>(
+            "acts_volume_pos_" + pk,
+            Acts::getAttrValueOr<double>(acts_tubs, pk, 0.));
+      }
     }
   }
 
