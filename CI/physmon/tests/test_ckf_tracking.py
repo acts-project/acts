@@ -142,8 +142,6 @@ def test_ckf_tracking(seeding_algorithm, physmon: "Physmon"):
     stems = [
         "performance_ckf",
         "tracksummary_ckf",
-        "performance_ivf",
-        "performance_amvf",
     ]
 
     associatedParticles = "particles_input"
@@ -182,11 +180,15 @@ def test_ckf_tracking(seeding_algorithm, physmon: "Physmon"):
         s.run()
     del s
 
+    # @TODO: Add plotting into ROOT file for vertexing and ckf tracksummary
+
     for vertexing in ["ivf", "amvf"]:
+        target = f"performance_{vertexing}.root"
         physmon.add_output_file(
             f"{vertexing}/performance_vertexing.root",
-            rename=f"performance_{vertexing}.root",
+            rename=target,
         )
+        physmon.histogram_comparison(target, f"Performance {vertexing}")
 
     if seeding_algorithm in [
         SeedingAlgorithm.Default,
@@ -196,7 +198,9 @@ def test_ckf_tracking(seeding_algorithm, physmon: "Physmon"):
         stems += ["performance_seeding"]
 
     for stem in stems:
-        physmon.add_output_file(f"{stem}.root", rename=f"{stem}_{physmon.name}.root")
+        target = f"{stem}.root"
+        physmon.add_output_file(f"{stem}.root", rename=target)
+        physmon.histogram_comparison(target, f"Performance {physmon.name} {stem}")
 
     #  ] + (
     #  ["performance_seeding", "performance_ambi"]

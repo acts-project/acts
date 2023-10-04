@@ -25,6 +25,13 @@ def output_path(request):
     return path
 
 
+@pytest.fixture(scope="session")
+def reference_path(request):
+    path: Path = request.config.getoption("--physmon-reference-path").resolve()
+
+    return path
+
+
 class Physmon:
     detector: "acts.examples.dd4hep.DD4hepDetector"
     trackingGeometry: acts.TrackingGeometry
@@ -33,6 +40,8 @@ class Physmon:
     digiConfig: Path
     geoSel: Path
     output_path: Path
+    reference_path: Path
+    update_references: bool
     tmp_path: Path
     name: str
 
@@ -45,6 +54,8 @@ class Physmon:
         digiConfig,
         geoSel,
         output_path,
+        reference_path,
+        update_references,
         tmp_path,
         name,
     ):
@@ -55,24 +66,40 @@ class Physmon:
         self.digiConfig = digiConfig
         self.geoSel = geoSel
         self.output_path = output_path
+        self.reference_path = reference_path
+        self.update_references = update_references
         self.tmp_path = tmp_path
         self.name = name
+
+        self.test_output_path.mkdir(exist_ok=True, parents=True)
+        self.test_reference_path.mkdir(exist_ok=True, parents=True)
+
+    @property
+    def test_output_path(self) -> Path:
+        return self.output_path / self.name
+
+    @property
+    def test_reference_path(self) -> Path:
+        return self.reference_path / self.name
 
     def add_output_file(self, filename: str, rename: Optional[str] = None):
         __tracebackhide__ = True
         tmp = self.tmp_path / filename
         assert tmp.exists(), f"Output file {tmp} does not exist"
         outname = rename if rename else filename
-        shutil.copy(tmp, self.output_path / outname)
+        shutil.copy(tmp, self.test_output_path / outname)
 
     def histogram_comparison(
         self, filename: Path, title: str, config_path: Optional[Path] = None
     ):
         __tracebackhide__ = True
-        monitored = self.output_path / filename
-        reference = Path(__file__).parent.parent / "reference" / filename
+        monitored = self.test_output_path / filename
+        reference = self.test_reference_path / filename
 
         assert monitored.exists(), f"Output file {monitored} does not exist"
+
+        if self.update_references:
+            shutil.copy(monitored, reference)
         assert reference.exists(), f"Reference file {reference} does not exist"
 
         from histcmp.console import Console
@@ -124,9 +151,9 @@ class Physmon:
 
         status = print_summary(comparison, console)
 
-        plots = self.output_path / "plots"
+        plots = self.test_output_path / "plots"
         plots.mkdir(exist_ok=True, parents=True)
-        report_file = self.output_path / f"{self.name}.html"
+        report_file = self.test_output_path / f"{monitored.stem}.html"
         make_report(comparison, report_file, console, plots, format="pdf")
 
         for item in comparison.items:
@@ -152,13 +179,20 @@ def _physmon_prereqs():
     return srcdir, detector, trackingGeometry, decorators
 
 
+def _sanitize_test_name(name: str):
+    name = re.sub(r"^test_", "", name)
+    name = re.sub(r"\]$", "", name)
+    name = re.sub(r"[\[\]]", "_", name)
+    return name
+
+
 @pytest.fixture()
-def physmon(output_path, _physmon_prereqs, tmp_path, request):
+def physmon(
+    output_path: Path, reference_path: Path, _physmon_prereqs, tmp_path, request
+):
     u = acts.UnitConstants
 
     srcdir, detector, trackingGeometry, decorators = _physmon_prereqs
-
-    name = re.sub(r"^test_", "", request.node.name)
 
     setup = Physmon(
         detector=detector,
@@ -169,8 +203,10 @@ def physmon(output_path, _physmon_prereqs, tmp_path, request):
         geoSel=srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json",
         field=acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T)),
         output_path=output_path,
+        reference_path=reference_path,
+        update_references=request.config.getoption("--physmon-update-references"),
         tmp_path=tmp_path,
-        name=name,
+        name=_sanitize_test_name(request.node.name),
     )
     return setup
 
@@ -251,7 +287,7 @@ def monitor(physmon: Physmon, request, capsys):
 
     memory = physmon.output_path / "memory"
     memory.mkdir(exist_ok=True)
-    name = re.sub(r"^test_", "", request.node.name)
+    name = _sanitize_test_name(request.node.name)
     with (memory / f"mem_{name}.csv").open("w") as fh:
         mon = Monitor(output=fh, interval=0.1)
 

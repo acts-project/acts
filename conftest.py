@@ -49,3 +49,11 @@ def pytest_addoption(parser):
         default=Path.cwd() / "physmon",
         type=Path,
     )
+    parser.addoption(
+        "--physmon-reference-path",
+        action="store",
+        default=Path(__file__).parent / "CI/physmon/reference",
+        type=Path,
+    )
+
+    parser.addoption("--physmon-update-references", action="store_true")
