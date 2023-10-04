@@ -28,15 +28,17 @@ void addEventData(Context& ctx) {
              particleHypothesis.toStream(os);
              return os.str();
            })
-      .def_property_readonly_static("muon", &Acts::ParticleHypothesis::muon)
-      .def_property_readonly_static("pion", &Acts::ParticleHypothesis::pion)
-      .def_property_readonly_static("electron",
-                                    &Acts::ParticleHypothesis::electron)
-      .def_property_readonly_static("geantino",
-                                    &Acts::ParticleHypothesis::geantino)
       .def_property_readonly_static(
-          "chargedGeantino", static_cast<Acts::ParticleHypothesis (*)()>(
-                                 &Acts::ParticleHypothesis::chargedGeantino));
+          "muon", []() { return Acts::ParticleHypothesis::muon(); })
+      .def_property_readonly_static(
+          "pion", []() { return Acts::ParticleHypothesis::pion(); })
+      .def_property_readonly_static(
+          "electron", []() { return Acts::ParticleHypothesis::electron(); })
+      .def_property_readonly_static(
+          "geantino", []() { return Acts::ParticleHypothesis::geantino(); })
+      .def_property_readonly_static("chargedGeantino", []() {
+        return Acts::ParticleHypothesis::chargedGeantino();
+      });
 }
 
 }  // namespace Acts::Python
