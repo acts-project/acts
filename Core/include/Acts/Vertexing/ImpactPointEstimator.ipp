@@ -241,20 +241,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Reference point R
   Vector3 refPoint = trkParams.referenceSurface().center(gctx);
 
-  // Perigee parameters (parameters of 2D PCA)
-  double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
-  double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
-  double phiP = trkParams.parameters()[BoundIndices::eBoundPhi];
-  double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
+  // Extract charge-related particle parameters
+  double absoluteCharge = trkParams.particleHypothesis().absoluteCharge();
   double qOvP = trkParams.parameters()[BoundIndices::eBoundQOverP];
-  double tP = trkParams.parameters()[BoundIndices::eBoundTime];
-  // Functions of the polar angle theta for later use
-  double sinTheta = std::sin(theta);
-  double cotTheta = 1. / std::tan(theta);
-
-  // Set optimization variable phi to the angle at the 2D PCA as a first guess.
-  // Note that phi corresponds to phiV in the reference.
-  double phi = phiP;
 
   // B-field z-component at the reference position.
   // Note that we assume a constant B field here!
@@ -263,15 +252,13 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return fieldRes.error();
   }
   double bZ = (*fieldRes)[eZ];
-  double absoluteCharge = trkParams.particleHypothesis().absoluteCharge();
 
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B-field. In that case, the 3D PCA can be calculated analytically, see
   // Sec 3.2 of the reference.
   if (absoluteCharge == 0. or bZ == 0.) {
     // Momentum direction (constant for straight tracks)
-    Vector3 momDirStraightTrack = Vector3(
-        std::cos(phi) * sinTheta, std::sin(phi) * sinTheta, std::cos(theta));
+    Vector3 momDirStraightTrack = trkParams.direction();
 
     // Current position on the track
     Vector3 positionOnTrack = trkParams.position(gctx);
@@ -285,13 +272,16 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     pcaStraightTrack.template head<3>() =
         positionOnTrack + distanceToPca * momDirStraightTrack;
     if constexpr (nDim == 4) {
+      // Track time at positionOnTrack
+      double timeOnTrack = trkParams.parameters()[BoundIndices::eBoundTime];
+
       ActsScalar m0 = trkParams.particleHypothesis().mass();
       ActsScalar p = std::abs(absoluteCharge / qOvP);
 
       // Speed in units of c
       ActsScalar beta = p / std::hypot(p, m0);
 
-      pcaStraightTrack[3] = tP + distanceToPca / beta;
+      pcaStraightTrack[3] = timeOnTrack + distanceToPca / beta;
     }
 
     // Vector pointing from the vertex position to the 3D PCA
@@ -303,6 +293,20 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   // Charged particles in a constant B-field follow a helical trajectory. In
   // that case, we calculate the 3D PCA using the Newton method, see Sec 4.2 in
   // the reference.
+
+  // Spatial Perigee parameters (i.e., spatial parameters of 2D PCA)
+  double d0 = trkParams.parameters()[BoundIndices::eBoundLoc0];
+  double z0 = trkParams.parameters()[BoundIndices::eBoundLoc1];
+  // Momentum angles at 2D PCA
+  double phiP = trkParams.parameters()[BoundIndices::eBoundPhi];
+  double theta = trkParams.parameters()[BoundIndices::eBoundTheta];
+  // Functions of the polar angle theta for later use
+  double sinTheta = std::sin(theta);
+  double cotTheta = 1. / std::tan(theta);
+
+  // Set optimization variable phi to the angle at the 2D PCA as a first guess.
+  // Note that phi corresponds to phiV in the reference.
+  double phi = phiP;
 
   // Signed radius of the helix on which the particle moves
   double rho = sinTheta * (1. / qOvP) / bZ;
@@ -342,6 +346,9 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       helixCenter + rho * Vector3(-sinPhi, cosPhi, -cotTheta * phi);
 
   if constexpr (nDim == 4) {
+    // Time at the 2D PCA P
+    double tP = trkParams.parameters()[BoundIndices::eBoundTime];
+
     ActsScalar m0 = trkParams.particleHypothesis().mass();
     ActsScalar p = std::abs(absoluteCharge / qOvP);
 
