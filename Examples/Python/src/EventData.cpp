@@ -34,8 +34,9 @@ void addEventData(Context& ctx) {
                                     &Acts::ParticleHypothesis::electron)
       .def_property_readonly_static("geantino",
                                     Acts::ParticleHypothesis::geantino)
-      .def_property_readonly_static("chargedGeantino",
-                                    &Acts::ParticleHypothesis::chargedGeantino);
+      .def_property_readonly_static("chargedGeantino", []() {
+        return Acts::ParticleHypothesis::chargedGeantino();
+      });
 }
 
 }  // namespace Acts::Python
