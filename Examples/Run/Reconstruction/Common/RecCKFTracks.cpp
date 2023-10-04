@@ -245,12 +245,8 @@ int runRecCKFTracks(
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
-    paramsEstimationCfg.sigmaLoc0 = 25._um;
-    paramsEstimationCfg.sigmaLoc1 = 100._um;
-    paramsEstimationCfg.sigmaPhi = 0.02_degree;
-    paramsEstimationCfg.sigmaTheta = 0.02_degree;
-    paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
-    paramsEstimationCfg.sigmaT0 = 1400._s;
+    paramsEstimationCfg.initialSigmas = {25._um,      100._um,      0.02_degree,
+                                         0.02_degree, 0.1 / 1._GeV, 1400._s};
     paramsEstimationCfg.initialVarInflation =
         vm["ckf-initial-variance-inflation"].template as<Options::Reals<6>>();
 
