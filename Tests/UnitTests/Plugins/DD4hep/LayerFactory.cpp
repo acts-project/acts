@@ -29,7 +29,7 @@ using namespace dd4hep;
 /// @param sens the sensitive detector to be used
 /// @param layerID the layer identification number
 DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
-                            xml_comp_t x_layer, SensitiveDetector sens,
+                            const xml_comp_t &x_layer, SensitiveDetector sens,
                             int layerID = 0) {
   // Make the cylinder detector element
   auto layerName = x_layer.nameStr();
@@ -68,7 +68,8 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
     // Go through the sensors
     unsigned int sensorID = 1u;
     xml_comp_t x_det_modules = x_layer.child(_Unicode(modules));
-    for (xml_coll_t bmodule(x_det_modules, _U(box)); bmodule; ++bmodule) {
+    for (xml_coll_t bmodule(x_det_modules, _U(box)); bmodule != nullptr;
+         ++bmodule) {
       xml_comp_t x_det_box = bmodule;
 
       // Due to convention this causes an axis flip on x
@@ -94,8 +95,8 @@ DetElement addCylinderLayer(Detector &dd, Assembly &dAssembly,
     }
   }
   // Passive layer surface - place it inside the envelope
-  for (xml_coll_t psurface(x_layer, _Unicode(acts_passive_surface)); psurface;
-       ++psurface) {
+  for (xml_coll_t psurface(x_layer, _Unicode(acts_passive_surface));
+       psurface != nullptr; ++psurface) {
     xml_comp_t x_passive_xml = psurface;
     // Direct definition of a child surface
     if (x_passive_xml.hasChild(_Unicode(tubs))) {
@@ -154,7 +155,8 @@ static Ref_t create_barrel_detector(Detector &dd, xml_h xml,
   if (x_det.hasChild(_Unicode(layers))) {
     xml_comp_t x_det_layers = x_det.child(_Unicode(layers));
     int layerID = 0;
-    for (xml_coll_t layer(x_det_layers, _Unicode(layer)); layer; ++layer) {
+    for (xml_coll_t layer(x_det_layers, _Unicode(layer)); layer != nullptr;
+         ++layer) {
       xml_comp_t x_det_layer = layer;
       auto layerElement =
           addCylinderLayer(dd, detectorAssembly, x_det_layer, sens, layerID++);
@@ -221,7 +223,8 @@ static Ref_t create_disc_layer(Detector &dd, xml_h xml,
     unsigned int sensorID = 1u;
     xml_comp_t x_det_modules = x_det.child(_Unicode(modules));
 
-    for (xml_coll_t bmodule(x_det_modules, _U(trap)); bmodule; ++bmodule) {
+    for (xml_coll_t bmodule(x_det_modules, _U(trap)); bmodule != nullptr;
+         ++bmodule) {
       xml_comp_t x_det_trap = bmodule;
 
       // Due to convention this causes an axis flip on x
