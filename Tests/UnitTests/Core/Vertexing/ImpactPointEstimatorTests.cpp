@@ -99,7 +99,7 @@ Estimator makeEstimator(double bZ) {
   Estimator::Config cfg(field,
                         std::make_shared<Propagator>(
                             std::move(stepper), detail::VoidNavigator(),
-                            getDefaultLogger("Prop", Logging::Level::ERROR)));
+                            getDefaultLogger("Prop", Logging::Level::WARNING)));
   return Estimator(cfg);
 }
 
