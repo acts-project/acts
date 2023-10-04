@@ -114,8 +114,7 @@ struct GlobalChiSquareFitterFunctionImpl final : public TrackFitterFunction {
       TrackContainer& tracks) const override {
     const auto gx2fOptions = makeGx2fOptions(options, calibrator);
     std::cout << "############# THIS SHOULD NOT HAPPEN - wrong operator() "
-                 "#############"
-              << std::endl;
+                 "#############\nsurfaceSequence = " << surfaceSequence) << std::endl;
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       gx2fOptions, tracks);
   }
