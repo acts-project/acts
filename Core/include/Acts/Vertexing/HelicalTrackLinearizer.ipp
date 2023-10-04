@@ -102,7 +102,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   // The particle moves on a straight trajectory if its charge is 0 or if there
   // is no B field. Conversely, if it has a charge and the B field is constant,
   // it moves on a helical trajectory.
-  if (Bz == 0. or absoluteCharge == 0.) {
+  if (absoluteCharge == 0. or Bz == 0.) {
     // Derivatives can be found in Eqs. 5.39 and 5.40 of Ref. (1).
     // Since we propagated to the PCA (point P in Ref. (1)), we evaluate the
     // Jacobians there. One can show that, in this case, RTilde = 0 and QTilde =
