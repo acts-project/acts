@@ -211,7 +211,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   auto zeroField = std::make_shared<MagneticField>(Vector3(0, 0, 0));
   StraightLineStepper straightLineStepper;
   auto straightLinePropagator =
-      std::make_shared<StraightPropagator>(std::move(straightLineStepper));
+      std::make_shared<StraightPropagator>(straightLineStepper);
   StraightLineEstimator::Config zeroFieldCfg(zeroField, straightLinePropagator);
   StraightLineEstimator zeroFieldIPEstimator(zeroFieldCfg);
   StraightLineEstimator::State zeroFieldIPState(magFieldCache());
