@@ -234,6 +234,84 @@ BOOST_AUTO_TEST_CASE(safeInverse) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(incidentAnglesTest) {
+  RotationMatrix3 ref = RotationMatrix3::Identity();
+
+  // Right angle in both planes
+  for (size_t i = 0; i < 3; i++) {
+    Vector3 dir = Vector3::Zero();
+    dir[i] = 1;
+    std::pair<double, double> angles = incidentAngles(dir, ref);
+    double expect = (i < 2) ? 0 : M_PI_2;
+    CHECK_CLOSE_ABS(angles.first, expect,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(angles.second, expect,
+                    std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree on both axes
+  {
+    Vector3 dir = Vector3({1, 1, 1}).normalized();
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree on first axis
+  {
+    Vector3 dir = Vector3({1, 0, 1}).normalized();
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree on second axis
+  {
+    Vector3 dir = Vector3({0, 1, 1}).normalized();
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // Reverse crossing
+  {
+    Vector3 dir = {0, 0, -1};
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, -M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, -M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree but different quadrant
+  {
+    Vector3 dir = {-1, -1, 1};
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, 3 * M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, 3 * M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // 45 degree but different quadrant & other side
+  {
+    Vector3 dir = {-1, -1, -1};
+    auto [a0, a1] = incidentAngles(dir, ref);
+    CHECK_CLOSE_ABS(a0, -3 * M_PI_4,
+                    std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, -3 * M_PI_4,
+                    std::numeric_limits<ActsScalar>::epsilon());
+  }
+
+  // Rotate the reference frame instead
+  {
+    double s45 = std::sin(M_PI_4);
+    double c45 = std::cos(M_PI_4);
+    RotationMatrix3 ref45;
+    ref45 << c45, 0, s45, 0, 1, 0, -s45, 0, c45;
+    Vector3 dir = {0, 0, 1};
+    auto [a0, a1] = incidentAngles(dir, ref45);
+    CHECK_CLOSE_ABS(a0, M_PI_4, std::numeric_limits<ActsScalar>::epsilon());
+    CHECK_CLOSE_ABS(a1, M_PI_2, std::numeric_limits<ActsScalar>::epsilon());
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
