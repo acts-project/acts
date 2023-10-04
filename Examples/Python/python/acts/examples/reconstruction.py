@@ -1036,16 +1036,16 @@ def addCKFTracks(
 
 
 def addGx2fTracks(
-        s: acts.examples.Sequencer,
-        trackingGeometry: acts.TrackingGeometry,
-        field: acts.MagneticFieldProvider,
-        # directNavigation: bool = False,
-        inputProtoTracks: str = "truth_particle_tracks",
-        multipleScattering: bool = False,
-        energyLoss: bool = False,
-        clusters: str = None,
-        calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
-        logLevel: Optional[acts.logging.Level] = None,
+    s: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    # directNavigation: bool = False,
+    inputProtoTracks: str = "truth_particle_tracks",
+    multipleScattering: bool = False,
+    energyLoss: bool = False,
+    clusters: str = None,
+    calibrator: acts.examples.MeasurementCalibrator = acts.examples.makePassThroughCalibrator(),
+    logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 

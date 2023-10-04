@@ -10,13 +10,13 @@ u = acts.UnitConstants
 
 
 def runTruthTrackingGx2f(
-        trackingGeometry: acts.TrackingGeometry,
-        field: acts.MagneticFieldProvider,
-        outputDir: Path,
-        digiConfigFile: Path,
-        # directNavigation=False,
-        s: acts.examples.Sequencer = None,
-        inputParticlePath: Optional[Path] = None,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
+    outputDir: Path,
+    digiConfigFile: Path,
+    # directNavigation=False,
+    s: acts.examples.Sequencer = None,
+    inputParticlePath: Optional[Path] = None,
 ):
     from acts.examples.simulation import (
         addParticleGun,
@@ -146,7 +146,6 @@ def runTruthTrackingGx2f(
 
 
 if "__main__" == __name__:
-
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     # detector, trackingGeometry, _ = getOpenDataDetector()
@@ -159,7 +158,7 @@ if "__main__" == __name__:
         # decorators=decorators,
         field=field,
         digiConfigFile=srcdir
-                       / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
         # outputCsv=True,
         # inputParticlePath=inputParticlePath,

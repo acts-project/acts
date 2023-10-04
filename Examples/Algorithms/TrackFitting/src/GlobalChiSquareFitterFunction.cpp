@@ -20,7 +20,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitter.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"  /// removeable?
+#include "Acts/TrackFitting/KalmanFitter.hpp"  /// removable?
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
