@@ -71,9 +71,9 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
     double bFieldMin = 0.1 * Acts::UnitConstants::T;
     /// Initial covariance matrix diagonal.
     std::array<double, 6> initialSigmas = {
-        1 * Acts::UnitConstants::mm,     1 * Acts::UnitConstants::mm,
-        1 * Acts::UnitConstants::degree, 1 * Acts::UnitConstants::degree,
-        0.1 / Acts::UnitConstants::GeV,  1 * Acts::UnitConstants::ns};
+        10 * Acts::UnitConstants::mm,     10 * Acts::UnitConstants::mm,
+        10 * Acts::UnitConstants::degree, 10 * Acts::UnitConstants::degree,
+        0.1 / Acts::UnitConstants::GeV,   1 * Acts::UnitConstants::ns};
     /// Inflate initial covariance.
     std::array<double, 6> initialVarInflation = {1., 1., 1., 1., 1., 1.};
     /// Particle hypothesis.
