@@ -398,26 +398,20 @@ class Gx2Fitter {
           ACTS_VERBOSE("Measurement surface " << surface->geometryId()
                                               << " detected.");
 
-          if (surface and surface->surfaceMaterial()) {
-            ACTS_VERBOSE(
-                "dbgActor: materialInteractor PREupdate could be needed.")
-          }
-
           // Transport the covariance to the surface
           stepper.transportCovarianceToBound(state.stepping, *surface,
                                              freeToBoundCorrection);
 
-          std::cout << "actorPRE - result.lastMeasurementIndex: "
-                    << result.lastMeasurementIndex << std::endl;
-          std::cout << "SIZE - result.fittedStates: "
-                    << result.fittedStates->size() << std::endl;
-          std::cout << "actorPRE - result.lastTrackIndex: "
-                    << result.lastTrackIndex << std::endl;
+          ACTS_VERBOSE("Actor - before updating in the end:"
+                       << "\n\tresult.lastMeasurementIndex: "
+                       << result.lastMeasurementIndex
+                       << "\n\tresult.lastTrackIndex: " << result.lastTrackIndex
+                       << "\n\tresult.fittedStates->size(): "
+                       << result.fittedStates->size())
 
+          // TODO generalize the update of the currentTrackIndex
           size_t currentTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
-          std::cout << "   processSurface: result.lastTrackIndex = "
-                    << result.lastTrackIndex << std::endl;
           // Checks if during the update an existing surface is found.
           // If not, there will be a new index generated afterwards
           if (nUpdate == 0) {
@@ -458,9 +452,9 @@ class Gx2Fitter {
           // add a full TrackState entry multi trajectory
           // (this allocates storage for all components, we will set them later)
           auto& fittedStates = *result.fittedStates;
-          /// use trackstate API
 
-          /// START of getTrackStateProxy()
+          // TODO can we generalize the function from PR#2499
+          /// START of getTrackStateProxy() from PR#2499
           // add a full TrackState entry multi trajectory
           // (this allocates storage for all components, we will set them later)
           /// const auto newTrackIndex = fittedStates.addTrackState(mask,
@@ -490,7 +484,7 @@ class Gx2Fitter {
           }
           trackStateProxy.jacobian() = std::move(jacobian);
           trackStateProxy.pathLength() = std::move(pathLength);
-          /// END of getTrackStateProxy()
+          /// END of getTrackStateProxy() from PR#2499
 
           // We have predicted parameters, so calibrate the uncalibrated input
           // measurement
@@ -524,14 +518,13 @@ class Gx2Fitter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // We count the processed state
           ++result.processedStates;
-          std::cout << "actor - result.lastMeasurementIndex: "
-                    << result.lastMeasurementIndex << std::endl;
-          std::cout << "actor - trackStateProxy.index(): "
-                    << trackStateProxy.index() << std::endl;
-          std::cout << "actor - result.lastTrackIndex: "
-                    << result.lastTrackIndex << std::endl;
-          std::cout << "actor - currentTrackIndex: " << currentTrackIndex
-                    << std::endl;
+          ACTS_VERBOSE("Actor - before updating in the end:"
+                       << "\n\tresult.lastMeasurementIndex: "
+                       << result.lastMeasurementIndex
+                       << "\n\ttrackStateProxy.index(): "
+                       << trackStateProxy.index()
+                       << "\n\tresult.lastTrackIndex: " << result.lastTrackIndex
+                       << "\n\tcurrentTrackIndex: " << currentTrackIndex)
           result.lastMeasurementIndex = currentTrackIndex;
           result.lastTrackIndex = currentTrackIndex;
         } else {
@@ -746,8 +739,9 @@ class Gx2Fitter {
     track.parameters() = params.parameters();
     track.covariance() = fullCovariancePredicted;
     track.setReferenceSurface(params.referenceSurface().getSharedPtr());
-    calculateTrackQuantities(
-        track);  // TODO write test for calculateTrackQuantities
+
+    // TODO write test for calculateTrackQuantities
+    calculateTrackQuantities(track);
 
     // Return the converted Track
     return track;
