@@ -28,28 +28,14 @@ void addEventData(Context& ctx) {
              particleHypothesis.toStream(os);
              return os.str();
            })
-      .def_property_readonly_static("muon",
-                                    [](py::object /* self */) {
-                                      return Acts::ParticleHypothesis::muon();
-                                    })
-      .def_property_readonly_static("pion",
-                                    [](py::object /* self */) {
-                                      return Acts::ParticleHypothesis::pion();
-                                    })
-      .def_property_readonly_static(
-          "electron",
-          [](py::object /* self */) {
-            return Acts::ParticleHypothesis::electron();
-          })
-      .def_property_readonly_static(
-          "geantino",
-          [](py::object /* self */) {
-            return Acts::ParticleHypothesis::geantino();
-          })
-      .def_property_readonly_static(
-          "chargedGeantino", [](py::object /* self */) {
-            return Acts::ParticleHypothesis::chargedGeantino();
-          });
+      .def_property_readonly_static("muon", &Acts::ParticleHypothesis::muon)
+      .def_property_readonly_static("pion", &Acts::ParticleHypothesis::pion)
+      .def_property_readonly_static("electron",
+                                    &Acts::ParticleHypothesis::electron)
+      .def_property_readonly_static("geantino",
+                                    Acts::ParticleHypothesis::geantino)
+      .def_property_readonly_static("chargedGeantino",
+                                    &Acts::ParticleHypothesis::chargedGeantino);
 }
 
 }  // namespace Acts::Python
