@@ -142,7 +142,7 @@ class IterativeVertexFinder {
   template <
       typename T = InputTrack_t,
       std::enable_if_t<std::is_same<T, BoundTrackParameters>::value, int> = 0>
-  IterativeVertexFinder(Config& cfg,
+  IterativeVertexFinder(Config cfg,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "IterativeVertexFinder", Logging::INFO))
       : m_cfg(std::move(cfg)),
@@ -156,7 +156,7 @@ class IterativeVertexFinder {
   /// @param func Function extracting BoundTrackParameters from InputTrack_t
   /// object
   /// @param logger The logging instance
-  IterativeVertexFinder(Config& cfg,
+  IterativeVertexFinder(Config cfg,
                         std::function<BoundTrackParameters(InputTrack_t)> func,
                         std::unique_ptr<const Logger> logger = getDefaultLogger(
                             "IterativeVertexFinder", Logging::INFO))
