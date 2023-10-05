@@ -22,9 +22,7 @@ class ISurfaceMaterial;
 
 Acts::DD4hepDetectorElement::DD4hepDetectorElement(
     const dd4hep::DetElement detElement, const std::string& axes, double scalor,
-    bool /*isDisc*/, std::shared_ptr<const Acts::ISurfaceMaterial> material,
-    const std::shared_ptr<
-        const Acts::DigitizationModule>& /*digitizationModule*/)
+    bool /*isDisc*/, std::shared_ptr<const Acts::ISurfaceMaterial> material)
     : Acts::TGeoDetectorElement(Identifier(detElement.volumeID()),
                                 *(detElement.placement().ptr()),
                                 detElement.nominal().worldTransformation(),
