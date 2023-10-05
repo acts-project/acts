@@ -11,12 +11,17 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <algorithm>
+#include <array>
 #include <iostream>
 #include <limits>
+#include <stdexcept>
+#include <vector>
 
 namespace utf = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();

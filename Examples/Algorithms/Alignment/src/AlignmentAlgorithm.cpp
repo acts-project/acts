@@ -11,13 +11,14 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
                                                      Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("AlignmentAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("AlignmentAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -36,23 +37,26 @@ ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
     throw std::invalid_argument(
         "Missing output alignment parameters collection");
   }
+
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_outputAlignmentParameters.initialize(m_cfg.outputAlignmentParameters);
 }
 
 ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
-      m_cfg.inputInitialTrackParameters);
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
-    ACTS_FATAL("Inconsistent number of proto tracks and parameters");
+    ACTS_FATAL("Inconsistent number of proto tracks and parameters "
+               << protoTracks.size() << " vs " << initialParameters.size());
     return ProcessCode::ABORT;
   }
 
@@ -88,16 +92,17 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   }
 
   // Prepare the output for alignment parameters
-  std::unordered_map<Acts::DetectorElementBase*, Acts::Transform3>
-      alignedParameters;
+  AlignmentParameters alignedParameters;
 
   // Construct a perigee surface as the target surface for the fitter
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
   Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
-  MeasurementCalibrator calibrator{measurements};
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
+  PassThroughCalibrator pcalibrator;
+  MeasurementCalibratorAdapter calibrator(pcalibrator, measurements);
+  extensions.calibrator.connect<&MeasurementCalibratorAdapter::calibrate>(
+      &calibrator);
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
   extensions.updater.connect<
@@ -131,7 +136,6 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   }
 
   // add alignment parameters to event store
-  ctx.eventStore.add(m_cfg.outputAlignmentParameters,
-                     std::move(alignedParameters));
+  m_outputAlignmentParameters(ctx, std::move(alignedParameters));
   return ActsExamples::ProcessCode::SUCCESS;
 }

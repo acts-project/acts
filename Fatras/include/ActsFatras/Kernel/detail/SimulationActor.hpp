@@ -45,9 +45,11 @@ struct SimulationActor {
     // type.
     using action_type = SimulationActor;
 
-    template <typename propagator_state_t, typename stepper_t>
-    constexpr bool operator()(propagator_state_t & /*unused*/,
-                              const stepper_t & /*unused*/,
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    constexpr bool operator()(propagator_state_t & /*state*/,
+                              const stepper_t & /*stepper*/,
+                              const navigator_t & /*navigator*/,
                               const result_type &result,
                               const Acts::Logger & /*logger*/) const {
       // must return true if the propagation should abort
@@ -78,9 +80,11 @@ struct SimulationActor {
   /// @param stepper is the propagation stepper object
   /// @param result is the mutable result/cache object
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t &state, stepper_t &stepper,
-                  result_type &result, const Acts::Logger & /*logger*/) const {
+                  navigator_t &navigator, result_type &result,
+                  const Acts::Logger & /*logger*/) const {
     assert(generator and "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
@@ -136,14 +140,14 @@ struct SimulationActor {
     }
 
     // If we are on target, everything should have been done
-    if (state.navigation.targetReached) {
+    if (navigator.targetReached(state.navigation)) {
       return;
     }
     // If we are not on a surface, there is nothing further for us to do
-    if (not state.navigation.currentSurface) {
+    if (not navigator.currentSurface(state.navigation)) {
       return;
     }
-    const Acts::Surface &surface = *state.navigation.currentSurface;
+    const Acts::Surface &surface = *navigator.currentSurface(state.navigation);
 
     // we need the particle state before and after the interaction for the hit
     // creation. create a copy since the particle will be modified in-place.
@@ -155,7 +159,7 @@ struct SimulationActor {
       //   it should in principle never happen, so probably it would be best
       //   to change to a model using transform() directly
       auto lpResult = surface.globalToLocal(state.geoContext, before.position(),
-                                            before.unitDirection());
+                                            before.direction());
       if (lpResult.ok()) {
         Acts::Vector2 local = lpResult.value();
         Acts::MaterialSlab slab =
@@ -166,8 +170,7 @@ struct SimulationActor {
           auto normal = surface.normal(state.geoContext, local);
           // dot-product(unit normal, direction) = cos(incidence angle)
           // particle direction is normalized, not sure about surface normal
-          auto cosIncidenceInv =
-              normal.norm() / normal.dot(before.unitDirection());
+          auto cosIncidenceInv = normal.norm() / normal.dot(before.direction());
           // apply abs in case `normal` and `before` produce an angle > 90°
           slab.scaleThickness(std::abs(cosIncidenceInv));
           // run the interaction simulation
@@ -186,15 +189,15 @@ struct SimulationActor {
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
     }
 
-    // continue the propagation with the modified parameters
-    stepper.update(state.stepping, after.position(), after.unitDirection(),
-                   after.absoluteMomentum(), after.time());
-  }
+    if (after.absoluteMomentum() == 0.0) {
+      result.isAlive = false;
+      return;
+    }
 
-  /// Pure observer interface. Does not apply to the Fatras simulator.
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t & /*unused*/, stepper_t & /*unused*/,
-                  const Acts::Logger & /*logger*/) const {}
+    // continue the propagation with the modified parameters
+    stepper.update(state.stepping, after.position(), after.direction(),
+                   after.qOverP(), after.time());
+  }
 
   /// Construct the current particle state from the stepper state.
   template <typename stepper_t>
@@ -215,7 +218,7 @@ struct SimulationActor {
     return Particle(previous)
         .setPosition4(stepper.position(state), stepper.time(state))
         .setDirection(stepper.direction(state))
-        .setAbsoluteMomentum(stepper.momentum(state))
+        .setAbsoluteMomentum(stepper.absoluteMomentum(state))
         .setProperTime(properTime);
   }
 

@@ -11,11 +11,12 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-#include <exception>
+#include <stdexcept>
 
 namespace Acts {
 namespace Experimental {
@@ -26,7 +27,7 @@ class DetectorVolume;
 /// navigation state to nullptr, usually indicates the end of
 /// the known world, hence the name
 struct EndOfWorldImpl : public INavigationDelegate {
-  /// @brief a null volume link - explicitely
+  /// @brief a null volume link - explicitly
   ///
   /// @note the method parameters are ignored
   inline void update(const GeometryContext& /*ignored*/,
@@ -53,7 +54,7 @@ struct SingleDetectorVolumeImpl : public INavigationDelegate {
 
   SingleDetectorVolumeImpl() = delete;
 
-  /// @brief a null volume link - explicitely
+  /// @brief a null volume link - explicitly
   ///
   /// @note the method parameters are ignored
   ///

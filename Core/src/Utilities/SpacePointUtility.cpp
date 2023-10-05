@@ -8,7 +8,16 @@
 
 #include "Acts/Utilities/SpacePointUtility.hpp"
 
-#include <iostream>
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <algorithm>
+#include <cmath>
+#include <memory>
+
 namespace Acts {
 
 Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
@@ -40,26 +49,12 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
 }
 
 std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
-    const GeometryContext& gctx, const Measurement& meas) const {
-  const auto& slink =
-      std::visit([](const auto& x) { return &x.sourceLink(); }, meas);
-
-  const auto geoId = slink->geometryId();
-
-  const Surface* surface = m_config.trackingGeometry->findSurface(geoId);
-  auto [localPos, localCov] = std::visit(
-      [](const auto& measurement) {
-        auto expander = measurement.expander();
-        BoundVector par = expander * measurement.parameters();
-        BoundSymMatrix cov =
-            expander * measurement.covariance() * expander.transpose();
-        // extract local position
-        Vector2 lpar(par[eBoundLoc0], par[eBoundLoc1]);
-        // extract local position covariance.
-        SymMatrix2 lcov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
-        return std::make_pair(lpar, lcov);
-      },
-      meas);
+    const GeometryContext& gctx, const SourceLink& slink,
+    const SourceLinkSurfaceAccessor& surfaceAccessor, const BoundVector& par,
+    const BoundSquareMatrix& cov) const {
+  const Surface* surface = surfaceAccessor(slink);
+  Vector2 localPos(par[eBoundLoc0], par[eBoundLoc1]);
+  SquareMatrix2 localCov = cov.block<2, 2>(eBoundLoc0, eBoundLoc0);
   Vector3 globalPos = surface->localToGlobal(gctx, localPos, Vector3());
   RotationMatrix3 rotLocalToGlobal =
       surface->referenceFrame(gctx, globalPos, Vector3());
@@ -92,56 +87,40 @@ std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
   return std::make_pair(globalPos, gcov);
 }
 
-Vector2 SpacePointUtility::calcRhoZVars(const GeometryContext& gctx,
-                                        const Measurement& measFront,
-                                        const Measurement& measBack,
-                                        const Vector3& globalPos,
-                                        const double theta) const {
-  const auto var1 = getLoc0Var(measFront);
-  const auto var2 = getLoc0Var(measBack);
-  // strip1 and strip2 are tilted at +/- theta/2
+Vector2 SpacePointUtility::calcRhoZVars(
+    const GeometryContext& gctx, const SourceLink& slinkFront,
+    const SourceLink& slinkBack,
+    const SourceLinkSurfaceAccessor& surfaceAccessor,
+    const std::function<std::pair<const BoundVector, const BoundSquareMatrix>(
+        SourceLink)>& paramCovAccessor,
+    const Vector3& globalPos, const double theta) const {
+  const auto var1 = paramCovAccessor(slinkFront).second(0, 0);
+  const auto var2 = paramCovAccessor(slinkBack).second(0, 0);
 
+  // strip1 and strip2 are tilted at +/- theta/2
   double sigma_x = std::hypot(var1, var2) / (2 * sin(theta * 0.5));
   double sigma_y = std::hypot(var1, var2) / (2 * cos(theta * 0.5));
 
   // projection to the surface with strip1.
   double sig_x1 = sigma_x * cos(0.5 * theta) + sigma_y * sin(0.5 * theta);
   double sig_y1 = sigma_y * cos(0.5 * theta) + sigma_x * sin(0.5 * theta);
-  SymMatrix2 lcov;
+  SquareMatrix2 lcov;
   lcov << sig_x1, 0, 0, sig_y1;
 
-  const auto& slink_meas1 =
-      std::visit([](const auto& x) { return &x.sourceLink(); }, measFront);
+  const Surface& surface = *surfaceAccessor(slinkFront);
 
-  const auto geoId = slink_meas1->geometryId();
-
-  auto gcov = rhoZCovariance(gctx, geoId, globalPos, lcov);
-
+  auto gcov = rhoZCovariance(gctx, surface, globalPos, lcov);
   return gcov;
 }
 
-double SpacePointUtility::getLoc0Var(const Measurement& meas) const {
-  auto cov = std::visit(
-      [](const auto& x) {
-        auto expander = x.expander();
-        BoundSymMatrix bcov = expander * x.covariance() * expander.transpose();
-        SymMatrix2 lcov = bcov.block<2, 2>(eBoundLoc0, eBoundLoc0);
-        return lcov;
-      },
-      meas);
-  return cov(0, 0);
-}
-
 Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
-                                          const GeometryIdentifier& geoId,
+                                          const Surface& surface,
                                           const Vector3& globalPos,
-                                          const SymMatrix2& localCov) const {
+                                          const SquareMatrix2& localCov) const {
   Vector3 globalFakeMom(1, 1, 1);
 
-  const Surface* surface = m_config.trackingGeometry->findSurface(geoId);
-
   RotationMatrix3 rotLocalToGlobal =
-      surface->referenceFrame(gctx, globalPos, globalFakeMom);
+      surface.referenceFrame(gctx, globalPos, globalFakeMom);
 
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];

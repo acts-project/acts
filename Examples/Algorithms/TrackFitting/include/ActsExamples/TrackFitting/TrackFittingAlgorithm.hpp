@@ -8,92 +8,55 @@
 
 #pragma once
 
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
-#include <functional>
 #include <memory>
-#include <vector>
+#include <string>
 
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
+class MeasurementCalibrator;
+class TrackFitterFunction;
+struct AlgorithmContext;
 
-class TrackFittingAlgorithm final : public BareAlgorithm {
+class TrackFittingAlgorithm final : public IAlgorithm {
  public:
-  // All track fitter functions must return the same type. For now this is the
-  // KalmanFitterResult, but maybe in the future it makes sense to generalize
-  // this
-
-  using TrackContainer =
-      Acts::TrackContainer<Acts::VectorTrackContainer,
-                           Acts::VectorMultiTrajectory, std::shared_ptr>;
-
-  using TrackFitterResult = Acts::Result<TrackContainer::TrackProxy>;
-
-  /// General options that do not depend on the fitter type, but need to be
-  /// handed over by the algorithm
-  struct GeneralFitterOptions {
-    std::reference_wrapper<const Acts::GeometryContext> geoContext;
-    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
-    std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
-    std::reference_wrapper<const MeasurementCalibrator> calibrator;
-    const Acts::Surface* referenceSurface = nullptr;
-    Acts::PropagatorPlainOptions propOptions;
-  };
-
-  /// Fit function that takes the above parameters and runs a fit
-  /// @note This is separated into a virtual interface to keep compilation units
-  /// small.
-  class TrackFitterFunction {
-   public:
-    virtual ~TrackFitterFunction() = default;
-    virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
-                                         const TrackParameters&,
-                                         const GeneralFitterOptions&,
-                                         TrackContainer&) const = 0;
-
-    virtual TrackFitterResult operator()(
-        const std::vector<Acts::SourceLink>&, const TrackParameters&,
-        const GeneralFitterOptions&, const std::vector<const Acts::Surface*>&,
-        TrackContainer&) const = 0;
-  };
-
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
-    /// Boolean determining to use DirectNavigator or standard Navigator
-    bool directNavigation = false;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input proto tracks collection, i.e. groups of hit indices.
     std::string inputProtoTracks;
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
+    /// (optional) Input clusters for each measurement
+    std::string inputClusters;
     /// Output fitted tracks collection.
     std::string outputTracks;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterFunction> fit;
-    /// Tracking geometry for surface lookup
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
+    // Type erased calibrator for the measurements
+    std::shared_ptr<MeasurementCalibrator> calibrator;
   };
 
   /// Constructor of the fitting algorithm
   ///
-  /// @param config is the config struct to configure the algorihtm
+  /// @param config is the config struct to configure the algorithm
   /// @param level is the logging level
   TrackFittingAlgorithm(Config config, Acts::Logging::Level level);
 
@@ -108,6 +71,19 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
+  ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
+      this, "InputInitialTrackParameters"};
+
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
+
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

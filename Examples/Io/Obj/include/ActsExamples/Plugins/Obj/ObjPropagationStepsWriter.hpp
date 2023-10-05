@@ -54,13 +54,13 @@ class ObjPropagationStepsWriter
   ~ObjPropagationStepsWriter() override = default;
 
   /// End-of-run hook
-  ProcessCode endRun() override { return ActsExamples::ProcessCode::SUCCESS; }
+  ProcessCode finalize() override { return ActsExamples::ProcessCode::SUCCESS; }
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
-  Config m_cfg;  ///!< Internal configuration represenation
+  Config m_cfg;  ///!< Internal configuration representation
 
  protected:
   /// This implementation holds the actual writing method

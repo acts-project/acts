@@ -1,11 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
@@ -60,7 +61,7 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
         float varianceZ;
         int layer;
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::sqrt(x * x + y * y);
+        r = std::hypot(x, y);
         float f22 = varianceR;
         float wid = varianceZ;
         float cov = wid * wid * .08333;
@@ -220,11 +221,11 @@ auto main(int argc, char** argv) -> int {
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedFinder)::SeedingState state;
-    for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
-         ++groupIt) {
+    for (auto [bottom, middle, top] : spGroup) {
       normalSeedFinder.createSeedsForGroup(
-          options, state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
+          options, state, spGroup.grid(),
+          std::back_inserter(seedVector_cpu.emplace_back()), bottom, middle,
+          top, rMiddleSPRange);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;
@@ -247,9 +248,12 @@ auto main(int argc, char** argv) -> int {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
 
-  for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spVec.size());
+
+  for (auto [bottom, middle, top] : spGroup) {
     seedVector_sycl.push_back(syclSeedFinder.createSeedsForGroup(
-        groupIt.bottom(), groupIt.middle(), groupIt.top()));
+        spacePointData, spGroup.grid(), bottom, middle, top));
     group_count++;
     if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
       break;

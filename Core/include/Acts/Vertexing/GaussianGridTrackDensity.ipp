@@ -5,6 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Vertexing/VertexingError.hpp"
 
 #include <algorithm>
@@ -28,7 +29,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::getMaxZPosition(
   }
 
   // Derive corresponding z value
-  return (zbin - mainGridSize / 2 + 0.5f) * m_cfg.binSize;
+  return (zbin - mainGridSize / 2.0f + 0.5f) * m_cfg.binSize;
 }
 
 template <int mainGridSize, int trkGridSize>
@@ -57,27 +58,12 @@ std::pair<int, typename Acts::GaussianGridTrackDensity<
                    mainGridSize, trkGridSize>::TrackGridVector>
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     const Acts::BoundTrackParameters& trk, MainGridVector& mainGrid) const {
-  SymMatrix2 cov = trk.covariance().value().block<2, 2>(0, 0);
+  SquareMatrix2 cov = trk.spatialImpactParameterCovariance().value();
   float d0 = trk.parameters()[0];
   float z0 = trk.parameters()[1];
 
   // Calculate offset in d direction to central bin at z-axis
   int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
-  // Calculate bin in z
-  int zBin = int(z0 / m_cfg.binSize + mainGridSize / 2.);
-
-  if (zBin < 0 || zBin >= mainGridSize) {
-    return {-1, TrackGridVector::Zero()};
-  }
-  // Calculate the positions of the bin centers
-  float binCtrD = dOffset * m_cfg.binSize;
-  float binCtrZ = (zBin + 0.5f) * m_cfg.binSize - m_cfg.zMinMax;
-
-  // Calculate the distance between IP values and their
-  // corresponding bin centers
-  float distCtrD = d0 - binCtrD;
-  float distCtrZ = z0 - binCtrZ;
-
   // Check if current track does affect grid density
   // in central bins at z-axis
   if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
@@ -86,8 +72,21 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
     return {-1, TrackGridVector::Zero()};
   }
 
+  // Calculate bin in z
+  int zBin = int(z0 / m_cfg.binSize + mainGridSize / 2.);
+
+  if (zBin < 0 || zBin >= mainGridSize) {
+    return {-1, TrackGridVector::Zero()};
+  }
+  // Calculate the positions of the bin centers
+  float binCtrZ = (zBin + 0.5f) * m_cfg.binSize - m_cfg.zMinMax;
+
+  // Calculate the distance between IP values and their
+  // corresponding bin centers
+  float distCtrZ = z0 - binCtrZ;
+
   // Create the track grid
-  TrackGridVector trackGrid = createTrackGrid(dOffset, cov, distCtrD, distCtrZ);
+  TrackGridVector trackGrid = createTrackGrid(d0, distCtrZ, cov);
   // Add the track grid to the main grid
   addTrackGridToMainGrid(zBin, trackGrid, mainGrid);
 
@@ -138,17 +137,14 @@ template <int mainGridSize, int trkGridSize>
 typename Acts::GaussianGridTrackDensity<mainGridSize,
                                         trkGridSize>::TrackGridVector
 Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::createTrackGrid(
-    int offset, const Acts::SymMatrix2& cov, float distCtrD,
-    float distCtrZ) const {
+    float d0, float distCtrZ, const Acts::SquareMatrix2& cov) const {
   TrackGridVector trackGrid(TrackGridVector::Zero());
-
-  int i = (trkGridSize - 1) / 2 + offset;
-  float d = (i - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
+  float floorHalfTrkGridSize = static_cast<float>(trkGridSize) / 2 - 0.5f;
 
   // Loop over columns
   for (int j = 0; j < trkGridSize; j++) {
-    float z = (j - static_cast<float>(trkGridSize) / 2 + 0.5f) * m_cfg.binSize;
-    trackGrid(j) = normal2D(d + distCtrD, z + distCtrZ, cov);
+    float z = (j - floorHalfTrkGridSize) * m_cfg.binSize;
+    trackGrid(j) = normal2D(-d0, z - distCtrZ, cov);
   }
   return trackGrid;
 }
@@ -174,8 +170,8 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float deltaZ1 = (maxValue / 2 - mainGrid(rhmBin - 1)) *
-                  (m_cfg.binSize / (mainGrid(rhmBin - 1) - mainGrid(rhmBin)));
+  float deltaZ1 = m_cfg.binSize * (maxValue / 2 - mainGrid(rhmBin - 1)) /
+                  (mainGrid(rhmBin) - mainGrid(rhmBin - 1));
 
   // Find left half-maximum bin
   int lhmBin = zBin;
@@ -186,8 +182,8 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
   }
 
   // Use linear approximation to find better z value for FWHM between bins
-  float deltaZ2 = (maxValue / 2 - mainGrid(lhmBin + 1)) *
-                  (m_cfg.binSize / (mainGrid(rhmBin + 1) - mainGrid(rhmBin)));
+  float deltaZ2 = m_cfg.binSize * (mainGrid(lhmBin + 1) - maxValue / 2) /
+                  (mainGrid(lhmBin + 1) - mainGrid(lhmBin));
 
   // Approximate FWHM
   float fwhm =
@@ -201,13 +197,13 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::estimateSeedWidth(
 
 template <int mainGridSize, int trkGridSize>
 float Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::normal2D(
-    float d, float z, const Acts::SymMatrix2& cov) const {
+    float d, float z, const Acts::SquareMatrix2& cov) const {
   float det = cov.determinant();
-  float coef = 1 / (2 * M_PI * std::sqrt(det));
+  float coef = 1 / std::sqrt(det);
   float expo =
       -1 / (2 * det) *
-      (cov(1, 1) * d * d - d * z * (cov(0, 1) + cov(1, 0)) + cov(0, 0) * z * z);
-  return coef * std::exp(expo);
+      (cov(1, 1) * d * d - (cov(0, 1) + cov(1, 0)) * d * z + cov(0, 0) * z * z);
+  return coef * safeExp(expo);
 }
 
 template <int mainGridSize, int trkGridSize>

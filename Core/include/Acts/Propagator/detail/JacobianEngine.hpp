@@ -21,7 +21,7 @@ namespace Acts {
 /// @brief These functions perform the calculation of the Jacobians for the
 /// the covariance transport. This is a purely algebraic problem the
 /// calculations are identical for @c StraightLineStepper and @c EigenStepper.
-/// As a consequence the methods can be located in a seperate file.
+/// As a consequence the methods can be located in a separate file.
 namespace detail {
 
 /// @brief Evaluate the projection Jacobian from free to curvilinear parameters

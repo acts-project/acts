@@ -14,18 +14,23 @@
 #include "Acts/Seeding/SeedFinderOrthogonal.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Construct track seeds from space points.
-class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
+class SeedingOrthogonalAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
@@ -37,8 +42,6 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
-    /// Output proto track collection.
-    std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderOrthogonalConfig<SimSpacePoint> seedFinderConfig;
@@ -63,6 +66,12 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
  private:
   Config m_cfg;
   Acts::SeedFinderOrthogonal<SimSpacePoint> m_finder;
+
+  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
+      m_inputSpacePoints{};
+
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+
   void printOptions() const;
   template <typename sp>
   void printConfig() const;

@@ -10,15 +10,11 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Frustum.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 
-#include <algorithm>
 #include <array>
-#include <iostream>
-#include <limits>
-#include <ostream>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -140,7 +136,7 @@ class AxisAlignedBoundingBox {
    * Helper function to calculate the size of a bounding box enclosing @p boxes.
    * @param boxes The boxes to wrap (const pointers)
    * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
+   * @return Pair of vertices: min and max.
    */
   static std::pair<VertexType, VertexType> wrap(
       const std::vector<const self_t*>& boxes,
@@ -151,7 +147,7 @@ class AxisAlignedBoundingBox {
    * Overload which accepts non-const boxes in @p boxes.
    * @param boxes The boxes to wrap (non-const pointers)
    * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
+   * @return Pair of vertices: min and max.
    */
   static std::pair<VertexType, VertexType> wrap(
       const std::vector<self_t*>& boxes,
@@ -162,7 +158,7 @@ class AxisAlignedBoundingBox {
    * Overload which accepts a vector in @p boxes which owns the instances
    * @param boxes The boxes to wrap (by-value vector)
    * @param envelope Optional envelop to add/subtract to dimension.
-   * @return Pair of vertixes: min and max.
+   * @return Pair of vertices: min and max.
    */
   static std::pair<VertexType, VertexType> wrap(
       const std::vector<self_t>& boxes,
@@ -278,7 +274,7 @@ class AxisAlignedBoundingBox {
   void transform(const transform_type& trf);
 
   /**
-   * Transforms this bounding box using the given transfom. This method returns
+   * Transforms this bounding box using the given transform. This method returns
    * a copy of this box, with the transformation applied, and leaves this
    * instance unchanged.
    * @param trf The transform

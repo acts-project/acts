@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/AlgebraHelpers.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
@@ -47,7 +47,8 @@ TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
+inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const
+    -> ConstParameters {
   if (hasSmoothed()) {
     return smoothed();
   } else if (hasFiltered()) {
@@ -58,7 +59,8 @@ inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const -> Covariance {
+inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const
+    -> ConstCovariance {
   if (hasSmoothed()) {
     return smoothedCovariance();
   } else if (hasFiltered()) {
@@ -76,21 +78,10 @@ inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::uncalibratedSourceLink() const
-    -> const SourceLink& {
+inline auto TrackStateProxy<D, M, ReadOnly>::getUncalibratedSourceLink() const
+    -> SourceLink {
   assert(has<hashString("uncalibratedSourceLink")>());
-  return component<std::optional<SourceLink>,
-                   hashString("uncalibratedSourceLink")>()
-      .value();
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::calibratedSourceLink() const
-    -> const SourceLink& {
-  assert(has<hashString("calibratedSourceLink")>());
-  return component<std::optional<SourceLink>,
-                   hashString("calibratedSourceLink")>()
-      .value();
+  return m_traj->getUncalibratedSourceLink(m_istate);
 }
 
 }  // namespace detail_lt

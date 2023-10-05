@@ -15,6 +15,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <utility>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;

@@ -12,6 +12,9 @@
 
 #include "Acts/Utilities/detail/Extendable.hpp"
 
+#include <tuple>
+#include <type_traits>
+
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
 

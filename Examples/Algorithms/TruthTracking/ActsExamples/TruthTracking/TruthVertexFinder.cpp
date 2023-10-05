@@ -10,30 +10,38 @@
 
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 
-#include <algorithm>
+#include <iterator>
+#include <ostream>
 #include <stdexcept>
-#include <vector>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::TruthVertexFinder::TruthVertexFinder(const Config& config,
                                                    Acts::Logging::Level level)
-    : BareAlgorithm("TruthVertexFinder", level), m_cfg(config) {
+    : IAlgorithm("TruthVertexFinder", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
 }
 
 ActsExamples::ProcessCode ActsExamples::TruthVertexFinder::execute(
     const AlgorithmContext& ctx) const {
   // prepare input and output collections
   ACTS_VERBOSE("Reading particles from " << m_cfg.inputParticles);
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& particles = m_inputParticles(ctx);
   ProtoVertexContainer protoVertices;
   ACTS_VERBOSE("Have " << particles.size() << " particles");
 
@@ -75,6 +83,6 @@ ActsExamples::ProcessCode ActsExamples::TruthVertexFinder::execute(
 
   ACTS_VERBOSE("Write " << protoVertices.size() << " proto vertex to "
                         << m_cfg.outputProtoVertices);
-  ctx.eventStore.add(m_cfg.outputProtoVertices, std::move(protoVertices));
+  m_outputProtoVertices(ctx, std::move(protoVertices));
   return ProcessCode::SUCCESS;
 }

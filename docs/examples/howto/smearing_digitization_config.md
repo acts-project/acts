@@ -3,7 +3,7 @@
 As a convenience, a simple helper script is provided to help producing JSON configuration files for smearing digitization.
 The script is located in the source tree at `Examples/Algorithms/Digitization/scripts/smearing-config.py`.
 
-Each volume configuration is one logical block consiting of the following options:
+Each volume configuration is one logical block consisting of the following options:
 
 * `--digi-smear-volume=X`: Specifies the numeric identifier of the
   volume configured in the present block. This option also acts as a

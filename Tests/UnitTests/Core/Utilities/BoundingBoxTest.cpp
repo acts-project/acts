@@ -15,16 +15,22 @@
 #include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Ray.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
+#include <algorithm>
+#include <array>
+#include <cmath>
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <memory>
-#include <random>
 #include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {

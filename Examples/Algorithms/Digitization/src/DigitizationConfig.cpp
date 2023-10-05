@@ -9,14 +9,8 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
-#include "ActsExamples/Digitization/Smearers.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
-
-#include <numeric>
-#include <string>
 
 namespace {
 

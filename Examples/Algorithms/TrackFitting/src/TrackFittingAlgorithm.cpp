@@ -8,19 +8,32 @@
 
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackProxy.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
-#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
+#include <cstddef>
+#include <functional>
+#include <ostream>
 #include <stdexcept>
+#include <system_error>
+#include <utility>
+#include <vector>
 
 ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFittingAlgorithm", level),
+    : ActsExamples::IAlgorithm("TrackFittingAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -35,29 +48,39 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     throw std::invalid_argument(
         "Missing input initial track parameters collection");
   }
-  if (not m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
-  }
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing output tracks collection");
   }
+  if (!m_cfg.calibrator) {
+    throw std::invalid_argument("Missing calibrator");
+  }
+  if (m_cfg.inputClusters.empty() && m_cfg.calibrator->needsClusters()) {
+    throw std::invalid_argument("The configured calibrator needs clusters");
+  }
+
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
-      m_cfg.inputInitialTrackParameters);
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  const auto& initialParameters = m_inputInitialTrackParameters(ctx);
+
+  const ClusterContainer* clusters =
+      m_inputClusters.isInitialized() ? &m_inputClusters(ctx) : nullptr;
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
-    ACTS_FATAL("Inconsistent number of proto tracks and parameters");
+    ACTS_FATAL("Inconsistent number of proto tracks and parameters "
+               << protoTracks.size() << " vs " << initialParameters.size());
     return ProcessCode::ABORT;
   }
 
@@ -68,11 +91,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // Measurement calibrator must be instantiated here, because we need the
   // measurements to construct it. The other extensions are hold by the
   // fit-function-object
-  ActsExamples::MeasurementCalibrator calibrator(measurements);
+  ActsExamples::MeasurementCalibratorAdapter calibrator(*(m_cfg.calibrator),
+                                                        measurements, clusters);
 
-  GeneralFitterOptions options{
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      calibrator,     pSurface.get(),      Acts::PropagatorPlainOptions()};
+  TrackFitterFunction::GeneralFitterOptions options{
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),
+      Acts::PropagatorPlainOptions()};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
@@ -80,7 +104,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
-  std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
     if (m_cfg.pickTrack > -1 and m_cfg.pickTrack != static_cast<int>(itrack)) {
@@ -100,21 +123,17 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     ACTS_VERBOSE("Initial parameters: "
                  << initialParams.fourPosition(ctx.geoContext).transpose()
-                 << " -> " << initialParams.unitDirection().transpose());
+                 << " -> " << initialParams.direction().transpose());
 
     // Clear & reserve the right size
     trackSourceLinks.clear();
     trackSourceLinks.reserve(protoTrack.size());
-    surfSequence.clear();
-    surfSequence.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
     for (auto hitIndex : protoTrack) {
       if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
         const IndexSourceLink& sourceLink = *it;
-        auto geoId = sourceLink.geometryId();
         trackSourceLinks.push_back(Acts::SourceLink{sourceLink});
-        surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
       } else {
         ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
                                   << hitIndex);
@@ -123,11 +142,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     }
 
     ACTS_DEBUG("Invoke direct fitter for track " << itrack);
-    auto result =
-        m_cfg.directNavigation
-            ? (*m_cfg.fit)(trackSourceLinks, initialParams, options,
-                           surfSequence, tracks)
-            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, tracks);
+    auto result = (*m_cfg.fit)(trackSourceLinks, initialParams, options,
+                               calibrator, tracks);
 
     if (result.ok()) {
       // Get the fit output object
@@ -155,6 +171,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       std::make_shared<Acts::ConstVectorMultiTrajectory>(
           std::move(*trackStateContainer))};
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
+  m_outputTracks(ctx, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -11,17 +11,35 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Direction.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericCurvilinearTrackParameters.hpp"
+#include "Acts/EventData/ParticleHypothesis.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Result.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
+#include <limits>
+#include <memory>
+#include <optional>
+#include <random>
+#include <string>
+#include <tuple>
+#include <utility>
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -43,8 +61,6 @@ struct SteppingState {
   Vector3 pos = Vector3(0., 0., 0.);
   Vector3 dir = Vector3(0., 0., 1);
   double p = 100_MeV;
-
-  NavigationDirection navDir = NavigationDirection::Forward;
 };
 
 /// @brief mockup of stepping state
@@ -58,8 +74,8 @@ struct Stepper {
   ///                 the magnetic field cell is used (and potentially
   ///                 updated)
   /// @param [in] pos is the field position
-  Result<Vector3> getField(SteppingState& /*unused*/,
-                           const Vector3& /*unused*/) const {
+  Result<Vector3> getField(SteppingState& /*state*/,
+                           const Vector3& /*pos*/) const {
     // get the field from the cell
     return Result<Vector3>::success(field);
   }
@@ -71,7 +87,7 @@ struct Stepper {
   Vector3 direction(const SteppingState& state) const { return state.dir; }
 
   /// Access method - momentum
-  double momentum(const SteppingState& state) const { return state.p; }
+  double absoluteMomentum(const SteppingState& state) const { return state.p; }
 };
 
 /// @brief mockup of navigation state
@@ -85,6 +101,7 @@ struct Options {
   double pathLimit = std::numeric_limits<double>::max();
   bool loopProtection = true;
   double loopFraction = 0.5;
+  Direction direction = Direction::Forward;
 
   bool debug = false;
   std::string debugString;
@@ -181,7 +198,8 @@ BOOST_DATA_TEST_CASE(
   EigenPropagator epropagator(std::move(estepper));
 
   // define start parameters
-  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, p, q);
+  CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, q / p,
+                                   std::nullopt, ParticleHypothesis::pion());
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
   PropagatorOptions options(tgContext, mfContext);

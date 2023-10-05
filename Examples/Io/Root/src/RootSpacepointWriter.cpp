@@ -9,10 +9,15 @@
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 
 #include <ios>
+#include <ostream>
 #include <stdexcept>
+#include <vector>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -58,7 +63,7 @@ ActsExamples::RootSpacepointWriter::~RootSpacepointWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

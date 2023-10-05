@@ -92,21 +92,25 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   }
 
   /// This is the call signature for the abort list, it broadcasts the call
-  /// to the tuple() memembers of the list
+  /// to the tuple() members of the list
   ///
-  /// @tparam result_t is the result type from a certain action
   /// @tparam propagator_state_t is the state type of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  /// @tparam result_t is the result type from a certain action
   ///
-  /// @param [in] result is the result object from a certain action
   /// @param [in,out] state is the state object from the propagator
   /// @param [in] stepper Stepper used for the propagation
-  template <typename result_t, typename propagator_state_t, typename stepper_t,
-            typename... Args>
-  bool operator()(const result_t& result, propagator_state_t& state,
-                  const stepper_t& stepper, Args&&... args) const {
-    return detail::abort_list_impl<aborters_t...>::check(
-        tuple(), result, state, stepper, std::forward<Args>(args)...);
+  /// @param [in] navigator Navigator used for the propagation
+  /// @param [in] result is the result object from a certain action
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t, typename result_t, typename... Args>
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& navigator, const result_t& result,
+                  Args&&... args) const {
+    using impl = detail::abort_list_impl<aborters_t...>;
+    return impl::check(tuple(), state, stepper, navigator, result,
+                       std::forward<Args>(args)...);
   }
 };
 

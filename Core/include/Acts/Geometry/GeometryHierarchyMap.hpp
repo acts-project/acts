@@ -106,7 +106,7 @@ class GeometryHierarchyMap {
   ///
   /// This can be either from the element matching exactly to the given geometry
   /// id, if it exists, or from the element for the next available higher level
-  /// within the geometry hierachy.
+  /// within the geometry hierarchy.
   ///
   /// @param id geometry identifier for which information is requested
   /// @retval iterator to an existing value

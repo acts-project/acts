@@ -11,9 +11,12 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <vector>
 
 #include "BoundaryCheckTestsRefs.hpp"
 
@@ -45,8 +48,6 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0) {
 }
 
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
-#include "BoundaryCheckTestsRefs.hpp"
-
   BoundaryCheck bcheck(true);
 
   for (size_t i = 0; i < rectTestPoints.size(); i++) {
@@ -70,7 +71,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance) {
 
 // Aligned box w/ covariance check
 BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
-  SymMatrix2 cov;
+  SquareMatrix2 cov;
   cov << 1, 0.5, 0.5, 2;
   BoundaryCheck check(cov, 3.0);
   Vector2 ll(-1, -1);
@@ -114,7 +115,7 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleSimple) {
 // Triangle w/ covariance check
 BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance) {
   Vector2 vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
-  SymMatrix2 cov;
+  SquareMatrix2 cov;
   cov << 0.5, 0, 0, 0.5;
   BoundaryCheck check(cov, 4.1);
   BOOST_CHECK(check.isInside({0, 0}, vertices));

@@ -8,19 +8,27 @@
 
 #pragma once
 
+#include "Acts/Material/MaterialInteraction.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootMaterialTrackReader
 ///
@@ -74,6 +82,9 @@ class RootMaterialTrackReader : public IReader {
   /// The config class
   Config m_cfg;
 
+  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_outputMaterialTracks{this, "OutputMaterialTracks"};
+
   /// mutex used to protect multi-threaded reads
   std::mutex m_read_mutex;
 
@@ -119,16 +130,16 @@ class RootMaterialTrackReader : public IReader {
       new std::vector<float>;  ///< step material rho
 
   std::vector<std::uint64_t>* m_sur_id =
-      new std::vector<std::uint64_t>;  ///< ID of the suface associated with the
-                                       ///< step
+      new std::vector<std::uint64_t>;  ///< ID of the surface associated with
+                                       ///< the step
   std::vector<float>* m_sur_x =
-      new std::vector<float>;  ///< x position of the center of the suface
+      new std::vector<float>;  ///< x position of the center of the surface
                                ///< associated with the step
   std::vector<float>* m_sur_y =
-      new std::vector<float>;  ///< y position of the center of the suface
+      new std::vector<float>;  ///< y position of the center of the surface
                                ///< associated with the step
   std::vector<float>* m_sur_z =
-      new std::vector<float>;  ///< z position of the center of the suface
+      new std::vector<float>;  ///< z position of the center of the surface
                                ///< associated with the step
   std::vector<float>* m_sur_pathCorrection =
       new std::vector<float>;  ///< path correction when associating

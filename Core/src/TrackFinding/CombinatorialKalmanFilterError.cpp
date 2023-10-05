@@ -8,6 +8,8 @@
 
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
 
+#include <string>
+
 namespace {
 
 class CombinatorialKalmanFilterErrorCategory : public std::error_category {

@@ -9,14 +9,26 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tests/CommonHelpers/DataDirectory.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+
+#include <array>
+#include <cstddef>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "TGeoManager.h"
 

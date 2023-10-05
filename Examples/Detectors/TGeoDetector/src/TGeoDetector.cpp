@@ -11,27 +11,37 @@
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/PassiveLayerBuilder.hpp"
+#include "Acts/Geometry/ProtoLayerHelper.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/SurfaceBinningMatcher.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Plugins/TGeo/TGeoCylinderDiscSplitter.hpp"
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/TGeoDetector/JsonTGeoDetectorConfig.hpp"
 #include "ActsExamples/TGeoDetector/TGeoITkModuleSplitter.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstdlib>
 #include <fstream>
+#include <functional>
+#include <initializer_list>
+#include <limits>
 #include <list>
+#include <optional>
 
 #include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
+
+#include "TGeoManager.h"
 
 namespace ActsExamples {
 using namespace Options;
@@ -44,7 +54,7 @@ namespace {
 /// @param config The input config
 /// @return Vector of layer builder configs
 std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
-    const TGeoDetector::Config& config) {
+    const TGeoDetector::Config& config, const Acts::Logger& logger) {
   std::vector<Acts::TGeoLayerBuilder::Config> detLayerConfigs;
 
   // iterate over all configured detector volumes
@@ -82,6 +92,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       lConfig.volumeName = volume.subVolumeName.at(ncp);
       lConfig.sensorNames = volume.sensitiveNames.at(ncp);
       lConfig.localAxes = volume.sensitiveAxes.at(ncp);
+      lConfig.envelope = {config.layerEnvelopeR, config.layerEnvelopeR};
 
       auto rR = volume.rRange.at(ncp);
       auto rMin = rR.lower.value_or(0.);
@@ -117,14 +128,18 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       cdsConfig.discPhiSegments = volume.discNPhiSegments;
       cdsConfig.discRadialSegments = volume.discNRSegments;
       layerBuilderConfig.detectorElementSplitter =
-          std::make_shared<const Acts::TGeoCylinderDiscSplitter>(cdsConfig);
+          std::make_shared<const Acts::TGeoCylinderDiscSplitter>(
+              cdsConfig,
+              logger.clone("TGeoCylinderDiscSplitter", config.layerLogLevel));
     } else if (volume.itkModuleSplit) {
       ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
       itkConfig.barrelMap = volume.barrelMap;
       itkConfig.discMap = volume.discMap;
       itkConfig.splitPatterns = volume.splitPatterns;
       layerBuilderConfig.detectorElementSplitter =
-          std::make_shared<ActsExamples::TGeoITkModuleSplitter>(itkConfig);
+          std::make_shared<ActsExamples::TGeoITkModuleSplitter>(
+              itkConfig,
+              logger.clone("TGeoITkModuleSplitter", config.layerLogLevel));
     }
 
     detLayerConfigs.push_back(layerBuilderConfig);
@@ -146,41 +161,39 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     const TGeoDetector::Config& config, const Acts::GeometryContext& context,
     std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>&
         detElementStore,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) {
+    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator,
+    const Acts::Logger& logger) {
   // configure surface array creator
   Acts::SurfaceArrayCreator::Config sacConfig;
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
-      sacConfig,
-      Acts::getDefaultLogger("SurfaceArrayCreator", config.surfaceLogLevel));
+      sacConfig, logger.clone("SurfaceArrayCreator", config.surfaceLogLevel));
   // configure the proto layer helper
   Acts::ProtoLayerHelper::Config plhConfig;
   auto protoLayerHelper = std::make_shared<const Acts::ProtoLayerHelper>(
-      plhConfig,
-      Acts::getDefaultLogger("ProtoLayerHelper", config.layerLogLevel));
+      plhConfig, logger.clone("ProtoLayerHelper", config.layerLogLevel));
   // configure the layer creator that uses the surface array creator
   Acts::LayerCreator::Config lcConfig;
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
   auto layerCreator = std::make_shared<const Acts::LayerCreator>(
-      lcConfig, Acts::getDefaultLogger("LayerCreator", config.layerLogLevel));
+      lcConfig, logger.clone("LayerCreator", config.layerLogLevel));
   // configure the layer array creator
   Acts::LayerArrayCreator::Config lacConfig;
   auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(
-      lacConfig,
-      Acts::getDefaultLogger("LayerArrayCreator", config.layerLogLevel));
+      lacConfig, logger.clone("LayerArrayCreator", config.layerLogLevel));
   // tracking volume array creator
   Acts::TrackingVolumeArrayCreator::Config tvacConfig;
   auto tVolumeArrayCreator =
       std::make_shared<const Acts::TrackingVolumeArrayCreator>(
-          tvacConfig, Acts::getDefaultLogger("TrackingVolumeArrayCreator",
-                                             config.volumeLogLevel));
+          tvacConfig,
+          logger.clone("TrackingVolumeArrayCreator", config.volumeLogLevel));
   // configure the cylinder volume helper
   Acts::CylinderVolumeHelper::Config cvhConfig;
   cvhConfig.layerArrayCreator = layerArrayCreator;
   cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
   auto cylinderVolumeHelper =
       std::make_shared<const Acts::CylinderVolumeHelper>(
-          cvhConfig, Acts::getDefaultLogger("CylinderVolumeHelper",
-                                            config.volumeLogLevel));
+          cvhConfig,
+          logger.clone("CylinderVolumeHelper", config.volumeLogLevel));
 
   //-------------------------------------------------------------------------------------
   // list the volume builders
@@ -195,20 +208,19 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     bplConfig.centralLayerHalflengthZ = {config.beamPipeHalflengthZ};
     bplConfig.centralLayerThickness = {config.beamPipeLayerThickness};
     auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
-        bplConfig,
-        Acts::getDefaultLogger("BeamPipeLayerBuilder", config.layerLogLevel));
+        bplConfig, logger.clone("BeamPipeLayerBuilder", config.layerLogLevel));
     // create the volume for the beam pipe
     Acts::CylinderVolumeBuilder::Config bpvConfig;
     bpvConfig.trackingVolumeHelper = cylinderVolumeHelper;
     bpvConfig.volumeName = "BeamPipe";
     bpvConfig.layerBuilder = beamPipeBuilder;
-    bpvConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
-                                1. * Acts::UnitConstants::mm};
+    bpvConfig.layerEnvelopeR = {config.beamPipeEnvelopeR,
+                                config.beamPipeEnvelopeR};
     bpvConfig.buildToRadiusZero = true;
     auto beamPipeVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
-            bpvConfig, Acts::getDefaultLogger("BeamPipeVolumeBuilder",
-                                              config.volumeLogLevel));
+            bpvConfig,
+            logger.clone("BeamPipeVolumeBuilder", config.volumeLogLevel));
     // add to the list of builders
     volumeBuilders.push_back(beamPipeVolumeBuilder);
   }
@@ -216,7 +228,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   // Import the file from
   TGeoManager::Import(config.fileName.c_str());
 
-  auto layerBuilderConfigs = makeLayerBuilderConfigs(config);
+  auto layerBuilderConfigs = makeLayerBuilderConfigs(config, logger);
 
   // Remember the layer builders to collect the detector elements
   std::vector<std::shared_ptr<const Acts::TGeoLayerBuilder>> tgLayerBuilders;
@@ -231,24 +243,22 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
       sacConfigLB.surfaceMatcher = lbc.surfaceBinMatcher;
       auto surfaceArrayCreatorLB =
           std::make_shared<const Acts::SurfaceArrayCreator>(
-              sacConfigLB, Acts::getDefaultLogger(
-                               lbc.configurationName + "SurfaceArrayCreator",
-                               config.surfaceLogLevel));
+              sacConfigLB,
+              logger.clone(lbc.configurationName + "SurfaceArrayCreator",
+                           config.surfaceLogLevel));
       // configure the layer creator that uses the surface array creator
       Acts::LayerCreator::Config lcConfigLB;
       lcConfigLB.surfaceArrayCreator = surfaceArrayCreatorLB;
       layerCreatorLB = std::make_shared<const Acts::LayerCreator>(
-          lcConfigLB,
-          Acts::getDefaultLogger(lbc.configurationName + "LayerCreator",
-                                 config.layerLogLevel));
+          lcConfigLB, logger.clone(lbc.configurationName + "LayerCreator",
+                                   config.layerLogLevel));
     }
 
     // Configure the proto layer helper
     Acts::ProtoLayerHelper::Config plhConfigLB;
     auto protoLayerHelperLB = std::make_shared<const Acts::ProtoLayerHelper>(
-        plhConfigLB,
-        Acts::getDefaultLogger(lbc.configurationName + "ProtoLayerHelper",
-                               config.layerLogLevel));
+        plhConfigLB, logger.clone(lbc.configurationName + "ProtoLayerHelper",
+                                  config.layerLogLevel));
 
     //-------------------------------------------------------------------------------------
     lbc.layerCreator =
@@ -257,8 +267,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
         (protoLayerHelperLB != nullptr) ? protoLayerHelperLB : protoLayerHelper;
 
     auto layerBuilder = std::make_shared<const Acts::TGeoLayerBuilder>(
-        lbc, Acts::getDefaultLogger(lbc.configurationName + "LayerBuilder",
-                                    config.layerLogLevel));
+        lbc, logger.clone(lbc.configurationName + "LayerBuilder",
+                          config.layerLogLevel));
     // remember the layer builder
     tgLayerBuilders.push_back(layerBuilder);
 
@@ -267,8 +277,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     volumeConfig.trackingVolumeHelper = cylinderVolumeHelper;
     volumeConfig.volumeName = lbc.configurationName;
     volumeConfig.buildToRadiusZero = volumeBuilders.empty();
-    volumeConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
-                                   5. * Acts::UnitConstants::mm};
+    volumeConfig.layerEnvelopeR = {config.layerEnvelopeR,
+                                   config.layerEnvelopeR};
     auto ringLayoutConfiguration =
         [&](const std::vector<Acts::TGeoLayerBuilder::LayerConfig>& lConfigs)
         -> void {
@@ -287,9 +297,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     volumeConfig.layerBuilder = layerBuilder;
     volumeConfig.volumeSignature = 0;
     auto volumeBuilder = std::make_shared<const Acts::CylinderVolumeBuilder>(
-        volumeConfig,
-        Acts::getDefaultLogger(lbc.configurationName + "VolumeBuilder",
-                               config.volumeLogLevel));
+        volumeConfig, logger.clone(lbc.configurationName + "VolumeBuilder",
+                                   config.volumeLogLevel));
     // add to the list of builders
     volumeBuilders.push_back(volumeBuilder);
   }
@@ -311,8 +320,8 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   tgConfig.trackingVolumeHelper = cylinderVolumeHelper;
   auto cylinderGeometryBuilder =
       std::make_shared<const Acts::TrackingGeometryBuilder>(
-          tgConfig, Acts::getDefaultLogger("TrackerGeometryBuilder",
-                                           config.volumeLogLevel));
+          tgConfig,
+          logger.clone("TrackerGeometryBuilder", config.volumeLogLevel));
   // get the geometry
   auto trackingGeometry = cylinderGeometryBuilder->trackingGeometry(context);
   // collect the detector element store
@@ -361,8 +370,9 @@ auto TGeoDetector::finalize(
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext tGeoContext;
-  TrackingGeometryPtr tgeoTrackingGeometry =
-      buildTGeoDetector(cfg, tGeoContext, detectorStore, std::move(mdecorator));
+  auto logger = Acts::getDefaultLogger("TGeoDetector", Acts::Logging::INFO);
+  TrackingGeometryPtr tgeoTrackingGeometry = buildTGeoDetector(
+      cfg, tGeoContext, detectorStore, std::move(mdecorator), *logger);
 
   ContextDecorators tgeoContextDeocrators = {};
   // Return the pair of geometry and empty decorators

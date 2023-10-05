@@ -9,15 +9,23 @@
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
+#include <vector>
 
 #include <TFile.h>
-#include <TTree.h>
 
 using Acts::VectorHelpers::eta;
 
@@ -41,6 +49,9 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -67,7 +78,8 @@ ActsExamples::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::TrackFitterPerformanceWriter::finalize() {
   // fill residual and pull details into additional hists
   m_resPlotTool.refinement(m_resPlotCache);
 
@@ -84,13 +96,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // Read truth input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Truth particles with corresponding reconstructed tracks
   std::vector<ActsFatras::Barcode> reconParticleIds;

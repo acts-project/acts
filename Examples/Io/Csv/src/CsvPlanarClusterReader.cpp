@@ -8,17 +8,31 @@
 
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
+#include "Acts/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
+#include <stdexcept>
 
 #include <dfe/dfe_io_dsv.hpp>
 
@@ -46,6 +60,12 @@ ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
+
+  m_outputClusters.initialize(m_cfg.outputClusters);
+  m_outputMeasurementParticlesMap.initialize(
+      m_cfg.outputMeasurementParticlesMap);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
+  m_outputHitIds.initialize(m_cfg.outputHitIds);
 }
 
 std::string ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader::name()
@@ -60,7 +80,7 @@ ActsExamples::CsvPlanarClusterReader::availableEvents() const {
 
 namespace {
 struct CompareHitId {
-  // support transparent comparision between identifiers and full objects
+  // support transparent comparison between identifiers and full objects
   using is_transparent = void;
   template <typename T>
   constexpr bool operator()(const T& left, const T& right) const {
@@ -117,11 +137,11 @@ std::vector<ActsExamples::HitData> readHitsByGeometryId(
   return hits;
 }
 
-std::vector<ActsExamples::CellData> readCellsByHitId(
+std::vector<ActsExamples::CellDataLegacy> readCellsByHitId(
     const std::string& inputDir, size_t event) {
   // timestamp is an optional element
-  auto cells = readEverything<ActsExamples::CellData>(inputDir, "cells.csv",
-                                                      {"timestamp"}, event);
+  auto cells = readEverything<ActsExamples::CellDataLegacy>(
+      inputDir, "cells.csv", {"timestamp"}, event);
   // sort for fast hit id look up
   std::sort(cells.begin(), cells.end(), CompareHitId{});
   return cells;
@@ -146,7 +166,7 @@ std::vector<ActsExamples::TruthHitData> readTruthHitsByHitId(
 ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     const ActsExamples::AlgorithmContext& ctx) {
   // hit_id in the files is not required to be neither continuous nor
-  // monotonic. internally, we want continous indices within [0,#hits)
+  // monotonic. internally, we want continuous indices within [0,#hits)
   // to simplify data handling. to be able to perform this mapping we first
   // read all data into memory before converting to the internal event data
   // types.
@@ -245,7 +265,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     local = lpResult.value();
 
     // TODO what to use as cluster uncertainty?
-    Acts::ActsSymMatrix<3> cov = Acts::ActsSymMatrix<3>::Identity();
+    Acts::ActsSquareMatrix<3> cov = Acts::ActsSquareMatrix<3>::Identity();
     // create the planar cluster
     Acts::SourceLink sourceLink{
         Acts::DigitizationSourceLink(geoId, std::move(simHitIndices))};
@@ -276,11 +296,10 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
   }
 
   // write the data to the EventStore
-  ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
-  ctx.eventStore.add(m_cfg.outputHitIds, std::move(hitIds));
-  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
-                     std::move(hitParticlesMap));
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+  m_outputClusters(ctx, std::move(clusters));
+  m_outputHitIds(ctx, std::move(hitIds));
+  m_outputMeasurementParticlesMap(ctx, std::move(hitParticlesMap));
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

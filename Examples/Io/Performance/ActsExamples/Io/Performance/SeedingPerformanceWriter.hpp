@@ -8,24 +8,37 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 
+#include <cstddef>
 #include <mutex>
 #include <string>
 #include <vector>
 
 class TFile;
 class TTree;
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
-class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
+struct AlgorithmContext;
+
+class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
  public:
+  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
-    /// Input reconstructed proto tracks collection.
-    std::string inputProtoTracks;
+    /// Input reconstructed seed collection.
+    std::string inputSeeds;
     /// Input hit to particles map.
     std::string inputMeasurementParticlesMap;
     /// Input truth particles collection.
@@ -47,14 +60,14 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   ~SeedingPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) override;
+                     const SimSeedContainer& seeds) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.
@@ -72,6 +85,10 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   size_t m_nTotalParticles = 0;
   size_t m_nTotalMatchedParticles = 0;
   size_t m_nTotalDuplicatedParticles = 0;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMaps"};
 };
 
 }  // namespace ActsExamples

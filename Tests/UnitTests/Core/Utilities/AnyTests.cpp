@@ -11,6 +11,10 @@
 
 #include "Acts/Utilities/Any.hpp"
 
+#include <any>
+#include <array>
+#include <cstddef>
+#include <type_traits>
 #include <utility>
 
 using namespace Acts;

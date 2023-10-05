@@ -9,13 +9,11 @@
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/EventData/Track.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <ios>
 #include <optional>
 #include <stdexcept>
 
@@ -32,6 +30,9 @@ ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
     throw std::invalid_argument(
         "You have to either provide track parameters or trajectories");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
 }
 
 ActsExamples::CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
@@ -40,7 +41,7 @@ std::string ActsExamples::CsvTrackParameterWriter::name() const {
   return "CsvTrackParameterWriter";
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }
@@ -50,13 +51,10 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
   std::vector<Acts::BoundTrackParameters> inputTrackParameters;
 
   if (!m_cfg.inputTrackParameters.empty()) {
-    const auto& tmp =
-        ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
-            m_cfg.inputTrackParameters);
+    const auto& tmp = m_inputTrackParameters(ctx);
     inputTrackParameters = tmp;
   } else {
-    const auto& inputTrajectories =
-        ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+    const auto& inputTrajectories = m_inputTrajectories(ctx);
 
     for (const auto& trajectories : inputTrajectories) {
       for (auto tip : trajectories.tips()) {

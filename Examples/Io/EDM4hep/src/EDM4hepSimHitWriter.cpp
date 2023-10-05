@@ -16,8 +16,9 @@
 
 #include <stdexcept>
 
-#include "edm4hep/MCParticle.h"
-#include "edm4hep/SimTrackerHit.h"
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/SimTrackerHit.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -25,23 +26,25 @@ EDM4hepSimHitWriter::EDM4hepSimHitWriter(
     const EDM4hepSimHitWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputSimHits, "CsvSimHitWriter", level),
       m_cfg(config),
-      m_writer(config.outputPath, &m_store) {
+      m_writer(config.outputPath) {
   ACTS_VERBOSE("Created output file " << config.outputPath);
 
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
 
-  m_mcParticleCollection =
-      &m_store.create<edm4hep::MCParticleCollection>(m_cfg.outputParticles);
-  m_writer.registerForWrite(m_cfg.outputParticles);
+  if (m_cfg.outputParticles.empty()) {
+    throw std::invalid_argument("Missing output particle name");
+  }
 
-  m_simTrackerHitCollection = &m_store.create<edm4hep::SimTrackerHitCollection>(
-      m_cfg.outputSimTrackerHits);
-  m_writer.registerForWrite(m_cfg.outputSimTrackerHits);
+  if (m_cfg.outputSimTrackerHits.empty()) {
+    throw std::invalid_argument("Missing output sim tracker hit name");
+  }
+
+  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
 }
 
-ActsExamples::ProcessCode EDM4hepSimHitWriter::endRun() {
+ActsExamples::ProcessCode EDM4hepSimHitWriter::finalize() {
   m_writer.finish();
 
   return ProcessCode::SUCCESS;
@@ -49,16 +52,20 @@ ActsExamples::ProcessCode EDM4hepSimHitWriter::endRun() {
 
 ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext& ctx,
                                         const SimHitContainer& simHits) {
+  podio::Frame frame;
+
   EDM4hepUtil::MapParticleIdTo particleMapper;
   std::unordered_map<ActsFatras::Barcode, edm4hep::MutableMCParticle>
       particleMap;
 
+  edm4hep::MCParticleCollection mcParticles;
+  edm4hep::SimTrackerHitCollection simTrackerHitCollection;
+
   if (!m_cfg.inputParticles.empty()) {
-    auto particles =
-        ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+    auto particles = m_inputParticles(ctx);
 
     for (const auto& particle : particles) {
-      auto p = m_mcParticleCollection->create();
+      auto p = mcParticles->create();
       particleMap[particle.particleId()] = p;
       EDM4hepUtil::writeParticle(particle, p);
     }
@@ -73,14 +80,16 @@ ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext& ctx,
   }
 
   for (const auto& simHit : simHits) {
-    auto simTrackerHit = m_simTrackerHitCollection->create();
+    auto simTrackerHit = simTrackerHitCollection->create();
     EDM4hepUtil::writeSimHit(
         simHit, simTrackerHit, particleMapper,
         [](Acts::GeometryIdentifier id) { return id.value(); });
   }
 
-  m_writer.writeEvent();
-  m_store.clearCollections();
+  frame.put(std::move(mcParticles), m_cfg.outputParticles);
+  frame.put(std::move(simTrackerHitCollection), m_cfg.outputSimTrackerHits);
+
+  m_writer.writeFrame(frame, "events");
 
   return ProcessCode::SUCCESS;
 }

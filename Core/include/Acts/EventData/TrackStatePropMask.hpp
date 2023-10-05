@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/EnumBitwiseOperators.hpp"
 
+#include <cstdint>
 #include <limits>
 #include <ostream>
 #include <type_traits>
@@ -24,7 +25,7 @@ namespace Acts {
 /// a jacobian.
 /// The enum is used as a strong type wrapper around the bits to prevent
 /// autoconversion from integer
-enum struct TrackStatePropMask : uint8_t {
+enum struct TrackStatePropMask : std::uint8_t {
   None = 0,
   Predicted = 1 << 0,
   Filtered = 1 << 1,
@@ -33,7 +34,7 @@ enum struct TrackStatePropMask : uint8_t {
 
   Calibrated = 1 << 4,
 
-  All = std::numeric_limits<uint8_t>::max(),  // should be all ones
+  All = std::numeric_limits<std::uint8_t>::max(),  // should be all ones
 };
 
 ACTS_DEFINE_ENUM_BITWISE_OPERATORS(TrackStatePropMask)

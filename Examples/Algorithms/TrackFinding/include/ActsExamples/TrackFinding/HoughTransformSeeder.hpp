@@ -74,15 +74,26 @@
 #include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/TrackFinding/HoughVectors.hpp"
 
+#include <cstddef>
+#include <memory>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 using ResultDouble = Acts::Result<double>;
 using ResultBool = Acts::Result<bool>;
@@ -139,7 +150,7 @@ thread_local std::vector<std::shared_ptr<HoughMeasurementStruct>>
     houghMeasurementStructs;
 
 /// Construct track seeds from space points.
-class HoughTransformSeeder final : public BareAlgorithm {
+class HoughTransformSeeder final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
@@ -156,6 +167,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
     std::string outputProtoTracks;
     /// Input source links collection.
     std::string inputSourceLinks;
+    /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// For which part of the detector geometry should space points be created.
     ///
@@ -257,6 +269,17 @@ class HoughTransformSeeder final : public BareAlgorithm {
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
   const Acts::Logger& logger() const { return *m_logger; }
+
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
+  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
+      m_inputSpacePoints{};
+
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
 
   ////////////////////////////////////////////////////////////////////////
   /// Convenience

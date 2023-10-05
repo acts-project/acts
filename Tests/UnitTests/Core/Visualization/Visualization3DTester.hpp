@@ -33,7 +33,7 @@ namespace Test {
 /// * l is checked for integer > 0 entries only
 ///
 /// @param tString is the test string
-/// @param triMesh ist he test if only triangular surfaces exist
+/// @param triMesh is the test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testObjString(const std::string& tString,
@@ -117,7 +117,7 @@ struct PlyElement {
 ///
 ///
 /// @param tString is the test string
-/// @param triMesh ist he test if only triangular surfaces exist
+/// @param triMesh is the test if only triangular surfaces exist
 ///
 /// @return a vector of failure messages
 inline static std::vector<std::string> testPlyString(const std::string& tString,
@@ -188,7 +188,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
             ++currentElement.properties;
           }
         } else {
-          errorStrings.push_back(w + line + " ] Unkown command.");
+          errorStrings.push_back(w + line + " ] Unknown command.");
         }
       }
     } else {
@@ -212,7 +212,7 @@ inline static std::vector<std::string> testPlyString(const std::string& tString,
           errorStrings.push_back(
               w + line + std::string(" ] Element expected ") +
               std::to_string(elements[cElement].properties) +
-              std::string(" propertes, while found ") +
+              std::string(" properties, while found ") +
               std::to_string(lineSplit.size()) + std::string("."));
         }
       }

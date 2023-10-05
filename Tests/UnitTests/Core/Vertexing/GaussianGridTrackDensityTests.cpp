@@ -11,12 +11,21 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/GenericBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/GaussianGridTrackDensity.hpp"
+
+#include <algorithm>
+#include <cstddef>
+#include <memory>
+#include <optional>
+#include <utility>
 
 namespace bdata = boost::unit_test::data;
 using namespace Acts::UnitLiterals;
@@ -24,7 +33,7 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-using Covariance = BoundSymMatrix;
+using Covariance = BoundSquareMatrix;
 
 // Create a test context
 GeometryContext geoContext = GeometryContext();
@@ -76,14 +85,22 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
-  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
-  BoundTrackParameters params3(perigeeSurface, paramVec3, covMat);
-  BoundTrackParameters params3_1(perigeeSurface, paramVec3_1, covMat);
-  BoundTrackParameters params4(perigeeSurface, paramVec4, covMat);
-  BoundTrackParameters params5(perigeeSurface, paramVec5, covMat);
-  BoundTrackParameters params6(perigeeSurface, paramVec6, covMat);
-  BoundTrackParameters params7(perigeeSurface, paramVec7, covMat);
+  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat,
+                               ParticleHypothesis::pion());
+  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat,
+                               ParticleHypothesis::pion());
+  BoundTrackParameters params3(perigeeSurface, paramVec3, covMat,
+                               ParticleHypothesis::pion());
+  BoundTrackParameters params3_1(perigeeSurface, paramVec3_1, covMat,
+                                 ParticleHypothesis::pion());
+  BoundTrackParameters params4(perigeeSurface, paramVec4, covMat,
+                               ParticleHypothesis::pion());
+  BoundTrackParameters params5(perigeeSurface, paramVec5, covMat,
+                               ParticleHypothesis::pion());
+  BoundTrackParameters params6(perigeeSurface, paramVec6, covMat,
+                               ParticleHypothesis::pion());
+  BoundTrackParameters params7(perigeeSurface, paramVec7, covMat,
+                               ParticleHypothesis::pion());
 
   // The grid to be filled
   Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
@@ -104,7 +121,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
   auto zeroGrid = Grid::MainGridVector::Zero();
   BOOST_CHECK_EQUAL(mainGrid, zeroGrid);
 
-  // Now add track 1 and 2 to grid, seperately.
+  // Now add track 1 and 2 to grid, separately.
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   auto gridCopy = mainGrid;
 
@@ -195,8 +212,10 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
-  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
+  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat,
+                               ParticleHypothesis::pion());
+  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat,
+                               ParticleHypothesis::pion());
 
   // The grid to be filled
   Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
@@ -208,12 +227,12 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
-  // Artifically add some more density around the peak of track 2
+  // Artificially add some more density around the peak of track 2
   int maxZbin = static_cast<int>((posZ2 / binSize + mainGridSize / 2.));
   mainGrid(maxZbin - 1) += 1;
   mainGrid(maxZbin + 1) += 1;
 
-  // Even though peak density of track 1 is slighly higher, track 2
+  // Even though peak density of track 1 is slightly higher, track 2
   // has a higher sum of track densities including the peak and the two
   // surrounding bins and will be the output z position.
   auto maxRes = grid.getMaxZPosition(mainGrid);
@@ -256,8 +275,10 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(Vector3(0., 0., 0.));
 
-  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat);
-  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat);
+  BoundTrackParameters params1(perigeeSurface, paramVec1, covMat,
+                               ParticleHypothesis::pion());
+  BoundTrackParameters params2(perigeeSurface, paramVec2, covMat,
+                               ParticleHypothesis::pion());
 
   // The grid to be filled
   Grid::MainGridVector mainGrid = Grid::MainGridVector::Zero();
@@ -269,12 +290,12 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   binAndTrackGrid = grid.addTrack(params1, mainGrid);
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
-  // Artifically add some more density around the peak of track 2
+  // Artificially add some more density around the peak of track 2
   int maxZbin = static_cast<int>((posZ2 / binSize + mainGridSize / 2.));
   mainGrid(maxZbin - 1) += 1;
   mainGrid(maxZbin + 1) += 1;
 
-  // Even though peak density of track 1 is slighly higher, track 2
+  // Even though peak density of track 1 is slightly higher, track 2
   // has a higher sum of track densities including the peak and the two
   // surrounding bins and will be the output z position.
 

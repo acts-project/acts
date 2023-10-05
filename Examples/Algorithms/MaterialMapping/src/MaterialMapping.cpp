@@ -8,16 +8,22 @@
 
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "Acts/Material/AccumulatedMaterialSlab.hpp"
+#include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
+#include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
 
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
+
 ActsExamples::MaterialMapping::MaterialMapping(
     const ActsExamples::MaterialMapping::Config& cfg,
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("MaterialMapping", level),
+    : ActsExamples::IAlgorithm("MaterialMapping", level),
       m_cfg(cfg),
       m_mappingState(cfg.geoContext, cfg.magFieldContext),
       m_mappingStateVol(cfg.geoContext, cfg.magFieldContext) {
@@ -26,6 +32,9 @@ ActsExamples::MaterialMapping::MaterialMapping(
   } else if (!m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
+
+  m_inputMaterialTracks.initialize(m_cfg.collection);
+  m_outputMaterialTracks.initialize(m_cfg.mappingMaterialCollection);
 
   ACTS_INFO("This algorithm requires inter-event information, "
             << "run in single-threaded mode!");
@@ -93,9 +102,7 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     const ActsExamples::AlgorithmContext& context) const {
   // Take the collection from the EventStore
   std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection =
-      context.eventStore
-          .get<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>(
-              m_cfg.collection);
+      m_inputMaterialTracks(context);
 
   if (m_cfg.materialSurfaceMapper) {
     // To make it work with the framework needs a lock guard
@@ -117,8 +124,7 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     }
   }
   // Write take the collection to the EventStore
-  context.eventStore.add(m_cfg.mappingMaterialCollection,
-                         std::move(mtrackCollection));
+  m_outputMaterialTracks(context, std::move(mtrackCollection));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

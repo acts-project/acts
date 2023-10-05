@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -38,9 +38,9 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// space point in a std::tuple format
   /// @return vector of seed candidates that pass the cut
   std::vector<typename CandidatesForMiddleSp<
-      InternalSpacePoint<SpacePoint>>::value_type>
+      const InternalSpacePoint<SpacePoint>>::value_type>
   cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp<
-                     InternalSpacePoint<SpacePoint>>::value_type>
+                     const InternalSpacePoint<SpacePoint>>::value_type>
                      seedCandidates) const override;
 };
 
@@ -68,14 +68,14 @@ bool ATLASCuts<SpacePoint>::singleSeedCut(
 }
 
 template <typename SpacePoint>
-std::vector<
-    typename CandidatesForMiddleSp<InternalSpacePoint<SpacePoint>>::value_type>
+std::vector<typename CandidatesForMiddleSp<
+    const InternalSpacePoint<SpacePoint>>::value_type>
 ATLASCuts<SpacePoint>::cutPerMiddleSP(
     std::vector<typename CandidatesForMiddleSp<
-        InternalSpacePoint<SpacePoint>>::value_type>
+        const InternalSpacePoint<SpacePoint>>::value_type>
         seedCandidates) const {
   std::vector<typename CandidatesForMiddleSp<
-      InternalSpacePoint<SpacePoint>>::value_type>
+      const InternalSpacePoint<SpacePoint>>::value_type>
       newSeedsVector;
   if (seedCandidates.size() <= 1) {
     return seedCandidates;

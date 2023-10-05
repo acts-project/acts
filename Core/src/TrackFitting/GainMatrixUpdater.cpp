@@ -9,17 +9,20 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/TrackFitting/KalmanFitterError.hpp"
 
-#include <optional>
+#include <algorithm>
+#include <cstddef>
+#include <utility>
 
 #include <Eigen/src/Core/MatrixBase.h>
 
 namespace Acts {
 
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
-    InternalTrackState trackState, NavigationDirection direction,
+    InternalTrackState trackState, Direction direction,
     const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
   std::error_code error;
@@ -28,7 +31,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
   visit_measurement(trackState.calibratedSize, [&](auto N) -> bool {
     constexpr size_t kMeasurementSize = decltype(N)::value;
     using ParametersVector = ActsVector<kMeasurementSize>;
-    using CovarianceMatrix = ActsSymMatrix<kMeasurementSize>;
+    using CovarianceMatrix = ActsSquareMatrix<kMeasurementSize>;
 
     typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
         trackState.calibrated};
@@ -55,7 +58,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
     if (K.hasNaN()) {
-      error = (direction == NavigationDirection::Forward)
+      error = (direction == Direction::Forward)
                   ? KalmanFitterError::ForwardUpdateFailed
                   : KalmanFitterError::BackwardUpdateFailed;  // set to error
       return false;                                           // abort execution
@@ -63,8 +66,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
 
     trackState.filtered =
         trackState.predicted + K * (calibrated - H * trackState.predicted);
-    trackState.filteredCovariance =
-        (BoundSymMatrix::Identity() - K * H) * trackState.predictedCovariance;
+    trackState.filteredCovariance = (BoundSquareMatrix::Identity() - K * H) *
+                                    trackState.predictedCovariance;
     ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
     ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 
@@ -82,10 +85,7 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     CovarianceMatrix m =
         ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance).eval();
 
-    static constexpr double epsilon = 1e-13;
-    m.diagonal().array() += epsilon;
-
-    chi2 = (residual.transpose() * (m.inverse()) * residual).value();
+    chi2 = (residual.transpose() * m.inverse() * residual).value();
 
     ACTS_VERBOSE("Chi2: " << chi2);
     return true;  // continue execution

@@ -8,10 +8,14 @@
 
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
+#include <utility>
 
 namespace {
 
@@ -75,8 +79,8 @@ void ActsExamples::identifyContributingParticles(
       return true;
     }
     // register all particles that generated this hit
-    const IndexSourceLink& sl =
-        state.uncalibratedSourceLink().template get<IndexSourceLink>();
+    IndexSourceLink sl =
+        state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
     for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, hitParticle.second);

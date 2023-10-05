@@ -11,10 +11,15 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
 
+#include <cstdint>
+#include <limits>
 #include <random>
+#include <utility>
+#include <vector>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsFatras;
@@ -27,9 +32,9 @@ namespace {
 /// Continuous process that does not trigger a break
 struct SterileContinuousProcess {
   template <typename generator_t>
-  bool operator()(generator_t & /*unused*/, const MaterialSlab & /*unused*/,
-                  Particle & /*unused*/,
-                  std::vector<Particle> & /*unused*/) const {
+  bool operator()(generator_t & /*generator*/, const MaterialSlab & /*slab*/,
+                  Particle & /*particle*/,
+                  std::vector<Particle> & /*generated*/) const {
     return false;
   }
 };
@@ -42,9 +47,9 @@ static_assert(!detail::IsPointLikeProcess<SterileContinuousProcess>::value,
 /// Continuous process that DOES trigger a break
 struct FatalContinuousProcess {
   template <typename generator_t>
-  bool operator()(generator_t & /*unused*/, const MaterialSlab & /*unused*/,
-                  Particle & /*unused*/,
-                  std::vector<Particle> & /*unused*/) const {
+  bool operator()(generator_t & /*generator*/, const MaterialSlab & /*slab*/,
+                  Particle & /*particle*/,
+                  std::vector<Particle> & /*generated*/) const {
     return true;
   }
 };
@@ -59,12 +64,12 @@ static_assert(!detail::IsPointLikeProcess<FatalContinuousProcess>::value,
 struct X0PointLikeProcess {
   template <typename generator_t>
   std::pair<Scalar, Scalar> generatePathLimits(
-      generator_t & /*unused*/, const Particle & /*unused*/) const {
+      generator_t & /*generator*/, const Particle & /*particle*/) const {
     return {0.5, std::numeric_limits<Scalar>::infinity()};
   }
 
   template <typename generator_t>
-  bool run(generator_t & /*unused*/, Particle &particle,
+  bool run(generator_t & /*generator*/, Particle &particle,
            std::vector<Particle> &generated) const {
     auto pid0 = particle.particleId().makeDescendant(0);
     generated.emplace_back(particle.withParticleId(pid0));
@@ -83,12 +88,12 @@ static_assert(detail::IsPointLikeProcess<X0PointLikeProcess>::value,
 struct L0PointLikeProcess {
   template <typename generator_t>
   std::pair<Scalar, Scalar> generatePathLimits(
-      generator_t & /*unused*/, const Particle & /*unused*/) const {
+      generator_t & /*generator*/, const Particle & /*particle*/) const {
     return {std::numeric_limits<Scalar>::infinity(), 1.5};
   }
 
   template <typename generator_t>
-  bool run(generator_t & /*unused*/, Particle &particle,
+  bool run(generator_t & /*generator*/, Particle &particle,
            std::vector<Particle> &generated) const {
     auto pid0 = particle.particleId().makeDescendant(0);
     auto pid1 = particle.particleId().makeDescendant(1);

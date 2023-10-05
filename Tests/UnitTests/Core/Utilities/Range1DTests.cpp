@@ -11,6 +11,8 @@
 #include "Acts/Utilities/Range1D.hpp"
 
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace {
 std::vector<int> v = {-100, -90, -80, -70, -60, -50, -40, -30, -20, 10, 0,

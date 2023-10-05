@@ -20,7 +20,6 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
 #include "ActsExamples/GenericDetector/ProtoLayerCreatorT.hpp"
@@ -40,7 +39,7 @@ using SurfacePosition = std::pair<const Acts::Surface*, Acts::Vector3>;
 ///
 /// The LayerBuilderT is able to build cylinder & disc layers
 /// from hard-coded input.
-/// This is ment for the simple detector examples.
+/// This is meant for the simple detector examples.
 template <typename detector_element_t>
 class LayerBuilderT : public Acts::ILayerBuilder {
  public:

@@ -9,22 +9,33 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
 #include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
 #include <limits>
+#include <memory>
+#include <ostream>
 #include <random>
-#include <system_error>
-#include <variant>
+#include <utility>
 
 namespace {
 
@@ -33,8 +44,8 @@ namespace bd = boost::unit_test::data;
 using RandomGenerator = std::default_random_engine;
 
 struct SterileSmearer {
-  Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomGenerator& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(double value,
+                                                     RandomGenerator& /*rng*/) {
     return Acts::Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + 0., 0.));
   }
@@ -43,16 +54,16 @@ struct SterileSmearer {
 struct AddSmearer {
   double offset = 1.0;
 
-  Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomGenerator& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(double value,
+                                                     RandomGenerator& /*rng*/) {
     return Acts::Result<std::pair<double, double>>(
         std::make_pair<double, double>(value + offset, 3.));
   }
 };
 
 struct InvalidSmearer {
-  Acts::Result<std::pair<double, double>> operator()(
-      double /*ignored*/, RandomGenerator& /*unused*/) {
+  Acts::Result<std::pair<double, double>> operator()(double /*ignored*/,
+                                                     RandomGenerator& /*rng*/) {
     return Acts::Result<std::pair<double, double>>(
         ActsFatras::DigitizationError::SmearingError);
   }

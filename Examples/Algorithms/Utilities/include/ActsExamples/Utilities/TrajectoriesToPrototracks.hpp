@@ -8,24 +8,30 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
+
+#include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
-class TrajectoriesToPrototracks final : public BareAlgorithm {
+class TrajectoriesToPrototracks final : public IAlgorithm {
  public:
   struct Config {
     std::string inputTrajectories = "trajectories";
-    std::string outputPrototracks = "tracks-from-trajectories";
+    std::string outputProtoTracks = "tracks-from-trajectories";
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl)
-      : BareAlgorithm("TrajectoriesToPrototracks", lvl),
-        m_cfg(std::move(cfg)) {}
+  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///
@@ -38,6 +44,12 @@ class TrajectoriesToPrototracks final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

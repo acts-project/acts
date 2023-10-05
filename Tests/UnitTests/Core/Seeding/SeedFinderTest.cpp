@@ -1,27 +1,37 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
-#include <sstream>
+#include <iterator>
+#include <memory>
+#include <string>
+#include <tuple>
 #include <utility>
-
-#include <boost/type_erasure/any_cast.hpp>
+#include <vector>
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
@@ -43,7 +53,7 @@ std::vector<const SpacePoint*> readFile(const std::string& filename) {
       float x = 0, y = 0, z = 0, r = 0, varianceR = 0, varianceZ = 0;
       if (linetype == "lxyz") {
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
-        r = std::sqrt(x * x + y * y);
+        r = std::hypot(x, y);
         float f22 = varianceR;
         float wid = varianceZ;
         float cov = wid * wid * .08333;
@@ -194,13 +204,10 @@ int main(int argc, char** argv) {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;
   auto start = std::chrono::system_clock::now();
-  auto groupIt = spGroup.begin();
-  auto endOfGroups = spGroup.end();
-  for (; !(groupIt == endOfGroups); ++groupIt) {
+  for (auto [bottom, middle, top] : spGroup) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(options, state, std::back_inserter(v),
-                          groupIt.bottom(), groupIt.middle(), groupIt.top(),
-                          rMiddleSPRange);
+    a.createSeedsForGroup(options, state, spGroup.grid(), std::back_inserter(v),
+                          bottom, middle, top, rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

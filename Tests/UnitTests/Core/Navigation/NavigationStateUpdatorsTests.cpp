@@ -8,31 +8,31 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/detail/AxisFwd.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cstddef>
 #include <memory>
+#include <tuple>
+#include <utility>
 #include <vector>
+
+#include "../Surfaces/SurfaceStub.hpp"
 
 // A test context
 Acts::GeometryContext tContext;
 
 namespace Acts {
 
-class Surface {};
-
 namespace Experimental {
-
-// A portal with a surfac
-class Portal {
- public:
-  std::shared_ptr<Surface> m_surface = nullptr;
-  Portal(std::shared_ptr<Surface> sf) : m_surface(std::move(sf)) {}
-  const Surface& surface() const { return (*m_surface.get()); }
-};
 
 class Detector;
 
@@ -107,14 +107,36 @@ struct IndexedSurfacesExtractor {
 
 }  // namespace Experimental
 
+class TestAxis : public IAxis {
+ public:
+  bool isEquidistant() const final { return true; }
+
+  bool isVariable() const final { return false; }
+
+  detail::AxisBoundaryType getBoundaryType() const final {
+    return detail::AxisBoundaryType::Closed;
+  }
+
+  std::vector<ActsScalar> getBinEdges() const final { return {-1, 1}; }
+
+  ActsScalar getMin() const final { return -1.; }
+
+  ActsScalar getMax() const final { return 1.; }
+
+  size_t getNBins() const final { return 1; };
+};
+
 class MultiGrid1D {
  public:
   static constexpr size_t DIM = 1u;
 
   const std::vector<size_t>& atPosition(
-      const std::array<ActsScalar, 1u>& /*unused*/) const {
+      const std::array<ActsScalar, 1u>& /*position*/) const {
     return e;
   }
+
+  std::array<const IAxis*, DIM> axes() const { return {&ta}; }
+  TestAxis ta;
 
  private:
   std::vector<size_t> e = {0u, 1u};
@@ -125,9 +147,12 @@ class MultiGrid2D {
   static constexpr size_t DIM = 2u;
 
   const std::vector<size_t>& atPosition(
-      const std::array<ActsScalar, 2u>& /*unused*/) const {
+      const std::array<ActsScalar, 2u>& /*position*/) const {
     return e;
   }
+
+  std::array<const IAxis*, DIM> axes() const { return {&ta, &ta}; };
+  TestAxis ta;
 
  private:
   std::vector<size_t> e = {1u};
@@ -145,14 +170,14 @@ using AllSurfacesProvider = Acts::Experimental::StaticUpdatorImpl<
 using AllPortalsProvider = Acts::Experimental::StaticUpdatorImpl<
     Acts::Experimental::AllPortalsExtractor, Acts::Experimental::PortalsFiller>;
 
-auto surfaceA = std::make_shared<Acts::Surface>();
-auto surfaceB = std::make_shared<Acts::Surface>();
-auto surfaceC = std::make_shared<Acts::Surface>();
+auto surfaceA = Acts::Surface::makeShared<Acts::SurfaceStub>();
+auto surfaceB = Acts::Surface::makeShared<Acts::SurfaceStub>();
+auto surfaceC = Acts::Surface::makeShared<Acts::SurfaceStub>();
 
-auto pSurfaceA = std::make_shared<Acts::Surface>();
-auto pSurfaceB = std::make_shared<Acts::Surface>();
-auto portalA = std::make_shared<Acts::Experimental::Portal>(pSurfaceA);
-auto portalB = std::make_shared<Acts::Experimental::Portal>(pSurfaceB);
+auto pSurfaceA = Acts::Surface::makeShared<Acts::SurfaceStub>();
+auto pSurfaceB = Acts::Surface::makeShared<Acts::SurfaceStub>();
+auto portalA = Acts::Experimental::Portal::makeShared(pSurfaceA);
+auto portalB = Acts::Experimental::Portal::makeShared(pSurfaceB);
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 

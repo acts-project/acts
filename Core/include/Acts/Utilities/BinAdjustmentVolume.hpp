@@ -52,7 +52,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
-      throw std::invalid_argument("Arbirary binning can not be adjusted.");
+      throw std::invalid_argument("Arbitrary binning can not be adjusted.");
     } else if (bval != binR and bval != binPhi and bval != binZ) {
       throw std::invalid_argument("Cylinder volume binning must be: phi, r, z");
     }
@@ -107,7 +107,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
-      throw std::invalid_argument("Arbirary binning can not be adjusted.");
+      throw std::invalid_argument("Arbitrary binning can not be adjusted.");
     } else if (bval != binR and bval != binPhi and bval != binZ) {
       throw std::invalid_argument(
           "Cutout cylinder volume binning must be: phi, r, z");
@@ -162,7 +162,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
-      throw std::invalid_argument("Arbirary binning can not be adjusted.");
+      throw std::invalid_argument("Arbitrary binning can not be adjusted.");
     } else if (bval != binX and bval != binY and bval != binZ) {
       throw std::invalid_argument("Cylinder volume binning must be: x, y, z");
     }

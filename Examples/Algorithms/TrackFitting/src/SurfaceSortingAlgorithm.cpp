@@ -10,11 +10,21 @@
 
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+
+#include <cstddef>
+#include <memory>
+#include <stdexcept>
+#include <utility>
+#include <vector>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::SurfaceSortingAlgorithm::SurfaceSortingAlgorithm(
     Config cfg, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("SurfaceSortingAlgorithm", level),
+    : ActsExamples::IAlgorithm("SurfaceSortingAlgorithm", level),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputProtoTracks.empty()) {
     throw std::invalid_argument("Missing input proto track collection");
@@ -28,17 +38,18 @@ ActsExamples::SurfaceSortingAlgorithm::SurfaceSortingAlgorithm(
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing output proto track collection");
   }
+
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using HitSimHitsMap = IndexMultimap<Index>;
-
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& simHitsMap =
-      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& simHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   ProtoTrackContainer sortedTracks;
   sortedTracks.reserve(protoTracks.size());
@@ -70,7 +81,7 @@ ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
     sortedTracks.emplace_back(std::move(sortedProtoTrack));
   }
 
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(sortedTracks));
+  m_outputProtoTracks(ctx, std::move(sortedTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

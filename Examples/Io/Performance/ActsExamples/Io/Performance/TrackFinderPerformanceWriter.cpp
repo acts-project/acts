@@ -9,20 +9,25 @@
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <mutex>
+#include <stdexcept>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
+#include <RtypesCore.h>
 #include <TFile.h>
 #include <TTree.h>
 
@@ -34,6 +39,10 @@ using ProtoTrackContainer = ActsExamples::ProtoTrackContainer;
 
 struct ActsExamples::TrackFinderPerformanceWriter::Impl {
   Config cfg;
+
+  ReadDataHandle<SimParticleContainer> inputParticles;
+  ReadDataHandle<HitParticlesMap> inputMeasurementParticlesMap;
+
   TFile* file = nullptr;
 
   // per-track tree
@@ -81,7 +90,11 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
   // extra logger reference for the logging macros
   const Acts::Logger& _logger;
 
-  Impl(Config&& c, const Acts::Logger& l) : cfg(std::move(c)), _logger(l) {
+  Impl(TrackFinderPerformanceWriter* parent, Config&& c, const Acts::Logger& l)
+      : cfg(std::move(c)),
+        inputParticles{parent, "InputParticles"},
+        inputMeasurementParticlesMap{parent, "InputMeasurementParticlesMap"},
+        _logger(l) {
     if (cfg.inputProtoTracks.empty()) {
       throw std::invalid_argument("Missing proto tracks input collection");
     }
@@ -94,6 +107,9 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     if (cfg.filePath.empty()) {
       throw std::invalid_argument("Missing output filename");
     }
+
+    inputParticles.initialize(cfg.inputParticles);
+    inputMeasurementParticlesMap.initialize(cfg.inputMeasurementParticlesMap);
 
     // the output file can not be given externally since TFile accesses to the
     // same file from multiple threads are unsafe.
@@ -210,9 +226,9 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
         prtVz = particle.position().z() / Acts::UnitConstants::mm;
         prtVt = particle.time() / Acts::UnitConstants::ns;
         const auto p = particle.absoluteMomentum() / Acts::UnitConstants::GeV;
-        prtPx = p * particle.unitDirection().x();
-        prtPy = p * particle.unitDirection().y();
-        prtPz = p * particle.unitDirection().z();
+        prtPx = p * particle.direction().x();
+        prtPy = p * particle.direction().y();
+        prtPz = p * particle.direction().z();
         prtM = particle.mass() / Acts::UnitConstants::GeV;
         prtQ = particle.charge() / Acts::UnitConstants::e;
         // reconstruction
@@ -241,7 +257,7 @@ ActsExamples::TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
     ActsExamples::TrackFinderPerformanceWriter::Config config,
     Acts::Logging::Level level)
     : WriterT(config.inputProtoTracks, "TrackFinderPerformanceWriter", level),
-      m_impl(std::make_unique<Impl>(std::move(config), logger())) {}
+      m_impl(std::make_unique<Impl>(this, std::move(config), logger())) {}
 
 ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() =
     default;
@@ -249,15 +265,14 @@ ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() =
 ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
     const ActsExamples::ProtoTrackContainer& tracks) {
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_impl->cfg.inputParticles);
-  const auto& hitParticlesMap = ctx.eventStore.get<HitParticlesMap>(
-      m_impl->cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_impl->inputParticles(ctx);
+  const auto& hitParticlesMap = m_impl->inputMeasurementParticlesMap(ctx);
   m_impl->write(ctx.eventNumber, particles, hitParticlesMap, tracks);
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::TrackFinderPerformanceWriter::finalize() {
   m_impl->close();
   return ProcessCode::SUCCESS;
 }

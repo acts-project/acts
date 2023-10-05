@@ -9,18 +9,22 @@
 #include "HitsPrinter.hpp"
 
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
-#include "ActsExamples/EventData/Index.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
+#include <algorithm>
+#include <ostream>
+#include <stdexcept>
+#include <utility>
 #include <vector>
 
 ActsExamples::HitsPrinter::HitsPrinter(
     const ActsExamples::HitsPrinter::Config& cfg, Acts::Logging::Level level)
-    : BareAlgorithm("HitsPrinter", level), m_cfg(cfg) {
+    : IAlgorithm("HitsPrinter", level), m_cfg(cfg) {
   if (m_cfg.inputClusters.empty()) {
     throw std::invalid_argument("Input clusters collection is not configured");
   }
@@ -31,18 +35,17 @@ ActsExamples::HitsPrinter::HitsPrinter(
   if (m_cfg.inputHitIds.empty()) {
     throw std::invalid_argument("Input hit ids collection is not configured");
   }
+
+  m_inputClusters.initialize(m_cfg.inputClusters);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputHitIds.initialize(m_cfg.inputHitIds);
 }
 
 ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using Clusters = ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-  using HitIds = std::vector<size_t>;
-
-  const auto& clusters = ctx.eventStore.get<Clusters>(m_cfg.inputClusters);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto& hitIds = ctx.eventStore.get<HitIds>(m_cfg.inputHitIds);
+  const auto& clusters = m_inputClusters(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& hitIds = m_inputHitIds(ctx);
 
   if (clusters.size() != hitIds.size()) {
     ACTS_ERROR(

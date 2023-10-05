@@ -6,24 +6,53 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFitting/GsfFitterFunction.hpp"
-
-#include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Definitions/Common.hpp"
+#include "Acts/Definitions/Direction.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
-#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "Acts/TrackFitting/GsfMixtureReduction.hpp"
+#include "Acts/TrackFitting/GsfOptions.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/GaussianMixtureReduction.hpp"
+#include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Zip.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/MeasurementCalibration.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
+#include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
-#include <filesystem>
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
+#include <vector>
+
+namespace Acts {
+class MagneticFieldProvider;
+class SourceLink;
+class Surface;
+class TrackingGeometry;
+}  // namespace Acts
 
 using namespace ActsExamples;
 
@@ -33,18 +62,16 @@ using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
-using Fitter =
-    Acts::Experimental::GaussianSumFitter<Propagator, BetheHeitlerApprox,
-                                          Acts::VectorMultiTrajectory>;
+using Fitter = Acts::GaussianSumFitter<Propagator, BetheHeitlerApprox,
+                                       Acts::VectorMultiTrajectory>;
 using DirectFitter =
-    Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
-                                          Acts::VectorMultiTrajectory>;
+    Acts::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
+                            Acts::VectorMultiTrajectory>;
 using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
 
-struct GsfFitterFunctionImpl
-    : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
+struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
   Fitter fitter;
   DirectFitter directFitter;
 
@@ -54,19 +81,26 @@ struct GsfFitterFunctionImpl
   double weightCutoff = 0;
   bool abortOnError = false;
   bool disableAllMaterialHandling = false;
+  Acts::MixtureReductionMethod reductionMethod =
+      Acts::MixtureReductionMethod::eMaxWeight;
 
-  GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
-      : fitter(std::move(f)), directFitter(std::move(df)) {}
+  IndexSourceLink::SurfaceAccessor m_slSurfaceAccessor;
 
-  auto makeGsfOptions(
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
-      const {
-    Acts::Experimental::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
+  GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df,
+                        const Acts::TrackingGeometry& trkGeo)
+      : fitter(std::move(f)),
+        directFitter(std::move(df)),
+        m_slSurfaceAccessor{trkGeo} {}
+
+  template <typename calibrator_t>
+  auto makeGsfOptions(const GeneralFitterOptions& options,
+                      const calibrator_t& calibrator) const {
+    Acts::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &updater);
 
-    Acts::Experimental::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
+    Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
         options.geoContext,
         options.magFieldContext,
         options.calibrationContext,
@@ -78,30 +112,51 @@ struct GsfFitterFunctionImpl
         abortOnError,
         disableAllMaterialHandling};
 
-    gsfOptions.extensions.calibrator
-        .template connect<&ActsExamples::MeasurementCalibrator::calibrate>(
-            &options.calibrator.get());
+    gsfOptions.extensions.calibrator.connect<&calibrator_t::calibrate>(
+        &calibrator);
+    gsfOptions.extensions.surfaceAccessor
+        .connect<&IndexSourceLink::SurfaceAccessor::operator()>(
+            &m_slSurfaceAccessor);
+    gsfOptions.extensions.mixtureReducer
+        .connect<&Acts::reduceMixtureWithKLDistance>();
 
     return gsfOptions;
   }
 
-  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<Acts::SourceLink>& sourceLinks,
-      const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      TrackContainer& tracks) const override {
-    const auto gsfOptions = makeGsfOptions(options);
+  TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
+                               const TrackParameters& initialParameters,
+                               const GeneralFitterOptions& options,
+                               const MeasurementCalibratorAdapter& calibrator,
+                               TrackContainer& tracks) const override {
+    const auto gsfOptions = makeGsfOptions(options, calibrator);
+
+    using namespace Acts::GsfConstants;
+    if (not tracks.hasColumn(
+            Acts::hashString(kFinalMultiComponentStateColumn))) {
+      std::string key(kFinalMultiComponentStateColumn);
+      tracks.template addColumn<FinalMultiComponentState>(key);
+    }
+
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       gsfOptions, tracks);
   }
 
-  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
+  TrackFitterResult operator()(
       const std::vector<Acts::SourceLink>& sourceLinks,
-      const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      const TrackParameters& initialParameters,
+      const GeneralFitterOptions& options,
+      const RefittingCalibrator& calibrator,
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
-    const auto gsfOptions = makeGsfOptions(options);
+    const auto gsfOptions = makeGsfOptions(options, calibrator);
+
+    using namespace Acts::GsfConstants;
+    if (not tracks.hasColumn(
+            Acts::hashString(kFinalMultiComponentStateColumn))) {
+      std::string key(kFinalMultiComponentStateColumn);
+      tracks.template addColumn<FinalMultiComponentState>(key);
+    }
+
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, gsfOptions, surfaceSequence,
                             tracks);
@@ -110,17 +165,17 @@ struct GsfFitterFunctionImpl
 
 }  // namespace
 
-std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
-ActsExamples::makeGsfFitterFunction(
+std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
+    double weightCutoff, Acts::MixtureReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
-  MultiStepper stepper(std::move(magneticField), finalReductionMethod);
-
   // Standard fitter
+  MultiStepper stepper(magneticField, finalReductionMethod,
+                       logger.cloneWithSuffix("Step"));
+  const auto& geo = *trackingGeometry;
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
@@ -133,9 +188,12 @@ ActsExamples::makeGsfFitterFunction(
                      logger.cloneWithSuffix("GSF"));
 
   // Direct fitter
+  MultiStepper directStepper(std::move(magneticField), finalReductionMethod,
+                             logger.cloneWithSuffix("Step"));
   Acts::DirectNavigator directNavigator{
       logger.cloneWithSuffix("DirectNavigator")};
-  DirectPropagator directPropagator(stepper, std::move(directNavigator),
+  DirectPropagator directPropagator(std::move(directStepper),
+                                    std::move(directNavigator),
                                     logger.cloneWithSuffix("DirectPropagator"));
   DirectFitter directTrackFitter(std::move(directPropagator),
                                  BetheHeitlerApprox(betheHeitlerApprox),
@@ -143,11 +201,12 @@ ActsExamples::makeGsfFitterFunction(
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction = std::make_shared<GsfFitterFunctionImpl>(
-      std::move(trackFitter), std::move(directTrackFitter));
+      std::move(trackFitter), std::move(directTrackFitter), geo);
   fitterFunction->maxComponents = maxComponents;
   fitterFunction->weightCutoff = weightCutoff;
   fitterFunction->abortOnError = abortOnError;
   fitterFunction->disableAllMaterialHandling = disableAllMaterialHandling;
+  fitterFunction->reductionMethod = finalReductionMethod;
 
   return fitterFunction;
 }

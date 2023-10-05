@@ -2,10 +2,11 @@ target_sources(
   ActsCore
   PRIVATE
     KalmanFitterError.cpp
-    Chi2FitterError.cpp
     GainMatrixUpdater.cpp
     GainMatrixSmoother.cpp
+    GlobalChiSquareFitterError.cpp
     GsfError.cpp
     GsfUtils.cpp
     BetheHeitlerApprox.cpp
+    GsfMixtureReduction.cpp
 )

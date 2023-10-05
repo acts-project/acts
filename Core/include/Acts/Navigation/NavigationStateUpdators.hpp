@@ -10,15 +10,48 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 
 #include <array>
 #include <memory>
 
 namespace Acts {
+
 namespace Experimental {
+
+/// Helper method to update the candidates (portals/surfaces),
+/// this can be called for initial surface/portal estimation,
+/// but also during the navigation to update the current list
+/// of candidates.
+///
+/// @param gctx is the Geometry context of this call
+/// @param nState [in,out] is the navigation state to be updated
+///
+/// @todo for surfaces skip the non-reached ones, while keep for portals
+inline void updateCandidates(const GeometryContext& gctx,
+                             NavigationState& nState) {
+  const auto& position = nState.position;
+  const auto& direction = nState.direction;
+  auto& nCandidates = nState.surfaceCandidates;
+
+  for (auto& c : nCandidates) {
+    // Get the surface representation: either native surfcae of portal
+    const Surface& sRep =
+        c.surface != nullptr ? *c.surface : c.portal->surface();
+
+    // Get the intersection @todo make a templated intersector
+    // TODO surface tolerance
+    auto sIntersection = sRep.intersect(gctx, position, direction,
+                                        c.boundaryCheck, s_onSurfaceTolerance);
+    c.objectIntersection = sIntersection[c.objectIntersection.index()];
+  }
+}
 
 /// @brief  This sets a single object, e.g. single surface or single volume
 /// @tparam object_type the type of the object to be filled
@@ -75,17 +108,26 @@ class StaticUpdatorImpl : public INavigationDelegate {
 ///
 /// It can be used for volumes, surfaces at convenience
 ///
-/// @tparam grid_type is the type of the grid
+/// @tparam grid_t is the type of the grid
 /// @tparam extractor_type is the helper to extract the object
 /// @tparam filler_type is the helper to fill the object into the nState
-template <typename grid_type, typename extractor_type, typename filler_type>
+template <typename grid_t, typename extractor_type, typename filler_type>
 class IndexedUpdatorImpl : public INavigationDelegate {
  public:
+  /// Broadcast the grid type
+  using grid_type = grid_t;
+
   /// An extractor helper to get the object(s) from the volume
   extractor_type extractor;
 
   /// The grid where the indices are stored
   grid_type grid;
+
+  /// These are the cast parameters - copied from constructor
+  std::array<BinningValue, grid_type::DIM> casts{};
+
+  /// A transform to be applied to the position
+  Transform3 transform = Transform3::Identity();
 
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
@@ -106,12 +148,12 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   ///
   /// @note this is attaching objects without intersecting nor checking
   void update(const GeometryContext& gctx, NavigationState& nState) const {
-    // Transform into local 3D frame
-    Vector3 p3loc = transform * nState.position;
     // Extract the index grid entry
-    const auto& entry = grid.atPosition(castPosition(p3loc));
+    const auto& entry = grid.atPosition(castPosition(nState.position));
     auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
+
+    updateCandidates(gctx, nState);
   }
 
   /// Cast into a lookup position
@@ -119,24 +161,22 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// @param position is the position of the update call
   std::array<ActsScalar, grid_type::DIM> castPosition(
       const Vector3& position) const {
+    // Transform into local 3D frame
+    Vector3 tposition = transform * position;
+
     std::array<ActsScalar, grid_type::DIM> casted{};
-    fillCasts(position, casted,
+    fillCasts(tposition, casted,
               std::make_integer_sequence<std::size_t, grid_type::DIM>{});
     return casted;
   }
 
  private:
-  /// These are the cast parameters
-  std::array<BinningValue, grid_type::DIM> casts{};
-  /// A transform to be applied to the position
-  Transform3 transform = Transform3::Identity();
-
   /// Unroll the cast loop
   /// @param position is the position of the update call
   /// @param a is the array to be filled
   template <typename Array, std::size_t... idx>
   void fillCasts(const Vector3& position, Array& a,
-                 std::index_sequence<idx...> /*unused*/) const {
+                 std::index_sequence<idx...> /*indices*/) const {
     ((a[idx] = VectorHelpers::cast(position, casts[idx])), ...);
   }
 };
@@ -149,11 +189,15 @@ class IndexedUpdatorImpl : public INavigationDelegate {
 template <typename... updators_t>
 class ChainedUpdatorImpl : public INavigationDelegate {
  public:
+  /// The stored updators
+  std::tuple<updators_t...> updators;
+
   /// Constructor for chained updators in a tuple, this will unroll
   /// the tuple and call them in sequence
   ///
   /// @param upts the updators to be called in chain
-  ChainedUpdatorImpl(const std::tuple<updators_t...>& upts) : updators(upts) {}
+  ChainedUpdatorImpl(const std::tuple<updators_t...>&& upts)
+      : updators(std::move(upts)) {}
 
   /// A combined navigation state updator w/o intersection specifics
   ///
@@ -166,10 +210,6 @@ class ChainedUpdatorImpl : public INavigationDelegate {
         [&](auto&&... updator) { ((updator.update(gctx, nState)), ...); },
         updators);
   }
-
- private:
-  // The stored updators
-  std::tuple<updators_t...> updators;
 };
 
 }  // namespace Experimental

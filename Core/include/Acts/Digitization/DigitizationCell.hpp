@@ -21,8 +21,6 @@ struct DigitizationCell final {
   // connstruct them
   DigitizationCell(size_t ch0, size_t ch1, float d = 0.)
       : channel0(ch0), channel1(ch1), data(d) {}
-  // copy them
-  DigitizationCell(const DigitizationCell& dc) = default;
 
   /// To merge cells in case they are at the same position
   /// @param dc the cell to be added to the current cell

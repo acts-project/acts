@@ -13,8 +13,10 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
+#include <cmath>
 #include <limits>
 #include <tuple>
+#include <utility>
 
 using Acts::detail::difference_periodic;
 using Acts::detail::normalizePhiTheta;
@@ -27,7 +29,7 @@ constexpr auto tol = std::numeric_limits<double>::epsilon();
 }
 
 namespace {
-// Test dataset for periodic diffference calculation, each entry is
+// Test dataset for periodic difference calculation, each entry is
 //
 //     lhs, rhs, periodic range, expected difference
 //

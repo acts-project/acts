@@ -17,5 +17,5 @@ docker run --rm -ti \
        -v ${WD}:/work_dir:rw \
        --user "${USER_ID}:${GROUP_ID}" \
        -w "/work_dir" \
-       ghcr.io/acts-project/format10:v6 \
+       ghcr.io/acts-project/format14:v41 \
        CI/check_format .

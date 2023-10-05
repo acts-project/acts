@@ -10,12 +10,18 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Read in a simhit collection in comma-separated-value format.
 ///
@@ -59,6 +65,8 @@ class CsvSimHitReader final : public IReader {
   Config m_cfg;
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

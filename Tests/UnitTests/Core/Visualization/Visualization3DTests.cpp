@@ -9,12 +9,14 @@
 #include <boost/test/tools/output_test_stream.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 #include "Visualization3DTester.hpp"
 

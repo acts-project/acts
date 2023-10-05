@@ -37,7 +37,7 @@ The following parameters for the seed finding are set in ``/acts/Examples/Run/Se
   seedingCfg.impactMax = 3.;
 
 
-You can run the seeding example with a comand like this:
+You can run the seeding example with a command like this:
 The detector volumes and layers used in the space point maker are configured using a json file in the source code.
 
 .. code-block:: console
@@ -60,7 +60,7 @@ After running this example, you should see something like this:
 
 This output shows the efficiency, fake rate, and duplicate rate for the selected particles.
 The example also generates output root files in the output directory.
-In ``performance_seeding_hists.root``, you can find the efficiency plots.
+In ``performance_seeding.root``, you can find the efficiency plots.
 The plots below are examples of the efficiency plots produced using the ttbar sample with 200 pile-up vertices.
 
 .. image:: ../../figures/performance/seeding/seeding_eff_vs_pt.png

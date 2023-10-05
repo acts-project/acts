@@ -13,6 +13,8 @@
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <cstddef>
+#include <memory>
 #include <tuple>
 #include <vector>
 
@@ -23,6 +25,8 @@ class G4VPhysicalVolume;
 namespace Acts {
 
 class Geant4DetectorElement;
+class IGeant4PhysicalVolumeSelector;
+class Surface;
 
 /// A factory to convert Geant4 physical volumes
 /// into Geant4 detector elements
@@ -33,7 +37,7 @@ class Geant4DetectorSurfaceFactory {
   /// global lifetime configuration
   struct Config {};
 
-  // Collect the senstive surfaces
+  // Collect the sensitive surfaces
   using Geant4SensitiveSurface =
       std::tuple<std::shared_ptr<Geant4DetectorElement>,
                  std::shared_ptr<Surface>>;
@@ -46,7 +50,7 @@ class Geant4DetectorSurfaceFactory {
     /// The created detector elements - for the detector store
     std::vector<Geant4SensitiveSurface> sensitiveSurfaces;
     /// The created non-const surfaces - for further processing,
-    std::vector<std::shared_ptr<Surface>> passiveSurfaces;
+    std::vector<Geant4PassiveSurface> passiveSurfaces;
     /// matching and conversion statistics: volumes
     std::size_t matchedG4Volumes = 0;
     /// matching and conversion statistics: surfaces
@@ -55,7 +59,7 @@ class Geant4DetectorSurfaceFactory {
     std::size_t convertedMaterials = 0;
   };
 
-  /// Nested option struct that allows per call changable configuration
+  /// Nested option struct that allows per call changeable configuration
   struct Options {
     /// Convert the length scale
     ActsScalar scaleConversion = 1.;

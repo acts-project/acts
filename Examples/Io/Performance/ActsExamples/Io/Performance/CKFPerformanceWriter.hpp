@@ -9,19 +9,33 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/FakeRatePlotTool.hpp"
 #include "ActsExamples/Validation/TrackSummaryPlotTool.hpp"
 
+#include <cstddef>
+#include <functional>
 #include <mutex>
+#include <string>
+#include <vector>
 
 class TFile;
 class TTree;
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out the performance of CombinatorialKalmanFilter (CKF), e.g.
 /// track efficiency, fake rate etc.
@@ -33,6 +47,8 @@ namespace ActsExamples {
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// Input (found) trajectories collection.
     std::string inputTrajectories;
@@ -49,12 +65,10 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     FakeRatePlotTool::Config fakeRatePlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
     TrackSummaryPlotTool::Config trackSummaryPlotToolConfig;
+
     /// Min reco-truth matching probability
     double truthMatchProbMin = 0.5;
-    /// Min number of measurements
-    size_t nMeasurementsMin = 9;
-    /// Min transverse momentum
-    double ptMin = 1 * Acts::UnitConstants::GeV;
+
     /// function to check if neural network predicted track label is duplicate
     std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
   };
@@ -64,7 +78,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   ~CKFPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -99,6 +113,10 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   size_t m_nTotalMatchedParticles = 0;
   size_t m_nTotalDuplicateParticles = 0;
   size_t m_nTotalFakeParticles = 0;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
 };
 
 }  // namespace ActsExamples

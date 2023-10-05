@@ -10,16 +10,28 @@
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <numeric>
+#include <algorithm>
+#include <cstddef>
+#include <map>
+#include <memory>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 #include <TFile.h>
-#include <TTree.h>
-#include <TVectorF.h>
+#include <TVectorFfwd.h>
+#include <TVectorT.h>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
     ActsExamples::CKFPerformanceWriter::Config cfg, Acts::Logging::Level lvl)
@@ -39,6 +51,9 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
@@ -65,7 +80,7 @@ ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
   float eff_tracks = float(m_nTotalMatchedTracks) / m_nTotalTracks;
   float fakeRate_tracks = float(m_nTotalFakeTracks) / m_nTotalTracks;
   float duplicationRate_tracks =
@@ -120,16 +135,13 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   // The number of majority particle hits and fitted track parameters
   using RecoTrackInfo = std::pair<size_t, Acts::BoundTrackParameters>;
   using Acts::VectorHelpers::perp;
 
   // Read truth input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Counter of truth-matched reco tracks
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;
@@ -153,12 +165,6 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
       auto trajState =
           Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
 
-      // Reco track selection
-      //@TODO: add interface for applying others cuts on reco tracks:
-      // -> pT, d0, z0, detector-specific hits/holes number cut
-      if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
-        continue;
-      }
       // Check if the reco track has fitted track parameters
       if (not traj.hasTrackParameters(trackTip)) {
         ACTS_WARNING(
@@ -167,12 +173,6 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
         continue;
       }
       const auto& fittedParameters = traj.trackParameters(trackTip);
-      // Requirement on the pT of the track
-      const auto& momentum = fittedParameters.momentum();
-      const auto pT = perp(momentum);
-      if (pT < m_cfg.ptMin) {
-        continue;
-      }
       // Fill the trajectory summary info
       m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                   trajState.nStates, trajState.nMeasurements,
@@ -262,9 +262,6 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
   // Loop over all truth particle seeds for efficiency plots and reco details.
   // These are filled w.r.t. truth particle seed info
   for (const auto& particle : particles) {
-    if (particle.transverseMomentum() < m_cfg.ptMin) {
-      continue;
-    }
     auto particleId = particle.particleId();
     // Investigate the truth-matched tracks
     size_t nMatchedTracks = 0;

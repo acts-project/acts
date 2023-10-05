@@ -9,7 +9,6 @@
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -17,6 +16,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IAxis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/grid_helper.hpp"
 
 #include <algorithm>

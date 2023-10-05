@@ -15,15 +15,20 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
+#include <cstddef>
 #include <functional>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Event generator based on separate particles and vertex generators.
 ///
@@ -113,6 +118,9 @@ class EventGenerator final : public ActsExamples::IReader {
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

@@ -12,6 +12,7 @@
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
@@ -29,18 +30,18 @@ namespace detail {
 /// @param source_link The source-link used for the update
 /// @param fittedStates The Multitrajectory to that we add the state
 /// @param lastTrackIndex The parent index for the new state in the MT
-/// @param doCovTransport Wether to perform a covariance transport when
+/// @param doCovTransport Whether to perform a covariance transport when
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t,
           typename extensions_t, typename traj_t>
 auto kalmanHandleMeasurement(
-    propagator_state_t &state, const stepper_t &stepper,
-    const extensions_t &extensions, const Surface &surface,
-    const SourceLink &source_link, MultiTrajectory<traj_t> &fittedStates,
+    const CalibrationContext &calibrationContext, propagator_state_t &state,
+    const stepper_t &stepper, const extensions_t &extensions,
+    const Surface &surface, const SourceLink &source_link, traj_t &fittedStates,
     const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
+        false)) -> Result<typename traj_t::TrackStateProxy> {
   // Bind the transported state to the current surface
   auto res = stepper.boundState(state.stepping, surface, doCovTransport,
                                 freeToBoundCorrection);
@@ -59,9 +60,6 @@ auto kalmanHandleMeasurement(
 
   trackStateProxy.setReferenceSurface(surface.getSharedPtr());
 
-  // assign the source link to the track state
-  trackStateProxy.setUncalibratedSourceLink(source_link);
-
   // Fill the track state
   trackStateProxy.predicted() = std::move(boundParams.parameters());
   if (boundParams.covariance().has_value()) {
@@ -73,10 +71,11 @@ auto kalmanHandleMeasurement(
 
   // We have predicted parameters, so calibrate the uncalibrated input
   // measuerement
-  extensions.calibrator(state.geoContext, trackStateProxy);
+  extensions.calibrator(state.geoContext, calibrationContext, source_link,
+                        trackStateProxy);
 
   // Get and set the type flags
-  auto &typeFlags = trackStateProxy.typeFlags();
+  auto typeFlags = trackStateProxy.typeFlags();
   typeFlags.set(TrackStateFlag::ParameterFlag);
   if (surface.surfaceMaterial() != nullptr) {
     typeFlags.set(TrackStateFlag::MaterialFlag);
@@ -89,7 +88,7 @@ auto kalmanHandleMeasurement(
   if (not extensions.outlierFinder(trackStateProxy)) {
     // Run Kalman update
     auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                        state.stepping.navDir, logger);
+                                        state.options.direction, logger);
     if (!updateRes.ok()) {
       ACTS_ERROR("Update step failed: " << updateRes.error());
       return updateRes.error();
@@ -99,8 +98,7 @@ auto kalmanHandleMeasurement(
   } else {
     ACTS_VERBOSE(
         "Filtering step successful. But measurement is determined "
-        "to "
-        "be an outlier. Stepping state is not updated.")
+        "to be an outlier. Stepping state is not updated.")
     // Set the outlier type flag
     typeFlags.set(TrackStateFlag::OutlierFlag);
     trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
@@ -119,16 +117,16 @@ auto kalmanHandleMeasurement(
 /// @param surface The current surface
 /// @param fittedStates The Multitrajectory to that we add the state
 /// @param lastTrackIndex The parent index for the new state in the MT
-/// @param doCovTransport Wether to perform a covariance transport when
+/// @param doCovTransport Whether to perform a covariance transport when
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t, typename traj_t>
 auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
-    MultiTrajectory<traj_t> &fittedStates, const size_t lastTrackIndex,
-    bool doCovTransport, const Logger &logger,
+    traj_t &fittedStates, const size_t lastTrackIndex, bool doCovTransport,
+    const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
+        false)) -> Result<typename traj_t::TrackStateProxy> {
   // No source links on surface, add either hole or passive material
   // TrackState entry multi trajectory. No storage allocation for
   // uncalibrated/calibrated measurement and filtered parameter
@@ -143,7 +141,7 @@ auto kalmanHandleNoMeasurement(
   trackStateProxy.setReferenceSurface(surface.getSharedPtr());
 
   // Set the track state flags
-  auto &typeFlags = trackStateProxy.typeFlags();
+  auto typeFlags = trackStateProxy.typeFlags();
   typeFlags.set(TrackStateFlag::ParameterFlag);
   if (surface.surfaceMaterial() != nullptr) {
     typeFlags.set(TrackStateFlag::MaterialFlag);

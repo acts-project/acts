@@ -14,16 +14,21 @@
 #include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <limits>
 #include <string>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class CsvMeasurementWriter
 ///
@@ -44,8 +49,6 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string inputMeasurements;
     /// Which cluster collection to write (optional)
     std::string inputClusters = "";
-    /// Which simulated (truth) hits collection to use.
-    std::string inputSimHits;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
     /// Where to place output files
@@ -63,7 +66,7 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
   ~CsvMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -79,6 +82,10 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples

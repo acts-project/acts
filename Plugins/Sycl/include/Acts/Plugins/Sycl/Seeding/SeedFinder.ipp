@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -63,7 +63,10 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Acts::Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointData& spacePointData,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // As a first step, we create Arrays of Structures (AoS)
@@ -80,8 +83,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
 
-  for (auto SP : bottomSPs) {
-    bottomSPvec.push_back(SP);
+  for (std::size_t SPidx : bottomSPs) {
+    auto& sp_collection = grid.at(SPidx);
+    for (auto& SP : sp_collection) {
+      bottomSPvec.push_back(SP.get());
+    }
   }
   deviceBottomSPs.reserve(bottomSPvec.size());
   for (auto SP : bottomSPvec) {
@@ -89,8 +95,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (auto SP : middleSPs) {
-    middleSPvec.push_back(SP);
+  {
+    auto& sp_collection = grid.at(middleSPs);
+    for (auto& SP : sp_collection) {
+      middleSPvec.push_back(SP.get());
+    }
   }
   deviceMiddleSPs.reserve(middleSPvec.size());
   for (auto SP : middleSPvec) {
@@ -98,8 +107,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (auto SP : topSPs) {
-    topSPvec.push_back(SP);
+  for (auto SPidx : topSPs) {
+    auto& sp_collection = grid.at(SPidx);
+    for (auto& SP : sp_collection) {
+      topSPvec.push_back(SP.get());
+    }
   }
   deviceTopSPs.reserve(topSPvec.size());
   for (auto SP : topSPvec) {
@@ -118,7 +130,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   // Iterate through seeds returned by the SYCL algorithm and perform the last
   // step of filtering for fixed middle SP.
   std::vector<typename CandidatesForMiddleSp<
-      InternalSpacePoint<external_spacepoint_t>>::value_type>
+      const InternalSpacePoint<external_spacepoint_t>>::value_type>
       candidates;
 
   for (size_t mi = 0; mi < seeds.size(); ++mi) {
@@ -133,10 +145,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     }
     std::sort(
         candidates.begin(), candidates.end(),
-        CandidatesForMiddleSp<
-            InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
+        CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>::
+            descendingByQuality);
     std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
-    m_config.seedFilter->filterSeeds_1SpFixed(candidates, numQualitySeeds,
+    m_config.seedFilter->filterSeeds_1SpFixed(spacePointData, candidates,
+                                              numQualitySeeds,
                                               std::back_inserter(outputVec));
   }
   return outputVec;

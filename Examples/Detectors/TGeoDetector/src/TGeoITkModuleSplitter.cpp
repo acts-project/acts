@@ -11,8 +11,14 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <sstream>
 
 ActsExamples::TGeoITkModuleSplitter::TGeoITkModuleSplitter(
     const ActsExamples::TGeoITkModuleSplitter::Config& cfg,
@@ -25,7 +31,7 @@ void ActsExamples::TGeoITkModuleSplitter::initSplitCategories() {
   m_splitCategories.reserve(m_cfg.splitPatterns.size());
   for (const std::pair<const std::string, std::string>& pattern_split_category :
        m_cfg.splitPatterns) {
-    // mark pattern for disc or barrel modul splits:
+    // mark pattern for disc or barrel module splits:
     bool is_disk = false;
     if (m_cfg.discMap.find(pattern_split_category.second) !=
         m_cfg.discMap.end()) {
@@ -56,10 +62,10 @@ ActsExamples::TGeoITkModuleSplitter::split(
   for (const std::tuple<std::regex, std::string, bool>& split_category :
        m_splitCategories) {
     if (std::regex_match(sensorName, std::get<0>(split_category))) {
-      ACTS_INFO("Splitting " +
-                std::string(category_names[std::get<2>(split_category)]) +
-                " node " + sensorName + " using split ranges of category " +
-                std::get<1>(split_category));
+      ACTS_DEBUG("Splitting " +
+                 std::string(category_names[std::get<2>(split_category)]) +
+                 " node " + sensorName + " using split ranges of category " +
+                 std::get<1>(split_category));
       if (!std::get<2>(split_category)) {
         return ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
             gctx, detElement, m_cfg.barrelMap.at(std::get<1>(split_category)));
@@ -140,7 +146,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
     const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     const std::vector<ActsExamples::TGeoITkModuleSplitter::SplitRange>&
         splitRanges) const {
-  // Retrive the surface
+  // Retrieve the surface
   auto identifier = detElement->identifier();
   const Acts::Surface& surface = detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();

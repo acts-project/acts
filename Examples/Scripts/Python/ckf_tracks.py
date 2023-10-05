@@ -40,8 +40,7 @@ def runCKFTracks(
         SeedFinderConfigArg,
         SeedFinderOptionsArg,
         SeedingAlgorithm,
-        TrackParamsEstimationConfig,
-        CKFPerformanceConfig,
+        TruthEstimatedSeedingAlgorithmConfigArg,
         addCKFTracks,
     )
 
@@ -109,7 +108,7 @@ def runCKFTracks(
             impactMax=3 * u.mm,
         ),
         SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
-        TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
+        TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared
         if truthSmearedSeeded
         else SeedingAlgorithm.TruthEstimated
@@ -124,7 +123,6 @@ def runCKFTracks(
         s,
         trackingGeometry,
         field,
-        CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
         outputDirRoot=outputDir,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
     )

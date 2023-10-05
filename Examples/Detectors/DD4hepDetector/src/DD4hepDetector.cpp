@@ -9,14 +9,22 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
-#include "ActsExamples/Framework/IContextDecorator.hpp"
+
+#include <stdexcept>
 
 #include <boost/program_options.hpp>
 
 namespace ActsExamples {
 namespace DD4hep {
+
+DD4hepDetector::DD4hepDetector() = default;
+
+DD4hepDetector::DD4hepDetector(
+    std::shared_ptr<DD4hepGeometryService> _geometryService)
+    : geometryService(std::move(_geometryService)) {}
+
+DD4hepDetector::~DD4hepDetector() = default;
 
 auto DD4hepDetector::finalize(
     ActsExamples::DD4hep::DD4hepGeometryService::Config config,
@@ -26,7 +34,6 @@ auto DD4hepDetector::finalize(
   config.matDecorator = std::move(mdecorator);
   geometryService =
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
-  lcdd = geometryService->lcdd();
   TrackingGeometryPtr dd4tGeometry =
       geometryService->trackingGeometry(dd4HepContext);
   if (!dd4tGeometry) {

@@ -10,12 +10,17 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <charconv>
+#include <cstdint>
 #include <cstdio>
 #include <filesystem>
+#include <map>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
+#include <type_traits>
+#include <vector>
 
 std::string ActsExamples::ensureWritableDirectory(const std::string& dir) {
   using std::filesystem::current_path;

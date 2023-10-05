@@ -32,6 +32,14 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
+#include <iosfwd>
+#include <ostream>
+#include <utility>
+
+namespace Acts {
+class DiscBounds;
+}  // namespace Acts
 
 Acts::CylinderVolumeHelper::CylinderVolumeHelper(
     const Acts::CylinderVolumeHelper::Config& cvhConfig,
@@ -208,7 +216,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
   ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
-  // assing min/max
+  // assign min/max
   double min = cylinder ? rMin : zMin;
   double max = cylinder ? rMax : zMax;
 
@@ -418,7 +426,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     const CylinderVolumeBounds*& cylinderVolumeBounds,
     const Transform3& transform, double& rMinClean, double& rMaxClean,
     double& zMinClean, double& zMaxClean, BinningValue& bValue,
-    BinningType /*unused*/) const {
+    BinningType /*bType*/) const {
   // some verbose output
 
   ACTS_VERBOSE("Parsing the " << layers.size()
@@ -875,7 +883,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
     // Collect the material - might be ambiguous, first one wins
     std::shared_ptr<const ISurfaceMaterial> boundaryMaterial = nullptr;
 
-    ACTS_VERBOSE("New Boundary surface setting for countainers");
+    ACTS_VERBOSE("New Boundary surface setting for containers");
     ACTS_VERBOSE(" - at first volume: " << tvolOne->volumeName());
     // Update the volume with the boundary surface accordingly
     // it's safe to access directly, they can not be nullptr

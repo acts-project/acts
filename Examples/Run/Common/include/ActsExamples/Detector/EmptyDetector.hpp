@@ -20,5 +20,5 @@ struct EmptyDetector : public ActsExamples::IBaseDetector {
 
   std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
   finalize(const boost::program_options::variables_map& vm,
-           std::shared_ptr<const Acts::IMaterialDecorator> /*unused*/) override;
+           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
 };

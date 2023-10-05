@@ -8,17 +8,21 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <cstdint>
 #include <mutex>
 #include <string>
+#include <vector>
 
 class TFile;
 class TTree;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Write out particles as a flat TTree.
 ///
@@ -51,7 +55,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   ~RootParticleWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

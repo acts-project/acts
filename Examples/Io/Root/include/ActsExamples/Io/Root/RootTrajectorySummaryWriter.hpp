@@ -9,16 +9,29 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
+#include <cstdint>
 #include <mutex>
+#include <string>
 #include <vector>
+
+#include <TMatrixD.h>
 
 class TFile;
 class TTree;
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootTrajectorySummaryWriter
 ///
@@ -39,6 +52,8 @@ namespace ActsExamples {
 class RootTrajectorySummaryWriter final
     : public WriterT<TrajectoriesContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// Input (fitted) trajectories collection
     std::string inputTrajectories;
@@ -52,6 +67,8 @@ class RootTrajectorySummaryWriter final
     std::string treeName = "tracksummary";
     /// File access mode.
     std::string fileMode = "RECREATE";
+    /// Switch for adding full covariance matrix to output file.
+    bool writeCovMat = false;
   };
 
   /// Constructor
@@ -62,7 +79,7 @@ class RootTrajectorySummaryWriter final
   ~RootTrajectorySummaryWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -75,7 +92,12 @@ class RootTrajectorySummaryWriter final
                      const TrajectoriesContainer& trajectories) override;
 
  private:
-  Config m_cfg;             ///< The config class
+  Config m_cfg;  ///< The config class
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMaps"};
+
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
@@ -165,6 +187,50 @@ class RootTrajectorySummaryWriter final
       m_pull_eTHETA_fit;  ///< Fitted parameters eTHETA pull of track
   std::vector<float> m_pull_eQOP_fit;  ///< Fitted parameters eQOP pull of track
   std::vector<float> m_pull_eT_fit;    ///< Fitted parameters eT pull of track
+
+  // entries of the full covariance matrix. One block for every row of the
+  // matrix
+  std::vector<float> m_cov_eLOC0_eLOC0;
+  std::vector<float> m_cov_eLOC0_eLOC1;
+  std::vector<float> m_cov_eLOC0_ePHI;
+  std::vector<float> m_cov_eLOC0_eTHETA;
+  std::vector<float> m_cov_eLOC0_eQOP;
+  std::vector<float> m_cov_eLOC0_eT;
+
+  std::vector<float> m_cov_eLOC1_eLOC0;
+  std::vector<float> m_cov_eLOC1_eLOC1;
+  std::vector<float> m_cov_eLOC1_ePHI;
+  std::vector<float> m_cov_eLOC1_eTHETA;
+  std::vector<float> m_cov_eLOC1_eQOP;
+  std::vector<float> m_cov_eLOC1_eT;
+
+  std::vector<float> m_cov_ePHI_eLOC0;
+  std::vector<float> m_cov_ePHI_eLOC1;
+  std::vector<float> m_cov_ePHI_ePHI;
+  std::vector<float> m_cov_ePHI_eTHETA;
+  std::vector<float> m_cov_ePHI_eQOP;
+  std::vector<float> m_cov_ePHI_eT;
+
+  std::vector<float> m_cov_eTHETA_eLOC0;
+  std::vector<float> m_cov_eTHETA_eLOC1;
+  std::vector<float> m_cov_eTHETA_ePHI;
+  std::vector<float> m_cov_eTHETA_eTHETA;
+  std::vector<float> m_cov_eTHETA_eQOP;
+  std::vector<float> m_cov_eTHETA_eT;
+
+  std::vector<float> m_cov_eQOP_eLOC0;
+  std::vector<float> m_cov_eQOP_eLOC1;
+  std::vector<float> m_cov_eQOP_ePHI;
+  std::vector<float> m_cov_eQOP_eTHETA;
+  std::vector<float> m_cov_eQOP_eQOP;
+  std::vector<float> m_cov_eQOP_eT;
+
+  std::vector<float> m_cov_eT_eLOC0;
+  std::vector<float> m_cov_eT_eLOC1;
+  std::vector<float> m_cov_eT_ePHI;
+  std::vector<float> m_cov_eT_eTHETA;
+  std::vector<float> m_cov_eT_eQOP;
+  std::vector<float> m_cov_eT_eT;
 };
 
 }  // namespace ActsExamples

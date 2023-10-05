@@ -10,20 +10,26 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <array>
+#include <cstddef>
 #include <ios>
+#include <memory>
 #include <mutex>
+#include <optional>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 
 #include <TFile.h>
 #include <TTree.h>
 #include <boost/optional.hpp>
+
+namespace Acts {
+class InterpolatedMagneticField;
+}  // namespace Acts
 
 namespace ActsExamples {
 

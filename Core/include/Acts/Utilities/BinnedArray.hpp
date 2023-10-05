@@ -23,7 +23,7 @@ namespace Acts {
 ///
 /// Pure virtual base class for Binned Array to avoid map searches
 /// - there is only one restriction:
-///   T must be of pointer type in order to be initialized withh nullptr
+///   T must be of pointer type in order to be initialized with nullptr
 ///   and to allow for nullptr return type
 ///
 /// - the BinnedArray is designed for 0D, 1D, 2D, and 3D binning
@@ -45,7 +45,7 @@ class BinnedArray {
 
   /// Same method without bins for backward compatibility
   ///
-  /// @param lposition is the local position for finding the obect
+  /// @param lposition is the local position for finding the object
   ///
   /// @return the object according to the estimated bin
   virtual T object(const Vector2& lposition) const {
@@ -72,7 +72,7 @@ class BinnedArray {
     return object(position, bins);
   }
 
-  /// Return all unqiue object
+  /// Return all unique object
   /// @note this is the accessor to the
   /// @return the vector of all array objects
   virtual const std::vector<T>& arrayObjects() const = 0;

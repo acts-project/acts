@@ -8,19 +8,26 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <utility>
 #include <vector>
 
 class TChain;
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// @class RootParticleReader
 ///
@@ -67,6 +74,14 @@ class RootParticleReader : public IReader {
 
   /// The config class
   Config m_cfg;
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
+
+  WriteDataHandle<std::vector<uint32_t>> m_outputPrimaryVertices{
+      this, "OutputPrimaryVertices"};
+  WriteDataHandle<std::vector<uint32_t>> m_outputSecondaryVertices{
+      this, "OutputSecondaryVertices"};
 
   std::unique_ptr<const Acts::Logger> m_logger;
 

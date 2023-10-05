@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -32,23 +32,23 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// discarded
   bool singleSeedCut(
       float weight, const InternalSpacePoint<SpacePoint>& bottom,
-      const InternalSpacePoint<SpacePoint>& /*unused*/,
-      const InternalSpacePoint<SpacePoint>& /*unused*/) const override;
+      const InternalSpacePoint<SpacePoint>& /*middle*/,
+      const InternalSpacePoint<SpacePoint>& /*top*/) const override;
 
   /// @param seedCandidates contains collection of seed candidates created for one middle
   /// space point in a std::tuple format
   /// @return vector of seeds that pass the cut
   std::vector<typename CandidatesForMiddleSp<
-      InternalSpacePoint<SpacePoint>>::value_type>
+      const InternalSpacePoint<SpacePoint>>::value_type>
   cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp<
-                     InternalSpacePoint<SpacePoint>>::value_type>
+                     const InternalSpacePoint<SpacePoint>>::value_type>
                      seedCandidates) const override;
 };
 
 template <typename SpacePoint>
 float ATLASCuts<SpacePoint>::seedWeight(
     const InternalSpacePoint<SpacePoint>& bottom,
-    const InternalSpacePoint<SpacePoint>& /*unused*/,
+    const InternalSpacePoint<SpacePoint>& /*middle*/,
     const InternalSpacePoint<SpacePoint>& top) const {
   float weight = 0;
   if (bottom.radius() > 150) {
@@ -63,20 +63,20 @@ float ATLASCuts<SpacePoint>::seedWeight(
 template <typename SpacePoint>
 bool ATLASCuts<SpacePoint>::singleSeedCut(
     float weight, const InternalSpacePoint<SpacePoint>& b,
-    const InternalSpacePoint<SpacePoint>& /*unused*/,
-    const InternalSpacePoint<SpacePoint>& /*unused*/) const {
+    const InternalSpacePoint<SpacePoint>& /*m*/,
+    const InternalSpacePoint<SpacePoint>& /*t*/) const {
   return !(b.radius() > 150. && weight < 380.);
 }
 
 template <typename SpacePoint>
-std::vector<
-    typename CandidatesForMiddleSp<InternalSpacePoint<SpacePoint>>::value_type>
+std::vector<typename CandidatesForMiddleSp<
+    const InternalSpacePoint<SpacePoint>>::value_type>
 ATLASCuts<SpacePoint>::cutPerMiddleSP(
     std::vector<typename CandidatesForMiddleSp<
-        InternalSpacePoint<SpacePoint>>::value_type>
+        const InternalSpacePoint<SpacePoint>>::value_type>
         seedCandidates) const {
   std::vector<typename CandidatesForMiddleSp<
-      InternalSpacePoint<SpacePoint>>::value_type>
+      const InternalSpacePoint<SpacePoint>>::value_type>
       newSeedsVector;
   if (seedCandidates.size() <= 1) {
     return seedCandidates;

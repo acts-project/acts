@@ -48,7 +48,7 @@ namespace detail {
 /// All types provide `.projectVector(...)` and `.exandVector(...)` methods to
 /// convert to/from the subspace. They also provide `.projector()` and
 /// `.expander()` methods to create projection and expansion matrices if they
-/// are required explicitely. For the specific subspace requirements listed
+/// are required explicitly. For the specific subspace requirements listed
 /// above, the projection and expansion matrices are transpose to each other. In
 /// the general case, this does not have to be the case and users are encouraged
 /// to use `.projector()` and `.expander()` instead of e.g.

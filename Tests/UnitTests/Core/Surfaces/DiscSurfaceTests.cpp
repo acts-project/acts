@@ -11,21 +11,38 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Alignment.hpp"
+#include "Acts/Definitions/Tolerance.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/DiscTrapezoidBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
 
-#include <limits>
+#include <algorithm>
+#include <cmath>
+#include <initializer_list>
+#include <memory>
+#include <ostream>
+#include <string>
+#include <utility>
 
 namespace utf = boost::unit_test;
 namespace tt = boost::test_tools;
 
 namespace Acts {
+class AssertionFailureException;
 
 namespace Test {
 // using boost::test_tools::output_test_stream;
@@ -185,15 +202,16 @@ BOOST_AUTO_TEST_CASE(DiscSurfaceProperties) {
   // intersect is a struct of (Vector3) position, pathLength, distance and
   // (bool) valid, it's contained in a Surface intersection
   auto sfIntersection =
-      discSurfaceObject->intersect(tgContext, globalPosition, direction, false);
+      discSurfaceObject->intersect(tgContext, globalPosition, direction, false)
+          .closest();
   Intersection3D expectedIntersect{Vector3{1.2, 0., 0.}, 10.,
                                    Intersection3D::Status::reachable};
   BOOST_CHECK(bool(sfIntersection));
-  CHECK_CLOSE_ABS(sfIntersection.intersection.position,
-                  expectedIntersect.position, 1e-9);
-  CHECK_CLOSE_ABS(sfIntersection.intersection.pathLength,
-                  expectedIntersect.pathLength, 1e-9);
-  BOOST_CHECK_EQUAL(sfIntersection.object, discSurfaceObject.get());
+  CHECK_CLOSE_ABS(sfIntersection.position(), expectedIntersect.position(),
+                  1e-9);
+  CHECK_CLOSE_ABS(sfIntersection.pathLength(), expectedIntersect.pathLength(),
+                  1e-9);
+  BOOST_CHECK_EQUAL(sfIntersection.object(), discSurfaceObject.get());
 
   //
   /// Test name

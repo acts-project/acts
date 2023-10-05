@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -157,26 +158,15 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
 
   float deltaR = rH - rL;
 
-  /*
-   * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
-   * which is to say the absolute value must be smaller than the max cot(θ).
-   */
   float deltaZ = (zH - zL);
   float cotTheta = deltaZ / deltaR;
-  if (std::fabs(cotTheta) > m_config.cotThetaMax) {
-    return false;
-  }
-
   /*
-   * Cut: Ensure that the origin of the duplet (the intersection of the line
+   * Cut: Ensure that the origin of the dublet (the intersection of the line
    * between them with the z axis) lies within the collision region.
    */
   float zOrigin = zL - rL * cotTheta;
   if (zOrigin < m_config.collisionRegionMin ||
       zOrigin > m_config.collisionRegionMax) {
-    return false;
-  }
-  if (std::abs(deltaZ) > m_config.deltaZMax) {
     return false;
   }
 
@@ -222,6 +212,20 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     }
   }
 
+  /*
+   * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
+   * which is to say the absolute value must be smaller than the max cot(θ).
+   */
+  if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+    return false;
+  }
+  /*
+   * Cut: Ensure that z-distance between SPs is within max and min values.
+   */
+  if (std::abs(deltaZ) > m_config.deltaZMax) {
+    return false;
+  }
+
   return true;
 }
 
@@ -241,9 +245,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     const SeedFinderOptions &options, internal_sp_t &middle,
     std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
     SeedFilterState seedFilterState,
-    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
-        &candidates_collector) const {
+    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
+        &candidates_collector,
+    Acts::SpacePointData &spacePointData) const {
   float rM = middle.radius();
+  float zM = middle.z();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
 
@@ -251,8 +257,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   if (m_config.seedConfirmation == true) {
     // check if middle SP is in the central or forward region
     SeedConfirmationRangeConfig seedConfRange =
-        (middle.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-         middle.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+        (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
             ? m_config.forwardSeedConfirmationRange
             : m_config.centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the middle SP is
@@ -260,44 +266,57 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
                                        ? seedConfRange.nTopForLargeR
                                        : seedConfRange.nTopForSmallR;
+    // set max bottom radius for seed confirmation
+    seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+    // continue if number of top SPs is smaller than minimum
     if (top.size() < seedFilterState.nTopSeedConf) {
       return;
     }
   }
 
-  std::vector<internal_sp_t *> top_valid;
+  std::vector<const internal_sp_t *> top_valid;
   std::vector<float> curvatures;
   std::vector<float> impactParameters;
 
   // contains parameters required to calculate circle with linear equation
   // ...for bottom-middle
   std::vector<LinCircle> linCircleBottom;
-  linCircleBottom.reserve(bottom.size());
   // ...for middle-top
   std::vector<LinCircle> linCircleTop;
-  linCircleTop.reserve(top.size());
 
-  auto sorted_bottoms =
-      transformCoordinates(bottom, middle, true, linCircleBottom);
-  auto sorted_tops = transformCoordinates(top, middle, false, linCircleTop);
+  // transform coordinates
+  transformCoordinates(spacePointData, bottom, middle, true, linCircleBottom);
+  transformCoordinates(spacePointData, top, middle, false, linCircleTop);
 
-  std::vector<float> tanLM;
-  std::vector<float> tanMT;
-
-  tanLM.reserve(bottom.size());
-  tanMT.reserve(top.size());
-
-  size_t numBotSP = bottom.size();
-  size_t numTopSP = top.size();
-
-  for (size_t b = 0; b < numBotSP; b++) {
-    tanLM.push_back(std::atan2(middle.radius() - bottom[b]->radius(),
-                               middle.z() - bottom[b]->z()));
+  // sort: make index vector
+  std::vector<std::size_t> sorted_bottoms(linCircleBottom.size());
+  for (std::size_t i(0); i < sorted_bottoms.size(); ++i) {
+    sorted_bottoms[i] = i;
   }
 
+  std::vector<std::size_t> sorted_tops(linCircleTop.size());
+  for (std::size_t i(0); i < sorted_tops.size(); ++i) {
+    sorted_tops[i] = i;
+  }
+
+  std::sort(
+      sorted_bottoms.begin(), sorted_bottoms.end(),
+      [&linCircleBottom](const std::size_t a, const std::size_t b) -> bool {
+        return linCircleBottom[a].cotTheta < linCircleBottom[b].cotTheta;
+      });
+
+  std::sort(sorted_tops.begin(), sorted_tops.end(),
+            [&linCircleTop](const std::size_t a, const std::size_t b) -> bool {
+              return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
+            });
+
+  std::vector<float> tanMT;
+  tanMT.reserve(top.size());
+
+  size_t numTopSP = top.size();
   for (size_t t = 0; t < numTopSP; t++) {
-    tanMT.push_back(std::atan2(top[t]->radius() - middle.radius(),
-                               top[t]->z() - middle.z()));
+    tanMT.push_back(
+        std::atan2(top[t]->radius() - middle.radius(), top[t]->z() - zM));
   }
 
   size_t t0 = 0;
@@ -309,15 +328,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     auto lb = linCircleBottom[b];
-    seedFilterState.zOrigin = lb.Zo;
-    float cotThetaB = lb.cotTheta;
-    float Vb = lb.V;
-    float Ub = lb.U;
-    float ErB = lb.Er;
-    float iDeltaRB = lb.iDeltaR;
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
-    float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float iSinTheta2 = (1. + lb.cotTheta * lb.cotTheta);
+    float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -327,31 +341,42 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
-    // multiply the squared sigma onto the squared scattering
-    scatteringInRegion2 *= m_config.sigmaScattering * m_config.sigmaScattering;
+    float scatteringInRegion2 = options.multipleScattering2 * iSinTheta2;
+
+    // minimum number of compatible top SPs to trigger the filter for a certain
+    // middle bottom pair if seedConfirmation is false we always ask for at
+    // least one compatible top to trigger the filter
+    size_t minCompatibleTopSPs = 2;
+    if (!m_config.seedConfirmation or
+        bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
+      minCompatibleTopSPs = 1;
+    }
+    if (m_config.seedConfirmation and seedFilterState.numQualitySeeds) {
+      minCompatibleTopSPs++;
+    }
 
     // clear all vectors used in each inner for loop
     top_valid.clear();
     curvatures.clear();
     impactParameters.clear();
 
+    float tanLM = std::atan2(rM - bottom[b]->radius(), zM - bottom[b]->z());
+
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t t = sorted_tops[index_t];
       auto lt = linCircleTop[t];
-      float cotThetaT = lt.cotTheta;
 
-      if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
+      if (std::abs(tanLM - tanMT[t]) > 0.005) {
         continue;
       }
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
-      float error2 = lt.Er + ErB +
-                     2 * (cotThetaB * lt.cotTheta * varianceRM + varianceZM) *
-                         iDeltaRB * lt.iDeltaR;
+      float error2 = lt.Er + lb.Er +
+                     2 * (lb.cotTheta * lt.cotTheta * varianceRM + varianceZM) *
+                         lb.iDeltaR * lt.iDeltaR;
 
-      float deltaCotTheta = cotThetaB - lt.cotTheta;
+      float deltaCotTheta = lb.cotTheta - lt.cotTheta;
       float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
 
       // Apply a cut on the compatibility between the r-z slope of the two
@@ -366,24 +391,22 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
-        if (m_config.skipPreviousTopSP) {
-          // break if cotTheta from bottom SP < cotTheta from top SP because
-          // the SP are sorted by cotTheta
-          if (cotThetaB - cotThetaT < 0) {
-            break;
-          }
-          t0 = index_t + 1;
+        // break if cotTheta from bottom SP < cotTheta from top SP because
+        // the SP are sorted by cotTheta
+        if (deltaCotTheta < 0) {
+          break;
         }
+        t0 = index_t + 1;
         continue;
       }
 
-      float dU = lt.U - Ub;
+      float dU = lt.U - lb.U;
 
       // A and B are evaluated as a function of the circumference parameters
       // x_0 and y_0
-      float A = (lt.V - Vb) / dU;
+      float A = (lt.V - lb.V) / dU;
       float S2 = 1. + A * A;
-      float B = Vb - A * Ub;
+      float B = lb.V - A * lb.U;
       float B2 = B * B;
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
@@ -392,28 +415,26 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
 
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
-      float iHelixDiameter2 = B2 / S2;
-      // calculate scattering for p(T) calculated from seed curvature
-      float pT2scatter = 4 * iHelixDiameter2 * options.pT2perRadius;
-      // if pT > maxPtScattering, calculate allowed scattering angle using
-      // maxPtScattering instead of pt.
-      float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-      if (pT > m_config.maxPtScattering) {
-        float pTscatter = m_config.highland / m_config.maxPtScattering;
-        pT2scatter = pTscatter * pTscatter;
-      }
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 >
-          (error2 + (pT2scatter * iSinTheta2 * m_config.sigmaScattering *
-                     m_config.sigmaScattering))) {
-        if (m_config.skipPreviousTopSP) {
-          if (cotThetaB - cotThetaT < 0) {
-            break;
-          }
-          t0 = index_t;
+      float p2scatterSigma = B2 / S2 * sigmaSquaredPtDependent;
+      if (!std::isinf(m_config.maxPtScattering)) {
+        // if pT > maxPtScattering, calculate allowed scattering angle using
+        // maxPtScattering instead of pt.
+        if (B2 == 0 or options.pTPerHelixRadius * std::sqrt(S2 / B2) >
+                           2. * m_config.maxPtScattering) {
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
+          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
         }
+      }
+      // if deltaTheta larger than allowed scattering for calculated pT, skip
+      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+        if (deltaCotTheta < 0) {
+          break;
+        }
+        t0 = index_t;
         continue;
       }
 
@@ -431,11 +452,17 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
 
-    if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(
-          *bottom[b], middle, top_valid, curvatures, impactParameters,
-          seedFilterState, candidates_collector);
+    // continue if number of top SPs is smaller than minimum required for filter
+    if (top.size() < minCompatibleTopSPs) {
+      continue;
     }
+
+    seedFilterState.zOrigin = zM - rM * lb.cotTheta;
+
+    m_config.seedFilter->filterSeeds_2SpFixed(
+        spacePointData, *bottom[b], middle, top_valid, curvatures,
+        impactParameters, seedFilterState, candidates_collector);
+
   }  // loop on bottoms
 }
 
@@ -443,8 +470,8 @@ template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     const SeedFinderOptions &options, const tree_t &tree,
-    output_container_t &out_cont,
-    const typename tree_t::pair_t &middle_p) const {
+    output_container_t &out_cont, const typename tree_t::pair_t &middle_p,
+    Acts::SpacePointData &spacePointData) const {
   using range_t = typename tree_t::range_t;
   internal_sp_t &middle = *middle_p.second;
 
@@ -454,7 +481,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * bottom_lh_v denotes the candidates bottom seed points, assuming that the
    * track has monotonically _increasing_ z position. bottom_hl_v denotes the
    * candidate bottom points assuming that the track has monotonically
-   * _decreaing_ z position. top_lh_v are the candidate top points for an
+   * _decreasing_ z position. top_lh_v are the candidate top points for an
    * increasing z track, and top_hl_v are the candidate top points for a
    * decreasing z track.
    */
@@ -468,7 +495,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   std::size_t max_num_seeds_per_spm =
       m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
 
-  CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+  CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
       candidates_collector;
   candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                       max_num_quality_seeds_per_spm);
@@ -537,36 +564,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     /*
      * Search the trees for points that lie in the given search range.
      */
-    tree.rangeSearchMapDiscard(
-        bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
-                         const typename tree_t::coordinate_t &,
-                         const typename tree_t::value_t &bottom) {
-          if (validTuple(options, *bottom, middle, false)) {
-            bottom_lh_v.push_back(bottom);
-          }
-        });
-  }
-
-  /*
-   * Perform the same search for candidate bottom spacepoints, but for
-   * monotonically decreasing z tracks.
-   */
-  if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
-    tree.rangeSearchMapDiscard(
-        bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
-                         const typename tree_t::coordinate_t &,
-                         const typename tree_t::value_t &bottom) {
-          if (validTuple(options, middle, *bottom, true)) {
-            bottom_hl_v.push_back(bottom);
-          }
-        });
-  }
-
-  /*
-   * Next, we perform a search for top candidates in increasing z tracks,
-   * which only makes sense if we found any bottom candidates.
-   */
-  if (!bottom_lh_v.empty()) {
     tree.rangeSearchMapDiscard(top_lh_r,
                                [this, &options, &middle, &top_lh_v](
                                    const typename tree_t::coordinate_t &,
@@ -578,9 +575,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   }
 
   /*
-   * And repeat for the top spacepoints for decreasing z tracks!
+   * Perform the same search for candidate bottom spacepoints, but for
+   * monotonically decreasing z tracks.
    */
-  if (!bottom_hl_v.empty()) {
+  if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
     tree.rangeSearchMapDiscard(top_hl_r,
                                [this, &options, &middle, &top_hl_v](
                                    const typename tree_t::coordinate_t &,
@@ -591,29 +589,85 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                });
   }
 
-  // TODO: add seed confirmation
+  // apply cut on the number of top SP if seedConfirmation is true
   SeedFilterState seedFilterState;
+  bool search_bot_hl = true;
+  bool search_bot_lh = true;
+  if (m_config.seedConfirmation) {
+    // check if middle SP is in the central or forward region
+    SeedConfirmationRangeConfig seedConfRange =
+        (middle.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         middle.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP is
+    // in the central or forward region
+    seedFilterState.nTopSeedConf = middle.radius() > seedConfRange.rMaxSeedConf
+                                       ? seedConfRange.nTopForLargeR
+                                       : seedConfRange.nTopForSmallR;
+    // set max bottom radius for seed confirmation
+    seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+    // continue if number of top SPs is smaller than minimum
+    if (top_lh_v.size() < seedFilterState.nTopSeedConf) {
+      search_bot_lh = false;
+    }
+    if (top_hl_v.size() < seedFilterState.nTopSeedConf) {
+      search_bot_hl = false;
+    }
+  }
+
+  /*
+   * Next, we perform a search for bottom candidates in increasing z tracks,
+   * which only makes sense if we found any bottom candidates.
+   */
+  if (!top_lh_v.empty() and search_bot_lh) {
+    tree.rangeSearchMapDiscard(
+        bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
+                         const typename tree_t::coordinate_t &,
+                         const typename tree_t::value_t &bottom) {
+          if (validTuple(options, *bottom, middle, false)) {
+            bottom_lh_v.push_back(bottom);
+          }
+        });
+  }
+
+  /*
+   * And repeat for the top spacepoints for decreasing z tracks!
+   */
+  if (!top_hl_v.empty() and search_bot_hl) {
+    tree.rangeSearchMapDiscard(
+        bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
+                         const typename tree_t::coordinate_t &,
+                         const typename tree_t::value_t &bottom) {
+          if (validTuple(options, middle, *bottom, true)) {
+            bottom_hl_v.push_back(bottom);
+          }
+        });
+  }
 
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
     filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
-                     candidates_collector);
+                     candidates_collector, spacePointData);
   }
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
     filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
-                     candidates_collector);
+                     candidates_collector, spacePointData);
   }
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
-                                            seedFilterState.numQualitySeeds,
-                                            std::back_inserter(out_cont));
+  if ((!bottom_lh_v.empty() && !top_lh_v.empty()) or
+      (!bottom_hl_v.empty() && !top_hl_v.empty())) {
+    m_config.seedFilter->filterSeeds_1SpFixed(
+        spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
+        std::back_inserter(out_cont));
+  }
 }
 
 template <typename external_spacepoint_t>
@@ -670,11 +724,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * point, and save it in a vector.
    */
   Acts::Extent rRangeSPExtent;
+  std::size_t counter = 0;
   std::vector<internal_sp_t *> internalSpacePoints;
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spacePoints.size());
+
   for (const external_spacepoint_t *p : spacePoints) {
     auto [position, variance] = extract_coordinates(p);
     internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
-        *p, position, options.beamPos, variance));
+        counter++, *p, position, options.beamPos, variance));
     // store x,y,z values in extent
     rRangeSPExtent.extend(position);
   }
@@ -712,7 +770,17 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       }
     }
 
-    processFromMiddleSP(options, tree, out_cont, middle_p);
+    // remove all middle SPs outside phi and z region of interest
+    if (middle.z() < m_config.zOutermostLayers.first or
+        middle.z() > m_config.zOutermostLayers.second) {
+      continue;
+    }
+    float spPhi = middle.phi();
+    if (spPhi > m_config.phiMax or spPhi < m_config.phiMin) {
+      continue;
+    }
+
+    processFromMiddleSP(options, tree, out_cont, middle_p, spacePointData);
   }
 
   /*

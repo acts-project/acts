@@ -3,7 +3,12 @@ from pathlib import Path
 from typing import Optional
 
 import acts
-from acts.examples import Sequencer, ParticleSelector, ParticleSmearing, TrackSelector
+from acts.examples import (
+    Sequencer,
+    ParticleSelector,
+    ParticleSmearing,
+    TrackParameterSelector,
+)
 from acts.examples.simulation import addPythia8
 from acts.examples.reconstruction import (
     addVertexFitting,
@@ -82,17 +87,16 @@ def runVertexFitting(
         )
         s.addReader(trackSummaryReader)
 
-        trackSelector = TrackSelector(
+        trackParamSelector = TrackParameterSelector(
             level=acts.logging.INFO,
             inputTrackParameters=trackSummaryReader.config.outputTracks,
             outputTrackParameters="selectedTrackParameters",
-            removeNeutral=True,
             absEtaMax=2.5,
             loc0Max=4.0 * u.mm,  # rho max
             ptMin=500 * u.MeV,
         )
-        s.addAlgorithm(trackSelector)
-        trackParameters = trackSelector.config.outputTrackParameters
+        s.addAlgorithm(trackParamSelector)
+        trackParameters = trackParamSelector.config.outputTrackParameters
 
     logger.info("Using vertex finder: %s", vertexFinder.name)
 

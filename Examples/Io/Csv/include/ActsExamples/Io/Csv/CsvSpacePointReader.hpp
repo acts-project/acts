@@ -10,13 +10,19 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <cstddef>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Read in a simhit collection in comma-separated-value format.
 ///
@@ -62,6 +68,10 @@ class CsvSpacePointReader final : public IReader {
 
  private:
   Config m_cfg;
+
+  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
+      this, "OutputSpacePoints"};
+
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 

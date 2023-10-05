@@ -8,16 +8,36 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <cstddef>
 #include <string>
+#include <vector>
+
+namespace Acts {
+class PlanarModuleCluster;
+}  // namespace Acts
+namespace ActsFatras {
+class Barcode;
+}  // namespace ActsFatras
 
 namespace ActsExamples {
+struct AlgorithmContext;
 
 /// Print hits within some geometric region-of-interest.
-class HitsPrinter : public BareAlgorithm {
+class HitsPrinter : public IAlgorithm {
  public:
+  using Clusters = ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
+  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
+  using HitIds = std::vector<size_t>;
+
   struct Config {
     /// Input cluster collection.
     std::string inputClusters;
@@ -42,6 +62,11 @@ class HitsPrinter : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<Clusters> m_inputClusters{this, "InputClusters"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMaps"};
+  ReadDataHandle<HitIds> m_inputHitIds{this, "InputHitIds"};
 };
 
 }  // namespace ActsExamples

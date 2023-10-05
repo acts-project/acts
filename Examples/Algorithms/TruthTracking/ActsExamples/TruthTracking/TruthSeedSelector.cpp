@@ -8,22 +8,27 @@
 
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 
-#include "Acts/Definitions/Units.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MultiIndex.hpp"
+#include "Acts/Utilities/VectorHelpers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
-#include <algorithm>
+#include <functional>
 #include <stdexcept>
-#include <vector>
+#include <utility>
+
+namespace ActsExamples {
+struct AlgorithmContext;
+}  // namespace ActsExamples
 
 using namespace ActsExamples;
 
 TruthSeedSelector::TruthSeedSelector(const Config& config,
                                      Acts::Logging::Level level)
-    : BareAlgorithm("TruthSeedSelector", level), m_cfg(config) {
+    : IAlgorithm("TruthSeedSelector", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
@@ -33,16 +38,16 @@ TruthSeedSelector::TruthSeedSelector(const Config& config,
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output truth particles collection");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
 ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // prepare input collections
-  const auto& inputParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& inputParticles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
   // compute particle_id -> {hit_id...} map from the
   // hit_id -> {particle_id...} map on the fly.
   const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
@@ -55,8 +60,8 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
     return (min <= x) and (x < max);
   };
   auto isValidparticle = [&](const auto& p) {
-    const auto eta = Acts::VectorHelpers::eta(p.unitDirection());
-    const auto phi = Acts::VectorHelpers::phi(p.unitDirection());
+    const auto eta = Acts::VectorHelpers::eta(p.direction());
+    const auto phi = Acts::VectorHelpers::phi(p.direction());
     const auto rho = Acts::VectorHelpers::perp(p.position());
     // find the corresponding hits for this particle
     const auto& hits = makeRange(particleHitsMap.equal_range(p.particleId()));
@@ -79,6 +84,6 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputParticles, std::move(selectedParticles));
+  m_outputParticles(ctx, std::move(selectedParticles));
   return ProcessCode::SUCCESS;
 }

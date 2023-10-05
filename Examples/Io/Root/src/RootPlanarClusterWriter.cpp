@@ -8,20 +8,32 @@
 
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Digitization/DigitizationSourceLink.hpp"
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Paths.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Utilities/GroupBy.hpp"
+#include "ActsExamples/Utilities/Range.hpp"
+#include "ActsFatras/EventData/Barcode.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
 
+#include <cstdint>
 #include <ios>
+#include <ostream>
 #include <stdexcept>
+#include <utility>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -35,6 +47,9 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
@@ -85,7 +100,7 @@ ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
@@ -102,7 +117,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
     const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
         clusters) {
   // retrieve simulated hits
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = m_inputSimHits(ctx);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -179,7 +194,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
         // local position to be calculated
         Acts::Vector2 lPosition{0., 0.};
         auto lpResult = surface.globalToLocal(ctx.geoContext, simHit.position(),
-                                              simHit.unitDirection());
+                                              simHit.direction());
         if (not lpResult.ok()) {
           ACTS_FATAL("Global to local transformation did not succeed.");
           return ProcessCode::ABORT;

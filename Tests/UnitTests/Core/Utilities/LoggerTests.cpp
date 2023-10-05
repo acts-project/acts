@@ -12,8 +12,13 @@
 
 #include "Acts/Utilities/Logger.hpp"
 
+#include <cstddef>
 #include <fstream>
+#include <memory>
+#include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace Acts {
 namespace Test {
@@ -103,6 +108,12 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
   auto copy = log->clone("TestLoggerClone");
   test(std::move(copy), "TestLoggerClone");
   BOOST_CHECK_EQUAL(log->name(), "TestLogger");
+
+  auto copy2 = log->clone("TestLoggerClone");
+  BOOST_CHECK_EQUAL(copy2->level(), log->level());
+
+  auto copy3 = log->cloneWithSuffix("Suffix");
+  BOOST_CHECK_EQUAL(log->level(), copy3->level());
 
   logfile = std::ofstream{output_file};  // clear output
 
