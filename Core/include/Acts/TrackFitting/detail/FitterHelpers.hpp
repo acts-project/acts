@@ -41,7 +41,7 @@ auto getTrackStateProxy(propagator_state_t &state, const stepper_t &stepper,
   size_t currentTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   if (getOnLastTrackIndex) {
-    if (lastTrackIndex < fittedStates.size() - 1 ||
+    if (lastTrackIndex >= fittedStates.size() ||
         lastTrackIndex == Acts::MultiTrajectoryTraits::kInvalid) {
       ACTS_WARNING("No TrackState with index "
                    << lastTrackIndex << " found. Add new TrackState.");
