@@ -33,6 +33,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/GlobalChiSquareFitterError.hpp"
+#include "Acts/TrackFitting/detail/FitterHelpers.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -449,42 +450,15 @@ class Gx2Fitter {
             }
           }
 
-          // add a full TrackState entry multi trajectory
-          // (this allocates storage for all components, we will set them later)
-          auto& fittedStates = *result.fittedStates;
-
-          // TODO can we generalize the function from PR#2499
-          /// START of getTrackStateProxy() from PR#2499
-          // add a full TrackState entry multi trajectory
-          // (this allocates storage for all components, we will set them later)
-          /// const auto newTrackIndex = fittedStates.addTrackState(mask,
-          /// lastTrackIndex);
-
-          // now get track state proxy back
-          auto trackStateProxy = fittedStates.getTrackState(currentTrackIndex);
-
-          trackStateProxy.setReferenceSurface(surface->getSharedPtr());
-
-          // Bind the transported state to the current surface
-          auto res = stepper.boundState(state.stepping, *surface, false,
-                                        freeToBoundCorrection);
-          if (!res.ok()) {
-            ACTS_ERROR("Propagate to surface " << surface->geometryId()
-                                               << " failed: " << res.error());
-            return;
+          auto trackStateProxyRes = detail::getTrackStateProxy(
+              state, stepper, *surface, *result.fittedStates, currentTrackIndex,
+              false, logger(), freeToBoundCorrection,
+              ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
+              true);
+          if (!trackStateProxyRes.ok()) {
+            result.result = trackStateProxyRes.error();
           }
-          auto& [boundParams, jacobian, pathLength] = *res;
-
-          // Fill the track state
-          trackStateProxy.predicted() = std::move(boundParams.parameters());
-          /// Do we need this block? it was a conflict
-          if (boundParams.covariance().has_value()) {
-            trackStateProxy.predictedCovariance() =
-                std::move(*boundParams.covariance());
-          }
-          trackStateProxy.jacobian() = std::move(jacobian);
-          trackStateProxy.pathLength() = std::move(pathLength);
-          /// END of getTrackStateProxy() from PR#2499
+          auto& trackStateProxy = *trackStateProxyRes;
 
           // We have predicted parameters, so calibrate the uncalibrated input
           // measurement
