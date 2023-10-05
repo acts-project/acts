@@ -227,7 +227,7 @@ TrackAlignmentState trackAlignmentState(
       // The direction
       const Vector3 direction = freeParams.segment<3>(eFreeDir0);
       // The derivative of free parameters w.r.t. path length. @note Here, we
-      // assumes a linear track model, i.e. negecting the change of track
+      // assume a linear track model, i.e. neglecting the change of track
       // direction. Otherwise, we need to know the magnetic field at the free
       // parameters
       FreeVector pathDerivative = FreeVector::Zero();

@@ -307,7 +307,7 @@ struct GsfActor {
       updateStepper(state, stepper, navigator, componentCache);
     }
 
-    // If we only done preUpdate before, now do postUpdate
+    // If we have only done preUpdate before, now do postUpdate
     if (haveMaterial && haveMeasurement) {
       applyMultipleScattering(state, stepper, navigator,
                               MaterialUpdateStage::PostUpdate);

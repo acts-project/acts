@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, extensions,
                                 PropagatorPlainOptions());
 
-  // Construct an non-updating alignment updater
+  // Construct a non-updating alignment updater
   AlignedTransformUpdater voidAlignUpdater =
       [](DetectorElementBase* /*element*/, const GeometryContext& /*gctx*/,
          const Transform3& /*transform*/) { return true; };

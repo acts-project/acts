@@ -418,7 +418,7 @@ struct WrappingConfig {
       sl << "New container built with       configuration: "
          << containerVolumeConfig.toString() << '\n';
     }
-    // go through the new new ones first
+    // go through the new ones first
     if (nVolumeConfig) {
       sl << " - n: Negative Endcap, current configuration: "
          << nVolumeConfig.toString() << '\n';
