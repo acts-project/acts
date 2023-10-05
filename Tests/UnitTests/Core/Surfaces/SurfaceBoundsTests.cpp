@@ -29,9 +29,23 @@ class SurfaceBoundsStub : public SurfaceBounds {
     std::iota(m_values.begin(), m_values.end(), 0);
   }
 
+#if defined(__GNUC__) && __GNUC__ == 13 && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#endif
+  SurfaceBoundsStub(const SurfaceBoundsStub& other) = default;
+#if defined(__GNUC__) && __GNUC__ == 13 && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
   ~SurfaceBoundsStub() override = default;
-  BoundsType type() const final { return SurfaceBounds::eOther; }
-  std::vector<double> values() const override { return m_values; }
+  BoundsType type() const final {
+    return SurfaceBounds::eOther;
+  }
+  std::vector<double> values() const override {
+    return m_values;
+  }
   bool inside(const Vector2& /*lpos*/,
               const BoundaryCheck& /*bcheck*/) const final {
     return true;
