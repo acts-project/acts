@@ -32,6 +32,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/TrackFitting/detail/FitterHelpers.hpp"
 #include "Acts/TrackFitting/detail/KalmanUpdateHelpers.hpp"
 #include "Acts/TrackFitting/detail/VoidFitterComponents.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
