@@ -347,7 +347,7 @@ class Gx2Fitter {
     /// Calibration context for the fit
     const CalibrationContext* calibrationContext{nullptr};
 
-    /// The number of the current iteration of the update
+    /// The current iteration of the fitter
     size_t nUpdate = Acts::MultiTrajectoryTraits::kInvalid;
 
     /// @brief Gx2f actor operation
@@ -403,24 +403,25 @@ class Gx2Fitter {
           stepper.transportCovarianceToBound(state.stepping, *surface,
                                              freeToBoundCorrection);
 
-          ACTS_VERBOSE("Actor - before updating in the end:"
-                       << "\n\tresult.lastMeasurementIndex: "
-                       << result.lastMeasurementIndex
-                       << "\n\tresult.lastTrackIndex: " << result.lastTrackIndex
-                       << "\n\tresult.fittedStates->size(): "
-                       << result.fittedStates->size())
+          ACTS_VERBOSE(
+              "Actor - indices before processing:"
+              << "\n\t"
+              << "result.lastMeasurementIndex: " << result.lastMeasurementIndex
+              << "\n\t"
+              << "result.lastTrackIndex: " << result.lastTrackIndex << "\n\t"
+              << "result.fittedStates->size(): " << result.fittedStates->size())
 
           // TODO generalize the update of the currentTrackIndex
           size_t currentTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
-          // Checks if during the update an existing surface is found.
-          // If not, there will be a new index generated afterwards
+          // Checks if an existing surface is found during the gx2f-iteration.
+          // If not, there a new index will be generated afterwards
+          // During the first iteration, we will always create a new index
           if (nUpdate == 0) {
             ACTS_VERBOSE("   processSurface: nUpdate == 0 decision");
 
-            // add a full TrackState entry multi trajectory
-            // (this allocates storage for all components, we will set them
-            // later)
+            // Add a full TrackState entry multi trajectory. This allocates
+            // storage for all components, which we will set later.
             currentTrackIndex = result.fittedStates->addTrackState(
                 ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
                 result.lastTrackIndex);
@@ -438,9 +439,8 @@ class Gx2Fitter {
               ACTS_VERBOSE("   processSurface: currentTrackIndex (n+1) = "
                            << currentTrackIndex);
             } else {
-              // add a full TrackState entry multi trajectory
-              // (this allocates storage for all components, we will set them
-              // later)
+              // Add a full TrackState entry multi trajectory. This allocates
+              // storage for all components, which we will set later.
               currentTrackIndex = result.fittedStates->addTrackState(
                   ~(TrackStatePropMask::Smoothed |
                     TrackStatePropMask::Filtered),
@@ -492,13 +492,15 @@ class Gx2Fitter {
           typeFlags.set(TrackStateFlag::MeasurementFlag);
           // We count the processed state
           ++result.processedStates;
-          ACTS_VERBOSE("Actor - before updating in the end:"
-                       << "\n\tresult.lastMeasurementIndex: "
-                       << result.lastMeasurementIndex
-                       << "\n\ttrackStateProxy.index(): "
-                       << trackStateProxy.index()
-                       << "\n\tresult.lastTrackIndex: " << result.lastTrackIndex
-                       << "\n\tcurrentTrackIndex: " << currentTrackIndex)
+          ACTS_VERBOSE("Actor - indices after processing, before over writing:"
+                       << "\n\t"
+                       << "result.lastMeasurementIndex: "
+                       << result.lastMeasurementIndex << "\n\t"
+                       << "trackStateProxy.index(): " << trackStateProxy.index()
+                       << "\n\t"
+                       << "result.lastTrackIndex: " << result.lastTrackIndex
+                       << "\n\t"
+                       << "currentTrackIndex: " << currentTrackIndex)
           result.lastMeasurementIndex = currentTrackIndex;
           result.lastTrackIndex = currentTrackIndex;
         } else {
