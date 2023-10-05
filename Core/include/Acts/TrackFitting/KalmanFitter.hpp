@@ -267,7 +267,7 @@ class KalmanFitter {
         m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
 
  private:
-  /// The propgator for the transport and material update
+  /// The propagator for the transport and material update
   propagator_t m_propagator;
 
   /// The logger instance

@@ -72,7 +72,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
   //
   //     A = (N1*A1 + N2*A2) / (N1+N2) = (N1/N)*A1 + (N2/N)*A2 = W1*A1 + W2*A2
   //
-  // the number of atoms/molecues in a given volume V with molar density rho is
+  // the number of atoms/molecules in a given volume V with molar density rho is
   //
   //     N = V * rho * Na
   //

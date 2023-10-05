@@ -299,7 +299,7 @@ class CombinatorialKalmanFilter {
  private:
   using KalmanNavigator = typename propagator_t::Navigator;
 
-  /// The propgator for the transport and material update
+  /// The propagator for the transport and material update
   propagator_t m_propagator;
 
   std::unique_ptr<const Logger> m_logger;

@@ -93,7 +93,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// Framework execute method of the alignment algorithm
   ///
   /// @param ctx is the algorithm context that holds event-wise information
-  /// @return a process code to steer the algporithm flow
+  /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const override;
 
