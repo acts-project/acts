@@ -230,4 +230,65 @@ struct Alignment {
 };
 }  // namespace ActsAlignment
 
-#include "ActsAlignment/Kernel/Alignment.ipp"
+
+//Struct that takes care of grouping misaligned detector elements
+struct GroupedMisalignment {
+    std::vector<std::string> geoIDPrefixes;
+    Acts::Transform3 combinedMisalignmentDelta;
+    Acts::Vector3 centerOfGravity;
+    std::vector<Acts::Transform3> relativeTransforms;
+};
+
+//  function for creating grouped misalignment
+GroupedMisalignment createGroupedMisalignment(
+    const std::vector<Acts::DetectorElementBase*>& allElements,
+    const std::vector<std::string>& geoIDPrefixes);
+ // 
+Acts::Result<void> ActsAlignment::updateAlignmentParameters(
+    const Acts::GeometryContext& gctx,
+    const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
+    const AlignedTransformUpdater& alignedTransformUpdater,
+    AlignmentResult& alignResult,
+    const GeometryHierarchyMap& geometryMap,
+    const AlignmentParameterSet& alignmentParameterSet) const {
+    
+    // defining the group pattern
+   std::set<Acts::GeometryContext::GeoID> group1Pattern = {
+    Acts::GeometryContext::GeoID(1, 0),  // for the geoid 1
+    Acts::GeometryContext::GeoID(1, 1),  // for the geoid 2
+    Acts::GeometryContext::GeoID(1, 2)   // for the geoid 3
+};
+
+std::set<Acts::GeometryContext::GeoID> group2Pattern = {
+    Acts::GeometryContext::GeoID(2, 0),  // for the geoid 4
+    Acts::GeometryContext::GeoID(2, 1)   // for the geoid 5
+}
+
+    
+    
+    for (const auto& entry : geometryMap) {
+        Acts::GeometryContext::GeoID geoId = entry.first;
+        bool isAligned = entry.second;
+
+        //checking for each detector element, based on geoid if should be aligned or not
+        if (isAligned) {
+            // does geoid matches with the group pattern
+            if (group1Pattern.count(geoId) > 0) {
+                // add it to group 1 and apply updates if needed
+                if (alignmentParameterSet.find(geoId) != alignmentParameterSet.end()) {
+                    Acts::Transform3 alignmentParams = alignmentParameterSet.at(geoId);
+                    // add to the alignResult updated alignment parameters
+                    alignResult.alignedParameters[geoId] = alignmentParams;
+                }
+            } else if (group2Pattern.count(geoId) > 0) {
+                // adding to group 2 and apply updates if needed
+                if (alignmentParameterSet.find(geoId) != alignmentParameterSet.end()) {
+                    Acts::Transform3 alignmentParams = alignmentParameterSet.at(geoId);
+                    // Update the aligned parameters in alignResult
+                    alignResult.alignedParameters[geoId] = alignmentParams;
+                }
+            }
+        }
+    }
+
+
