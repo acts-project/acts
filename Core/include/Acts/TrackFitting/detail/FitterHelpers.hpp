@@ -49,8 +49,8 @@ auto getTrackStateProxy(propagator_state_t &state, const stepper_t &stepper,
     }
     currentTrackIndex = lastTrackIndex;
   } else {
-    // add a full TrackState entry multi trajectory
-    // (this allocates storage for all components, we will set them later)
+    // Add a full TrackState entry multi trajectory. This allocates storage for
+    // all components, which we will set later.
     currentTrackIndex = fittedStates.addTrackState(mask, lastTrackIndex);
   }
 
