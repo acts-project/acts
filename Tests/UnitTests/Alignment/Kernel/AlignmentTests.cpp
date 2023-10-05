@@ -89,7 +89,7 @@ KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
 /// @brief Construct a telescope-like detector
 ///
 struct TelescopeDetector {
-  /// Default constructor for the Cubit tracking geometry
+  /// Default constructor for the Cubic tracking geometry
   ///
   /// @param gctx the geometry context for this geometry at building time
   TelescopeDetector(std::reference_wrapper<const GeometryContext> gctx)

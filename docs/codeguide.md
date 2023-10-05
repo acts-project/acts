@@ -100,7 +100,7 @@ Example:
 ```cpp
 // VertexSomething should be abbreviated as
 struct VtxSomething; // not VTXSomething.
-// This is bad example since the name should not be abbreviated here anyways.
+// This is bad example since the name should not be abbreviated here anyway.
 ```
 
 ### N.3: Functions and methods use mixedCase

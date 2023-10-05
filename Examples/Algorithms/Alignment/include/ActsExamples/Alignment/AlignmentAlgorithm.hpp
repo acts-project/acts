@@ -50,7 +50,7 @@ class AlignmentAlgorithm final : public IAlgorithm {
   /// Create the alignment function implementation.
   ///
   /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
+  /// contains shared_ptr anyway.
   static std::shared_ptr<AlignmentFunction> makeAlignmentFunction(
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);

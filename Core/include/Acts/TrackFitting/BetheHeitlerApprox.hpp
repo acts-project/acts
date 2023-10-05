@@ -246,7 +246,7 @@ class AtlasBetheHeitlerApprox {
       }
 
       if (PolyDegree != degree) {
-        throw std::invalid_argument("Wrong wrong polynom order in '" +
+        throw std::invalid_argument("Wrong polynom order in '" +
                                     filepath + "'");
       }
 

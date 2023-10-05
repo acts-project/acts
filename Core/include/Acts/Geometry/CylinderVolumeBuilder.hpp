@@ -476,7 +476,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   struct Config {
     /// The tracking volume helper for construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
-    /// The string based indenfication
+    /// The string based identification
     std::string volumeName = "";
     /// The world material
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
