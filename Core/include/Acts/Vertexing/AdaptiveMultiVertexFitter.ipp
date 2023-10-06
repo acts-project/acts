@@ -145,7 +145,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
       for (const auto& trk : trks) {
         // Range of vertices that are associated with trk. The range is
         // represented via its bounds: range.first refers to the first
-        // iterator of the range and range.second to the last.
+        // iterator of the range; range.second refers to the iterator after the
+        // last iterator of the range.
         auto range = state.trackToVerticesMultiMap.equal_range(trk);
 
         for (auto it = range.first; it != range.second; ++it) {
