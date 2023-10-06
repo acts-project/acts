@@ -122,46 +122,48 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 
   std::vector<Vertex<input_track_t>*> verticesToFit;
 
-  // Prepares vtx and tracks for fast estimation method of their
-  // compatibility with vertex
+  // Save the 3D impact parameters of all tracks associated with newVertex. Note
+  // that the impact parameters are calculated wrt the position of the vertex
+  // seed.
   auto res = prepareVertexForFit(state, &newVertex, vertexingOptions);
   if (!res.ok()) {
     return res.error();
   }
+
   // List of vertices added in last iteration
   std::vector<Vertex<input_track_t>*> lastIterAddedVertices = {&newVertex};
   // List of vertices added in current iteration
   std::vector<Vertex<input_track_t>*> currentIterAddedVertices;
 
-  // Loop as long as new vertices are found that share tracks with
-  // previously added vertices
+  // Fill verticesToFit with vertices that are connected to newVertex (via
+  // tracks and/or other vertices).
   while (!lastIterAddedVertices.empty()) {
-    for (auto& lastVtxIter : lastIterAddedVertices) {
-      // Loop over all track at current lastVtxIter
+    for (auto& lastIterAddedVertex : lastIterAddedVertices) {
+      // Loop over all tracks at the current vtx
       const std::vector<const input_track_t*>& trks =
-          state.vtxInfoMap[lastVtxIter].trackLinks;
+          state.vtxInfoMap[lastIterAddedVertex].trackLinks;
       for (const auto& trk : trks) {
-        // Retrieve list of links to all vertices that currently use the current
-        // track
+        // Range of vertices that are associated with trk. The range is
+        // represented via its bounds: range.first refers to the first
+        // iterator of the range and range.second to the last.
         auto range = state.trackToVerticesMultiMap.equal_range(trk);
 
-        // Loop over all attached vertices and add those to vertex fit
-        // which are not already in `verticesToFit`
-        for (auto vtxIter = range.first; vtxIter != range.second; ++vtxIter) {
-          auto newVtxIter = vtxIter->second;
-          if (!isAlreadyInList(newVtxIter, verticesToFit)) {
-            // Add newVtxIter to verticesToFit
-            verticesToFit.push_back(newVtxIter);
+        for (auto it = range.first; it != range.second; ++it) {
+          // it->first corresponds to trk, it->second to one of its associated
+          // vertices
+          auto vtxToFit = it->second;
+          // Add vertex to the fit if it is not already included
+          if (!isAlreadyInList(vtxToFit, verticesToFit)) {
+            verticesToFit.push_back(vtxToFit);
 
-            // Add newVtxIter vertex to currentIterAddedVertices
-            // if vertex != lastVtxIter
-            if (newVtxIter != lastVtxIter) {
+            // Collect vertices that were added this iteration
+            if (vtxToFit != lastIterAddedVertex) {
               currentIterAddedVertices.push_back(newVtxIter);
             }
           }
-        }  // End for loop over linksToVertices
-      }
-    }  // End loop over lastIterAddedVertices
+        }  // End for loop over range of associated vertices
+      }    // End loop over trackLinks
+    }      // End loop over lastIterAddedVertices
 
     lastIterAddedVertices = currentIterAddedVertices;
     currentIterAddedVertices.clear();
@@ -180,11 +182,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
 
 template <typename input_track_t, typename linearizer_t>
 bool Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
-    isAlreadyInList(
-        Vertex<input_track_t>* vtx,
-        const std::vector<Vertex<input_track_t>*>& verticesVec) const {
-  return std::find(verticesVec.begin(), verticesVec.end(), vtx) !=
-         verticesVec.end();
+    isAlreadyInList(Vertex<input_track_t>* vtx,
+                    const std::vector<Vertex<input_track_t>*>& vertices) const {
+  return std::find(vertices.begin(), vertices.end(), vtx) != vertices.end();
 }
 
 template <typename input_track_t, typename linearizer_t>
@@ -193,20 +193,20 @@ Acts::Result<void> Acts::
         State& state, Vertex<input_track_t>* vtx,
         const VertexingOptions<input_track_t>& vertexingOptions) const {
   // The current vertex info object
-  auto& currentVtxInfo = state.vtxInfoMap[vtx];
+  auto& vtxInfo = state.vtxInfoMap[vtx];
   // The seed position
-  const Vector3& seedPos = currentVtxInfo.seedPosition.template head<3>();
+  const Vector3& seedPos = vtxInfo.seedPosition.template head<3>();
 
   // Loop over all tracks at current vertex
-  for (const auto& trk : currentVtxInfo.trackLinks) {
+  for (const auto& trk : vtxInfo.trackLinks) {
     auto res = m_cfg.ipEst.estimate3DImpactParameters(
         vertexingOptions.geoContext, vertexingOptions.magFieldContext,
         m_extractParameters(*trk), seedPos, state.ipState);
     if (!res.ok()) {
       return res.error();
     }
-    // Set ip3dParams for current trackAtVertex
-    currentVtxInfo.ip3dParams.emplace(trk, res.value());
+    // Set impactParams3D for current trackAtVertex
+    vtxInfo.impactParams3D.emplace(trk, res.value());
   }
   return {};
 }
@@ -226,8 +226,8 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
         state.tracksAtVerticesMap.at(std::make_pair(trk, currentVtx));
     // Recover from cases where linearization point != 0 but
     // more tracks were added later on
-    if (currentVtxInfo.ip3dParams.find(trk) ==
-        currentVtxInfo.ip3dParams.end()) {
+    if (currentVtxInfo.impactParams3D.find(trk) ==
+        currentVtxInfo.impactParams3D.end()) {
       auto res = m_cfg.ipEst.estimate3DImpactParameters(
           vertexingOptions.geoContext, vertexingOptions.magFieldContext,
           m_extractParameters(*trk),
@@ -235,12 +235,12 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
       if (!res.ok()) {
         return res.error();
       }
-      // Set ip3dParams for current trackAtVertex
-      currentVtxInfo.ip3dParams.emplace(trk, res.value());
+      // Set impactParams3D for current trackAtVertex
+      currentVtxInfo.impactParams3D.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.template getVertexCompatibility<3>(
-        vertexingOptions.geoContext, &(currentVtxInfo.ip3dParams.at(trk)),
+        vertexingOptions.geoContext, &(currentVtxInfo.impactParams3D.at(trk)),
         VectorHelpers::position(currentVtxInfo.oldPosition));
     if (!compRes.ok()) {
       return compRes.error();
