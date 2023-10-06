@@ -11,6 +11,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 
+#include <map>
 #include <memory>
 #include <string>
 
@@ -29,24 +30,25 @@ class ISurfaceMaterial;
 ///
 /// DetectorElement plugin for DD4hep detector elements. DD4hep is based on
 /// TGeo shapes, therefore the DD4hepDetectorElement inherits from
-/// TGeoDetectorElement.
+/// TGeoDetectorElement in order to perform the conversion.
+///
 /// The full geometrical information is provided by the TGeoDetectorElement.
 /// The DD4hepDetectorElement extends the TGeoDetectorElement by containing a
 /// segmentation for the readout.
-/// @todo what if shape conversion fails? add implementation of more than one
-/// surface per module, implementing also for other shapes->Cone,ConeSeg,Tube?
-/// what
-/// if not used with DD4hep?
-/// @todo segmentation
-
+///
 class DD4hepDetectorElement : public TGeoDetectorElement {
  public:
   /// Broadcast the context type
   using ContextType = GeometryContext;
 
+  /// Define a string based story
+  using Store = std::map<std::string,
+                         std::vector<std::shared_ptr<DD4hepDetectorElement>>>;
+
   /// Constructor
-  /// @param detElement The DD4hep DetElement which should be linked to a
-  /// surface
+  /// @param detElement The DD4hep DetElement which should be associated to
+  /// an ACTS surface
+  ///
   /// @param axes is the axis orientation with respect to the tracking frame
   ///        it is a string of the three characters x, y and z (standing for
   ///        the three axes) There is a distinction between
@@ -63,7 +65,6 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   /// @param scalor is the scale factor for unit conversion if needed
   /// @param isDisc in case the sensitive detector module should be translated
   ///        as disc (e.g. for endcaps) this flag should be set to true
-  /// @param digitizationModule Optional digitization configuration for the element
   /// @note In the translation from a 3D geometry (TGeo) which only knows
   ///       tubes to a 2D geometry (Tracking geometry) a distinction if the
   ///       module should be described as a cylinder or a disc surface needs to
@@ -76,9 +77,7 @@ class DD4hepDetectorElement : public TGeoDetectorElement {
   DD4hepDetectorElement(
       const dd4hep::DetElement detElement, const std::string& axes = "XYZ",
       double scalor = 1., bool isDisc = false,
-      std::shared_ptr<const ISurfaceMaterial> material = nullptr,
-      const std::shared_ptr<const DigitizationModule>& digitizationModule =
-          nullptr);
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr);
 
   ~DD4hepDetectorElement() override = default;
 
