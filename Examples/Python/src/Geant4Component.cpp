@@ -69,7 +69,14 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
              std::shared_ptr<DetectorConstructionFactory>>(
       mod, "DetectorConstructionFactory");
 
-  py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod, "Geant4Handle");
+  py::class_<Geant4Manager, std::unique_ptr<Geant4Manager, py::nodelete>>(
+      mod, "Geant4Manager")
+      .def_static("instance", &Geant4Manager::instance,
+                  py::return_value_policy::reference)
+      .def("currentHandle", &Geant4Manager::currentHandle);
+
+  py::class_<Geant4Handle, std::shared_ptr<Geant4Handle>>(mod, "Geant4Handle")
+      .def("tweakLogging", &Geant4Handle::tweakLogging);
 
   {
     using Algorithm = Geant4SimulationBase;
