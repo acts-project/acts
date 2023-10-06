@@ -245,7 +245,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double absoluteCharge = trkParams.particleHypothesis().absoluteCharge();
   double qOvP = trkParams.parameters()[BoundIndices::eBoundQOverP];
 
-  // B-field z-component at the reference position.
+  // Z-component of the B field at the reference position.
   // Note that we assume a constant B field here!
   auto fieldRes = m_cfg.bField->getField(refPoint, state.fieldCache);
   if (!fieldRes.ok()) {
@@ -254,7 +254,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double bZ = (*fieldRes)[eZ];
 
   // The particle moves on a straight trajectory if its charge is 0 or if there
-  // is no B-field. In that case, the 3D PCA can be calculated analytically, see
+  // is no B field. In that case, the 3D PCA can be calculated analytically, see
   // Sec 3.2 of the reference.
   if (absoluteCharge == 0. or bZ == 0.) {
     // Momentum direction (constant for straight tracks)
@@ -290,7 +290,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
     return std::make_pair(deltaRStraightTrack, momDirStraightTrack);
   }
 
-  // Charged particles in a constant B-field follow a helical trajectory. In
+  // Charged particles in a constant B field follow a helical trajectory. In
   // that case, we calculate the 3D PCA using the Newton method, see Sec 4.2 in
   // the reference.
 

@@ -207,7 +207,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   Estimator ipEstimator(cfg);
   Estimator::State ipState(magFieldCache());
 
-  // Set up quantities for 0 B field
+  // Set up quantities for B = 0
   auto zeroField = std::make_shared<MagneticField>(Vector3(0, 0, 0));
   StraightLineStepper straightLineStepper;
   auto straightLinePropagator =
@@ -270,7 +270,7 @@ BOOST_DATA_TEST_CASE(TimeAtPca, tracksWithoutIPs* vertices, t0, phi, theta, p,
   BOOST_CHECK(result.ok());
   const auto& refParams = *result->endParameters;
 
-  // Propagate to the 2D PCA of the reference point in a 0 B field
+  // Propagate to the 2D PCA of the reference point when B = 0
   auto zeroFieldResult =
       straightLinePropagator->propagate(params, *refPerigeeSurface, pOptions);
   BOOST_CHECK(zeroFieldResult.ok());
