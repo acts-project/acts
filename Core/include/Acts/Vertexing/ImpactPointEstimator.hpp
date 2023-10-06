@@ -143,8 +143,8 @@ class ImpactPointEstimator {
   /// corresponding 3D PCA. Returns also the momentum direction at the 3D PCA.
   /// The template parameter nDim determines whether we calculate the 3D
   /// distance (nDim = 3) or the 4D distance (nDim = 4) to the 3D PCA.
-  /// @note For straight tracks there exists an analytical solution; for
-  /// helical tracks, we use the Newton method.
+  /// @note For straight tracks we use an analytical solution; for helical
+  /// tracks we use the Newton method.
   ///
   /// @tparam nDim Number of dimensions used to compute compatibility
   /// @note If nDim = 3 we only consider spatial dimensions; if nDim = 4, we
