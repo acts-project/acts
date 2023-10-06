@@ -350,6 +350,10 @@ class Gx2Fitter {
     /// The current iteration of the fitter
     size_t nUpdate = Acts::MultiTrajectoryTraits::kInvalid;
 
+    /// Mask for the track states. We don't need Smoothed and Filtered
+    TrackStatePropMask mask =
+        ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered);
+
     /// @brief Gx2f actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagator state
@@ -415,16 +419,15 @@ class Gx2Fitter {
           size_t currentTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
           // Checks if an existing surface is found during the gx2f-iteration.
-          // If not, there a new index will be generated afterwards
-          // During the first iteration, we will always create a new index
+          // If not, a new index will be generated afterwards.
+          // During the first iteration, we will always create a new index.
           if (nUpdate == 0) {
             ACTS_VERBOSE("   processSurface: nUpdate == 0 decision");
 
             // Add a full TrackState entry multi trajectory. This allocates
             // storage for all components, which we will set later.
-            currentTrackIndex = result.fittedStates->addTrackState(
-                ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
-                result.lastTrackIndex);
+            currentTrackIndex =
+                result.fittedStates->addTrackState(mask, result.lastTrackIndex);
           } else {
             ACTS_VERBOSE("   processSurface: nUpdate > 0 decision");
 
@@ -442,9 +445,7 @@ class Gx2Fitter {
               // Add a full TrackState entry multi trajectory. This allocates
               // storage for all components, which we will set later.
               currentTrackIndex = result.fittedStates->addTrackState(
-                  ~(TrackStatePropMask::Smoothed |
-                    TrackStatePropMask::Filtered),
-                  result.lastTrackIndex);
+                  mask, result.lastTrackIndex);
               ACTS_VERBOSE("   processSurface: currentTrackIndex (ADD NEW)= "
                            << currentTrackIndex);
             }
@@ -452,9 +453,7 @@ class Gx2Fitter {
 
           auto trackStateProxyRes = detail::getTrackStateProxy(
               state, stepper, *surface, *result.fittedStates, currentTrackIndex,
-              false, logger(), freeToBoundCorrection,
-              ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
-              true);
+              false, logger(), freeToBoundCorrection, mask, true);
           if (!trackStateProxyRes.ok()) {
             result.result = trackStateProxyRes.error();
           }
