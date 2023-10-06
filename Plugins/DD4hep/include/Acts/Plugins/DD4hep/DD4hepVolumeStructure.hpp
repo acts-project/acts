@@ -32,7 +32,7 @@ namespace Experimental {
 ///
 class DD4hepVolumeStructure {
  public:
-  /// Constructor with argumets
+  /// Constructor with arguments
   /// @param mlogger is the screen output logger
   DD4hepVolumeStructure(std::unique_ptr<const Logger> mlogger =
                             getDefaultLogger("DD4hepVolumeStructure",
