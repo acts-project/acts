@@ -110,6 +110,9 @@ class NonNeutralChargedParticleHypothesis
                                                pion().mass(), absQ);
   }
 
+  static NonNeutralChargedParticleHypothesis chargedGeantino() {
+    return chargedGeantino(Acts::UnitConstants::e);
+  }
   static NonNeutralChargedParticleHypothesis chargedGeantino(float absQ) {
     return NonNeutralChargedParticleHypothesis(PdgParticle::eInvalid, 0, absQ);
   }
@@ -153,6 +156,9 @@ class ParticleHypothesis : public GenericParticleHypothesis<AnyCharge> {
 
   static ParticleHypothesis geantino() {
     return NeutralParticleHypothesis::geantino();
+  }
+  static ParticleHypothesis chargedGeantino() {
+    return chargedGeantino(Acts::UnitConstants::e);
   }
   static ParticleHypothesis chargedGeantino(float absQ) {
     return ParticleHypothesis(PdgParticle::eInvalid, 0, absQ);
