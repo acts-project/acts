@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cmath>
 #include <iomanip>
 #include <limits>
 #include <ostream>
@@ -59,7 +60,7 @@ class ConstrainedStep {
 
   /// constructor from Scalar
   /// @param value is the user given initial value
-  constexpr explicit ConstrainedStep(Scalar value) { m_values[user] = value; }
+  constexpr explicit ConstrainedStep(Scalar value) { setUser(value); }
 
   /// set accuracy by one Scalar
   ///
@@ -67,24 +68,35 @@ class ConstrainedStep {
   /// exposed to the Propagator
   ///
   /// @param value is the new accuracy value
-  constexpr void setValue(Scalar value) {
+  constexpr void setAccuracy(Scalar value) {
+    assert(value > 0 && "ConstrainedStep accuracy must be > 0.");
     /// set the accuracy value
     m_values[accuracy] = value;
   }
 
+  /// set user by one Scalar
+  ///
+  /// @param value is the new user value
+  constexpr void setUser(Scalar value) {
+    assert(value != 0 && "ConstrainedStep user must be != 0.");
+    /// set the user value
+    m_values[user] = value;
+  }
+
   /// returns the min step size
-  constexpr Scalar value() const { return value(currentType()); }
+  constexpr Scalar value() const {
+    Type minType = Type(std::min_element(m_values.begin(), m_values.end()) -
+                        m_values.begin());
+    Scalar min = m_values[minType];
+    // accuracy is always positive and therefore handled separately
+    Scalar result = std::min(std::abs(min), m_values[accuracy]);
+    return std::signbit(min) ? -result : result;
+  }
 
   /// Access a specific value
   ///
   /// @param type is the requested parameter type
   constexpr Scalar value(Type type) const { return m_values[type]; }
-
-  /// Access the currently leading type
-  constexpr Type currentType() const {
-    return Type(std::min_element(m_values.begin(), m_values.end()) -
-                m_values.begin());
-  }
 
   /// release a certain constraint value
   ///
@@ -100,19 +112,16 @@ class ConstrainedStep {
   /// @param type is the constraint type
   /// @param releaseStep Allow step size to increase again
   constexpr void update(Scalar value, Type type, bool releaseStep = false) {
+    assert(type != accuracy && "Accuracy should not be updated.");
     if (releaseStep) {
       release(type);
     }
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
     if (std::abs(value) < std::abs(m_values[type])) {
+      assert(value != 0 && "ConstrainedStep user must be != 0.");
       m_values[type] = value;
     }
-  }
-
-  constexpr void scale(Scalar factor) {
-    assert(factor > 0 && "ConstrainedStep scale factor was zero or negative.");
-    m_values[accuracy] = value() * factor;
   }
 
   std::ostream& toStream(std::ostream& os) const {

@@ -41,16 +41,16 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
   // Transverse component at start is taken for the loop protection
   const double p = stepper.absoluteMomentum(state.stepping);
   // Calculate the full helix path
-  const double helixPath = state.options.direction * 2 * M_PI * p / B;
-  // And set it as the loop limit if it overwrites the internal limit
-  double loopLimit = state.options.loopFraction * helixPath;
-  double pathLimit = pathAborter.internalLimit;
-  if (std::abs(loopLimit) < std::abs(pathLimit)) {
-    pathAborter.internalLimit = loopLimit;
+  const double helixPath = 2 * M_PI * p / B;
+  // Apply the loop fraction
+  const double loopLimit = state.options.loopFraction * helixPath;
 
-    ACTS_VERBOSE("Path aborter limit set to "
-                 << loopLimit << " (full helix =  " << helixPath << ")");
-  }
+  // And set it as the loop limit
+  const double previousLimit = pathAborter.internalLimit;
+  pathAborter.internalLimit = loopLimit;
+  ACTS_VERBOSE("Path aborter limit set to "
+               << loopLimit << " (full helix = " << helixPath
+               << ", previous limit = " << previousLimit << ")");
 }
 
 }  // namespace detail
